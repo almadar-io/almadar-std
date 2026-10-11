@@ -39,23 +39,23 @@ export type StdUiGeometricPatternEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGeometricPatternConfig {
-  children?: PatternValue;
-  className?: string;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
   /** Default: `"background"` */
   mode?: 'background' | 'left' | 'right' | 'dual' | 'around' | 'frame';
-  /** Default: `0.06` */
-  opacity?: number;
-  /** Default: `1` */
-  scale?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  enterDelay?: number;
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `0.5` */
   strokeWidth?: number;
+  /** Default: `1` */
+  scale?: number;
+  className?: string;
   /** Default: `"star8"` */
   variant?: 'star8' | 'star6' | 'khatam' | 'star10' | 'star12' | 'rosette-double' | 'rosette-filled' | 'seigaiha' | 'greek-key' | 'celtic-knot' | 'kolam' | 'arch' | 'arabesque-vine' | 'arabesque-net';
+  children?: PatternValue;
+  /** Default: `0.06` */
+  opacity?: number;
 }
 
 /**

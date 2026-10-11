@@ -40,10 +40,10 @@ export type StdRoleGateEventKey = 'INIT';
  */
 export interface StdRoleGateConfig {
   content?: TraitFieldRef;
-  /** Default: `[]` */
-  roles?: string[];
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `[]` */
+  roles?: string[];
 }
 
 /**

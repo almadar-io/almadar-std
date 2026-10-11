@@ -54,16 +54,16 @@ export interface StdChaseAiUnitsChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdChaseAiConfig {
-  /** Default: `12` */
-  gridHeight?: number;
-  /** Default: `12` */
-  gridWidth?: number;
   /** Default: `true` */
   running?: boolean;
   /** Default: `[]` */
-  tiles?: EntityRow[];
-  /** Default: `[]` */
   units?: EntityRow[];
+  /** Default: `12` */
+  gridWidth?: number;
+  /** Default: `[]` */
+  tiles?: EntityRow[];
+  /** Default: `12` */
+  gridHeight?: number;
 }
 
 /**

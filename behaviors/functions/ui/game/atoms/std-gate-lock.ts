@@ -56,12 +56,12 @@ export interface StdGateLockGateBlockedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdGateLockConfig {
-  /** Default: `[]` */
-  doors?: EntityRow[];
   /** Default: `0.6` */
   reachMargin?: number;
   /** Default: `true` */
   running?: boolean;
+  /** Default: `[]` */
+  doors?: EntityRow[];
 }
 
 /**

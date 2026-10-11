@@ -39,35 +39,35 @@ export type StdUiActionPaletteEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionPaletteConfig {
-  /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"},"id":"Id","name":"Name","stateMachine":{"currentState":"Current State","description":"Description","name":"Name","states":["Item","Item 2"],"transitions":[{"event":"Event","from":"From","guardHint":"Guard Hint","to":"To"},{"event":"Event 2","from":"From 2","guardHint":"Guard Hint 2","to":"To 2"}]}},{"category":"Category 2","description":"Description 2","iconEmoji":"Icon Emoji 2","iconUrl":{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"},"id":"Id 2","name":"Name 2","stateMachine":{"currentState":"Current State 2","description":"Description 2","name":"Name 2","states":["Item","Item 2"],"transitions":[{"event":"Event","from":"From","guardHint":"Guard Hint","to":"To"},{"event":"Event 2","from":"From 2","guardHint":"Guard Hint 2","to":"To 2"}]}}]` */
+  /** Default: `[{"iconEmoji":"Icon Emoji","description":"Description","iconUrl":{"name":"iconUrl","role":"ui","animations":["static"],"style":"pixel","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png","dimension":"2d","aspect":"1:1","category":"iconUrl","thumbnailUrl":""},"id":"Id","stateMachine":{"name":"Name","currentState":"Current State","description":"Description","states":["Item","Item 2"],"transitions":[{"event":"Event","to":"To","guardHint":"Guard Hint","from":"From"},{"from":"From 2","to":"To 2","event":"Event 2","guardHint":"Guard Hint 2"}]},"name":"Name","category":"Category"},{"iconEmoji":"Icon Emoji 2","name":"Name 2","iconUrl":{"role":"ui","thumbnailUrl":"","category":"iconUrl","animations":["static"],"url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png","dimension":"2d","style":"pixel","name":"iconUrl","aspect":"1:1"},"category":"Category 2","description":"Description 2","stateMachine":{"currentState":"Current State 2","description":"Description 2","name":"Name 2","transitions":[{"event":"Event","from":"From","to":"To","guardHint":"Guard Hint"},{"guardHint":"Guard Hint 2","event":"Event 2","from":"From 2","to":"To 2"}],"states":["Item","Item 2"]},"id":"Id 2"}]` */
   actions?: EntityRow[];
-  /** Default: `true` */
-  allowDuplicates?: boolean;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
   ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `{}` */
-  categoryColors?: Record<string, TraitConfig>;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  label?: string;
-  lang?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaDescribedby?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaExpanded?: boolean;
   tabIndex?: number;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaSelected?: boolean;
+  lang?: string;
+  label?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `[]` */
   usedActionIds?: string[];
+  className?: string;
+  ariaHidden?: boolean;
+  /** Default: `{}` */
+  categoryColors?: Record<string, TraitConfig>;
+  enterDelay?: number;
+  ariaBusy?: boolean;
+  /** Default: `true` */
+  allowDuplicates?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaLabel?: string;
+  ariaLabelledby?: string;
 }
 
 /**

@@ -55,54 +55,54 @@ export interface StdLearnArrangementLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnArrangementConfig {
-  /** Default: `false` */
-  animate?: boolean;
-  /** Default: `"Check"` */
-  checkLabel?: string;
-  /** Default: `"success"` */
-  correctColor?: string;
-  /** Default: `"fill"` */
-  emptySlotColor?: string;
-  /** Default: `220` */
-  height?: number;
-  /** Default: `"error"` */
-  incorrectColor?: string;
-  /** Default: `false` */
-  interactive?: boolean;
-  /** Default: `[{"correctPosition":0,"hint":"What has to happen before anything can be poured?","id":"1","label":"Boil water in a kettle"},{"correctPosition":1,"hint":"The bag goes in before the water does.","id":"2","label":"Place a tea bag in the cup"},{"correctPosition":2,"hint":"Now the water and the bag meet.","id":"3","label":"Pour the hot water over the tea bag"},{"correctPosition":3,"hint":"Flavor needs time to develop.","id":"4","label":"Let it steep for a few minutes"},{"correctPosition":4,"hint":"This happens once the tea is strong enough.","id":"5","label":"Remove the tea bag and add milk or sugar to taste"}]` */
-  items?: EntityRow[];
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `"series-2"` */
-  pendingColor?: string;
-  /** Default: `"Retry"` */
-  retryLabel?: string;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `"ink"` */
-  slotBorderColor?: string;
-  /** Default: `"sm"` */
-  slotFontSize?: string;
-  /** Default: `60` */
-  slotHeight?: number;
-  /** Default: `40` */
-  slotLeft?: number;
-  /** Default: `120` */
-  slotSpacing?: number;
   /** Default: `"label"` */
   slotTextColor?: string;
-  /** Default: `100` */
-  slotWidth?: number;
+  /** Default: `"Undo"` */
+  undoLabel?: string;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `"Check"` */
+  checkLabel?: string;
+  /** Default: `false` */
+  animate?: boolean;
+  /** Default: `"ink"` */
+  slotBorderColor?: string;
   /** Default: `70` */
   slotY?: number;
   /** Default: `""` */
-  summary?: string;
+  matchMode?: string;
   /** Default: `"Build the Order"` */
   title?: string;
-  /** Default: `"Undo"` */
-  undoLabel?: string;
+  /** Default: `false` */
+  interactive?: boolean;
+  /** Default: `60` */
+  slotHeight?: number;
+  /** Default: `120` */
+  slotSpacing?: number;
+  /** Default: `"sm"` */
+  slotFontSize?: string;
   /** Default: `640` */
   width?: number;
+  /** Default: `40` */
+  slotLeft?: number;
+  /** Default: `"error"` */
+  incorrectColor?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
+  /** Default: `"Retry"` */
+  retryLabel?: string;
+  /** Default: `220` */
+  height?: number;
+  /** Default: `"series-2"` */
+  pendingColor?: string;
+  /** Default: `"fill"` */
+  emptySlotColor?: string;
+  /** Default: `"success"` */
+  correctColor?: string;
+  /** Default: `100` */
+  slotWidth?: number;
+  /** Default: `[{"id":"1","correctPosition":0,"label":"Boil water in a kettle","hint":"What has to happen before anything can be poured?"},{"correctPosition":1,"hint":"The bag goes in before the water does.","label":"Place a tea bag in the cup","id":"2"},{"correctPosition":2,"label":"Pour the hot water over the tea bag","hint":"Now the water and the bag meet.","id":"3"},{"correctPosition":3,"id":"4","label":"Let it steep for a few minutes","hint":"Flavor needs time to develop."},{"correctPosition":4,"hint":"This happens once the tea is strong enough.","id":"5","label":"Remove the tea bag and add milk or sugar to taste"}]` */
+  items?: EntityRow[];
 }
 
 /**

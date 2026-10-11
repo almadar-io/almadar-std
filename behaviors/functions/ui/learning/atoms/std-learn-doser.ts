@@ -67,50 +67,50 @@ export interface StdLearnDoserLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnDoserConfig {
-  /** Default: `false` */
-  autoDrip?: boolean;
+  /** Default: `600` */
+  width?: number;
   /** Default: `""` */
   backgroundColor?: string;
-  /** Default: `[{"color":"muted","label":"Low","terminal":false,"upperBound":50},{"color":"success","label":"High","terminal":true,"upperBound":999999999}]` */
-  bands?: EntityRow[];
-  /** Default: `100` */
-  capacity?: number;
-  /** Default: `500` */
-  dripIntervalMs?: number;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `300` */
-  historyLength?: number;
+  /** Default: `1` */
+  stepSmall?: number;
+  /** Default: `"Zone"` */
+  zoneReadoutLabel?: string;
   /** Default: `""` */
-  matchMode?: string;
+  unit?: string;
+  /** Default: `true` */
+  showCanvas?: boolean;
   /** Default: `"Dose"` */
   quantityLabel?: string;
-  /** Default: `"Reservoir"` */
-  reservoirLabel?: string;
+  /** Default: `300` */
+  historyLength?: number;
+  /** Default: `5` */
+  stepLarge?: number;
+  /** Default: `400` */
+  height?: number;
   /** Default: `"config"` */
   rosterSource?: 'config' | 'event';
   /** Default: `[]` */
   series?: string[];
-  /** Default: `true` */
-  showCanvas?: boolean;
-  /** Default: `"series-1"` */
-  sourceColor?: string;
+  /** Default: `false` */
+  autoDrip?: boolean;
   /** Default: `"Source"` */
   sourceLabel?: string;
-  /** Default: `5` */
-  stepLarge?: number;
-  /** Default: `1` */
-  stepSmall?: number;
   /** Default: `""` */
-  summary?: string;
+  matchMode?: string;
+  /** Default: `500` */
+  dripIntervalMs?: number;
+  /** Default: `"Reservoir"` */
+  reservoirLabel?: string;
+  /** Default: `"series-1"` */
+  sourceColor?: string;
   /** Default: `"Doser"` */
   title?: string;
+  /** Default: `100` */
+  capacity?: number;
+  /** Default: `[{"terminal":false,"color":"muted","upperBound":50,"label":"Low"},{"color":"success","upperBound":999999999,"terminal":true,"label":"High"}]` */
+  bands?: EntityRow[];
   /** Default: `""` */
-  unit?: string;
-  /** Default: `600` */
-  width?: number;
-  /** Default: `"Zone"` */
-  zoneReadoutLabel?: string;
+  summary?: string;
 }
 
 /**

@@ -47,24 +47,24 @@ export interface StdPricingPlanSelectedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPricingConfig {
-  /** Default: `"none"` */
-  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
-  /** Default: `"background"` */
-  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
-  /** Default: `"none"` */
-  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `false` */
+  texture?: boolean;
   /** Default: `""` */
-  footnote?: string;
+  lede?: string;
+  /** Default: `[{"actionHref":"#","actionLabel":"Start free","summary":"For trying things out.","name":"Starter","period":"/month","features":["1 project","Community support"],"price":"$0"},{"actionHref":"#","features":["Unlimited projects","Shared workspace","Priority support"],"actionLabel":"Choose Team","period":"/month","highlighted":true,"name":"Team","badge":"Popular","summary":"For teams shipping every week.","price":"$29"}]` */
+  plans?: EntityRow[];
   /** Default: `""` */
   heading?: string;
   /** Default: `""` */
-  lede?: string;
-  /** Default: `[{"actionHref":"#","actionLabel":"Start free","features":["1 project","Community support"],"name":"Starter","period":"/month","price":"$0","summary":"For trying things out."},{"actionHref":"#","actionLabel":"Choose Team","badge":"Popular","features":["Unlimited projects","Shared workspace","Priority support"],"highlighted":true,"name":"Team","period":"/month","price":"$29","summary":"For teams shipping every week."}]` */
-  plans?: EntityRow[];
+  footnote?: string;
+  /** Default: `"none"` */
+  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `"none"` */
+  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   /** Default: `"plain"` */
   surface?: 'plain' | 'muted' | 'accent' | 'inverse';
-  /** Default: `false` */
-  texture?: boolean;
+  /** Default: `"background"` */
+  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
 }
 
 /**

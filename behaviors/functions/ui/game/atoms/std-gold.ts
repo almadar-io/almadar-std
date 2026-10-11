@@ -46,12 +46,12 @@ export interface StdGoldGoldChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdGoldConfig {
-  /** Default: `true` */
-  running?: boolean;
-  /** Default: `0` */
-  startGold?: number;
   /** Default: `25` */
   yieldAmount?: number;
+  /** Default: `0` */
+  startGold?: number;
+  /** Default: `true` */
+  running?: boolean;
 }
 
 /**

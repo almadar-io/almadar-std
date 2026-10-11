@@ -16,7 +16,7 @@ import type {
   JsonValue,
 } from '@almadar/core';
 import { loadGoldenOrb } from './exports-reader.js';
-import { resolveStdDataDir } from './data-dir.js';
+import { resolveStdDeclaredFile } from './data-dir.js';
 
 // Import registry data directly — bundlers inline this at build time.
 // Falls back to fs read for dev mode (unbundled).
@@ -38,9 +38,7 @@ function loadRegistryData(): Promise<{ behaviors: Record<string, unknown> }> {
 async function loadRegistryDataUncached(): Promise<{ behaviors: Record<string, unknown> }> {
   try {
     const { readFileSync } = await import('fs');
-    const { resolve } = await import('path');
-    const dir = await resolveStdDataDir();
-    const raw = readFileSync(resolve(dir, 'behaviors-registry.json'), 'utf-8');
+    const raw = readFileSync(await resolveStdDeclaredFile('index', 'behaviors-registry.json'), 'utf-8');
     return JSON.parse(raw) as { behaviors: Record<string, unknown> };
   } catch {
     return { behaviors: {} };

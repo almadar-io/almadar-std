@@ -286,28 +286,28 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
     name: 'DataErasureOrbital',
     uses: [
       {
-        'as': 'Spinner',
         'from': 'std/behaviors/ui-spinner',
+        'as': 'Spinner',
       },
       {
-        'as': 'Typography',
         'from': 'std/behaviors/ui-typography',
+        'as': 'Typography',
       },
       {
-        'as': 'Icon',
         'from': 'std/behaviors/ui-icon',
+        'as': 'Icon',
       },
       {
-        'as': 'Button',
         'from': 'std/behaviors/ui-button',
+        'as': 'Button',
       },
       {
-        'as': 'Divider',
         'from': 'std/behaviors/ui-divider',
+        'as': 'Divider',
       },
       {
-        'as': 'Alert',
         'from': 'std/behaviors/ui-alert',
+        'as': 'Alert',
       },
     ],
     entity: {
@@ -318,70 +318,70 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'subjectId',
+            'type': 'string',
             'default': '',
             'description': 'Unique identifier for the data subject.',
-            'name': 'subjectId',
             'synonyms': 'data subject ID, identifier, user ID',
-            'type': 'string',
           },
           {
+            'name': 'targetEntity',
+            'type': 'string',
             'default': '',
             'description': 'The entity or system affected by the erasure request.',
-            'name': 'targetEntity',
             'synonyms': 'affected entity, target system, destination',
-            'type': 'string',
           },
           {
-            'default': 'pending',
-            'description': 'Current state of the erasure request.',
             'name': 'status',
-            'synonyms': 'state, lifecycle, condition',
             'type': 'string',
+            'default': 'pending',
             'values': [
               'pending',
               'grace',
               'executed',
               'cancelled',
             ],
+            'description': 'Current state of the erasure request.',
+            'synonyms': 'state, lifecycle, condition',
           },
           {
+            'name': 'requestedAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when the erasure request was initially submitted.',
-            'name': 'requestedAt',
             'synonyms': 'submission time, creation time, request date',
-            'type': 'number',
           },
           {
-            'default': 0,
-            'description': 'Timestamp indicating when the erasure process completed.',
             'name': 'executesAt',
-            'synonyms': 'completion time, finish time, end time',
             'type': 'number',
-          },
-          {
             'default': 0,
             'description': 'Timestamp indicating when the erasure process completed.',
-            'name': 'executedAt',
             'synonyms': 'completion time, finish time, end time',
-            'type': 'number',
           },
           {
+            'name': 'executedAt',
+            'type': 'number',
+            'default': 0,
+            'description': 'Timestamp indicating when the erasure process completed.',
+            'synonyms': 'completion time, finish time, end time',
+          },
+          {
+            'name': 'cancelledAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp when the erasure request was cancelled.',
-            'name': 'cancelledAt',
             'synonyms': 'cancellation time, cancelled timestamp, cancel date',
-            'type': 'number',
           },
           {
+            'name': 'notes',
+            'type': 'string',
             'default': '',
             'description': 'Free-form text providing additional information or context.',
-            'name': 'notes',
             'synonyms': 'comment, remark, description, details',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -392,208 +392,111 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
     } as Entity,
     traits: [
       makeTraitRef({
-        'linkedEntity': 'ErasureRequest',
-        'name': 'LoadingSpinner',
         'ref': ('Spinner.traits.SpinnerRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
+        'name': 'LoadingSpinner',
+        'linkedEntity': 'ErasureRequest',
       }),
       makeTraitRef({
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
+        'name': 'ErrorSpinner',
+        'linkedEntity': 'ErasureRequest',
         'config': {
           'size': {
-            'default': 'sm',
             'type': 'unknown',
+            'default': 'sm',
           },
         },
-        'linkedEntity': 'ErasureRequest',
-        'name': 'ErrorSpinner',
-        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
+        'name': 'LoadingText',
+        'linkedEntity': 'ErasureRequest',
         'config': {
           'color': {
+            'type': 'unknown',
             'default': 'muted',
-            'type': 'unknown',
-          },
-          'content': {
-            'default': 'Loading erasure requests…',
-            'type': 'unknown',
           },
           'variant': {
-            'default': 'caption',
             'type': 'unknown',
+            'default': 'caption',
+          },
+          'content': {
+            'type': 'unknown',
+            'default': 'Loading erasure requests…',
           },
         },
-        'linkedEntity': 'ErasureRequest',
-        'name': 'LoadingText',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Icon.traits.IconRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
+        'name': 'Trash2Icon',
+        'linkedEntity': 'ErasureRequest',
         'config': {
           'name': {
-            'default': 'trash-2',
             'type': 'unknown',
+            'default': 'trash-2',
           },
         },
-        'linkedEntity': 'ErasureRequest',
-        'name': 'Trash2Icon',
-        'ref': ('Icon.traits.IconRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
+        'name': 'ErasureRequestsTitle',
+        'linkedEntity': 'ErasureRequest',
         'config': {
           'content': {
-            'default': 'Erasure requests',
             'type': 'unknown',
+            'default': 'Erasure requests',
           },
           'variant': {
-            'default': 'h3',
             'type': 'unknown',
+            'default': 'h3',
           },
         },
-        'linkedEntity': 'ErasureRequest',
-        'name': 'ErasureRequestsTitle',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
+        'name': 'CloseButton',
+        'linkedEntity': 'ErasureRequest',
         'config': {
           'action': {
-            'default': 'CLOSE',
             'type': 'unknown',
+            'default': 'CLOSE',
+          },
+          'variant': {
+            'type': 'unknown',
+            'default': 'ghost',
           },
           'icon': {
-            'default': 'x',
             'type': 'unknown',
+            'default': 'x',
           },
           'label': {
+            'type': 'unknown',
             'default': 'Close',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'ghost',
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'ErasureRequest',
-        'name': 'CloseButton',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
       }),
       makeTraitRef({
-        'linkedEntity': 'ErasureRequest',
-        'name': 'ErasureDivider',
         'ref': ('Divider.traits.DividerRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
+        'name': 'ErasureDivider',
+        'linkedEntity': 'ErasureRequest',
       }),
       makeTraitRef({
+        'ref': ('Alert.traits.AlertRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
+        'name': 'ErrorAlert',
+        'linkedEntity': 'ErasureRequest',
         'config': {
-          'message': {
-            'default': '@payload.error',
-            'type': 'unknown',
-          },
           'variant': {
-            'default': 'error',
             'type': 'unknown',
+            'default': 'error',
+          },
+          'message': {
+            'type': 'unknown',
+            'default': '@payload.error',
           },
         },
-        'linkedEntity': 'ErasureRequest',
-        'name': 'ErrorAlert',
-        'ref': ('Alert.traits.AlertRender' satisfies _StdDataErasureDataErasureOrbitalUsesRef),
       }),
       {
-        'capabilities': [
-          'compliance',
-          'erasure',
-        ],
-        'category': 'interaction',
-        'config': {
-          'enabled': {
-            'default': false,
-            'description': 'Let people request that their data be permanently removed. Off by default.',
-            'label': 'Allow data erasure (GDPR)',
-            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, gdpr, erasure, right to be forgotten, data deletion, scheduled deletion, retention purge, account deletion, anonymize user data, scrub PII, delete user data',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'itemActions': {
-            'default': [
-              {
-                'event': 'CANCEL_ERASURE',
-                'icon': 'x',
-                'label': 'Cancel',
-                'variant': 'secondary',
-              },
-            ],
-            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Row actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'reviewSlot': {
-            'default': 'modal',
-            'description': 'UI slot the erasure-requests queue renders into. Defaults to the modal overlay so it never seizes the host\'s main content; summoned via OPEN, cleared via CLOSE.',
-            'label': 'Review slot',
-            'tier': 'internal',
-            'type': 'slot',
-          },
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Visual treatment for the erasure-requests data table.',
-            'label': 'Erasure queue table style',
-            'synonyms': 'table style, grid look, compact, spacious',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'targetEntity': {
-            'default': '',
-            'description': 'Entity name whose records erasure requests apply to (e.g. \'CustomerAccount\').',
-            'label': 'Target entity',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
-        },
+        'name': 'ErasureWorkflow',
         'effectRow': [
           {
             'kind': 'emit',
@@ -614,8 +517,8 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.reviewSlot',
+            'resolved': false,
           },
           {
             'kind': 'render-ui',
@@ -642,24 +545,32 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
             'site': 'tick',
           },
         ],
+        'category': 'interaction',
+        'capabilities': [
+          'compliance',
+          'erasure',
+        ],
+        'linkedEntity': 'ErasureRequest',
         'emits': [
           {
-            'description': 'Signals a request cancellation during its processing lifecycle.',
             'event': 'CANCEL_ERASURE',
+            'description': 'Signals a request cancellation during its processing lifecycle.',
+            'synonyms': 'abort, revoke, undo, terminate',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'ErasureRequest',
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'subjectId',
@@ -672,6 +583,12 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'grace',
+                      'executed',
+                      'cancelled',
+                    ],
                   },
                   {
                     'name': 'requestedAt',
@@ -694,30 +611,30 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                     'type': 'string',
                   },
                 ],
-                'type': 'object',
+                'entity': 'ErasureRequest',
               },
             ],
-            'synonyms': 'abort, revoke, undo, terminate',
-            'tier': 'domain',
           },
           {
-            'description': 'Dismisses the erasure-requests overlay.',
             'event': 'CLOSE',
+            'description': 'Dismisses the erasure-requests overlay.',
             'synonyms': 'dismiss, hide, cancel, done',
             'tier': 'domain',
           },
           {
-            'description': 'Indicates that erasure request data has been successfully loaded.',
             'event': 'ErasureLoaded',
+            'description': 'Indicates that erasure request data has been successfully loaded.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ErasureRequest',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'subjectId',
@@ -730,6 +647,12 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'grace',
+                      'executed',
+                      'cancelled',
+                    ],
                   },
                   {
                     'name': 'requestedAt',
@@ -752,15 +675,15 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ErasureRequest',
               },
             ],
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates failure to load erasure request data.',
             'event': 'ErasureLoadFailed',
+            'description': 'Indicates failure to load erasure request data.',
+            'synonyms': 'load error, failed load, data error',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -771,18 +694,18 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                 'type': 'string',
               },
             ],
-            'synonyms': 'load error, failed load, data error',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates a new erasure request has been successfully saved.',
             'event': 'ErasureSaved',
-            'payloadEntity': 'ErasureRequest',
+            'description': 'Indicates a new erasure request has been successfully saved.',
+            'synonyms': 'created, added, persisted',
+            'tier': 'domain',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'subjectId',
@@ -795,6 +718,12 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
               {
                 'name': 'status',
                 'type': 'string',
+                'values': [
+                  'pending',
+                  'grace',
+                  'executed',
+                  'cancelled',
+                ],
               },
               {
                 'name': 'requestedAt',
@@ -817,13 +746,13 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'created, added, persisted',
-            'tier': 'domain',
+            'payloadEntity': 'ErasureRequest',
           },
           {
-            'description': 'Indicates that saving the erasure request failed.',
             'event': 'ErasureSaveFailed',
+            'description': 'Indicates that saving the erasure request failed.',
+            'synonyms': 'failed, error, unsuccessful',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -834,12 +763,13 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                 'type': 'string',
               },
             ],
-            'synonyms': 'failed, error, unsuccessful',
-            'tier': 'internal',
           },
           {
-            'description': 'Instructs the target atom to perform the actual delete or PII scrub for a request whose grace period has elapsed.',
             'event': 'ExecuteErasure',
+            'description': 'Instructs the target atom to perform the actual delete or PII scrub for a request whose grace period has elapsed.',
+            'synonyms': 'execute, perform erasure, delete now, scrub, finalize erasure',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'requestId',
@@ -854,22 +784,21 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'execute, perform erasure, delete now, scrub, finalize erasure',
-            'tier': 'domain',
           },
           {
-            'description': 'Internal: grace requests due for execution.',
             'event': 'ExecScanLoaded',
+            'description': 'Internal: grace requests due for execution.',
+            'synonyms': 'scan loaded, due requests',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ErasureRequest',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'subjectId',
@@ -882,6 +811,12 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'pending',
+                      'grace',
+                      'executed',
+                      'cancelled',
+                    ],
                   },
                   {
                     'name': 'requestedAt',
@@ -904,15 +839,15 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ErasureRequest',
               },
             ],
-            'synonyms': 'scan loaded, due requests',
-            'tier': 'internal',
           },
           {
-            'description': 'Internal: execution scan failed.',
             'event': 'ExecScanFailed',
+            'description': 'Internal: execution scan failed.',
+            'synonyms': 'scan error, scan failed',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -923,44 +858,59 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                 'type': 'string',
               },
             ],
-            'synonyms': 'scan error, scan failed',
-            'tier': 'internal',
           },
           {
-            'description': 'Internal: one request executed; advances the scan loop.',
             'event': 'ExecStepped',
+            'description': 'Internal: one request executed; advances the scan loop.',
+            'synonyms': 'stepped, next',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'synonyms': 'stepped, next',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'ErasureRequest',
-        'name': 'ErasureWorkflow',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'execScanning',
+            },
+            {
+              'name': 'loading',
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates that erasure request data has been successfully loaded.',
               'key': 'ErasureLoaded',
               'name': 'Erasure loaded',
+              'description': 'Indicates that erasure request data has been successfully loaded.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'ErasureRequest',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'subjectId',
@@ -973,6 +923,12 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'grace',
+                        'executed',
+                        'cancelled',
+                      ],
                     },
                     {
                       'name': 'requestedAt',
@@ -995,16 +951,16 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'ErasureRequest',
                 },
               ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates failure to load erasure request data.',
               'key': 'ErasureLoadFailed',
               'name': 'Erasure load failed',
+              'description': 'Indicates failure to load erasure request data.',
+              'synonyms': 'load error, failed load, data error',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1015,29 +971,29 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'type': 'string',
                 },
               ],
-              'synonyms': 'load error, failed load, data error',
-              'tier': 'internal',
             },
             {
-              'description': 'Summons the erasure-requests queue (host nav/affordance requests it).',
               'key': 'OPEN',
               'name': 'Open',
+              'description': 'Summons the erasure-requests queue (host nav/affordance requests it).',
               'synonyms': 'open, show, review, view queue, erasure requests',
               'tier': 'domain',
             },
             {
-              'description': 'Internal: grace requests due for execution.',
               'key': 'ExecScanLoaded',
               'name': 'Exec scan loaded',
+              'description': 'Internal: grace requests due for execution.',
+              'synonyms': 'scan loaded, due requests',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'ErasureRequest',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'subjectId',
@@ -1050,6 +1006,12 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'grace',
+                        'executed',
+                        'cancelled',
+                      ],
                     },
                     {
                       'name': 'requestedAt',
@@ -1072,16 +1034,16 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'ErasureRequest',
                 },
               ],
-              'synonyms': 'scan loaded, due requests',
-              'tier': 'internal',
             },
             {
-              'description': 'Internal: execution scan failed.',
               'key': 'ExecScanFailed',
               'name': 'Exec scan failed',
+              'description': 'Internal: execution scan failed.',
+              'synonyms': 'scan error, scan failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1092,47 +1054,47 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'type': 'string',
                 },
               ],
-              'synonyms': 'scan error, scan failed',
-              'tier': 'internal',
             },
             {
-              'description': 'Internal: one request executed; advances the scan loop.',
               'key': 'ExecStepped',
               'name': 'Exec stepped',
+              'description': 'Internal: one request executed; advances the scan loop.',
+              'synonyms': 'stepped, next',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'stepped, next',
-              'tier': 'internal',
             },
             {
-              'description': 'Dismisses the erasure-requests overlay.',
               'key': 'CLOSE',
               'name': 'Close',
+              'description': 'Dismisses the erasure-requests overlay.',
               'synonyms': 'dismiss, hide, cancel, done',
               'tier': 'domain',
             },
             {
-              'description': 'Signals a request cancellation during its processing lifecycle.',
               'key': 'CANCEL_ERASURE',
               'name': 'Cancel Erasure',
+              'description': 'Signals a request cancellation during its processing lifecycle.',
+              'synonyms': 'abort, revoke, undo, terminate',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
-                  'entity': 'ErasureRequest',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'subjectId',
@@ -1145,6 +1107,12 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'pending',
+                        'grace',
+                        'executed',
+                        'cancelled',
+                      ],
                     },
                     {
                       'name': 'requestedAt',
@@ -1167,22 +1135,21 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
+                  'entity': 'ErasureRequest',
                 },
               ],
-              'synonyms': 'abort, revoke, undo, terminate',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a new erasure request has been successfully saved.',
               'key': 'ErasureSaved',
               'name': 'Erasure saved',
-              'payloadEntity': 'ErasureRequest',
+              'description': 'Indicates a new erasure request has been successfully saved.',
+              'synonyms': 'created, added, persisted',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'subjectId',
@@ -1195,6 +1162,12 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                 {
                   'name': 'status',
                   'type': 'string',
+                  'values': [
+                    'pending',
+                    'grace',
+                    'executed',
+                    'cancelled',
+                  ],
                 },
                 {
                   'name': 'requestedAt',
@@ -1217,13 +1190,14 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'type': 'string',
                 },
               ],
-              'synonyms': 'created, added, persisted',
-              'tier': 'domain',
+              'payloadEntity': 'ErasureRequest',
             },
             {
-              'description': 'Indicates that saving the erasure request failed.',
               'key': 'ErasureSaveFailed',
               'name': 'Erasure save failed',
+              'description': 'Indicates that saving the erasure request failed.',
+              'synonyms': 'failed, error, unsuccessful',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1234,13 +1208,13 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'type': 'string',
                 },
               ],
-              'synonyms': 'failed, error, unsuccessful',
-              'tier': 'internal',
             },
             {
-              'description': 'Instructs the target atom to perform the actual delete or PII scrub for a request whose grace period has elapsed.',
               'key': 'ExecuteErasure',
               'name': 'Execute erasure',
+              'description': 'Instructs the target atom to perform the actual delete or PII scrub for a request whose grace period has elapsed.',
+              'synonyms': 'execute, perform erasure, delete now, scrub, finalize erasure',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'requestId',
@@ -1255,30 +1229,13 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'type': 'string',
                 },
               ],
-              'synonyms': 'execute, perform erasure, delete now, scrub, finalize erasure',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'execScanning',
-            },
-            {
-              'name': 'loading',
-            },
-            {
-              'name': 'browsing',
-            },
-            {
-              'name': 'error',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1291,45 +1248,46 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
               'event': 'ErasureLoaded',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ErasureLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Couldn\'t load the erasure queue — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
+                    'dismissible': true,
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'ErasureLoadFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'loading',
+              'event': 'OPEN',
+              'guard': '@config.enabled',
               'effects': [
                 [
                   'fetch',
                   ('ErasureRequest' satisfies _StdDataErasureEntityName),
                   {
                     'emit': {
-                      'failure': 'ErasureLoadFailed',
                       'success': 'ErasureLoaded',
+                      'failure': 'ErasureLoadFailed',
                     },
                   },
                 ],
@@ -1337,24 +1295,35 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'render-ui',
                   '@config.reviewSlot',
                   {
+                    'gap': 'md',
+                    'className': 'py-12',
                     'align': 'center',
+                    'direction': 'vertical',
                     'children': [
                       '@trait.LoadingSpinner',
                       '@trait.LoadingText',
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'OPEN',
-              'from': 'idle',
-              'guard': '@config.enabled',
-              'to': 'loading',
             },
             {
+              'from': 'idle',
+              'to': 'execScanning',
+              'event': 'ExecScanLoaded',
+              'guard': [
+                'and',
+                '@config.enabled',
+                [
+                  '>',
+                  [
+                    'array/len',
+                    '@payload.data',
+                  ],
+                  0,
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -1400,9 +1369,9 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'emit',
                   'ExecuteErasure',
                   {
-                    'requestId': '@entity.id',
-                    'subjectId': '@entity.subjectId',
                     'targetEntity': '@entity.targetEntity',
+                    'subjectId': '@entity.subjectId',
+                    'requestId': '@entity.id',
                   },
                 ],
                 [
@@ -1416,31 +1385,17 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   },
                   {
                     'emit': {
-                      'failure': 'ExecScanFailed',
                       'success': 'ExecStepped',
+                      'failure': 'ExecScanFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ExecScanLoaded',
-              'from': 'idle',
-              'guard': [
-                'and',
-                '@config.enabled',
-                [
-                  '>',
-                  [
-                    'array/len',
-                    '@payload.data',
-                  ],
-                  0,
-                ],
-              ],
-              'to': 'execScanning',
             },
             {
-              'event': 'ExecScanLoaded',
               'from': 'idle',
+              'to': 'idle',
+              'event': 'ExecScanLoaded',
               'guard': [
                 '=',
                 [
@@ -1449,39 +1404,37 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                 ],
                 0,
               ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ExecScanFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
+                    'variant': 'error',
+                    'type': 'alert',
                     'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t scan for erasures to execute — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'ExecScanFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'execScanning',
+              'to': 'execScanning',
+              'event': 'ExecStepped',
               'effects': [
                 [
                   'fetch',
                   ('ErasureRequest' satisfies _StdDataErasureEntityName),
                   {
-                    'emit': {
-                      'failure': 'ExecScanFailed',
-                      'success': 'ExecScanLoaded',
-                    },
                     'filter': [
                       'and',
                       [
@@ -1503,14 +1456,26 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                         '@now',
                       ],
                     ],
+                    'emit': {
+                      'success': 'ExecScanLoaded',
+                      'failure': 'ExecScanFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'ExecStepped',
-              'from': 'execScanning',
-              'to': 'execScanning',
             },
             {
+              'from': 'execScanning',
+              'to': 'execScanning',
+              'event': 'ExecScanLoaded',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'set',
@@ -1557,8 +1522,8 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'ExecuteErasure',
                   {
                     'requestId': '@entity.id',
-                    'subjectId': '@entity.subjectId',
                     'targetEntity': '@entity.targetEntity',
+                    'subjectId': '@entity.subjectId',
                   },
                 ],
                 [
@@ -1566,33 +1531,23 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'update',
                   ('ErasureRequest' satisfies _StdDataErasureEntityName),
                   {
-                    'executedAt': '@now',
-                    'id': '@entity.id',
                     'status': 'executed',
+                    'id': '@entity.id',
+                    'executedAt': '@now',
                   },
                   {
                     'emit': {
-                      'failure': 'ExecScanFailed',
                       'success': 'ExecStepped',
+                      'failure': 'ExecScanFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ExecScanLoaded',
-              'from': 'execScanning',
-              'guard': [
-                '>',
-                [
-                  'array/len',
-                  '@payload.data',
-                ],
-                0,
-              ],
-              'to': 'execScanning',
             },
             {
-              'event': 'ExecScanLoaded',
               'from': 'execScanning',
+              'to': 'idle',
+              'event': 'ExecScanLoaded',
               'guard': [
                 '=',
                 [
@@ -1601,78 +1556,64 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                 ],
                 0,
               ],
-              'to': 'idle',
             },
             {
+              'from': 'execScanning',
+              'to': 'idle',
+              'event': 'ExecScanFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
                     'dismissible': true,
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Couldn\'t scan for erasures to execute — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'ExecScanFailed',
-              'from': 'execScanning',
-              'to': 'idle',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'ErasureLoaded',
               'effects': [
                 [
                   'render-ui',
                   '@config.reviewSlot',
                   {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'align': 'center',
                         'children': [
                           {
+                            'type': 'stack',
                             'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               '@trait.Trash2Icon',
                               '@trait.ErasureRequestsTitle',
                             ],
                             'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
                           },
                           '@trait.CloseButton',
                         ],
+                        'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'sm',
                         'justify': 'between',
-                        'type': 'stack',
                       },
                       '@trait.ErasureDivider',
                       {
-                        'cols': 1,
-                        'entity': '@payload.data',
-                        'fields': [
-                          {
-                            'label': 'Subject',
-                            'name': 'subjectId',
-                            'variant': 'caption',
-                          },
-                          {
-                            'label': 'Status',
-                            'name': 'status',
-                            'variant': 'badge',
-                          },
-                          {
-                            'label': 'Executes',
-                            'name': 'executesAt',
-                            'variant': 'caption',
-                          },
-                        ],
-                        'gap': 'sm',
+                        'type': 'data-grid',
                         'itemActions': [
                           'array/filter',
                           '@config.itemActions',
@@ -1707,38 +1648,54 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                             ],
                           ],
                         ],
+                        'fields': [
+                          {
+                            'name': 'subjectId',
+                            'label': 'Subject',
+                            'variant': 'caption',
+                          },
+                          {
+                            'variant': 'badge',
+                            'name': 'status',
+                            'label': 'Status',
+                          },
+                          {
+                            'name': 'executesAt',
+                            'label': 'Executes',
+                            'variant': 'caption',
+                          },
+                        ],
+                        'gap': 'sm',
                         'look': '@config.tableLook',
-                        'type': 'data-grid',
+                        'cols': 1,
+                        'entity': '@payload.data',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'ErasureLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'ErasureLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   '@config.reviewSlot',
                   {
+                    'type': 'stack',
                     'children': [
                       '@trait.ErrorAlert',
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'ErasureLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'loading',
+              'to': 'idle',
+              'event': 'CLOSE',
               'effects': [
                 [
                   'render-ui',
@@ -1746,11 +1703,11 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   null,
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'loading',
-              'to': 'idle',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'CANCEL_ERASURE',
               'effects': [
                 [
                   'set',
@@ -1769,17 +1726,17 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   '@entity',
                   {
                     'emit': {
-                      'failure': 'ErasureSaveFailed',
                       'success': 'ErasureSaved',
+                      'failure': 'ErasureSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'CANCEL_ERASURE',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'ErasureSaved',
               'effects': [
                 [
                   'fetch',
@@ -1792,11 +1749,11 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   },
                 ],
               ],
-              'event': 'ErasureSaved',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ErasureSaveFailed',
               'effects': [
                 [
                   'render-ui',
@@ -1809,11 +1766,11 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   },
                 ],
               ],
-              'event': 'ErasureSaveFailed',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'idle',
+              'event': 'CLOSE',
               'effects': [
                 [
                   'render-ui',
@@ -1821,19 +1778,19 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   null,
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'browsing',
-              'to': 'idle',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'OPEN',
               'effects': [
                 [
                   'fetch',
                   ('ErasureRequest' satisfies _StdDataErasureEntityName),
                   {
                     'emit': {
-                      'failure': 'ErasureLoadFailed',
                       'success': 'ErasureLoaded',
+                      'failure': 'ErasureLoadFailed',
                     },
                   },
                 ],
@@ -1848,11 +1805,11 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   },
                 ],
               ],
-              'event': 'OPEN',
-              'from': 'error',
-              'to': 'loading',
             },
             {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'CLOSE',
               'effects': [
                 [
                   'render-ui',
@@ -1860,14 +1817,13 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   null,
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'error',
-              'to': 'idle',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'executionScan',
+            'interval': '0 * * * *',
             'effects': [
               [
                 'fetch',
@@ -1901,11 +1857,103 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                 },
               ],
             ],
-            'interval': '0 * * * *',
-            'name': 'executionScan',
             'runsInBackground': true,
           },
         ],
+        'config': {
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Erasure queue table style',
+            'description': 'Visual treatment for the erasure-requests data table.',
+            'synonyms': 'table style, grid look, compact, spacious',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'itemActions': {
+            'type': '[ItemAction]',
+            'default': [
+              {
+                'label': 'Cancel',
+                'icon': 'x',
+                'variant': 'secondary',
+                'event': 'CANCEL_ERASURE',
+              },
+            ],
+            'label': 'Row actions',
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'targetEntity': {
+            'type': 'string',
+            'default': '',
+            'label': 'Target entity',
+            'description': 'Entity name whose records erasure requests apply to (e.g. \'CustomerAccount\').',
+            'tier': 'internal',
+          },
+          'reviewSlot': {
+            'type': 'slot',
+            'default': 'modal',
+            'label': 'Review slot',
+            'description': 'UI slot the erasure-requests queue renders into. Defaults to the modal overlay so it never seizes the host\'s main content; summoned via OPEN, cleared via CLOSE.',
+            'tier': 'internal',
+          },
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Allow data erasure (GDPR)',
+            'description': 'Let people request that their data be permanently removed. Off by default.',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, gdpr, erasure, right to be forgotten, data deletion, scheduled deletion, retention purge, account deletion, anonymize user data, scrub PII, delete user data',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

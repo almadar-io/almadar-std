@@ -94,73 +94,73 @@ export interface StdUiCanvasMovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCanvasConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  backgroundColor?: string;
-  backgroundImage?: unknown;
-  camera?: EntityRow;
   children?: PatternValue;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `[]` */
-  drawables?: PatternValue[];
-  editable?: boolean;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `"FEATURE_CLICK"` */
-  featureClickEvent?: string;
-  fit?: boolean;
-  /** Default: `[]` */
-  fogOfWar?: unknown;
-  isLoading?: boolean;
-  /** Default: `{"item":"INIT"}` */
-  keyMap?: Record<string, TraitConfig>;
-  /** Default: `{"item":"INIT"}` */
-  keyUpMap?: Record<string, TraitConfig>;
-  lang?: string;
-  lighting?: EntityRow;
-  /** Default: `"2d"` */
-  mode?: '2d' | '3d';
-  /** Default: `"MOVE"` */
-  moveEvent?: string;
-  /** Default: `"MOVE"` */
-  onMove?: string;
-  /** Default: `"SELECT"` */
-  onSelect?: string;
-  pixelsPerUnit?: number;
-  post?: EntityRow;
-  projection?: 'isometric' | 'hex' | 'flat' | 'free' | 'side';
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaLabel?: string;
+  ariaExpanded?: boolean;
   /** Default: `"SELECT"` */
   selectEvent?: string;
-  selectedId?: string;
-  shadows?: boolean;
-  showCoordinates?: boolean;
-  showGrid?: boolean;
-  showMinimap?: boolean;
-  showTileInfo?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  projection?: 'isometric' | 'hex' | 'flat' | 'free' | 'side';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaDescribedby?: string;
+  isLoading?: boolean;
+  /** Default: `"MOVE"` */
+  moveEvent?: string;
   tabIndex?: number;
-  /** Default: `"TILE_CLICK"` */
-  tileClickEvent?: string;
+  unitScale?: number;
+  /** Default: `{"item":"INIT"}` */
+  keyUpMap?: Record<string, TraitConfig>;
+  showCoordinates?: boolean;
+  pixelsPerUnit?: number;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"TILE_HOVER"` */
   tileHoverEvent?: string;
-  /** Default: `"TILE_LEAVE"` */
-  tileLeaveEvent?: string;
-  tileWidth?: number;
+  worldHeight?: number;
+  ariaHidden?: boolean;
+  /** Default: `[]` */
+  fogOfWar?: unknown;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `"SELECT"` */
+  onSelect?: string;
+  editable?: boolean;
+  showGrid?: boolean;
+  className?: string;
+  worldWidth?: number;
+  /** Default: `"TILE_CLICK"` */
+  tileClickEvent?: string;
+  backgroundImage?: unknown;
+  fit?: boolean;
+  selectedId?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   /** Default: `"UNIT_CLICK"` */
   unitClickEvent?: string;
-  unitScale?: number;
-  worldHeight?: number;
-  worldWidth?: number;
+  lighting?: EntityRow;
+  showTileInfo?: boolean;
+  /** Default: `"TILE_LEAVE"` */
+  tileLeaveEvent?: string;
+  /** Default: `"2d"` */
+  mode?: '2d' | '3d';
+  backgroundColor?: string;
+  shadows?: boolean;
+  post?: EntityRow;
+  ariaSelected?: boolean;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  tileWidth?: number;
+  ariaBusy?: boolean;
+  /** Default: `"MOVE"` */
+  onMove?: string;
+  enterDelay?: number;
+  /** Default: `{"item":"INIT"}` */
+  keyMap?: Record<string, TraitConfig>;
+  lang?: string;
+  showMinimap?: boolean;
+  ariaLabelledby?: string;
+  /** Default: `[]` */
+  drawables?: PatternValue[];
+  /** Default: `"FEATURE_CLICK"` */
+  featureClickEvent?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  camera?: EntityRow;
 }
 
 /**

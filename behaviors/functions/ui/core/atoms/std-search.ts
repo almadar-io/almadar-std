@@ -46,10 +46,10 @@ export interface StdSearchSearchPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSearchConfig {
-  /** Default: `"SEARCH"` */
-  event?: string;
   /** Default: `"Search…"` */
   placeholder?: string;
+  /** Default: `"SEARCH"` */
+  event?: string;
 }
 
 /**
@@ -181,14 +181,14 @@ export function stdSearchSearchResultOrbital(params: StdSearchSearchResultOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'The text entered by the user in the search field.',
             'name': 'searchTerm',
-            'synonyms': 'query, search term, input, text',
             'type': 'string',
+            'description': 'The text entered by the user in the search field.',
+            'synonyms': 'query, search term, input, text',
           },
         ];
         const extras = params.fields ?? [];
@@ -199,22 +199,13 @@ export function stdSearchSearchResultOrbital(params: StdSearchSearchResultOrbita
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'event': {
-            'default': 'SEARCH',
-            'description': 'Event emitted when the user submits a query',
-            'label': 'Search event',
-            'tier': 'internal',
-            'type': 'event',
-          },
-          'placeholder': {
-            'default': 'Search…',
-            'description': 'Hint text shown inside the empty search input',
-            'label': 'Placeholder text',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'SearchResultSearch',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'searchTerm',
+          ],
         },
         'effectRow': [
           {
@@ -226,77 +217,72 @@ export function stdSearchSearchResultOrbital(params: StdSearchSearchResultOrbita
             'resource': '@entity.searchTerm',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'SearchResult',
         'emits': [
           {
-            'description': 'Initiates a search operation based on the input term.',
             'event': 'SEARCH',
+            'description': 'Initiates a search operation based on the input term.',
+            'synonyms': 'query, lookup, find',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'searchTerm',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'query, lookup, find',
-            'tier': 'domain',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'searchTerm',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'SearchResult',
-        'name': 'SearchResultSearch',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Initiates a search operation based on the input term.',
               'key': 'SEARCH',
               'name': 'Search',
+              'description': 'Initiates a search operation based on the input term.',
+              'synonyms': 'query, lookup, find',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'searchTerm',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'query, lookup, find',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'event': '@config.event',
                     'placeholder': '@config.placeholder',
                     'type': 'search-input',
+                    'event': '@config.event',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'SEARCH',
               'effects': [
                 [
                   'set',
@@ -307,18 +293,32 @@ export function stdSearchSearchResultOrbital(params: StdSearchSearchResultOrbita
                   'render-ui',
                   'main',
                   {
-                    'event': '@config.event',
-                    'placeholder': '@config.placeholder',
                     'type': 'search-input',
+                    'placeholder': '@config.placeholder',
+                    'event': '@config.event',
                   },
                 ],
               ],
-              'event': 'SEARCH',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'placeholder': {
+            'type': 'string',
+            'default': 'Search…',
+            'label': 'Placeholder text',
+            'description': 'Hint text shown inside the empty search input',
+            'tier': 'presentation',
+          },
+          'event': {
+            'type': 'event',
+            'default': 'SEARCH',
+            'label': 'Search event',
+            'description': 'Event emitted when the user submits a query',
+            'tier': 'internal',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

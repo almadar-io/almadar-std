@@ -67,83 +67,83 @@ export interface StdUiCodeBlockGoToDefinitionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeBlockConfig {
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  code?: string;
-  /** Default: `[]` */
-  diagnostics?: EntityRow[];
-  diagnosticsCode?: string;
-  /** Default: `[]` */
-  diff?: EntityRow[];
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `false` */
-  editable?: boolean;
-  editorId?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `[]` */
-  files?: EntityRow[];
-  foldable?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  lang?: string;
-  /** Default: `"text"` */
-  language?: string;
-  lineNumbers?: boolean;
-  /** Default: `"60vh"` */
-  maxHeight?: unknown;
   /** Default: `"code"` */
   mode?: 'code' | 'diff';
-  /** Default: `["left","right","up","down","word-forward","word-back","word-end","line-start","line-end","first-nonblank","doc-start","doc-end","paragraph-forward","paragraph-back","line","selection","match-bracket"]` */
-  motions?: string[];
-  newValue?: string;
-  oldValue?: string;
-  /** Default: `"CHANGE"` */
-  onChange?: string;
-  /** Default: `"EDITOR_BLUR"` */
-  onEditorBlur?: string;
-  /** Default: `"EDITOR_FOCUS"` */
-  onEditorFocus?: string;
-  /** Default: `"GO_TO_DEFINITION"` */
-  onGoToDefinition?: string;
-  /** Default: `"INSERT_TEXT"` */
-  onInsertText?: string;
-  /** Default: `"MOTION"` */
-  onMotion?: string;
-  /** Default: `"OPERATE"` */
-  onOperate?: string;
-  /** Default: `"SET_MODE"` */
-  onSetMode?: string;
-  /** Default: `["delete","yank","change","put","put-before","undo","redo","join","toggle-case","indent","dedent","replace"]` */
-  operators?: string[];
-  problems?: number;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  showCopy?: boolean;
+  /** Default: `false` */
+  editable?: boolean;
+  ariaBusy?: boolean;
+  code?: string;
   /** Default: `true` */
   showCopyButton?: boolean;
+  editorId?: string;
+  ariaLabelledby?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  error?: EntityRow;
   /** Default: `true` */
   showLanguageBadge?: boolean;
+  /** Default: `"OPERATE"` */
+  onOperate?: string;
+  enterDelay?: number;
+  title?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  lang?: string;
+  /** Default: `"INSERT_TEXT"` */
+  onInsertText?: string;
+  ariaLabel?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `[]` */
+  diff?: EntityRow[];
+  /** Default: `"CHANGE"` */
+  onChange?: string;
+  className?: string;
+  /** Default: `["delete","yank","change","put","put-before","undo","redo","join","toggle-case","indent","dedent","replace"]` */
+  operators?: string[];
+  ariaHidden?: boolean;
+  foldable?: boolean;
+  /** Default: `["left","right","up","down","word-forward","word-back","word-end","line-start","line-end","first-nonblank","doc-start","doc-end","paragraph-forward","paragraph-back","line","selection","match-bracket"]` */
+  motions?: string[];
+  /** Default: `"MOTION"` */
+  onMotion?: string;
+  /** Default: `"GO_TO_DEFINITION"` */
+  onGoToDefinition?: string;
+  /** Default: `"text"` */
+  language?: string;
+  /** Default: `"EDITOR_FOCUS"` */
+  onEditorFocus?: string;
   /** Default: `false` */
   showLineNumbers?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `false` */
+  isLoading?: boolean;
   tabIndex?: number;
-  title?: string;
+  /** Default: `"60vh"` */
+  maxHeight?: unknown;
+  /** Default: `[]` */
+  files?: EntityRow[];
+  lineNumbers?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  oldValue?: string;
+  newValue?: string;
+  ariaDescribedby?: string;
   /** Default: `""` */
   viewerRole?: string;
+  ariaExpanded?: boolean;
+  problems?: number;
+  showCopy?: boolean;
+  /** Default: `[]` */
+  diagnostics?: EntityRow[];
+  ariaSelected?: boolean;
+  /** Default: `"SET_MODE"` */
+  onSetMode?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `false` */
   wordWrap?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `"EDITOR_BLUR"` */
+  onEditorBlur?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  diagnosticsCode?: string;
 }
 
 /**

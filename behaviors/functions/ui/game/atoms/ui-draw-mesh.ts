@@ -39,33 +39,33 @@ export type StdUiDrawMeshEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawMeshConfig {
-  animation?: EntityRow;
   castShadow?: boolean;
-  depth?: number;
+  segments?: number;
   /** Default: `[]` */
   faces?: unknown;
-  height?: number;
-  material?: EntityRow;
-  opacity?: number;
-  outline?: EntityRow;
-  pivot?: 'bottom' | 'center';
-  /** Default: `{"x":1,"y":1,"z":1}` */
-  position?: EntityRow;
-  radius?: number;
-  radiusBottom?: number;
-  radiusTop?: number;
-  receiveShadow?: boolean;
-  rotation?: unknown;
-  segments?: number;
-  /** Default: `"box"` */
-  shape?: 'box' | 'sphere' | 'capsule' | 'cylinder' | 'cone' | 'torus' | 'plane' | 'circle' | 'polyhedron';
-  skin?: EntityRow;
-  tube?: number;
+  depth?: number;
+  animation?: EntityRow;
   /** Default: `[]` */
   uvs?: unknown;
+  /** Default: `"box"` */
+  shape?: 'box' | 'sphere' | 'capsule' | 'cylinder' | 'cone' | 'torus' | 'plane' | 'circle' | 'polyhedron';
+  pivot?: 'bottom' | 'center';
+  rotation?: unknown;
+  opacity?: number;
+  height?: number;
+  tube?: number;
+  /** Default: `{"z":1,"y":1,"x":1}` */
+  position?: EntityRow;
+  width?: number;
+  skin?: EntityRow;
   /** Default: `[]` */
   vertices?: unknown;
-  width?: number;
+  material?: EntityRow;
+  radius?: number;
+  receiveShadow?: boolean;
+  radiusTop?: number;
+  outline?: EntityRow;
+  radiusBottom?: number;
 }
 
 /**

@@ -38,16 +38,16 @@ export type StdSurvivalBoard3dListenKey = 'MOVE' | 'RESTART' | 'WANDER';
  */
 export interface StdSurvivalBoard3dConfig {
   /** Default: `2` */
-  gridHeight?: unknown;
-  /** Default: `2` */
   gridWidth?: unknown;
+  /** Default: `[{"x":0,"z":0,"passable":true,"id":"t-0-0","terrain":"grass","modelUrl":{"style":"vector","role":"tile","name":"grass","variant":"","dimension":"2d","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","category":"terrain","animations":["static"],"aspect":"1:1","thumbnailUrl":""},"y":0},{"x":0,"y":1,"id":"t-0-1","passable":true,"modelUrl":{"name":"grass","category":"terrain","style":"vector","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","dimension":"2d","aspect":"1:1","variant":"","role":"tile","animations":["static"],"thumbnailUrl":""},"terrain":"grass","z":0},{"z":0,"y":0,"x":1,"passable":true,"terrain":"grass","modelUrl":{"category":"terrain","style":"vector","variant":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","dimension":"2d","name":"grass","aspect":"1:1","role":"tile","thumbnailUrl":"","animations":["static"]},"id":"t-1-0"},{"modelUrl":{"variant":"","aspect":"1:1","dimension":"2d","category":"terrain","name":"grass","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","thumbnailUrl":"","animations":["static"],"role":"tile","style":"vector"},"passable":true,"terrain":"grass","x":1,"z":0,"id":"t-1-1","y":1}]` */
+  tiles?: unknown;
   /** Default: `100` */
   moveBudget?: unknown;
   /** Default: `true` */
   running?: unknown;
-  /** Default: `[{"id":"t-0-0","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","variant":""},"passable":true,"terrain":"grass","x":0,"y":0,"z":0},{"id":"t-0-1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","variant":""},"passable":true,"terrain":"grass","x":0,"y":1,"z":0},{"id":"t-1-0","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","variant":""},"passable":true,"terrain":"grass","x":1,"y":0,"z":0},{"id":"t-1-1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","variant":""},"passable":true,"terrain":"grass","x":1,"y":1,"z":0}]` */
-  tiles?: unknown;
-  /** Default: `[{"health":1,"id":"survivor","maxHealth":1,"modelUrl":{"animations":["idle"],"aspect":"1:1","category":"unit","dimension":"2d","name":"player-unit","role":"player","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","variant":""},"name":"Survivor","position":{"x":1,"y":1},"team":"player","unitType":"survivor","x":1,"y":1,"z":0}]` */
+  /** Default: `2` */
+  gridHeight?: unknown;
+  /** Default: `[{"unitType":"survivor","x":1,"team":"player","z":0,"position":{"x":1,"y":1},"name":"Survivor","id":"survivor","y":1,"maxHealth":1,"modelUrl":{"name":"player-unit","style":"vector","animations":["idle"],"thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","dimension":"2d","variant":"","role":"player","category":"unit","aspect":"1:1"},"health":1}]` */
   units?: unknown;
 }
 
@@ -102,20 +102,20 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
     name: 'SurvivalBoard3DOrbital',
     uses: [
       {
-        'as': 'Nav',
         'from': 'std/behaviors/std-hero-nav',
+        'as': 'Nav',
       },
       {
-        'as': 'Harvest',
         'from': 'std/behaviors/std-gather',
+        'as': 'Harvest',
       },
       {
-        'as': 'Particles',
         'from': 'std/behaviors/std-fx-particles',
+        'as': 'Particles',
       },
       {
-        'as': 'Survival',
         'from': 'std/behaviors/std-survival-flow',
+        'as': 'Survival',
       },
     ],
     entity: {
@@ -126,639 +126,639 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'units',
+            'type': 'array',
             'default': [
               {
-                'health': 1,
-                'id': 'survivor',
                 'maxHealth': 1,
+                'z': 0,
+                'position': {
+                  'y': 1,
+                  'x': 1,
+                },
+                'unitType': 'survivor',
+                'x': 1,
                 'modelUrl': {
+                  'style': 'vector',
+                  'role': 'player',
+                  'variant': '',
+                  'dimension': '2d',
+                  'category': 'unit',
+                  'thumbnailUrl': '',
+                  'aspect': '1:1',
+                  'name': 'player-unit',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'player-unit',
-                  'role': 'player',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
-                  'variant': '',
                 },
                 'name': 'Survivor',
-                'position': {
-                  'x': 1,
-                  'y': 1,
-                },
-                'team': 'player',
-                'unitType': 'survivor',
-                'x': 1,
+                'health': 1,
+                'id': 'survivor',
                 'y': 1,
-                'z': 0,
+                'team': 'player',
               },
             ],
             'items': {
+              'type': 'object',
               'properties': {
-                'health': {
-                  'name': 'health',
+                'unitType': {
+                  'name': 'unitType',
+                  'type': 'string',
                   'required': false,
+                },
+                'x': {
+                  'name': 'x',
                   'type': 'number',
+                  'required': false,
                 },
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'maxHealth': {
                   'name': 'maxHealth',
-                  'required': false,
                   'type': 'number',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
                   'required': false,
-                  'type': 'object',
                 },
-                'name': {
-                  'name': 'name',
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
                   'required': false,
-                  'type': 'string',
                 },
                 'position': {
                   'name': 'position',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
-                    'x': {
-                      'name': 'x',
-                      'required': true,
-                      'type': 'number',
-                    },
                     'y': {
                       'name': 'y',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
                     },
                   },
-                  'required': false,
-                  'type': 'object',
                 },
                 'team': {
                   'name': 'team',
-                  'required': false,
                   'type': 'string',
-                },
-                'unitType': {
-                  'name': 'unitType',
                   'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': false,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': false,
-                  'type': 'number',
                 },
                 'z': {
                   'name': 'z',
-                  'required': false,
                   'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'units',
-            'type': 'array',
-          },
-          {
-            'default': [
-              {
-                'id': 't-0-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-0-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 1,
-                'z': 0,
-              },
-              {
-                'id': 't-1-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-1-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 1,
-                'z': 0,
-              },
-            ],
-            'items': {
-              'properties': {
-                'id': {
-                  'name': 'id',
                   'required': false,
-                  'type': 'string',
+                },
+                'health': {
+                  'name': 'health',
+                  'type': 'number',
+                  'required': false,
                 },
                 'modelUrl': {
                   'name': 'modelUrl',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
                     'category': {
                       'name': 'category',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                     },
                     'dimension': {
                       'name': 'dimension',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                     },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
+                    'aspect': {
+                      'name': 'aspect',
                       'type': 'string',
+                      'required': false,
                     },
-                    'role': {
-                      'name': 'role',
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
                       'required': false,
-                      'type': 'string',
+                      'items': {
+                        'type': 'string',
+                      },
                     },
                     'sprite': {
                       'name': 'sprite',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
                       'required': false,
-                      'type': 'string',
                     },
                     'thumbnailUrl': {
                       'name': 'thumbnailUrl',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                     },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
+                    'name': {
+                      'name': 'name',
                       'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
                     },
                     'variant': {
                       'name': 'variant',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
                     },
                   },
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
                   'required': false,
+                },
+              },
+            },
+          },
+          {
+            'name': 'tiles',
+            'type': 'array',
+            'default': [
+              {
+                'id': 't-0-0',
+                'terrain': 'grass',
+                'x': 0,
+                'passable': true,
+                'y': 0,
+                'modelUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'variant': '',
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'aspect': '1:1',
+                  'name': 'grass',
+                  'thumbnailUrl': '',
+                  'style': 'vector',
+                  'dimension': '2d',
+                  'role': 'tile',
+                },
+                'z': 0,
+              },
+              {
+                'passable': true,
+                'id': 't-0-1',
+                'y': 1,
+                'modelUrl': {
+                  'aspect': '1:1',
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'thumbnailUrl': '',
+                  'role': 'tile',
+                  'dimension': '2d',
+                  'variant': '',
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'animations': [
+                    'static',
+                  ],
+                },
+                'terrain': 'grass',
+                'z': 0,
+                'x': 0,
+              },
+              {
+                'passable': true,
+                'x': 1,
+                'modelUrl': {
+                  'category': 'terrain',
+                  'dimension': '2d',
+                  'style': 'vector',
+                  'variant': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'thumbnailUrl': '',
+                  'aspect': '1:1',
+                  'animations': [
+                    'static',
+                  ],
+                  'role': 'tile',
+                  'name': 'grass',
+                },
+                'id': 't-1-0',
+                'terrain': 'grass',
+                'y': 0,
+                'z': 0,
+              },
+              {
+                'z': 0,
+                'modelUrl': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'variant': '',
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'role': 'tile',
+                  'name': 'grass',
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                },
+                'terrain': 'grass',
+                'x': 1,
+                'y': 1,
+                'id': 't-1-1',
+                'passable': true,
+              },
+            ],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'terrain': {
+                  'name': 'terrain',
+                  'type': 'string',
+                  'required': false,
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
                   'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
                 },
                 'passable': {
                   'name': 'passable',
-                  'required': false,
                   'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
                   'required': false,
+                },
+                'id': {
+                  'name': 'id',
                   'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
+                  'required': false,
                 },
                 'z': {
                   'name': 'z',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'tiles',
-            'type': 'array',
           },
           {
-            'default': 0,
             'name': 'movesLeft',
             'type': 'number',
+            'default': 0,
           },
           {
+            'name': 'features',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
                 },
                 'elevation': {
                   'name': 'elevation',
-                  'required': false,
                   'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
                   'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
                 },
                 'x': {
                   'name': 'x',
+                  'type': 'number',
                   'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'features',
-            'type': 'array',
-          },
-          {
-            'default': 0,
-            'name': 'wood',
-            'type': 'number',
-          },
-          {
-            'default': 0,
-            'name': 'stone',
-            'type': 'number',
-          },
-          {
-            'default': [],
-            'items': {
-              'properties': {
-                'bornAt': {
-                  'name': 'bornAt',
-                  'required': false,
-                  'type': 'number',
                 },
                 'color': {
                   'name': 'color',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                 },
-                'effect': {
-                  'name': 'effect',
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
                   'required': false,
-                  'type': 'string',
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
                 },
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
-                },
-                'maxTtl': {
-                  'name': 'maxTtl',
                   'required': false,
-                  'type': 'number',
-                },
-                'message': {
-                  'name': 'message',
-                  'required': false,
-                  'type': 'string',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'ttl': {
-                  'name': 'ttl',
-                  'required': true,
-                  'type': 'number',
                 },
                 'type': {
                   'name': 'type',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
-                'vx': {
-                  'name': 'vx',
+              },
+            },
+          },
+          {
+            'name': 'wood',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'stone',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'fx',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'message': {
+                  'name': 'message',
+                  'type': 'string',
                   'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
                 },
                 'vz': {
                   'name': 'vz',
+                  'type': 'number',
                   'required': false,
-                  'type': 'number',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
                 },
                 'y': {
                   'name': 'y',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
+                },
+                'maxTtl': {
+                  'name': 'maxTtl',
+                  'type': 'number',
+                  'required': false,
                 },
                 'z': {
                   'name': 'z',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'bornAt': {
+                  'name': 'bornAt',
+                  'type': 'number',
+                  'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'ttl': {
+                  'name': 'ttl',
+                  'type': 'number',
+                  'required': true,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'fx',
-            'type': 'array',
           },
           {
-            'default': 'none',
             'name': 'result',
             'type': 'string',
+            'default': 'none',
           },
           {
-            'default': '',
             'name': 'selectedUnitId',
             'type': 'string',
+            'default': '',
           },
           {
+            'name': 'validMoves',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
                 'x': {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 'z': {
                   'name': 'z',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'validMoves',
-            'type': 'array',
           },
           {
-            'default': 'observation',
             'name': 'phase',
             'type': 'string',
+            'default': 'observation',
           },
         ];
         const extras = params.fields ?? [];
@@ -769,775 +769,290 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Nav.traits.HeroNav' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
+        'name': 'HeroAuthority',
+        'linkedEntity': 'GameState',
         'config': {
-          'gridHeight': {
-            'default': 2,
-            'type': 'unknown',
-          },
           'gridWidth': {
+            'type': 'unknown',
             'default': 2,
-            'type': 'unknown',
-          },
-          'moveBudget': {
-            'default': 100,
-            'type': 'unknown',
-          },
-          'running': {
-            'default': true,
-            'type': 'unknown',
           },
           'tiles': {
+            'type': 'unknown',
             'default': [
               {
+                'x': 0,
+                'z': 0,
+                'passable': true,
                 'id': 't-0-0',
+                'terrain': 'grass',
                 'modelUrl': {
+                  'style': 'vector',
+                  'role': 'tile',
+                  'name': 'grass',
+                  'variant': '',
+                  'dimension': '2d',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'category': 'terrain',
                   'animations': [
                     'static',
                   ],
                   'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
                 },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
                 'y': 0,
-                'z': 0,
               },
               {
+                'x': 0,
+                'y': 1,
                 'id': 't-0-1',
+                'passable': true,
                 'modelUrl': {
+                  'name': 'grass',
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
+                  'aspect': '1:1',
+                  'variant': '',
+                  'role': 'tile',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
                 },
-                'passable': true,
                 'terrain': 'grass',
-                'x': 0,
-                'y': 1,
                 'z': 0,
               },
               {
-                'id': 't-1-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
+                'z': 0,
                 'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-1-1',
+                'x': 1,
+                'passable': true,
+                'terrain': 'grass',
                 'modelUrl': {
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'variant': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
+                  'name': 'grass',
+                  'aspect': '1:1',
+                  'role': 'tile',
+                  'thumbnailUrl': '',
                   'animations': [
                     'static',
                   ],
+                },
+                'id': 't-1-0',
+              },
+              {
+                'modelUrl': {
+                  'variant': '',
                   'aspect': '1:1',
-                  'category': 'terrain',
                   'dimension': '2d',
+                  'category': 'terrain',
                   'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'thumbnailUrl': '',
+                  'animations': [
+                    'static',
+                  ],
                   'role': 'tile',
                   'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
                 },
                 'passable': true,
                 'terrain': 'grass',
                 'x': 1,
-                'y': 1,
                 'z': 0,
+                'id': 't-1-1',
+                'y': 1,
               },
             ],
+          },
+          'moveBudget': {
             'type': 'unknown',
+            'default': 100,
+          },
+          'running': {
+            'type': 'unknown',
+            'default': true,
+          },
+          'gridHeight': {
+            'type': 'unknown',
+            'default': 2,
           },
           'units': {
+            'type': 'unknown',
             'default': [
               {
-                'health': 1,
-                'id': 'survivor',
-                'maxHealth': 1,
-                'modelUrl': {
-                  'animations': [
-                    'idle',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'player-unit',
-                  'role': 'player',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
-                  'variant': '',
-                },
-                'name': 'Survivor',
+                'unitType': 'survivor',
+                'x': 1,
+                'team': 'player',
+                'z': 0,
                 'position': {
                   'x': 1,
                   'y': 1,
                 },
-                'team': 'player',
-                'unitType': 'survivor',
-                'x': 1,
+                'name': 'Survivor',
+                'id': 'survivor',
                 'y': 1,
-                'z': 0,
+                'maxHealth': 1,
+                'modelUrl': {
+                  'name': 'player-unit',
+                  'style': 'vector',
+                  'animations': [
+                    'idle',
+                  ],
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'dimension': '2d',
+                  'variant': '',
+                  'role': 'player',
+                  'category': 'unit',
+                  'aspect': '1:1',
+                },
+                'health': 1,
               },
             ],
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'MOVE',
+            'triggers': 'MOVE',
             'source': {
               'kind': 'trait',
               'trait': 'SurvivalIntent',
             },
-            'triggers': 'MOVE',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'SurvivalIntent',
             },
-            'triggers': 'RESTART',
           },
           {
             'event': 'WANDER',
+            'triggers': 'WANDER',
             'source': {
               'kind': 'trait',
               'trait': 'SurvivalIntent',
             },
-            'triggers': 'WANDER',
           },
         ],
-        'name': 'HeroAuthority',
-        'ref': ('Nav.traits.HeroNav' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Harvest.traits.Gather' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
+        'name': 'Gather',
+        'linkedEntity': 'GameState',
         'config': {
-          'running': {
-            'default': true,
+          'yieldPerNode': {
             'type': 'unknown',
+            'default': 1,
           },
-          'stoneType': {
-            'default': 'rock',
+          'running': {
             'type': 'unknown',
+            'default': true,
           },
           'woodType': {
+            'type': 'unknown',
             'default': 'tree',
-            'type': 'unknown',
           },
-          'yieldPerNode': {
-            'default': 1,
+          'stoneType': {
             'type': 'unknown',
+            'default': 'rock',
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'HERO_STEPPED',
+            'triggers': 'HERO_STEPPED',
             'source': {
               'kind': 'trait',
               'trait': 'HeroAuthority',
             },
-            'triggers': 'HERO_STEPPED',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'SurvivalIntent',
             },
-            'triggers': 'RESTART',
           },
         ],
-        'name': 'Gather',
-        'ref': ('Harvest.traits.Gather' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Particles.traits.FxParticles' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
+        'name': 'FxDecay',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'BURST',
+            'triggers': 'BURST',
             'source': {
               'kind': 'trait',
               'trait': 'Gather',
             },
-            'triggers': 'BURST',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'SurvivalIntent',
             },
-            'triggers': 'RESTART',
           },
         ],
-        'name': 'FxDecay',
-        'ref': ('Particles.traits.FxParticles' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Survival.traits.SurvivalFlow' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
+        'name': 'Flow',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'RESOURCES',
+            'triggers': 'RESOURCES',
             'source': {
               'kind': 'trait',
               'trait': 'Gather',
             },
-            'triggers': 'RESOURCES',
           },
           {
             'event': 'BUILD_CAMP',
+            'triggers': 'BUILD_CAMP',
             'source': {
               'kind': 'trait',
               'trait': 'SurvivalIntent',
             },
-            'triggers': 'BUILD_CAMP',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'SurvivalIntent',
             },
-            'triggers': 'RESTART',
           },
         ],
-        'name': 'Flow',
-        'ref': ('Survival.traits.SurvivalFlow' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'assetManifest': {
-            'default': {
-              'effects': {},
-              'features': {},
-              'terrains': {},
-              'units': {},
-            },
-            'description': 'Per-role model manifest resolving tile/unit/feature models by terrain/category key.',
-            'label': 'Asset Manifest',
-            'properties': {
-              'effects': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'effects',
-                'required': false,
-                'type': 'object',
-              },
-              'features': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'features',
-                'required': false,
-                'type': 'object',
-              },
-              'terrains': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'terrains',
-                'required': false,
-                'type': 'object',
-              },
-              'units': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'units',
-                'required': false,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'AssetManifest',
-          },
-          'bgColor': {
-            'default': '#0a0f1a',
-            'description': 'Canvas background color.',
-            'label': 'Bg Color',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cameraMode': {
-            'default': 'top-down',
-            'description': '3D canvas camera mode.',
-            'label': 'Camera Mode',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'campStone': {
-            'default': 4,
-            'description': 'Stone required before the Build Camp action is allowed.',
-            'label': 'Camp Stone',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'campWood': {
-            'default': 4,
-            'description': 'Wood required before the Build Camp action is allowed.',
-            'label': 'Camp Wood',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'extraStats': {
-            'default': [],
-            'description': 'Board-specific HUD stats appended after the standard set.',
-            'items': {
-              'properties': {
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'value': {
-                  'name': 'value',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Extra Stats',
-            'tier': 'presentation',
-            'type': '[HudStat]',
-          },
-          'fxPresets': {
-            'default': [
-              {
-                'color': '#84a98c',
-                'color2': '#6b4226',
-                'count': 5,
-                'shape': 'spark',
-                'size': 0.45,
-                'type': 'pickup',
-                'vy': -0.2,
-              },
-            ],
-            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
-            'items': {
-              'properties': {
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'color2': {
-                  'name': 'color2',
-                  'required': false,
-                  'type': 'string',
-                },
-                'count': {
-                  'name': 'count',
-                  'required': false,
-                  'type': 'number',
-                },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'glow': {
-                  'name': 'glow',
-                  'required': false,
-                  'type': 'number',
-                },
-                'gravity': {
-                  'name': 'gravity',
-                  'required': false,
-                  'type': 'number',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'shape': {
-                  'name': 'shape',
-                  'required': false,
-                  'type': 'string',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Fx Presets',
-            'tier': 'presentation',
-            'type': '[FxPreset]',
-          },
-          'gridHeight': {
-            'default': 16,
-            'description': 'Grid row count (matches HeroAuthority.gridHeight).',
-            'label': 'Grid Height',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'gridWidth': {
-            'default': 16,
-            'description': 'Grid column count (matches HeroAuthority.gridWidth).',
-            'label': 'Grid Width',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'movementRange': {
-            'default': 3,
-            'description': 'Max manhattan distance the hero may step per move.',
-            'label': 'Movement Range',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'scale': {
-            'default': 0.45,
-            'description': 'Canvas render scale.',
-            'label': 'Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'unitScale': {
-            'default': 1,
-            'description': 'Unit draw-size multiplier.',
-            'label': 'Unit Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-        },
+        'name': 'SurvivalIntent',
         'effectRow': [
           {
             'kind': 'emit',
@@ -1582,86 +1097,90 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
             'site': 'tick',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'GameState',
         'emits': [
           {
-            'description': 'Hero move intent applied by the hero-nav authority',
             'event': 'MOVE',
+            'description': 'Hero move intent applied by the hero-nav authority',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Advances neutral NPCs one random step via the hero-nav authority',
             'event': 'WANDER',
+            'description': 'Advances neutral NPCs one random step via the hero-nav authority',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'tick',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Resets every mechanic (units/budget, resources, result) for a new round',
             'event': 'RESTART',
+            'description': 'Resets every mechanic (units/budget, resources, result) for a new round',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'tileClickEvent prop',
             'event': 'TILE_CLICK',
+            'description': 'tileClickEvent prop',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'z',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'tileId',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'unitClickEvent prop',
             'event': 'UNIT_CLICK',
+            'description': 'unitClickEvent prop',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
@@ -1672,64 +1191,66 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                 'type': 'number',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Clears the current selection',
             'event': 'CANCEL',
+            'description': 'Clears the current selection',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Build Camp button pressed',
             'event': 'BUILD_CAMP_PRESS',
+            'description': 'Build Camp button pressed',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Requests building the camp once wood/stone goals are met; survival-flow resolves the win',
             'event': 'BUILD_CAMP',
+            'description': 'Requests building the camp once wood/stone goals are met; survival-flow resolves the win',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'GameState',
-        'name': 'SurvivalIntent',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'playing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'unitClickEvent prop',
               'key': 'UNIT_CLICK',
               'name': 'Unit Click',
+              'description': 'unitClickEvent prop',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
@@ -1740,128 +1261,124 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                   'type': 'number',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'tileClickEvent prop',
               'key': 'TILE_CLICK',
               'name': 'Tile Click',
+              'description': 'tileClickEvent prop',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'z',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'tileId',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Clears the current selection',
               'key': 'CANCEL',
               'name': 'Cancel',
+              'description': 'Clears the current selection',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Build Camp button pressed',
               'key': 'BUILD_CAMP_PRESS',
               'name': 'Build Camp Press',
+              'description': 'Build Camp button pressed',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
               'key': 'PLAY_AGAIN',
               'name': 'Play Again',
             },
             {
-              'description': 'Hero move intent applied by the hero-nav authority',
               'key': 'MOVE',
               'name': 'Move',
+              'description': 'Hero move intent applied by the hero-nav authority',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Advances neutral NPCs one random step via the hero-nav authority',
               'key': 'WANDER',
               'name': 'Wander',
+              'description': 'Advances neutral NPCs one random step via the hero-nav authority',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'tick',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Resets every mechanic (units/budget, resources, result) for a new round',
               'key': 'RESTART',
               'name': 'Restart',
+              'description': 'Resets every mechanic (units/budget, resources, result) for a new round',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Requests building the camp once wood/stone goals are met; survival-flow resolves the win',
               'key': 'BUILD_CAMP',
               'name': 'Build Camp',
+              'description': 'Requests building the camp once wood/stone goals are met; survival-flow resolves the win',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'playing',
             },
           ],
           'transitions': [
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1882,34 +1399,20 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                   'render-ui',
                   'main',
                   {
-                    'addons': {
-                      'children': [
-                        {
-                          'action': 'CANCEL',
-                          'label': 'Cancel',
-                          'type': 'button',
-                          'variant': 'secondary',
-                        },
-                        {
-                          'action': 'PLAY_AGAIN',
-                          'label': 'Restart',
-                          'type': 'button',
-                          'variant': 'secondary',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'sm',
-                      'type': 'stack',
-                    },
                     'children': [
                       {
                         'backgroundColor': '@config.bgColor',
+                        'tileClickEvent': 'TILE_CLICK',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'camera': {
-                          'mode': '@config.cameraMode',
                           'zoom': '@config.scale',
+                          'mode': '@config.cameraMode',
                         },
+                        'type': 'canvas',
+                        'mode': '3d',
                         'children': [
                           {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               'array/filter',
                               [
@@ -1919,6 +1422,18 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                   'fn',
                                   't',
                                   {
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@t',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@t',
+                                        'y',
+                                      ],
+                                    },
                                     'asset': [
                                       'if',
                                       [
@@ -1949,18 +1464,6 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                         ],
                                       ],
                                     ],
-                                    'position': {
-                                      'x': [
-                                        'object/get',
-                                        '@t',
-                                        'x',
-                                      ],
-                                      'y': [
-                                        'object/get',
-                                        '@t',
-                                        'y',
-                                      ],
-                                    },
                                     'type': 'draw-sprite',
                                   },
                                 ],
@@ -1979,7 +1482,6 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                 ],
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                           {
                             'items': [
@@ -1989,11 +1491,7 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                 'fn',
                                 'f',
                                 {
-                                  'asset': [
-                                    'object/get',
-                                    '@f',
-                                    'assetUrl',
-                                  ],
+                                  'type': 'draw-sprite',
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2006,13 +1504,18 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                       'y',
                                     ],
                                   },
-                                  'type': 'draw-sprite',
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'assetUrl',
+                                  ],
                                 },
                               ],
                             ],
                             'type': 'draw-sprite-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               '@entity.validMoves',
@@ -2020,7 +1523,7 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                 'fn',
                                 'm',
                                 {
-                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'shape': 'cell',
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2033,14 +1536,14 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                       'z',
                                     ],
                                   },
-                                  'shape': 'cell',
                                   'type': 'draw-shape',
+                                  'fill': 'rgba(74,222,128,0.4)',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               [
@@ -2064,23 +1567,23 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                 'fn',
                                 'u',
                                 {
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                  'stroke': 'rgba(0,200,255,0.8)',
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
-                                  'radiusX': 0.5,
-                                  'radiusY': 0.2,
                                   'shape': 'ellipse',
-                                  'stroke': 'rgba(0,200,255,0.8)',
-                                  'strokeWidth': 3,
-                                  'type': 'draw-shape',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               'array/map',
                               '@entity.units',
@@ -2089,30 +1592,30 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                 'u',
                                 {
                                   'anchor': 'ground',
+                                  'width': 0.8,
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
+                                  'type': 'draw-sprite',
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
                                   'asset': [
                                     'object/get',
                                     '@u',
                                     'modelUrl',
                                   ],
                                   'height': 0.8,
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                  'width': 0.8,
                                 },
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               '@entity.units',
@@ -2120,21 +1623,20 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                 'fn',
                                 'u',
                                 {
-                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'shape': 'rect',
+                                  'width': 0.8,
+                                  'type': 'draw-shape',
                                   'height': 0.12,
-                                  'offsetY': -0.6,
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
-                                  'shape': 'rect',
-                                  'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'offsetY': -0.6,
+                                  'fill': 'rgba(0,0,0,0.6)',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
                             'items': [
@@ -2145,15 +1647,12 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                 'u',
                                 {
                                   'fill': '#22c55e',
-                                  'height': 0.12,
-                                  'offsetY': -0.6,
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
-                                  'shape': 'rect',
-                                  'type': 'draw-shape',
+                                  'height': 0.12,
                                   'width': [
                                     '*',
                                     0.8,
@@ -2171,12 +1670,16 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                       ],
                                     ],
                                   ],
+                                  'offsetY': -0.6,
+                                  'type': 'draw-shape',
+                                  'shape': 'rect',
                                 },
                               ],
                             ],
                             'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-text-layer',
                             'items': [
                               'array/map',
                               '@entity.units',
@@ -2184,47 +1687,98 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                 'fn',
                                 'u',
                                 {
+                                  'type': 'draw-text',
                                   'color': '#ffffff',
-                                  'offsetY': -0.85,
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
+                                  'offsetY': -0.85,
                                   'text': [
                                     'object/get',
                                     '@u',
                                     'name',
                                   ],
-                                  'type': 'draw-text',
                                 },
                               ],
                             ],
-                            'type': 'draw-text-layer',
                           },
                           {
-                            'items': '@entity.fx',
+                            'type': 'draw-fx-layer',
                             'presets': '@config.fxPresets',
                             'tickMs': 500,
-                            'type': 'draw-fx-layer',
+                            'items': '@entity.fx',
                           },
                         ],
-                        'mode': '3d',
-                        'tileClickEvent': 'TILE_CLICK',
-                        'type': 'canvas',
-                        'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
                       },
                     ],
+                    'addons': {
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'action': 'CANCEL',
+                          'variant': 'secondary',
+                          'type': 'button',
+                          'label': 'Cancel',
+                        },
+                        {
+                          'type': 'button',
+                          'action': 'PLAY_AGAIN',
+                          'variant': 'secondary',
+                          'label': 'Restart',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'gap': 'sm',
+                    },
+                    'type': 'game-shell',
+                    'overlay': [
+                      'if',
+                      [
+                        '!=',
+                        '@entity.result',
+                        'none',
+                      ],
+                      {
+                        'children': [
+                          {
+                            'stats': [
+                              {
+                                'label': 'Result',
+                                'value': '@entity.result',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                          {
+                            'type': 'button',
+                            'variant': 'primary',
+                            'label': 'Play Again',
+                            'action': 'PLAY_AGAIN',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'align': 'center',
+                      },
+                      null,
+                    ],
                     'hud': {
+                      'direction': 'horizontal',
+                      'type': 'stack',
+                      'justify': 'between',
+                      'gap': 'md',
                       'children': [
                         {
                           'stats': [
                             'array/concat',
                             [
                               {
-                                'label': 'Wood',
                                 'value': '@entity.wood',
+                                'label': 'Wood',
                               },
                               {
                                 'label': 'Stone',
@@ -2245,57 +1799,49 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                         },
                         {
                           'action': 'BUILD_CAMP_PRESS',
-                          'label': 'Build Camp',
-                          'type': 'button',
                           'variant': 'primary',
+                          'type': 'button',
+                          'label': 'Build Camp',
                         },
                       ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
                     },
-                    'overlay': [
-                      'if',
-                      [
-                        '!=',
-                        '@entity.result',
-                        'none',
-                      ],
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'stats': [
-                              {
-                                'label': 'Result',
-                                'value': '@entity.result',
-                              },
-                            ],
-                            'type': 'game-hud',
-                          },
-                          {
-                            'action': 'PLAY_AGAIN',
-                            'label': 'Play Again',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
-                        ],
-                        'direction': 'vertical',
-                        'gap': 'md',
-                        'type': 'stack',
-                      },
-                      null,
-                    ],
-                    'type': 'game-shell',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'playing',
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'UNIT_CLICK',
+              'guard': [
+                'and',
+                [
+                  '==',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  '==',
+                  [
+                    'object/get',
+                    [
+                      'array/find',
+                      '@entity.units',
+                      [
+                        'fn',
+                        'u',
+                        [
+                          '==',
+                          '@u.id',
+                          '@payload.unitId',
+                        ],
+                      ],
+                    ],
+                    'team',
+                  ],
+                  'player',
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -2427,83 +1973,26 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                       'fn',
                       't',
                       {
-                        'x': [
-                          'object/get',
-                          '@t',
-                          'x',
-                        ],
                         'z': [
                           'object/get',
                           '@t',
                           'y',
+                        ],
+                        'x': [
+                          'object/get',
+                          '@t',
+                          'x',
                         ],
                       },
                     ],
                   ],
                 ],
               ],
-              'event': 'UNIT_CLICK',
-              'from': 'playing',
-              'guard': [
-                'and',
-                [
-                  '==',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  '==',
-                  [
-                    'object/get',
-                    [
-                      'array/find',
-                      '@entity.units',
-                      [
-                        'fn',
-                        'u',
-                        [
-                          '==',
-                          '@u.id',
-                          '@payload.unitId',
-                        ],
-                      ],
-                    ],
-                    'team',
-                  ],
-                  'player',
-                ],
-              ],
-              'to': 'playing',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'MOVE',
-                  {
-                    'unitId': '@entity.selectedUnitId',
-                    'x': '@payload.x',
-                    'y': '@payload.z',
-                  },
-                ],
-                [
-                  'set',
-                  '@entity.selectedUnitId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.phase',
-                  'observation',
-                ],
-              ],
-              'event': 'TILE_CLICK',
               'from': 'playing',
+              'to': 'playing',
+              'event': 'TILE_CLICK',
               'guard': [
                 'and',
                 [
@@ -2523,8 +2012,8 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                     [
                       'grid/in-bounds',
                       {
-                        'x': '@payload.x',
                         'y': '@payload.z',
+                        'x': '@payload.x',
                       },
                       '@config.gridWidth',
                       '@config.gridHeight',
@@ -2647,9 +2136,42 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                   ],
                 ],
               ],
-              'to': 'playing',
+              'effects': [
+                [
+                  'emit',
+                  'MOVE',
+                  {
+                    'x': '@payload.x',
+                    'unitId': '@entity.selectedUnitId',
+                    'y': '@payload.z',
+                  },
+                ],
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'observation',
+                ],
+              ],
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'CANCEL',
+              'guard': [
+                '!=',
+                '@entity.selectedUnitId',
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -2667,27 +2189,11 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                   'observation',
                 ],
               ],
-              'event': 'CANCEL',
-              'from': 'playing',
-              'guard': [
-                '!=',
-                '@entity.selectedUnitId',
-                '',
-              ],
-              'to': 'playing',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'BUILD_CAMP',
-                  {
-                    'id': 'board',
-                  },
-                ],
-              ],
-              'event': 'BUILD_CAMP_PRESS',
               'from': 'playing',
+              'to': 'playing',
+              'event': 'BUILD_CAMP_PRESS',
               'guard': [
                 'and',
                 [
@@ -2709,9 +2215,20 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                   ],
                 ],
               ],
-              'to': 'playing',
+              'effects': [
+                [
+                  'emit',
+                  'BUILD_CAMP',
+                  {
+                    'id': 'board',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'PLAY_AGAIN',
               'effects': [
                 [
                   'emit',
@@ -2736,47 +2253,74 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                   'observation',
                 ],
               ],
-              'event': 'PLAY_AGAIN',
-              'from': 'playing',
-              'to': 'playing',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'renderTick',
+            'interval': 100,
             'effects': [
               [
                 'render-ui',
                 'main',
                 {
                   'addons': {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'sm',
                     'children': [
                       {
+                        'type': 'button',
                         'action': 'CANCEL',
                         'label': 'Cancel',
-                        'type': 'button',
                         'variant': 'secondary',
                       },
                       {
-                        'action': 'PLAY_AGAIN',
-                        'label': 'Restart',
-                        'type': 'button',
                         'variant': 'secondary',
+                        'action': 'PLAY_AGAIN',
+                        'type': 'button',
+                        'label': 'Restart',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
                   },
-                  'children': [
+                  'overlay': [
+                    'if',
+                    [
+                      '!=',
+                      '@entity.result',
+                      'none',
+                    ],
                     {
-                      'backgroundColor': '@config.bgColor',
-                      'camera': {
-                        'mode': '@config.cameraMode',
-                        'zoom': '@config.scale',
-                      },
+                      'align': 'center',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
                       'children': [
                         {
+                          'type': 'game-hud',
+                          'stats': [
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'button',
+                          'variant': 'primary',
+                          'label': 'Play Again',
+                          'action': 'PLAY_AGAIN',
+                        },
+                      ],
+                    },
+                    null,
+                  ],
+                  'children': [
+                    {
+                      'children': [
+                        {
+                          'type': 'draw-sprite-layer',
                           'items': [
                             'array/filter',
                             [
@@ -2786,6 +2330,19 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                 'fn',
                                 't',
                                 {
+                                  'position': {
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                   'asset': [
                                     'if',
                                     [
@@ -2816,19 +2373,6 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                       ],
                                     ],
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@t',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@t',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
@@ -2846,7 +2390,6 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                               ],
                             ],
                           ],
-                          'type': 'draw-sprite-layer',
                         },
                         {
                           'items': [
@@ -2862,15 +2405,15 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                                   'assetUrl',
                                 ],
                                 'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
                                   'y': [
                                     'object/get',
                                     '@f',
                                     'y',
+                                  ],
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
                                   ],
                                 },
                                 'type': 'draw-sprite',
@@ -2888,20 +2431,20 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                               'm',
                               {
                                 'fill': 'rgba(74,222,128,0.4)',
+                                'shape': 'cell',
+                                'type': 'draw-shape',
                                 'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@m',
-                                    'x',
-                                  ],
                                   'y': [
                                     'object/get',
                                     '@m',
                                     'z',
                                   ],
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
                                 },
-                                'shape': 'cell',
-                                'type': 'draw-shape',
                               },
                             ],
                           ],
@@ -2931,17 +2474,17 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                               'fn',
                               'u',
                               {
+                                'radiusX': 0.5,
                                 'position': [
                                   'object/get',
                                   '@u',
                                   'position',
                                 ],
-                                'radiusX': 0.5,
                                 'radiusY': 0.2,
-                                'shape': 'ellipse',
                                 'stroke': 'rgba(0,200,255,0.8)',
-                                'strokeWidth': 3,
                                 'type': 'draw-shape',
+                                'shape': 'ellipse',
+                                'strokeWidth': 3,
                               },
                             ],
                           ],
@@ -2955,25 +2498,25 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                               'fn',
                               'u',
                               {
-                                'anchor': 'ground',
-                                'asset': [
-                                  'object/get',
-                                  '@u',
-                                  'modelUrl',
-                                ],
                                 'height': 0.8,
+                                'width': 0.8,
+                                'anchor': 'ground',
+                                'type': 'draw-sprite',
                                 'id': [
                                   'object/get',
                                   '@u',
                                   'id',
+                                ],
+                                'asset': [
+                                  'object/get',
+                                  '@u',
+                                  'modelUrl',
                                 ],
                                 'position': [
                                   'object/get',
                                   '@u',
                                   'position',
                                 ],
-                                'type': 'draw-sprite',
-                                'width': 0.8,
                               },
                             ],
                           ],
@@ -2987,17 +2530,17 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                               'fn',
                               'u',
                               {
+                                'type': 'draw-shape',
+                                'offsetY': -0.6,
                                 'fill': 'rgba(0,0,0,0.6)',
                                 'height': 0.12,
-                                'offsetY': -0.6,
                                 'position': [
                                   'object/get',
                                   '@u',
                                   'position',
                                 ],
-                                'shape': 'rect',
-                                'type': 'draw-shape',
                                 'width': 0.8,
+                                'shape': 'rect',
                               },
                             ],
                           ],
@@ -3011,16 +2554,16 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                               'fn',
                               'u',
                               {
+                                'type': 'draw-shape',
                                 'fill': '#22c55e',
                                 'height': 0.12,
-                                'offsetY': -0.6,
                                 'position': [
                                   'object/get',
                                   '@u',
                                   'position',
                                 ],
+                                'offsetY': -0.6,
                                 'shape': 'rect',
-                                'type': 'draw-shape',
                                 'width': [
                                   '*',
                                   0.8,
@@ -3051,39 +2594,47 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                               'fn',
                               'u',
                               {
-                                'color': '#ffffff',
-                                'offsetY': -0.85,
                                 'position': [
                                   'object/get',
                                   '@u',
                                   'position',
                                 ],
+                                'type': 'draw-text',
                                 'text': [
                                   'object/get',
                                   '@u',
                                   'name',
                                 ],
-                                'type': 'draw-text',
+                                'offsetY': -0.85,
+                                'color': '#ffffff',
                               },
                             ],
                           ],
                           'type': 'draw-text-layer',
                         },
                         {
-                          'items': '@entity.fx',
-                          'presets': '@config.fxPresets',
                           'tickMs': 500,
+                          'presets': '@config.fxPresets',
+                          'items': '@entity.fx',
                           'type': 'draw-fx-layer',
                         },
                       ],
-                      'mode': '3d',
-                      'tileClickEvent': 'TILE_CLICK',
                       'type': 'canvas',
+                      'camera': {
+                        'zoom': '@config.scale',
+                        'mode': '@config.cameraMode',
+                      },
+                      'tileClickEvent': 'TILE_CLICK',
                       'unitClickEvent': 'UNIT_CLICK',
+                      'mode': '3d',
                       'unitScale': '@config.unitScale',
+                      'backgroundColor': '@config.bgColor',
                     },
                   ],
                   'hud': {
+                    'justify': 'between',
+                    'type': 'stack',
+                    'direction': 'horizontal',
                     'children': [
                       {
                         'stats': [
@@ -3094,12 +2645,12 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                               'value': '@entity.wood',
                             },
                             {
-                              'label': 'Stone',
                               'value': '@entity.stone',
+                              'label': 'Stone',
                             },
                             {
-                              'label': 'Energy',
                               'value': '@entity.movesLeft',
+                              'label': 'Energy',
                             },
                             {
                               'label': 'Result',
@@ -3111,57 +2662,27 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                         'type': 'game-hud',
                       },
                       {
-                        'action': 'BUILD_CAMP_PRESS',
-                        'label': 'Build Camp',
                         'type': 'button',
                         'variant': 'primary',
+                        'action': 'BUILD_CAMP_PRESS',
+                        'label': 'Build Camp',
                       },
                     ],
-                    'direction': 'horizontal',
                     'gap': 'md',
-                    'justify': 'between',
-                    'type': 'stack',
                   },
-                  'overlay': [
-                    'if',
-                    [
-                      '!=',
-                      '@entity.result',
-                      'none',
-                    ],
-                    {
-                      'align': 'center',
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'label': 'Result',
-                              'value': '@entity.result',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'action': 'PLAY_AGAIN',
-                          'label': 'Play Again',
-                          'type': 'button',
-                          'variant': 'primary',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
-                    },
-                    null,
-                  ],
                   'type': 'game-shell',
                 },
               ],
             ],
-            'interval': 100,
-            'name': 'renderTick',
           },
           {
+            'name': 'wanderTick',
+            'interval': 900,
+            'guard': [
+              '==',
+              '@entity.result',
+              'none',
+            ],
             'effects': [
               [
                 'emit',
@@ -3171,15 +2692,494 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                 },
               ],
             ],
-            'guard': [
-              '==',
-              '@entity.result',
-              'none',
-            ],
-            'interval': 900,
-            'name': 'wanderTick',
           },
         ],
+        'config': {
+          'cameraMode': {
+            'type': 'string',
+            'default': 'top-down',
+            'label': 'Camera Mode',
+            'description': '3D canvas camera mode.',
+            'tier': 'presentation',
+          },
+          'gridWidth': {
+            'type': 'number',
+            'default': 16,
+            'label': 'Grid Width',
+            'description': 'Grid column count (matches HeroAuthority.gridWidth).',
+            'tier': 'presentation',
+          },
+          'scale': {
+            'type': 'number',
+            'default': 0.45,
+            'label': 'Scale',
+            'description': 'Canvas render scale.',
+            'tier': 'presentation',
+          },
+          'movementRange': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Movement Range',
+            'description': 'Max manhattan distance the hero may step per move.',
+            'tier': 'domain',
+          },
+          'extraStats': {
+            'type': '[HudStat]',
+            'default': [],
+            'label': 'Extra Stats',
+            'description': 'Board-specific HUD stats appended after the standard set.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'value': {
+                  'name': 'value',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'campStone': {
+            'type': 'number',
+            'default': 4,
+            'label': 'Camp Stone',
+            'description': 'Stone required before the Build Camp action is allowed.',
+            'tier': 'domain',
+          },
+          'fxPresets': {
+            'type': '[FxPreset]',
+            'default': [
+              {
+                'count': 5,
+                'color': '#84a98c',
+                'type': 'pickup',
+                'vy': -0.2,
+                'shape': 'spark',
+                'color2': '#6b4226',
+                'size': 0.45,
+              },
+            ],
+            'label': 'Fx Presets',
+            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'gravity': {
+                  'name': 'gravity',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'count': {
+                  'name': 'count',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'glow': {
+                  'name': 'glow',
+                  'type': 'number',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+                'shape': {
+                  'name': 'shape',
+                  'type': 'string',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color2': {
+                  'name': 'color2',
+                  'type': 'string',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vz': {
+                  'name': 'vz',
+                  'type': 'number',
+                  'required': false,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'unitScale': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Unit Scale',
+            'description': 'Unit draw-size multiplier.',
+            'tier': 'presentation',
+          },
+          'bgColor': {
+            'type': 'string',
+            'default': '#0a0f1a',
+            'label': 'Bg Color',
+            'description': 'Canvas background color.',
+            'tier': 'presentation',
+          },
+          'gridHeight': {
+            'type': 'number',
+            'default': 16,
+            'label': 'Grid Height',
+            'description': 'Grid row count (matches HeroAuthority.gridHeight).',
+            'tier': 'presentation',
+          },
+          'assetManifest': {
+            'type': 'AssetManifest',
+            'default': {
+              'effects': {},
+              'features': {},
+              'terrains': {},
+              'units': {},
+            },
+            'label': 'Asset Manifest',
+            'description': 'Per-role model manifest resolving tile/unit/feature models by terrain/category key.',
+            'tier': 'presentation',
+            'properties': {
+              'terrains': {
+                'name': 'terrains',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'units': {
+                'name': 'units',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'effects': {
+                'name': 'effects',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'features': {
+                'name': 'features',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'campWood': {
+            'type': 'number',
+            'default': 4,
+            'label': 'Camp Wood',
+            'description': 'Wood required before the Build Camp action is allowed.',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

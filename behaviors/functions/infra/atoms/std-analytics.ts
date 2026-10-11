@@ -53,14 +53,14 @@ export interface StdAnalyticsReportFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAnalyticsConfig {
+  /** Default: `"main"` */
+  statusSlot?: unknown;
+  /** Default: `"/"` */
+  path?: string;
   /** Default: `""` */
   domain?: string;
   /** Default: `""` */
   endpoint?: string;
-  /** Default: `"/"` */
-  path?: string;
-  /** Default: `"main"` */
-  statusSlot?: unknown;
 }
 
 /**
@@ -191,31 +191,31 @@ export function stdAnalyticsAnalyticsOrbital(params: StdAnalyticsAnalyticsOrbita
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
+            'name': 'reported',
+            'type': 'number',
             'default': 0,
             'description': 'How many pageviews and events the collector accepted',
-            'name': 'reported',
             'synonyms': 'sent, count, beacons',
-            'type': 'number',
           },
           {
-            'default': 'reporting',
-            'description': 'What happened to the last report',
             'name': 'status',
-            'synonyms': 'state, result',
             'type': 'string',
+            'default': 'reporting',
             'values': [
               'reporting',
               'reported',
               'skipped',
               'failed',
             ],
+            'description': 'What happened to the last report',
+            'synonyms': 'state, result',
           },
           {
+            'name': 'errorMessage',
+            'type': 'string',
             'default': '',
             'description': 'Why the last report failed; blank = none',
-            'name': 'errorMessage',
             'synonyms': 'error, failure reason',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -226,41 +226,7 @@ export function stdAnalyticsAnalyticsOrbital(params: StdAnalyticsAnalyticsOrbita
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'domain': {
-            'default': '',
-            'description': 'The site id each report is recorded under; empty records the page\'s host',
-            'label': 'Site',
-            'synonyms': 'site id, hostname, property',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'endpoint': {
-            'default': '',
-            'description': 'The analytics collector\'s ingest URL (`POST`); empty sends nothing',
-            'label': 'Collector endpoint',
-            'synonyms': 'analytics url, collector, stats endpoint, beacon url',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'path': {
-            'default': '/',
-            'description': 'The path this page is reported under, starting with /',
-            'label': 'Page path',
-            'synonyms': 'url, route, page',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'statusSlot': {
-            'default': 'main',
-            'description': 'Where the atom shows its one-line status; a page running it in the background sends it to `system`',
-            'label': 'Status slot',
-            'synonyms': 'status area, slot',
-            'tier': 'presentation',
-            'type': 'slot',
-          },
-        },
+        'name': 'Analytics',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -272,8 +238,8 @@ export function stdAnalyticsAnalyticsOrbital(params: StdAnalyticsAnalyticsOrbita
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.statusSlot',
+            'resolved': false,
           },
           {
             'kind': 'set',
@@ -288,104 +254,106 @@ export function stdAnalyticsAnalyticsOrbital(params: StdAnalyticsAnalyticsOrbita
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'AnalyticsRecord',
         'emits': [
           {
-            'description': 'The report was handed to the collector (`sent`), or skipped (no endpoint, or a local host)',
             'event': 'REPORTED',
+            'description': 'The report was handed to the collector (`sent`), or skipped (no endpoint, or a local host)',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'sent',
-                'required': true,
                 'type': 'boolean',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The report could not be sent (a bad event name, or no analytics service on this host)',
             'event': 'REPORT_FAILED',
+            'description': 'The report could not be sent (a bad event name, or no analytics service on this host)',
+            'tier': 'secondary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'secondary',
           },
         ],
-        'linkedEntity': 'AnalyticsRecord',
-        'name': 'Analytics',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'active',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Report a named event on this page, with its properties',
-              'external': true,
               'key': 'TRACK',
               'name': 'Track',
+              'description': 'Report a named event on this page, with its properties',
+              'synonyms': 'track event, log event, record click, analytics event',
               'payloadSchema': [
                 {
                   'name': 'name',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'props',
                   'type': 'Map<string,string>',
                 },
               ],
-              'synonyms': 'track event, log event, record click, analytics event',
+              'external': true,
             },
             {
-              'description': 'The report was handed to the collector (`sent`), or skipped (no endpoint, or a local host)',
               'key': 'REPORTED',
               'name': 'Reported',
+              'description': 'The report was handed to the collector (`sent`), or skipped (no endpoint, or a local host)',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'sent',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'The report could not be sent (a bad event name, or no analytics service on this host)',
               'key': 'REPORT_FAILED',
               'name': 'Report Failed',
+              'description': 'The report could not be sent (a bad event name, or no analytics service on this host)',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'active',
             },
           ],
           'transitions': [
             {
+              'from': 'active',
+              'to': 'active',
+              'event': 'INIT',
               'effects': [
                 [
                   'call-service',
                   'analytics',
                   'pageview',
                   {
-                    'domain': '@config.domain',
                     'endpoint': '@config.endpoint',
                     'path': '@config.path',
+                    'domain': '@config.domain',
                   },
                   {
                     'emit': {
@@ -398,43 +366,43 @@ export function stdAnalyticsAnalyticsOrbital(params: StdAnalyticsAnalyticsOrbita
                   'render-ui',
                   '@config.statusSlot',
                   {
-                    'content': 'Reporting this visit…',
+                    'variant': 'caption',
                     'role': 'status',
                     'type': 'typography',
-                    'variant': 'caption',
+                    'content': 'Reporting this visit…',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'active',
-              'to': 'active',
             },
             {
+              'from': 'active',
+              'to': 'active',
+              'event': 'TRACK',
               'effects': [
                 [
                   'call-service',
                   'analytics',
                   'track',
                   {
+                    'name': '@payload.name',
                     'domain': '@config.domain',
                     'endpoint': '@config.endpoint',
-                    'name': '@payload.name',
-                    'path': '@config.path',
                     'props': '@payload.props',
+                    'path': '@config.path',
                   },
                   {
                     'emit': {
-                      'failure': 'REPORT_FAILED',
                       'success': 'REPORTED',
+                      'failure': 'REPORT_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'TRACK',
-              'from': 'active',
-              'to': 'active',
             },
             {
+              'from': 'active',
+              'to': 'active',
+              'event': 'REPORTED',
               'effects': [
                 [
                   'set',
@@ -464,23 +432,23 @@ export function stdAnalyticsAnalyticsOrbital(params: StdAnalyticsAnalyticsOrbita
                   'render-ui',
                   '@config.statusSlot',
                   {
+                    'type': 'typography',
                     'content': [
                       'if',
                       '@payload.sent',
                       'Visit reported',
                       'Not reported here',
                     ],
-                    'role': 'status',
-                    'type': 'typography',
                     'variant': 'caption',
+                    'role': 'status',
                   },
                 ],
               ],
-              'event': 'REPORTED',
-              'from': 'active',
-              'to': 'active',
             },
             {
+              'from': 'active',
+              'to': 'active',
+              'event': 'REPORT_FAILED',
               'effects': [
                 [
                   'set',
@@ -496,23 +464,55 @@ export function stdAnalyticsAnalyticsOrbital(params: StdAnalyticsAnalyticsOrbita
                   'render-ui',
                   '@config.statusSlot',
                   {
+                    'role': 'status',
+                    'variant': 'caption',
+                    'type': 'typography',
                     'content': [
                       'str/concat',
                       'Not reported: ',
                       '@payload.error',
                     ],
-                    'role': 'status',
-                    'type': 'typography',
-                    'variant': 'caption',
                   },
                 ],
               ],
-              'event': 'REPORT_FAILED',
-              'from': 'active',
-              'to': 'active',
             },
           ],
         },
+        'config': {
+          'statusSlot': {
+            'type': 'slot',
+            'default': 'main',
+            'label': 'Status slot',
+            'description': 'Where the atom shows its one-line status; a page running it in the background sends it to `system`',
+            'synonyms': 'status area, slot',
+            'tier': 'presentation',
+          },
+          'path': {
+            'type': 'string',
+            'default': '/',
+            'label': 'Page path',
+            'description': 'The path this page is reported under, starting with /',
+            'synonyms': 'url, route, page',
+            'tier': 'domain',
+          },
+          'domain': {
+            'type': 'string',
+            'default': '',
+            'label': 'Site',
+            'description': 'The site id each report is recorded under; empty records the page\'s host',
+            'synonyms': 'site id, hostname, property',
+            'tier': 'domain',
+          },
+          'endpoint': {
+            'type': 'string',
+            'default': '',
+            'label': 'Collector endpoint',
+            'description': 'The analytics collector\'s ingest URL (`POST`); empty sends nothing',
+            'synonyms': 'analytics url, collector, stats endpoint, beacon url',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

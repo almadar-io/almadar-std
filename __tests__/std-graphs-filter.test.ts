@@ -4,10 +4,11 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { STD_REGISTRY } from './std-registry.js';
 
 type Node = string | number | boolean | null | Node[] | { [key: string]: Node };
 
-const orb = JSON.parse(readFileSync(join(__dirname, '../behaviors/registry/ui/core/atoms/std-graphs.orb'), 'utf-8')) as {
+const orb = JSON.parse(readFileSync(join(STD_REGISTRY, 'ui/core/atoms/std-graphs.orb'), 'utf-8')) as {
   orbitals: Array<{ traits: Array<{
     config: Record<string, { default: Node }>;
     stateMachine: { transitions: Array<{ event: string; effects: Node[] }> };

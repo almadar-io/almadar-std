@@ -172,18 +172,18 @@ export function stdAnimTickAnimTickOrbital(params: StdAnimTickAnimTickOrbitalPar
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'default': 0,
             'name': 'animCounter',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
             'name': 'frameName',
             'type': 'string',
+            'default': '',
           },
         ];
         const extras = params.fields ?? [];
@@ -194,19 +194,14 @@ export function stdAnimTickAnimTickOrbital(params: StdAnimTickAnimTickOrbitalPar
     } as Entity,
     traits: [
       {
-        'category': 'game-core',
-        'config': {
-          'frames': {
-            'default': [],
-            'description': 'Atlas sub-texture names cycled into @entity.frameName, one per tick; empty disables name cycling.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Frame names',
-            'synonyms': 'sprite names, atlas frames, animation frames',
-            'tier': 'domain',
-            'type': '[string]',
-          },
+        'name': 'AnimTick',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'animCounter',
+            'frameName',
+          ],
         },
         'effectRow': [
           {
@@ -232,32 +227,26 @@ export function stdAnimTickAnimTickOrbital(params: StdAnimTickAnimTickOrbitalPar
             'site': 'tick',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'animCounter',
-            'frameName',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
+        'category': 'game-core',
         'linkedEntity': 'AnimTickItem',
-        'name': 'AnimTick',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'running',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'running',
-            },
-          ],
           'transitions': [
             {
+              'from': 'running',
+              'to': 'running',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -286,14 +275,13 @@ export function stdAnimTickAnimTickOrbital(params: StdAnimTickAnimTickOrbitalPar
                   ],
                 ],
               ],
-              'event': 'INIT',
-              'from': 'running',
-              'to': 'running',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'animTick',
+            'interval': 100,
             'effects': [
               [
                 'set',
@@ -333,10 +321,22 @@ export function stdAnimTickAnimTickOrbital(params: StdAnimTickAnimTickOrbitalPar
                 ],
               ],
             ],
-            'interval': 100,
-            'name': 'animTick',
           },
         ],
+        'config': {
+          'frames': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Frame names',
+            'description': 'Atlas sub-texture names cycled into @entity.frameName, one per tick; empty disables name cycling.',
+            'synonyms': 'sprite names, atlas frames, animation frames',
+            'tier': 'domain',
+            'items': {
+              'type': 'string',
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

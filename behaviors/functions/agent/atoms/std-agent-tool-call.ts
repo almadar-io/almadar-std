@@ -183,116 +183,116 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
+            'name': 'messages',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
-                'content': {
-                  'name': 'content',
-                  'required': true,
-                  'type': 'string',
-                },
-                'role': {
-                  'name': 'role',
-                  'required': true,
-                  'type': 'string',
-                },
-                'toolCallId': {
-                  'name': 'toolCallId',
-                  'required': false,
-                  'type': 'string',
-                },
                 'toolCalls': {
+                  'name': 'toolCalls',
+                  'type': 'array',
+                  'required': false,
                   'items': {
+                    'type': 'object',
                     'properties': {
-                      'function': {
-                        'name': 'function',
-                        'properties': {
-                          'arguments': {
-                            'name': 'arguments',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'name': {
-                            'name': 'name',
-                            'required': true,
-                            'type': 'string',
-                          },
-                        },
-                        'required': false,
-                        'type': 'object',
-                      },
-                      'id': {
-                        'name': 'id',
-                        'required': true,
-                        'type': 'string',
-                      },
                       'type': {
                         'name': 'type',
-                        'required': false,
                         'type': 'string',
+                        'required': false,
                         'values': [
                           'function',
                         ],
                       },
+                      'id': {
+                        'name': 'id',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'function': {
+                        'name': 'function',
+                        'type': 'object',
+                        'required': false,
+                        'properties': {
+                          'arguments': {
+                            'name': 'arguments',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'name': {
+                            'name': 'name',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
                     },
-                    'type': 'object',
                   },
-                  'name': 'toolCalls',
+                },
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': true,
+                },
+                'toolCallId': {
+                  'name': 'toolCallId',
+                  'type': 'string',
                   'required': false,
-                  'type': 'array',
+                },
+                'role': {
+                  'name': 'role',
+                  'type': 'string',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'messages',
-            'type': 'array',
           },
           {
+            'name': 'tools',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
                 'description': {
                   'name': 'description',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'name': {
                   'name': 'name',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'schema': {
                   'name': 'schema',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
-                    'description': {
-                      'name': 'description',
-                      'required': false,
-                      'type': 'string',
-                    },
                     'type': {
                       'name': 'type',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
                     },
                   },
-                  'required': false,
-                  'type': 'object',
                 },
               },
-              'type': 'object',
             },
-            'name': 'tools',
-            'type': 'array',
           },
           {
-            'default': '',
             'name': 'response',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'done',
@@ -307,7 +307,7 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'ToolCallExecution',
         'effectRow': [
           {
             'kind': 'llm/call-tools',
@@ -329,22 +329,33 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
             'resource': '@entity.tools',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'ToolCall',
         'emits': [
           {
             'event': 'TOOLS_CALLED',
             'payloadSchema': [
               {
                 'name': 'result',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
           },
         ],
-        'linkedEntity': 'ToolCall',
-        'name': 'ToolCallExecution',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'calling',
+            },
+            {
+              'name': 'done',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -356,24 +367,27 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
               'payloadSchema': [
                 {
                   'name': 'messages',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'role',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'toolCalls',
+                      'type': '[object]',
                       'properties': [
                         {
                           'name': 'id',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'type',
@@ -384,46 +398,46 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                         },
                         {
                           'name': 'function',
+                          'type': 'object',
                           'properties': [
                             {
                               'name': 'name',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'arguments',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                           ],
-                          'type': 'object',
                         },
                       ],
-                      'type': '[object]',
                     },
                     {
                       'name': 'toolCallId',
                       'type': 'string',
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
                 },
                 {
                   'name': 'tools',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'name',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'description',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'schema',
+                      'type': 'object',
                       'properties': [
                         {
                           'name': 'type',
@@ -434,11 +448,8 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                           'type': 'string',
                         },
                       ],
-                      'type': 'object',
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
                 },
               ],
             },
@@ -448,8 +459,8 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
               'payloadSchema': [
                 {
                   'name': 'result',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
@@ -462,20 +473,11 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
               'name': 'Reset',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'calling',
-            },
-            {
-              'name': 'done',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -498,11 +500,11 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'calling',
+              'event': 'CALL_TOOLS',
               'effects': [
                 [
                   'set',
@@ -526,11 +528,11 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                   },
                 ],
               ],
-              'event': 'CALL_TOOLS',
-              'from': 'idle',
-              'to': 'calling',
             },
             {
+              'from': 'calling',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -553,11 +555,11 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'calling',
-              'to': 'idle',
             },
             {
+              'from': 'calling',
+              'to': 'done',
+              'event': 'TOOLS_CALLED',
               'effects': [
                 [
                   'set',
@@ -570,11 +572,11 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                   'done',
                 ],
               ],
-              'event': 'TOOLS_CALLED',
-              'from': 'calling',
-              'to': 'done',
             },
             {
+              'from': 'calling',
+              'to': 'done',
+              'event': 'TOOLS_FAILED',
               'effects': [
                 [
                   'set',
@@ -587,11 +589,11 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                   'done',
                 ],
               ],
-              'event': 'TOOLS_FAILED',
-              'from': 'calling',
-              'to': 'done',
             },
             {
+              'from': 'done',
+              'to': 'done',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -599,11 +601,11 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                   'done',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'done',
-              'to': 'done',
             },
             {
+              'from': 'done',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -626,35 +628,41 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'done',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'lifecycle',
+        'name': 'ToolCallReady',
         'effectRow': [
           {
             'kind': 'set',
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
         'linkedEntity': 'ToolCall',
         'listens': [
           {
             'event': 'TOOLS_CALLED',
+            'triggers': 'TOOLS_CALLED',
             'source': {
               'kind': 'trait',
               'trait': ('ToolCallExecution' satisfies _StdAgentToolCallListenTraitName),
             },
-            'triggers': 'TOOLS_CALLED',
           },
         ],
-        'name': 'ToolCallReady',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'waiting',
+              'isInitial': true,
+            },
+            {
+              'name': 'ready',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -669,17 +677,11 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
               'name': 'Reset',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'waiting',
-            },
-            {
-              'name': 'ready',
-            },
-          ],
           'transitions': [
             {
+              'from': 'waiting',
+              'to': 'waiting',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -687,23 +689,11 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'waiting',
-              'to': 'waiting',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.status',
-                  'done',
-                ],
-              ],
+              'from': 'waiting',
+              'to': 'ready',
               'event': 'TOOLS_CALLED',
-              'from': 'waiting',
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -711,11 +701,23 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                   'done',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'waiting',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -723,12 +725,10 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'ready',
-              'to': 'waiting',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

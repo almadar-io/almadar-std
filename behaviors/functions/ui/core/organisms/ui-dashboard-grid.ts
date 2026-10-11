@@ -39,44 +39,44 @@ export type StdUiDashboardGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardGridConfig {
-  /** Default: `{}` */
-  activeFilters?: Record<string, TraitConfig>;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `[{"colSpan":1,"content":"Content","id":"Id","rowSpan":1},{"colSpan":2,"content":"Content 2","id":"Id 2","rowSpan":2}]` */
-  cells?: EntityRow[];
-  className?: string;
-  /** Default: `3` */
-  columns?: number;
-  dir?: 'ltr' | 'rtl' | 'auto';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
+  ariaExpanded?: boolean;
+  sortDirection?: 'asc' | 'desc';
+  sortBy?: string;
   error?: EntityRow;
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
-  isLoading?: boolean;
-  lang?: string;
-  pageProp?: number;
-  pageSize?: number;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  searchValue?: string;
+  totalCount?: number;
   /** Default: `[]` */
   selectedIds?: string[];
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
+  ariaLabelledby?: string;
+  tabIndex?: number;
+  pageProp?: number;
+  /** Default: `{}` */
+  activeFilters?: Record<string, TraitConfig>;
+  isLoading?: boolean;
+  ariaSelected?: boolean;
+  /** Default: `[{"content":"Content","id":"Id","colSpan":1,"rowSpan":1},{"colSpan":2,"rowSpan":2,"id":"Id 2","content":"Content 2"}]` */
+  cells?: EntityRow[];
+  ariaBusy?: boolean;
+  pageSize?: number;
+  ariaDescribedby?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  searchValue?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  className?: string;
   /** Default: `"auto"` */
   surface?: 'auto' | 'none';
-  tabIndex?: number;
-  totalCount?: number;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaLabel?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  lang?: string;
+  /** Default: `3` */
+  columns?: number;
+  enterDelay?: number;
+  ariaHidden?: boolean;
 }
 
 type _StdUiDashboardGridEntityName = 'DashboardGridItem';
@@ -136,8 +136,8 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -148,181 +148,88 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
     } as Entity,
     traits: [
       {
+        'name': 'DashboardGridRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
+        'linkedEntity': 'DashboardGridItem',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'searchValue': '@config.searchValue',
+                    'gap': '@config.gap',
+                    'totalCount': '@config.totalCount',
+                    'aria-label': '@config.ariaLabel',
+                    'sortBy': '@config.sortBy',
+                    'aria-selected': '@config.ariaSelected',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'enter': '@config.enter',
+                    'selectedIds': '@config.selectedIds',
+                    'dir': '@config.dir',
+                    'type': 'dashboard-grid',
+                    'skeleton': '@config.skeleton',
+                    'activeFilters': '@config.activeFilters',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'role': '@config.role',
+                    'className': '@config.className',
+                    'aria-live': '@config.ariaLive',
+                    'columns': '@config.columns',
+                    'cells': '@config.cells',
+                    'surface': '@config.surface',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'sortDirection': '@config.sortDirection',
+                    'lang': '@config.lang',
+                    'error': '@config.error',
+                    'aria-pressed': '@config.ariaPressed',
+                    'tabIndex': '@config.tabIndex',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-busy': '@config.ariaBusy',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'enterDelay': '@config.enterDelay',
+                    'isLoading': '@config.isLoading',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
         'config': {
-          'activeFilters': {
-            'default': {},
-            'description': 'Active filters',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Active Filters',
-            'tier': 'presentation',
-            'type': 'Map<string,string>',
-          },
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
-            'label': 'Aria-current',
-            'synonyms': 'aria-current',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'page',
-              'step',
-              'location',
-              'date',
-              'time',
-              'true',
-              'false',
-            ],
-          },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'cells': {
-            'default': [
-              {
-                'colSpan': 1,
-                'content': 'Content',
-                'id': 'Id',
-                'rowSpan': 1,
-              },
-              {
-                'colSpan': 2,
-                'content': 'Content 2',
-                'id': 'Id 2',
-                'rowSpan': 2,
-              },
-            ],
-            'description': 'Cell definitions',
-            'items': {
-              'properties': {
-                'colSpan': {
-                  'name': 'colSpan',
-                  'required': false,
-                  'type': 'number',
-                },
-                'content': {
-                  'name': 'content',
-                  'required': false,
-                  'type': 'node',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'rowSpan': {
-                  'name': 'rowSpan',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Cells',
-            'tier': 'presentation',
-            'type': '[DashboardGridCellsItem]',
-          },
-          'className': {
-            'description': 'Additional CSS classes',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'columns': {
-            'default': 3,
-            'description': 'Number of columns',
-            'label': 'Columns',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
-          },
           'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
             'values': [
               'none',
               'fade',
@@ -331,82 +238,198 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
               'slide',
             ],
           },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
             'tier': 'presentation',
-            'type': 'number',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'sortBy': {
+            'type': 'string',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
           },
           'error': {
-            'description': 'Error state (UiError)',
+            'type': 'DashboardGridError',
             'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
             'properties': {
               'code': {
                 'name': 'code',
+                'type': 'string',
                 'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
               },
               'stack': {
                 'name': 'stack',
-                'required': false,
                 'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
               },
             },
-            'tier': 'presentation',
-            'type': 'DashboardGridError',
           },
           'gap': {
-            'default': 'md',
-            'description': 'Gap between cells',
-            'label': 'Gap',
-            'tier': 'presentation',
             'type': 'string',
+            'default': 'md',
+            'label': 'Gap',
+            'description': 'Gap between cells',
+            'tier': 'presentation',
             'values': [
               'sm',
               'md',
               'lg',
             ],
           },
-          'isLoading': {
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
+          'totalCount': {
+            'type': 'number',
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
-            'type': 'boolean',
           },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'ariaLabelledby': {
             'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
           },
           'pageProp': {
-            'description': 'Current page number',
+            'type': 'number',
             'label': 'Page',
+            'description': 'Current page number',
             'synonyms': 'page',
             'tier': 'presentation',
-            'type': 'number',
+          },
+          'activeFilters': {
+            'type': 'Map<string,string>',
+            'default': {},
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'cells': {
+            'type': '[DashboardGridCellsItem]',
+            'default': [
+              {
+                'content': 'Content',
+                'id': 'Id',
+                'colSpan': 1,
+                'rowSpan': 1,
+              },
+              {
+                'colSpan': 2,
+                'rowSpan': 2,
+                'id': 'Id 2',
+                'content': 'Content 2',
+              },
+            ],
+            'label': 'Cells',
+            'description': 'Cell definitions',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'type': 'node',
+                  'required': false,
+                },
+                'colSpan': {
+                  'name': 'colSpan',
+                  'type': 'number',
+                  'required': false,
+                },
+                'rowSpan': {
+                  'name': 'rowSpan',
+                  'type': 'number',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
           },
           'pageSize': {
-            'description': 'Number of items per page',
-            'label': 'Page Size',
-            'tier': 'presentation',
             'type': 'number',
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'ariaDescribedby': {
+            'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -492,26 +515,72 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
             ],
           },
           'searchValue': {
-            'description': 'Current search query value',
-            'label': 'Search Value',
-            'tier': 'presentation',
             'type': 'string',
-          },
-          'selectedIds': {
-            'default': [],
-            'description': 'Currently selected item IDs',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Selected Ids',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
-            'type': '[string]',
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'dir': {
+            'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'surface': {
+            'type': 'string',
+            'default': 'auto',
+            'label': 'Surface',
+            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out. Each cell is a tile.',
+            'tier': 'presentation',
+            'values': [
+              'auto',
+              'none',
+            ],
+          },
+          'ariaCurrent': {
+            'type': 'string',
+            'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'synonyms': 'aria-current',
+            'tier': 'presentation',
+            'values': [
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
+            ],
           },
           'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
             'values': [
               'header',
               'table',
@@ -525,122 +594,53 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
               'none',
             ],
           },
-          'sortBy': {
-            'description': 'Current sort field',
-            'label': 'Sort By',
-            'tier': 'presentation',
+          'ariaLabel': {
             'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
           },
-          'sortDirection': {
-            'description': 'Current sort direction',
-            'label': 'Sort Direction',
-            'tier': 'presentation',
+          'ariaLive': {
             'type': 'string',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
             'values': [
-              'asc',
-              'desc',
+              'off',
+              'polite',
+              'assertive',
             ],
           },
-          'surface': {
-            'default': 'auto',
-            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out. Each cell is a tile.',
-            'label': 'Surface',
-            'tier': 'presentation',
+          'lang': {
             'type': 'string',
-            'values': [
-              'auto',
-              'none',
-            ],
-          },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
             'tier': 'presentation',
-            'type': 'number',
           },
-          'totalCount': {
-            'description': 'Total number of items',
-            'label': 'Total Count',
-            'tier': 'presentation',
+          'columns': {
             'type': 'number',
+            'default': 3,
+            'label': 'Columns',
+            'description': 'Number of columns',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
           },
         },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'DashboardGridItem',
-        'name': 'DashboardGridRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'activeFilters': '@config.activeFilters',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'cells': '@config.cells',
-                    'className': '@config.className',
-                    'columns': '@config.columns',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'error': '@config.error',
-                    'gap': '@config.gap',
-                    'isLoading': '@config.isLoading',
-                    'lang': '@config.lang',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'skeleton': '@config.skeleton',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'totalCount': '@config.totalCount',
-                    'type': 'dashboard-grid',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

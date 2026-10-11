@@ -77,28 +77,28 @@ export interface StdScopedListDeletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdScopedListConfig {
-  /** Default: `""` */
-  emptyDescription?: string;
-  /** Default: `"inbox"` */
-  emptyIcon?: unknown;
+  /** Default: `[{"variant":"h4","name":"name","label":"Name"}]` */
+  fields?: EntityRow[];
   /** Default: `"Nothing here yet"` */
   emptyTitle?: string;
-  /** Default: `[{"label":"Name","name":"name","variant":"h4"}]` */
-  fields?: EntityRow[];
-  /** Default: `"sm"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   itemActions?: EntityRow[];
-  /** Default: `"VIEW"` */
-  itemClickEvent?: string;
-  /** Default: `"parentId"` */
-  scopeField?: string;
-  /** Default: `""` */
-  sortBy?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `"parentId"` */
+  scopeField?: string;
+  /** Default: `"VIEW"` */
+  itemClickEvent?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"inbox"` */
+  emptyIcon?: unknown;
+  /** Default: `""` */
+  sortBy?: string;
+  /** Default: `"sm"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  emptyDescription?: string;
   /** Default: `"everything"` */
   whenUnscoped?: 'everything' | 'nothing';
 }

@@ -46,39 +46,39 @@ export interface StdUiSplitPaneRatioChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSplitPaneConfig {
-  ariaBusy?: boolean;
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `"RATIO_CHANGE"` */
+  onRatioChange?: string;
+  /** Default: `[]` */
+  right?: PatternValue;
   ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
+  ariaBusy?: boolean;
   className?: string;
+  /** Default: `100` */
+  minSize?: number;
+  ariaLabel?: string;
+  leftClassName?: string;
+  tabIndex?: number;
   dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `"horizontal"` */
   direction?: 'horizontal' | 'vertical';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  lang?: string;
   /** Default: `[]` */
   left?: PatternValue;
-  leftClassName?: string;
-  /** Default: `100` */
-  minSize?: number;
-  /** Default: `"RATIO_CHANGE"` */
-  onRatioChange?: string;
-  ratio?: number;
   /** Default: `true` */
   resizable?: boolean;
-  /** Default: `[]` */
-  right?: PatternValue;
   rightClassName?: string;
+  ariaExpanded?: boolean;
+  lang?: string;
+  enterDelay?: number;
+  ariaDescribedby?: string;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
+  ariaSelected?: boolean;
+  ratio?: number;
+  ariaLabelledby?: string;
+  ariaHidden?: boolean;
 }
 
 type _StdUiSplitPaneEntityName = 'SplitPaneItem';
@@ -138,13 +138,13 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'intrinsic': true,
             'name': 'ratio',
             'type': 'number',
+            'intrinsic': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -155,21 +155,178 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
-            'type': 'boolean',
+        'name': 'SplitPaneRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'ratio',
+          ],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
           },
+          {
+            'kind': 'set',
+            'resource': '@entity.ratio',
+          },
+        ],
+        'category': 'interaction',
+        'linkedEntity': 'SplitPaneItem',
+        'emits': [
+          {
+            'event': '@config.onRatioChange',
+            'description': 'Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'ratio',
+                'type': 'number',
+              },
+            ],
+            'definerKnob': 'onRatioChange',
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'RATIO_CHANGE',
+              'name': 'Ratio Change',
+              'payloadSchema': [
+                {
+                  'name': 'ratio',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': '@config.onRatioChange',
+              'name': '@config.on ratio change',
+              'description': 'Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'ratio',
+                  'type': 'number',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.ratio',
+                  '@config.ratio',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'enterDelay': '@config.enterDelay',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-current': '@config.ariaCurrent',
+                    'enter': '@config.enter',
+                    'minSize': '@config.minSize',
+                    'leftClassName': '@config.leftClassName',
+                    'aria-hidden': '@config.ariaHidden',
+                    'type': 'split-pane',
+                    'onRatioChange': '@config.onRatioChange',
+                    'direction': '@config.direction',
+                    'aria-selected': '@config.ariaSelected',
+                    'rightClassName': '@config.rightClassName',
+                    'aria-live': '@config.ariaLive',
+                    'resizable': '@config.resizable',
+                    'lang': '@config.lang',
+                    'ratio': '@entity.ratio',
+                    'aria-label': '@config.ariaLabel',
+                    'role': '@config.role',
+                    'tabIndex': '@config.tabIndex',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'left': '@config.left',
+                    'right': '@config.right',
+                    'dir': '@config.dir',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'skeleton': '@config.skeleton',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'RATIO_CHANGE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.ratio',
+                  '@payload.ratio',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'aria-expanded': '@config.ariaExpanded',
+                    'ratio': '@entity.ratio',
+                    'lang': '@config.lang',
+                    'aria-hidden': '@config.ariaHidden',
+                    'onRatioChange': '@config.onRatioChange',
+                    'aria-label': '@config.ariaLabel',
+                    'direction': '@config.direction',
+                    'left': '@config.left',
+                    'enter': '@config.enter',
+                    'aria-live': '@config.ariaLive',
+                    'minSize': '@config.minSize',
+                    'aria-selected': '@config.ariaSelected',
+                    'type': 'split-pane',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-current': '@config.ariaCurrent',
+                    'rightClassName': '@config.rightClassName',
+                    'skeleton': '@config.skeleton',
+                    'leftClassName': '@config.leftClassName',
+                    'tabIndex': '@config.tabIndex',
+                    'role': '@config.role',
+                    'aria-busy': '@config.ariaBusy',
+                    'right': '@config.right',
+                    'className': '@config.className',
+                    'enterDelay': '@config.enterDelay',
+                    'resizable': '@config.resizable',
+                    'dir': '@config.dir',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-pressed': '@config.ariaPressed',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
           'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'type': 'string',
             'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
             'synonyms': 'aria-current',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
               'page',
               'step',
@@ -180,105 +337,11 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
               'false',
             ],
           },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'className': {
-            'description': 'Additional CSS classes',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
-          },
-          'direction': {
-            'default': 'horizontal',
-            'description': 'Direction of the split',
-            'label': 'Direction',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'horizontal',
-              'vertical',
-            ],
-          },
           'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
             'values': [
               'none',
               'fade',
@@ -287,76 +350,174 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
               'slide',
             ],
           },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
+          'skeleton': {
             'type': 'string',
-          },
-          'left': {
-            'default': [],
-            'description': 'Content for the left/top pane',
-            'label': 'Left',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
             'tier': 'presentation',
-            'type': 'node',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
           },
-          'leftClassName': {
-            'description': 'Class for left/top pane',
-            'label': 'Left Class Name',
-            'tier': 'presentation',
+          'ariaLive': {
             'type': 'string',
-          },
-          'minSize': {
-            'default': 100,
-            'description': 'Minimum size of either pane in pixels',
-            'label': 'Min Size',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
             'tier': 'presentation',
-            'type': 'number',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
           },
           'onRatioChange': {
-            'default': 'RATIO_CHANGE',
-            'description': 'Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.',
-            'label': 'On Ratio Change',
-            'tier': 'presentation',
             'type': 'event',
-          },
-          'ratio': {
-            'description': 'Initial ratio (0-100, percentage of first pane)',
-            'label': 'Ratio',
+            'default': 'RATIO_CHANGE',
+            'label': 'On Ratio Change',
+            'description': 'Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.',
             'tier': 'presentation',
-            'type': 'number',
-          },
-          'resizable': {
-            'default': true,
-            'description': 'Allow user resizing',
-            'label': 'Resizable',
-            'tier': 'presentation',
-            'type': 'boolean',
           },
           'right': {
-            'default': [],
-            'description': 'Content for the right/bottom pane',
-            'label': 'Right',
-            'tier': 'presentation',
             'type': 'node',
+            'default': [],
+            'label': 'Right',
+            'description': 'Content for the right/bottom pane',
+            'tier': 'presentation',
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'minSize': {
+            'type': 'number',
+            'default': 100,
+            'label': 'Min Size',
+            'description': 'Minimum size of either pane in pixels',
+            'tier': 'presentation',
+          },
+          'ariaLabel': {
+            'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+          },
+          'leftClassName': {
+            'type': 'string',
+            'label': 'Left Class Name',
+            'description': 'Class for left/top pane',
+            'tier': 'presentation',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
+          },
+          'dir': {
+            'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'direction': {
+            'type': 'string',
+            'default': 'horizontal',
+            'label': 'Direction',
+            'description': 'Direction of the split',
+            'tier': 'presentation',
+            'values': [
+              'horizontal',
+              'vertical',
+            ],
+          },
+          'left': {
+            'type': 'node',
+            'default': [],
+            'label': 'Left',
+            'description': 'Content for the left/top pane',
+            'tier': 'presentation',
+          },
+          'resizable': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Resizable',
+            'description': 'Allow user resizing',
+            'tier': 'presentation',
           },
           'rightClassName': {
-            'description': 'Class for right/bottom pane',
-            'label': 'Right Class Name',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Right Class Name',
+            'description': 'Class for right/bottom pane',
+            'tier': 'presentation',
+          },
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
+          },
+          'ariaDescribedby': {
+            'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -441,196 +602,35 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
               'treeitem',
             ],
           },
-          'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
             'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'header',
-              'table',
-              'list',
-              'grid',
-              'detail',
-              'stats',
-              'form',
-              'card',
-              'text',
-              'none',
-            ],
           },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
-            'tier': 'presentation',
+          'ratio': {
             'type': 'number',
+            'label': 'Ratio',
+            'description': 'Initial ratio (0-100, percentage of first pane)',
+            'tier': 'presentation',
+          },
+          'ariaLabelledby': {
+            'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
           },
         },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-          {
-            'kind': 'set',
-            'resource': '@entity.ratio',
-          },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'onRatioChange',
-            'description': 'Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.',
-            'event': '@config.onRatioChange',
-            'payloadSchema': [
-              {
-                'name': 'ratio',
-                'type': 'number',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-        ],
-        'entityContract': {
-          'provides': [
-            'ratio',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'SplitPaneItem',
-        'name': 'SplitPaneRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'key': 'RATIO_CHANGE',
-              'name': 'Ratio Change',
-              'payloadSchema': [
-                {
-                  'name': 'ratio',
-                  'type': 'number',
-                },
-              ],
-            },
-            {
-              'description': 'Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.',
-              'key': '@config.onRatioChange',
-              'name': '@config.on ratio change',
-              'payloadSchema': [
-                {
-                  'name': 'ratio',
-                  'type': 'number',
-                },
-              ],
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.ratio',
-                  '@config.ratio',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'dir': '@config.dir',
-                    'direction': '@config.direction',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'lang': '@config.lang',
-                    'left': '@config.left',
-                    'leftClassName': '@config.leftClassName',
-                    'minSize': '@config.minSize',
-                    'onRatioChange': '@config.onRatioChange',
-                    'ratio': '@entity.ratio',
-                    'resizable': '@config.resizable',
-                    'right': '@config.right',
-                    'rightClassName': '@config.rightClassName',
-                    'role': '@config.role',
-                    'skeleton': '@config.skeleton',
-                    'tabIndex': '@config.tabIndex',
-                    'type': 'split-pane',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.ratio',
-                  '@payload.ratio',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'dir': '@config.dir',
-                    'direction': '@config.direction',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'lang': '@config.lang',
-                    'left': '@config.left',
-                    'leftClassName': '@config.leftClassName',
-                    'minSize': '@config.minSize',
-                    'onRatioChange': '@config.onRatioChange',
-                    'ratio': '@entity.ratio',
-                    'resizable': '@config.resizable',
-                    'right': '@config.right',
-                    'rightClassName': '@config.rightClassName',
-                    'role': '@config.role',
-                    'skeleton': '@config.skeleton',
-                    'tabIndex': '@config.tabIndex',
-                    'type': 'split-pane',
-                  },
-                ],
-              ],
-              'event': 'RATIO_CHANGE',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

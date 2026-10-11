@@ -78,69 +78,69 @@ export interface StdUiCanvas2dMovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCanvas2dConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  backgroundImage?: unknown;
-  bgColor?: string;
-  /** Default: `"pan-zoom"` */
-  camera?: 'pan-zoom' | 'follow' | 'fixed';
-  cameraPos?: EntityRow;
-  children?: PatternValue;
-  className?: string;
-  description?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `[]` */
-  drawables?: PatternValue[];
-  /** Default: `false` */
-  editable?: boolean;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
   /** Default: `false` */
   fit?: boolean;
-  followTarget?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `{"item":"INIT"}` */
-  keyMap?: Record<string, TraitConfig>;
-  /** Default: `{"item":"INIT"}` */
-  keyUpMap?: Record<string, TraitConfig>;
-  lang?: string;
-  /** Default: `"MOVE"` */
-  moveEvent?: string;
-  /** Default: `"MOVE"` */
-  onMove?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   /** Default: `"SELECT"` */
   onSelect?: string;
-  /** Default: `"isometric"` */
-  projection?: 'isometric' | 'hex' | 'flat' | 'free' | 'side';
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  error?: EntityRow;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"pan-zoom"` */
+  camera?: 'pan-zoom' | 'follow' | 'fixed';
+  ariaLabel?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `"TILE_LEAVE"` */
+  tileLeaveEvent?: string;
+  className?: string;
   /** Default: `0.4` */
   scale?: number;
+  tileWidth?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  selectedId?: string;
+  bgColor?: string;
+  /** Default: `"MOVE"` */
+  onMove?: string;
+  description?: string;
+  /** Default: `"TILE_HOVER"` */
+  tileHoverEvent?: string;
   /** Default: `"SELECT"` */
   selectEvent?: string;
-  selectedId?: string;
-  /** Default: `true` */
-  showMinimap?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `[]` */
+  drawables?: PatternValue[];
+  lang?: string;
+  enterDelay?: number;
+  followTarget?: EntityRow;
+  ariaExpanded?: boolean;
+  /** Default: `{"item":"INIT"}` */
+  keyUpMap?: Record<string, TraitConfig>;
+  ariaHidden?: boolean;
+  backgroundImage?: unknown;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `"UNIT_CLICK"` */
+  unitClickEvent?: string;
+  /** Default: `false` */
+  editable?: boolean;
+  ariaBusy?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `"isometric"` */
+  projection?: 'isometric' | 'hex' | 'flat' | 'free' | 'side';
+  ariaSelected?: boolean;
   tabIndex?: number;
   /** Default: `"TILE_CLICK"` */
   tileClickEvent?: string;
-  /** Default: `"TILE_HOVER"` */
-  tileHoverEvent?: string;
-  /** Default: `"TILE_LEAVE"` */
-  tileLeaveEvent?: string;
-  tileWidth?: number;
-  /** Default: `"UNIT_CLICK"` */
-  unitClickEvent?: string;
+  cameraPos?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  children?: PatternValue;
+  ariaLabelledby?: string;
+  ariaDescribedby?: string;
+  /** Default: `"MOVE"` */
+  moveEvent?: string;
+  /** Default: `true` */
+  showMinimap?: boolean;
+  /** Default: `{"item":"INIT"}` */
+  keyMap?: Record<string, TraitConfig>;
 }
 
 /**

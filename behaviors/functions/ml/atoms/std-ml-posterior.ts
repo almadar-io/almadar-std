@@ -66,18 +66,18 @@ export interface StdMlPosteriorEvidenceInsufficientPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMlPosteriorConfig {
-  /** Default: `0.3` */
-  intervalWidthMax?: number;
+  /** Default: `0.4` */
+  remediationCeiling?: number;
   /** Default: `0.8` */
   masteryFloor?: number;
   /** Default: `1` */
-  priorAlpha?: number;
-  /** Default: `1` */
   priorBeta?: number;
-  /** Default: `0.4` */
-  remediationCeiling?: number;
+  /** Default: `0.3` */
+  intervalWidthMax?: number;
   /** Default: `200` */
   sampleCount?: number;
+  /** Default: `1` */
+  priorAlpha?: number;
 }
 
 /**
@@ -208,45 +208,45 @@ export function stdMlPosteriorMlPosteriorOrbital(params: StdMlPosteriorMlPosteri
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': 1,
-            'description': 'Beta distribution success count (prior + observed successes).',
             'name': 'alpha',
             'type': 'number',
+            'default': 1,
+            'description': 'Beta distribution success count (prior + observed successes).',
           },
           {
-            'default': 1,
-            'description': 'Beta distribution failure count (prior + observed failures).',
             'name': 'beta',
             'type': 'number',
+            'default': 1,
+            'description': 'Beta distribution failure count (prior + observed failures).',
           },
           {
-            'default': 0,
-            'description': 'Posterior mean: alpha / (alpha + beta).',
             'name': 'mean',
             'type': 'number',
+            'default': 0,
+            'description': 'Posterior mean: alpha / (alpha + beta).',
           },
           {
-            'default': 0,
-            'description': 'Lower bound of the last computed credible interval.',
             'name': 'intervalLow',
             'type': 'number',
+            'default': 0,
+            'description': 'Lower bound of the last computed credible interval.',
           },
           {
-            'default': 0,
-            'description': 'Upper bound of the last computed credible interval.',
             'name': 'intervalHigh',
             'type': 'number',
+            'default': 0,
+            'description': 'Upper bound of the last computed credible interval.',
           },
           {
-            'default': 0,
-            'description': 'Number of observations folded into the posterior so far.',
             'name': 'observations',
             'type': 'number',
+            'default': 0,
+            'description': 'Number of observations folded into the posterior so far.',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'insufficient',
@@ -263,50 +263,19 @@ export function stdMlPosteriorMlPosteriorOrbital(params: StdMlPosteriorMlPosteri
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'intervalWidthMax': {
-            'default': 0.3,
-            'description': 'Above this width the posterior is too uncertain to decide — abstain with EVIDENCE_INSUFFICIENT.',
-            'label': 'Max credible-interval width',
-            'tier': 'policy',
-            'type': 'float',
-          },
-          'masteryFloor': {
-            'default': 0.8,
-            'description': 'Posterior mean at or above this, with a tight interval, licenses MASTERY_REACHED.',
-            'label': 'Mastery floor',
-            'tier': 'policy',
-            'type': 'float',
-          },
-          'priorAlpha': {
-            'default': 1,
-            'description': 'Beta prior success pseudo-count before any observation.',
-            'label': 'Prior alpha',
-            'tier': 'domain',
-            'type': 'float',
-          },
-          'priorBeta': {
-            'default': 1,
-            'description': 'Beta prior failure pseudo-count before any observation.',
-            'label': 'Prior beta',
-            'tier': 'domain',
-            'type': 'float',
-          },
-          'remediationCeiling': {
-            'default': 0.4,
-            'description': 'Posterior mean at or below this, with a tight interval, licenses REMEDIATION_NEEDED.',
-            'label': 'Remediation ceiling',
-            'tier': 'policy',
-            'type': 'float',
-          },
-          'sampleCount': {
-            'default': 200,
-            'description': 'Number of Monte Carlo draws from the Beta posterior used to estimate the credible interval.',
-            'label': 'Posterior sample count',
-            'tier': 'infra',
-            'type': 'int',
-          },
+        'name': 'PosteriorBelief',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'alpha',
+            'beta',
+            'intervalHigh',
+            'intervalLow',
+            'mean',
+            'observations',
+            'status',
+          ],
         },
         'effectRow': [
           {
@@ -350,94 +319,86 @@ export function stdMlPosteriorMlPosteriorOrbital(params: StdMlPosteriorMlPosteri
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'Posterior',
         'emits': [
           {
-            'description': 'The posterior mean clears masteryFloor with a credible interval narrow enough to trust.',
             'event': 'MASTERY_REACHED',
+            'description': 'The posterior mean clears masteryFloor with a credible interval narrow enough to trust.',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'mean',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
               {
                 'name': 'intervalLow',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
               {
                 'name': 'intervalHigh',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
           {
-            'description': 'The posterior mean is at or below remediationCeiling with a credible interval narrow enough to trust.',
             'event': 'REMEDIATION_NEEDED',
+            'description': 'The posterior mean is at or below remediationCeiling with a credible interval narrow enough to trust.',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'mean',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
               {
                 'name': 'intervalLow',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
               {
                 'name': 'intervalHigh',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
           {
-            'description': 'The abstain — the credible interval is still wider than intervalWidthMax, so no verdict is licensed yet.',
             'event': 'EVIDENCE_INSUFFICIENT',
+            'description': 'The abstain — the credible interval is still wider than intervalWidthMax, so no verdict is licensed yet.',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'mean',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
               {
                 'name': 'intervalLow',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
               {
                 'name': 'intervalHigh',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'alpha',
-            'beta',
-            'intervalHigh',
-            'intervalLow',
-            'mean',
-            'observations',
-            'status',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'Posterior',
-        'name': 'PosteriorBelief',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -449,89 +410,86 @@ export function stdMlPosteriorMlPosteriorOrbital(params: StdMlPosteriorMlPosteri
               'payloadSchema': [
                 {
                   'name': 'outcome',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
               ],
             },
             {
-              'description': 'The posterior mean clears masteryFloor with a credible interval narrow enough to trust.',
               'key': 'MASTERY_REACHED',
               'name': 'Mastery Reached',
+              'description': 'The posterior mean clears masteryFloor with a credible interval narrow enough to trust.',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'mean',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
                 {
                   'name': 'intervalLow',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
                 {
                   'name': 'intervalHigh',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'The posterior mean is at or below remediationCeiling with a credible interval narrow enough to trust.',
               'key': 'REMEDIATION_NEEDED',
               'name': 'Remediation Needed',
+              'description': 'The posterior mean is at or below remediationCeiling with a credible interval narrow enough to trust.',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'mean',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
                 {
                   'name': 'intervalLow',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
                 {
                   'name': 'intervalHigh',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'The abstain — the credible interval is still wider than intervalWidthMax, so no verdict is licensed yet.',
               'key': 'EVIDENCE_INSUFFICIENT',
               'name': 'Evidence Insufficient',
+              'description': 'The abstain — the credible interval is still wider than intervalWidthMax, so no verdict is licensed yet.',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'mean',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
                 {
                   'name': 'intervalLow',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
                 {
                   'name': 'intervalHigh',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -577,11 +535,11 @@ export function stdMlPosteriorMlPosteriorOrbital(params: StdMlPosteriorMlPosteri
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'OBSERVE',
               'effects': [
                 [
                   'set',
@@ -711,9 +669,9 @@ export function stdMlPosteriorMlPosteriorOrbital(params: StdMlPosteriorMlPosteri
                           'emit',
                           'EVIDENCE_INSUFFICIENT',
                           {
+                            'mean': '@entity.mean',
                             'intervalHigh': '@high',
                             'intervalLow': '@low',
-                            'mean': '@entity.mean',
                           },
                         ],
                       ],
@@ -735,9 +693,9 @@ export function stdMlPosteriorMlPosteriorOrbital(params: StdMlPosteriorMlPosteri
                             'emit',
                             'MASTERY_REACHED',
                             {
+                              'mean': '@entity.mean',
                               'intervalHigh': '@high',
                               'intervalLow': '@low',
-                              'mean': '@entity.mean',
                             },
                           ],
                         ],
@@ -759,8 +717,8 @@ export function stdMlPosteriorMlPosteriorOrbital(params: StdMlPosteriorMlPosteri
                               'emit',
                               'REMEDIATION_NEEDED',
                               {
-                                'intervalHigh': '@high',
                                 'intervalLow': '@low',
+                                'intervalHigh': '@high',
                                 'mean': '@entity.mean',
                               },
                             ],
@@ -788,12 +746,54 @@ export function stdMlPosteriorMlPosteriorOrbital(params: StdMlPosteriorMlPosteri
                   ],
                 ],
               ],
-              'event': 'OBSERVE',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'remediationCeiling': {
+            'type': 'float',
+            'default': 0.4,
+            'label': 'Remediation ceiling',
+            'description': 'Posterior mean at or below this, with a tight interval, licenses REMEDIATION_NEEDED.',
+            'tier': 'policy',
+          },
+          'masteryFloor': {
+            'type': 'float',
+            'default': 0.8,
+            'label': 'Mastery floor',
+            'description': 'Posterior mean at or above this, with a tight interval, licenses MASTERY_REACHED.',
+            'tier': 'policy',
+          },
+          'priorBeta': {
+            'type': 'float',
+            'default': 1,
+            'label': 'Prior beta',
+            'description': 'Beta prior failure pseudo-count before any observation.',
+            'tier': 'domain',
+          },
+          'intervalWidthMax': {
+            'type': 'float',
+            'default': 0.3,
+            'label': 'Max credible-interval width',
+            'description': 'Above this width the posterior is too uncertain to decide — abstain with EVIDENCE_INSUFFICIENT.',
+            'tier': 'policy',
+          },
+          'sampleCount': {
+            'type': 'int',
+            'default': 200,
+            'label': 'Posterior sample count',
+            'description': 'Number of Monte Carlo draws from the Beta posterior used to estimate the credible interval.',
+            'tier': 'infra',
+          },
+          'priorAlpha': {
+            'type': 'float',
+            'default': 1,
+            'label': 'Prior alpha',
+            'description': 'Beta prior success pseudo-count before any observation.',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

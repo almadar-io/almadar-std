@@ -57,14 +57,14 @@ export interface StdCoefPadCoefPadAppliedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCoefPadConfig {
-  /** Default: `[]` */
-  coefPads?: EntityRow[];
+  /** Default: `true` */
+  running?: boolean;
   /** Default: `0.7` */
   reachX?: number;
   /** Default: `1.2` */
   reachY?: number;
-  /** Default: `true` */
-  running?: boolean;
+  /** Default: `[]` */
+  coefPads?: EntityRow[];
 }
 
 /**

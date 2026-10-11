@@ -21,7 +21,7 @@ orbital WorkspaceLayoutOrbital {
     initial: composing
 
     state composing {
-      INIT -> composing
+      INIT -> composing when (not @config.secondarySidebarStartsCollapsed)
         (render-ui main {
           type: stack
           direction: vertical
@@ -46,8 +46,166 @@ orbital WorkspaceLayoutOrbital {
           secondarySidebarLabel: @config.secondarySidebarLabel
           secondarySidebarIcon: @config.secondarySidebarIcon
           secondarySidebarWidth: @config.secondarySidebarWidth
+          secondarySidebarCollapsed: false
+          onSecondarySidebarCollapsedChange: SECONDARY_TOGGLED
           }]
         })
+      INIT -> secondaryClosed when @config.secondarySidebarStartsCollapsed
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          className: "h-full min-h-0"
+          children: [(if @config.showTopBar @config.topBarTrait null), {
+          type: dock-layout
+          className: "flex-1 min-h-0"
+          rail: (if @config.showRail @config.railTrait null)
+          sidebar: (if @config.showSidebar @config.sidebarTrait null)
+          sidebarMinSize: @config.sidebarMinSize
+          main: {
+            type: box
+            className: "relative h-full"
+            children: [@config.mainTrait, (if @config.showFloating { type: box, className: "pointer-events-none absolute inset-x-0 top-2 z-30 flex justify-center", children: [{ type: box, className: "pointer-events-auto", children: [@config.floatingTrait] }] } null)]
+          }
+          bottomPanel: (if @config.showBottomPanel @config.bottomPanelTrait null)
+          bottomPanelLabel: @config.bottomPanelLabel
+          bottomPanelIcon: @config.bottomPanelIcon
+          statusBar: (if @config.showStatusBar @config.statusBarTrait null)
+          secondarySidebar: (if @config.showSecondarySidebar @config.secondarySidebarTrait null)
+          secondarySidebarLabel: @config.secondarySidebarLabel
+          secondarySidebarIcon: @config.secondarySidebarIcon
+          secondarySidebarWidth: @config.secondarySidebarWidth
+          secondarySidebarCollapsed: true
+          onSecondarySidebarCollapsedChange: SECONDARY_TOGGLED
+          }]
+        })
+      SECONDARY_TOGGLED -> secondaryClosed when (= ?collapsed true)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          className: "h-full min-h-0"
+          children: [(if @config.showTopBar @config.topBarTrait null), {
+          type: dock-layout
+          className: "flex-1 min-h-0"
+          rail: (if @config.showRail @config.railTrait null)
+          sidebar: (if @config.showSidebar @config.sidebarTrait null)
+          sidebarMinSize: @config.sidebarMinSize
+          main: {
+            type: box
+            className: "relative h-full"
+            children: [@config.mainTrait, (if @config.showFloating { type: box, className: "pointer-events-none absolute inset-x-0 top-2 z-30 flex justify-center", children: [{ type: box, className: "pointer-events-auto", children: [@config.floatingTrait] }] } null)]
+          }
+          bottomPanel: (if @config.showBottomPanel @config.bottomPanelTrait null)
+          bottomPanelLabel: @config.bottomPanelLabel
+          bottomPanelIcon: @config.bottomPanelIcon
+          statusBar: (if @config.showStatusBar @config.statusBarTrait null)
+          secondarySidebar: (if @config.showSecondarySidebar @config.secondarySidebarTrait null)
+          secondarySidebarLabel: @config.secondarySidebarLabel
+          secondarySidebarIcon: @config.secondarySidebarIcon
+          secondarySidebarWidth: @config.secondarySidebarWidth
+          secondarySidebarCollapsed: true
+          onSecondarySidebarCollapsedChange: SECONDARY_TOGGLED
+          }]
+        })
+    }
+
+    state secondaryClosed {
+      INIT -> composing when (not @config.secondarySidebarStartsCollapsed)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          className: "h-full min-h-0"
+          children: [(if @config.showTopBar @config.topBarTrait null), {
+          type: dock-layout
+          className: "flex-1 min-h-0"
+          rail: (if @config.showRail @config.railTrait null)
+          sidebar: (if @config.showSidebar @config.sidebarTrait null)
+          sidebarMinSize: @config.sidebarMinSize
+          main: {
+            type: box
+            className: "relative h-full"
+            children: [@config.mainTrait, (if @config.showFloating { type: box, className: "pointer-events-none absolute inset-x-0 top-2 z-30 flex justify-center", children: [{ type: box, className: "pointer-events-auto", children: [@config.floatingTrait] }] } null)]
+          }
+          bottomPanel: (if @config.showBottomPanel @config.bottomPanelTrait null)
+          bottomPanelLabel: @config.bottomPanelLabel
+          bottomPanelIcon: @config.bottomPanelIcon
+          statusBar: (if @config.showStatusBar @config.statusBarTrait null)
+          secondarySidebar: (if @config.showSecondarySidebar @config.secondarySidebarTrait null)
+          secondarySidebarLabel: @config.secondarySidebarLabel
+          secondarySidebarIcon: @config.secondarySidebarIcon
+          secondarySidebarWidth: @config.secondarySidebarWidth
+          secondarySidebarCollapsed: false
+          onSecondarySidebarCollapsedChange: SECONDARY_TOGGLED
+          }]
+        })
+      INIT -> secondaryClosed when @config.secondarySidebarStartsCollapsed
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          className: "h-full min-h-0"
+          children: [(if @config.showTopBar @config.topBarTrait null), {
+          type: dock-layout
+          className: "flex-1 min-h-0"
+          rail: (if @config.showRail @config.railTrait null)
+          sidebar: (if @config.showSidebar @config.sidebarTrait null)
+          sidebarMinSize: @config.sidebarMinSize
+          main: {
+            type: box
+            className: "relative h-full"
+            children: [@config.mainTrait, (if @config.showFloating { type: box, className: "pointer-events-none absolute inset-x-0 top-2 z-30 flex justify-center", children: [{ type: box, className: "pointer-events-auto", children: [@config.floatingTrait] }] } null)]
+          }
+          bottomPanel: (if @config.showBottomPanel @config.bottomPanelTrait null)
+          bottomPanelLabel: @config.bottomPanelLabel
+          bottomPanelIcon: @config.bottomPanelIcon
+          statusBar: (if @config.showStatusBar @config.statusBarTrait null)
+          secondarySidebar: (if @config.showSecondarySidebar @config.secondarySidebarTrait null)
+          secondarySidebarLabel: @config.secondarySidebarLabel
+          secondarySidebarIcon: @config.secondarySidebarIcon
+          secondarySidebarWidth: @config.secondarySidebarWidth
+          secondarySidebarCollapsed: true
+          onSecondarySidebarCollapsedChange: SECONDARY_TOGGLED
+          }]
+        })
+      SECONDARY_TOGGLED -> composing when (= ?collapsed false)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: none
+          className: "h-full min-h-0"
+          children: [(if @config.showTopBar @config.topBarTrait null), {
+          type: dock-layout
+          className: "flex-1 min-h-0"
+          rail: (if @config.showRail @config.railTrait null)
+          sidebar: (if @config.showSidebar @config.sidebarTrait null)
+          sidebarMinSize: @config.sidebarMinSize
+          main: {
+            type: box
+            className: "relative h-full"
+            children: [@config.mainTrait, (if @config.showFloating { type: box, className: "pointer-events-none absolute inset-x-0 top-2 z-30 flex justify-center", children: [{ type: box, className: "pointer-events-auto", children: [@config.floatingTrait] }] } null)]
+          }
+          bottomPanel: (if @config.showBottomPanel @config.bottomPanelTrait null)
+          bottomPanelLabel: @config.bottomPanelLabel
+          bottomPanelIcon: @config.bottomPanelIcon
+          statusBar: (if @config.showStatusBar @config.statusBarTrait null)
+          secondarySidebar: (if @config.showSecondarySidebar @config.secondarySidebarTrait null)
+          secondarySidebarLabel: @config.secondarySidebarLabel
+          secondarySidebarIcon: @config.secondarySidebarIcon
+          secondarySidebarWidth: @config.secondarySidebarWidth
+          secondarySidebarCollapsed: false
+          onSecondarySidebarCollapsedChange: SECONDARY_TOGGLED
+          }]
+        })
+    }
+
+    listens {
+      SECONDARY_TOGGLED {
+        collapsed : boolean!
+      }
+        @description "The right sidebar was closed or opened from its edge toggle."
+        @tier "interaction"
     }
 
     config {
@@ -131,6 +289,11 @@ orbital WorkspaceLayoutOrbital {
       secondarySidebarWidth : number = 280
         @label "Right sidebar width"
         @description "Width of the right sidebar in pixels."
+        @tier "presentation"
+      secondarySidebarStartsCollapsed : boolean = false
+        @label "Start with the right sidebar closed?"
+        @description "The right sidebar starts closed; its edge toggle opens it."
+        @synonyms "collapsed inspector, hidden right panel, closed right dock"
         @tier "presentation"
       showFloating : boolean = false
         @label "Show a floating strip over the main area?"

@@ -53,42 +53,42 @@ export interface StdUiGraphViewNodeHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGraphViewConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `[{"color":"Color","label":"Label","source":"Source","target":"Target"},{"color":"Color 2","label":"Label 2","source":"Source 2","target":"Target 2"}]` */
-  edges?: EntityRow[];
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  height?: number;
-  lang?: string;
-  /** Default: `"force"` */
-  layout?: 'force' | 'flow' | 'tree' | 'radial';
-  /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1},{"color":"Color 2","group":"Group 2","id":"Id 2","label":"Label 2","size":2}]` */
-  nodes?: EntityRow[];
-  /** Default: `"NODE_CLICK"` */
-  onNodeClick?: string;
-  /** Default: `"NODE_HOVER"` */
-  onNodeHover?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `true` */
   showLabels?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `"auto"` */
-  surface?: 'auto' | 'none';
-  tabIndex?: number;
-  width?: number;
+  /** Default: `"NODE_HOVER"` */
+  onNodeHover?: string;
+  ariaDescribedby?: string;
   /** Default: `true` */
   zoomToFit?: boolean;
+  /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1},{"group":"Group 2","size":2,"id":"Id 2","label":"Label 2","color":"Color 2"}]` */
+  nodes?: EntityRow[];
+  ariaBusy?: boolean;
+  ariaHidden?: boolean;
+  lang?: string;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"force"` */
+  layout?: 'force' | 'flow' | 'tree' | 'radial';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  height?: number;
+  tabIndex?: number;
+  ariaExpanded?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaSelected?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  className?: string;
+  ariaLabel?: string;
+  /** Default: `"NODE_CLICK"` */
+  onNodeClick?: string;
+  ariaLabelledby?: string;
+  width?: number;
+  enterDelay?: number;
+  /** Default: `[{"source":"Source","target":"Target","color":"Color","label":"Label"},{"source":"Source 2","target":"Target 2","color":"Color 2","label":"Label 2"}]` */
+  edges?: EntityRow[];
 }
 
 /**

@@ -39,35 +39,35 @@ export type StdUiStateJsonViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateJsonViewConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
   ariaSelected?: boolean;
-  className?: string;
-  /** Default: `false` */
-  defaultExpanded?: boolean;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
+  ariaLabelledby?: string;
+  lang?: string;
+  ariaHidden?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaBusy?: boolean;
   /** Default: `""` */
   initialState?: string;
-  label?: string;
-  lang?: string;
+  tabIndex?: number;
   /** Default: `""` */
   name?: string;
+  enterDelay?: number;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `["Item","Item 2"]` */
   states?: string[];
-  tabIndex?: number;
-  /** Default: `[{"event":"Event","from":"From","to":"To"},{"event":"Event 2","from":"From 2","to":"To 2"}]` */
+  /** Default: `[{"from":"From","event":"Event","to":"To"},{"event":"Event 2","to":"To 2","from":"From 2"}]` */
   transitions?: EntityRow[];
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaExpanded?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaDescribedby?: string;
+  /** Default: `false` */
+  defaultExpanded?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  label?: string;
+  className?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaLabel?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
 }
 
 /**

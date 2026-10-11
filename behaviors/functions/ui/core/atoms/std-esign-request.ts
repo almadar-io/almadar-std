@@ -219,16 +219,16 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
     name: 'ESignRequestOrbital',
     uses: [
       {
-        'as': 'Typography',
         'from': 'std/behaviors/ui-typography',
+        'as': 'Typography',
       },
       {
-        'as': 'DataGrid',
         'from': 'std/behaviors/ui-data-grid',
+        'as': 'DataGrid',
       },
       {
-        'as': 'Alert',
         'from': 'std/behaviors/ui-alert',
+        'as': 'Alert',
       },
     ],
     entity: {
@@ -239,43 +239,41 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Unique identifier for the associated document.',
             'name': 'documentId',
-            'required': true,
-            'synonyms': 'document reference, file ID',
             'type': 'string',
+            'required': true,
+            'description': 'Unique identifier for the associated document.',
+            'synonyms': 'document reference, file ID',
           },
           {
+            'name': 'documentName',
+            'type': 'string',
             'default': '',
             'description': 'The name of the document being requested for signature.',
-            'name': 'documentName',
             'synonyms': 'filename, document title, file name',
-            'type': 'string',
           },
           {
-            'description': 'The name of the recipient for the e-signature request.',
             'name': 'recipientName',
+            'type': 'string',
             'required': true,
+            'description': 'The name of the recipient for the e-signature request.',
             'synonyms': 'recipient, name, user',
-            'type': 'string',
           },
           {
-            'description': 'The email address of the recipient.',
             'name': 'recipientEmail',
-            'required': true,
-            'synonyms': 'email, address, contact',
             'type': 'email',
+            'required': true,
+            'description': 'The email address of the recipient.',
+            'synonyms': 'email, address, contact',
           },
           {
-            'default': 'draft',
-            'description': 'The current stage of the request lifecycle.',
             'name': 'status',
-            'synonyms': 'state, condition, phase',
             'type': 'string',
+            'default': 'draft',
             'values': [
               'draft',
               'sent',
@@ -284,31 +282,33 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
               'declined',
               'expired',
             ],
+            'description': 'The current stage of the request lifecycle.',
+            'synonyms': 'state, condition, phase',
           },
           {
-            'description': 'Timestamp indicating when the request was sent.',
             'name': 'sentAt',
+            'type': 'datetime',
+            'description': 'Timestamp indicating when the request was sent.',
             'synonyms': 'sent date, send time, dispatched at',
-            'type': 'datetime',
           },
           {
-            'description': 'Timestamp indicating when the request was signed.',
             'name': 'signedAt',
+            'type': 'datetime',
+            'description': 'Timestamp indicating when the request was signed.',
             'synonyms': 'signed date, signature date, completion date',
-            'type': 'datetime',
           },
           {
-            'description': 'The date and time when the request is no longer valid.',
             'name': 'expiresAt',
-            'synonyms': 'expiration, expiry, due date',
             'type': 'datetime',
+            'description': 'The date and time when the request is no longer valid.',
+            'synonyms': 'expiration, expiry, due date',
           },
           {
+            'name': 'notes',
+            'type': 'string',
             'default': '',
             'description': 'Free-text comments or additional information.',
-            'name': 'notes',
             'synonyms': 'comment, remark, description, details',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -319,131 +319,101 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdEsignRequestESignRequestOrbitalUsesRef),
+        'name': 'TitleHeading',
+        'linkedEntity': 'ESignRequest',
         'config': {
           'content': {
-            'default': '@config.title',
             'type': 'unknown',
+            'default': '@config.title',
           },
           'variant': {
-            'default': 'h3',
             'type': 'unknown',
+            'default': 'h3',
           },
         },
-        'linkedEntity': 'ESignRequest',
-        'name': 'TitleHeading',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdEsignRequestESignRequestOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('DataGrid.traits.DataGridRender' satisfies _StdEsignRequestESignRequestOrbitalUsesRef),
+        'name': 'RequestDataGrid',
+        'linkedEntity': 'ESignRequest',
         'config': {
-          'fields': {
+          'itemActions': {
+            'type': 'unknown',
             'default': [
               {
-                'label': 'Document',
-                'name': 'documentName',
-                'variant': 'h4',
+                'variant': 'primary',
+                'event': 'SEND_REQUEST',
+                'label': 'Send',
               },
               {
-                'label': 'Recipient',
+                'variant': 'danger',
+                'event': 'REVOKE_REQUEST',
+                'label': 'Revoke',
+              },
+            ],
+          },
+          'viewerRole': {
+            'type': 'unknown',
+            'default': '@config.viewerRole',
+          },
+          'fields': {
+            'type': 'unknown',
+            'default': [
+              {
+                'name': 'documentName',
+                'variant': 'h4',
+                'label': 'Document',
+              },
+              {
                 'name': 'recipientName',
                 'variant': 'body',
+                'label': 'Recipient',
               },
               {
                 'label': 'Email',
-                'name': 'recipientEmail',
                 'variant': 'caption',
+                'name': 'recipientEmail',
               },
               {
-                'label': 'Status',
                 'name': 'status',
+                'label': 'Status',
                 'variant': 'badge',
               },
               {
                 'label': 'Sent',
-                'name': 'sentAt',
                 'variant': 'caption',
+                'name': 'sentAt',
               },
             ],
-            'type': 'unknown',
-          },
-          'itemActions': {
-            'default': [
-              {
-                'event': 'SEND_REQUEST',
-                'label': 'Send',
-                'variant': 'primary',
-              },
-              {
-                'event': 'REVOKE_REQUEST',
-                'label': 'Revoke',
-                'variant': 'danger',
-              },
-            ],
-            'type': 'unknown',
           },
           'look': {
+            'type': 'unknown',
             'default': '@config.tableLook',
-            'type': 'unknown',
-          },
-          'viewerRole': {
-            'default': '@config.viewerRole',
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'ESignRequest',
-        'name': 'RequestDataGrid',
-        'ref': ('DataGrid.traits.DataGridRender' satisfies _StdEsignRequestESignRequestOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Alert.traits.AlertRender' satisfies _StdEsignRequestESignRequestOrbitalUsesRef),
+        'name': 'ErrorAlert',
+        'linkedEntity': 'ESignRequest',
         'config': {
-          'message': {
-            'default': 'Failed to load signature requests',
-            'type': 'unknown',
-          },
           'title': {
-            'default': 'Failed to load signature requests',
             'type': 'unknown',
+            'default': 'Failed to load signature requests',
           },
           'variant': {
-            'default': 'error',
             'type': 'unknown',
+            'default': 'error',
+          },
+          'message': {
+            'type': 'unknown',
+            'default': 'Failed to load signature requests',
           },
         },
-        'linkedEntity': 'ESignRequest',
-        'name': 'ErrorAlert',
-        'ref': ('Alert.traits.AlertRender' satisfies _StdEsignRequestESignRequestOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
-            'label': 'Table look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'title': {
-            'default': 'Signature Requests',
-            'description': 'Heading shown above the signature-request list',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
-        },
+        'name': 'ESignRequestSigning',
         'effectRow': [
           {
             'kind': 'fetch',
@@ -462,50 +432,54 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
             'resource': '@entity.id',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'ESignRequest',
         'emits': [
           {
-            'description': 'Signals a request has been sent for signature.',
             'event': 'SEND_REQUEST',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-            ],
+            'description': 'Signals a request has been sent for signature.',
             'synonyms': 'dispatch, submit, transmit',
             'tier': 'domain',
-          },
-          {
-            'description': 'Indicates a signature request has been cancelled.',
-            'event': 'REVOKE_REQUEST',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'synonyms': 'cancel, void, retract',
-            'tier': 'presentation',
           },
           {
-            'description': 'Signals that the request list has been successfully populated.',
-            'event': 'ESignRequestLoaded',
+            'event': 'REVOKE_REQUEST',
+            'description': 'Indicates a signature request has been cancelled.',
+            'synonyms': 'cancel, void, retract',
+            'tier': 'presentation',
             'payloadSchema': [
               {
-                'entity': 'ESignRequest',
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'ESignRequestLoaded',
+            'description': 'Signals that the request list has been successfully populated.',
+            'synonyms': 'loaded, refreshed, populated, initialized',
+            'tier': 'internal',
+            'payloadSchema': [
+              {
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentName',
@@ -513,13 +487,13 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   },
                   {
                     'name': 'recipientName',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'recipientEmail',
-                    'required': true,
                     'type': 'email',
+                    'required': true,
                   },
                   {
                     'name': 'status',
@@ -550,15 +524,15 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ESignRequest',
               },
             ],
-            'synonyms': 'loaded, refreshed, populated, initialized',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to load e-signature request data.',
             'event': 'ESignRequestLoadFailed',
+            'description': 'Indicates a failure to load e-signature request data.',
+            'synonyms': 'error, failure, load error',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -569,37 +543,46 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure, load error',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'ESignRequest',
-        'name': 'ESignRequestSigning',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals that the request list has been successfully populated.',
               'key': 'ESignRequestLoaded',
               'name': 'ESignRequest loaded',
+              'description': 'Signals that the request list has been successfully populated.',
+              'synonyms': 'loaded, refreshed, populated, initialized',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'ESignRequest',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentName',
@@ -607,13 +590,13 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                     },
                     {
                       'name': 'recipientName',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'recipientEmail',
-                      'required': true,
                       'type': 'email',
+                      'required': true,
                     },
                     {
                       'name': 'status',
@@ -644,16 +627,16 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'ESignRequest',
                 },
               ],
-              'synonyms': 'loaded, refreshed, populated, initialized',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a failure to load e-signature request data.',
               'key': 'ESignRequestLoadFailed',
               'name': 'ESignRequest load failed',
+              'description': 'Indicates a failure to load e-signature request data.',
+              'synonyms': 'error, failure, load error',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -664,52 +647,41 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, load error',
-              'tier': 'internal',
             },
             {
-              'description': 'Signals a request has been sent for signature.',
               'key': 'SEND_REQUEST',
               'name': 'Send Request',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
+              'description': 'Signals a request has been sent for signature.',
               'synonyms': 'dispatch, submit, transmit',
               'tier': 'domain',
-            },
-            {
-              'description': 'Indicates a signature request has been cancelled.',
-              'key': 'REVOKE_REQUEST',
-              'name': 'Revoke Request',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
+            },
+            {
+              'key': 'REVOKE_REQUEST',
+              'name': 'Revoke Request',
+              'description': 'Indicates a signature request has been cancelled.',
               'synonyms': 'cancel, void, retract',
               'tier': 'presentation',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'browsing',
-            },
-            {
-              'name': 'error',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
             },
           ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -731,42 +703,42 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                         'variant': 'header',
                       },
                       {
-                        'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
+                        'rows': 6,
                       },
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'ESignRequestLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       '@trait.TitleHeading',
                       '@trait.RequestDataGrid',
                     ],
                     'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'ESignRequestLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'ESignRequestLoadFailed',
               'effects': [
                 [
                   'render-ui',
@@ -779,19 +751,19 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   },
                 ],
               ],
-              'event': 'ESignRequestLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('ESignRequest' satisfies _StdEsignRequestEntityName),
                   {
                     'emit': {
-                      'failure': 'ESignRequestLoadFailed',
                       'success': 'ESignRequestLoaded',
+                      'failure': 'ESignRequestLoadFailed',
                     },
                   },
                 ],
@@ -799,28 +771,28 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'SEND_REQUEST',
               'effects': [
                 [
                   'set',
@@ -831,18 +803,18 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': 'Signature request sent',
                     'type': 'alert',
+                    'dismissible': true,
                     'variant': 'success',
                   },
                 ],
               ],
-              'event': 'SEND_REQUEST',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'REVOKE_REQUEST',
               'effects': [
                 [
                   'set',
@@ -854,17 +826,17 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   'toast',
                   {
                     'dismissible': true,
-                    'message': 'Signature request revoked',
-                    'type': 'alert',
                     'variant': 'info',
+                    'type': 'alert',
+                    'message': 'Signature request revoked',
                   },
                 ],
               ],
-              'event': 'REVOKE_REQUEST',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -882,27 +854,55 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   {
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'title': {
+            'type': 'string',
+            'default': 'Signature Requests',
+            'label': 'Section title',
+            'description': 'Heading shown above the signature-request list',
+            'tier': 'presentation',
+          },
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Table look',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

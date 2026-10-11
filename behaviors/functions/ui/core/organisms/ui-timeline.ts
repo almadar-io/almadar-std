@@ -54,47 +54,47 @@ export interface StdUiTimelineTimelineLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTimelineConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  dateField?: string;
   descriptionField?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `[]` */
-  fields?: string[];
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `[]` */
-  items?: EntityRow[];
-  lang?: string;
+  tabIndex?: number;
+  className?: string;
   /** Default: `"vertical-spacious"` */
   look?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `true` */
   selfFetch?: boolean;
-  /** Default: `"list"` */
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  ariaHidden?: boolean;
   statusField?: string;
+  title?: string;
+  ariaSelected?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaExpanded?: boolean;
+  ariaBusy?: boolean;
+  /** Default: `[]` */
+  items?: EntityRow[];
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `[]` */
+  fields?: string[];
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  error?: EntityRow;
+  ariaDescribedby?: string;
   /** Default: `"auto"` */
   surface?: 'auto' | 'none';
-  tabIndex?: number;
-  title?: string;
+  dateField?: string;
+  enterDelay?: number;
   titleField?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"list"` */
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   /** Default: `""` */
   viewerRole?: string;
+  lang?: string;
+  ariaLabelledby?: string;
+  ariaLabel?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 type _StdUiTimelineEntityName = 'TimelineItem';
@@ -161,8 +161,8 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -173,303 +173,393 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
     } as Entity,
     traits: [
       {
+        'name': 'TimelineRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'TimelineItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
+        'linkedEntity': 'TimelineItem',
+        'emits': [
+          {
+            'event': 'VIEW',
+            'description': 'User opened a record from the list.',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row',
+                'type': '@entity',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'TimelineLoaded',
+            'description': 'Timeline rows finished loading; payload.data holds the collection.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[object]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+                'entity': 'TimelineItem',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'TimelineLoaded',
+              'name': 'Timeline loaded',
+              'description': 'Timeline rows finished loading; payload.data holds the collection.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'TimelineItem',
+                },
+              ],
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'description': 'User opened a record from the list.',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': '@entity',
+                  'required': true,
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': '@config.selfFetch',
+              'effects': [
+                [
+                  'fetch',
+                  ('TimelineItem' satisfies _StdUiTimelineEntityName),
+                  {
+                    'emit': {
+                      'success': 'TimelineLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'aria-hidden': '@config.ariaHidden',
+                    'dateField': '@config.dateField',
+                    'className': '@config.className',
+                    'enter': '@config.enter',
+                    'aria-live': '@config.ariaLive',
+                    'aria-current': '@config.ariaCurrent',
+                    'lang': '@config.lang',
+                    'role': '@config.role',
+                    'isLoading': '@config.isLoading',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'descriptionField': '@config.descriptionField',
+                    'items': '@config.items',
+                    'statusField': '@config.statusField',
+                    'enterDelay': '@config.enterDelay',
+                    'aria-selected': '@config.ariaSelected',
+                    'aria-busy': '@config.ariaBusy',
+                    'error': '@config.error',
+                    'fields': '@config.fields',
+                    'aria-label': '@config.ariaLabel',
+                    'surface': '@config.surface',
+                    'tabIndex': '@config.tabIndex',
+                    'aria-pressed': '@config.ariaPressed',
+                    'skeleton': '@config.skeleton',
+                    'look': '@config.look',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'dir': '@config.dir',
+                    'entity': '@entity',
+                    'type': 'timeline',
+                    'titleField': '@config.titleField',
+                    'title': '@config.title',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'fields': '@config.fields',
+                    'aria-live': '@config.ariaLive',
+                    'dir': '@config.dir',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'role': '@config.role',
+                    'titleField': '@config.titleField',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-current': '@config.ariaCurrent',
+                    'enterDelay': '@config.enterDelay',
+                    'tabIndex': '@config.tabIndex',
+                    'title': '@config.title',
+                    'error': '@config.error',
+                    'surface': '@config.surface',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'entity': '@entity',
+                    'skeleton': '@config.skeleton',
+                    'items': '@config.items',
+                    'statusField': '@config.statusField',
+                    'type': 'timeline',
+                    'isLoading': '@config.isLoading',
+                    'enter': '@config.enter',
+                    'className': '@config.className',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-busy': '@config.ariaBusy',
+                    'descriptionField': '@config.descriptionField',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'aria-selected': '@config.ariaSelected',
+                    'lang': '@config.lang',
+                    'aria-hidden': '@config.ariaHidden',
+                    'look': '@config.look',
+                    'aria-label': '@config.ariaLabel',
+                    'dateField': '@config.dateField',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'TimelineLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'error': '@config.error',
+                    'fields': '@config.fields',
+                    'enterDelay': '@config.enterDelay',
+                    'aria-label': '@config.ariaLabel',
+                    'dir': '@config.dir',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-selected': '@config.ariaSelected',
+                    'entity': '@payload.data',
+                    'lang': '@config.lang',
+                    'tabIndex': '@config.tabIndex',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'type': 'timeline',
+                    'aria-live': '@config.ariaLive',
+                    'isLoading': '@config.isLoading',
+                    'surface': '@config.surface',
+                    'look': '@config.look',
+                    'className': '@config.className',
+                    'aria-busy': '@config.ariaBusy',
+                    'dateField': '@config.dateField',
+                    'titleField': '@config.titleField',
+                    'descriptionField': '@config.descriptionField',
+                    'role': '@config.role',
+                    'title': '@config.title',
+                    'statusField': '@config.statusField',
+                    'aria-current': '@config.ariaCurrent',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'aria-pressed': '@config.ariaPressed',
+                    'enter': '@config.enter',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'skeleton': '@config.skeleton',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'items': '@config.items',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
         'config': {
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
-            'label': 'Aria-current',
-            'synonyms': 'aria-current',
-            'tier': 'presentation',
+          'descriptionField': {
             'type': 'string',
-            'values': [
-              'page',
-              'step',
-              'location',
-              'date',
-              'time',
-              'true',
-              'false',
-            ],
-          },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
+            'label': 'Description Field',
+            'description': 'Entity field holding each item\'s description.',
             'tier': 'presentation',
-            'type': 'string',
           },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
             'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
           },
           'className': {
-            'description': 'Additional CSS classes',
+            'type': 'string',
             'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'dateField': {
-            'description': 'Entity field holding each item\'s date.',
-            'label': 'Date Field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'descriptionField': {
-            'description': 'Entity field holding each item\'s description.',
-            'label': 'Description Field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'error': {
-            'description': 'Error state',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'TimelineError',
-          },
-          'fields': {
-            'default': [],
-            'description': 'Entity fields the timeline draws; each slot is named by its own `*Field` prop.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Fields',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'isLoading': {
-            'default': false,
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'itemActions': {
-            'default': [],
-            'description': 'Actions per item',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'required': false,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Item Actions',
-            'tier': 'presentation',
-            'type': '[TimelineItemActionsItem]',
-          },
-          'items': {
-            'default': [],
-            'description': 'Timeline items',
-            'items': {
-              'properties': {
-                'date': {
-                  'name': 'date',
-                  'required': false,
-                  'type': 'string',
-                },
-                'description': {
-                  'name': 'description',
-                  'required': false,
-                  'type': 'string',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'status': {
-                  'name': 'status',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'complete',
-                    'active',
-                    'pending',
-                    'error',
-                  ],
-                },
-                'tags': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'tags',
-                  'required': false,
-                  'type': 'array',
-                },
-                'title': {
-                  'name': 'title',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Items',
-            'tier': 'presentation',
-            'type': '[TimelineItemsItem]',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
-            'type': 'string',
           },
           'look': {
-            'default': 'vertical-spacious',
-            'description': 'Layer 2 visual treatment.',
-            'label': 'Look',
-            'tier': 'presentation',
             'type': 'string',
+            'default': 'vertical-spacious',
+            'label': 'Look',
+            'description': 'Layer 2 visual treatment.',
+            'tier': 'presentation',
             'values': [
               'vertical-compact',
               'vertical-spacious',
@@ -477,11 +567,89 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
               'swimlane',
             ],
           },
-          'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
+          'selfFetch': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Fetch its own rows on mount?',
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'tier': 'internal',
+          },
+          'itemActions': {
+            'type': '[TimelineItemActionsItem]',
+            'default': [],
+            'label': 'Item Actions',
+            'description': 'Actions per item',
             'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                  ],
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+              },
+            },
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+          },
+          'statusField': {
             'type': 'string',
+            'label': 'Status Field',
+            'description': 'Entity field holding each item\'s status (complete | active | pending | error).',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'label': 'Title',
+            'description': 'Timeline title',
+            'tier': 'presentation',
+          },
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'role': {
+            'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -566,19 +734,204 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
               'treeitem',
             ],
           },
-          'selfFetch': {
-            'default': true,
-            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
-            'label': 'Fetch its own rows on mount?',
-            'tier': 'internal',
+          'ariaLive': {
+            'type': 'string',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'ariaExpanded': {
             'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+          },
+          'items': {
+            'type': '[TimelineItemsItem]',
+            'default': [],
+            'label': 'Items',
+            'description': 'Timeline items',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'status': {
+                  'name': 'status',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'complete',
+                    'active',
+                    'pending',
+                    'error',
+                  ],
+                },
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                'date': {
+                  'name': 'date',
+                  'type': 'string',
+                  'required': false,
+                },
+                'tags': {
+                  'name': 'tags',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'fields': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Fields',
+            'description': 'Entity fields the timeline draws; each slot is named by its own `*Field` prop.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'error': {
+            'type': 'TimelineError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'ariaDescribedby': {
+            'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+          },
+          'surface': {
+            'type': 'string',
+            'default': 'auto',
+            'label': 'Surface',
+            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'auto',
+              'none',
+            ],
+          },
+          'dateField': {
+            'type': 'string',
+            'label': 'Date Field',
+            'description': 'Entity field holding each item\'s date.',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
+          },
+          'titleField': {
+            'type': 'string',
+            'label': 'Title Field',
+            'description': 'Entity field holding each item\'s title.',
+            'tier': 'presentation',
+          },
+          'dir': {
+            'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
           },
           'skeleton': {
-            'default': 'list',
-            'description': 'Skeleton drawn while loading, and the shape an empty slot shows while this element\'s server render is in flight (`none` opts out).',
-            'label': 'Skeleton',
-            'tier': 'presentation',
             'type': 'string',
+            'default': 'list',
+            'label': 'Skeleton',
+            'description': 'Skeleton drawn while loading, and the shape an empty slot shows while this element\'s server render is in flight (`none` opts out).',
+            'tier': 'presentation',
             'values': [
               'header',
               'table',
@@ -592,411 +945,58 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
               'none',
             ],
           },
-          'statusField': {
-            'description': 'Entity field holding each item\'s status (complete | active | pending | error).',
-            'label': 'Status Field',
-            'tier': 'presentation',
+          'ariaCurrent': {
             'type': 'string',
-          },
-          'surface': {
-            'default': 'auto',
-            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out.',
-            'label': 'Surface',
+            'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'synonyms': 'aria-current',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
-              'auto',
-              'none',
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
             ],
-          },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'title': {
-            'description': 'Timeline title',
-            'label': 'Title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'titleField': {
-            'description': 'Entity field holding each item\'s title.',
-            'label': 'Title Field',
-            'tier': 'presentation',
-            'type': 'string',
           },
           'viewerRole': {
-            'default': '',
-            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
             'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
+          },
+          'ariaLabelledby': {
+            'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+          },
+          'ariaLabel': {
+            'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
           },
         },
-        'effectRow': [
-          {
-            'kind': 'fetch',
-            'resource': 'TimelineItem',
-          },
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'emits': [
-          {
-            'description': 'User opened a record from the list.',
-            'event': 'VIEW',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'row',
-                'required': true,
-                'type': '@entity',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'description': 'Timeline rows finished loading; payload.data holds the collection.',
-            'event': 'TimelineLoaded',
-            'payloadSchema': [
-              {
-                'entity': 'TimelineItem',
-                'name': 'data',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                ],
-                'type': '[object]',
-              },
-            ],
-            'scope': 'internal',
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'essential',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'TimelineItem',
-        'name': 'TimelineRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Timeline rows finished loading; payload.data holds the collection.',
-              'key': 'TimelineLoaded',
-              'name': 'Timeline loaded',
-              'payloadSchema': [
-                {
-                  'entity': 'TimelineItem',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'essential',
-            },
-            {
-              'description': 'User opened a record from the list.',
-              'key': 'VIEW',
-              'name': 'View',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'row',
-                  'required': true,
-                  'type': '@entity',
-                },
-              ],
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('TimelineItem' satisfies _StdUiTimelineEntityName),
-                  {
-                    'emit': {
-                      'success': 'TimelineLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'dateField': '@config.dateField',
-                    'descriptionField': '@config.descriptionField',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'fields': '@config.fields',
-                    'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      'array/filter',
-                      '@config.itemActions',
-                      [
-                        'fn',
-                        'action',
-                        [
-                          'or',
-                          [
-                            '=',
-                            [
-                              'array/len',
-                              [
-                                'object/get',
-                                '@action',
-                                'roles',
-                                [],
-                              ],
-                            ],
-                            0,
-                          ],
-                          [
-                            'array/includes',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                            '@config.viewerRole',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'items': '@config.items',
-                    'lang': '@config.lang',
-                    'look': '@config.look',
-                    'role': '@config.role',
-                    'skeleton': '@config.skeleton',
-                    'statusField': '@config.statusField',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'title': '@config.title',
-                    'titleField': '@config.titleField',
-                    'type': 'timeline',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'guard': '@config.selfFetch',
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'dateField': '@config.dateField',
-                    'descriptionField': '@config.descriptionField',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'fields': '@config.fields',
-                    'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      'array/filter',
-                      '@config.itemActions',
-                      [
-                        'fn',
-                        'action',
-                        [
-                          'or',
-                          [
-                            '=',
-                            [
-                              'array/len',
-                              [
-                                'object/get',
-                                '@action',
-                                'roles',
-                                [],
-                              ],
-                            ],
-                            0,
-                          ],
-                          [
-                            'array/includes',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                            '@config.viewerRole',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'items': '@config.items',
-                    'lang': '@config.lang',
-                    'look': '@config.look',
-                    'role': '@config.role',
-                    'skeleton': '@config.skeleton',
-                    'statusField': '@config.statusField',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'title': '@config.title',
-                    'titleField': '@config.titleField',
-                    'type': 'timeline',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'guard': [
-                'not',
-                '@config.selfFetch',
-              ],
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'dateField': '@config.dateField',
-                    'descriptionField': '@config.descriptionField',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@payload.data',
-                    'error': '@config.error',
-                    'fields': '@config.fields',
-                    'isLoading': '@config.isLoading',
-                    'itemActions': [
-                      'array/filter',
-                      '@config.itemActions',
-                      [
-                        'fn',
-                        'action',
-                        [
-                          'or',
-                          [
-                            '=',
-                            [
-                              'array/len',
-                              [
-                                'object/get',
-                                '@action',
-                                'roles',
-                                [],
-                              ],
-                            ],
-                            0,
-                          ],
-                          [
-                            'array/includes',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                            '@config.viewerRole',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'items': '@config.items',
-                    'lang': '@config.lang',
-                    'look': '@config.look',
-                    'role': '@config.role',
-                    'skeleton': '@config.skeleton',
-                    'statusField': '@config.statusField',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'title': '@config.title',
-                    'titleField': '@config.titleField',
-                    'type': 'timeline',
-                  },
-                ],
-              ],
-              'event': 'TimelineLoaded',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

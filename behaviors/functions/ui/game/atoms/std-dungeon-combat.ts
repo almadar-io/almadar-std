@@ -53,20 +53,20 @@ export interface StdDungeonCombatDefeatedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDungeonCombatConfig {
-  /** Default: `1` */
-  attackDamage?: number;
-  /** Default: `[]` */
-  enemies?: EntityRow[];
   /** Default: `9` */
   gridHeight?: number;
-  /** Default: `12` */
-  gridWidth?: number;
-  /** Default: `50` */
-  pointsPerKill?: number;
-  /** Default: `true` */
-  running?: boolean;
   /** Default: `5` */
   startHp?: number;
+  /** Default: `true` */
+  running?: boolean;
+  /** Default: `1` */
+  attackDamage?: number;
+  /** Default: `50` */
+  pointsPerKill?: number;
+  /** Default: `12` */
+  gridWidth?: number;
+  /** Default: `[]` */
+  enemies?: EntityRow[];
   /** Default: `[]` */
   tiles?: EntityRow[];
 }

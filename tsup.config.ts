@@ -10,6 +10,7 @@ export default defineConfig({
     'behaviors/types.ts',
     'behaviors/exports-reader.ts',
     'behaviors/query.ts',
+    'behaviors/data-dir.ts',
     'behaviors/embeddings.ts',
     'behaviors/factory-signatures.ts',
     'behaviors/knob-embeddings.ts',
@@ -25,7 +26,8 @@ export default defineConfig({
   dts: !process.env.ALMADAR_FAST_OVERLAY,
   clean: !process.env.ALMADAR_FAST_OVERLAY,
   sourcemap: false,
-  splitting: false,
+  // Shared generated functions land in one chunk instead of being inlined into every entry.
+  splitting: true,
   treeshake: true,
   // The data sidecars (registry .orb tree + JSON catalogs) are copied by the shared
   // `copyDistSidecars` helper — the same one the `build:data` fast-refresh script calls,

@@ -68,18 +68,18 @@ export interface StdLivesCheckpointReachedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLivesConfig {
-  /** Default: `[]` */
-  checkpoints?: EntityRow[];
   /** Default: `1500` */
   invulnMs?: number;
-  /** Default: `3` */
-  maxLives?: number;
   /** Default: `true` */
   running?: boolean;
-  /** Default: `0` */
-  spawnX?: number;
+  /** Default: `3` */
+  maxLives?: number;
   /** Default: `0` */
   spawnY?: number;
+  /** Default: `[]` */
+  checkpoints?: EntityRow[];
+  /** Default: `0` */
+  spawnX?: number;
 }
 
 /**

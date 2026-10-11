@@ -39,32 +39,32 @@ export type StdUiRuntimeDebuggerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiRuntimeDebuggerConfig {
-  ariaBusy?: boolean;
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
   ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `true` */
-  defaultCollapsed?: boolean;
-  defaultTab?: string;
   dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
+  ariaDescribedby?: string;
   lang?: string;
-  /** Default: `"floating"` */
-  mode?: 'floating' | 'inline' | 'verify';
+  defaultTab?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaExpanded?: boolean;
+  schema?: EntityRow;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaLabel?: string;
+  ariaSelected?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"bottom-right"` */
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  schema?: EntityRow;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `"floating"` */
+  mode?: 'floating' | 'inline' | 'verify';
+  ariaLabelledby?: string;
+  ariaBusy?: boolean;
+  className?: string;
+  enterDelay?: number;
   tabIndex?: number;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `true` */
+  defaultCollapsed?: boolean;
 }
 
 type _StdUiRuntimeDebuggerEntityName = 'RuntimeDebuggerItem';
@@ -124,8 +124,8 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -136,21 +136,80 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
-            'type': 'boolean',
+        'name': 'RuntimeDebuggerRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
           },
+        ],
+        'category': 'interaction',
+        'linkedEntity': 'RuntimeDebuggerItem',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'lang': '@config.lang',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'className': '@config.className',
+                    'enterDelay': '@config.enterDelay',
+                    'dir': '@config.dir',
+                    'schema': '@config.schema',
+                    'skeleton': '@config.skeleton',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-selected': '@config.ariaSelected',
+                    'defaultTab': '@config.defaultTab',
+                    'tabIndex': '@config.tabIndex',
+                    'type': 'runtime-debugger',
+                    'role': '@config.role',
+                    'aria-live': '@config.ariaLive',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-label': '@config.ariaLabel',
+                    'enter': '@config.enter',
+                    'position': '@config.position',
+                    'defaultCollapsed': '@config.defaultCollapsed',
+                    'mode': '@config.mode',
+                    'aria-pressed': '@config.ariaPressed',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
           'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'type': 'string',
             'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
             'synonyms': 'aria-current',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
               'page',
               'step',
@@ -161,107 +220,73 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'false',
             ],
           },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
           'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
+            'type': 'boolean',
             'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
             'synonyms': 'aria-hidden',
             'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'className': {
-            'description': 'Additional CSS classes',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'defaultCollapsed': {
-            'default': true,
-            'description': 'Initial collapsed state',
-            'label': 'Default Collapsed',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'defaultTab': {
-            'description': 'Default active tab id',
-            'label': 'Default Tab',
-            'tier': 'presentation',
-            'type': 'string',
           },
           'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
             'values': [
               'ltr',
               'rtl',
               'auto',
             ],
           },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
+          'ariaDescribedby': {
             'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+          },
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
+          },
+          'defaultTab': {
+            'type': 'string',
+            'label': 'Default Tab',
+            'description': 'Default active tab id',
+            'tier': 'presentation',
+          },
+          'ariaLive': {
+            'type': 'string',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
+          'schema': {
+            'type': 'SExpr',
+            'label': 'Schema',
+            'description': 'Raw schema for EventDispatcherTab payload extraction',
+            'tier': 'presentation',
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
             'values': [
               'none',
               'fade',
@@ -270,48 +295,25 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'slide',
             ],
           },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
+          'ariaLabel': {
             'type': 'string',
-          },
-          'mode': {
-            'default': 'floating',
-            'description': 'Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)',
-            'label': 'Mode',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
             'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'floating',
-              'inline',
-              'verify',
-            ],
           },
-          'position': {
-            'default': 'bottom-right',
-            'description': 'Initial position',
-            'label': 'Position',
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
             'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'bottom-right',
-              'bottom-left',
-              'top-right',
-              'top-left',
-            ],
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -396,17 +398,11 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'treeitem',
             ],
           },
-          'schema': {
-            'description': 'Raw schema for EventDispatcherTab payload extraction',
-            'label': 'Schema',
-            'tier': 'presentation',
-            'type': 'SExpr',
-          },
           'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
             'values': [
               'header',
               'table',
@@ -420,80 +416,84 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'none',
             ],
           },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
+          'position': {
+            'type': 'string',
+            'default': 'bottom-right',
+            'label': 'Position',
+            'description': 'Initial position',
             'tier': 'presentation',
+            'values': [
+              'bottom-right',
+              'bottom-left',
+              'top-right',
+              'top-left',
+            ],
+          },
+          'mode': {
+            'type': 'string',
+            'default': 'floating',
+            'label': 'Mode',
+            'description': 'Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)',
+            'tier': 'presentation',
+            'values': [
+              'floating',
+              'inline',
+              'verify',
+            ],
+          },
+          'ariaLabelledby': {
+            'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
             'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'defaultCollapsed': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Default Collapsed',
+            'description': 'Initial collapsed state',
+            'tier': 'presentation',
           },
         },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'RuntimeDebuggerItem',
-        'name': 'RuntimeDebuggerRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'defaultCollapsed': '@config.defaultCollapsed',
-                    'defaultTab': '@config.defaultTab',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'lang': '@config.lang',
-                    'mode': '@config.mode',
-                    'position': '@config.position',
-                    'role': '@config.role',
-                    'schema': '@config.schema',
-                    'skeleton': '@config.skeleton',
-                    'tabIndex': '@config.tabIndex',
-                    'type': 'runtime-debugger',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

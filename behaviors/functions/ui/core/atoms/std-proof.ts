@@ -31,28 +31,28 @@ const ALIAS = 'Proof';
  * without modifying its state-machine topology.
  */
 export interface StdProofConfig {
-  /** Default: `"@config.alignment"` */
-  alignment?: unknown;
-  /** Default: `"@config.columns"` */
-  columns?: unknown;
-  /** Default: `"@config.edgeBottom"` */
-  edgeBottom?: unknown;
-  /** Default: `"@config.edgeColor"` */
-  edgeColor?: unknown;
-  /** Default: `"@config.edgeTop"` */
-  edgeTop?: unknown;
   /** Default: `"@config.heading"` */
   heading?: unknown;
-  /** Default: `["array/map","@config.entries",["fn","item",{"avatar":["object/get","@item","avatar",""],"badge":["object/get","@item","badge",""],"description":["object/get","@item","quote",""],"meta":["object/get","@item","role",""],"title":["object/get","@item","name",""]}]]` */
-  items?: unknown;
-  /** Default: `"@config.lede"` */
-  lede?: unknown;
-  /** Default: `"profile"` */
-  look?: unknown;
-  /** Default: `"@config.surface"` */
-  surface?: unknown;
+  /** Default: `"@config.columns"` */
+  columns?: unknown;
   /** Default: `"@config.texture"` */
   texture?: unknown;
+  /** Default: `"@config.alignment"` */
+  alignment?: unknown;
+  /** Default: `"@config.edgeBottom"` */
+  edgeBottom?: unknown;
+  /** Default: `"@config.lede"` */
+  lede?: unknown;
+  /** Default: `"@config.edgeColor"` */
+  edgeColor?: unknown;
+  /** Default: `"@config.surface"` */
+  surface?: unknown;
+  /** Default: `["array/map","@config.entries",["fn","item",{"title":["object/get","@item","name",""],"description":["object/get","@item","quote",""],"badge":["object/get","@item","badge",""],"meta":["object/get","@item","role",""],"avatar":["object/get","@item","avatar",""]}]]` */
+  items?: unknown;
+  /** Default: `"@config.edgeTop"` */
+  edgeTop?: unknown;
+  /** Default: `"profile"` */
+  look?: unknown;
 }
 
 /**

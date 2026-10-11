@@ -61,14 +61,14 @@ export interface StdConfirmationConfirmActionLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdConfirmationConfig {
-  /** Default: `"Are you sure?"` */
-  alertMessage?: string;
-  /** Default: `"Confirm"` */
-  confirmLabel?: string;
   /** Default: `"alert-triangle"` */
   icon?: string;
+  /** Default: `"Are you sure?"` */
+  alertMessage?: string;
   /** Default: `"Confirm Action"` */
   title?: string;
+  /** Default: `"Confirm"` */
+  confirmLabel?: string;
 }
 
 /**
@@ -214,39 +214,39 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
             'type': 'string',
           },
           {
-            'description': 'A user-facing identifier for the confirmation action.',
             'name': 'name',
+            'type': 'string',
+            'description': 'A user-facing identifier for the confirmation action.',
             'synonyms': 'label, title, identifier',
-            'type': 'string',
           },
           {
-            'description': 'A detailed explanation of the action being confirmed.',
             'name': 'description',
-            'synonyms': 'details, explanation, notes, information',
             'type': 'string',
+            'description': 'A detailed explanation of the action being confirmed.',
+            'synonyms': 'details, explanation, notes, information',
           },
           {
-            'default': 'active',
-            'description': 'Indicates the current operational state of the action.',
             'name': 'status',
-            'synonyms': 'state, condition, enabled',
             'type': 'string',
+            'default': 'active',
             'values': [
               'active',
               'inactive',
               'pending',
             ],
+            'description': 'Indicates the current operational state of the action.',
+            'synonyms': 'state, condition, enabled',
           },
           {
             'name': 'createdAt',
             'type': 'string',
           },
           {
+            'name': 'pendingId',
+            'type': 'string',
             'default': '',
             'description': 'Unique identifier for the pending confirmation request.',
-            'name': 'pendingId',
             'synonyms': 'requestId, referenceId, confirmationId',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -257,36 +257,14 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'alertMessage': {
-            'default': 'Are you sure?',
-            'description': 'Body text explaining what the user is confirming',
-            'label': 'Alert message',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'confirmLabel': {
-            'default': 'Confirm',
-            'description': 'Label on the primary confirm action button',
-            'label': 'Confirm button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'icon': {
-            'default': 'alert-triangle',
-            'description': 'Icon name displayed in the confirmation modal header',
-            'label': 'Icon',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'title': {
-            'default': 'Confirm Action',
-            'description': 'Heading shown at the top of the confirmation modal',
-            'label': 'Modal title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'ConfirmActionConfirmation',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'name',
+            'pendingId',
+          ],
         },
         'effectRow': [
           {
@@ -310,28 +288,33 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
             'resource': '@entity.pendingId',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'ConfirmAction',
         'emits': [
           {
-            'description': 'Indicates the user has approved the action.',
             'event': 'CONFIRM',
+            'description': 'Indicates the user has approved the action.',
+            'synonyms': 'approve, accept, ok',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'synonyms': 'approve, accept, ok',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates the action was cancelled by the user.',
             'event': 'CANCEL',
+            'description': 'Indicates the action was cancelled by the user.',
             'synonyms': 'dismiss, reject, undo',
             'tier': 'domain',
           },
           {
-            'description': 'Indicates failure to load the confirmation action.',
             'event': 'ConfirmActionLoadFailed',
+            'description': 'Indicates failure to load the confirmation action.',
+            'synonyms': 'error, failure, failed, problem',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -342,17 +325,17 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'error, failure, failed, problem',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates the confirmation action has been successfully loaded.',
             'event': 'ConfirmActionLoaded',
+            'description': 'Indicates the confirmation action has been successfully loaded.',
+            'synonyms': 'loaded, ready, initialized',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ConfirmAction',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -384,35 +367,32 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ConfirmAction',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'loaded, ready, initialized',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'name',
-            'pendingId',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'ConfirmAction',
-        'name': 'ConfirmActionConfirmation',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'confirming',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates failure to load the confirmation action.',
               'key': 'ConfirmActionLoadFailed',
               'name': 'ConfirmAction load failed',
+              'description': 'Indicates failure to load the confirmation action.',
+              'synonyms': 'error, failure, failed, problem',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -423,22 +403,22 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, failed, problem',
-              'tier': 'internal',
             },
             {
-              'description': 'A request for confirmation before proceeding.',
               'key': 'REQUEST',
               'name': 'Request',
+              'description': 'A request for confirmation before proceeding.',
+              'synonyms': 'prompt, ask, verify',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
-                  'entity': 'ConfirmAction',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
@@ -470,47 +450,47 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
+                  'entity': 'ConfirmAction',
                 },
               ],
-              'synonyms': 'prompt, ask, verify',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates the user has approved the action.',
               'key': 'CONFIRM',
               'name': 'Confirm',
+              'description': 'Indicates the user has approved the action.',
+              'synonyms': 'approve, accept, ok',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'approve, accept, ok',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates the action was cancelled by the user.',
               'key': 'CANCEL',
               'name': 'Cancel',
+              'description': 'Indicates the action was cancelled by the user.',
               'synonyms': 'dismiss, reject, undo',
               'tier': 'domain',
             },
             {
-              'description': 'Indicates the user dismissed the confirmation.',
               'key': 'CLOSE',
               'name': 'Close',
+              'description': 'Indicates the user dismissed the confirmation.',
               'synonyms': 'dismiss, decline, reject',
               'tier': 'domain',
             },
             {
-              'description': 'Indicates the confirmation action has been successfully loaded.',
               'key': 'ConfirmActionLoaded',
               'name': 'ConfirmAction loaded',
+              'description': 'Indicates the confirmation action has been successfully loaded.',
+              'synonyms': 'loaded, ready, initialized',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'ConfirmAction',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -542,24 +522,16 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'ConfirmAction',
                 },
               ],
-              'synonyms': 'loaded, ready, initialized',
-              'tier': 'internal',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'confirming',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -572,32 +544,33 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ConfirmActionLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t load the item to confirm — ',
                       '@payload.error',
                     ],
+                    'dismissible': true,
                     'type': 'alert',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'ConfirmActionLoadFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'confirming',
+              'event': 'REQUEST',
+              'guard': '@payload.row',
               'effects': [
                 [
                   'set',
@@ -613,93 +586,80 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                   'render-ui',
                   'modal',
                   {
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'align': 'center',
                         'children': [
                           {
                             'name': '@config.icon',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
                             'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'message': '@config.alertMessage',
-                        'type': 'alert',
                         'variant': 'error',
+                        'type': 'alert',
+                        'message': '@config.alertMessage',
                       },
                       {
+                        'variant': 'h4',
                         'content': '@entity.name',
                         'type': 'typography',
-                        'variant': 'h4',
                       },
                       {
-                        'color': 'muted',
                         'content': '@entity.pendingId',
-                        'type': 'typography',
+                        'color': 'muted',
                         'variant': 'caption',
+                        'type': 'typography',
                       },
                       {
+                        'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
-                            'action': 'CANCEL',
                             'label': 'Cancel',
                             'type': 'button',
                             'variant': 'ghost',
+                            'action': 'CANCEL',
                           },
                           {
+                            'type': 'button',
                             'action': 'CONFIRM',
                             'actionPayload': {
                               'id': '@entity.pendingId',
                             },
                             'icon': 'check',
-                            'label': '@config.confirmLabel',
-                            'type': 'button',
                             'variant': 'danger',
+                            'label': '@config.confirmLabel',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'justify': 'end',
-                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'REQUEST',
-              'from': 'idle',
-              'guard': '@payload.row',
-              'to': 'confirming',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'modal',
-                  null,
-                ],
-              ],
+              'from': 'confirming',
+              'to': 'idle',
               'event': 'INIT',
-              'from': 'confirming',
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
@@ -707,11 +667,11 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                   null,
                 ],
               ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
               'event': 'CONFIRM',
-              'from': 'confirming',
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
@@ -719,11 +679,11 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                   null,
                 ],
               ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
               'event': 'CANCEL',
-              'from': 'confirming',
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
@@ -731,12 +691,52 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                   null,
                 ],
               ],
-              'event': 'CLOSE',
+            },
+            {
               'from': 'confirming',
               'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+              ],
             },
           ],
         },
+        'config': {
+          'icon': {
+            'type': 'string',
+            'default': 'alert-triangle',
+            'label': 'Icon',
+            'description': 'Icon name displayed in the confirmation modal header',
+            'tier': 'presentation',
+          },
+          'alertMessage': {
+            'type': 'string',
+            'default': 'Are you sure?',
+            'label': 'Alert message',
+            'description': 'Body text explaining what the user is confirming',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Confirm Action',
+            'label': 'Modal title',
+            'description': 'Heading shown at the top of the confirmation modal',
+            'tier': 'presentation',
+          },
+          'confirmLabel': {
+            'type': 'string',
+            'default': 'Confirm',
+            'label': 'Confirm button',
+            'description': 'Label on the primary confirm action button',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

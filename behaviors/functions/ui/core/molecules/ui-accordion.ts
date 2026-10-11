@@ -55,40 +55,40 @@ export interface StdUiAccordionTogglePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAccordionConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
   ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `[]` */
-  defaultOpen?: number[];
   /** Default: `[]` */
   defaultOpenItems?: string[];
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `[{"content":"Content","defaultOpen":false,"disabled":false,"header":"Header","id":"Id","title":"Title"},{"content":"Content 2","defaultOpen":true,"disabled":true,"header":"Header 2","id":"Id 2","title":"Title 2"}]` */
-  items?: EntityRow[];
-  lang?: string;
   /** Default: `false` */
   multiple?: boolean;
-  /** Default: `"ITEM_TOGGLE"` */
-  onItemToggle?: string;
+  ariaSelected?: boolean;
   /** Default: `[]` */
-  openItems?: string[];
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  defaultOpen?: number[];
   /** Default: `"auto"` */
   surface?: 'auto' | 'none';
-  tabIndex?: number;
+  /** Default: `[]` */
+  openItems?: string[];
+  ariaBusy?: boolean;
+  /** Default: `"ITEM_TOGGLE"` */
+  onItemToggle?: string;
+  lang?: string;
+  ariaLabel?: string;
+  ariaDescribedby?: string;
+  /** Default: `[{"disabled":false,"header":"Header","defaultOpen":false,"id":"Id","title":"Title","content":"Content"},{"content":"Content 2","id":"Id 2","title":"Title 2","disabled":true,"header":"Header 2","defaultOpen":true}]` */
+  items?: EntityRow[];
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaHidden?: boolean;
   /** Default: `"TOGGLE"` */
   toggleEvent?: string;
+  enterDelay?: number;
+  className?: string;
+  ariaExpanded?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  tabIndex?: number;
+  ariaPressed?: 'true' | 'false' | 'mixed';
 }
 
 /**

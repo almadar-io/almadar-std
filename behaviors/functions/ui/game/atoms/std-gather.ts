@@ -57,12 +57,12 @@ export interface StdGatherResourcesPayload {
 export interface StdGatherConfig {
   /** Default: `[]` */
   features?: EntityRow[];
-  /** Default: `true` */
-  running?: boolean;
   /** Default: `0` */
   startStone?: number;
   /** Default: `0` */
   startWood?: number;
+  /** Default: `true` */
+  running?: boolean;
   /** Default: `"rock"` */
   stoneType?: string;
   /** Default: `"tree"` */

@@ -39,10 +39,10 @@ export type StdScoreEventKey = 'INIT' | 'UNITS_CHANGED';
  * without modifying its state-machine topology.
  */
 export interface StdScoreConfig {
-  /** Default: `0` */
-  initialEnemies?: number;
   /** Default: `10` */
   pointsPerKill?: number;
+  /** Default: `0` */
+  initialEnemies?: number;
   /** Default: `true` */
   running?: boolean;
   /** Default: `0` */

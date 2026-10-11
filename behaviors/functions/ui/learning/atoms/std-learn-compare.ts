@@ -50,60 +50,60 @@ export interface StdLearnCompareComparisonChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnCompareConfig {
-  /** Default: `"Tune each side's parameters and watch how the two curves diverge."` */
-  compareText?: string;
-  /** Default: `"power"` */
-  curveKind?: string;
-  /** Default: `1` */
-  gridStep?: number;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `1` */
-  leftADefault?: number;
-  /** Default: `2` */
-  leftBDefault?: number;
-  /** Default: `"series-1"` */
-  leftColor?: string;
-  /** Default: `"Left"` */
-  leftLabel?: string;
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `"A"` */
-  paramALabel?: string;
-  /** Default: `5` */
-  paramAMax?: number;
-  /** Default: `-5` */
-  paramAMin?: number;
-  /** Default: `0.1` */
-  paramAStep?: number;
-  /** Default: `"B"` */
-  paramBLabel?: string;
-  /** Default: `5` */
-  paramBMax?: number;
-  /** Default: `-5` */
-  paramBMin?: number;
-  /** Default: `0.1` */
-  paramBStep?: number;
-  /** Default: `2` */
-  rightADefault?: number;
-  /** Default: `1.5` */
-  rightBDefault?: number;
   /** Default: `"series-2"` */
   rightColor?: string;
-  /** Default: `"Right"` */
-  rightLabel?: string;
-  /** Default: `true` */
-  showAxes?: boolean;
-  /** Default: `true` */
-  showGrid?: boolean;
-  /** Default: `""` */
-  summary?: string;
+  /** Default: `"power"` */
+  curveKind?: string;
   /** Default: `"Compare Two Settings"` */
   title?: string;
   /** Default: `600` */
   width?: number;
+  /** Default: `"Right"` */
+  rightLabel?: string;
+  /** Default: `-5` */
+  paramAMin?: number;
+  /** Default: `"A"` */
+  paramALabel?: string;
+  /** Default: `5` */
+  paramAMax?: number;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `0.1` */
+  paramBStep?: number;
+  /** Default: `1.5` */
+  rightBDefault?: number;
+  /** Default: `-5` */
+  paramBMin?: number;
+  /** Default: `1` */
+  leftADefault?: number;
+  /** Default: `5` */
+  paramBMax?: number;
+  /** Default: `"Left"` */
+  leftLabel?: string;
+  /** Default: `2` */
+  leftBDefault?: number;
+  /** Default: `"B"` */
+  paramBLabel?: string;
+  /** Default: `1` */
+  gridStep?: number;
+  /** Default: `true` */
+  showAxes?: boolean;
+  /** Default: `2` */
+  rightADefault?: number;
   /** Default: `10` */
   xMax?: number;
+  /** Default: `"series-1"` */
+  leftColor?: string;
+  /** Default: `400` */
+  height?: number;
+  /** Default: `true` */
+  showGrid?: boolean;
+  /** Default: `"Tune each side's parameters and watch how the two curves diverge."` */
+  compareText?: string;
+  /** Default: `0.1` */
+  paramAStep?: number;
+  /** Default: `""` */
+  matchMode?: string;
   /** Default: `0` */
   xMin?: number;
 }

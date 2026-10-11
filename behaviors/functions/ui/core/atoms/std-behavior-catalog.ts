@@ -93,20 +93,20 @@ export interface StdBehaviorCatalogDescribeFailedPayload {
 export interface StdBehaviorCatalogConfig {
   /** Default: `"Details"` */
   describeLabel?: string;
-  /** Default: `"Nothing matches."` */
-  emptyLabel?: string;
   /** Default: `"list"` */
   look?: 'list' | 'chips';
+  /** Default: `"Search building blocks"` */
+  searchPlaceholder?: string;
+  /** Default: `"Nothing matches."` */
+  emptyLabel?: string;
   /** Default: `4` */
   maxChips?: number;
+  /** Default: `["almadar-std/ui/core"]` */
+  scope?: string[];
   /** Default: `0.3` */
   minScore?: number;
   /** Default: `"Use"` */
   pickLabel?: string;
-  /** Default: `["almadar-std/ui/core"]` */
-  scope?: string[];
-  /** Default: `"Search building blocks"` */
-  searchPlaceholder?: string;
 }
 
 /**

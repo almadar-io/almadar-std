@@ -55,15 +55,15 @@ export interface StdAuditCaptureAuditRecordedPayload {
  */
 export interface StdAuditCaptureConfig {
   /** Default: `false` */
-  captureBeforeAfter?: boolean;
+  enabled?: boolean;
   /** Default: `""` */
   captureEntity?: unknown;
   /** Default: `[]` */
+  excludeFields?: string[];
+  /** Default: `[]` */
   captureEventTypes?: string[];
   /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `[]` */
-  excludeFields?: string[];
+  captureBeforeAfter?: boolean;
 }
 
 /**
@@ -212,91 +212,91 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'actor',
+            'type': 'string',
             'default': '',
             'description': 'The user or system performing the action.',
-            'name': 'actor',
             'synonyms': 'user, source, originator',
-            'type': 'string',
           },
           {
+            'name': 'action',
+            'type': 'string',
             'default': '',
             'description': 'The specific operation performed on the entity.',
-            'name': 'action',
             'synonyms': 'operation, event, activity, change',
-            'type': 'string',
           },
           {
+            'name': 'entityType',
+            'type': 'string',
             'default': '',
             'description': 'The type of entity that was modified.',
-            'name': 'entityType',
             'synonyms': 'type, kind, class',
-            'type': 'string',
           },
           {
+            'name': 'entityId',
+            'type': 'string',
             'default': '',
             'description': 'Unique identifier for the entity being audited.',
-            'name': 'entityId',
             'synonyms': 'entity identifier, record id, item id',
-            'type': 'string',
           },
           {
-            'default': {},
-            'description': 'The state of the entity prior to the modification.',
-            'items': {
-              'type': 'scalar',
-            },
             'name': 'before',
-            'synonyms': 'previous, original, old value',
             'type': 'object',
-          },
-          {
             'default': {},
-            'description': 'The state of the entity after a modification.',
             'items': {
               'type': 'scalar',
             },
-            'name': 'after',
-            'synonyms': 'new, updated, post, subsequent',
-            'type': 'object',
+            'description': 'The state of the entity prior to the modification.',
+            'synonyms': 'previous, original, old value',
           },
           {
+            'name': 'after',
+            'type': 'object',
+            'default': {},
+            'items': {
+              'type': 'scalar',
+            },
+            'description': 'The state of the entity after a modification.',
+            'synonyms': 'new, updated, post, subsequent',
+          },
+          {
+            'name': 'recordedAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when the audit event was recorded.',
-            'name': 'recordedAt',
             'synonyms': 'timestamp, date, time',
-            'type': 'number',
           },
           {
+            'name': 'sourceEvent',
+            'type': 'string',
             'default': '',
             'description': 'The event that delivered the change to the audit trail, e.g. ContactSaved.',
-            'name': 'sourceEvent',
             'synonyms': 'triggering event, cause, origin event',
-            'type': 'string',
           },
           {
+            'name': 'sourceTrait',
+            'type': 'string',
             'default': '',
             'description': 'The behavior that emitted the change.',
-            'name': 'sourceTrait',
             'synonyms': 'emitter, origin, raised by',
-            'type': 'string',
           },
           {
+            'name': 'sourceOrbital',
+            'type': 'string',
             'default': '',
             'description': 'The module the change came from.',
-            'name': 'sourceOrbital',
             'synonyms': 'origin module, source module',
-            'type': 'string',
           },
           {
+            'name': 'sourceTick',
+            'type': 'string',
             'default': '',
             'description': 'The scheduled job that caused the change; blank when a person or an event did.',
-            'name': 'sourceTick',
             'synonyms': 'scheduled job, background job, timer',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -307,55 +307,19 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
     } as Entity,
     traits: [
       {
-        'capabilities': [
-          'audit',
-          'compliance',
-        ],
-        'category': 'lifecycle',
-        'config': {
-          'captureBeforeAfter': {
-            'default': false,
-            'description': 'Store a full before-and-after snapshot of each change. More detail, but a larger audit log.',
-            'label': 'Store before-and-after snapshots?',
-            'synonyms': 'before after, snapshot, diff, change snapshot, field diff',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'captureEntity': {
-            'default': '',
-            'description': 'Type name of the entity whose mutations get logged',
-            'label': 'Entity to audit',
-            'tier': 'internal',
-            'type': 'entity',
-          },
-          'captureEventTypes': {
-            'default': [],
-            'description': 'When set, only these kinds are audited: the payload\'s `kind` field, or the delivering event\'s name when there is no kind. Empty list = capture every event.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Event-kind filter',
-            'tier': 'internal',
-            'type': '[string]',
-          },
-          'enabled': {
-            'default': false,
-            'description': 'Keep an audit trail of every change to records — who changed what, and when. Off by default.',
-            'label': 'Track every change',
-            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'excludeFields': {
-            'default': [],
-            'description': 'Entity fields to omit from the before/after snapshots — e.g. passwords or other sensitive fields you do not want copied into the audit trail.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Skip fields',
-            'tier': 'internal',
-            'type': '[string]',
-          },
+        'name': 'AuditCaptureListener',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'action',
+            'actor',
+            'after',
+            'before',
+            'entityId',
+            'entityType',
+            'recordedAt',
+          ],
         },
         'effectRow': [
           {
@@ -395,9 +359,16 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
             'resource': '@entity.recordedAt',
           },
         ],
+        'category': 'lifecycle',
+        'capabilities': [
+          'audit',
+          'compliance',
+        ],
+        'linkedEntity': 'AuditEntry',
         'emits': [
           {
             'event': 'AuditRecorded',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'actor',
@@ -436,26 +407,15 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
                 'type': 'string',
               },
             ],
-            'scope': 'external',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'action',
-            'actor',
-            'after',
-            'before',
-            'entityId',
-            'entityType',
-            'recordedAt',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AuditEntry',
-        'name': 'AuditCaptureListener',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'EntityMutated',
@@ -510,14 +470,12 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'EntityMutated',
+              'guard': '@config.enabled',
               'effects': [
                 [
                   'when',
@@ -622,18 +580,15 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
                       'create',
                       ('AuditEntry' satisfies _StdAuditCaptureEntityName),
                       {
-                        'action': '@entity.action',
-                        'actor': '@user.id',
-                        'after': '@entity.after',
-                        'before': '@entity.before',
-                        'entityType': '@config.captureEntity',
-                        'recordedAt': 0,
-                        'sourceEvent': '@event.event',
                         'sourceOrbital': [
                           'str/default',
                           '@event.source.orbital',
                           '',
                         ],
+                        'actor': '@user.id',
+                        'recordedAt': 0,
+                        'entityType': '@config.captureEntity',
+                        'after': '@entity.after',
                         'sourceTick': [
                           'str/default',
                           '@event.source.tick',
@@ -644,30 +599,33 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
                           '@event.source.trait',
                           '',
                         ],
+                        'before': '@entity.before',
+                        'sourceEvent': '@event.event',
+                        'action': '@entity.action',
                       },
                     ],
                     [
                       'emit',
                       'AuditRecorded',
                       {
-                        'action': '@entity.action',
-                        'actor': '@user.id',
-                        'entityType': '@config.captureEntity',
-                        'recordedAt': 0,
                         'sourceEvent': '@event.event',
+                        'recordedAt': 0,
+                        'sourceTrait': [
+                          'str/default',
+                          '@event.source.trait',
+                          '',
+                        ],
                         'sourceOrbital': [
                           'str/default',
                           '@event.source.orbital',
                           '',
                         ],
+                        'action': '@entity.action',
+                        'actor': '@user.id',
+                        'entityType': '@config.captureEntity',
                         'sourceTick': [
                           'str/default',
                           '@event.source.tick',
-                          '',
-                        ],
-                        'sourceTrait': [
-                          'str/default',
-                          '@event.source.trait',
                           '',
                         ],
                       },
@@ -675,13 +633,55 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
                   ],
                 ],
               ],
-              'event': 'EntityMutated',
-              'from': 'idle',
-              'guard': '@config.enabled',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Track every change',
+            'description': 'Keep an audit trail of every change to records — who changed what, and when. Off by default.',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log',
+            'tier': 'policy',
+          },
+          'captureEntity': {
+            'type': 'entity',
+            'default': '',
+            'label': 'Entity to audit',
+            'description': 'Type name of the entity whose mutations get logged',
+            'tier': 'internal',
+          },
+          'excludeFields': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Skip fields',
+            'description': 'Entity fields to omit from the before/after snapshots — e.g. passwords or other sensitive fields you do not want copied into the audit trail.',
+            'tier': 'internal',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'captureEventTypes': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Event-kind filter',
+            'description': 'When set, only these kinds are audited: the payload\'s `kind` field, or the delivering event\'s name when there is no kind. Empty list = capture every event.',
+            'tier': 'internal',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'captureBeforeAfter': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Store before-and-after snapshots?',
+            'description': 'Store a full before-and-after snapshot of each change. More detail, but a larger audit log.',
+            'synonyms': 'before after, snapshot, diff, change snapshot, field diff',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

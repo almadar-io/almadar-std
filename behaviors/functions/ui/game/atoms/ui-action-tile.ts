@@ -39,44 +39,44 @@ export type StdUiActionTileEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionTileConfig {
-  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"},"id":"Id","name":"Name","stateMachine":{"currentState":"Current State","description":"Description","name":"Name","states":["Item","Item 2"],"transitions":[{"event":"Event","from":"From","guardHint":"Guard Hint","to":"To"},{"event":"Event 2","from":"From 2","guardHint":"Guard Hint 2","to":"To 2"}]}}` */
-  action?: EntityRow;
   /** Default: `{}` */
   activeFilters?: Record<string, TraitConfig>;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `{}` */
-  categoryColors?: Record<string, TraitConfig>;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `false` */
   disabled?: boolean;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  isLoading?: boolean;
-  lang?: string;
-  pageProp?: number;
   pageSize?: number;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `{}` */
+  categoryColors?: Record<string, TraitConfig>;
+  ariaLabelledby?: string;
+  ariaExpanded?: boolean;
+  isLoading?: boolean;
+  /** Default: `{"name":"Name","id":"Id","iconEmoji":"Icon Emoji","description":"Description","stateMachine":{"currentState":"Current State","description":"Description","states":["Item","Item 2"],"name":"Name","transitions":[{"from":"From","event":"Event","to":"To","guardHint":"Guard Hint"},{"event":"Event 2","to":"To 2","from":"From 2","guardHint":"Guard Hint 2"}]},"category":"Category","iconUrl":{"aspect":"1:1","dimension":"2d","animations":["static"],"style":"pixel","category":"iconUrl","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png","name":"iconUrl","thumbnailUrl":"","role":"ui"}}` */
+  action?: EntityRow;
+  enterDelay?: number;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  ariaSelected?: boolean;
   searchValue?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
+  lang?: string;
+  tabIndex?: number;
+  pageProp?: number;
+  totalCount?: number;
+  sortDirection?: 'asc' | 'desc';
+  ariaDescribedby?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  tabIndex?: number;
-  totalCount?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  className?: string;
+  error?: EntityRow;
+  /** Default: `[]` */
+  selectedIds?: string[];
 }
 
 /**

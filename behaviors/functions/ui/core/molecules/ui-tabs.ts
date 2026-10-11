@@ -47,39 +47,39 @@ export interface StdUiTabsTabChangePayload {
  */
 export interface StdUiTabsConfig {
   activeTab?: string;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
   ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  defaultActiveTab?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `[]` */
-  items?: EntityRow[];
   lang?: string;
-  /** Default: `"TAB_CHANGE"` */
-  onTabChange?: string;
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaSelected?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `"TAB_CHANGE"` */
-  tabChangeEvent?: string;
-  tabIndex?: number;
-  /** Default: `[]` */
-  tabs?: EntityRow[];
-  /** Default: `"default"` */
-  variant?: 'default' | 'pills' | 'underline';
+  className?: string;
+  ariaDescribedby?: string;
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'pills' | 'underline';
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
+  ariaExpanded?: boolean;
+  /** Default: `[]` */
+  items?: EntityRow[];
+  /** Default: `"TAB_CHANGE"` */
+  onTabChange?: string;
+  /** Default: `"TAB_CHANGE"` */
+  tabChangeEvent?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaBusy?: boolean;
+  /** Default: `[]` */
+  tabs?: EntityRow[];
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  enterDelay?: number;
+  ariaLabel?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  defaultActiveTab?: string;
+  ariaHidden?: boolean;
+  tabIndex?: number;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
 }
 
 /**

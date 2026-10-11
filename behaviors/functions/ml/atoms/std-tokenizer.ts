@@ -48,20 +48,20 @@ export interface StdTokenizerTokenizedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTokenizerConfig {
-  /** Default: `","` */
-  delimiter?: string;
-  /** Default: `true` */
-  lowercase?: boolean;
   /** Default: `512` */
   maxLength?: number;
   /** Default: `"whitespace"` */
   method?: 'whitespace' | 'character' | 'delimiter';
   /** Default: `true` */
-  trimWhitespace?: boolean;
+  lowercase?: boolean;
   /** Default: `0` */
   unkId?: number;
   /** Default: `{}` */
   vocab?: Record<string, TraitConfig>;
+  /** Default: `true` */
+  trimWhitespace?: boolean;
+  /** Default: `","` */
+  delimiter?: string;
 }
 
 /**
@@ -192,43 +192,43 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': '',
             'name': 'text',
             'type': 'string',
+            'default': '',
           },
           {
+            'name': 'tokens',
+            'type': 'array',
             'default': [],
             'items': {
               'type': 'string',
             },
-            'name': 'tokens',
-            'type': 'array',
           },
           {
+            'name': 'tokenIds',
+            'type': 'array',
             'default': [],
             'items': {
               'type': 'number',
             },
-            'name': 'tokenIds',
-            'type': 'array',
           },
           {
-            'default': 0,
             'name': 'tokenCount',
             'type': 'number',
+            'default': 0,
           },
           {
+            'name': 'request',
+            'type': 'object',
             'default': {},
             'items': {
               'type': 'scalar',
             },
-            'name': 'request',
-            'type': 'object',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'checked',
@@ -243,66 +243,7 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'delimiter': {
-            'default': ',',
-            'description': 'Split delimiter used when method is delimiter; ignored otherwise',
-            'label': 'Delimiter',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'lowercase': {
-            'default': true,
-            'description': 'Lowercase every token before vocabulary lookup',
-            'label': 'Lowercase',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'maxLength': {
-            'default': 512,
-            'description': 'Truncate the token sequence to at most this many tokens',
-            'label': 'Max length',
-            'tier': 'policy',
-            'type': 'int',
-          },
-          'method': {
-            'default': 'whitespace',
-            'description': 'Whitespace splits on single spaces, character splits into individual characters, delimiter splits on config.delimiter',
-            'label': 'Method',
-            'tier': 'policy',
-            'type': 'string',
-            'values': [
-              'whitespace',
-              'character',
-              'delimiter',
-            ],
-          },
-          'trimWhitespace': {
-            'default': true,
-            'description': 'Trim each token and drop tokens that are empty afterward',
-            'label': 'Trim whitespace',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'unkId': {
-            'default': 0,
-            'description': 'Id assigned to a token that is not present in config.vocab',
-            'label': 'Unknown token id',
-            'tier': 'policy',
-            'type': 'int',
-          },
-          'vocab': {
-            'default': {},
-            'description': 'Token-to-id map; a token absent from this map resolves to unkId',
-            'items': {
-              'type': 'number',
-            },
-            'label': 'Vocabulary',
-            'tier': 'domain',
-            'type': 'Map<string,int>',
-          },
-        },
+        'name': 'TokenizerRun',
         'effectRow': [
           {
             'kind': 'emit',
@@ -333,35 +274,43 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
             'resource': '@entity.tokens',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'TokenSequence',
         'emits': [
           {
-            'description': 'Text tokenized into a normalized, truncated token sequence with vocabulary ids',
             'event': 'TOKENIZED',
+            'description': 'Text tokenized into a normalized, truncated token sequence with vocabulary ids',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'tokens',
-                'required': true,
                 'type': '[string]',
+                'required': true,
               },
               {
                 'name': 'tokenIds',
-                'required': true,
                 'type': '[int]',
+                'required': true,
               },
               {
                 'name': 'tokenCount',
-                'required': true,
                 'type': 'int',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'TokenSequence',
-        'name': 'TokenizerRun',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'checked',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -373,8 +322,8 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
               'payloadSchema': [
                 {
                   'name': 'text',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'request',
@@ -387,40 +336,34 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
               'name': 'Reset',
             },
             {
-              'description': 'Text tokenized into a normalized, truncated token sequence with vocabulary ids',
               'key': 'TOKENIZED',
               'name': 'Tokenized',
+              'description': 'Text tokenized into a normalized, truncated token sequence with vocabulary ids',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'tokens',
-                  'required': true,
                   'type': '[string]',
+                  'required': true,
                 },
                 {
                   'name': 'tokenIds',
-                  'required': true,
                   'type': '[int]',
+                  'required': true,
                 },
                 {
                   'name': 'tokenCount',
-                  'required': true,
                   'type': 'int',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'checked',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -453,11 +396,11 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'checked',
+              'event': 'TOKENIZE',
               'effects': [
                 [
                   'let',
@@ -617,19 +560,19 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
                       'emit',
                       'TOKENIZED',
                       {
+                        'tokens': '@entity.tokens',
                         'tokenCount': '@entity.tokenCount',
                         'tokenIds': '@entity.tokenIds',
-                        'tokens': '@entity.tokens',
                       },
                     ],
                   ],
                 ],
               ],
-              'event': 'TOKENIZE',
-              'from': 'idle',
-              'to': 'checked',
             },
             {
+              'from': 'checked',
+              'to': 'checked',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -637,11 +580,11 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
                   'checked',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'checked',
-              'to': 'checked',
             },
             {
+              'from': 'checked',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -674,12 +617,69 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'checked',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'maxLength': {
+            'type': 'int',
+            'default': 512,
+            'label': 'Max length',
+            'description': 'Truncate the token sequence to at most this many tokens',
+            'tier': 'policy',
+          },
+          'method': {
+            'type': 'string',
+            'default': 'whitespace',
+            'label': 'Method',
+            'description': 'Whitespace splits on single spaces, character splits into individual characters, delimiter splits on config.delimiter',
+            'tier': 'policy',
+            'values': [
+              'whitespace',
+              'character',
+              'delimiter',
+            ],
+          },
+          'lowercase': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Lowercase',
+            'description': 'Lowercase every token before vocabulary lookup',
+            'tier': 'policy',
+          },
+          'unkId': {
+            'type': 'int',
+            'default': 0,
+            'label': 'Unknown token id',
+            'description': 'Id assigned to a token that is not present in config.vocab',
+            'tier': 'policy',
+          },
+          'vocab': {
+            'type': 'Map<string,int>',
+            'default': {},
+            'label': 'Vocabulary',
+            'description': 'Token-to-id map; a token absent from this map resolves to unkId',
+            'tier': 'domain',
+            'items': {
+              'type': 'number',
+            },
+          },
+          'trimWhitespace': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Trim whitespace',
+            'description': 'Trim each token and drop tokens that are empty afterward',
+            'tier': 'policy',
+          },
+          'delimiter': {
+            'type': 'string',
+            'default': ',',
+            'label': 'Delimiter',
+            'description': 'Split delimiter used when method is delimiter; ignored otherwise',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

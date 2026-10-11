@@ -382,44 +382,44 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
     name: 'RateBucketOrbital',
     uses: [
       {
-        'as': 'Icon',
         'from': 'std/behaviors/ui-icon',
+        'as': 'Icon',
       },
       {
-        'as': 'Typography',
         'from': 'std/behaviors/ui-typography',
+        'as': 'Typography',
       },
       {
-        'as': 'StatusDot',
         'from': 'std/behaviors/ui-status-dot',
+        'as': 'StatusDot',
       },
       {
-        'as': 'Alert',
         'from': 'std/behaviors/ui-alert',
+        'as': 'Alert',
       },
       {
-        'as': 'StatDisplay',
         'from': 'std/behaviors/ui-stat-display',
+        'as': 'StatDisplay',
       },
       {
-        'as': 'Meter',
         'from': 'std/behaviors/ui-meter',
+        'as': 'Meter',
       },
       {
-        'as': 'ProgressBar',
         'from': 'std/behaviors/ui-progress-bar',
+        'as': 'ProgressBar',
       },
       {
-        'as': 'Button',
         'from': 'std/behaviors/ui-button',
+        'as': 'Button',
       },
       {
-        'as': 'Divider',
         'from': 'std/behaviors/ui-divider',
+        'as': 'Divider',
       },
       {
-        'as': 'SimpleGrid',
         'from': 'std/behaviors/ui-simple-grid',
+        'as': 'SimpleGrid',
       },
     ],
     entity: {
@@ -432,60 +432,60 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
             'type': 'string',
           },
           {
-            'description': 'A user-defined identifier for the rate limiting bucket.',
             'name': 'name',
+            'type': 'string',
+            'description': 'A user-defined identifier for the rate limiting bucket.',
             'synonyms': 'label, identifier, alias',
-            'type': 'string',
           },
           {
-            'description': 'A textual explanation of the rate bucket\'s purpose.',
             'name': 'description',
-            'synonyms': 'explanation, details, notes',
             'type': 'string',
+            'description': 'A textual explanation of the rate bucket\'s purpose.',
+            'synonyms': 'explanation, details, notes',
           },
           {
-            'default': 'active',
-            'description': 'Current operational state of the rate limiting bucket.',
             'name': 'status',
-            'synonyms': 'state, condition, operationalStatus',
             'type': 'string',
+            'default': 'active',
             'values': [
               'active',
               'inactive',
               'pending',
             ],
+            'description': 'Current operational state of the rate limiting bucket.',
+            'synonyms': 'state, condition, operationalStatus',
           },
           {
             'name': 'createdAt',
             'type': 'string',
           },
           {
+            'name': 'count',
+            'type': 'number',
             'default': 0,
             'description': 'The current value of a counter.',
-            'name': 'count',
             'synonyms': 'value, amount, total',
-            'type': 'number',
           },
           {
+            'name': 'window',
+            'type': 'number',
             'default': 0,
             'description': 'The duration of the rate limiting window, in seconds.',
-            'name': 'window',
             'synonyms': 'duration, time, interval, period',
-            'type': 'number',
           },
           {
+            'name': 'limiterStatus',
+            'type': 'string',
             'default': 'open',
             'description': 'Current operational state of the rate limiter.',
-            'name': 'limiterStatus',
             'synonyms': 'state, condition, mode',
-            'type': 'string',
           },
           {
+            'name': 'limit',
+            'type': 'number',
             'default': 60,
             'description': 'Requests this bucket admits per window before it throttles; set from requestsPerMinute when the limiter mounts.',
-            'name': 'limit',
             'synonyms': 'cap, quota, ceiling, maximum requests',
-            'type': 'number',
           },
         ];
         const extras = params.fields ?? [];
@@ -496,289 +496,254 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Icon.traits.IconRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+        'name': 'ShieldIcon',
+        'linkedEntity': 'RateBucket',
         'config': {
           'name': {
+            'type': 'unknown',
             'default': 'shield',
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'RateBucket',
-        'name': 'ShieldIcon',
-        'ref': ('Icon.traits.IconRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
       }),
       makeTraitRef({
-        'config': {
-          'content': {
-            'default': 'RateBucket Rate Limiter',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'h2',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'RateBucket',
-        'name': 'RateBucketTitle',
         'ref': ('Typography.traits.TypographyRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'label': {
-            'default': 'Open',
-            'type': 'unknown',
-          },
-          'pulse': {
-            'default': false,
-            'type': 'unknown',
-          },
-          'status': {
-            'default': 'online',
-            'type': 'unknown',
-          },
-        },
+        'name': 'RateBucketTitle',
         'linkedEntity': 'RateBucket',
-        'name': 'OpenStatusDot',
-        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
-      }),
-      makeTraitRef({
         'config': {
-          'label': {
-            'default': 'Throttled',
-            'type': 'unknown',
-          },
-          'pulse': {
-            'default': true,
-            'type': 'unknown',
-          },
-          'status': {
-            'default': 'critical',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'RateBucket',
-        'name': 'ThrottledStatusDot',
-        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'message': {
-            'default': 'Rate limit exceeded. Requests are being throttled.',
-            'type': 'unknown',
-          },
           'variant': {
-            'default': 'error',
             'type': 'unknown',
+            'default': 'h2',
+          },
+          'content': {
+            'type': 'unknown',
+            'default': 'RateBucket Rate Limiter',
           },
         },
+      }),
+      makeTraitRef({
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+        'name': 'OpenStatusDot',
         'linkedEntity': 'RateBucket',
-        'name': 'RateLimitAlert',
+        'config': {
+          'pulse': {
+            'type': 'unknown',
+            'default': false,
+          },
+          'status': {
+            'type': 'unknown',
+            'default': 'online',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Open',
+          },
+        },
+      }),
+      makeTraitRef({
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+        'name': 'ThrottledStatusDot',
+        'linkedEntity': 'RateBucket',
+        'config': {
+          'status': {
+            'type': 'unknown',
+            'default': 'critical',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Throttled',
+          },
+          'pulse': {
+            'type': 'unknown',
+            'default': true,
+          },
+        },
+      }),
+      makeTraitRef({
         'ref': ('Alert.traits.AlertRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'name': 'RateLimitAlert',
+        'linkedEntity': 'RateBucket',
         'config': {
-          'label': {
-            'default': 'Requests',
+          'variant': {
             'type': 'unknown',
+            'default': 'error',
           },
-          'look': {
-            'default': '@config.statLook',
+          'message': {
             'type': 'unknown',
-          },
-          'value': {
-            'default': '@entity.count',
-            'type': 'unknown',
+            'default': 'Rate limit exceeded. Requests are being throttled.',
           },
         },
-        'linkedEntity': 'RateBucket',
+      }),
+      makeTraitRef({
+        'ref': ('StatDisplay.traits.StatDisplayRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
         'name': 'RequestsStat',
-        'ref': ('StatDisplay.traits.StatDisplayRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'RateBucket',
         'config': {
           'label': {
-            'default': 'Window',
             'type': 'unknown',
+            'default': 'Requests',
           },
           'look': {
+            'type': 'unknown',
             'default': '@config.statLook',
-            'type': 'unknown',
           },
           'value': {
-            'default': '@entity.window',
             'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'RateBucket',
-        'name': 'WindowStat',
-        'ref': ('StatDisplay.traits.StatDisplayRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'max': {
-            'default': '@entity.limit',
-            'type': 'unknown',
-          },
-          'min': {
-            'default': 0,
-            'type': 'unknown',
-          },
-          'value': {
             'default': '@entity.count',
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'RateBucket',
-        'name': 'CountMeter',
-        'ref': ('Meter.traits.MeterRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('StatDisplay.traits.StatDisplayRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+        'name': 'WindowStat',
+        'linkedEntity': 'RateBucket',
         'config': {
-          'max': {
-            'default': '@entity.limit',
+          'look': {
             'type': 'unknown',
+            'default': '@config.statLook',
+          },
+          'value': {
+            'type': 'unknown',
+            'default': '@entity.window',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Window',
+          },
+        },
+      }),
+      makeTraitRef({
+        'ref': ('Meter.traits.MeterRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+        'name': 'CountMeter',
+        'linkedEntity': 'RateBucket',
+        'config': {
+          'min': {
+            'type': 'unknown',
+            'default': 0,
+          },
+          'value': {
+            'type': 'unknown',
+            'default': '@entity.count',
+          },
+          'max': {
+            'type': 'unknown',
+            'default': '@entity.limit',
+          },
+        },
+      }),
+      makeTraitRef({
+        'ref': ('ProgressBar.traits.ProgressBarRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+        'name': 'CountProgressBar',
+        'linkedEntity': 'RateBucket',
+        'config': {
+          'value': {
+            'type': 'unknown',
+            'default': '@entity.count',
           },
           'showPercentage': {
+            'type': 'unknown',
             'default': true,
-            'type': 'unknown',
           },
-          'value': {
-            'default': '@entity.count',
+          'max': {
             'type': 'unknown',
+            'default': '@entity.limit',
           },
         },
-        'linkedEntity': 'RateBucket',
-        'name': 'CountProgressBar',
-        'ref': ('ProgressBar.traits.ProgressBarRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
       }),
       makeTraitRef({
-        'config': {
-          'action': {
-            'default': 'REQUEST',
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'send',
-            'type': 'unknown',
-          },
-          'label': {
-            'default': 'Request',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'primary',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'RateBucket',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
         'name': 'RequestButton',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'action': {
-            'default': 'RESET',
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'rotate-ccw',
-            'type': 'unknown',
-          },
-          'label': {
-            'default': 'Reset',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'ghost',
-            'type': 'unknown',
-          },
-        },
         'linkedEntity': 'RateBucket',
-        'name': 'ResetButton',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
-      }),
-      makeTraitRef({
         'config': {
-          'action': {
-            'default': 'RESET',
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'rotate-ccw',
-            'type': 'unknown',
-          },
-          'label': {
-            'default': 'Reset',
-            'type': 'unknown',
-          },
           'variant': {
+            'type': 'unknown',
             'default': 'primary',
+          },
+          'label': {
             'type': 'unknown',
+            'default': 'Request',
+          },
+          'action': {
+            'type': 'unknown',
+            'default': 'REQUEST',
+          },
+          'icon': {
+            'type': 'unknown',
+            'default': 'send',
           },
         },
-        'linkedEntity': 'RateBucket',
-        'name': 'ResetPrimaryButton',
+      }),
+      makeTraitRef({
         'ref': ('Button.traits.ButtonRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'name': 'ResetButton',
         'linkedEntity': 'RateBucket',
-        'name': 'RateBucketDivider',
-        'ref': ('Divider.traits.DividerRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+        'config': {
+          'action': {
+            'type': 'unknown',
+            'default': 'RESET',
+          },
+          'variant': {
+            'type': 'unknown',
+            'default': 'ghost',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Reset',
+          },
+          'icon': {
+            'type': 'unknown',
+            'default': 'rotate-ccw',
+          },
+        },
       }),
       makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+        'name': 'ResetPrimaryButton',
+        'linkedEntity': 'RateBucket',
+        'config': {
+          'variant': {
+            'type': 'unknown',
+            'default': 'primary',
+          },
+          'action': {
+            'type': 'unknown',
+            'default': 'RESET',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Reset',
+          },
+          'icon': {
+            'type': 'unknown',
+            'default': 'rotate-ccw',
+          },
+        },
+      }),
+      makeTraitRef({
+        'ref': ('Divider.traits.DividerRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+        'name': 'RateBucketDivider',
+        'linkedEntity': 'RateBucket',
+      }),
+      makeTraitRef({
+        'ref': ('SimpleGrid.traits.SimpleGridRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
+        'name': 'StatsGrid',
+        'linkedEntity': 'RateBucket',
         'config': {
           'children': {
+            'type': 'unknown',
             'default': [
               '@trait.RequestsStat',
               '@trait.WindowStat',
             ],
-            'type': 'unknown',
           },
           'cols': {
-            'default': 2,
             'type': 'unknown',
+            'default': 2,
           },
         },
-        'linkedEntity': 'RateBucket',
-        'name': 'StatsGrid',
-        'ref': ('SimpleGrid.traits.SimpleGridRender' satisfies _StdRateLimiterRateBucketOrbitalUsesRef),
       }),
       {
-        'capabilities': [
-          'rate-limit',
-        ],
-        'category': 'interaction',
-        'config': {
-          'enabled': {
-            'default': false,
-            'description': 'Whether rate limiting is active for the host orbital. Off by default; turn on to throttle requests.',
-            'label': 'Enabled',
-            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, rate limit, throttle, requests per minute, slow down, cap usage, request cap, limit traffic, prevent abuse',
-            'tier': 'domain',
-            'type': 'boolean',
-          },
-          'requestsPerMinute': {
-            'default': 60,
-            'description': 'Requests a bucket admits per one-minute window; the next request throttles it, and each elapsed minute (or RESET) reopens it.',
-            'label': 'Requests per minute',
-            'synonyms': 'rate limit, request cap, RPS, throttle threshold',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'statLook': {
-            'default': 'elevated',
-            'description': 'Layer 2 visual treatment for stat / KPI cards.',
-            'label': 'Stat display look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'elevated',
-              'flat',
-              'progress-backed',
-              'gauge',
-              'sparkline',
-            ],
-          },
-        },
+        'name': 'RateBucketRateLimiter',
         'effectRow': [
           {
             'kind': 'emit',
@@ -810,17 +775,28 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
             'site': 'tick',
           },
         ],
+        'category': 'interaction',
+        'capabilities': [
+          'rate-limit',
+        ],
+        'linkedEntity': 'RateBucket',
         'emits': [
           {
-            'description': 'One rate-limit window (a minute) has elapsed; the request count starts over.',
             'event': 'WINDOW_ELAPSED',
+            'description': 'One rate-limit window (a minute) has elapsed; the request count starts over.',
             'scope': 'internal',
           },
         ],
-        'linkedEntity': 'RateBucket',
-        'name': 'RateBucketRateLimiter',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'open',
+              'isInitial': true,
+            },
+            {
+              'name': 'throttled',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -831,41 +807,32 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
               'name': 'Request',
             },
             {
-              'key': 'THROTTLE',
-              'name': 'Throttle',
-            },
-            {
               'key': 'RESET',
               'name': 'Reset',
             },
             {
-              'description': 'One rate-limit window (a minute) has elapsed; the request count starts over.',
               'key': 'WINDOW_ELAPSED',
               'name': 'Window Elapsed',
+              'description': 'One rate-limit window (a minute) has elapsed; the request count starts over.',
             },
             {
-              'description': 'Sets this bucket\'s limit (requests per window), e.g. from the host row\'s own rate limit.',
               'key': 'CONFIGURE',
               'name': 'Configure',
+              'description': 'Sets this bucket\'s limit (requests per window), e.g. from the host row\'s own rate limit.',
               'payloadSchema': [
                 {
                   'name': 'limit',
                   'type': 'number',
                 },
               ],
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'open',
-            },
-            {
-              'name': 'throttled',
+              'listened': true,
             },
           ],
           'transitions': [
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -893,37 +860,37 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
                   {
                     'children': [
                       {
-                        'align': 'center',
+                        'justify': 'between',
                         'children': [
                           {
                             'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
                             'children': [
                               '@trait.ShieldIcon',
                               '@trait.RateBucketTitle',
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                           '@trait.OpenStatusDot',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'md',
                       },
                       '@trait.RateBucketDivider',
                       '@trait.StatsGrid',
                       '@trait.CountMeter',
                       '@trait.CountProgressBar',
                       {
+                        'direction': 'horizontal',
+                        'justify': 'center',
                         'children': [
                           '@trait.RequestButton',
                           '@trait.ResetButton',
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
-                        'justify': 'center',
                         'type': 'stack',
                       },
                     ],
@@ -933,73 +900,11 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'open',
-              'to': 'open',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.count',
-                  [
-                    '+',
-                    '@entity.count',
-                    1,
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.limiterStatus',
-                  'throttled',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'align': 'center',
-                            'children': [
-                              '@trait.ShieldIcon',
-                              '@trait.RateBucketTitle',
-                            ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
-                          },
-                          '@trait.ThrottledStatusDot',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
-                      },
-                      '@trait.RateBucketDivider',
-                      '@trait.RateLimitAlert',
-                      '@trait.StatsGrid',
-                      '@trait.CountMeter',
-                      {
-                        'children': [
-                          '@trait.ResetPrimaryButton',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'center',
-                        'type': 'stack',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'REQUEST',
               'from': 'open',
+              'to': 'throttled',
+              'event': 'REQUEST',
               'guard': [
                 'and',
                 '@config.enabled',
@@ -1013,9 +918,6 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
                   '@entity.limit',
                 ],
               ],
-              'to': 'throttled',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -1027,53 +929,60 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
                   ],
                 ],
                 [
+                  'set',
+                  '@entity.limiterStatus',
+                  'throttled',
+                ],
+                [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'md',
                         'children': [
                           {
+                            'direction': 'horizontal',
                             'align': 'center',
                             'children': [
                               '@trait.ShieldIcon',
                               '@trait.RateBucketTitle',
                             ],
-                            'direction': 'horizontal',
                             'gap': 'md',
                             'type': 'stack',
                           },
-                          '@trait.OpenStatusDot',
+                          '@trait.ThrottledStatusDot',
                         ],
                         'direction': 'horizontal',
-                        'gap': 'md',
+                        'align': 'center',
                         'justify': 'between',
-                        'type': 'stack',
                       },
                       '@trait.RateBucketDivider',
+                      '@trait.RateLimitAlert',
                       '@trait.StatsGrid',
                       '@trait.CountMeter',
-                      '@trait.CountProgressBar',
                       {
-                        'children': [
-                          '@trait.RequestButton',
-                          '@trait.ResetButton',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'center',
                         'type': 'stack',
+                        'justify': 'center',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          '@trait.ResetPrimaryButton',
+                        ],
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'REQUEST',
+            },
+            {
               'from': 'open',
+              'to': 'open',
+              'event': 'REQUEST',
               'guard': [
                 'and',
                 '@config.enabled',
@@ -1087,65 +996,67 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
                   '@entity.limit',
                 ],
               ],
-              'to': 'open',
-            },
-            {
               'effects': [
                 [
                   'set',
-                  '@entity.limiterStatus',
-                  'throttled',
+                  '@entity.count',
+                  [
+                    '+',
+                    '@entity.count',
+                    1,
+                  ],
                 ],
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
                         'children': [
                           {
-                            'align': 'center',
                             'children': [
                               '@trait.ShieldIcon',
                               '@trait.RateBucketTitle',
                             ],
+                            'align': 'center',
                             'direction': 'horizontal',
                             'gap': 'md',
                             'type': 'stack',
                           },
-                          '@trait.ThrottledStatusDot',
+                          '@trait.OpenStatusDot',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
+                        'align': 'center',
                       },
                       '@trait.RateBucketDivider',
-                      '@trait.RateLimitAlert',
                       '@trait.StatsGrid',
                       '@trait.CountMeter',
+                      '@trait.CountProgressBar',
                       {
-                        'children': [
-                          '@trait.ResetPrimaryButton',
-                        ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
                         'justify': 'center',
+                        'direction': 'horizontal',
+                        'children': [
+                          '@trait.RequestButton',
+                          '@trait.ResetButton',
+                        ],
                         'type': 'stack',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'THROTTLE',
-              'from': 'open',
-              'to': 'throttled',
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -1161,53 +1072,53 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'justify': 'between',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
                             'align': 'center',
                             'children': [
                               '@trait.ShieldIcon',
                               '@trait.RateBucketTitle',
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                           '@trait.OpenStatusDot',
                         ],
-                        'direction': 'horizontal',
                         'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
                       },
                       '@trait.RateBucketDivider',
                       '@trait.StatsGrid',
                       '@trait.CountMeter',
                       '@trait.CountProgressBar',
                       {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           '@trait.RequestButton',
                           '@trait.ResetButton',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'justify': 'center',
-                        'type': 'stack',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'RESET',
-              'from': 'open',
-              'to': 'open',
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'WINDOW_ELAPSED',
               'effects': [
                 [
                   'set',
@@ -1215,11 +1126,11 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
                   0,
                 ],
               ],
-              'event': 'WINDOW_ELAPSED',
-              'from': 'open',
-              'to': 'open',
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'CONFIGURE',
               'effects': [
                 [
                   'set',
@@ -1227,11 +1138,11 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
                   '@payload.limit',
                 ],
               ],
-              'event': 'CONFIGURE',
-              'from': 'open',
-              'to': 'open',
             },
             {
+              'from': 'throttled',
+              'to': 'throttled',
+              'event': 'CONFIGURE',
               'effects': [
                 [
                   'set',
@@ -1239,199 +1150,229 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
                   '@payload.limit',
                 ],
               ],
-              'event': 'CONFIGURE',
+            },
+            {
+              'from': 'throttled',
+              'to': 'open',
+              'event': 'WINDOW_ELAPSED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.limiterStatus',
+                  'open',
+                ],
+                [
+                  'set',
+                  '@entity.count',
+                  0,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                            'gap': 'md',
+                            'align': 'center',
+                          },
+                          '@trait.OpenStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'gap': 'md',
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      '@trait.CountProgressBar',
+                      {
+                        'gap': 'sm',
+                        'children': [
+                          '@trait.RequestButton',
+                          '@trait.ResetButton',
+                        ],
+                        'justify': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'throttled',
+              'to': 'open',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.limiterStatus',
+                  'open',
+                ],
+                [
+                  'set',
+                  '@entity.count',
+                  0,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                            'gap': 'md',
+                            'align': 'center',
+                            'type': 'stack',
+                          },
+                          '@trait.OpenStatusDot',
+                        ],
+                        'gap': 'md',
+                        'align': 'center',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      '@trait.CountProgressBar',
+                      {
+                        'justify': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'children': [
+                          '@trait.RequestButton',
+                          '@trait.ResetButton',
+                        ],
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
               'from': 'throttled',
               'to': 'throttled',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.limiterStatus',
-                  'open',
-                ],
-                [
-                  'set',
-                  '@entity.count',
-                  0,
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'align': 'center',
-                            'children': [
-                              '@trait.ShieldIcon',
-                              '@trait.RateBucketTitle',
-                            ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
-                          },
-                          '@trait.OpenStatusDot',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
-                      },
-                      '@trait.RateBucketDivider',
-                      '@trait.StatsGrid',
-                      '@trait.CountMeter',
-                      '@trait.CountProgressBar',
-                      {
-                        'children': [
-                          '@trait.RequestButton',
-                          '@trait.ResetButton',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'center',
-                        'type': 'stack',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'WINDOW_ELAPSED',
-              'from': 'throttled',
-              'to': 'open',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.limiterStatus',
-                  'open',
-                ],
-                [
-                  'set',
-                  '@entity.count',
-                  0,
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'align': 'center',
-                            'children': [
-                              '@trait.ShieldIcon',
-                              '@trait.RateBucketTitle',
-                            ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
-                          },
-                          '@trait.OpenStatusDot',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
-                      },
-                      '@trait.RateBucketDivider',
-                      '@trait.StatsGrid',
-                      '@trait.CountMeter',
-                      '@trait.CountProgressBar',
-                      {
-                        'children': [
-                          '@trait.RequestButton',
-                          '@trait.ResetButton',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'center',
-                        'type': 'stack',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'RESET',
-              'from': 'throttled',
-              'to': 'open',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'align': 'center',
-                            'children': [
-                              '@trait.ShieldIcon',
-                              '@trait.RateBucketTitle',
-                            ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
-                          },
-                          '@trait.ThrottledStatusDot',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
-                      },
-                      '@trait.RateBucketDivider',
-                      '@trait.RateLimitAlert',
-                      '@trait.StatsGrid',
-                      '@trait.CountMeter',
-                      {
-                        'children': [
-                          '@trait.ResetPrimaryButton',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'center',
-                        'type': 'stack',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
               'event': 'INIT',
-              'from': 'throttled',
-              'to': 'throttled',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                          },
+                          '@trait.ThrottledStatusDot',
+                        ],
+                        'align': 'center',
+                        'justify': 'between',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.RateLimitAlert',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'children': [
+                          '@trait.ResetPrimaryButton',
+                        ],
+                        'justify': 'center',
+                        'direction': 'horizontal',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
+                ],
+              ],
             },
           ],
         },
         'ticks': [
           {
+            'name': 'windowElapsed',
+            'interval': 60000,
             'effects': [
               [
                 'emit',
                 'WINDOW_ELAPSED',
               ],
             ],
-            'interval': 60000,
-            'name': 'windowElapsed',
           },
         ],
+        'config': {
+          'statLook': {
+            'type': 'string',
+            'default': 'elevated',
+            'label': 'Stat display look',
+            'description': 'Layer 2 visual treatment for stat / KPI cards.',
+            'tier': 'presentation',
+            'values': [
+              'elevated',
+              'flat',
+              'progress-backed',
+              'gauge',
+              'sparkline',
+            ],
+          },
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Enabled',
+            'description': 'Whether rate limiting is active for the host orbital. Off by default; turn on to throttle requests.',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, rate limit, throttle, requests per minute, slow down, cap usage, request cap, limit traffic, prevent abuse',
+            'tier': 'domain',
+          },
+          'requestsPerMinute': {
+            'type': 'number',
+            'default': 60,
+            'label': 'Requests per minute',
+            'description': 'Requests a bucket admits per one-minute window; the next request throttles it, and each elapsed minute (or RESET) reopens it.',
+            'synonyms': 'rate limit, request cap, RPS, throttle threshold',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

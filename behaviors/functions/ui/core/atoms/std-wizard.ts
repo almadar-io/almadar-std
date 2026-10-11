@@ -83,34 +83,34 @@ export interface StdWizardWizardSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWizardConfig {
-  /** Default: `"Back"` */
-  backLabel?: string;
-  /** Default: `"Cancel wizard"` */
-  cancelLabel?: string;
+  /** Default: `[{"label":"Details","fields":["title","description"],"key":"details","icon":"file-text","description":"Basic information"},{"description":"Configure preferences","icon":"settings","key":"options","fields":["category","priority"],"label":"Options"},{"key":"review","description":"Confirm and submit","fields":["notes"],"label":"Review","icon":"check-circle"}]` */
+  steps?: EntityRow[];
+  /** Default: `"elevated"` */
+  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `[]` */
+  stepDescriptions?: string[];
+  /** Default: `"Complete"` */
+  completedTitle?: string;
+  /** Default: `"Start a new wizard"` */
+  restartLabel?: string;
+  /** Default: `"Submit"` */
+  submitLabel?: string;
+  /** Default: `[]` */
+  stepLabels?: string[];
   /** Default: `"The wizard was cancelled. No data was submitted."` */
   cancelledText?: string;
   /** Default: `"Cancelled"` */
   cancelledTitle?: string;
-  /** Default: `"elevated"` */
-  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `""` */
-  completedText?: string;
-  /** Default: `"Complete"` */
-  completedTitle?: string;
   /** Default: `"Next"` */
   nextLabel?: string;
-  /** Default: `"Start a new wizard"` */
-  restartLabel?: string;
-  /** Default: `[]` */
-  stepDescriptions?: string[];
-  /** Default: `[]` */
-  stepLabels?: string[];
-  /** Default: `[{"description":"Basic information","fields":["title","description"],"icon":"file-text","key":"details","label":"Details"},{"description":"Configure preferences","fields":["category","priority"],"icon":"settings","key":"options","label":"Options"},{"description":"Confirm and submit","fields":["notes"],"icon":"check-circle","key":"review","label":"Review"}]` */
-  steps?: EntityRow[];
-  /** Default: `"Submit"` */
-  submitLabel?: string;
+  /** Default: `"Cancel wizard"` */
+  cancelLabel?: string;
   /** Default: `"Wizard"` */
   title?: string;
+  /** Default: `"Back"` */
+  backLabel?: string;
+  /** Default: `""` */
+  completedText?: string;
 }
 
 /**
@@ -253,29 +253,27 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'The descriptive name for this wizard view.',
             'name': 'title',
-            'required': true,
-            'synonyms': 'name, heading, label',
             'type': 'string',
+            'required': true,
+            'description': 'The descriptive name for this wizard view.',
+            'synonyms': 'name, heading, label',
           },
           {
+            'name': 'description',
+            'type': 'string',
             'default': '',
             'description': 'A brief explanation of the step\'s purpose or content.',
-            'name': 'description',
             'synonyms': 'explanation, details, summary, notes',
-            'type': 'string',
           },
           {
-            'default': '',
-            'description': 'Indicates the field\'s intended audience or area of focus.',
             'name': 'category',
-            'synonyms': 'type, area, discipline, group',
             'type': 'string',
+            'default': '',
             'values': [
               'marketing',
               'engineering',
@@ -283,13 +281,13 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               'operations',
               '',
             ],
+            'description': 'Indicates the field\'s intended audience or area of focus.',
+            'synonyms': 'type, area, discipline, group',
           },
           {
-            'default': '',
-            'description': 'Indicates the relative importance or urgency of the wizard.',
             'name': 'priority',
-            'synonyms': 'level, importance, urgency',
             'type': 'string',
+            'default': '',
             'values': [
               'low',
               'medium',
@@ -297,134 +295,136 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               'urgent',
               '',
             ],
+            'description': 'Indicates the relative importance or urgency of the wizard.',
+            'synonyms': 'level, importance, urgency',
           },
           {
+            'name': 'notes',
+            'type': 'string',
             'default': '',
             'description': 'Free-form textual remarks or additional information.',
-            'name': 'notes',
             'synonyms': 'comments, remarks, observations, details',
-            'type': 'string',
           },
           {
+            'name': 'wizardSteps',
+            'type': 'array',
             'default': [],
-            'description': 'An ordered list of steps within the wizard process.',
             'items': {
+              'type': 'object',
               'properties': {
                 'description': {
                   'name': 'description',
+                  'type': 'string',
                   'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
                 },
                 'title': {
                   'name': 'title',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'wizardSteps',
+            'description': 'An ordered list of steps within the wizard process.',
             'synonyms': 'steps, sequence, stages',
-            'type': 'array',
           },
           {
+            'name': 'currentStepIndex',
+            'type': 'number',
             'default': 0,
             'description': 'The numerical index of the currently displayed step.',
-            'name': 'currentStepIndex',
             'synonyms': 'step number, step position, index',
-            'type': 'number',
           },
           {
+            'name': 'totalSteps',
+            'type': 'number',
             'default': 0,
             'description': 'The total number of steps in the wizard.',
-            'name': 'totalSteps',
             'synonyms': 'count, steps, length',
-            'type': 'number',
           },
           {
+            'name': 'currentStepLabel',
+            'type': 'string',
             'default': '',
             'description': 'The text displayed for the currently active step.',
-            'name': 'currentStepLabel',
             'synonyms': 'step title, step name, current step',
-            'type': 'string',
           },
           {
+            'name': 'currentStepDescription',
+            'type': 'string',
             'default': '',
             'description': 'A brief explanation of the current step\'s purpose.',
-            'name': 'currentStepDescription',
             'synonyms': 'step description, step details, step explanation',
-            'type': 'string',
           },
           {
+            'name': 'currentStepIcon',
+            'type': 'string',
             'default': 'circle',
             'description': 'Icon representing the current step in the process.',
-            'name': 'currentStepIcon',
             'synonyms': 'icon, image, visual',
-            'type': 'string',
           },
           {
+            'name': 'currentFields',
+            'type': 'array',
             'default': [],
-            'description': 'The data currently being displayed in the form.',
             'items': {
               'type': 'string',
             },
-            'name': 'currentFields',
+            'description': 'The data currently being displayed in the form.',
             'synonyms': 'form data, input values, field values',
-            'type': 'array',
           },
           {
+            'name': 'isFirstStep',
+            'type': 'boolean',
             'default': true,
             'description': 'Indicates if this is the initial step in the wizard.',
-            'name': 'isFirstStep',
             'synonyms': 'first, initial, start',
-            'type': 'boolean',
           },
           {
+            'name': 'isLastStep',
+            'type': 'boolean',
             'default': false,
             'description': 'Indicates whether this is the final step in the wizard.',
-            'name': 'isLastStep',
             'synonyms': 'last, end, final',
-            'type': 'boolean',
           },
           {
+            'name': 'primaryActionLabel',
+            'type': 'string',
             'default': 'Next',
             'description': 'Text displayed for the primary action button.',
-            'name': 'primaryActionLabel',
             'synonyms': 'button text, action label, primary button',
-            'type': 'string',
           },
           {
+            'name': 'primaryActionIcon',
+            'type': 'string',
             'default': 'chevron-right',
             'description': 'Icon representing the primary action button.',
-            'name': 'primaryActionIcon',
             'synonyms': 'icon, button-icon, action-icon',
-            'type': 'string',
           },
           {
+            'name': 'completionMessage',
+            'type': 'string',
             'default': '',
             'description': 'Text displayed upon successful completion of the wizard.',
-            'name': 'completionMessage',
             'synonyms': 'success message, confirmation text, final message',
-            'type': 'string',
           },
           {
+            'name': 'cancelReason',
+            'type': 'string',
             'default': '',
             'description': 'The reason provided for cancelling the wizard process.',
-            'name': 'cancelReason',
             'synonyms': 'cancellation reason, cancel explanation, dismissal reason',
-            'type': 'string',
           },
           {
+            'name': 'errorMessage',
+            'type': 'string',
             'default': '',
             'description': 'Error message displayed when a process fails.',
-            'name': 'errorMessage',
             'synonyms': 'error, fault, problem',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -435,185 +435,26 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'backLabel': {
-            'default': 'Back',
-            'label': 'Back label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cancelLabel': {
-            'default': 'Cancel wizard',
-            'label': 'Cancel label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cancelledText': {
-            'default': 'The wizard was cancelled. No data was submitted.',
-            'label': 'Cancelled text',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cancelledTitle': {
-            'default': 'Cancelled',
-            'label': 'Cancelled title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cardLook': {
-            'default': 'elevated',
-            'description': 'Layer 2 visual treatment for cards rendered by this atom.',
-            'label': 'Card look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'elevated',
-              'flat-bordered',
-              'borderless-divider',
-              'ticket',
-              'invoice',
-              'chip',
-              'tile-image-first',
-            ],
-          },
-          'completedText': {
-            'default': '',
-            'description': 'Shown when the wizard finishes; empty shows the default completion message',
-            'label': 'Completed text',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'completedTitle': {
-            'default': 'Complete',
-            'label': 'Completed title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'nextLabel': {
-            'default': 'Next',
-            'label': 'Next label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'restartLabel': {
-            'default': 'Start a new wizard',
-            'label': 'Restart label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'stepDescriptions': {
-            'default': [],
-            'description': 'In step order: the description shown for each step, in place of its `steps` description (render-only, so it may be translated)',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Step descriptions',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'stepLabels': {
-            'default': [],
-            'description': 'In step order: the label shown for each step, in place of its `steps` label (render-only, so it may be translated)',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Step labels',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'steps': {
-            'default': [
-              {
-                'description': 'Basic information',
-                'fields': [
-                  'title',
-                  'description',
-                ],
-                'icon': 'file-text',
-                'key': 'details',
-                'label': 'Details',
-              },
-              {
-                'description': 'Configure preferences',
-                'fields': [
-                  'category',
-                  'priority',
-                ],
-                'icon': 'settings',
-                'key': 'options',
-                'label': 'Options',
-              },
-              {
-                'description': 'Confirm and submit',
-                'fields': [
-                  'notes',
-                ],
-                'icon': 'check-circle',
-                'key': 'review',
-                'label': 'Review',
-              },
-            ],
-            'description': 'Ordered steps with their label, icon, and form fields',
-            'items': {
-              'properties': {
-                'allowedRoles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'allowedRoles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'description': {
-                  'name': 'description',
-                  'required': false,
-                  'type': 'string',
-                },
-                'fields': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'fields',
-                  'required': false,
-                  'type': 'array',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'key': {
-                  'name': 'key',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Steps',
-            'tier': 'domain',
-            'type': '[StepSpec]',
-          },
-          'submitLabel': {
-            'default': 'Submit',
-            'description': 'The primary button on the last step',
-            'label': 'Submit label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'title': {
-            'default': 'Wizard',
-            'description': 'Heading shown across all wizard steps',
-            'label': 'Wizard title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'WizardForm',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'cancelReason',
+            'completionMessage',
+            'currentFields',
+            'currentStepDescription',
+            'currentStepIcon',
+            'currentStepIndex',
+            'currentStepLabel',
+            'errorMessage',
+            'isFirstStep',
+            'isLastStep',
+            'primaryActionIcon',
+            'primaryActionLabel',
+            'totalSteps',
+            'wizardSteps',
+          ],
         },
         'effectRow': [
           {
@@ -689,51 +530,55 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
             'resource': '@entity.wizardSteps',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'WizardView',
         'emits': [
           {
-            'description': 'Signals progression to the next step in the wizard.',
             'event': 'ADVANCE',
+            'description': 'Signals progression to the next step in the wizard.',
+            'synonyms': 'next, proceed, continue',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'data',
-                'required': true,
                 'type': '@entity',
+                'required': true,
               },
             ],
-            'synonyms': 'next, proceed, continue',
-            'tier': 'domain',
           },
           {
-            'description': 'Aborts the wizard process, discarding any unsaved data.',
             'event': 'RETREAT',
+            'description': 'Aborts the wizard process, discarding any unsaved data.',
             'synonyms': 'cancel, abort, quit, exit, undo',
             'tier': 'domain',
           },
           {
-            'description': 'Indicates the user has abandoned the data collection process.',
             'event': 'CANCEL',
+            'description': 'Indicates the user has abandoned the data collection process.',
+            'synonyms': 'close, dismiss, abort',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'reason',
                 'type': 'string',
               },
             ],
-            'synonyms': 'close, dismiss, abort',
-            'tier': 'domain',
           },
           {
-            'description': 'Initiates a reset of the wizard\'s state and data.',
             'event': 'RESTART',
+            'description': 'Initiates a reset of the wizard\'s state and data.',
             'synonyms': 'reset, refresh, reinitialize',
             'tier': 'presentation',
           },
           {
-            'description': 'Signals the wizard has finished loading and is ready.',
             'event': 'WizardLoaded',
+            'description': 'Signals the wizard has finished loading and is ready.',
+            'synonyms': 'ready, initialized, available',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ObjectSpec',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -748,15 +593,15 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ObjectSpec',
               },
             ],
-            'synonyms': 'ready, initialized, available',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates the wizard failed to load initial data.',
             'event': 'WizardLoadFailed',
+            'description': 'Indicates the wizard failed to load initial data.',
+            'synonyms': 'load error, initialization failure',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -767,25 +612,25 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                 'type': 'string',
               },
             ],
-            'synonyms': 'load error, initialization failure',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates successful data submission within the wizard.',
             'event': 'WizardSaved',
+            'description': 'Indicates successful data submission within the wizard.',
+            'synonyms': 'saved, submitted, confirmed',
+            'tier': 'domain',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'value',
                 'type': '@entity',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'saved, submitted, confirmed',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to save wizard data.',
             'event': 'WizardSaveFailed',
+            'description': 'Indicates a failure to save wizard data.',
+            'synonyms': 'error, failed, save error',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -796,159 +641,13 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failed, save error',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'cancelReason',
-            'completionMessage',
-            'currentFields',
-            'currentStepDescription',
-            'currentStepIcon',
-            'currentStepIndex',
-            'currentStepLabel',
-            'errorMessage',
-            'isFirstStep',
-            'isLastStep',
-            'primaryActionIcon',
-            'primaryActionLabel',
-            'totalSteps',
-            'wizardSteps',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'WizardView',
-        'name': 'WizardForm',
-        'scope': 'instance',
         'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Signals the wizard has finished loading and is ready.',
-              'key': 'WizardLoaded',
-              'name': 'Wizard loaded',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'label',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'value',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'ready, initialized, available',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates the wizard failed to load initial data.',
-              'key': 'WizardLoadFailed',
-              'name': 'Wizard load failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'load error, initialization failure',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Indicates successful data submission within the wizard.',
-              'key': 'WizardSaved',
-              'name': 'Wizard saved',
-              'payloadSchema': [
-                {
-                  'name': 'value',
-                  'type': '@entity',
-                },
-              ],
-              'synonyms': 'saved, submitted, confirmed',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates a failure to save wizard data.',
-              'key': 'WizardSaveFailed',
-              'name': 'Wizard save failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'error, failed, save error',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Signals progression to the next step in the wizard.',
-              'key': 'ADVANCE',
-              'name': 'Advance',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'required': true,
-                  'type': '@entity',
-                },
-              ],
-              'synonyms': 'next, proceed, continue',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Aborts the wizard process, discarding any unsaved data.',
-              'key': 'RETREAT',
-              'name': 'Retreat',
-              'synonyms': 'cancel, abort, quit, exit, undo',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates the user has abandoned the data collection process.',
-              'key': 'CANCEL',
-              'name': 'Cancel',
-              'payloadSchema': [
-                {
-                  'name': 'reason',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'close, dismiss, abort',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Initiates a reset of the wizard\'s state and data.',
-              'key': 'RESTART',
-              'name': 'Restart',
-              'synonyms': 'reset, refresh, reinitialize',
-              'tier': 'presentation',
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'loading',
+              'isInitial': true,
             },
             {
               'name': 'running',
@@ -963,8 +662,132 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               'name': 'error',
             },
           ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'WizardLoaded',
+              'name': 'Wizard loaded',
+              'description': 'Signals the wizard has finished loading and is ready.',
+              'synonyms': 'ready, initialized, available',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'label',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'value',
+                      'type': 'string',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              'key': 'WizardLoadFailed',
+              'name': 'Wizard load failed',
+              'description': 'Indicates the wizard failed to load initial data.',
+              'synonyms': 'load error, initialization failure',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'WizardSaved',
+              'name': 'Wizard saved',
+              'description': 'Indicates successful data submission within the wizard.',
+              'synonyms': 'saved, submitted, confirmed',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': '@entity',
+                },
+              ],
+            },
+            {
+              'key': 'WizardSaveFailed',
+              'name': 'Wizard save failed',
+              'description': 'Indicates a failure to save wizard data.',
+              'synonyms': 'error, failed, save error',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ADVANCE',
+              'name': 'Advance',
+              'description': 'Signals progression to the next step in the wizard.',
+              'synonyms': 'next, proceed, continue',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '@entity',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'RETREAT',
+              'name': 'Retreat',
+              'description': 'Aborts the wizard process, discarding any unsaved data.',
+              'synonyms': 'cancel, abort, quit, exit, undo',
+              'tier': 'domain',
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+              'description': 'Indicates the user has abandoned the data collection process.',
+              'synonyms': 'close, dismiss, abort',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'reason',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+              'description': 'Initiates a reset of the wizard\'s state and data.',
+              'synonyms': 'reset, refresh, reinitialize',
+              'tier': 'presentation',
+            },
+          ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -980,28 +803,28 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
-                        'fields': 3,
                         'type': 'skeleton',
+                        'fields': 3,
                         'variant': 'form',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'running',
+              'event': 'WizardLoaded',
               'effects': [
                 [
                   'set',
@@ -1026,6 +849,11 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                       'fn',
                       'step',
                       {
+                        'title': [
+                          'object/get',
+                          '@step',
+                          'label',
+                        ],
                         'description': [
                           'object/get',
                           '@step',
@@ -1036,11 +864,6 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                           'object/get',
                           '@step',
                           'key',
-                        ],
-                        'title': [
-                          'object/get',
-                          '@step',
-                          'label',
                         ],
                       },
                     ],
@@ -1156,26 +979,30 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
-                            'name': 'list-checks',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
+                            'name': 'list-checks',
                           },
                           {
                             'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'sm',
                       },
                       {
+                        'type': 'wizard-progress',
                         'allowNavigation': false,
                         'currentStep': '@entity.currentStepIndex',
                         'steps': [
@@ -1196,6 +1023,17 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                               'fn',
                               'step',
                               {
+                                'id': [
+                                  'object/get',
+                                  '@step',
+                                  'id',
+                                  '',
+                                ],
+                                'title': [
+                                  'array/nth',
+                                  '@config.stepLabels',
+                                  '@index',
+                                ],
                                 'description': [
                                   'if',
                                   [
@@ -1218,38 +1056,31 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                     '@index',
                                   ],
                                 ],
-                                'id': [
-                                  'object/get',
-                                  '@step',
-                                  'id',
-                                  '',
-                                ],
-                                'title': [
-                                  'array/nth',
-                                  '@config.stepLabels',
-                                  '@index',
-                                ],
                               },
                             ],
                           ],
                         ],
-                        'type': 'wizard-progress',
                       },
                       {
                         'children': [
                           {
+                            'type': 'stack',
+                            'gap': 'md',
                             'children': [
                               {
                                 'align': 'center',
+                                'type': 'stack',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'name': '@entity.currentStepIcon',
-                                    'size': 'xl',
                                     'type': 'icon',
+                                    'size': 'xl',
                                   },
                                   {
                                     'children': [
                                       {
+                                        'variant': 'h2',
                                         'content': [
                                           'if',
                                           [
@@ -1268,9 +1099,10 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                           ],
                                         ],
                                         'type': 'typography',
-                                        'variant': 'h2',
                                       },
                                       {
+                                        'variant': 'body',
+                                        'type': 'typography',
                                         'color': 'muted',
                                         'content': [
                                           'if',
@@ -1289,25 +1121,24 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                             '@entity.currentStepIndex',
                                           ],
                                         ],
-                                        'type': 'typography',
-                                        'variant': 'body',
                                       },
                                     ],
-                                    'direction': 'vertical',
                                     'gap': 'xs',
                                     'type': 'stack',
+                                    'direction': 'vertical',
                                   },
                                 ],
-                                'direction': 'horizontal',
                                 'gap': 'sm',
-                                'type': 'stack',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
                                 'cancelEvent': 'CANCEL',
-                                'entity': '@entity',
+                                'submitEvent': 'ADVANCE',
+                                'showCancel': false,
+                                'mode': 'edit',
+                                'showSubmit': false,
                                 'fields': [
                                   'array/map',
                                   '@entity.currentFields',
@@ -1319,42 +1150,41 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                     },
                                   ],
                                 ],
-                                'mode': 'edit',
-                                'showCancel': false,
-                                'showSubmit': false,
-                                'submitEvent': 'ADVANCE',
                                 'type': 'form-section',
+                                'entity': '@entity',
                               },
                             ],
                             'direction': 'vertical',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                         ],
                         'look': '@config.cardLook',
                         'type': 'card',
                       },
                       {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'align': 'center',
                         'children': [
                           {
-                            'action': 'RETREAT',
-                            'disabled': '@entity.isFirstStep',
-                            'icon': 'chevron-left',
+                            'variant': 'ghost',
                             'label': '@config.backLabel',
+                            'action': 'RETREAT',
                             'type': 'button',
-                            'variant': 'ghost',
+                            'icon': 'chevron-left',
+                            'disabled': '@entity.isFirstStep',
                           },
                           {
-                            'action': 'CANCEL',
                             'icon': 'x',
-                            'label': '@config.cancelLabel',
-                            'type': 'button',
                             'variant': 'ghost',
+                            'action': 'CANCEL',
+                            'type': 'button',
+                            'label': '@config.cancelLabel',
                           },
                           {
-                            'action': 'ADVANCE',
                             'icon': '@entity.primaryActionIcon',
+                            'action': 'ADVANCE',
+                            'variant': 'primary',
                             'label': [
                               'if',
                               [
@@ -1370,25 +1200,18 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                               '@config.nextLabel',
                             ],
                             'type': 'button',
-                            'variant': 'primary',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'WizardLoaded',
-              'from': 'loading',
-              'to': 'running',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'WizardLoadFailed',
               'effects': [
                 [
                   'set',
@@ -1400,24 +1223,24 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'main',
                   {
                     'message': '@entity.errorMessage',
-                    'title': 'Failed to load',
                     'type': 'error-state',
+                    'title': 'Failed to load',
                   },
                 ],
               ],
-              'event': 'WizardLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'WizardSaved',
               'effects': [
                 [
                   'fetch',
                   ('WizardView' satisfies _StdWizardEntityName),
                   {
                     'emit': {
-                      'failure': 'WizardLoadFailed',
                       'success': 'WizardLoaded',
+                      'failure': 'WizardLoadFailed',
                     },
                   },
                 ],
@@ -1425,28 +1248,28 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
+                        'variant': 'form',
                         'fields': 3,
                         'type': 'skeleton',
-                        'variant': 'form',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'WizardSaved',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'WizardSaveFailed',
               'effects': [
                 [
                   'set',
@@ -1457,17 +1280,17 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'message': '@entity.errorMessage',
                     'title': 'Save failed',
                     'type': 'error-state',
+                    'message': '@entity.errorMessage',
                   },
                 ],
               ],
-              'event': 'WizardSaveFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'running',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1490,8 +1313,8 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                       },
                       {
                         'fields': 3,
-                        'type': 'skeleton',
                         'variant': 'form',
+                        'type': 'skeleton',
                       },
                     ],
                     'direction': 'vertical',
@@ -1500,11 +1323,15 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'running',
-              'to': 'loading',
             },
             {
+              'from': 'running',
+              'to': 'running',
+              'event': 'ADVANCE',
+              'guard': [
+                'not',
+                '@entity.isLastStep',
+              ],
               'effects': [
                 [
                   'set',
@@ -1632,27 +1459,27 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
                             'name': 'list-checks',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
-                            'content': '@config.title',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': '@config.title',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'align': 'center',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                       },
                       {
-                        'allowNavigation': false,
                         'currentStep': '@entity.currentStepIndex',
                         'steps': [
                           'if',
@@ -1709,6 +1536,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                             ],
                           ],
                         ],
+                        'allowNavigation': false,
                         'type': 'wizard-progress',
                       },
                       {
@@ -1716,16 +1544,20 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                           {
                             'children': [
                               {
-                                'align': 'center',
+                                'type': 'stack',
                                 'children': [
                                   {
+                                    'type': 'icon',
                                     'name': '@entity.currentStepIcon',
                                     'size': 'xl',
-                                    'type': 'icon',
                                   },
                                   {
+                                    'gap': 'xs',
+                                    'direction': 'vertical',
+                                    'type': 'stack',
                                     'children': [
                                       {
+                                        'variant': 'h2',
                                         'content': [
                                           'if',
                                           [
@@ -1744,10 +1576,9 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                           ],
                                         ],
                                         'type': 'typography',
-                                        'variant': 'h2',
                                       },
                                       {
-                                        'color': 'muted',
+                                        'variant': 'body',
                                         'content': [
                                           'if',
                                           [
@@ -1766,23 +1597,22 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                           ],
                                         ],
                                         'type': 'typography',
-                                        'variant': 'body',
+                                        'color': 'muted',
                                       },
                                     ],
-                                    'direction': 'vertical',
-                                    'gap': 'xs',
-                                    'type': 'stack',
                                   },
                                 ],
-                                'direction': 'horizontal',
                                 'gap': 'sm',
-                                'type': 'stack',
+                                'align': 'center',
+                                'direction': 'horizontal',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
-                                'cancelEvent': 'CANCEL',
+                                'submitEvent': 'ADVANCE',
+                                'mode': 'edit',
+                                'showSubmit': false,
                                 'entity': '@entity',
                                 'fields': [
                                   'array/map',
@@ -1795,42 +1625,40 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                     },
                                   ],
                                 ],
-                                'mode': 'edit',
+                                'cancelEvent': 'CANCEL',
                                 'showCancel': false,
-                                'showSubmit': false,
-                                'submitEvent': 'ADVANCE',
                                 'type': 'form-section',
                               },
                             ],
-                            'direction': 'vertical',
-                            'gap': 'md',
                             'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'vertical',
                           },
                         ],
-                        'look': '@config.cardLook',
                         'type': 'card',
+                        'look': '@config.cardLook',
                       },
                       {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'align': 'center',
                         'children': [
                           {
                             'action': 'RETREAT',
                             'disabled': '@entity.isFirstStep',
                             'icon': 'chevron-left',
-                            'label': '@config.backLabel',
                             'type': 'button',
                             'variant': 'ghost',
+                            'label': '@config.backLabel',
                           },
                           {
+                            'variant': 'ghost',
+                            'type': 'button',
                             'action': 'CANCEL',
                             'icon': 'x',
                             'label': '@config.cancelLabel',
-                            'type': 'button',
-                            'variant': 'ghost',
                           },
                           {
-                            'action': 'ADVANCE',
-                            'icon': '@entity.primaryActionIcon',
                             'label': [
                               'if',
                               [
@@ -1845,30 +1673,26 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                               '@config.submitLabel',
                               '@config.nextLabel',
                             ],
-                            'type': 'button',
                             'variant': 'primary',
+                            'type': 'button',
+                            'action': 'ADVANCE',
+                            'icon': '@entity.primaryActionIcon',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'ADVANCE',
-              'from': 'running',
-              'guard': [
-                'not',
-                '@entity.isLastStep',
-              ],
-              'to': 'running',
             },
             {
+              'from': 'running',
+              'to': 'completed',
+              'event': 'ADVANCE',
+              'guard': '@entity.isLastStep',
               'effects': [
                 [
                   'set',
@@ -1882,8 +1706,8 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'WizardSaveFailed',
                       'success': 'WizardSaved',
+                      'failure': 'WizardSaveFailed',
                     },
                   },
                 ],
@@ -1891,12 +1715,11 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'children': [
                       {
-                        'name': 'check-circle',
                         'size': 'xl',
                         'type': 'icon',
+                        'name': 'check-circle',
                       },
                       {
                         'align': 'center',
@@ -1905,8 +1728,8 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                         'variant': 'h2',
                       },
                       {
+                        'variant': 'body',
                         'align': 'center',
-                        'color': 'muted',
                         'content': [
                           'if',
                           [
@@ -1918,11 +1741,9 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                           '@config.completedText',
                         ],
                         'type': 'typography',
-                        'variant': 'body',
+                        'color': 'muted',
                       },
                       {
-                        'allowNavigation': false,
-                        'currentStep': '@entity.totalSteps',
                         'steps': [
                           'if',
                           [
@@ -1978,28 +1799,30 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                             ],
                           ],
                         ],
+                        'allowNavigation': false,
+                        'currentStep': '@entity.totalSteps',
                         'type': 'wizard-progress',
                       },
                       {
-                        'action': 'RESTART',
-                        'icon': 'rotate-ccw',
-                        'label': '@config.restartLabel',
                         'type': 'button',
+                        'label': '@config.restartLabel',
+                        'icon': 'rotate-ccw',
+                        'action': 'RESTART',
                         'variant': 'secondary',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
+                    'align': 'center',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'ADVANCE',
-              'from': 'running',
-              'guard': '@entity.isLastStep',
-              'to': 'completed',
             },
             {
+              'from': 'running',
+              'to': 'running',
+              'event': 'RETREAT',
               'effects': [
                 [
                   'set',
@@ -2127,9 +1950,11 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
                             'name': 'list-checks',
@@ -2137,18 +1962,17 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                             'type': 'icon',
                           },
                           {
-                            'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
+                            'content': '@config.title',
                           },
                         ],
                         'direction': 'horizontal',
                         'gap': 'sm',
+                        'align': 'center',
                         'type': 'stack',
                       },
                       {
-                        'allowNavigation': false,
-                        'currentStep': '@entity.currentStepIndex',
                         'steps': [
                           'if',
                           [
@@ -2167,6 +1991,17 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                               'fn',
                               'step',
                               {
+                                'title': [
+                                  'array/nth',
+                                  '@config.stepLabels',
+                                  '@index',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@step',
+                                  'id',
+                                  '',
+                                ],
                                 'description': [
                                   'if',
                                   [
@@ -2189,38 +2024,36 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                     '@index',
                                   ],
                                 ],
-                                'id': [
-                                  'object/get',
-                                  '@step',
-                                  'id',
-                                  '',
-                                ],
-                                'title': [
-                                  'array/nth',
-                                  '@config.stepLabels',
-                                  '@index',
-                                ],
                               },
                             ],
                           ],
                         ],
+                        'currentStep': '@entity.currentStepIndex',
                         'type': 'wizard-progress',
+                        'allowNavigation': false,
                       },
                       {
+                        'type': 'card',
+                        'look': '@config.cardLook',
                         'children': [
                           {
                             'children': [
                               {
+                                'gap': 'sm',
+                                'direction': 'horizontal',
+                                'type': 'stack',
                                 'align': 'center',
                                 'children': [
                                   {
+                                    'type': 'icon',
                                     'name': '@entity.currentStepIcon',
                                     'size': 'xl',
-                                    'type': 'icon',
                                   },
                                   {
+                                    'gap': 'xs',
                                     'children': [
                                       {
+                                        'variant': 'h2',
                                         'content': [
                                           'if',
                                           [
@@ -2239,10 +2072,10 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                           ],
                                         ],
                                         'type': 'typography',
-                                        'variant': 'h2',
                                       },
                                       {
-                                        'color': 'muted',
+                                        'type': 'typography',
+                                        'variant': 'body',
                                         'content': [
                                           'if',
                                           [
@@ -2260,24 +2093,24 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                             '@entity.currentStepIndex',
                                           ],
                                         ],
-                                        'type': 'typography',
-                                        'variant': 'body',
+                                        'color': 'muted',
                                       },
                                     ],
-                                    'direction': 'vertical',
-                                    'gap': 'xs',
                                     'type': 'stack',
+                                    'direction': 'vertical',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'sm',
-                                'type': 'stack',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
                                 'cancelEvent': 'CANCEL',
+                                'mode': 'edit',
+                                'showCancel': false,
+                                'type': 'form-section',
+                                'showSubmit': false,
+                                'submitEvent': 'ADVANCE',
                                 'entity': '@entity',
                                 'fields': [
                                   'array/map',
@@ -2290,41 +2123,36 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                     },
                                   ],
                                 ],
-                                'mode': 'edit',
-                                'showCancel': false,
-                                'showSubmit': false,
-                                'submitEvent': 'ADVANCE',
-                                'type': 'form-section',
                               },
                             ],
-                            'direction': 'vertical',
                             'gap': 'md',
                             'type': 'stack',
+                            'direction': 'vertical',
                           },
                         ],
-                        'look': '@config.cardLook',
-                        'type': 'card',
                       },
                       {
-                        'align': 'center',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'action': 'RETREAT',
+                            'label': '@config.backLabel',
+                            'variant': 'ghost',
                             'disabled': '@entity.isFirstStep',
                             'icon': 'chevron-left',
-                            'label': '@config.backLabel',
                             'type': 'button',
-                            'variant': 'ghost',
+                            'action': 'RETREAT',
                           },
                           {
-                            'action': 'CANCEL',
-                            'icon': 'x',
-                            'label': '@config.cancelLabel',
                             'type': 'button',
+                            'label': '@config.cancelLabel',
                             'variant': 'ghost',
+                            'icon': 'x',
+                            'action': 'CANCEL',
                           },
                           {
                             'action': 'ADVANCE',
+                            'type': 'button',
+                            'variant': 'primary',
                             'icon': '@entity.primaryActionIcon',
                             'label': [
                               'if',
@@ -2340,26 +2168,21 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                               '@config.submitLabel',
                               '@config.nextLabel',
                             ],
-                            'type': 'button',
-                            'variant': 'primary',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'RETREAT',
-              'from': 'running',
-              'to': 'running',
             },
             {
+              'from': 'running',
+              'to': 'cancelled',
+              'event': 'CANCEL',
               'effects': [
                 [
                   'set',
@@ -2370,7 +2193,8 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
                         'name': 'x-circle',
@@ -2379,36 +2203,35 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                       },
                       {
                         'align': 'center',
-                        'content': '@config.cancelledTitle',
-                        'type': 'typography',
                         'variant': 'h2',
+                        'type': 'typography',
+                        'content': '@config.cancelledTitle',
                       },
                       {
+                        'type': 'typography',
+                        'variant': 'body',
                         'align': 'center',
                         'color': 'muted',
                         'content': '@config.cancelledText',
-                        'type': 'typography',
-                        'variant': 'body',
                       },
                       {
-                        'action': 'RESTART',
                         'icon': 'rotate-ccw',
-                        'label': '@config.restartLabel',
                         'type': 'button',
+                        'label': '@config.restartLabel',
                         'variant': 'secondary',
+                        'action': 'RESTART',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
-              'event': 'CANCEL',
-              'from': 'running',
-              'to': 'cancelled',
             },
             {
+              'from': 'completed',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -2424,6 +2247,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'children': [
                       {
                         'type': 'skeleton',
@@ -2436,37 +2260,35 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'completed',
-              'to': 'loading',
             },
             {
+              'from': 'completed',
+              'to': 'completed',
+              'event': 'WizardSaved',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'name': 'check-circle',
                         'size': 'xl',
+                        'name': 'check-circle',
                         'type': 'icon',
                       },
                       {
                         'align': 'center',
-                        'content': '@config.completedTitle',
                         'type': 'typography',
+                        'content': '@config.completedTitle',
                         'variant': 'h2',
                       },
                       {
-                        'align': 'center',
-                        'color': 'muted',
+                        'variant': 'body',
                         'content': [
                           'if',
                           [
@@ -2477,12 +2299,13 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                           '@entity.completionMessage',
                           '@config.completedText',
                         ],
+                        'color': 'muted',
                         'type': 'typography',
-                        'variant': 'body',
+                        'align': 'center',
                       },
                       {
-                        'allowNavigation': false,
                         'currentStep': '@entity.totalSteps',
+                        'allowNavigation': false,
                         'steps': [
                           'if',
                           [
@@ -2541,45 +2364,45 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                         'type': 'wizard-progress',
                       },
                       {
+                        'variant': 'secondary',
+                        'label': '@config.restartLabel',
                         'action': 'RESTART',
                         'icon': 'rotate-ccw',
-                        'label': '@config.restartLabel',
                         'type': 'button',
-                        'variant': 'secondary',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
-              'event': 'WizardSaved',
-              'from': 'completed',
-              'to': 'completed',
             },
             {
+              'from': 'completed',
+              'to': 'completed',
+              'event': 'WizardSaveFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
+                    'type': 'alert',
                     'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t save the wizard — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'WizardSaveFailed',
-              'from': 'completed',
-              'to': 'completed',
             },
             {
+              'from': 'completed',
+              'to': 'loading',
+              'event': 'RESTART',
               'effects': [
                 [
                   'set',
@@ -2596,8 +2419,8 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   ('WizardView' satisfies _StdWizardEntityName),
                   {
                     'emit': {
-                      'failure': 'WizardLoadFailed',
                       'success': 'WizardLoaded',
+                      'failure': 'WizardLoadFailed',
                     },
                   },
                 ],
@@ -2605,28 +2428,28 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
+                        'variant': 'form',
                         'fields': 3,
                         'type': 'skeleton',
-                        'variant': 'form',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'RESTART',
-              'from': 'completed',
-              'to': 'loading',
             },
             {
+              'from': 'cancelled',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -2648,22 +2471,22 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                         'variant': 'header',
                       },
                       {
+                        'variant': 'form',
                         'fields': 3,
                         'type': 'skeleton',
-                        'variant': 'form',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'cancelled',
-              'to': 'loading',
             },
             {
+              'from': 'cancelled',
+              'to': 'loading',
+              'event': 'RESTART',
               'effects': [
                 [
                   'set',
@@ -2680,8 +2503,8 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   ('WizardView' satisfies _StdWizardEntityName),
                   {
                     'emit': {
-                      'failure': 'WizardLoadFailed',
                       'success': 'WizardLoaded',
+                      'failure': 'WizardLoadFailed',
                     },
                   },
                 ],
@@ -2689,28 +2512,28 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
+                        'variant': 'form',
                         'fields': 3,
                         'type': 'skeleton',
-                        'variant': 'form',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'RESTART',
-              'from': 'cancelled',
-              'to': 'loading',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
@@ -2722,23 +2545,200 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                         'variant': 'header',
                       },
                       {
-                        'fields': 3,
-                        'type': 'skeleton',
                         'variant': 'form',
+                        'type': 'skeleton',
+                        'fields': 3,
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'steps': {
+            'type': '[StepSpec]',
+            'default': [
+              {
+                'label': 'Details',
+                'fields': [
+                  'title',
+                  'description',
+                ],
+                'key': 'details',
+                'icon': 'file-text',
+                'description': 'Basic information',
+              },
+              {
+                'description': 'Configure preferences',
+                'icon': 'settings',
+                'key': 'options',
+                'fields': [
+                  'category',
+                  'priority',
+                ],
+                'label': 'Options',
+              },
+              {
+                'key': 'review',
+                'description': 'Confirm and submit',
+                'fields': [
+                  'notes',
+                ],
+                'label': 'Review',
+                'icon': 'check-circle',
+              },
+            ],
+            'label': 'Steps',
+            'description': 'Ordered steps with their label, icon, and form fields',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
+                'fields': {
+                  'name': 'fields',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'key': {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': false,
+                },
+                'allowedRoles': {
+                  'name': 'allowedRoles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'cardLook': {
+            'type': 'string',
+            'default': 'elevated',
+            'label': 'Card look',
+            'description': 'Layer 2 visual treatment for cards rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'elevated',
+              'flat-bordered',
+              'borderless-divider',
+              'ticket',
+              'invoice',
+              'chip',
+              'tile-image-first',
+            ],
+          },
+          'stepDescriptions': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Step descriptions',
+            'description': 'In step order: the description shown for each step, in place of its `steps` description (render-only, so it may be translated)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'completedTitle': {
+            'type': 'string',
+            'default': 'Complete',
+            'label': 'Completed title',
+            'tier': 'presentation',
+          },
+          'restartLabel': {
+            'type': 'string',
+            'default': 'Start a new wizard',
+            'label': 'Restart label',
+            'tier': 'presentation',
+          },
+          'submitLabel': {
+            'type': 'string',
+            'default': 'Submit',
+            'label': 'Submit label',
+            'description': 'The primary button on the last step',
+            'tier': 'presentation',
+          },
+          'stepLabels': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Step labels',
+            'description': 'In step order: the label shown for each step, in place of its `steps` label (render-only, so it may be translated)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'cancelledText': {
+            'type': 'string',
+            'default': 'The wizard was cancelled. No data was submitted.',
+            'label': 'Cancelled text',
+            'tier': 'presentation',
+          },
+          'cancelledTitle': {
+            'type': 'string',
+            'default': 'Cancelled',
+            'label': 'Cancelled title',
+            'tier': 'presentation',
+          },
+          'nextLabel': {
+            'type': 'string',
+            'default': 'Next',
+            'label': 'Next label',
+            'tier': 'presentation',
+          },
+          'cancelLabel': {
+            'type': 'string',
+            'default': 'Cancel wizard',
+            'label': 'Cancel label',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Wizard',
+            'label': 'Wizard title',
+            'description': 'Heading shown across all wizard steps',
+            'tier': 'presentation',
+          },
+          'backLabel': {
+            'type': 'string',
+            'default': 'Back',
+            'label': 'Back label',
+            'tier': 'presentation',
+          },
+          'completedText': {
+            'type': 'string',
+            'default': '',
+            'label': 'Completed text',
+            'description': 'Shown when the wizard finishes; empty shows the default completion message',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

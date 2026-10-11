@@ -51,24 +51,24 @@ export interface StdMotionBodyBodyMovedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMotionBodyConfig {
-  /** Default: `[]` */
-  bodies?: EntityRow[];
-  /** Default: `0.98` */
-  damping?: number;
-  /** Default: `0` */
-  gravity?: number;
-  /** Default: `8` */
-  maxSpeed?: number;
   /** Default: `true` */
   running?: boolean;
+  /** Default: `-1000000` */
+  yMin?: number;
+  /** Default: `0` */
+  gravity?: number;
   /** Default: `1000000` */
   xMax?: number;
+  /** Default: `8` */
+  maxSpeed?: number;
+  /** Default: `0.98` */
+  damping?: number;
+  /** Default: `[]` */
+  bodies?: EntityRow[];
   /** Default: `-1000000` */
   xMin?: number;
   /** Default: `1000000` */
   yMax?: number;
-  /** Default: `-1000000` */
-  yMin?: number;
 }
 
 /**

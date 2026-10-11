@@ -265,79 +265,78 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'default': {},
-            'description': 'ImportSource descriptor of the run (kind + options), supplied by the host.',
             'name': 'source',
+            'type': 'object',
+            'default': {},
             'properties': {
-              'event': {
-                'name': 'event',
-                'required': false,
-                'type': 'string',
-              },
               'id': {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               'kind': {
                 'name': 'kind',
-                'required': true,
                 'type': 'string',
+                'required': true,
+              },
+              'event': {
+                'name': 'event',
+                'type': 'string',
+                'required': false,
               },
               'label': {
                 'name': 'label',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             },
-            'type': 'object',
+            'description': 'ImportSource descriptor of the run (kind + options), supplied by the host.',
           },
           {
+            'name': 'files',
+            'type': 'array',
             'default': [],
-            'description': 'Client-side file metadata for upload sources (name/size/type/lastModified).',
             'items': {
+              'type': 'object',
               'properties': {
-                'lastModified': {
-                  'name': 'lastModified',
-                  'required': false,
-                  'type': 'number',
-                },
                 'name': {
                   'name': 'name',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
+                },
+                'lastModified': {
+                  'name': 'lastModified',
+                  'type': 'number',
+                  'required': false,
                 },
                 'size': {
                   'name': 'size',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
                 },
                 'type': {
                   'name': 'type',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'files',
-            'type': 'array',
+            'description': 'Client-side file metadata for upload sources (name/size/type/lastModified).',
           },
           {
-            'default': '',
-            'description': 'Name of the host entity this import writes into.',
             'name': 'target',
             'type': 'string',
+            'default': '',
+            'description': 'Name of the host entity this import writes into.',
           },
           {
-            'default': 'idle',
-            'description': 'Lifecycle position of the run.',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'fetching',
@@ -347,138 +346,139 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               'done',
               'failed',
             ],
+            'description': 'Lifecycle position of the run.',
           },
           {
+            'name': 'documents',
+            'type': 'array',
             'default': [],
-            'description': 'Document metadata listed from the source — migration.listDocuments service result, never destructured by the atom.',
             'items': {
+              'type': 'object',
               'items': {
                 'type': 'scalar',
               },
-              'type': 'object',
             },
-            'name': 'documents',
-            'type': 'array',
+            'description': 'Document metadata listed from the source — migration.listDocuments service result, never destructured by the atom.',
           },
           {
+            'name': 'document',
+            'type': 'object',
             'default': {},
-            'description': 'Most recently fetched document content — migration.fetchDocument service result, never destructured by the atom.',
             'items': {
               'type': 'scalar',
             },
-            'name': 'document',
-            'type': 'object',
+            'description': 'Most recently fetched document content — migration.fetchDocument service result, never destructured by the atom.',
           },
           {
-            'default': {},
-            'description': 'Staged/committed/failed/skipped counts — merged from host staging and migration.commit service results, never destructured by the atom.',
             'name': 'stats',
+            'type': 'object',
+            'default': {},
             'properties': {
               'committed': {
                 'name': 'committed',
-                'required': false,
                 'type': 'number',
+                'required': false,
               },
               'failed': {
+                'name': 'failed',
+                'type': 'array',
+                'required': false,
                 'items': {
+                  'type': 'object',
                   'items': {
                     'type': 'scalar',
                   },
-                  'type': 'object',
                 },
-                'name': 'failed',
-                'required': false,
-                'type': 'array',
               },
             },
-            'type': 'object',
+            'description': 'Staged/committed/failed/skipped counts — merged from host staging and migration.commit service results, never destructured by the atom.',
           },
           {
+            'name': 'units',
+            'type': 'array',
             'default': [],
-            'description': 'Staged ImportUnits ready for review (ref/targetEntity/title/fields/parentRef), when the host stages the full rows rather than aggregate stats only.',
             'items': {
+              'type': 'object',
               'properties': {
                 'fields': {
+                  'name': 'fields',
+                  'type': 'object',
+                  'required': false,
                   'items': {
                     'type': 'scalar',
                   },
-                  'name': 'fields',
-                  'required': false,
-                  'type': 'object',
+                },
+                'ref': {
+                  'name': 'ref',
+                  'type': 'string',
+                  'required': true,
                 },
                 'parentRef': {
                   'name': 'parentRef',
+                  'type': 'string',
                   'required': false,
-                  'type': 'string',
-                },
-                'ref': {
-                  'name': 'ref',
-                  'required': true,
-                  'type': 'string',
                 },
                 'targetEntity': {
                   'name': 'targetEntity',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'title': {
                   'name': 'title',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'units',
+            'description': 'Staged ImportUnits ready for review (ref/targetEntity/title/fields/parentRef), when the host stages the full rows rather than aggregate stats only.',
             'synonyms': 'staged units, preview rows, import rows, staged rows',
-            'type': 'array',
           },
           {
+            'name': 'skipped',
+            'type': 'array',
             'default': [],
-            'description': 'Source elements skipped during staging with a reason each, when the host stages the full rows rather than aggregate stats only.',
             'items': {
+              'type': 'object',
               'properties': {
-                'reason': {
-                  'name': 'reason',
-                  'required': true,
-                  'type': 'string',
-                },
                 'ref': {
                   'name': 'ref',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
+                },
+                'reason': {
+                  'name': 'reason',
+                  'type': 'string',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'skipped',
+            'description': 'Source elements skipped during staging with a reason each, when the host stages the full rows rather than aggregate stats only.',
             'synonyms': 'skipped rows, skipped elements, staging skips',
-            'type': 'array',
           },
           {
+            'name': 'validationErrors',
+            'type': 'array',
             'default': [],
-            'description': 'Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only.',
             'items': {
+              'type': 'object',
               'items': {
                 'type': 'scalar',
               },
-              'type': 'object',
             },
-            'name': 'validationErrors',
+            'description': 'Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only.',
             'synonyms': 'staging errors, validation issues, import errors',
-            'type': 'array',
           },
           {
-            'default': '',
-            'description': 'Failure detail when status is failed.',
             'name': 'error',
             'type': 'string',
+            'default': '',
+            'description': 'Failure detail when status is failed.',
           },
           {
-            'default': 0,
-            'description': 'Run start timestamp.',
             'name': 'createdAt',
             'type': 'number',
+            'default': 0,
+            'description': 'Run start timestamp.',
           },
         ];
         const extras = params.fields ?? [];
@@ -489,32 +489,23 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'connectionRef': {
-            'default': '',
-            'description': 'Secret-store / environment KEY holding the source credentials. The reference is stored; the secret itself never enters config, traces, or snapshots — the migration service resolves it at run time. (Typed `secret` — the config-field type that marks a credential reference; UI password-renders it and traces mask it.)',
-            'label': 'Connection reference',
-            'synonyms': 'credential key, connection string reference, secret name',
-            'tier': 'internal',
-            'type': 'secret',
-          },
-          'reviewSlot': {
-            'default': 'modal',
-            'description': 'UI slot the staged-import review renders into when the host stages the full units/skipped rows (not stats-only). Defaults to the modal overlay so a host that never places this trait on a page — or that only ever sends {stats} — stays effectively headless; the rendered tree\'s confirm/cancel wire to the atom\'s own MIGRATION_APPROVED/MIGRATION_DISCARDED events.',
-            'label': 'Review slot',
-            'synonyms': 'preview slot, review outlet, staging modal, import review slot',
-            'tier': 'internal',
-            'type': 'slot',
-          },
-          'target': {
-            'default': '',
-            'description': 'Name of the host entity this import writes into (e.g. the organism\'s own entity). The migration service derives the full target descriptor from the running app\'s schema.',
-            'label': 'Target entity',
-            'synonyms': 'destination, import into, target type',
-            'tier': 'domain',
-            'type': 'string',
-          },
+        'name': 'MigrationJobLifecycle',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'document',
+            'documents',
+            'error',
+            'files',
+            'skipped',
+            'source',
+            'stats',
+            'status',
+            'target',
+            'units',
+            'validationErrors',
+          ],
         },
         'effectRow': [
           {
@@ -559,8 +550,8 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.reviewSlot',
+            'resolved': false,
           },
           {
             'kind': 'render-ui',
@@ -615,25 +606,30 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
             'resource': '@entity.validationErrors',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'MigrationJob',
         'emits': [
           {
-            'description': 'migration.listDocuments service result, flattened onto the payload by the call-service effect executor',
             'event': 'DOCUMENTS_LISTED',
+            'description': 'migration.listDocuments service result, flattened onto the payload by the call-service effect executor',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'documents',
-                'required': true,
                 'type': '[Map<string,scalar>]',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'migration.stage service result, flattened onto the payload by the call-service effect executor',
             'event': 'MIGRATION_STAGED',
+            'description': 'migration.stage service result, flattened onto the payload by the call-service effect executor',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'stats',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'committed',
@@ -644,22 +640,20 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                     'type': '[Map<string,scalar>]',
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
               {
-                'entity': 'ImportUnit',
                 'name': 'units',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'ref',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetEntity',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'title',
@@ -674,107 +668,111 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ImportUnit',
               },
               {
-                'entity': 'ImportSkip',
                 'name': 'skipped',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'ref',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'reason',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ImportSkip',
               },
               {
                 'name': 'validationErrors',
                 'type': '[Map<string,scalar>]',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'migration.fetchDocument service result, flattened onto the payload by the call-service effect executor',
             'event': 'DOCUMENT_FETCHED',
+            'description': 'migration.fetchDocument service result, flattened onto the payload by the call-service effect executor',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'document',
-                'required': true,
                 'type': 'Map<string,scalar>',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'migration.commit service result — committed count plus per-unit failures',
             'event': 'COMMITTED',
+            'description': 'migration.commit service result — committed count plus per-unit failures',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'committed',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'failed',
-                'required': true,
                 'type': '[Map<string,scalar>]',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'migration service call failure signal — lands the run in failed, never a silent swallow',
             'event': 'MIGRATION_CALL_FAILED',
+            'description': 'migration service call failure signal — lands the run in failed, never a silent swallow',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Source documents are listed and the run is ready for staging (deterministic pipeline or agent)',
             'event': 'MIGRATION_FETCHED',
+            'description': 'Source documents are listed and the run is ready for staging (deterministic pipeline or agent)',
+            'synonyms': 'import fetched, source listed, documents ready',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'documents',
-                'required': true,
                 'type': '[Map<string,scalar>]',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'import fetched, source listed, documents ready',
-            'tier': 'domain',
           },
           {
-            'description': 'A single fetched document\'s content, for the host staging layer to map into target units',
             'event': 'MIGRATION_DOCUMENT',
+            'description': 'A single fetched document\'s content, for the host staging layer to map into target units',
+            'synonyms': 'document loaded, content fetched',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'document',
-                'required': true,
                 'type': 'Map<string,scalar>',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'document loaded, content fetched',
-            'tier': 'domain',
           },
           {
-            'description': 'Staging is complete; the preview is ready for the approval gate. units/skipped/validationErrors forward the full staged rows when the host staged them, for a review-before-commit UI; stats-only hosts leave them empty.',
             'event': 'MIGRATION_REVIEW_READY',
+            'description': 'Staging is complete; the preview is ready for the approval gate. units/skipped/validationErrors forward the full staged rows when the host staged them, for a review-before-commit UI; stats-only hosts leave them empty.',
+            'synonyms': 'preview ready, staging complete, review import',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'stats',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'committed',
@@ -785,22 +783,20 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                     'type': '[Map<string,scalar>]',
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
               {
-                'entity': 'ImportUnit',
                 'name': 'units',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'ref',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetEntity',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'title',
@@ -815,40 +811,42 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ImportUnit',
               },
               {
-                'entity': 'ImportSkip',
                 'name': 'skipped',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'ref',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'reason',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ImportSkip',
               },
               {
                 'name': 'validationErrors',
                 'type': '[Map<string,scalar>]',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'preview ready, staging complete, review import',
-            'tier': 'domain',
           },
           {
-            'description': 'The commit drained through the host sink; stats carry committed and per-unit failed counts',
             'event': 'MIGRATION_COMPLETED',
+            'description': 'The commit drained through the host sink; stats carry committed and per-unit failed counts',
+            'synonyms': 'import done, migration complete, data imported',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'stats',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'committed',
@@ -859,463 +857,29 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                     'type': '[Map<string,scalar>]',
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'import done, migration complete, data imported',
-            'tier': 'domain',
           },
           {
-            'description': 'The run failed; error carries the service-reported detail and the terminal job row was persisted',
             'event': 'MIGRATION_FAILED',
+            'description': 'The run failed; error carries the service-reported detail and the terminal job row was persisted',
+            'synonyms': 'import failed, migration error',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'import failed, migration error',
-            'tier': 'domain',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'document',
-            'documents',
-            'error',
-            'files',
-            'skipped',
-            'source',
-            'stats',
-            'status',
-            'target',
-            'units',
-            'validationErrors',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'MigrationJob',
-        'name': 'MigrationJobLifecycle',
-        'scope': 'instance',
         'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Starts an import run. source is the ImportSource descriptor; files carries client file metadata for upload sources. Also reached via a sibling std-import\'s IMPORT_REQUESTED.',
-              'key': 'MIGRATION_START',
-              'name': 'Migration Start',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'kind',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'label',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'event',
-                      'type': 'string',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-                {
-                  'name': 'files',
-                  'properties': [
-                    {
-                      'name': 'name',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'size',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'type',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'lastModified',
-                      'type': 'number',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'start import, run migration, import data',
-              'tier': 'domain',
-            },
-            {
-              'description': 'migration.listDocuments service result, flattened onto the payload by the call-service effect executor',
-              'key': 'DOCUMENTS_LISTED',
-              'name': 'Documents Listed',
-              'payloadSchema': [
-                {
-                  'name': 'documents',
-                  'required': true,
-                  'type': '[Map<string,scalar>]',
-                },
-              ],
-              'tier': 'secondary',
-            },
-            {
-              'description': 'Source documents are listed and the run is ready for staging (deterministic pipeline or agent)',
-              'key': 'MIGRATION_FETCHED',
-              'name': 'Migration Fetched',
-              'payloadSchema': [
-                {
-                  'name': 'documents',
-                  'required': true,
-                  'type': '[Map<string,scalar>]',
-                },
-              ],
-              'synonyms': 'import fetched, source listed, documents ready',
-              'tier': 'domain',
-            },
-            {
-              'description': 'A single fetched document\'s content, for the host staging layer to map into target units',
-              'key': 'MIGRATION_DOCUMENT',
-              'name': 'Migration Document',
-              'payloadSchema': [
-                {
-                  'name': 'document',
-                  'required': true,
-                  'type': 'Map<string,scalar>',
-                },
-              ],
-              'synonyms': 'document loaded, content fetched',
-              'tier': 'domain',
-            },
-            {
-              'description': 'migration service call failure signal — lands the run in failed, never a silent swallow',
-              'key': 'MIGRATION_CALL_FAILED',
-              'name': 'Migration Call Failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'secondary',
-            },
-            {
-              'description': 'Fetch one document\'s full content from the source during staging',
-              'key': 'FETCH_DOCUMENT',
-              'name': 'Fetch Document',
-              'payloadSchema': [
-                {
-                  'name': 'documentId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'internal',
-            },
-            {
-              'description': 'migration.fetchDocument service result, flattened onto the payload by the call-service effect executor',
-              'key': 'DOCUMENT_FETCHED',
-              'name': 'Document Fetched',
-              'payloadSchema': [
-                {
-                  'name': 'document',
-                  'required': true,
-                  'type': 'Map<string,scalar>',
-                },
-              ],
-              'tier': 'secondary',
-            },
-            {
-              'description': 'migration.stage service result, flattened onto the payload by the call-service effect executor',
-              'key': 'MIGRATION_STAGED',
-              'name': 'Migration Staged',
-              'payloadSchema': [
-                {
-                  'name': 'stats',
-                  'properties': [
-                    {
-                      'name': 'committed',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'failed',
-                      'type': '[Map<string,scalar>]',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-                {
-                  'name': 'units',
-                  'properties': [
-                    {
-                      'name': 'ref',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'targetEntity',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'title',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'fields',
-                      'type': 'Map<string,scalar>',
-                    },
-                    {
-                      'name': 'parentRef',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-                {
-                  'name': 'skipped',
-                  'properties': [
-                    {
-                      'name': 'ref',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'reason',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-                {
-                  'name': 'validationErrors',
-                  'type': '[Map<string,scalar>]',
-                },
-              ],
-              'tier': 'secondary',
-            },
-            {
-              'description': 'The run was discarded before commit',
-              'key': 'MIGRATION_DISCARDED',
-              'name': 'Migration Discarded',
-              'tier': 'internal',
-            },
-            {
-              'description': 'The user approved the preview; units are the staged ImportUnits to commit through the host sink. Optional — the ImportPreviewTree\'s onConfirm fires with no payload, so commit falls back to the units already staged on the entity via MIGRATION_STAGED.',
-              'key': 'MIGRATION_APPROVED',
-              'name': 'Migration Approved',
-              'payloadSchema': [
-                {
-                  'name': 'units',
-                  'properties': [
-                    {
-                      'name': 'ref',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'targetEntity',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'title',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'fields',
-                      'type': 'Map<string,scalar>',
-                    },
-                    {
-                      'name': 'parentRef',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'approve import, confirm migration',
-              'tier': 'domain',
-            },
-            {
-              'description': 'The user sent the preview back for more staging',
-              'key': 'MIGRATION_REJECTED',
-              'name': 'Migration Rejected',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Staging is complete; the preview is ready for the approval gate. units/skipped/validationErrors forward the full staged rows when the host staged them, for a review-before-commit UI; stats-only hosts leave them empty.',
-              'key': 'MIGRATION_REVIEW_READY',
-              'name': 'Migration Review Ready',
-              'payloadSchema': [
-                {
-                  'name': 'stats',
-                  'properties': [
-                    {
-                      'name': 'committed',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'failed',
-                      'type': '[Map<string,scalar>]',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-                {
-                  'entity': 'ImportUnit',
-                  'name': 'units',
-                  'properties': [
-                    {
-                      'name': 'ref',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'targetEntity',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'title',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'fields',
-                      'type': 'Map<string,scalar>',
-                    },
-                    {
-                      'name': 'parentRef',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-                {
-                  'entity': 'ImportSkip',
-                  'name': 'skipped',
-                  'properties': [
-                    {
-                      'name': 'ref',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'reason',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-                {
-                  'name': 'validationErrors',
-                  'type': '[Map<string,scalar>]',
-                },
-              ],
-              'synonyms': 'preview ready, staging complete, review import',
-              'tier': 'domain',
-            },
-            {
-              'key': 'CLOSE',
-              'name': 'Close',
-            },
-            {
-              'description': 'migration.commit service result — committed count plus per-unit failures',
-              'key': 'COMMITTED',
-              'name': 'Committed',
-              'payloadSchema': [
-                {
-                  'name': 'committed',
-                  'required': true,
-                  'type': 'number',
-                },
-                {
-                  'name': 'failed',
-                  'required': true,
-                  'type': '[Map<string,scalar>]',
-                },
-              ],
-              'tier': 'secondary',
-            },
-            {
-              'description': 'Returns the job to idle from a terminal state',
-              'key': 'RESET',
-              'name': 'Reset',
-              'tier': 'internal',
-            },
-            {
-              'description': 'The commit drained through the host sink; stats carry committed and per-unit failed counts',
-              'key': 'MIGRATION_COMPLETED',
-              'name': 'Migration Completed',
-              'payloadSchema': [
-                {
-                  'name': 'stats',
-                  'properties': [
-                    {
-                      'name': 'committed',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'failed',
-                      'type': '[Map<string,scalar>]',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'import done, migration complete, data imported',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Re-runs the fetch after a failure, with the same source',
-              'key': 'MIGRATION_RETRY',
-              'name': 'Migration Retry',
-              'tier': 'internal',
-            },
-            {
-              'description': 'The run failed; error carries the service-reported detail and the terminal job row was persisted',
-              'key': 'MIGRATION_FAILED',
-              'name': 'Migration Failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'import failed, migration error',
-              'tier': 'domain',
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'idle',
+              'isInitial': true,
             },
             {
               'name': 'fetching',
@@ -1336,8 +900,420 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               'name': 'failed',
             },
           ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'MIGRATION_START',
+              'name': 'Migration Start',
+              'description': 'Starts an import run. source is the ImportSource descriptor; files carries client file metadata for upload sources. Also reached via a sibling std-import\'s IMPORT_REQUESTED.',
+              'synonyms': 'start import, run migration, import data',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'source',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'kind',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'event',
+                      'type': 'string',
+                    },
+                  ],
+                },
+                {
+                  'name': 'files',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'size',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'type',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'lastModified',
+                      'type': 'number',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              'key': 'DOCUMENTS_LISTED',
+              'name': 'Documents Listed',
+              'description': 'migration.listDocuments service result, flattened onto the payload by the call-service effect executor',
+              'tier': 'secondary',
+              'payloadSchema': [
+                {
+                  'name': 'documents',
+                  'type': '[Map<string,scalar>]',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'MIGRATION_FETCHED',
+              'name': 'Migration Fetched',
+              'description': 'Source documents are listed and the run is ready for staging (deterministic pipeline or agent)',
+              'synonyms': 'import fetched, source listed, documents ready',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'documents',
+                  'type': '[Map<string,scalar>]',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'MIGRATION_DOCUMENT',
+              'name': 'Migration Document',
+              'description': 'A single fetched document\'s content, for the host staging layer to map into target units',
+              'synonyms': 'document loaded, content fetched',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'document',
+                  'type': 'Map<string,scalar>',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'MIGRATION_CALL_FAILED',
+              'name': 'Migration Call Failed',
+              'description': 'migration service call failure signal — lands the run in failed, never a silent swallow',
+              'tier': 'secondary',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'FETCH_DOCUMENT',
+              'name': 'Fetch Document',
+              'description': 'Fetch one document\'s full content from the source during staging',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'documentId',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DOCUMENT_FETCHED',
+              'name': 'Document Fetched',
+              'description': 'migration.fetchDocument service result, flattened onto the payload by the call-service effect executor',
+              'tier': 'secondary',
+              'payloadSchema': [
+                {
+                  'name': 'document',
+                  'type': 'Map<string,scalar>',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'MIGRATION_STAGED',
+              'name': 'Migration Staged',
+              'description': 'migration.stage service result, flattened onto the payload by the call-service effect executor',
+              'tier': 'secondary',
+              'payloadSchema': [
+                {
+                  'name': 'stats',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'committed',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'failed',
+                      'type': '[Map<string,scalar>]',
+                    },
+                  ],
+                },
+                {
+                  'name': 'units',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'ref',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'targetEntity',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'title',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'fields',
+                      'type': 'Map<string,scalar>',
+                    },
+                    {
+                      'name': 'parentRef',
+                      'type': 'string',
+                    },
+                  ],
+                },
+                {
+                  'name': 'skipped',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'ref',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'reason',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                },
+                {
+                  'name': 'validationErrors',
+                  'type': '[Map<string,scalar>]',
+                },
+              ],
+            },
+            {
+              'key': 'MIGRATION_DISCARDED',
+              'name': 'Migration Discarded',
+              'description': 'The run was discarded before commit',
+              'tier': 'internal',
+            },
+            {
+              'key': 'MIGRATION_APPROVED',
+              'name': 'Migration Approved',
+              'description': 'The user approved the preview; units are the staged ImportUnits to commit through the host sink. Optional — the ImportPreviewTree\'s onConfirm fires with no payload, so commit falls back to the units already staged on the entity via MIGRATION_STAGED.',
+              'synonyms': 'approve import, confirm migration',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'units',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'ref',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'targetEntity',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'title',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'fields',
+                      'type': 'Map<string,scalar>',
+                    },
+                    {
+                      'name': 'parentRef',
+                      'type': 'string',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              'key': 'MIGRATION_REJECTED',
+              'name': 'Migration Rejected',
+              'description': 'The user sent the preview back for more staging',
+              'tier': 'internal',
+            },
+            {
+              'key': 'MIGRATION_REVIEW_READY',
+              'name': 'Migration Review Ready',
+              'description': 'Staging is complete; the preview is ready for the approval gate. units/skipped/validationErrors forward the full staged rows when the host staged them, for a review-before-commit UI; stats-only hosts leave them empty.',
+              'synonyms': 'preview ready, staging complete, review import',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'stats',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'committed',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'failed',
+                      'type': '[Map<string,scalar>]',
+                    },
+                  ],
+                },
+                {
+                  'name': 'units',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'ref',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'targetEntity',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'title',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'fields',
+                      'type': 'Map<string,scalar>',
+                    },
+                    {
+                      'name': 'parentRef',
+                      'type': 'string',
+                    },
+                  ],
+                  'entity': 'ImportUnit',
+                },
+                {
+                  'name': 'skipped',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'ref',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'reason',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'ImportSkip',
+                },
+                {
+                  'name': 'validationErrors',
+                  'type': '[Map<string,scalar>]',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'COMMITTED',
+              'name': 'Committed',
+              'description': 'migration.commit service result — committed count plus per-unit failures',
+              'tier': 'secondary',
+              'payloadSchema': [
+                {
+                  'name': 'committed',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'failed',
+                  'type': '[Map<string,scalar>]',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+              'description': 'Returns the job to idle from a terminal state',
+              'tier': 'internal',
+            },
+            {
+              'key': 'MIGRATION_COMPLETED',
+              'name': 'Migration Completed',
+              'description': 'The commit drained through the host sink; stats carry committed and per-unit failed counts',
+              'synonyms': 'import done, migration complete, data imported',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'stats',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'committed',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'failed',
+                      'type': '[Map<string,scalar>]',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              'key': 'MIGRATION_RETRY',
+              'name': 'Migration Retry',
+              'description': 'Re-runs the fetch after a failure, with the same source',
+              'tier': 'internal',
+            },
+            {
+              'key': 'MIGRATION_FAILED',
+              'name': 'Migration Failed',
+              'description': 'The run failed; error carries the service-reported detail and the terminal job row was persisted',
+              'synonyms': 'import failed, migration error',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1380,11 +1356,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   [],
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'fetching',
+              'event': 'MIGRATION_START',
               'effects': [
                 [
                   'set',
@@ -1418,9 +1394,9 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'migration',
                   'listDocuments',
                   {
-                    'connectionRef': '@config.connectionRef',
-                    'files': '@entity.files',
                     'source': '@entity.source',
+                    'files': '@entity.files',
+                    'connectionRef': '@config.connectionRef',
                   },
                   {
                     'emit': {
@@ -1430,11 +1406,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   },
                 ],
               ],
-              'event': 'MIGRATION_START',
-              'from': 'idle',
-              'to': 'fetching',
             },
             {
+              'from': 'fetching',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1477,11 +1453,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   [],
                 ],
               ],
-              'event': 'INIT',
-              'from': 'fetching',
-              'to': 'idle',
             },
             {
+              'from': 'fetching',
+              'to': 'mapping',
+              'event': 'DOCUMENTS_LISTED',
               'effects': [
                 [
                   'set',
@@ -1505,33 +1481,33 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'migration',
                   'stage',
                   {
-                    'connectionRef': '@config.connectionRef',
                     'documents': '@entity.documents',
                     'source': '@entity.source',
+                    'connectionRef': '@config.connectionRef',
                   },
                   {
                     'emit': {
-                      'failure': 'MIGRATION_CALL_FAILED',
                       'success': 'MIGRATION_STAGED',
+                      'failure': 'MIGRATION_CALL_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'DOCUMENTS_LISTED',
-              'from': 'fetching',
-              'to': 'mapping',
             },
             {
+              'from': 'fetching',
+              'to': 'mapping',
               'event': 'MIGRATION_FETCHED',
-              'from': 'fetching',
-              'to': 'mapping',
             },
             {
+              'from': 'fetching',
+              'to': 'mapping',
               'event': 'MIGRATION_DOCUMENT',
-              'from': 'fetching',
-              'to': 'mapping',
             },
             {
+              'from': 'fetching',
+              'to': 'failed',
+              'event': 'MIGRATION_CALL_FAILED',
               'effects': [
                 [
                   'set',
@@ -1548,10 +1524,10 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'create',
                   ('MigrationJob' satisfies _StdMigrationJobEntityName),
                   {
-                    'createdAt': '@entity.createdAt',
-                    'error': '@entity.error',
-                    'source': '@entity.source',
                     'stats': '@entity.stats',
+                    'error': '@entity.error',
+                    'createdAt': '@entity.createdAt',
+                    'source': '@entity.source',
                     'status': '@entity.status',
                     'target': '@entity.target',
                   },
@@ -1567,22 +1543,22 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t list the source documents — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
                     'variant': 'error',
+                    'dismissible': true,
+                    'type': 'alert',
                   },
                 ],
               ],
-              'event': 'MIGRATION_CALL_FAILED',
-              'from': 'fetching',
-              'to': 'failed',
             },
             {
+              'from': 'mapping',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1625,20 +1601,20 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   [],
                 ],
               ],
-              'event': 'INIT',
-              'from': 'mapping',
-              'to': 'idle',
             },
             {
+              'from': 'mapping',
+              'to': 'mapping',
+              'event': 'FETCH_DOCUMENT',
               'effects': [
                 [
                   'call-service',
                   'migration',
                   'fetchDocument',
                   {
+                    'source': '@entity.source',
                     'connectionRef': '@config.connectionRef',
                     'documentId': '@payload.documentId',
-                    'source': '@entity.source',
                   },
                   {
                     'emit': {
@@ -1648,11 +1624,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   },
                 ],
               ],
-              'event': 'FETCH_DOCUMENT',
-              'from': 'mapping',
-              'to': 'mapping',
             },
             {
+              'from': 'mapping',
+              'to': 'mapping',
+              'event': 'DOCUMENT_FETCHED',
               'effects': [
                 [
                   'set',
@@ -1667,11 +1643,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   },
                 ],
               ],
-              'event': 'DOCUMENT_FETCHED',
-              'from': 'mapping',
-              'to': 'mapping',
             },
             {
+              'from': 'mapping',
+              'to': 'reviewing',
+              'event': 'MIGRATION_STAGED',
               'effects': [
                 [
                   'set',
@@ -1714,32 +1690,32 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'render-ui',
                   '@config.reviewSlot',
                   {
-                    'cancelLabel': 'Discard',
-                    'confirmLabel': 'Approve import',
-                    'entityDisplay': {},
-                    'onCancel': 'MIGRATION_DISCARDED',
-                    'onConfirm': 'MIGRATION_APPROVED',
-                    'skipped': '@entity.skipped',
-                    'type': 'import-preview-tree',
                     'units': '@entity.units',
+                    'type': 'import-preview-tree',
+                    'confirmLabel': 'Approve import',
+                    'onConfirm': 'MIGRATION_APPROVED',
+                    'onCancel': 'MIGRATION_DISCARDED',
+                    'entityDisplay': {},
+                    'skipped': '@entity.skipped',
+                    'cancelLabel': 'Discard',
                   },
                 ],
                 [
                   'emit',
                   'MIGRATION_REVIEW_READY',
                   {
-                    'skipped': '@entity.skipped',
-                    'stats': '@entity.stats',
-                    'units': '@entity.units',
                     'validationErrors': '@entity.validationErrors',
+                    'stats': '@entity.stats',
+                    'skipped': '@entity.skipped',
+                    'units': '@entity.units',
                   },
                 ],
               ],
-              'event': 'MIGRATION_STAGED',
-              'from': 'mapping',
-              'to': 'reviewing',
             },
             {
+              'from': 'mapping',
+              'to': 'idle',
+              'event': 'MIGRATION_DISCARDED',
               'effects': [
                 [
                   'set',
@@ -1777,11 +1753,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   [],
                 ],
               ],
-              'event': 'MIGRATION_DISCARDED',
-              'from': 'mapping',
-              'to': 'idle',
             },
             {
+              'from': 'mapping',
+              'to': 'failed',
+              'event': 'MIGRATION_CALL_FAILED',
               'effects': [
                 [
                   'set',
@@ -1798,12 +1774,12 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'create',
                   ('MigrationJob' satisfies _StdMigrationJobEntityName),
                   {
-                    'createdAt': '@entity.createdAt',
                     'error': '@entity.error',
-                    'source': '@entity.source',
                     'stats': '@entity.stats',
-                    'status': '@entity.status',
+                    'createdAt': '@entity.createdAt',
                     'target': '@entity.target',
+                    'source': '@entity.source',
+                    'status': '@entity.status',
                   },
                 ],
                 [
@@ -1817,22 +1793,22 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Couldn\'t fetch the document — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
+                    'dismissible': true,
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'MIGRATION_CALL_FAILED',
-              'from': 'mapping',
-              'to': 'failed',
             },
             {
+              'from': 'reviewing',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
@@ -1880,11 +1856,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   [],
                 ],
               ],
-              'event': 'INIT',
-              'from': 'reviewing',
-              'to': 'idle',
             },
             {
+              'from': 'reviewing',
+              'to': 'committing',
+              'event': 'MIGRATION_APPROVED',
               'effects': [
                 [
                   'set',
@@ -1901,26 +1877,26 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'migration',
                   'commit',
                   {
-                    'jobId': '@entity.id',
                     'units': [
                       'or',
                       '@payload.units',
                       '@entity.units',
                     ],
+                    'jobId': '@entity.id',
                   },
                   {
                     'emit': {
-                      'failure': 'MIGRATION_CALL_FAILED',
                       'success': 'COMMITTED',
+                      'failure': 'MIGRATION_CALL_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'MIGRATION_APPROVED',
-              'from': 'reviewing',
-              'to': 'committing',
             },
             {
+              'from': 'reviewing',
+              'to': 'mapping',
+              'event': 'MIGRATION_REJECTED',
               'effects': [
                 [
                   'set',
@@ -1933,63 +1909,16 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   null,
                 ],
               ],
-              'event': 'MIGRATION_REJECTED',
-              'from': 'reviewing',
-              'to': 'mapping',
             },
             {
-              'event': 'MIGRATION_REVIEW_READY',
               'from': 'reviewing',
               'to': 'reviewing',
+              'event': 'MIGRATION_REVIEW_READY',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.status',
-                  'idle',
-                ],
-                [
-                  'set',
-                  '@entity.documents',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.document',
-                  {},
-                ],
-                [
-                  'set',
-                  '@entity.stats',
-                  {},
-                ],
-                [
-                  'set',
-                  '@entity.units',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.skipped',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.validationErrors',
-                  [],
-                ],
-                [
-                  'render-ui',
-                  '@config.reviewSlot',
-                  null,
-                ],
-              ],
+              'from': 'reviewing',
+              'to': 'idle',
               'event': 'MIGRATION_DISCARDED',
-              'from': 'reviewing',
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -2032,11 +1961,58 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   null,
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'reviewing',
-              'to': 'idle',
             },
             {
+              'from': 'reviewing',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.documents',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.document',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.stats',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.units',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.skipped',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.validationErrors',
+                  [],
+                ],
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+              ],
+            },
+            {
+              'from': 'committing',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -2079,11 +2055,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   [],
                 ],
               ],
-              'event': 'INIT',
-              'from': 'committing',
-              'to': 'idle',
             },
             {
+              'from': 'committing',
+              'to': 'done',
+              'event': 'COMMITTED',
               'effects': [
                 [
                   'set',
@@ -2107,12 +2083,12 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'create',
                   ('MigrationJob' satisfies _StdMigrationJobEntityName),
                   {
-                    'createdAt': '@entity.createdAt',
-                    'error': '',
-                    'source': '@entity.source',
                     'stats': '@entity.stats',
-                    'status': '@entity.status',
+                    'error': '',
+                    'createdAt': '@entity.createdAt',
                     'target': '@entity.target',
+                    'source': '@entity.source',
+                    'status': '@entity.status',
                   },
                 ],
                 [
@@ -2123,11 +2099,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   },
                 ],
               ],
-              'event': 'COMMITTED',
-              'from': 'committing',
-              'to': 'done',
             },
             {
+              'from': 'committing',
+              'to': 'failed',
+              'event': 'MIGRATION_CALL_FAILED',
               'effects': [
                 [
                   'set',
@@ -2144,12 +2120,12 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'create',
                   ('MigrationJob' satisfies _StdMigrationJobEntityName),
                   {
-                    'createdAt': '@entity.createdAt',
-                    'error': '@entity.error',
-                    'source': '@entity.source',
                     'stats': '@entity.stats',
                     'status': '@entity.status',
+                    'createdAt': '@entity.createdAt',
                     'target': '@entity.target',
+                    'source': '@entity.source',
+                    'error': '@entity.error',
                   },
                 ],
                 [
@@ -2163,69 +2139,22 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t commit the import — ',
                       '@payload.error',
                     ],
+                    'dismissible': true,
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'MIGRATION_CALL_FAILED',
-              'from': 'committing',
-              'to': 'failed',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.status',
-                  'idle',
-                ],
-                [
-                  'set',
-                  '@entity.error',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.documents',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.document',
-                  {},
-                ],
-                [
-                  'set',
-                  '@entity.stats',
-                  {},
-                ],
-                [
-                  'set',
-                  '@entity.units',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.skipped',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.validationErrors',
-                  [],
-                ],
-              ],
+              'from': 'done',
+              'to': 'idle',
               'event': 'INIT',
-              'from': 'done',
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -2268,16 +2197,63 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   [],
                 ],
               ],
-              'event': 'RESET',
-              'from': 'done',
-              'to': 'idle',
             },
             {
-              'event': 'MIGRATION_COMPLETED',
+              'from': 'done',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.documents',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.document',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.stats',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.units',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.skipped',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.validationErrors',
+                  [],
+                ],
+              ],
+            },
+            {
               'from': 'done',
               'to': 'done',
+              'event': 'MIGRATION_COMPLETED',
             },
             {
+              'from': 'failed',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -2320,11 +2296,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   [],
                 ],
               ],
-              'event': 'INIT',
-              'from': 'failed',
-              'to': 'idle',
             },
             {
+              'from': 'failed',
+              'to': 'fetching',
+              'event': 'MIGRATION_RETRY',
               'effects': [
                 [
                   'set',
@@ -2341,9 +2317,9 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'migration',
                   'listDocuments',
                   {
-                    'connectionRef': '@config.connectionRef',
                     'files': '@entity.files',
                     'source': '@entity.source',
+                    'connectionRef': '@config.connectionRef',
                   },
                   {
                     'emit': {
@@ -2353,11 +2329,11 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   },
                 ],
               ],
-              'event': 'MIGRATION_RETRY',
-              'from': 'failed',
-              'to': 'fetching',
             },
             {
+              'from': 'failed',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -2400,17 +2376,41 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   [],
                 ],
               ],
-              'event': 'RESET',
-              'from': 'failed',
-              'to': 'idle',
             },
             {
-              'event': 'MIGRATION_FAILED',
               'from': 'failed',
               'to': 'failed',
+              'event': 'MIGRATION_FAILED',
             },
           ],
         },
+        'config': {
+          'connectionRef': {
+            'type': 'secret',
+            'default': '',
+            'label': 'Connection reference',
+            'description': 'Secret-store / environment KEY holding the source credentials. The reference is stored; the secret itself never enters config, traces, or snapshots — the migration service resolves it at run time. (Typed `secret` — the config-field type that marks a credential reference; UI password-renders it and traces mask it.)',
+            'synonyms': 'credential key, connection string reference, secret name',
+            'tier': 'internal',
+          },
+          'reviewSlot': {
+            'type': 'slot',
+            'default': 'modal',
+            'label': 'Review slot',
+            'description': 'UI slot the staged-import review renders into when the host stages the full units/skipped rows (not stats-only). Defaults to the modal overlay so a host that never places this trait on a page — or that only ever sends {stats} — stays effectively headless; the rendered tree\'s confirm/cancel wire to the atom\'s own MIGRATION_APPROVED/MIGRATION_DISCARDED events.',
+            'synonyms': 'preview slot, review outlet, staging modal, import review slot',
+            'tier': 'internal',
+          },
+          'target': {
+            'type': 'string',
+            'default': '',
+            'label': 'Target entity',
+            'description': 'Name of the host entity this import writes into (e.g. the organism\'s own entity). The migration service derives the full target descriptor from the running app\'s schema.',
+            'synonyms': 'destination, import into, target type',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

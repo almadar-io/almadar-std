@@ -198,49 +198,49 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': '',
             'name': 'prompt',
             'type': 'string',
+            'default': '',
           },
           {
+            'name': 'memories',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
                 'category': {
                   'name': 'category',
-                  'required': true,
                   'type': 'string',
-                },
-                'content': {
-                  'name': 'content',
                   'required': true,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
                 },
                 'strength': {
                   'name': 'strength',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
+                },
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'memories',
-            'type': 'array',
           },
           {
-            'default': '',
             'name': 'plan',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'planning',
@@ -256,7 +256,7 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'PlannerExecution',
         'effectRow': [
           {
             'kind': 'emit',
@@ -285,19 +285,21 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'PlannerPlan',
         'emits': [
           {
             'event': 'PLANNED',
             'payloadSchema': [
               {
                 'name': 'plan',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'memoryCount',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
           },
@@ -305,31 +307,31 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
             'event': 'MEMORIES_RECALLED',
             'payloadSchema': [
               {
-                'entity': 'MemoryRecord',
                 'name': 'result',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'category',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'strength',
                     'type': 'number',
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'MemoryRecord',
               },
             ],
           },
@@ -338,16 +340,28 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
             'payloadSchema': [
               {
                 'name': 'result',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
           },
         ],
-        'linkedEntity': 'PlannerPlan',
-        'name': 'PlannerExecution',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'recalling',
+            },
+            {
+              'name': 'planning',
+            },
+            {
+              'name': 'planned',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -359,8 +373,8 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
               'payloadSchema': [
                 {
                   'name': 'prompt',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
@@ -369,31 +383,31 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
               'name': 'Memories Recalled',
               'payloadSchema': [
                 {
-                  'entity': 'MemoryRecord',
                   'name': 'result',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'category',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'strength',
                       'type': 'number',
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'MemoryRecord',
                 },
               ],
             },
@@ -407,8 +421,8 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
               'payloadSchema': [
                 {
                   'name': 'result',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
@@ -426,34 +440,22 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
               'payloadSchema': [
                 {
                   'name': 'plan',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'memoryCount',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'recalling',
-            },
-            {
-              'name': 'planning',
-            },
-            {
-              'name': 'planned',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -476,11 +478,11 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'recalling',
+              'event': 'PLAN',
               'effects': [
                 [
                   'set',
@@ -498,11 +500,11 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   },
                 ],
               ],
-              'event': 'PLAN',
-              'from': 'idle',
-              'to': 'recalling',
             },
             {
+              'from': 'recalling',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -525,33 +527,33 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'recalling',
-              'to': 'idle',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.memories',
-                  '@payload.result',
-                ],
-                [
-                  'llm/generate',
-                  '@entity.prompt',
-                  {
-                    'emit': {
-                      'failure': 'PLAN_GENERATION_FAILED',
-                      'success': 'PLAN_GENERATED',
-                    },
-                  },
-                ],
-              ],
+              'from': 'recalling',
+              'to': 'planning',
               'event': 'MEMORIES_RECALLED',
-              'from': 'recalling',
-              'to': 'planning',
+              'effects': [
+                [
+                  'set',
+                  '@entity.memories',
+                  '@payload.result',
+                ],
+                [
+                  'llm/generate',
+                  '@entity.prompt',
+                  {
+                    'emit': {
+                      'success': 'PLAN_GENERATED',
+                      'failure': 'PLAN_GENERATION_FAILED',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'recalling',
+              'to': 'planning',
+              'event': 'RECALL_FAILED',
               'effects': [
                 [
                   'set',
@@ -563,17 +565,17 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   '@entity.prompt',
                   {
                     'emit': {
-                      'failure': 'PLAN_GENERATION_FAILED',
                       'success': 'PLAN_GENERATED',
+                      'failure': 'PLAN_GENERATION_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'RECALL_FAILED',
-              'from': 'recalling',
-              'to': 'planning',
             },
             {
+              'from': 'planning',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -596,11 +598,11 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'planning',
-              'to': 'idle',
             },
             {
+              'from': 'planning',
+              'to': 'planned',
+              'event': 'PLAN_GENERATED',
               'effects': [
                 [
                   'set',
@@ -621,11 +623,11 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   },
                 ],
               ],
-              'event': 'PLAN_GENERATED',
-              'from': 'planning',
-              'to': 'planned',
             },
             {
+              'from': 'planning',
+              'to': 'planned',
+              'event': 'PLAN_GENERATION_FAILED',
               'effects': [
                 [
                   'set',
@@ -646,11 +648,11 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   },
                 ],
               ],
-              'event': 'PLAN_GENERATION_FAILED',
-              'from': 'planning',
-              'to': 'planned',
             },
             {
+              'from': 'planned',
+              'to': 'planned',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -658,11 +660,11 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   'planned',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'planned',
-              'to': 'planned',
             },
             {
+              'from': 'planned',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -685,35 +687,41 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'planned',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'lifecycle',
+        'name': 'PlannerListener',
         'effectRow': [
           {
             'kind': 'set',
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
         'linkedEntity': 'PlannerPlan',
         'listens': [
           {
             'event': 'PLANNED',
+            'triggers': 'PLANNED',
             'source': {
               'kind': 'trait',
               'trait': ('PlannerExecution' satisfies _StdAgentPlannerListenTraitName),
             },
-            'triggers': 'PLANNED',
           },
         ],
-        'name': 'PlannerListener',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'waiting',
+              'isInitial': true,
+            },
+            {
+              'name': 'ready',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -728,17 +736,11 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
               'name': 'Reset',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'waiting',
-            },
-            {
-              'name': 'ready',
-            },
-          ],
           'transitions': [
             {
+              'from': 'waiting',
+              'to': 'waiting',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -746,23 +748,11 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'waiting',
-              'to': 'waiting',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.status',
-                  'planned',
-                ],
-              ],
+              'from': 'waiting',
+              'to': 'ready',
               'event': 'PLANNED',
-              'from': 'waiting',
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -770,11 +760,23 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   'planned',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'planned',
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'waiting',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -782,12 +784,10 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'ready',
-              'to': 'waiting',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

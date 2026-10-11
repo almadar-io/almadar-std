@@ -110,12 +110,12 @@ export interface StdTagStripTagStripLoadFailedPayload {
 export interface StdTagStripConfig {
   /** Default: `""` */
   helperText?: string;
-  /** Default: `"Add a tag…"` */
-  placeholder?: string;
-  /** Default: `false` */
-  readOnly?: boolean;
   /** Default: `"Tags"` */
   title?: string;
+  /** Default: `false` */
+  readOnly?: boolean;
+  /** Default: `"Add a tag…"` */
+  placeholder?: string;
 }
 
 /**

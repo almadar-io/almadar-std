@@ -68,48 +68,48 @@ export interface StdUiDocumentPanelDonePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDocumentPanelConfig {
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
   ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  autosaveHint?: string;
-  className?: string;
-  /** Default: `"CONTENT_CHANGE"` */
-  contentChangeEvent?: string;
-  coverImage?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `"DONE"` */
-  doneEvent?: string;
-  doneLabel?: string;
-  /** Default: `"EDIT"` */
-  editEvent?: string;
-  editLabel?: string;
-  /** Default: `false` */
-  editing?: boolean;
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
+  autosaveHint?: string;
   icon?: unknown;
-  lang?: string;
-  maxInlineActions?: number;
-  placeholder?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  subtitle?: string;
-  tabIndex?: number;
-  title?: string;
   /** Default: `"TITLE_COMMIT"` */
   titleCommitEvent?: string;
   value?: string;
+  lang?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  enterDelay?: number;
   /** Default: `""` */
   viewerRole?: string;
+  title?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  editLabel?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  doneLabel?: string;
+  className?: string;
+  /** Default: `"EDIT"` */
+  editEvent?: string;
+  coverImage?: string;
+  /** Default: `false` */
+  editing?: boolean;
+  /** Default: `"CONTENT_CHANGE"` */
+  contentChangeEvent?: string;
+  ariaSelected?: boolean;
+  subtitle?: string;
+  ariaExpanded?: boolean;
+  placeholder?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaBusy?: boolean;
+  ariaHidden?: boolean;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"DONE"` */
+  doneEvent?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  ariaLabel?: string;
+  maxInlineActions?: number;
+  tabIndex?: number;
+  ariaDescribedby?: string;
 }
 
 /**

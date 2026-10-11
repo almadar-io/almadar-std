@@ -39,16 +39,16 @@ export type StdMarketBoard3dListenKey = 'MOVE' | 'RESTART';
 export interface StdMarketBoard3dConfig {
   /** Default: `4` */
   gridHeight?: unknown;
-  /** Default: `4` */
-  gridWidth?: unknown;
-  /** Default: `999999` */
-  moveBudget?: unknown;
+  /** Default: `[{"team":"player","id":"hero","unitType":"hero","x":1,"z":0,"position":{"y":1,"x":1},"maxHealth":1,"health":1,"y":1,"name":"Hero","modelUrl":{"aspect":"1:1","dimension":"2d","thumbnailUrl":"","category":"unit","name":"player-unit","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","role":"player","animations":["idle"],"style":"vector"}}]` */
+  units?: unknown;
   /** Default: `true` */
   running?: unknown;
-  /** Default: `[{"id":"t-0-0","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":0,"y":0,"z":0},{"id":"t-0-1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":0,"y":1,"z":0},{"id":"t-0-2","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":0,"y":2,"z":0},{"id":"t-0-3","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":0,"y":3,"z":0},{"id":"t-1-0","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":1,"y":0,"z":0},{"id":"t-1-1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":1,"y":1,"z":0},{"id":"t-1-2","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":1,"y":2,"z":0},{"id":"t-1-3","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":1,"y":3,"z":0},{"id":"t-2-0","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":2,"y":0,"z":0},{"id":"t-2-1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":2,"y":1,"z":0},{"id":"t-2-2","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":2,"y":2,"z":0},{"id":"t-2-3","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":2,"y":3,"z":0},{"id":"t-3-0","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":3,"y":0,"z":0},{"id":"t-3-1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":3,"y":1,"z":0},{"id":"t-3-2","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":3,"y":2,"z":0},{"id":"t-3-3","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"passable":true,"terrain":"grass","x":3,"y":3,"z":0}]` */
+  /** Default: `999999` */
+  moveBudget?: unknown;
+  /** Default: `4` */
+  gridWidth?: unknown;
+  /** Default: `[{"passable":true,"x":0,"id":"t-0-0","modelUrl":{"thumbnailUrl":"","style":"vector","category":"terrain","role":"tile","aspect":"1:1","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","dimension":"2d","animations":["static"],"name":"grass"},"z":0,"y":0,"terrain":"grass"},{"modelUrl":{"aspect":"1:1","animations":["static"],"dimension":"2d","thumbnailUrl":"","role":"tile","style":"vector","name":"grass","category":"terrain","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"id":"t-0-1","terrain":"grass","passable":true,"z":0,"x":0,"y":1},{"terrain":"grass","passable":true,"modelUrl":{"category":"terrain","role":"tile","animations":["static"],"dimension":"2d","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","name":"grass","aspect":"1:1","style":"vector","thumbnailUrl":""},"id":"t-0-2","y":2,"z":0,"x":0},{"z":0,"x":0,"id":"t-0-3","passable":true,"terrain":"grass","y":3,"modelUrl":{"url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","animations":["static"],"role":"tile","aspect":"1:1","style":"vector","dimension":"2d","category":"terrain","thumbnailUrl":"","name":"grass"}},{"id":"t-1-0","terrain":"grass","passable":true,"modelUrl":{"thumbnailUrl":"","style":"vector","animations":["static"],"url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","name":"grass","aspect":"1:1","category":"terrain","role":"tile","dimension":"2d"},"x":1,"y":0,"z":0},{"terrain":"grass","z":0,"x":1,"modelUrl":{"thumbnailUrl":"","dimension":"2d","category":"terrain","style":"vector","name":"grass","animations":["static"],"aspect":"1:1","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","role":"tile"},"id":"t-1-1","passable":true,"y":1},{"z":0,"y":2,"id":"t-1-2","modelUrl":{"role":"tile","aspect":"1:1","category":"terrain","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","dimension":"2d","animations":["static"],"style":"vector","thumbnailUrl":"","name":"grass"},"x":1,"terrain":"grass","passable":true},{"id":"t-1-3","y":3,"terrain":"grass","x":1,"modelUrl":{"name":"grass","dimension":"2d","thumbnailUrl":"","aspect":"1:1","animations":["static"],"style":"vector","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","role":"tile","category":"terrain"},"passable":true,"z":0},{"modelUrl":{"name":"grass","style":"vector","aspect":"1:1","role":"tile","category":"terrain","dimension":"2d","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","animations":["static"]},"z":0,"x":2,"passable":true,"terrain":"grass","id":"t-2-0","y":0},{"id":"t-2-1","passable":true,"y":1,"x":2,"modelUrl":{"name":"grass","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","category":"terrain","animations":["static"],"aspect":"1:1","dimension":"2d","style":"vector","role":"tile","thumbnailUrl":""},"z":0,"terrain":"grass"},{"terrain":"grass","passable":true,"y":2,"id":"t-2-2","z":0,"modelUrl":{"role":"tile","animations":["static"],"name":"grass","aspect":"1:1","category":"terrain","thumbnailUrl":"","dimension":"2d","style":"vector","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"x":2},{"terrain":"grass","passable":true,"z":0,"id":"t-2-3","modelUrl":{"url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","role":"tile","name":"grass","style":"vector","aspect":"1:1","dimension":"2d","thumbnailUrl":"","category":"terrain","animations":["static"]},"x":2,"y":3},{"x":3,"z":0,"y":0,"terrain":"grass","modelUrl":{"role":"tile","style":"vector","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","name":"grass","aspect":"1:1","dimension":"2d","animations":["static"],"category":"terrain","thumbnailUrl":""},"passable":true,"id":"t-3-0"},{"x":3,"y":1,"modelUrl":{"thumbnailUrl":"","style":"vector","name":"grass","dimension":"2d","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","category":"terrain","role":"tile","animations":["static"],"aspect":"1:1"},"terrain":"grass","passable":true,"id":"t-3-1","z":0},{"x":3,"z":0,"y":2,"modelUrl":{"style":"vector","animations":["static"],"aspect":"1:1","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","role":"tile","dimension":"2d","thumbnailUrl":"","name":"grass","category":"terrain"},"passable":true,"id":"t-3-2","terrain":"grass"},{"z":0,"x":3,"modelUrl":{"url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","category":"terrain","name":"grass","animations":["static"],"role":"tile","dimension":"2d","thumbnailUrl":"","style":"vector","aspect":"1:1"},"passable":true,"y":3,"terrain":"grass","id":"t-3-3"}]` */
   tiles?: unknown;
-  /** Default: `[{"health":1,"id":"hero","maxHealth":1,"modelUrl":{"animations":["idle"],"aspect":"1:1","category":"unit","dimension":"2d","name":"player-unit","role":"player","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png"},"name":"Hero","position":{"x":1,"y":1},"team":"player","unitType":"hero","x":1,"y":1,"z":0}]` */
-  units?: unknown;
 }
 
 type _StdMarketBoard3dEntityName = 'GameState' | 'HeroNavData' | 'PatienceData' | 'FxState' | 'MarketFlowData';
@@ -102,20 +102,20 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
     name: 'MarketBoard3DOrbital',
     uses: [
       {
-        'as': 'Nav',
         'from': 'std/behaviors/std-hero-nav',
+        'as': 'Nav',
       },
       {
-        'as': 'Svc',
         'from': 'std/behaviors/std-patience',
+        'as': 'Svc',
       },
       {
-        'as': 'Particles',
         'from': 'std/behaviors/std-fx-particles',
+        'as': 'Particles',
       },
       {
-        'as': 'Flow',
         'from': 'std/behaviors/std-market-flow',
+        'as': 'Flow',
       },
     ],
     entity: {
@@ -126,914 +126,914 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'units',
+            'type': 'array',
             'default': [
               {
-                'health': 1,
-                'id': 'hero',
-                'maxHealth': 1,
-                'modelUrl': {
-                  'animations': [
-                    'idle',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'player-unit',
-                  'role': 'player',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
-                },
                 'name': 'Hero',
                 'position': {
                   'x': 1,
                   'y': 1,
                 },
-                'team': 'player',
-                'unitType': 'hero',
-                'x': 1,
-                'y': 1,
+                'maxHealth': 1,
                 'z': 0,
-              },
-            ],
-            'items': {
-              'properties': {
-                'health': {
-                  'name': 'health',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'maxHealth': {
-                  'name': 'maxHealth',
-                  'required': false,
-                  'type': 'number',
-                },
+                'id': 'hero',
                 'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': false,
-                  'type': 'string',
-                },
-                'position': {
-                  'name': 'position',
-                  'properties': {
-                    'x': {
-                      'name': 'x',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'y': {
-                      'name': 'y',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'team': {
-                  'name': 'team',
-                  'required': false,
-                  'type': 'string',
-                },
-                'unitType': {
-                  'name': 'unitType',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': false,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': false,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'units',
-            'type': 'array',
-          },
-          {
-            'default': [
-              {
-                'id': 't-0-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
+                  'name': 'player-unit',
                   'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-0-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
                   'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
+                  'role': 'player',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 1,
-                'z': 0,
-              },
-              {
-                'id': 't-0-2',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 2,
-                'z': 0,
-              },
-              {
-                'id': 't-0-3',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 3,
-                'z': 0,
-              },
-              {
-                'id': 't-1-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-1-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 1,
-                'z': 0,
-              },
-              {
-                'id': 't-1-2',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 2,
-                'z': 0,
-              },
-              {
-                'id': 't-1-3',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 3,
-                'z': 0,
-              },
-              {
-                'id': 't-2-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-2-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 1,
-                'z': 0,
-              },
-              {
-                'id': 't-2-2',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 2,
-                'z': 0,
-              },
-              {
-                'id': 't-2-3',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 3,
-                'z': 0,
-              },
-              {
-                'id': 't-3-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-3-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 1,
-                'z': 0,
-              },
-              {
-                'id': 't-3-2',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 2,
-                'z': 0,
-              },
-              {
-                'id': 't-3-3',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 3,
-                'z': 0,
-              },
-            ],
-            'items': {
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'passable': {
-                  'name': 'passable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'tiles',
-            'type': 'array',
-          },
-          {
-            'default': 0,
-            'name': 'movesLeft',
-            'type': 'number',
-          },
-          {
-            'default': [
-              {
-                'id': 'cust-1',
-                'maxPatience': 10,
-                'modelUrl': {
+                  'category': 'unit',
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
-                  'category': 'customer',
-                  'dimension': '2d',
-                  'name': 'customer',
-                  'role': 'customer',
                   'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
                 },
-                'name': 'Customer',
-                'patience': 10,
-                'position': {
-                  'x': 2,
-                  'y': 2,
-                },
-                'team': 'customer',
-                'unitType': 'customer',
+                'health': 1,
+                'x': 1,
+                'unitType': 'hero',
+                'y': 1,
+                'team': 'player',
               },
             ],
             'items': {
+              'type': 'object',
               'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'maxPatience': {
-                  'name': 'maxPatience',
-                  'required': false,
-                  'type': 'number',
-                },
                 'modelUrl': {
                   'name': 'modelUrl',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
                     'aspect': {
                       'name': 'aspect',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
                       'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
                     },
                     'sprite': {
                       'name': 'sprite',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
                     },
                     'style': {
                       'name': 'style',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                     },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
+                    'name': {
+                      'name': 'name',
                       'type': 'string',
+                      'required': false,
                     },
                     'url': {
                       'name': 'url',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
                     },
                   },
-                  'required': false,
-                  'type': 'object',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': false,
-                  'type': 'string',
-                },
-                'patience': {
-                  'name': 'patience',
-                  'required': false,
-                  'type': 'number',
                 },
                 'position': {
                   'name': 'position',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
-                    'x': {
-                      'name': 'x',
-                      'required': true,
-                      'type': 'number',
-                    },
                     'y': {
                       'name': 'y',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
                     },
                   },
-                  'required': false,
-                  'type': 'object',
-                },
-                'team': {
-                  'name': 'team',
-                  'required': false,
-                  'type': 'string',
-                },
-                'unitType': {
-                  'name': 'unitType',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'customers',
-            'type': 'array',
-          },
-          {
-            'default': 0,
-            'name': 'served',
-            'type': 'number',
-          },
-          {
-            'default': 0,
-            'name': 'pending',
-            'type': 'number',
-          },
-          {
-            'default': 0,
-            'name': 'lost',
-            'type': 'number',
-          },
-          {
-            'default': [],
-            'items': {
-              'properties': {
-                'bornAt': {
-                  'name': 'bornAt',
-                  'required': false,
-                  'type': 'number',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'maxTtl': {
-                  'name': 'maxTtl',
-                  'required': false,
-                  'type': 'number',
-                },
-                'message': {
-                  'name': 'message',
-                  'required': false,
-                  'type': 'string',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'ttl': {
-                  'name': 'ttl',
-                  'required': true,
-                  'type': 'number',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
                 },
                 'y': {
                   'name': 'y',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'maxHealth': {
+                  'name': 'maxHealth',
+                  'type': 'number',
+                  'required': false,
                 },
                 'z': {
                   'name': 'z',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
+                },
+                'team': {
+                  'name': 'team',
+                  'type': 'string',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+                'health': {
+                  'name': 'health',
+                  'type': 'number',
+                  'required': false,
+                },
+                'unitType': {
+                  'name': 'unitType',
+                  'type': 'string',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
+          },
+          {
+            'name': 'tiles',
+            'type': 'array',
+            'default': [
+              {
+                'modelUrl': {
+                  'thumbnailUrl': '',
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'aspect': '1:1',
+                  'role': 'tile',
+                  'dimension': '2d',
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'animations': [
+                    'static',
+                  ],
+                },
+                'x': 0,
+                'id': 't-0-0',
+                'passable': true,
+                'terrain': 'grass',
+                'z': 0,
+                'y': 0,
+              },
+              {
+                'x': 0,
+                'passable': true,
+                'terrain': 'grass',
+                'y': 1,
+                'z': 0,
+                'id': 't-0-1',
+                'modelUrl': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'style': 'vector',
+                  'animations': [
+                    'static',
+                  ],
+                  'name': 'grass',
+                  'aspect': '1:1',
+                  'role': 'tile',
+                  'dimension': '2d',
+                  'category': 'terrain',
+                  'thumbnailUrl': '',
+                },
+              },
+              {
+                'id': 't-0-2',
+                'z': 0,
+                'y': 2,
+                'modelUrl': {
+                  'role': 'tile',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
+                  'aspect': '1:1',
+                  'style': 'vector',
+                  'category': 'terrain',
+                  'animations': [
+                    'static',
+                  ],
+                  'name': 'grass',
+                  'thumbnailUrl': '',
+                },
+                'terrain': 'grass',
+                'x': 0,
+                'passable': true,
+              },
+              {
+                'passable': true,
+                'modelUrl': {
+                  'role': 'tile',
+                  'animations': [
+                    'static',
+                  ],
+                  'thumbnailUrl': '',
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'aspect': '1:1',
+                  'dimension': '2d',
+                },
+                'z': 0,
+                'y': 3,
+                'id': 't-0-3',
+                'x': 0,
+                'terrain': 'grass',
+              },
+              {
+                'z': 0,
+                'id': 't-1-0',
+                'x': 1,
+                'terrain': 'grass',
+                'passable': true,
+                'modelUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'name': 'grass',
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'aspect': '1:1',
+                  'role': 'tile',
+                  'style': 'vector',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'category': 'terrain',
+                },
+                'y': 0,
+              },
+              {
+                'x': 1,
+                'y': 1,
+                'modelUrl': {
+                  'category': 'terrain',
+                  'animations': [
+                    'static',
+                  ],
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
+                  'aspect': '1:1',
+                  'style': 'vector',
+                  'thumbnailUrl': '',
+                  'role': 'tile',
+                },
+                'terrain': 'grass',
+                'passable': true,
+                'z': 0,
+                'id': 't-1-1',
+              },
+              {
+                'modelUrl': {
+                  'role': 'tile',
+                  'aspect': '1:1',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'category': 'terrain',
+                  'name': 'grass',
+                  'animations': [
+                    'static',
+                  ],
+                  'style': 'vector',
+                  'dimension': '2d',
+                },
+                'x': 1,
+                'z': 0,
+                'terrain': 'grass',
+                'id': 't-1-2',
+                'y': 2,
+                'passable': true,
+              },
+              {
+                'modelUrl': {
+                  'aspect': '1:1',
+                  'role': 'tile',
+                  'category': 'terrain',
+                  'name': 'grass',
+                  'animations': [
+                    'static',
+                  ],
+                  'style': 'vector',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                },
+                'x': 1,
+                'id': 't-1-3',
+                'terrain': 'grass',
+                'y': 3,
+                'passable': true,
+                'z': 0,
+              },
+              {
+                'modelUrl': {
+                  'thumbnailUrl': '',
+                  'role': 'tile',
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
+                  'style': 'vector',
+                  'name': 'grass',
+                },
+                'y': 0,
+                'z': 0,
+                'terrain': 'grass',
+                'id': 't-2-0',
+                'x': 2,
+                'passable': true,
+              },
+              {
+                'y': 1,
+                'passable': true,
+                'modelUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'dimension': '2d',
+                  'role': 'tile',
+                  'thumbnailUrl': '',
+                  'aspect': '1:1',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
+                  'category': 'terrain',
+                  'style': 'vector',
+                },
+                'x': 2,
+                'z': 0,
+                'terrain': 'grass',
+                'id': 't-2-1',
+              },
+              {
+                'modelUrl': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
+                  'aspect': '1:1',
+                  'thumbnailUrl': '',
+                  'category': 'terrain',
+                  'animations': [
+                    'static',
+                  ],
+                  'style': 'vector',
+                  'dimension': '2d',
+                  'role': 'tile',
+                },
+                'y': 2,
+                'id': 't-2-2',
+                'terrain': 'grass',
+                'z': 0,
+                'passable': true,
+                'x': 2,
+              },
+              {
+                'terrain': 'grass',
+                'y': 3,
+                'x': 2,
+                'passable': true,
+                'modelUrl': {
+                  'role': 'tile',
+                  'style': 'vector',
+                  'aspect': '1:1',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'thumbnailUrl': '',
+                  'name': 'grass',
+                  'category': 'terrain',
+                  'animations': [
+                    'static',
+                  ],
+                  'dimension': '2d',
+                },
+                'id': 't-2-3',
+                'z': 0,
+              },
+              {
+                'y': 0,
+                'z': 0,
+                'id': 't-3-0',
+                'passable': true,
+                'x': 3,
+                'modelUrl': {
+                  'name': 'grass',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'style': 'vector',
+                  'role': 'tile',
+                },
+                'terrain': 'grass',
+              },
+              {
+                'x': 3,
+                'z': 0,
+                'y': 1,
+                'id': 't-3-1',
+                'terrain': 'grass',
+                'passable': true,
+                'modelUrl': {
+                  'role': 'tile',
+                  'category': 'terrain',
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'thumbnailUrl': '',
+                  'animations': [
+                    'static',
+                  ],
+                  'dimension': '2d',
+                  'style': 'vector',
+                  'aspect': '1:1',
+                },
+              },
+              {
+                'id': 't-3-2',
+                'terrain': 'grass',
+                'passable': true,
+                'z': 0,
+                'modelUrl': {
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'animations': [
+                    'static',
+                  ],
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
+                  'aspect': '1:1',
+                  'role': 'tile',
+                  'style': 'vector',
+                  'category': 'terrain',
+                },
+                'y': 2,
+                'x': 3,
+              },
+              {
+                'passable': true,
+                'id': 't-3-3',
+                'z': 0,
+                'modelUrl': {
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'style': 'vector',
+                  'role': 'tile',
+                  'name': 'grass',
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                },
+                'terrain': 'grass',
+                'x': 3,
+                'y': 3,
+              },
+            ],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'terrain': {
+                  'name': 'terrain',
+                  'type': 'string',
+                  'required': false,
+                },
+                'passable': {
+                  'name': 'passable',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                  },
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          {
+            'name': 'movesLeft',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'customers',
+            'type': 'array',
+            'default': [
+              {
+                'team': 'customer',
+                'patience': 10,
+                'name': 'Customer',
+                'unitType': 'customer',
+                'id': 'cust-1',
+                'position': {
+                  'y': 2,
+                  'x': 2,
+                },
+                'modelUrl': {
+                  'role': 'customer',
+                  'style': 'vector',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'name': 'customer',
+                  'aspect': '1:1',
+                  'category': 'customer',
+                  'animations': [
+                    'idle',
+                  ],
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                },
+                'maxPatience': 10,
+              },
+            ],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'modelUrl': {
+                  'name': 'modelUrl',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+                'unitType': {
+                  'name': 'unitType',
+                  'type': 'string',
+                  'required': false,
+                },
+                'maxPatience': {
+                  'name': 'maxPatience',
+                  'type': 'number',
+                  'required': false,
+                },
+                'team': {
+                  'name': 'team',
+                  'type': 'string',
+                  'required': false,
+                },
+                'position': {
+                  'name': 'position',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'patience': {
+                  'name': 'patience',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          {
+            'name': 'served',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'pending',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lost',
+            'type': 'number',
+            'default': 0,
+          },
+          {
             'name': 'fx',
             'type': 'array',
-          },
-          {
-            'default': 'none',
-            'name': 'result',
-            'type': 'string',
-          },
-          {
-            'default': '',
-            'name': 'selectedUnitId',
-            'type': 'string',
-          },
-          {
             'default': [],
             'items': {
+              'type': 'object',
+              'properties': {
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'vz': {
+                  'name': 'vz',
+                  'type': 'number',
+                  'required': false,
+                },
+                'bornAt': {
+                  'name': 'bornAt',
+                  'type': 'number',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': false,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'message': {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'ttl': {
+                  'name': 'ttl',
+                  'type': 'number',
+                  'required': true,
+                },
+                'maxTtl': {
+                  'name': 'maxTtl',
+                  'type': 'number',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          {
+            'name': 'result',
+            'type': 'string',
+            'default': 'none',
+          },
+          {
+            'name': 'selectedUnitId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'validMoves',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
               'properties': {
                 'x': {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 'z': {
                   'name': 'z',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'validMoves',
-            'type': 'array',
           },
           {
-            'default': 'observation',
             'name': 'phase',
             'type': 'string',
+            'default': 'observation',
           },
         ];
         const extras = params.fields ?? [];
@@ -1044,1122 +1044,551 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Nav.traits.HeroNav' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
+        'name': 'HeroAuthority',
+        'linkedEntity': 'GameState',
         'config': {
           'gridHeight': {
+            'type': 'unknown',
             'default': 4,
-            'type': 'unknown',
           },
-          'gridWidth': {
-            'default': 4,
+          'units': {
             'type': 'unknown',
-          },
-          'moveBudget': {
-            'default': 999999,
-            'type': 'unknown',
-          },
-          'running': {
-            'default': true,
-            'type': 'unknown',
-          },
-          'tiles': {
             'default': [
               {
+                'team': 'player',
+                'id': 'hero',
+                'unitType': 'hero',
+                'x': 1,
+                'z': 0,
+                'position': {
+                  'y': 1,
+                  'x': 1,
+                },
+                'maxHealth': 1,
+                'health': 1,
+                'y': 1,
+                'name': 'Hero',
+                'modelUrl': {
+                  'aspect': '1:1',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'category': 'unit',
+                  'name': 'player-unit',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'role': 'player',
+                  'animations': [
+                    'idle',
+                  ],
+                  'style': 'vector',
+                },
+              },
+            ],
+          },
+          'running': {
+            'type': 'unknown',
+            'default': true,
+          },
+          'moveBudget': {
+            'type': 'unknown',
+            'default': 999999,
+          },
+          'gridWidth': {
+            'type': 'unknown',
+            'default': 4,
+          },
+          'tiles': {
+            'type': 'unknown',
+            'default': [
+              {
+                'passable': true,
+                'x': 0,
                 'id': 't-0-0',
                 'modelUrl': {
+                  'thumbnailUrl': '',
+                  'style': 'vector',
+                  'category': 'terrain',
+                  'role': 'tile',
+                  'aspect': '1:1',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
                   'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 0,
                 'z': 0,
+                'y': 0,
+                'terrain': 'grass',
               },
               {
-                'id': 't-0-1',
                 'modelUrl': {
+                  'aspect': '1:1',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
                   'dimension': '2d',
-                  'name': 'grass',
+                  'thumbnailUrl': '',
                   'role': 'tile',
                   'style': 'vector',
-                  'thumbnailUrl': '',
+                  'name': 'grass',
+                  'category': 'terrain',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
-                'passable': true,
+                'id': 't-0-1',
                 'terrain': 'grass',
+                'passable': true,
+                'z': 0,
                 'x': 0,
                 'y': 1,
-                'z': 0,
               },
               {
-                'id': 't-0-2',
+                'terrain': 'grass',
+                'passable': true,
                 'modelUrl': {
+                  'category': 'terrain',
+                  'role': 'tile',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
                   'dimension': '2d',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'name': 'grass',
-                  'role': 'tile',
+                  'aspect': '1:1',
                   'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
+                'id': 't-0-2',
                 'y': 2,
                 'z': 0,
+                'x': 0,
               },
               {
+                'z': 0,
+                'x': 0,
                 'id': 't-0-3',
+                'passable': true,
+                'terrain': 'grass',
+                'y': 3,
                 'modelUrl': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
                   'role': 'tile',
+                  'aspect': '1:1',
                   'style': 'vector',
+                  'dimension': '2d',
+                  'category': 'terrain',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
                 },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 3,
-                'z': 0,
               },
               {
                 'id': 't-1-0',
+                'terrain': 'grass',
+                'passable': true,
                 'modelUrl': {
+                  'thumbnailUrl': '',
+                  'style': 'vector',
                   'animations': [
                     'static',
                   ],
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
                   'aspect': '1:1',
                   'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
                   'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
                 },
-                'passable': true,
-                'terrain': 'grass',
                 'x': 1,
                 'y': 0,
                 'z': 0,
               },
               {
-                'id': 't-1-1',
+                'terrain': 'grass',
+                'z': 0,
+                'x': 1,
                 'modelUrl': {
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'name': 'grass',
                   'animations': [
                     'static',
                   ],
                   'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'role': 'tile',
                 },
+                'id': 't-1-1',
                 'passable': true,
-                'terrain': 'grass',
-                'x': 1,
                 'y': 1,
-                'z': 0,
               },
               {
+                'z': 0,
+                'y': 2,
                 'id': 't-1-2',
                 'modelUrl': {
+                  'role': 'tile',
+                  'aspect': '1:1',
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
                   'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
                 },
-                'passable': true,
-                'terrain': 'grass',
                 'x': 1,
-                'y': 2,
-                'z': 0,
+                'terrain': 'grass',
+                'passable': true,
               },
               {
                 'id': 't-1-3',
+                'y': 3,
+                'terrain': 'grass',
+                'x': 1,
                 'modelUrl': {
+                  'name': 'grass',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'aspect': '1:1',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
                   'style': 'vector',
-                  'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'role': 'tile',
+                  'category': 'terrain',
                 },
                 'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 3,
                 'z': 0,
               },
               {
-                'id': 't-2-0',
                 'modelUrl': {
+                  'name': 'grass',
+                  'style': 'vector',
+                  'aspect': '1:1',
+                  'role': 'tile',
+                  'category': 'terrain',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
+                'z': 0,
+                'x': 2,
                 'passable': true,
                 'terrain': 'grass',
-                'x': 2,
+                'id': 't-2-0',
                 'y': 0,
-                'z': 0,
               },
               {
                 'id': 't-2-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
                 'passable': true,
-                'terrain': 'grass',
-                'x': 2,
                 'y': 1,
-                'z': 0,
-              },
-              {
-                'id': 't-2-2',
+                'x': 2,
                 'modelUrl': {
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'category': 'terrain',
                   'animations': [
                     'static',
                   ],
                   'aspect': '1:1',
-                  'category': 'terrain',
                   'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
                   'style': 'vector',
+                  'role': 'tile',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 2,
                 'z': 0,
+                'terrain': 'grass',
               },
               {
+                'terrain': 'grass',
+                'passable': true,
+                'y': 2,
+                'id': 't-2-2',
+                'z': 0,
+                'modelUrl': {
+                  'role': 'tile',
+                  'animations': [
+                    'static',
+                  ],
+                  'name': 'grass',
+                  'aspect': '1:1',
+                  'category': 'terrain',
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'style': 'vector',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                },
+                'x': 2,
+              },
+              {
+                'terrain': 'grass',
+                'passable': true,
+                'z': 0,
                 'id': 't-2-3',
                 'modelUrl': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'role': 'tile',
+                  'name': 'grass',
+                  'style': 'vector',
+                  'aspect': '1:1',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'category': 'terrain',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
-                'passable': true,
-                'terrain': 'grass',
                 'x': 2,
                 'y': 3,
-                'z': 0,
               },
               {
-                'id': 't-3-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
                 'x': 3,
+                'z': 0,
                 'y': 0,
-                'z': 0,
+                'terrain': 'grass',
+                'modelUrl': {
+                  'role': 'tile',
+                  'style': 'vector',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
+                  'aspect': '1:1',
+                  'dimension': '2d',
+                  'animations': [
+                    'static',
+                  ],
+                  'category': 'terrain',
+                  'thumbnailUrl': '',
+                },
+                'passable': true,
+                'id': 't-3-0',
               },
               {
+                'x': 3,
+                'y': 1,
+                'modelUrl': {
+                  'thumbnailUrl': '',
+                  'style': 'vector',
+                  'name': 'grass',
+                  'dimension': '2d',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'category': 'terrain',
+                  'role': 'tile',
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                },
+                'terrain': 'grass',
+                'passable': true,
                 'id': 't-3-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 1,
                 'z': 0,
               },
               {
-                'id': 't-3-2',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'passable': true,
-                'terrain': 'grass',
                 'x': 3,
+                'z': 0,
                 'y': 2,
-                'z': 0,
-              },
-              {
-                'id': 't-3-3',
                 'modelUrl': {
+                  'style': 'vector',
                   'animations': [
                     'static',
                   ],
                   'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'role': 'tile',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'name': 'grass',
+                  'category': 'terrain',
                 },
                 'passable': true,
+                'id': 't-3-2',
                 'terrain': 'grass',
-                'x': 3,
-                'y': 3,
-                'z': 0,
               },
-            ],
-            'type': 'unknown',
-          },
-          'units': {
-            'default': [
               {
-                'health': 1,
-                'id': 'hero',
-                'maxHealth': 1,
-                'modelUrl': {
-                  'animations': [
-                    'idle',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'player-unit',
-                  'role': 'player',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
-                },
-                'name': 'Hero',
-                'position': {
-                  'x': 1,
-                  'y': 1,
-                },
-                'team': 'player',
-                'unitType': 'hero',
-                'x': 1,
-                'y': 1,
                 'z': 0,
+                'x': 3,
+                'modelUrl': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'category': 'terrain',
+                  'name': 'grass',
+                  'animations': [
+                    'static',
+                  ],
+                  'role': 'tile',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'style': 'vector',
+                  'aspect': '1:1',
+                },
+                'passable': true,
+                'y': 3,
+                'terrain': 'grass',
+                'id': 't-3-3',
               },
             ],
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'MOVE',
+            'triggers': 'MOVE',
             'source': {
               'kind': 'trait',
               'trait': 'MarketIntent',
             },
-            'triggers': 'MOVE',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'MarketIntent',
             },
-            'triggers': 'RESTART',
           },
         ],
-        'name': 'HeroAuthority',
-        'ref': ('Nav.traits.HeroNav' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Svc.traits.Patience' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
+        'name': 'Patience',
+        'linkedEntity': 'GameState',
         'config': {
+          'running': {
+            'type': 'unknown',
+            'default': true,
+          },
+          'serveRadius': {
+            'type': 'unknown',
+            'default': 1,
+          },
           'customers': {
+            'type': 'unknown',
             'default': [
               {
                 'id': 'cust-1',
-                'maxPatience': 10,
-                'modelUrl': {
-                  'animations': [
-                    'idle',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'customer',
-                  'dimension': '2d',
-                  'name': 'customer',
-                  'role': 'customer',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
-                },
-                'name': 'Customer',
-                'patience': 10,
                 'position': {
                   'x': 2,
                   'y': 2,
                 },
+                'patience': 10,
+                'name': 'Customer',
+                'modelUrl': {
+                  'category': 'customer',
+                  'style': 'vector',
+                  'animations': [
+                    'idle',
+                  ],
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'thumbnailUrl': '',
+                  'name': 'customer',
+                  'aspect': '1:1',
+                  'dimension': '2d',
+                  'role': 'customer',
+                },
                 'team': 'customer',
                 'unitType': 'customer',
+                'maxPatience': 10,
               },
             ],
-            'type': 'unknown',
-          },
-          'running': {
-            'default': true,
-            'type': 'unknown',
-          },
-          'serveRadius': {
-            'default': 1,
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'HERO_STEPPED',
+            'triggers': 'HERO_STEPPED',
             'source': {
               'kind': 'trait',
               'trait': 'HeroAuthority',
             },
-            'triggers': 'HERO_STEPPED',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'MarketIntent',
             },
-            'triggers': 'RESTART',
           },
         ],
-        'name': 'Patience',
-        'ref': ('Svc.traits.Patience' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Particles.traits.FxParticles' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
+        'name': 'FxDecay',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'MarketIntent',
             },
-            'triggers': 'RESTART',
           },
           {
             'event': 'BURST',
+            'triggers': 'BURST',
             'source': {
               'kind': 'trait',
               'trait': 'Patience',
             },
-            'triggers': 'BURST',
           },
         ],
-        'name': 'FxDecay',
-        'ref': ('Particles.traits.FxParticles' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Flow.traits.MarketFlow' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
+        'name': 'RoundGate',
+        'linkedEntity': 'GameState',
         'config': {
           'maxLost': {
+            'type': 'unknown',
             'default': 3,
-            'type': 'unknown',
-          },
-          'running': {
-            'default': true,
-            'type': 'unknown',
           },
           'targetServed': {
-            'default': 10,
             'type': 'unknown',
+            'default': 10,
+          },
+          'running': {
+            'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'MarketIntent',
             },
-            'triggers': 'RESTART',
           },
           {
             'event': 'SERVICE_CHANGED',
+            'triggers': 'SERVICE_CHANGED',
             'source': {
               'kind': 'trait',
               'trait': 'Patience',
             },
-            'triggers': 'SERVICE_CHANGED',
           },
         ],
-        'name': 'RoundGate',
-        'ref': ('Flow.traits.MarketFlow' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'assetManifest': {
-            'default': {
-              'effects': {},
-              'features': {},
-              'terrains': {},
-              'units': {},
-            },
-            'description': 'Per-role model manifest resolving tile models by terrain key.',
-            'label': 'Asset Manifest',
-            'properties': {
-              'effects': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'effects',
-                'required': false,
-                'type': 'object',
-              },
-              'features': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'features',
-                'required': false,
-                'type': 'object',
-              },
-              'terrains': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'terrains',
-                'required': false,
-                'type': 'object',
-              },
-              'units': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'units',
-                'required': false,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'AssetManifest',
-          },
-          'bgColor': {
-            'default': '#0a0f1a',
-            'description': 'Canvas background color.',
-            'label': 'Bg Color',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cameraMode': {
-            'default': 'top-down',
-            'description': '3D canvas camera mode.',
-            'label': 'Camera Mode',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'features': {
-            'default': [],
-            'description': 'Static decorative props (shelves/freezers/checkout/etc); never mutated by any mechanic.',
-            'items': {
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Features',
-            'tier': 'presentation',
-            'type': '[Feature]',
-          },
-          'fxPresets': {
-            'default': [
-              {
-                'color': '#fbbf24',
-                'color2': '#fde68a',
-                'count': 6,
-                'glow': 0.1,
-                'shape': 'spark',
-                'size': 0.45,
-                'type': 'score',
-                'vy': -0.3,
-              },
-              {
-                'color': '#ef4444',
-                'color2': '#450a0a',
-                'count': 4,
-                'gravity': 0.3,
-                'shape': 'puff',
-                'size': 0.5,
-                'type': 'damage',
-              },
-            ],
-            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
-            'items': {
-              'properties': {
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'color2': {
-                  'name': 'color2',
-                  'required': false,
-                  'type': 'string',
-                },
-                'count': {
-                  'name': 'count',
-                  'required': false,
-                  'type': 'number',
-                },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'glow': {
-                  'name': 'glow',
-                  'required': false,
-                  'type': 'number',
-                },
-                'gravity': {
-                  'name': 'gravity',
-                  'required': false,
-                  'type': 'number',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'shape': {
-                  'name': 'shape',
-                  'required': false,
-                  'type': 'string',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Fx Presets',
-            'tier': 'presentation',
-            'type': '[FxPreset]',
-          },
-          'goalText': {
-            'default': 'Serve customers before their patience runs out',
-            'description': 'HUD goal description.',
-            'label': 'Goal Text',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'gridHeight': {
-            'default': 4,
-            'description': 'Grid row count (matches HeroAuthority.gridHeight).',
-            'label': 'Grid Height',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'gridWidth': {
-            'default': 4,
-            'description': 'Grid column count (matches HeroAuthority.gridWidth).',
-            'label': 'Grid Width',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'howText': {
-            'default': 'Walk next to a customer — they are served automatically while you\'re adjacent',
-            'description': 'HUD how-to-play description.',
-            'label': 'How Text',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'livesLabel': {
-            'default': 'Lives',
-            'description': 'HUD label for the remaining-lives counter (maxLost - lost).',
-            'label': 'Lives Label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'maxLost': {
-            'default': 3,
-            'description': 'Starting lives shown in the HUD (matches RoundGate.maxLost).',
-            'label': 'Max Lost',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'movementRange': {
-            'default': 1,
-            'description': 'Max manhattan distance the hero may step per move.',
-            'label': 'Movement Range',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'scale': {
-            'default': 0.45,
-            'description': 'Canvas render scale.',
-            'label': 'Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'scoreLabel': {
-            'default': 'Score',
-            'description': 'HUD label for the served/score counter.',
-            'label': 'Score Label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'unitScale': {
-            'default': 1,
-            'description': 'Unit draw-size multiplier.',
-            'label': 'Unit Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-        },
+        'name': 'MarketIntent',
         'effectRow': [
           {
             'kind': 'emit',
@@ -2195,73 +1624,77 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
             'site': 'tick',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'GameState',
         'emits': [
           {
-            'description': 'Hero move intent applied by the hero-nav authority',
             'event': 'MOVE',
+            'description': 'Hero move intent applied by the hero-nav authority',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Resets every mechanic (units/budget, customers/patience, result) for a new round',
             'event': 'RESTART',
+            'description': 'Resets every mechanic (units/budget, customers/patience, result) for a new round',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'tileClickEvent prop',
             'event': 'TILE_CLICK',
+            'description': 'tileClickEvent prop',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'z',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'tileId',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'unitClickEvent prop',
             'event': 'UNIT_CLICK',
+            'description': 'unitClickEvent prop',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
@@ -2272,40 +1705,42 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                 'type': 'number',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Clears the current selection',
             'event': 'CANCEL',
+            'description': 'Clears the current selection',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'GameState',
-        'name': 'MarketIntent',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'playing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'unitClickEvent prop',
               'key': 'UNIT_CLICK',
               'name': 'Unit Click',
+              'description': 'unitClickEvent prop',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
@@ -2316,91 +1751,87 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                   'type': 'number',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'tileClickEvent prop',
               'key': 'TILE_CLICK',
               'name': 'Tile Click',
+              'description': 'tileClickEvent prop',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'z',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'tileId',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Clears the current selection',
               'key': 'CANCEL',
               'name': 'Cancel',
+              'description': 'Clears the current selection',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
               'key': 'PLAY_AGAIN',
               'name': 'Play Again',
             },
             {
-              'description': 'Hero move intent applied by the hero-nav authority',
               'key': 'MOVE',
               'name': 'Move',
+              'description': 'Hero move intent applied by the hero-nav authority',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Resets every mechanic (units/budget, customers/patience, result) for a new round',
               'key': 'RESTART',
               'name': 'Restart',
+              'description': 'Resets every mechanic (units/budget, customers/patience, result) for a new round',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'playing',
             },
           ],
           'transitions': [
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -2421,32 +1852,93 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
+                    'overlay': [
+                      'if',
+                      [
+                        '!=',
+                        '@entity.result',
+                        'none',
+                      ],
+                      {
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'stats': [
+                              {
+                                'value': '@entity.result',
+                                'label': 'Result',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                          {
+                            'action': 'PLAY_AGAIN',
+                            'label': 'Play Again',
+                            'variant': 'primary',
+                            'type': 'button',
+                          },
+                        ],
+                        'gap': 'md',
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                      null,
+                    ],
+                    'hud': {
+                      'type': 'game-hud',
+                      'stats': [
+                        {
+                          'label': '@config.scoreLabel',
+                          'value': '@entity.served',
+                        },
+                        {
+                          'value': [
+                            '-',
+                            '@config.maxLost',
+                            '@entity.lost',
+                          ],
+                          'label': '@config.livesLabel',
+                        },
+                        {
+                          'value': '@entity.result',
+                          'label': 'Result',
+                        },
+                        {
+                          'value': '@config.goalText',
+                          'label': 'Goal',
+                        },
+                        {
+                          'value': '@config.howText',
+                          'label': 'How',
+                        },
+                      ],
+                    },
                     'addons': {
+                      'type': 'stack',
+                      'gap': 'sm',
                       'children': [
                         {
-                          'action': 'CANCEL',
-                          'label': 'Cancel',
-                          'type': 'button',
                           'variant': 'secondary',
+                          'label': 'Cancel',
+                          'action': 'CANCEL',
+                          'type': 'button',
                         },
                         {
                           'action': 'PLAY_AGAIN',
-                          'label': 'Restart',
                           'type': 'button',
+                          'label': 'Restart',
                           'variant': 'secondary',
                         },
                       ],
                       'direction': 'vertical',
-                      'gap': 'sm',
-                      'type': 'stack',
                     },
                     'children': [
                       {
-                        'backgroundColor': '@config.bgColor',
-                        'camera': {
-                          'mode': '@config.cameraMode',
-                          'zoom': '@config.scale',
-                        },
+                        'type': 'canvas',
+                        'unitClickEvent': 'UNIT_CLICK',
+                        'unitScale': '@config.unitScale',
+                        'tileClickEvent': 'TILE_CLICK',
                         'children': [
                           {
                             'items': [
@@ -2458,6 +1950,7 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                   'fn',
                                   't',
                                   {
+                                    'type': 'draw-sprite',
                                     'asset': [
                                       'if',
                                       [
@@ -2494,18 +1987,17 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                         '@t',
                                         'x',
                                       ],
-                                      'y': [
-                                        'object/get',
-                                        '@t',
-                                        'y',
-                                      ],
                                       'z': [
                                         'object/get',
                                         '@t',
                                         'z',
                                       ],
+                                      'y': [
+                                        'object/get',
+                                        '@t',
+                                        'y',
+                                      ],
                                     },
-                                    'type': 'draw-sprite',
                                   },
                                 ],
                               ],
@@ -2526,6 +2018,7 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                             'type': 'draw-sprite-layer',
                           },
                           {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               'array/map',
                               '@config.features',
@@ -2533,11 +2026,6 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 'f',
                                 {
-                                  'asset': [
-                                    'object/get',
-                                    '@f',
-                                    'assetUrl',
-                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2550,11 +2038,15 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                       'y',
                                     ],
                                   },
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'assetUrl',
+                                  ],
                                   'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                           {
                             'items': [
@@ -2564,27 +2056,28 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 'm',
                                 {
-                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'type': 'draw-shape',
                                   'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@m',
-                                      'x',
-                                    ],
                                     'y': [
                                       'object/get',
                                       '@m',
                                       'z',
                                     ],
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
                                   },
+                                  'fill': 'rgba(74,222,128,0.4)',
                                   'shape': 'cell',
-                                  'type': 'draw-shape',
                                 },
                               ],
                             ],
                             'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               [
@@ -2608,6 +2101,8 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 'u',
                                 {
+                                  'shape': 'ellipse',
+                                  'strokeWidth': 3,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2633,16 +2128,13 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                       'z',
                                     ],
                                   },
-                                  'radiusX': 0.5,
                                   'radiusY': 0.2,
-                                  'shape': 'ellipse',
+                                  'radiusX': 0.5,
                                   'stroke': 'rgba(0,200,255,0.8)',
-                                  'strokeWidth': 3,
                                   'type': 'draw-shape',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
                             'items': [
@@ -2655,27 +2147,13 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                   'u',
                                   {
                                     'anchor': 'ground',
-                                    'asset': [
-                                      'object/get',
-                                      '@u',
-                                      'modelUrl',
-                                    ],
-                                    'height': 0.8,
                                     'id': [
                                       'object/get',
                                       '@u',
                                       'id',
                                     ],
+                                    'width': 0.8,
                                     'position': {
-                                      'x': [
-                                        'object/get',
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'position',
-                                        ],
-                                        'x',
-                                      ],
                                       'y': [
                                         'object/get',
                                         [
@@ -2690,9 +2168,23 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                         '@u',
                                         'z',
                                       ],
+                                      'x': [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'position',
+                                        ],
+                                        'x',
+                                      ],
                                     },
+                                    'height': 0.8,
+                                    'asset': [
+                                      'object/get',
+                                      '@u',
+                                      'modelUrl',
+                                    ],
                                     'type': 'draw-sprite',
-                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -2708,6 +2200,7 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                       '@c',
                                       'modelUrl',
                                     ],
+                                    'width': 0.8,
                                     'height': 0.8,
                                     'position': [
                                       'object/get',
@@ -2715,7 +2208,6 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                       'position',
                                     ],
                                     'type': 'draw-sprite',
-                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -2732,18 +2224,17 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                   'fn',
                                   'u',
                                   {
+                                    'type': 'draw-shape',
+                                    'shape': 'rect',
+                                    'offsetY': -0.6,
                                     'fill': 'rgba(0,0,0,0.6)',
                                     'height': 0.12,
-                                    'offsetY': -0.6,
+                                    'width': 0.8,
                                     'position': {
-                                      'x': [
+                                      'z': [
                                         'object/get',
-                                        [
-                                          'object/get',
-                                          '@u',
-                                          'position',
-                                        ],
-                                        'x',
+                                        '@u',
+                                        'z',
                                       ],
                                       'y': [
                                         'object/get',
@@ -2754,15 +2245,16 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                         ],
                                         'y',
                                       ],
-                                      'z': [
+                                      'x': [
                                         'object/get',
-                                        '@u',
-                                        'z',
+                                        [
+                                          'object/get',
+                                          '@u',
+                                          'position',
+                                        ],
+                                        'x',
                                       ],
                                     },
-                                    'shape': 'rect',
-                                    'type': 'draw-shape',
-                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -2773,17 +2265,17 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                   'fn',
                                   'c',
                                   {
+                                    'type': 'draw-shape',
                                     'fill': 'rgba(0,0,0,0.6)',
-                                    'height': 0.12,
                                     'offsetY': -0.6,
+                                    'height': 0.12,
+                                    'shape': 'rect',
+                                    'width': 0.8,
                                     'position': [
                                       'object/get',
                                       '@c',
                                       'position',
                                     ],
-                                    'shape': 'rect',
-                                    'type': 'draw-shape',
-                                    'width': 0.8,
                                   },
                                 ],
                               ],
@@ -2791,6 +2283,7 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                             'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/concat',
                               [
@@ -2800,9 +2293,6 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                   'fn',
                                   'u',
                                   {
-                                    'fill': '#22c55e',
-                                    'height': 0.12,
-                                    'offsetY': -0.6,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -2813,6 +2303,11 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                         ],
                                         'x',
                                       ],
+                                      'z': [
+                                        'object/get',
+                                        '@u',
+                                        'z',
+                                      ],
                                       'y': [
                                         'object/get',
                                         [
@@ -2822,14 +2317,11 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                         ],
                                         'y',
                                       ],
-                                      'z': [
-                                        'object/get',
-                                        '@u',
-                                        'z',
-                                      ],
                                     },
                                     'shape': 'rect',
                                     'type': 'draw-shape',
+                                    'fill': '#22c55e',
+                                    'offsetY': -0.6,
                                     'width': [
                                       '*',
                                       0.8,
@@ -2847,6 +2339,7 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                         ],
                                       ],
                                     ],
+                                    'height': 0.12,
                                   },
                                 ],
                               ],
@@ -2857,24 +2350,24 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                   'fn',
                                   'c',
                                   {
-                                    'fill': '#22c55e',
-                                    'height': 0.12,
-                                    'offsetY': -0.6,
+                                    'shape': 'rect',
+                                    'width': 0.8,
                                     'position': [
                                       'object/get',
                                       '@c',
                                       'position',
                                     ],
-                                    'shape': 'rect',
+                                    'height': 0.12,
+                                    'fill': '#22c55e',
                                     'type': 'draw-shape',
-                                    'width': 0.8,
+                                    'offsetY': -0.6,
                                   },
                                 ],
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-text-layer',
                             'items': [
                               'array/concat',
                               [
@@ -2884,9 +2377,13 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                   'fn',
                                   'u',
                                   {
-                                    'color': '#ffffff',
                                     'offsetY': -0.85,
                                     'position': {
+                                      'z': [
+                                        'object/get',
+                                        '@u',
+                                        'z',
+                                      ],
                                       'x': [
                                         'object/get',
                                         [
@@ -2905,12 +2402,8 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                         ],
                                         'y',
                                       ],
-                                      'z': [
-                                        'object/get',
-                                        '@u',
-                                        'z',
-                                      ],
                                     },
+                                    'color': '#ffffff',
                                     'text': [
                                       'object/get',
                                       '@u',
@@ -2927,109 +2420,76 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                   'fn',
                                   'c',
                                   {
+                                    'type': 'draw-text',
                                     'color': '#ffffff',
+                                    'text': [
+                                      'object/get',
+                                      '@c',
+                                      'name',
+                                    ],
                                     'offsetY': -0.85,
                                     'position': [
                                       'object/get',
                                       '@c',
                                       'position',
                                     ],
-                                    'text': [
-                                      'object/get',
-                                      '@c',
-                                      'name',
-                                    ],
-                                    'type': 'draw-text',
                                   },
                                 ],
                               ],
                             ],
-                            'type': 'draw-text-layer',
                           },
                           {
-                            'items': '@entity.fx',
-                            'presets': '@config.fxPresets',
                             'tickMs': 500,
+                            'presets': '@config.fxPresets',
                             'type': 'draw-fx-layer',
+                            'items': '@entity.fx',
                           },
                         ],
+                        'camera': {
+                          'mode': '@config.cameraMode',
+                          'zoom': '@config.scale',
+                        },
+                        'backgroundColor': '@config.bgColor',
                         'mode': '3d',
-                        'tileClickEvent': 'TILE_CLICK',
-                        'type': 'canvas',
-                        'unitClickEvent': 'UNIT_CLICK',
-                        'unitScale': '@config.unitScale',
                       },
                     ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': '@config.scoreLabel',
-                          'value': '@entity.served',
-                        },
-                        {
-                          'label': '@config.livesLabel',
-                          'value': [
-                            '-',
-                            '@config.maxLost',
-                            '@entity.lost',
-                          ],
-                        },
-                        {
-                          'label': 'Result',
-                          'value': '@entity.result',
-                        },
-                        {
-                          'label': 'Goal',
-                          'value': '@config.goalText',
-                        },
-                        {
-                          'label': 'How',
-                          'value': '@config.howText',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'overlay': [
-                      'if',
-                      [
-                        '!=',
-                        '@entity.result',
-                        'none',
-                      ],
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'stats': [
-                              {
-                                'label': 'Result',
-                                'value': '@entity.result',
-                              },
-                            ],
-                            'type': 'game-hud',
-                          },
-                          {
-                            'action': 'PLAY_AGAIN',
-                            'label': 'Play Again',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
-                        ],
-                        'direction': 'vertical',
-                        'gap': 'md',
-                        'type': 'stack',
-                      },
-                      null,
-                    ],
-                    'type': 'game-shell',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'playing',
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'UNIT_CLICK',
+              'guard': [
+                'and',
+                [
+                  '==',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  '==',
+                  [
+                    'object/get',
+                    [
+                      'array/find',
+                      '@entity.units',
+                      [
+                        'fn',
+                        'u',
+                        [
+                          '==',
+                          '@u.id',
+                          '@payload.unitId',
+                        ],
+                      ],
+                    ],
+                    'team',
+                  ],
+                  'player',
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -3087,15 +2547,15 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                   'position',
                                 ],
                                 {
-                                  'x': [
-                                    'object/get',
-                                    '@t',
-                                    'x',
-                                  ],
                                   'y': [
                                     'object/get',
                                     '@t',
                                     'y',
+                                  ],
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
                                   ],
                                 },
                               ],
@@ -3231,68 +2691,11 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                   ],
                 ],
               ],
-              'event': 'UNIT_CLICK',
-              'from': 'playing',
-              'guard': [
-                'and',
-                [
-                  '==',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  '==',
-                  [
-                    'object/get',
-                    [
-                      'array/find',
-                      '@entity.units',
-                      [
-                        'fn',
-                        'u',
-                        [
-                          '==',
-                          '@u.id',
-                          '@payload.unitId',
-                        ],
-                      ],
-                    ],
-                    'team',
-                  ],
-                  'player',
-                ],
-              ],
-              'to': 'playing',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'MOVE',
-                  {
-                    'unitId': '@entity.selectedUnitId',
-                    'x': '@payload.x',
-                    'y': '@payload.z',
-                  },
-                ],
-                [
-                  'set',
-                  '@entity.selectedUnitId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.phase',
-                  'observation',
-                ],
-              ],
-              'event': 'TILE_CLICK',
               'from': 'playing',
+              'to': 'playing',
+              'event': 'TILE_CLICK',
               'guard': [
                 'and',
                 [
@@ -3312,8 +2715,8 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                     [
                       'grid/in-bounds',
                       {
-                        'x': '@payload.x',
                         'y': '@payload.z',
+                        'x': '@payload.x',
                       },
                       '@config.gridWidth',
                       '@config.gridHeight',
@@ -3342,8 +2745,8 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                             'position',
                           ],
                           {
-                            'x': '@payload.x',
                             'y': '@payload.z',
+                            'x': '@payload.x',
                           },
                         ],
                         '@config.movementRange',
@@ -3483,9 +2886,42 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                   ],
                 ],
               ],
-              'to': 'playing',
+              'effects': [
+                [
+                  'emit',
+                  'MOVE',
+                  {
+                    'unitId': '@entity.selectedUnitId',
+                    'y': '@payload.z',
+                    'x': '@payload.x',
+                  },
+                ],
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'observation',
+                ],
+              ],
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'CANCEL',
+              'guard': [
+                '!=',
+                '@entity.selectedUnitId',
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -3503,16 +2939,11 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                   'observation',
                 ],
               ],
-              'event': 'CANCEL',
-              'from': 'playing',
-              'guard': [
-                '!=',
-                '@entity.selectedUnitId',
-                '',
-              ],
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'PLAY_AGAIN',
               'effects': [
                 [
                   'emit',
@@ -3537,45 +2968,106 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                   'observation',
                 ],
               ],
-              'event': 'PLAY_AGAIN',
-              'from': 'playing',
-              'to': 'playing',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'renderTick',
+            'interval': 100,
             'effects': [
               [
                 'render-ui',
                 'main',
                 {
+                  'overlay': [
+                    'if',
+                    [
+                      '!=',
+                      '@entity.result',
+                      'none',
+                    ],
+                    {
+                      'align': 'center',
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'action': 'PLAY_AGAIN',
+                          'label': 'Play Again',
+                          'type': 'button',
+                          'variant': 'primary',
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                    null,
+                  ],
+                  'type': 'game-shell',
+                  'hud': {
+                    'type': 'game-hud',
+                    'stats': [
+                      {
+                        'value': '@entity.served',
+                        'label': '@config.scoreLabel',
+                      },
+                      {
+                        'value': [
+                          '-',
+                          '@config.maxLost',
+                          '@entity.lost',
+                        ],
+                        'label': '@config.livesLabel',
+                      },
+                      {
+                        'value': '@entity.result',
+                        'label': 'Result',
+                      },
+                      {
+                        'value': '@config.goalText',
+                        'label': 'Goal',
+                      },
+                      {
+                        'value': '@config.howText',
+                        'label': 'How',
+                      },
+                    ],
+                  },
                   'addons': {
                     'children': [
                       {
                         'action': 'CANCEL',
-                        'label': 'Cancel',
-                        'type': 'button',
                         'variant': 'secondary',
+                        'type': 'button',
+                        'label': 'Cancel',
                       },
                       {
                         'action': 'PLAY_AGAIN',
-                        'label': 'Restart',
-                        'type': 'button',
                         'variant': 'secondary',
+                        'type': 'button',
+                        'label': 'Restart',
                       },
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'sm',
-                    'type': 'stack',
                   },
                   'children': [
                     {
-                      'backgroundColor': '@config.bgColor',
                       'camera': {
-                        'mode': '@config.cameraMode',
                         'zoom': '@config.scale',
+                        'mode': '@config.cameraMode',
                       },
+                      'backgroundColor': '@config.bgColor',
                       'children': [
                         {
                           'items': [
@@ -3587,6 +3079,24 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 't',
                                 {
+                                  'position': {
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'z': [
+                                      'object/get',
+                                      '@t',
+                                      'z',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                   'asset': [
                                     'if',
                                     [
@@ -3617,24 +3127,6 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                       ],
                                     ],
                                   ],
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@t',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@t',
-                                      'y',
-                                    ],
-                                    'z': [
-                                      'object/get',
-                                      '@t',
-                                      'z',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
@@ -3655,6 +3147,7 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                           'type': 'draw-sprite-layer',
                         },
                         {
+                          'type': 'draw-sprite-layer',
                           'items': [
                             'array/map',
                             '@config.features',
@@ -3668,24 +3161,24 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                   'assetUrl',
                                 ],
                                 'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
                                   'y': [
                                     'object/get',
                                     '@f',
                                     'y',
+                                  ],
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
                                   ],
                                 },
                                 'type': 'draw-sprite',
                               },
                             ],
                           ],
-                          'type': 'draw-sprite-layer',
                         },
                         {
+                          'type': 'draw-shape-layer',
                           'items': [
                             'array/map',
                             '@entity.validMoves',
@@ -3695,23 +3188,22 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                               {
                                 'fill': 'rgba(74,222,128,0.4)',
                                 'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@m',
-                                    'x',
-                                  ],
                                   'y': [
                                     'object/get',
                                     '@m',
                                     'z',
                                   ],
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
                                 },
-                                'shape': 'cell',
                                 'type': 'draw-shape',
+                                'shape': 'cell',
                               },
                             ],
                           ],
-                          'type': 'draw-shape-layer',
                         },
                         {
                           'items': [
@@ -3737,15 +3229,13 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                               'fn',
                               'u',
                               {
+                                'strokeWidth': 3,
+                                'stroke': 'rgba(0,200,255,0.8)',
                                 'position': {
-                                  'x': [
+                                  'z': [
                                     'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'x',
+                                    '@u',
+                                    'z',
                                   ],
                                   'y': [
                                     'object/get',
@@ -3756,24 +3246,27 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                     ],
                                     'y',
                                   ],
-                                  'z': [
+                                  'x': [
                                     'object/get',
-                                    '@u',
-                                    'z',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'x',
                                   ],
                                 },
                                 'radiusX': 0.5,
                                 'radiusY': 0.2,
-                                'shape': 'ellipse',
-                                'stroke': 'rgba(0,200,255,0.8)',
-                                'strokeWidth': 3,
                                 'type': 'draw-shape',
+                                'shape': 'ellipse',
                               },
                             ],
                           ],
                           'type': 'draw-shape-layer',
                         },
                         {
+                          'type': 'draw-sprite-layer',
                           'items': [
                             'array/concat',
                             [
@@ -3783,28 +3276,14 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 'u',
                                 {
-                                  'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'width': 0.8,
                                   'height': 0.8,
-                                  'id': [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
                                   'position': {
-                                    'x': [
-                                      'object/get',
-                                      [
-                                        'object/get',
-                                        '@u',
-                                        'position',
-                                      ],
-                                      'x',
-                                    ],
                                     'y': [
                                       'object/get',
                                       [
@@ -3819,9 +3298,23 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                       '@u',
                                       'z',
                                     ],
+                                    'x': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
+                                      'x',
+                                    ],
                                   },
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'type': 'draw-sprite',
-                                  'width': 0.8,
+                                  'anchor': 'ground',
                                 },
                               ],
                             ],
@@ -3832,24 +3325,23 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 'c',
                                 {
+                                  'height': 0.8,
                                   'asset': [
                                     'object/get',
                                     '@c',
                                     'modelUrl',
                                   ],
-                                  'height': 0.8,
+                                  'type': 'draw-sprite',
+                                  'width': 0.8,
                                   'position': [
                                     'object/get',
                                     '@c',
                                     'position',
                                   ],
-                                  'type': 'draw-sprite',
-                                  'width': 0.8,
                                 },
                               ],
                             ],
                           ],
-                          'type': 'draw-sprite-layer',
                         },
                         {
                           'items': [
@@ -3861,8 +3353,10 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 'u',
                                 {
+                                  'type': 'draw-shape',
+                                  'shape': 'rect',
                                   'fill': 'rgba(0,0,0,0.6)',
-                                  'height': 0.12,
+                                  'width': 0.8,
                                   'offsetY': -0.6,
                                   'position': {
                                     'x': [
@@ -3874,6 +3368,11 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                       ],
                                       'x',
                                     ],
+                                    'z': [
+                                      'object/get',
+                                      '@u',
+                                      'z',
+                                    ],
                                     'y': [
                                       'object/get',
                                       [
@@ -3883,15 +3382,8 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                       ],
                                       'y',
                                     ],
-                                    'z': [
-                                      'object/get',
-                                      '@u',
-                                      'z',
-                                    ],
                                   },
-                                  'shape': 'rect',
-                                  'type': 'draw-shape',
-                                  'width': 0.8,
+                                  'height': 0.12,
                                 },
                               ],
                             ],
@@ -3902,17 +3394,17 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 'c',
                                 {
-                                  'fill': 'rgba(0,0,0,0.6)',
-                                  'height': 0.12,
-                                  'offsetY': -0.6,
+                                  'width': 0.8,
+                                  'shape': 'rect',
                                   'position': [
                                     'object/get',
                                     '@c',
                                     'position',
                                   ],
-                                  'shape': 'rect',
+                                  'height': 0.12,
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'offsetY': -0.6,
                                   'type': 'draw-shape',
-                                  'width': 0.8,
                                 },
                               ],
                             ],
@@ -3929,36 +3421,7 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 'u',
                                 {
-                                  'fill': '#22c55e',
                                   'height': 0.12,
-                                  'offsetY': -0.6,
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      [
-                                        'object/get',
-                                        '@u',
-                                        'position',
-                                      ],
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      [
-                                        'object/get',
-                                        '@u',
-                                        'position',
-                                      ],
-                                      'y',
-                                    ],
-                                    'z': [
-                                      'object/get',
-                                      '@u',
-                                      'z',
-                                    ],
-                                  },
-                                  'shape': 'rect',
-                                  'type': 'draw-shape',
                                   'width': [
                                     '*',
                                     0.8,
@@ -3976,6 +3439,35 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                       ],
                                     ],
                                   ],
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
+                                      'x',
+                                    ],
+                                    'z': [
+                                      'object/get',
+                                      '@u',
+                                      'z',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
+                                      'y',
+                                    ],
+                                  },
+                                  'fill': '#22c55e',
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
                                 },
                               ],
                             ],
@@ -3986,17 +3478,17 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 'c',
                                 {
+                                  'shape': 'rect',
                                   'fill': '#22c55e',
                                   'height': 0.12,
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
                                   'offsetY': -0.6,
                                   'position': [
                                     'object/get',
                                     '@c',
                                     'position',
                                   ],
-                                  'shape': 'rect',
-                                  'type': 'draw-shape',
-                                  'width': 0.8,
                                 },
                               ],
                             ],
@@ -4004,6 +3496,7 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                           'type': 'draw-shape-layer',
                         },
                         {
+                          'type': 'draw-text-layer',
                           'items': [
                             'array/concat',
                             [
@@ -4013,8 +3506,12 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                 'fn',
                                 'u',
                                 {
-                                  'color': '#ffffff',
-                                  'offsetY': -0.85,
+                                  'type': 'draw-text',
+                                  'text': [
+                                    'object/get',
+                                    '@u',
+                                    'name',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4040,12 +3537,8 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                                       'z',
                                     ],
                                   },
-                                  'text': [
-                                    'object/get',
-                                    '@u',
-                                    'name',
-                                  ],
-                                  'type': 'draw-text',
+                                  'offsetY': -0.85,
+                                  'color': '#ffffff',
                                 },
                               ],
                             ],
@@ -4073,91 +3566,598 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                               ],
                             ],
                           ],
-                          'type': 'draw-text-layer',
                         },
                         {
-                          'items': '@entity.fx',
                           'presets': '@config.fxPresets',
-                          'tickMs': 500,
                           'type': 'draw-fx-layer',
+                          'tickMs': 500,
+                          'items': '@entity.fx',
                         },
                       ],
-                      'mode': '3d',
-                      'tileClickEvent': 'TILE_CLICK',
-                      'type': 'canvas',
                       'unitClickEvent': 'UNIT_CLICK',
+                      'tileClickEvent': 'TILE_CLICK',
                       'unitScale': '@config.unitScale',
+                      'mode': '3d',
+                      'type': 'canvas',
                     },
                   ],
-                  'hud': {
-                    'stats': [
-                      {
-                        'label': '@config.scoreLabel',
-                        'value': '@entity.served',
-                      },
-                      {
-                        'label': '@config.livesLabel',
-                        'value': [
-                          '-',
-                          '@config.maxLost',
-                          '@entity.lost',
-                        ],
-                      },
-                      {
-                        'label': 'Result',
-                        'value': '@entity.result',
-                      },
-                      {
-                        'label': 'Goal',
-                        'value': '@config.goalText',
-                      },
-                      {
-                        'label': 'How',
-                        'value': '@config.howText',
-                      },
-                    ],
-                    'type': 'game-hud',
-                  },
-                  'overlay': [
-                    'if',
-                    [
-                      '!=',
-                      '@entity.result',
-                      'none',
-                    ],
-                    {
-                      'align': 'center',
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'label': 'Result',
-                              'value': '@entity.result',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'action': 'PLAY_AGAIN',
-                          'label': 'Play Again',
-                          'type': 'button',
-                          'variant': 'primary',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
-                    },
-                    null,
-                  ],
-                  'type': 'game-shell',
                 },
               ],
             ],
-            'interval': 100,
-            'name': 'renderTick',
           },
         ],
+        'config': {
+          'scoreLabel': {
+            'type': 'string',
+            'default': 'Score',
+            'label': 'Score Label',
+            'description': 'HUD label for the served/score counter.',
+            'tier': 'presentation',
+          },
+          'gridHeight': {
+            'type': 'number',
+            'default': 4,
+            'label': 'Grid Height',
+            'description': 'Grid row count (matches HeroAuthority.gridHeight).',
+            'tier': 'presentation',
+          },
+          'unitScale': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Unit Scale',
+            'description': 'Unit draw-size multiplier.',
+            'tier': 'presentation',
+          },
+          'livesLabel': {
+            'type': 'string',
+            'default': 'Lives',
+            'label': 'Lives Label',
+            'description': 'HUD label for the remaining-lives counter (maxLost - lost).',
+            'tier': 'presentation',
+          },
+          'maxLost': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Max Lost',
+            'description': 'Starting lives shown in the HUD (matches RoundGate.maxLost).',
+            'tier': 'presentation',
+          },
+          'scale': {
+            'type': 'number',
+            'default': 0.45,
+            'label': 'Scale',
+            'description': 'Canvas render scale.',
+            'tier': 'presentation',
+          },
+          'movementRange': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Movement Range',
+            'description': 'Max manhattan distance the hero may step per move.',
+            'tier': 'domain',
+          },
+          'features': {
+            'type': '[Feature]',
+            'default': [],
+            'label': 'Features',
+            'description': 'Static decorative props (shelves/freezers/checkout/etc); never mutated by any mechanic.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'fxPresets': {
+            'type': '[FxPreset]',
+            'default': [
+              {
+                'count': 6,
+                'glow': 0.1,
+                'shape': 'spark',
+                'size': 0.45,
+                'vy': -0.3,
+                'type': 'score',
+                'color2': '#fde68a',
+                'color': '#fbbf24',
+              },
+              {
+                'count': 4,
+                'color2': '#450a0a',
+                'color': '#ef4444',
+                'type': 'damage',
+                'gravity': 0.3,
+                'shape': 'puff',
+                'size': 0.5,
+              },
+            ],
+            'label': 'Fx Presets',
+            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'glow': {
+                  'name': 'glow',
+                  'type': 'number',
+                  'required': false,
+                },
+                'gravity': {
+                  'name': 'gravity',
+                  'type': 'number',
+                  'required': false,
+                },
+                'count': {
+                  'name': 'count',
+                  'type': 'number',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'vz': {
+                  'name': 'vz',
+                  'type': 'number',
+                  'required': false,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'shape': {
+                  'name': 'shape',
+                  'type': 'string',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color2': {
+                  'name': 'color2',
+                  'type': 'string',
+                  'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'goalText': {
+            'type': 'string',
+            'default': 'Serve customers before their patience runs out',
+            'label': 'Goal Text',
+            'description': 'HUD goal description.',
+            'tier': 'presentation',
+          },
+          'howText': {
+            'type': 'string',
+            'default': 'Walk next to a customer — they are served automatically while you\'re adjacent',
+            'label': 'How Text',
+            'description': 'HUD how-to-play description.',
+            'tier': 'presentation',
+          },
+          'assetManifest': {
+            'type': 'AssetManifest',
+            'default': {
+              'terrains': {},
+              'effects': {},
+              'features': {},
+              'units': {},
+            },
+            'label': 'Asset Manifest',
+            'description': 'Per-role model manifest resolving tile models by terrain key.',
+            'tier': 'presentation',
+            'properties': {
+              'effects': {
+                'name': 'effects',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'units': {
+                'name': 'units',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'terrains': {
+                'name': 'terrains',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'features': {
+                'name': 'features',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'gridWidth': {
+            'type': 'number',
+            'default': 4,
+            'label': 'Grid Width',
+            'description': 'Grid column count (matches HeroAuthority.gridWidth).',
+            'tier': 'presentation',
+          },
+          'cameraMode': {
+            'type': 'string',
+            'default': 'top-down',
+            'label': 'Camera Mode',
+            'description': '3D canvas camera mode.',
+            'tier': 'presentation',
+          },
+          'bgColor': {
+            'type': 'string',
+            'default': '#0a0f1a',
+            'label': 'Bg Color',
+            'description': 'Canvas background color.',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

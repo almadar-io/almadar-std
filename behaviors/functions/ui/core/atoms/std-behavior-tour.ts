@@ -37,38 +37,38 @@ export type StdBehaviorTourListenKey = 'TOUR_PLAY';
  * without modifying its state-machine topology.
  */
 export interface StdBehaviorTourConfig {
+  /** Default: `"@config.title"` */
+  title?: unknown;
+  /** Default: `"@config.stepWord"` */
+  stepWord?: unknown;
   /** Default: `"@config.autoPlay"` */
   autoRun?: unknown;
+  /** Default: `"@config.summary"` */
+  summary?: unknown;
   /** Default: `"@config.compact"` */
   compact?: unknown;
+  /** Default: `"@config.resetLabel"` */
+  resetLabel?: unknown;
+  /** Default: `"@config.pausedLabel"` */
+  pausedLabel?: unknown;
   /** Default: `"@config.doneLabel"` */
   doneLabel?: unknown;
   /** Default: `"@config.ofWord"` */
   ofWord?: unknown;
-  /** Default: `"@config.pauseLabel"` */
-  pauseLabel?: unknown;
-  /** Default: `"@config.pausedLabel"` */
-  pausedLabel?: unknown;
   /** Default: `"@config.playLabel"` */
   playLabel?: unknown;
-  /** Default: `"@config.resetLabel"` */
-  resetLabel?: unknown;
-  /** Default: `false` */
-  runWhenVisible?: unknown;
   /** Default: `"@config.runningLabel"` */
   runningLabel?: unknown;
-  /** Default: `"@config.speedLabel"` */
-  speedLabel?: unknown;
+  /** Default: `"@config.pauseLabel"` */
+  pauseLabel?: unknown;
+  /** Default: `false` */
+  runWhenVisible?: unknown;
   /** Default: `"@config.stepIntervalMs"` */
   stepIntervalMs?: unknown;
   /** Default: `"@config.stepLabel"` */
   stepLabel?: unknown;
-  /** Default: `"@config.stepWord"` */
-  stepWord?: unknown;
-  /** Default: `"@config.summary"` */
-  summary?: unknown;
-  /** Default: `"@config.title"` */
-  title?: unknown;
+  /** Default: `"@config.speedLabel"` */
+  speedLabel?: unknown;
 }
 
 /**

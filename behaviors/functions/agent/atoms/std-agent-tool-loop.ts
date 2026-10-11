@@ -80,14 +80,14 @@ export interface StdAgentToolLoopAskFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAgentToolLoopConfig {
-  /** Default: `"agent-tool-loop"` */
-  cancelKey?: string;
-  /** Default: `"You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly."` */
-  instructions?: string;
-  /** Default: `8` */
-  maxSteps?: number;
   /** Default: `false` */
   quiet?: boolean;
+  /** Default: `"You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly."` */
+  instructions?: string;
+  /** Default: `"agent-tool-loop"` */
+  cancelKey?: string;
+  /** Default: `8` */
+  maxSteps?: number;
   /** Default: `[]` */
   tools?: EntityRow[];
 }
@@ -221,38 +221,38 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'default': 'idle',
-            'description': 'Where the current turn is.',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'thinking',
               'answered',
               'failed',
             ],
+            'description': 'Where the current turn is.',
           },
           {
-            'default': '',
-            'description': 'The last reply.',
             'name': 'reply',
             'type': 'string',
+            'default': '',
+            'description': 'The last reply.',
           },
           {
-            'default': '',
-            'description': 'Why the last turn failed.',
             'name': 'error',
             'type': 'string',
+            'default': '',
+            'description': 'Why the last turn failed.',
           },
           {
-            'default': false,
-            'description': 'The current turn belongs to an ephemeral conversation.',
             'name': 'ephemeral',
             'type': 'boolean',
+            'default': false,
+            'description': 'The current turn belongs to an ephemeral conversation.',
           },
         ];
         const extras = params.fields ?? [];
@@ -263,143 +263,7 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'cancelKey': {
-            'default': 'agent-tool-loop',
-            'description': 'The key this instance\'s model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own.',
-            'label': 'Cancel key',
-            'synonyms': 'call key, abort key',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'instructions': {
-            'default': 'You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.',
-            'description': 'Standing instructions sent with every conversation.',
-            'label': 'How should the assistant behave?',
-            'synonyms': 'system prompt, persona, guidance',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'maxSteps': {
-            'default': 8,
-            'description': 'How many model calls one request may take before it fails.',
-            'label': 'Model round-trips per request',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'quiet': {
-            'default': false,
-            'description': 'No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own.',
-            'label': 'Run in the background?',
-            'synonyms': 'silent, background, no toast, suppress errors, headless run',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'tools': {
-            'default': [],
-            'description': 'The declared inputs it may fire (`{ event: Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.',
-            'items': {
-              'properties': {
-                'AgentToolInput': {
-                  'name': 'AgentToolInput',
-                  'properties': {
-                    'event': {
-                      'name': 'event',
-                      'required': true,
-                      'type': 'EventAddress',
-                    },
-                    'payload': {
-                      'items': {
-                        'properties': {
-                          'description': {
-                            'name': 'description',
-                            'required': false,
-                            'type': 'string',
-                          },
-                          'name': {
-                            'name': 'name',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'properties': {
-                            'items': {
-                              'type': 'union',
-                              'values': [
-                                'AgentToolField',
-                              ],
-                            },
-                            'name': 'properties',
-                            'required': false,
-                            'type': 'array',
-                          },
-                          'required': {
-                            'name': 'required',
-                            'required': false,
-                            'type': 'boolean',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'values': {
-                            'items': {
-                              'type': 'string',
-                            },
-                            'name': 'values',
-                            'required': false,
-                            'type': 'array',
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'name': 'payload',
-                      'required': false,
-                      'type': 'array',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'AgentToolRead': {
-                  'name': 'AgentToolRead',
-                  'properties': {
-                    'read': {
-                      'name': 'read',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'AgentToolScope': {
-                  'name': 'AgentToolScope',
-                  'properties': {
-                    'scope': {
-                      'name': 'scope',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'declared',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-              },
-              'type': 'union',
-              'values': [
-                'AgentToolScope',
-                'AgentToolInput',
-                'AgentToolRead',
-              ],
-            },
-            'label': 'What may the assistant do?',
-            'synonyms': 'allowlist, abilities, actions, permissions',
-            'tier': 'domain',
-            'type': '[AgentTool]',
-          },
-        },
+        'name': 'AgentToolLoop',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -437,29 +301,37 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
             'resource': '@entity.status',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AgentTurn',
         'emits': [
           {
-            'description': 'One thing the assistant just did, live while it works: a model call, a tool it used, or what the app answered. Delivered to the asking tab only.',
             'event': 'ASSISTANT_STEP',
+            'description': 'One thing the assistant just did, live while it works: a model call, a tool it used, or what the app answered. Delivered to the asking tab only.',
+            'synonyms': 'progress, activity, trace step, working',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'activity',
+                'type': 'union',
+                'required': true,
                 'properties': [
                   {
                     'name': 'AgentToolCallActivity',
+                    'type': 'object',
                     'properties': [
                       {
                         'name': 'type',
-                        'required': true,
                         'type': 'string',
                         'values': [
                           'tool_call',
                         ],
+                        'required': true,
                       },
                       {
                         'name': 'tool',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'kind',
@@ -472,36 +344,36 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                       },
                       {
                         'name': 'argsText',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'timestamp',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                       {
                         'name': 'isExecuting',
                         'type': 'boolean',
                       },
                     ],
-                    'type': 'object',
                   },
                   {
                     'name': 'AgentToolResultActivity',
+                    'type': 'object',
                     'properties': [
                       {
                         'name': 'type',
-                        'required': true,
                         'type': 'string',
                         'values': [
                           'tool_result',
                         ],
+                        'required': true,
                       },
                       {
                         'name': 'tool',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'kind',
@@ -514,8 +386,8 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                       },
                       {
                         'name': 'success',
-                        'required': true,
                         'type': 'boolean',
+                        'required': true,
                       },
                       {
                         'name': 'detail',
@@ -527,60 +399,61 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                       },
                       {
                         'name': 'resultText',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'timestamp',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                     ],
-                    'type': 'object',
                   },
                   {
                     'name': 'AgentLlmResponseActivity',
+                    'type': 'object',
                     'properties': [
                       {
                         'name': 'type',
-                        'required': true,
                         'type': 'string',
                         'values': [
                           'llm_response',
                         ],
+                        'required': true,
                       },
                       {
                         'name': 'content',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'llm',
+                        'type': 'object',
                         'properties': [
                           {
                             'name': 'service',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'provider',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'model',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'systemPrompt',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'userPrompt',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'toolCallsJson',
@@ -592,8 +465,8 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                           },
                           {
                             'name': 'durationMs',
-                            'required': true,
                             'type': 'number',
+                            'required': true,
                           },
                           {
                             'name': 'promptTokens',
@@ -612,166 +485,168 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                             'type': 'number',
                           },
                         ],
-                        'type': 'object',
                       },
                       {
                         'name': 'timestamp',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                     ],
-                    'type': 'object',
                   },
                 ],
-                'required': true,
-                'type': 'union',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'progress, activity, trace step, working',
-            'tier': 'domain',
           },
           {
-            'description': 'The assistant answered; carries every tool step it took and the tokens it used. `ephemeral` echoes the conversation\'s: an ephemeral reply is not stored or remembered, and only an ephemeral conversation shows it.',
             'event': 'ASSISTANT_REPLIED',
+            'description': 'The assistant answered; carries every tool step it took and the tokens it used. `ephemeral` echoes the conversation\'s: an ephemeral reply is not stored or remembered, and only an ephemeral conversation shows it.',
+            'synonyms': 'answered, responded, done',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'reply',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'steps',
-                'required': true,
                 'type': '[AgentActivity]',
+                'required': true,
               },
               {
                 'name': 'usage',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'promptTokens',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'completionTokens',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'totalTokens',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'modelCalls',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
               {
                 'name': 'ephemeral',
                 'type': 'boolean',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'answered, responded, done',
-            'tier': 'domain',
           },
           {
-            'description': 'The assistant could not answer (model unavailable, or out of steps).',
             'event': 'ASSISTANT_REPLY_FAILED',
+            'description': 'The assistant could not answer (model unavailable, or out of steps).',
+            'synonyms': 'failed, error, gave up',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'ephemeral',
                 'type': 'boolean',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'failed, error, gave up',
-            'tier': 'domain',
           },
           {
             'event': 'ANSWERED',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'reply',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'steps',
-                'required': true,
                 'type': '[AgentActivity]',
+                'required': true,
               },
               {
                 'name': 'usage',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'promptTokens',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'completionTokens',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'totalTokens',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'modelCalls',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'ASK_FAILED',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'AgentTurn',
-        'name': 'AgentToolLoop',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'thinking',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant. An `ephemeral` conversation runs under its own `instructions` (empty: the configured ones) and exactly its own `tools` (absent or `[]`: none, never the configured ones), streams no live steps and shows no failure toast.',
               'key': 'CONVERSE',
               'name': 'Converse',
+              'description': 'Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant. An `ephemeral` conversation runs under its own `instructions` (empty: the configured ones) and exactly its own `tools` (absent or `[]`: none, never the configured ones), streams no live steps and shows no failure toast.',
+              'synonyms': 'ask, chat, request',
               'payloadSchema': [
                 {
                   'name': 'messages',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'role',
@@ -783,12 +658,10 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
                 },
                 {
                   'name': 'context',
@@ -807,93 +680,97 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   'type': 'boolean',
                 },
               ],
-              'synonyms': 'ask, chat, request',
             },
             {
-              'description': 'Abort the request in flight; nothing is replied and no failure is reported.',
               'key': 'CANCEL',
               'name': 'Cancel',
+              'description': 'Abort the request in flight; nothing is replied and no failure is reported.',
               'synonyms': 'stop, abort, cancel',
             },
             {
               'key': 'ANSWERED',
               'name': 'Answered',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'reply',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'steps',
-                  'required': true,
                   'type': '[AgentActivity]',
+                  'required': true,
                 },
                 {
                   'name': 'usage',
+                  'type': 'object',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'promptTokens',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'completionTokens',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'totalTokens',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'modelCalls',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': 'object',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'ASK_FAILED',
               'name': 'Ask Failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'One thing the assistant just did, live while it works: a model call, a tool it used, or what the app answered. Delivered to the asking tab only.',
               'key': 'ASSISTANT_STEP',
               'name': 'Assistant Step',
+              'description': 'One thing the assistant just did, live while it works: a model call, a tool it used, or what the app answered. Delivered to the asking tab only.',
+              'synonyms': 'progress, activity, trace step, working',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'activity',
+                  'type': 'union',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'AgentToolCallActivity',
+                      'type': 'object',
                       'properties': [
                         {
                           'name': 'type',
-                          'required': true,
                           'type': 'string',
                           'values': [
                             'tool_call',
                           ],
+                          'required': true,
                         },
                         {
                           'name': 'tool',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'kind',
@@ -906,36 +783,36 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                         },
                         {
                           'name': 'argsText',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'timestamp',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                         {
                           'name': 'isExecuting',
                           'type': 'boolean',
                         },
                       ],
-                      'type': 'object',
                     },
                     {
                       'name': 'AgentToolResultActivity',
+                      'type': 'object',
                       'properties': [
                         {
                           'name': 'type',
-                          'required': true,
                           'type': 'string',
                           'values': [
                             'tool_result',
                           ],
+                          'required': true,
                         },
                         {
                           'name': 'tool',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'kind',
@@ -948,8 +825,8 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                         },
                         {
                           'name': 'success',
-                          'required': true,
                           'type': 'boolean',
+                          'required': true,
                         },
                         {
                           'name': 'detail',
@@ -961,60 +838,61 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                         },
                         {
                           'name': 'resultText',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'timestamp',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                       ],
-                      'type': 'object',
                     },
                     {
                       'name': 'AgentLlmResponseActivity',
+                      'type': 'object',
                       'properties': [
                         {
                           'name': 'type',
-                          'required': true,
                           'type': 'string',
                           'values': [
                             'llm_response',
                           ],
+                          'required': true,
                         },
                         {
                           'name': 'content',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'llm',
+                          'type': 'object',
                           'properties': [
                             {
                               'name': 'service',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'provider',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'model',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'systemPrompt',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'userPrompt',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'toolCallsJson',
@@ -1026,8 +904,8 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                             },
                             {
                               'name': 'durationMs',
-                              'required': true,
                               'type': 'number',
+                              'required': true,
                             },
                             {
                               'name': 'promptTokens',
@@ -1046,104 +924,92 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                               'type': 'number',
                             },
                           ],
-                          'type': 'object',
                         },
                         {
                           'name': 'timestamp',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                       ],
-                      'type': 'object',
                     },
                   ],
-                  'required': true,
-                  'type': 'union',
                 },
               ],
-              'synonyms': 'progress, activity, trace step, working',
-              'tier': 'domain',
             },
             {
-              'description': 'The assistant answered; carries every tool step it took and the tokens it used. `ephemeral` echoes the conversation\'s: an ephemeral reply is not stored or remembered, and only an ephemeral conversation shows it.',
               'key': 'ASSISTANT_REPLIED',
               'name': 'Assistant Replied',
+              'description': 'The assistant answered; carries every tool step it took and the tokens it used. `ephemeral` echoes the conversation\'s: an ephemeral reply is not stored or remembered, and only an ephemeral conversation shows it.',
+              'synonyms': 'answered, responded, done',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'reply',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'steps',
-                  'required': true,
                   'type': '[AgentActivity]',
+                  'required': true,
                 },
                 {
                   'name': 'usage',
+                  'type': 'object',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'promptTokens',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'completionTokens',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'totalTokens',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'modelCalls',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': 'object',
                 },
                 {
                   'name': 'ephemeral',
                   'type': 'boolean',
                 },
               ],
-              'synonyms': 'answered, responded, done',
-              'tier': 'domain',
             },
             {
-              'description': 'The assistant could not answer (model unavailable, or out of steps).',
               'key': 'ASSISTANT_REPLY_FAILED',
               'name': 'Assistant Reply Failed',
+              'description': 'The assistant could not answer (model unavailable, or out of steps).',
+              'synonyms': 'failed, error, gave up',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ephemeral',
                   'type': 'boolean',
                 },
               ],
-              'synonyms': 'failed, error, gave up',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'thinking',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1151,62 +1017,11 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.status',
-                  'thinking',
-                ],
-                [
-                  'set',
-                  '@entity.ephemeral',
-                  false,
-                ],
-                [
-                  'call-service',
-                  'llm',
-                  'call-tools',
-                  {
-                    'instructions': [
-                      'if',
-                      [
-                        '=',
-                        [
-                          'str/default',
-                          '@payload.context',
-                          '',
-                        ],
-                        '',
-                      ],
-                      '@config.instructions',
-                      [
-                        'str/concat',
-                        '@config.instructions',
-                        '\n\nWhat you remember that may be relevant:\n',
-                        '@payload.context',
-                      ],
-                    ],
-                    'maxSteps': '@config.maxSteps',
-                    'messages': '@payload.messages',
-                    'tools': '@config.tools',
-                  },
-                  {
-                    'emit': {
-                      'failure': 'ASK_FAILED',
-                      'onMessage': 'ASSISTANT_STEP',
-                      'success': 'ANSWERED',
-                    },
-                    'key': '@config.cancelKey',
-                  },
-                ],
-              ],
-              'event': 'CONVERSE',
               'from': 'idle',
+              'to': 'thinking',
+              'event': 'CONVERSE',
               'guard': [
                 'and',
                 [
@@ -1218,9 +1033,6 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   '@payload.ephemeral',
                 ],
               ],
-              'to': 'thinking',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -1237,6 +1049,8 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   'llm',
                   'call-tools',
                   {
+                    'messages': '@payload.messages',
+                    'maxSteps': '@config.maxSteps',
                     'instructions': [
                       'if',
                       [
@@ -1256,21 +1070,23 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                         '@payload.context',
                       ],
                     ],
-                    'maxSteps': '@config.maxSteps',
-                    'messages': '@payload.messages',
                     'tools': '@config.tools',
                   },
                   {
+                    'key': '@config.cancelKey',
                     'emit': {
                       'failure': 'ASK_FAILED',
+                      'onMessage': 'ASSISTANT_STEP',
                       'success': 'ANSWERED',
                     },
-                    'key': '@config.cancelKey',
                   },
                 ],
               ],
-              'event': 'CONVERSE',
+            },
+            {
               'from': 'idle',
+              'to': 'thinking',
+              'event': 'CONVERSE',
               'guard': [
                 'and',
                 '@config.quiet',
@@ -1279,9 +1095,60 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   '@payload.ephemeral',
                 ],
               ],
-              'to': 'thinking',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'thinking',
+                ],
+                [
+                  'set',
+                  '@entity.ephemeral',
+                  false,
+                ],
+                [
+                  'call-service',
+                  'llm',
+                  'call-tools',
+                  {
+                    'tools': '@config.tools',
+                    'messages': '@payload.messages',
+                    'maxSteps': '@config.maxSteps',
+                    'instructions': [
+                      'if',
+                      [
+                        '=',
+                        [
+                          'str/default',
+                          '@payload.context',
+                          '',
+                        ],
+                        '',
+                      ],
+                      '@config.instructions',
+                      [
+                        'str/concat',
+                        '@config.instructions',
+                        '\n\nWhat you remember that may be relevant:\n',
+                        '@payload.context',
+                      ],
+                    ],
+                  },
+                  {
+                    'key': '@config.cancelKey',
+                    'emit': {
+                      'success': 'ANSWERED',
+                      'failure': 'ASK_FAILED',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'idle',
+              'to': 'thinking',
+              'event': 'CONVERSE',
+              'guard': '@payload.ephemeral',
               'effects': [
                 [
                   'set',
@@ -1298,6 +1165,13 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   'llm',
                   'call-tools',
                   {
+                    'tools': [
+                      'object/get',
+                      '@payload',
+                      'tools',
+                      [],
+                    ],
+                    'maxSteps': '@config.maxSteps',
                     'instructions': [
                       'if',
                       [
@@ -1312,30 +1186,22 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                       '@config.instructions',
                       '@payload.instructions',
                     ],
-                    'maxSteps': '@config.maxSteps',
                     'messages': '@payload.messages',
-                    'tools': [
-                      'object/get',
-                      '@payload',
-                      'tools',
-                      [],
-                    ],
                   },
                   {
+                    'key': '@config.cancelKey',
                     'emit': {
                       'failure': 'ASK_FAILED',
                       'success': 'ANSWERED',
                     },
-                    'key': '@config.cancelKey',
                   },
                 ],
               ],
-              'event': 'CONVERSE',
-              'from': 'idle',
-              'guard': '@payload.ephemeral',
-              'to': 'thinking',
             },
             {
+              'from': 'thinking',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1343,11 +1209,11 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'thinking',
-              'to': 'idle',
             },
             {
+              'from': 'thinking',
+              'to': 'idle',
+              'event': 'CANCEL',
               'effects': [
                 [
                   'cancel-call',
@@ -1359,11 +1225,11 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   'idle',
                 ],
               ],
-              'event': 'CANCEL',
-              'from': 'thinking',
-              'to': 'idle',
             },
             {
+              'from': 'thinking',
+              'to': 'idle',
+              'event': 'ANSWERED',
               'effects': [
                 [
                   'set',
@@ -1379,48 +1245,23 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   'emit',
                   'ASSISTANT_REPLIED',
                   {
-                    'ephemeral': '@entity.ephemeral',
                     'reply': '@payload.reply',
-                    'steps': '@payload.steps',
                     'usage': '@payload.usage',
+                    'steps': '@payload.steps',
+                    'ephemeral': '@entity.ephemeral',
                   },
                 ],
               ],
-              'event': 'ANSWERED',
-              'from': 'thinking',
-              'to': 'idle',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.status',
-                  'failed',
-                ],
-                [
-                  'set',
-                  '@entity.error',
-                  '@payload.error',
-                ],
-                [
-                  'emit',
-                  'ASSISTANT_REPLY_FAILED',
-                  {
-                    'ephemeral': '@entity.ephemeral',
-                    'error': '@payload.error',
-                  },
-                ],
-              ],
-              'event': 'ASK_FAILED',
               'from': 'thinking',
+              'to': 'idle',
+              'event': 'ASK_FAILED',
               'guard': [
                 'or',
                 '@config.quiet',
                 '@entity.ephemeral',
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -1436,22 +1277,16 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   'emit',
                   'ASSISTANT_REPLY_FAILED',
                   {
-                    'ephemeral': '@entity.ephemeral',
                     'error': '@payload.error',
-                  },
-                ],
-                [
-                  'render-ui',
-                  'toast',
-                  {
-                    'message': '@payload.error',
-                    'type': 'alert',
-                    'variant': 'error',
+                    'ephemeral': '@entity.ephemeral',
                   },
                 ],
               ],
-              'event': 'ASK_FAILED',
+            },
+            {
               'from': 'thinking',
+              'to': 'idle',
+              'event': 'ASK_FAILED',
               'guard': [
                 'and',
                 [
@@ -1463,10 +1298,175 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                   '@entity.ephemeral',
                 ],
               ],
-              'to': 'idle',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'failed',
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'emit',
+                  'ASSISTANT_REPLY_FAILED',
+                  {
+                    'error': '@payload.error',
+                    'ephemeral': '@entity.ephemeral',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'message': '@payload.error',
+                    'variant': 'error',
+                    'type': 'alert',
+                  },
+                ],
+              ],
             },
           ],
         },
+        'config': {
+          'quiet': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Run in the background?',
+            'description': 'No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own.',
+            'synonyms': 'silent, background, no toast, suppress errors, headless run',
+            'tier': 'policy',
+          },
+          'instructions': {
+            'type': 'string',
+            'default': 'You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.',
+            'label': 'How should the assistant behave?',
+            'description': 'Standing instructions sent with every conversation.',
+            'synonyms': 'system prompt, persona, guidance',
+            'tier': 'domain',
+          },
+          'cancelKey': {
+            'type': 'string',
+            'default': 'agent-tool-loop',
+            'label': 'Cancel key',
+            'description': 'The key this instance\'s model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own.',
+            'synonyms': 'call key, abort key',
+            'tier': 'internal',
+          },
+          'maxSteps': {
+            'type': 'number',
+            'default': 8,
+            'label': 'Model round-trips per request',
+            'description': 'How many model calls one request may take before it fails.',
+            'tier': 'policy',
+          },
+          'tools': {
+            'type': '[AgentTool]',
+            'default': [],
+            'label': 'What may the assistant do?',
+            'description': 'The declared inputs it may fire (`{ event: Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.',
+            'synonyms': 'allowlist, abilities, actions, permissions',
+            'tier': 'domain',
+            'items': {
+              'type': 'union',
+              'values': [
+                'AgentToolScope',
+                'AgentToolInput',
+                'AgentToolRead',
+              ],
+              'properties': {
+                'AgentToolInput': {
+                  'name': 'AgentToolInput',
+                  'type': 'object',
+                  'properties': {
+                    'payload': {
+                      'name': 'payload',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'properties': {
+                            'name': 'properties',
+                            'type': 'array',
+                            'required': false,
+                            'items': {
+                              'type': 'union',
+                              'values': [
+                                'AgentToolField',
+                              ],
+                            },
+                          },
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'required': {
+                            'name': 'required',
+                            'type': 'boolean',
+                            'required': false,
+                          },
+                          'name': {
+                            'name': 'name',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'values': {
+                            'name': 'values',
+                            'type': 'array',
+                            'required': false,
+                            'items': {
+                              'type': 'string',
+                            },
+                          },
+                          'description': {
+                            'name': 'description',
+                            'type': 'string',
+                            'required': false,
+                          },
+                        },
+                      },
+                    },
+                    'event': {
+                      'name': 'event',
+                      'type': 'EventAddress',
+                      'required': true,
+                    },
+                  },
+                },
+                'AgentToolScope': {
+                  'name': 'AgentToolScope',
+                  'type': 'object',
+                  'properties': {
+                    'scope': {
+                      'name': 'scope',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'declared',
+                      ],
+                    },
+                  },
+                },
+                'AgentToolRead': {
+                  'name': 'AgentToolRead',
+                  'type': 'object',
+                  'properties': {
+                    'read': {
+                      'name': 'read',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -54,16 +54,16 @@ export interface StdArcadePlayScoreChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdArcadePlayConfig {
-  /** Default: `[]` */
-  machines?: EntityRow[];
   /** Default: `1` */
   maxPayout?: number;
   /** Default: `0` */
   minPayout?: number;
-  /** Default: `true` */
-  running?: boolean;
+  /** Default: `[]` */
+  machines?: EntityRow[];
   /** Default: `14` */
   startTokens?: number;
+  /** Default: `true` */
+  running?: boolean;
 }
 
 /**

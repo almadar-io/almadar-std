@@ -39,43 +39,43 @@ export type StdUiSvgNodeEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgNodeConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
+  /** Default: `50` */
+  x?: number;
+  lang?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `100` */
+  width?: number;
   ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `6` */
+  r?: number;
+  /** Default: `"filled"` */
+  variant?: 'filled' | 'stroked' | 'pulse';
   ariaSelected?: boolean;
+  label?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaDescribedby?: string;
+  /** Default: `100` */
+  height?: number;
+  ariaLabelledby?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaBusy?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  enterDelay?: number;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `50` */
+  y?: number;
   /** Default: `true` */
   asRoot?: boolean;
   className?: string;
   /** Default: `"var(--color-primary)"` */
   color?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `100` */
-  height?: number;
-  label?: string;
-  lang?: string;
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `6` */
-  r?: number;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
-  /** Default: `"filled"` */
-  variant?: 'filled' | 'stroked' | 'pulse';
-  /** Default: `100` */
-  width?: number;
-  /** Default: `50` */
-  x?: number;
-  /** Default: `50` */
-  y?: number;
+  ariaLabel?: string;
+  ariaHidden?: boolean;
 }
 
 /**

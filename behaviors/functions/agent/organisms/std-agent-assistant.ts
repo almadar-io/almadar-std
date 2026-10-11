@@ -81,28 +81,28 @@ export function stdAgentAssistantAgentAssistantOrbital(params: StdAgentAssistant
     name: 'AgentAssistantOrbital',
     uses: [
       {
-        'as': 'Session',
         'from': 'std/behaviors/std-agent-session',
+        'as': 'Session',
       },
       {
-        'as': 'Context',
         'from': 'std/behaviors/std-agent-context',
+        'as': 'Context',
       },
       {
-        'as': 'Memory',
         'from': 'std/behaviors/std-agent-memory',
+        'as': 'Memory',
       },
       {
-        'as': 'Loop',
         'from': 'std/behaviors/std-agent-tool-loop',
+        'as': 'Loop',
       },
       {
-        'as': 'Trace',
         'from': 'std/behaviors/std-agent-trace',
+        'as': 'Trace',
       },
       {
-        'as': 'Shell',
         'from': 'std/behaviors/std-app-layout',
+        'as': 'Shell',
       },
     ],
     expects: [
@@ -133,8 +133,8 @@ export function stdAgentAssistantAgentAssistantOrbital(params: StdAgentAssistant
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -144,425 +144,425 @@ export function stdAgentAssistantAgentAssistantOrbital(params: StdAgentAssistant
       })(),
     } as Entity,
     config: {
-      'appName': {
-        'default': 'Assistant',
-        'description': 'Pass the app\'s own name so the assistant page matches the rest of the app.',
-        'label': 'App name in the assistant page\'s header',
+      'navItems': {
+        'type': '[NavItem]',
+        'default': [],
+        'label': 'Sidebar navigation on the assistant page',
+        'description': 'Pass the app\'s own navItems so the assistant page keeps the app\'s sidebar.',
         'tier': 'presentation',
-        'type': 'string',
-      },
-      'instructions': {
-        'default': 'You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.',
-        'description': 'Standing instructions sent with every request.',
-        'label': 'How should the assistant behave?',
-        'synonyms': 'system prompt, persona, guidance',
-        'tier': 'domain',
-        'type': 'string',
-      },
-      'keepMessages': {
-        'default': 12,
-        'label': 'Turns kept verbatim',
-        'tier': 'policy',
-        'type': 'number',
-      },
-      'links': {
-        'default': [
-          {
-            'href': '/assistant/runs',
-            'label': 'Run history',
-          },
-        ],
-        'description': 'Related pages, e.g. the assistant\'s run history.',
         'items': {
+          'type': 'object',
           'properties': {
             'href': {
               'name': 'href',
-              'required': true,
               'type': 'string',
-            },
-            'label': {
-              'name': 'label',
               'required': true,
-              'type': 'string',
             },
-          },
-          'type': 'object',
-        },
-        'label': 'Links above the conversation',
-        'tier': 'presentation',
-        'type': '[AgentLink]',
-      },
-      'maxSteps': {
-        'default': 8,
-        'label': 'Model round-trips per request',
-        'tier': 'policy',
-        'type': 'number',
-      },
-      'navItems': {
-        'default': [],
-        'description': 'Pass the app\'s own navItems so the assistant page keeps the app\'s sidebar.',
-        'items': {
-          'properties': {
-            'badge': {
-              'name': 'badge',
+            'icon': {
+              'name': 'icon',
+              'type': 'string',
               'required': false,
-              'type': 'string',
             },
             'children': {
+              'name': 'children',
+              'type': 'array',
+              'required': false,
               'items': {
                 'type': 'union',
                 'values': [
                   'NavItem',
                 ],
               },
-              'name': 'children',
+            },
+            'badge': {
+              'name': 'badge',
+              'type': 'string',
               'required': false,
-              'type': 'array',
-            },
-            'href': {
-              'name': 'href',
-              'required': true,
-              'type': 'string',
-            },
-            'icon': {
-              'name': 'icon',
-              'required': false,
-              'type': 'string',
-            },
-            'label': {
-              'name': 'label',
-              'required': true,
-              'type': 'string',
             },
             'roles': {
+              'name': 'roles',
+              'type': 'array',
+              'required': false,
               'items': {
                 'type': 'string',
               },
-              'name': 'roles',
-              'required': false,
-              'type': 'array',
+            },
+            'label': {
+              'name': 'label',
+              'type': 'string',
+              'required': true,
             },
           },
-          'type': 'object',
         },
-        'label': 'Sidebar navigation on the assistant page',
-        'tier': 'presentation',
-        'type': '[NavItem]',
       },
       'recallLimit': {
+        'type': 'number',
         'default': 3,
         'label': 'Memories recalled per request',
         'tier': 'policy',
+      },
+      'keepMessages': {
         'type': 'number',
+        'default': 12,
+        'label': 'Turns kept verbatim',
+        'tier': 'policy',
       },
       'tools': {
+        'type': '[AgentTool]',
         'default': [
           {
             'scope': 'declared',
           },
         ],
+        'label': 'What may the assistant do?',
         'description': 'As the signed-in user: `{ scope: declared }` (the default) gives it every external input the program declares and a read over every persisted entity, so each building block\'s declared inputs become its abilities; or list them — `{ event: Orbital.Trait.EVENT }` for one input, `{ read: Entity }` for one entity.',
+        'synonyms': 'allowlist, abilities, actions, permissions',
+        'tier': 'domain',
         'items': {
-          'properties': {
-            'AgentToolInput': {
-              'name': 'AgentToolInput',
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': true,
-                  'type': 'EventAddress',
-                },
-              },
-              'type': 'object',
-            },
-            'AgentToolRead': {
-              'name': 'AgentToolRead',
-              'properties': {
-                'read': {
-                  'name': 'read',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'AgentToolScope': {
-              'name': 'AgentToolScope',
-              'properties': {
-                'scope': {
-                  'name': 'scope',
-                  'required': true,
-                  'type': 'string',
-                  'values': [
-                    'declared',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-          },
           'type': 'union',
           'values': [
             'AgentToolScope',
             'AgentToolInput',
             'AgentToolRead',
           ],
+          'properties': {
+            'AgentToolScope': {
+              'name': 'AgentToolScope',
+              'type': 'object',
+              'properties': {
+                'scope': {
+                  'name': 'scope',
+                  'type': 'string',
+                  'required': true,
+                  'values': [
+                    'declared',
+                  ],
+                },
+              },
+            },
+            'AgentToolRead': {
+              'name': 'AgentToolRead',
+              'type': 'object',
+              'properties': {
+                'read': {
+                  'name': 'read',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+            'AgentToolInput': {
+              'name': 'AgentToolInput',
+              'type': 'object',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'type': 'EventAddress',
+                  'required': true,
+                },
+              },
+            },
+          },
         },
-        'label': 'What may the assistant do?',
-        'synonyms': 'allowlist, abilities, actions, permissions',
-        'tier': 'domain',
-        'type': '[AgentTool]',
+      },
+      'links': {
+        'type': '[AgentLink]',
+        'default': [
+          {
+            'label': 'Run history',
+            'href': '/assistant/runs',
+          },
+        ],
+        'label': 'Links above the conversation',
+        'description': 'Related pages, e.g. the assistant\'s run history.',
+        'tier': 'presentation',
+        'items': {
+          'type': 'object',
+          'properties': {
+            'label': {
+              'name': 'label',
+              'type': 'string',
+              'required': true,
+            },
+            'href': {
+              'name': 'href',
+              'type': 'string',
+              'required': true,
+            },
+          },
+        },
+      },
+      'maxSteps': {
+        'type': 'number',
+        'default': 8,
+        'label': 'Model round-trips per request',
+        'tier': 'policy',
       },
       'viewerRole': {
-        'default': '',
-        'description': 'The role the assistant page\'s sidebar items and their `roles` are checked against. Bind `@user.role` in an app whose identity carries a role; left empty, only items with no `roles` show.',
-        'label': 'Viewer role on the assistant page',
-        'tier': 'policy',
         'type': 'string',
+        'default': '',
+        'label': 'Viewer role on the assistant page',
+        'description': 'The role the assistant page\'s sidebar items and their `roles` are checked against. Bind `@user.role` in an app whose identity carries a role; left empty, only items with no `roles` show.',
+        'tier': 'policy',
+      },
+      'appName': {
+        'type': 'string',
+        'default': 'Assistant',
+        'label': 'App name in the assistant page\'s header',
+        'description': 'Pass the app\'s own name so the assistant page matches the rest of the app.',
+        'tier': 'presentation',
+      },
+      'instructions': {
+        'type': 'string',
+        'default': 'You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.',
+        'label': 'How should the assistant behave?',
+        'description': 'Standing instructions sent with every request.',
+        'synonyms': 'system prompt, persona, guidance',
+        'tier': 'domain',
       },
     },
     traits: [
       makeTraitRef({
+        'ref': ('Session.traits.AgentThread' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
+        'name': 'AssistantThread',
+        'linkedEntity': 'AgentMessage',
         'events': {
           'CONVERSE': 'REQUEST_CONTEXT',
         },
-        'linkedEntity': 'AgentMessage',
         'listens': [
           {
             'event': 'ASSISTANT_CHAT_OPENED',
+            'triggers': 'OPEN_CHAT',
             'source': {
               'kind': 'trait',
               'trait': 'AssistantChatKeeper',
             },
-            'triggers': 'OPEN_CHAT',
           },
           {
             'event': 'ASSISTANT_SEND_IN_CHAT',
+            'triggers': 'SEND_IN_CHAT',
             'source': {
               'kind': 'trait',
               'trait': 'AssistantChatKeeper',
             },
-            'triggers': 'SEND_IN_CHAT',
           },
           {
             'event': 'ASSISTANT_REPLY_IN_CHAT',
+            'triggers': 'REPLY_IN_CHAT',
             'source': {
               'kind': 'trait',
               'trait': 'AssistantChatKeeper',
             },
-            'triggers': 'REPLY_IN_CHAT',
           },
         ],
-        'name': 'AssistantThread',
-        'ref': ('Session.traits.AgentThread' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Session.traits.AgentChatKeeper' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
+        'name': 'AssistantChatKeeper',
         'linkedEntity': 'AgentChat',
         'listens': [
           {
             'event': 'ASSISTANT_SEND',
+            'triggers': 'SEND',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'SEND',
           },
           {
             'event': 'ASSISTANT_HISTORY_REQUESTED',
+            'triggers': 'LOAD_HISTORY',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'LOAD_HISTORY',
           },
           {
             'event': 'ASSISTANT_NEW_CHAT',
+            'triggers': 'NEW_CHAT',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'NEW_CHAT',
           },
           {
             'event': 'ASSISTANT_CHAT_SELECTED',
+            'triggers': 'SELECT_CHAT',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'SELECT_CHAT',
           },
           {
             'event': 'ASSISTANT_CHATS_REQUESTED',
+            'triggers': 'LIST_CHATS',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'LIST_CHATS',
           },
           {
             'event': 'ASSISTANT_REPLIED',
+            'triggers': 'REPLIED',
             'source': {
               'kind': 'trait',
               'trait': 'AssistantLoop',
             },
-            'triggers': 'REPLIED',
           },
         ],
-        'name': 'AssistantChatKeeper',
-        'ref': ('Session.traits.AgentChatKeeper' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Session.traits.AgentConversation' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
+        'name': 'AssistantConversation',
         'config': {
           'links': {
-            'default': '@config.links',
             'type': 'unknown',
+            'default': '@config.links',
           },
         },
-        'name': 'AssistantConversation',
-        'ref': ('Session.traits.AgentConversation' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Shell.traits.AppLayout' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
+        'name': 'AssistantLayout',
         'config': {
-          'appName': {
-            'default': '@config.appName',
+          'viewerEmail': {
             'type': 'unknown',
+            'default': '@user.email',
           },
           'contentClassName': {
-            'default': 'mx-auto flex w-full max-w-3xl flex-col h-[calc(100vh-9rem)] min-h-0',
             'type': 'unknown',
+            'default': 'mx-auto flex w-full max-w-3xl flex-col h-[calc(100vh-9rem)] min-h-0',
+          },
+          'appName': {
+            'type': 'unknown',
+            'default': '@config.appName',
           },
           'contentTrait': {
-            'default': '@trait.AssistantConversation',
             'type': 'unknown',
+            'default': '@trait.AssistantConversation',
           },
           'navItems': {
+            'type': 'unknown',
             'default': '@config.navItems',
-            'type': 'unknown',
-          },
-          'viewerEmail': {
-            'default': '@user.email',
-            'type': 'unknown',
-          },
-          'viewerName': {
-            'default': '@user.name',
-            'type': 'unknown',
           },
           'viewerRole': {
-            'default': '@config.viewerRole',
             'type': 'unknown',
+            'default': '@config.viewerRole',
+          },
+          'viewerName': {
+            'type': 'unknown',
+            'default': '@user.name',
           },
         },
-        'name': 'AssistantLayout',
-        'ref': ('Shell.traits.AppLayout' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Context.traits.AgentContextCompactor' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
+        'name': 'AssistantContext',
         'config': {
           'keepMessages': {
-            'default': '@config.keepMessages',
             'type': 'unknown',
+            'default': '@config.keepMessages',
           },
         },
         'listens': [
           {
             'event': 'REQUEST_CONTEXT',
+            'triggers': 'COMPACT',
             'source': {
               'kind': 'trait',
               'trait': 'AssistantThread',
             },
-            'triggers': 'COMPACT',
           },
           {
             'event': 'ASSISTANT_EPHEMERAL_SEND',
+            'triggers': 'COMPACT',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'COMPACT',
           },
         ],
-        'name': 'AssistantContext',
-        'ref': ('Context.traits.AgentContextCompactor' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Memory.traits.AgentMemoryRecall' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
+        'name': 'AssistantMemory',
+        'linkedEntity': 'AgentMemory',
         'config': {
           'recallLimit': {
-            'default': '@config.recallLimit',
             'type': 'unknown',
+            'default': '@config.recallLimit',
           },
         },
-        'linkedEntity': 'AgentMemory',
         'listens': [
           {
             'event': 'COMPACTED',
+            'triggers': 'RECALL',
             'source': {
               'kind': 'trait',
               'trait': 'AssistantContext',
             },
-            'triggers': 'RECALL',
           },
           {
             'event': 'ASSISTANT_REPLIED',
+            'triggers': 'REMEMBER',
             'source': {
               'kind': 'trait',
               'trait': 'AssistantLoop',
             },
-            'triggers': 'REMEMBER',
           },
           {
             'event': 'ASSISTANT_MEMORIES_REQUESTED',
+            'triggers': 'LIST',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'LIST',
           },
         ],
-        'name': 'AssistantMemory',
-        'ref': ('Memory.traits.AgentMemoryRecall' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Loop.traits.AgentToolLoop' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
+        'name': 'AssistantLoop',
         'config': {
-          'instructions': {
-            'default': '@config.instructions',
-            'type': 'unknown',
-          },
           'maxSteps': {
-            'default': '@config.maxSteps',
             'type': 'unknown',
+            'default': '@config.maxSteps',
+          },
+          'instructions': {
+            'type': 'unknown',
+            'default': '@config.instructions',
           },
           'tools': {
-            'default': '@config.tools',
             'type': 'unknown',
+            'default': '@config.tools',
           },
         },
         'listens': [
           {
             'event': 'RECALLED',
+            'triggers': 'CONVERSE',
             'source': {
               'kind': 'trait',
               'trait': 'AssistantMemory',
             },
-            'triggers': 'CONVERSE',
           },
         ],
-        'name': 'AssistantLoop',
-        'ref': ('Loop.traits.AgentToolLoop' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Trace.traits.AgentTraceRecorder' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
+        'name': 'AssistantTrace',
         'linkedEntity': 'AgentRun',
         'listens': [
           {
             'event': 'ASSISTANT_REPLIED',
+            'triggers': 'REPLIED',
             'source': {
               'kind': 'trait',
               'trait': 'AssistantLoop',
             },
-            'triggers': 'REPLIED',
           },
           {
             'event': 'ASSISTANT_REPLY_FAILED',
+            'triggers': 'REPLY_FAILED',
             'source': {
               'kind': 'trait',
               'trait': 'AssistantLoop',
             },
-            'triggers': 'REPLY_FAILED',
           },
         ],
-        'name': 'AssistantTrace',
-        'ref': ('Trace.traits.AgentTraceRecorder' satisfies _StdAgentAssistantAgentAssistantOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -761,8 +761,8 @@ export function stdAgentAssistantAgentRecordsOrbital(params: StdAgentAssistantAg
     name: 'AgentRecordsOrbital',
     uses: [
       {
-        'as': 'Trace',
         'from': 'std/behaviors/std-agent-trace',
+        'as': 'Trace',
       },
     ],
     expects: [
@@ -780,8 +780,8 @@ export function stdAgentAssistantAgentRecordsOrbital(params: StdAgentAssistantAg
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -792,90 +792,90 @@ export function stdAgentAssistantAgentRecordsOrbital(params: StdAgentAssistantAg
     } as Entity,
     auxiliaryEntities: [
       {
-        'collection': 'agentMessages',
-        'fields': [
-          {
-            'name': 'id',
-            'required': true,
-            'type': 'string',
-          },
-        ],
         'name': 'AgentMessage',
+        'collection': 'agentMessages',
         'persistence': 'persistent',
-      },
-      {
-        'collection': 'agentMemories',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ],
-        'name': 'AgentMemory',
-        'persistence': 'persistent',
       },
       {
-        'collection': 'agentChats',
+        'name': 'AgentMemory',
+        'collection': 'agentMemories',
+        'persistence': 'persistent',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
+          },
+        ],
+      },
+      {
+        'name': 'AgentChat',
+        'collection': 'agentChats',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
           },
           {
             'name': 'ownerId',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'default': '',
             'name': 'title',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 0,
             'name': 'startedAt',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'lastActiveAt',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
-            'intrinsic': true,
             'name': 'pendingMessage',
             'type': 'string',
-          },
-          {
             'default': '',
             'intrinsic': true,
+          },
+          {
             'name': 'pendingReply',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
           },
         ],
-        'name': 'AgentChat',
-        'persistence': 'persistent',
       },
     ] as EntityRef[],
     traits: [
       makeTraitRef({
+        'ref': ('Trace.traits.AgentRunBrowse' satisfies _StdAgentAssistantAgentRecordsOrbitalUsesRef),
+        'name': 'AgentRunHistory',
         'linkedEntity': 'AgentRun',
         'listens': [
           {
             'event': 'RUN_RECORDED',
+            'triggers': 'RUN_RECORDED',
             'source': {
               'kind': 'orbital',
               'orbital': 'AgentAssistantOrbital',
               'trait': 'AssistantTrace',
             },
-            'triggers': 'RUN_RECORDED',
           },
         ],
-        'name': 'AgentRunHistory',
-        'ref': ('Trace.traits.AgentRunBrowse' satisfies _StdAgentAssistantAgentRecordsOrbitalUsesRef),
       }),
     ],
     pages: [

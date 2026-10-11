@@ -39,15 +39,15 @@ export type StdCrewBoard2dListenKey = 'MOVE';
 export interface StdCrewBoard2dConfig {
   /** Default: `7` */
   gridHeight?: unknown;
-  /** Default: `7` */
-  gridWidth?: unknown;
-  /** Default: `999999` */
-  moveBudget?: unknown;
   /** Default: `true` */
   running?: unknown;
-  /** Default: `[{"id":"t-0-0","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"x":0,"y":0,"z":0},{"id":"t-0-1","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"x":0,"y":1,"z":0},{"id":"t-1-0","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"x":1,"y":0,"z":0},{"id":"t-1-1","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"x":1,"y":1,"z":0}]` */
+  /** Default: `7` */
+  gridWidth?: unknown;
+  /** Default: `[{"x":0,"z":0,"terrain":"grass","terrainSprite":{"style":"vector","aspect":"1:1","category":"terrain","name":"grass","role":"tile","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","animations":["static"],"thumbnailUrl":"","dimension":"2d"},"id":"t-0-0","passable":true,"y":0},{"terrainSprite":{"category":"terrain","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","dimension":"2d","thumbnailUrl":"","style":"vector","aspect":"1:1","name":"grass","role":"tile","animations":["static"]},"x":0,"passable":true,"id":"t-0-1","terrain":"grass","y":1,"z":0},{"z":0,"y":0,"terrainSprite":{"category":"terrain","role":"tile","style":"vector","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","dimension":"2d","thumbnailUrl":"","aspect":"1:1","animations":["static"],"name":"grass"},"id":"t-1-0","x":1,"terrain":"grass","passable":true},{"x":1,"y":1,"passable":true,"terrain":"grass","z":0,"terrainSprite":{"animations":["static"],"url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","style":"vector","name":"grass","dimension":"2d","aspect":"1:1","role":"tile","thumbnailUrl":"","category":"terrain"},"id":"t-1-1"}]` */
   tiles?: unknown;
-  /** Default: `[{"health":10,"id":"c1","maxHealth":10,"modelUrl":{"animations":["idle"],"aspect":"1:1","category":"unit","dimension":"2d","name":"crew-unit","role":"player","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png"},"name":"Crew","position":{"x":1,"y":1},"team":"player","unitType":"crew","x":1,"y":1,"z":0}]` */
+  /** Default: `999999` */
+  moveBudget?: unknown;
+  /** Default: `[{"health":10,"z":0,"position":{"y":1,"x":1},"id":"c1","maxHealth":10,"team":"player","modelUrl":{"category":"unit","animations":["idle"],"dimension":"2d","aspect":"1:1","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","thumbnailUrl":"","name":"crew-unit","style":"vector","role":"player"},"name":"Crew","y":1,"unitType":"crew","x":1}]` */
   units?: unknown;
 }
 
@@ -102,16 +102,16 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
     name: 'CrewBoard2DOrbital',
     uses: [
       {
-        'as': 'Nav',
         'from': 'std/behaviors/std-hero-nav',
+        'as': 'Nav',
       },
       {
-        'as': 'Particles',
         'from': 'std/behaviors/std-fx-particles',
+        'as': 'Particles',
       },
       {
-        'as': 'AnimTick',
         'from': 'std/behaviors/std-anim-tick',
+        'as': 'AnimTick',
       },
     ],
     entity: {
@@ -122,529 +122,529 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'units',
+            'type': 'array',
             'default': [
               {
+                'position': {
+                  'y': 1,
+                  'x': 1,
+                },
                 'health': 10,
-                'id': 'c1',
                 'maxHealth': 10,
+                'id': 'c1',
+                'x': 1,
+                'unitType': 'crew',
+                'team': 'player',
+                'name': 'Crew',
+                'z': 0,
                 'modelUrl': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'style': 'vector',
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'role': 'player',
+                  'category': 'unit',
+                  'aspect': '1:1',
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
                   'name': 'crew-unit',
-                  'role': 'player',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
                 },
-                'name': 'Crew',
-                'position': {
-                  'x': 1,
-                  'y': 1,
-                },
-                'team': 'player',
-                'unitType': 'crew',
-                'x': 1,
                 'y': 1,
-                'z': 0,
               },
             ],
             'items': {
+              'type': 'object',
               'properties': {
-                'health': {
-                  'name': 'health',
-                  'required': false,
+                'maxHealth': {
+                  'name': 'maxHealth',
                   'type': 'number',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
                 },
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
-                'maxHealth': {
-                  'name': 'maxHealth',
-                  'required': false,
+                'health': {
+                  'name': 'health',
                   'type': 'number',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
                   'required': false,
-                  'type': 'object',
                 },
                 'name': {
                   'name': 'name',
-                  'required': false,
                   'type': 'string',
-                },
-                'position': {
-                  'name': 'position',
-                  'properties': {
-                    'x': {
-                      'name': 'x',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'y': {
-                      'name': 'y',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
                   'required': false,
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
                   'type': 'object',
-                },
-                'team': {
-                  'name': 'team',
                   'required': false,
-                  'type': 'string',
-                },
-                'unitType': {
-                  'name': 'unitType',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': false,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': false,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'units',
-            'type': 'array',
-          },
-          {
-            'default': [
-              {
-                'id': 't-0-0',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 0,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-0-1',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 0,
-                'y': 1,
-                'z': 0,
-              },
-              {
-                'id': 't-1-0',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 1,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-1-1',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 1,
-                'y': 1,
-                'z': 0,
-              },
-            ],
-            'items': {
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'passable': {
-                  'name': 'passable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'required': false,
-                  'type': 'string',
-                },
-                'terrainSprite': {
-                  'name': 'terrainSprite',
                   'properties': {
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
                     'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
                       'items': {
                         'type': 'string',
                       },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
                     },
                     'style': {
                       'name': 'style',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                     },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
+                    'role': {
+                      'name': 'role',
                       'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
                     },
                     'url': {
                       'name': 'url',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
                     },
                   },
-                  'required': false,
+                },
+                'position': {
+                  'name': 'position',
                   'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
                 },
                 'x': {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': false,
+                },
+                'team': {
+                  'name': 'team',
+                  'type': 'string',
+                  'required': false,
+                },
+                'unitType': {
+                  'name': 'unitType',
+                  'type': 'string',
+                  'required': false,
                 },
                 'y': {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
                   'required': false,
-                  'type': 'number',
                 },
               },
-              'type': 'object',
             },
+          },
+          {
             'name': 'tiles',
             'type': 'array',
-          },
-          {
-            'default': 0,
-            'name': 'movesLeft',
-            'type': 'number',
-          },
-          {
-            'default': [],
+            'default': [
+              {
+                'terrain': 'grass',
+                'passable': true,
+                'y': 0,
+                'id': 't-0-0',
+                'x': 0,
+                'terrainSprite': {
+                  'role': 'tile',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'thumbnailUrl': '',
+                  'name': 'grass',
+                  'style': 'vector',
+                  'category': 'terrain',
+                  'animations': [
+                    'static',
+                  ],
+                  'dimension': '2d',
+                  'aspect': '1:1',
+                },
+                'z': 0,
+              },
+              {
+                'y': 1,
+                'z': 0,
+                'terrain': 'grass',
+                'passable': true,
+                'terrainSprite': {
+                  'style': 'vector',
+                  'name': 'grass',
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'aspect': '1:1',
+                  'role': 'tile',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'animations': [
+                    'static',
+                  ],
+                },
+                'x': 0,
+                'id': 't-0-1',
+              },
+              {
+                'terrainSprite': {
+                  'style': 'vector',
+                  'dimension': '2d',
+                  'aspect': '1:1',
+                  'name': 'grass',
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'thumbnailUrl': '',
+                  'role': 'tile',
+                  'animations': [
+                    'static',
+                  ],
+                },
+                'terrain': 'grass',
+                'y': 0,
+                'id': 't-1-0',
+                'z': 0,
+                'passable': true,
+                'x': 1,
+              },
+              {
+                'y': 1,
+                'passable': true,
+                'id': 't-1-1',
+                'z': 0,
+                'terrain': 'grass',
+                'terrainSprite': {
+                  'dimension': '2d',
+                  'name': 'grass',
+                  'category': 'terrain',
+                  'aspect': '1:1',
+                  'thumbnailUrl': '',
+                  'style': 'vector',
+                  'role': 'tile',
+                  'animations': [
+                    'static',
+                  ],
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                },
+                'x': 1,
+              },
+            ],
             'items': {
+              'type': 'object',
               'properties': {
-                'bornAt': {
-                  'name': 'bornAt',
-                  'required': false,
+                'y': {
+                  'name': 'y',
                   'type': 'number',
+                  'required': true,
                 },
-                'color': {
-                  'name': 'color',
+                'terrainSprite': {
+                  'name': 'terrainSprite',
+                  'type': 'object',
                   'required': false,
-                  'type': 'string',
+                  'properties': {
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
                 },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'terrain': {
+                  'name': 'terrain',
                   'type': 'string',
+                  'required': false,
+                },
+                'passable': {
+                  'name': 'passable',
+                  'type': 'boolean',
+                  'required': false,
                 },
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          {
+            'name': 'movesLeft',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'fx',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
                 },
                 'maxTtl': {
                   'name': 'maxTtl',
-                  'required': false,
                   'type': 'number',
-                },
-                'message': {
-                  'name': 'message',
                   'required': false,
+                },
+                'color': {
+                  'name': 'color',
                   'type': 'string',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
                   'required': false,
-                  'type': 'number',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'ttl': {
-                  'name': 'ttl',
-                  'required': true,
-                  'type': 'number',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
                 },
                 'y': {
                   'name': 'y',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
+                },
+                'message': {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': false,
                 },
                 'z': {
                   'name': 'z',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
                 },
-              },
-              'type': 'object',
-            },
-            'name': 'fx',
-            'type': 'array',
-          },
-          {
-            'default': '',
-            'name': 'selectedUnitId',
-            'type': 'string',
-          },
-          {
-            'default': [],
-            'items': {
-              'properties': {
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'ttl': {
+                  'name': 'ttl',
+                  'type': 'number',
+                  'required': true,
+                },
                 'x': {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
-                'z': {
-                  'name': 'z',
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
                   'required': true,
+                },
+                'vy': {
+                  'name': 'vy',
                   'type': 'number',
+                  'required': false,
+                },
+                'bornAt': {
+                  'name': 'bornAt',
+                  'type': 'number',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'vz': {
+                  'name': 'vz',
+                  'type': 'number',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
+          },
+          {
+            'name': 'selectedUnitId',
+            'type': 'string',
+            'default': '',
+          },
+          {
             'name': 'validMoves',
             'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
           },
           {
-            'default': 'idle',
             'name': 'phase',
             'type': 'string',
+            'default': 'idle',
           },
           {
-            'default': 100,
             'name': 'oxygen',
             'type': 'number',
+            'default': 100,
           },
           {
-            'default': 3,
             'name': 'crewCount',
             'type': 'number',
+            'default': 3,
           },
           {
-            'default': 0,
             'name': 'animCounter',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
             'name': 'frameName',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'animUnitId',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 'idle',
             'name': 'animState',
             'type': 'string',
+            'default': 'idle',
           },
           {
-            'default': 0,
             'name': 'animTicksLeft',
             'type': 'number',
+            'default': 0,
           },
         ];
         const extras = params.fields ?? [];
@@ -655,1050 +655,184 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Nav.traits.HeroNav' satisfies _StdCrewBoard2dCrewBoard2DOrbitalUsesRef),
+        'name': 'CrewAuthority',
+        'linkedEntity': 'GameState',
         'config': {
           'gridHeight': {
+            'type': 'unknown',
             'default': 7,
-            'type': 'unknown',
-          },
-          'gridWidth': {
-            'default': 7,
-            'type': 'unknown',
-          },
-          'moveBudget': {
-            'default': 999999,
-            'type': 'unknown',
           },
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
+          },
+          'gridWidth': {
+            'type': 'unknown',
+            'default': 7,
           },
           'tiles': {
+            'type': 'unknown',
             'default': [
               {
+                'x': 0,
+                'z': 0,
+                'terrain': 'grass',
+                'terrainSprite': {
+                  'style': 'vector',
+                  'aspect': '1:1',
+                  'category': 'terrain',
+                  'name': 'grass',
+                  'role': 'tile',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'animations': [
+                    'static',
+                  ],
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                },
                 'id': 't-0-0',
                 'passable': true,
-                'terrain': 'grass',
+                'y': 0,
+              },
+              {
                 'terrainSprite': {
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'style': 'vector',
+                  'aspect': '1:1',
+                  'name': 'grass',
+                  'role': 'tile',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
                 'x': 0,
-                'y': 0,
-                'z': 0,
-              },
-              {
+                'passable': true,
                 'id': 't-0-1',
-                'passable': true,
                 'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 0,
                 'y': 1,
                 'z': 0,
               },
               {
-                'id': 't-1-0',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 1,
+                'z': 0,
                 'y': 0,
-                'z': 0,
+                'terrainSprite': {
+                  'category': 'terrain',
+                  'role': 'tile',
+                  'style': 'vector',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'aspect': '1:1',
+                  'animations': [
+                    'static',
+                  ],
+                  'name': 'grass',
+                },
+                'id': 't-1-0',
+                'x': 1,
+                'terrain': 'grass',
+                'passable': true,
               },
               {
-                'id': 't-1-1',
+                'x': 1,
+                'y': 1,
                 'passable': true,
                 'terrain': 'grass',
+                'z': 0,
                 'terrainSprite': {
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'style': 'vector',
+                  'name': 'grass',
+                  'dimension': '2d',
+                  'aspect': '1:1',
+                  'role': 'tile',
+                  'thumbnailUrl': '',
+                  'category': 'terrain',
                 },
-                'x': 1,
-                'y': 1,
-                'z': 0,
+                'id': 't-1-1',
               },
             ],
+          },
+          'moveBudget': {
             'type': 'unknown',
+            'default': 999999,
           },
           'units': {
+            'type': 'unknown',
             'default': [
               {
                 'health': 10,
+                'z': 0,
+                'position': {
+                  'y': 1,
+                  'x': 1,
+                },
                 'id': 'c1',
                 'maxHealth': 10,
+                'team': 'player',
                 'modelUrl': {
+                  'category': 'unit',
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
-                  'category': 'unit',
                   'dimension': '2d',
-                  'name': 'crew-unit',
-                  'role': 'player',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
+                  'aspect': '1:1',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'thumbnailUrl': '',
+                  'name': 'crew-unit',
+                  'style': 'vector',
+                  'role': 'player',
                 },
                 'name': 'Crew',
-                'position': {
-                  'x': 1,
-                  'y': 1,
-                },
-                'team': 'player',
+                'y': 1,
                 'unitType': 'crew',
                 'x': 1,
-                'y': 1,
-                'z': 0,
               },
             ],
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'MOVE',
+            'triggers': 'MOVE',
             'source': {
               'kind': 'trait',
               'trait': 'CrewIntent',
             },
-            'triggers': 'MOVE',
           },
         ],
-        'name': 'CrewAuthority',
-        'ref': ('Nav.traits.HeroNav' satisfies _StdCrewBoard2dCrewBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Particles.traits.FxParticles' satisfies _StdCrewBoard2dCrewBoard2DOrbitalUsesRef),
+        'name': 'FxDecay',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
-        'name': 'FxDecay',
-        'ref': ('Particles.traits.FxParticles' satisfies _StdCrewBoard2dCrewBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('AnimTick.traits.AnimTick' satisfies _StdCrewBoard2dCrewBoard2DOrbitalUsesRef),
+        'name': 'AnimClock',
+        'linkedEntity': 'GameState',
         'config': {
           'frames': {
-            'default': [],
             'type': 'unknown',
+            'default': [],
           },
         },
-        'linkedEntity': 'GameState',
-        'name': 'AnimClock',
-        'ref': ('AnimTick.traits.AnimTick' satisfies _StdCrewBoard2dCrewBoard2DOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'assetManifest': {
-            'default': {
-              'effects': {},
-              'features': {},
-              'terrains': {},
-              'units': {},
-            },
-            'description': 'Terrain/unit/feature/effect sprite manifest.',
-            'label': 'Asset Manifest',
-            'properties': {
-              'effects': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'effects',
-                'required': false,
-                'type': 'object',
-              },
-              'features': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'features',
-                'required': false,
-                'type': 'object',
-              },
-              'terrains': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'terrains',
-                'required': false,
-                'type': 'object',
-              },
-              'units': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'units',
-                'required': false,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'AssetManifest',
-          },
-          'backgroundAsset': {
-            'default': {},
-            'description': 'Game-shell background panel sprite (theme chrome).',
-            'label': 'Background Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'cancelIcon': {
-            'default': {},
-            'description': 'Icon asset for the Cancel button.',
-            'label': 'Cancel Icon',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'crewCount': {
-            'default': 3,
-            'description': 'Initial HUD crew-count display value. Cosmetic only: the source board never changes it after INIT.',
-            'label': 'Crew Count',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'crewIcon': {
-            'default': {},
-            'description': 'Icon asset for the Crew HUD stat.',
-            'label': 'Crew Icon',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'features': {
-            'default': [],
-            'description': 'Decorative environment features (e.g. consoles) drawn on the board.',
-            'items': {
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Features',
-            'tier': 'presentation',
-            'type': '[Feature]',
-          },
-          'fxPresets': {
-            'default': [],
-            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type; its composed mechanics currently emit none, so the channel is forward-compat only.',
-            'items': {
-              'properties': {
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'color2': {
-                  'name': 'color2',
-                  'required': false,
-                  'type': 'string',
-                },
-                'count': {
-                  'name': 'count',
-                  'required': false,
-                  'type': 'number',
-                },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'glow': {
-                  'name': 'glow',
-                  'required': false,
-                  'type': 'number',
-                },
-                'gravity': {
-                  'name': 'gravity',
-                  'required': false,
-                  'type': 'number',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'shape': {
-                  'name': 'shape',
-                  'required': false,
-                  'type': 'string',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Fx Presets',
-            'tier': 'presentation',
-            'type': '[FxPreset]',
-          },
-          'gridHeight': {
-            'default': 7,
-            'description': 'Grid row count (matches CrewAuthority.gridHeight).',
-            'label': 'Grid Height',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'gridWidth': {
-            'default': 7,
-            'description': 'Grid column count (matches CrewAuthority.gridWidth).',
-            'label': 'Grid Width',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'hudBackgroundAsset': {
-            'default': {},
-            'description': 'HUD panel background sprite (theme chrome).',
-            'label': 'HUD Background Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'movementRange': {
-            'default': 2,
-            'description': 'Max manhattan distance a selected crew unit may move.',
-            'label': 'Movement Range',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'oxygen': {
-            'default': 100,
-            'description': 'Initial HUD oxygen display value. Cosmetic only: the source board never depletes it, so no atom writes it after INIT.',
-            'label': 'Oxygen',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'oxygenIcon': {
-            'default': {},
-            'description': 'Icon asset for the Oxygen HUD stat.',
-            'label': 'Oxygen Icon',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'projection': {
-            'default': 'flat',
-            'description': 'canvas-2d projection: flat or isometric.',
-            'label': 'Projection',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'showMinimap': {
-            'default': false,
-            'description': 'Whether the canvas draws a minimap.',
-            'label': 'Show Minimap',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-        },
+        'name': 'CrewIntent',
         'effectRow': [
           {
             'kind': 'emit',
@@ -1765,158 +899,160 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
             'site': 'tick',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'GameState',
         'emits': [
           {
-            'description': 'Crew move intent applied by the hero-nav authority',
             'event': 'MOVE',
+            'description': 'Crew move intent applied by the hero-nav authority',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Emits UI:{tileClickEvent} with { x, y } on tile click',
             'event': 'TILE_CLICK',
+            'description': 'Emits UI:{tileClickEvent} with { x, y } on tile click',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
             'event': 'UNIT_CLICK',
+            'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Emits UI:{cancelEvent} with {} on cancel',
             'event': 'CANCEL',
+            'description': 'Emits UI:{cancelEvent} with {} on cancel',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'GameState',
-        'name': 'CrewIntent',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'playing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
               'key': 'UNIT_CLICK',
               'name': 'Unit Click',
+              'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Emits UI:{tileClickEvent} with { x, y } on tile click',
               'key': 'TILE_CLICK',
               'name': 'Tile Click',
+              'description': 'Emits UI:{tileClickEvent} with { x, y } on tile click',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Crew move intent applied by the hero-nav authority',
               'key': 'MOVE',
               'name': 'Move',
+              'description': 'Crew move intent applied by the hero-nav authority',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Emits UI:{cancelEvent} with {} on cancel',
               'key': 'CANCEL',
               'name': 'Cancel',
+              'description': 'Emits UI:{cancelEvent} with {} on cancel',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'playing',
             },
           ],
           'transitions': [
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1947,46 +1083,10 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                   'render-ui',
                   'main',
                   {
-                    'backgroundAsset': '@config.backgroundAsset',
+                    'hudBackgroundAsset': '@config.hudBackgroundAsset',
                     'children': [
                       {
                         'camera': {
-                          'pos': {
-                            'x': [
-                              '/',
-                              [
-                                '+',
-                                [
-                                  'array/min',
-                                  '@entity.tiles',
-                                  'x',
-                                ],
-                                [
-                                  'array/max',
-                                  '@entity.tiles',
-                                  'x',
-                                ],
-                              ],
-                              2,
-                            ],
-                            'y': [
-                              '/',
-                              [
-                                '+',
-                                [
-                                  'array/min',
-                                  '@entity.tiles',
-                                  'y',
-                                ],
-                                [
-                                  'array/max',
-                                  '@entity.tiles',
-                                  'y',
-                                ],
-                              ],
-                              2,
-                            ],
-                          },
                           'zoom': [
                             'math/min',
                             1,
@@ -2012,6 +1112,42 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                               ],
                             ],
                           ],
+                          'pos': {
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@entity.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@entity.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@entity.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@entity.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
                         },
                         'children': [
                           {
@@ -2022,29 +1158,30 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 'fn',
                                 't',
                                 {
-                                  'fill': '#5c94fc',
                                   'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@t',
-                                      'x',
-                                    ],
                                     'y': [
                                       'object/get',
                                       '@t',
                                       'y',
                                     ],
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
                                   },
-                                  'shape': 'cell',
-                                  'stroke': 'rgba(255,255,255,0.35)',
+                                  'fill': '#5c94fc',
                                   'strokeWidth': 1,
+                                  'stroke': 'rgba(255,255,255,0.35)',
                                   'type': 'draw-shape',
+                                  'shape': 'cell',
                                 },
                               ],
                             ],
                             'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               'array/map',
                               '@entity.tiles',
@@ -2052,7 +1189,8 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 'fn',
                                 't',
                                 {
-                                  'anchor': 'center',
+                                  'height': 1,
+                                  'width': 1,
                                   'asset': [
                                     'if',
                                     [
@@ -2083,25 +1221,23 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                       ],
                                     ],
                                   ],
-                                  'height': 1,
+                                  'anchor': 'center',
                                   'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@t',
-                                      'x',
-                                    ],
                                     'y': [
                                       'object/get',
                                       '@t',
                                       'y',
                                     ],
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
                                   },
                                   'type': 'draw-sprite',
-                                  'width': 1,
                                 },
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                           {
                             'items': [
@@ -2111,13 +1247,15 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 'fn',
                                 'f',
                                 {
+                                  'width': 1,
                                   'anchor': 'ground',
+                                  'type': 'draw-sprite',
+                                  'height': 1,
                                   'asset': [
                                     'object/get',
                                     '@f',
                                     'assetUrl',
                                   ],
-                                  'height': 1,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2130,14 +1268,13 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                       'y',
                                     ],
                                   },
-                                  'type': 'draw-sprite',
-                                  'width': 1,
                                 },
                               ],
                             ],
                             'type': 'draw-sprite-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               '@entity.validMoves',
@@ -2145,25 +1282,24 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 'fn',
                                 'm',
                                 {
-                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
                                   'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@m',
-                                      'x',
-                                    ],
                                     'y': [
                                       'object/get',
                                       '@m',
                                       'z',
                                     ],
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
                                   },
-                                  'shape': 'cell',
-                                  'type': 'draw-shape',
+                                  'fill': 'rgba(74,222,128,0.4)',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
                             'items': [
@@ -2189,23 +1325,24 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 'fn',
                                 'u',
                                 {
+                                  'shape': 'ellipse',
+                                  'type': 'draw-shape',
+                                  'radiusY': 0.2,
+                                  'strokeWidth': 3,
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'radiusX': 0.5,
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
-                                  'radiusX': 0.5,
-                                  'radiusY': 0.2,
-                                  'shape': 'ellipse',
-                                  'stroke': 'rgba(0,200,255,0.8)',
-                                  'strokeWidth': 3,
-                                  'type': 'draw-shape',
                                 },
                               ],
                             ],
                             'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               'array/filter',
                               [
@@ -2277,7 +1414,20 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                       ],
                                     ],
                                     {
+                                      'height': 0.5,
+                                      'type': 'draw-sprite',
                                       'anchor': 'ground',
+                                      'width': 0.5,
+                                      'id': [
+                                        'object/get',
+                                        '@u',
+                                        'id',
+                                      ],
+                                      'position': [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
                                       'asset': [
                                         'if',
                                         [
@@ -2359,19 +1509,6 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                         ],
                                         '@unitAsset',
                                       ],
-                                      'height': 0.5,
-                                      'id': [
-                                        'object/get',
-                                        '@u',
-                                        'id',
-                                      ],
-                                      'position': [
-                                        'object/get',
-                                        '@u',
-                                        'position',
-                                      ],
-                                      'type': 'draw-sprite',
-                                      'width': 0.5,
                                     },
                                   ],
                                 ],
@@ -2390,9 +1527,9 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 ],
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               '@entity.units',
@@ -2400,25 +1537,25 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 'fn',
                                 'u',
                                 {
-                                  'anchor': 'ground',
-                                  'fill': 'rgba(0,0,0,0.6)',
-                                  'height': 0.12,
                                   'offsetX': -0.25,
-                                  'offsetY': -0.6,
+                                  'type': 'draw-shape',
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
-                                  'shape': 'rect',
-                                  'type': 'draw-shape',
                                   'width': 0.5,
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'anchor': 'ground',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'shape': 'rect',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               '@entity.units',
@@ -2426,18 +1563,13 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 'fn',
                                 'u',
                                 {
-                                  'anchor': 'ground',
-                                  'fill': '#22c55e',
-                                  'height': 0.12,
-                                  'offsetX': -0.25,
                                   'offsetY': -0.6,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'shape': 'rect',
+                                  'anchor': 'ground',
+                                  'height': 0.12,
+                                  'fill': '#22c55e',
                                   'type': 'draw-shape',
+                                  'offsetX': -0.25,
+                                  'shape': 'rect',
                                   'width': [
                                     '*',
                                     0.5,
@@ -2455,10 +1587,14 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                       ],
                                     ],
                                   ],
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
                             'items': [
@@ -2468,36 +1604,37 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 'fn',
                                 'u',
                                 {
-                                  'color': '#ffffff',
                                   'offsetY': -0.85,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
+                                  'type': 'draw-text',
                                   'text': [
                                     'object/get',
                                     '@u',
                                     'name',
                                   ],
-                                  'type': 'draw-text',
+                                  'color': '#ffffff',
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
                                 },
                               ],
                             ],
                             'type': 'draw-text-layer',
                           },
                           {
-                            'items': '@entity.fx',
-                            'presets': '@config.fxPresets',
                             'sprites': [
                               'object/get',
                               '@config.assetManifest',
                               'effects',
                             ],
-                            'tickMs': 500,
+                            'presets': '@config.fxPresets',
+                            'items': '@entity.fx',
                             'type': 'draw-fx-layer',
+                            'tickMs': 500,
                           },
                           {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               'array/map',
                               [
@@ -2645,38 +1782,39 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 'fn',
                                 'warmUrl',
                                 {
+                                  'width': 0.5,
                                   'asset': {
                                     'url': '@warmUrl',
                                   },
                                   'height': 0.5,
-                                  'opacity': 0,
                                   'position': {
-                                    'x': 0,
                                     'y': 0,
+                                    'x': 0,
                                   },
+                                  'opacity': 0,
                                   'type': 'draw-sprite',
-                                  'width': 0.5,
                                 },
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                         ],
                         'projection': '@config.projection',
-                        'showMinimap': '@config.showMinimap',
                         'tileClickEvent': 'TILE_CLICK',
                         'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
+                        'showMinimap': '@config.showMinimap',
                       },
                     ],
+                    'backgroundAsset': '@config.backgroundAsset',
                     'hud': {
+                      'justify': 'between',
                       'children': [
                         {
                           'stats': [
                             {
-                              'iconUrl': '@config.crewIcon',
                               'label': 'Crew',
                               'value': '@entity.crewCount',
+                              'iconUrl': '@config.crewIcon',
                             },
                             {
                               'iconUrl': '@config.oxygenIcon',
@@ -2687,16 +1825,14 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                           'type': 'game-hud',
                         },
                         {
-                          'align': 'center',
+                          'gap': 'xs',
                           'children': [
                             {
                               'content': 'Status',
-                              'type': 'typography',
                               'variant': 'caption',
+                              'type': 'typography',
                             },
                             {
-                              'label': '@entity.phase',
-                              'type': 'badge',
                               'variant': [
                                 'if',
                                 [
@@ -2707,59 +1843,40 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                 'info',
                                 'neutral',
                               ],
+                              'label': '@entity.phase',
+                              'type': 'badge',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'xs',
                           'type': 'stack',
+                          'direction': 'horizontal',
+                          'align': 'center',
                         },
                         {
-                          'label': 'O2',
                           'type': 'timer-display',
                           'value': '@entity.oxygen',
+                          'label': 'O2',
                         },
                         {
                           'action': 'CANCEL',
                           'iconAsset': '@config.cancelIcon',
-                          'label': 'Cancel',
-                          'type': 'button',
                           'variant': 'secondary',
+                          'type': 'button',
+                          'label': 'Cancel',
                         },
                       ],
-                      'direction': 'horizontal',
                       'gap': 'md',
-                      'justify': 'between',
                       'type': 'stack',
+                      'direction': 'horizontal',
                     },
-                    'hudBackgroundAsset': '@config.hudBackgroundAsset',
                     'type': 'game-shell',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'playing',
-              'to': 'playing',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.phase',
-                  'idle',
-                ],
-                [
-                  'set',
-                  '@entity.selectedUnitId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-              ],
-              'event': 'UNIT_CLICK',
               'from': 'playing',
+              'to': 'playing',
+              'event': 'UNIT_CLICK',
               'guard': [
                 'and',
                 [
@@ -2789,9 +1906,49 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                   'player',
                 ],
               ],
-              'to': 'playing',
+              'effects': [
+                [
+                  'set',
+                  '@entity.phase',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+              ],
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'UNIT_CLICK',
+              'guard': [
+                '==',
+                [
+                  'object/get',
+                  [
+                    'array/find',
+                    '@entity.units',
+                    [
+                      'fn',
+                      'u',
+                      [
+                        '==',
+                        '@u.id',
+                        '@payload.unitId',
+                      ],
+                    ],
+                  ],
+                  'team',
+                ],
+                'player',
+              ],
               'effects': [
                 [
                   'set',
@@ -2863,15 +2020,15 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                     'position',
                                   ],
                                   {
-                                    'x': [
-                                      'object/get',
-                                      '@t',
-                                      'x',
-                                    ],
                                     'y': [
                                       'object/get',
                                       '@t',
                                       'y',
+                                    ],
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
                                     ],
                                   },
                                 ],
@@ -2938,15 +2095,15 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                       'fn',
                       't',
                       {
-                        'x': [
-                          'object/get',
-                          '@t',
-                          'x',
-                        ],
                         'z': [
                           'object/get',
                           '@t',
                           'y',
+                        ],
+                        'x': [
+                          'object/get',
+                          '@t',
+                          'x',
                         ],
                       },
                     ],
@@ -2958,60 +2115,11 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                   'movement',
                 ],
               ],
-              'event': 'UNIT_CLICK',
-              'from': 'playing',
-              'guard': [
-                '==',
-                [
-                  'object/get',
-                  [
-                    'array/find',
-                    '@entity.units',
-                    [
-                      'fn',
-                      'u',
-                      [
-                        '==',
-                        '@u.id',
-                        '@payload.unitId',
-                      ],
-                    ],
-                  ],
-                  'team',
-                ],
-                'player',
-              ],
-              'to': 'playing',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'MOVE',
-                  {
-                    'unitId': '@entity.selectedUnitId',
-                    'x': '@payload.x',
-                    'y': '@payload.y',
-                  },
-                ],
-                [
-                  'set',
-                  '@entity.selectedUnitId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.phase',
-                  'idle',
-                ],
-              ],
-              'event': 'TILE_CLICK',
               'from': 'playing',
+              'to': 'playing',
+              'event': 'TILE_CLICK',
               'guard': [
                 'and',
                 [
@@ -3024,8 +2132,8 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                   [
                     'grid/in-bounds',
                     {
-                      'x': '@payload.x',
                       'y': '@payload.y',
+                      'x': '@payload.x',
                     },
                     '@config.gridWidth',
                     '@config.gridHeight',
@@ -3147,9 +2255,37 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                   ],
                 ],
               ],
-              'to': 'playing',
+              'effects': [
+                [
+                  'emit',
+                  'MOVE',
+                  {
+                    'unitId': '@entity.selectedUnitId',
+                    'y': '@payload.y',
+                    'x': '@payload.x',
+                  },
+                ],
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'idle',
+                ],
+              ],
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'MOVE',
               'effects': [
                 [
                   'set',
@@ -3167,11 +2303,16 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                   6,
                 ],
               ],
-              'event': 'MOVE',
-              'from': 'playing',
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'CANCEL',
+              'guard': [
+                '!=',
+                '@entity.selectedUnitId',
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -3189,19 +2330,13 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                   'idle',
                 ],
               ],
-              'event': 'CANCEL',
-              'from': 'playing',
-              'guard': [
-                '!=',
-                '@entity.selectedUnitId',
-                '',
-              ],
-              'to': 'playing',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'renderTick',
+            'interval': 100,
             'effects': [
               [
                 'set',
@@ -3253,46 +2388,73 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                 'render-ui',
                 'main',
                 {
+                  'type': 'game-shell',
+                  'hud': {
+                    'direction': 'horizontal',
+                    'gap': 'md',
+                    'justify': 'between',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'game-hud',
+                        'stats': [
+                          {
+                            'label': 'Crew',
+                            'value': '@entity.crewCount',
+                            'iconUrl': '@config.crewIcon',
+                          },
+                          {
+                            'label': 'Oxygen',
+                            'iconUrl': '@config.oxygenIcon',
+                            'value': '@entity.oxygen',
+                          },
+                        ],
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'content': 'Status',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'type': 'badge',
+                            'variant': [
+                              'if',
+                              [
+                                '==',
+                                '@entity.phase',
+                                'movement',
+                              ],
+                              'info',
+                              'neutral',
+                            ],
+                            'label': '@entity.phase',
+                          },
+                        ],
+                        'gap': 'xs',
+                        'align': 'center',
+                      },
+                      {
+                        'label': 'O2',
+                        'type': 'timer-display',
+                        'value': '@entity.oxygen',
+                      },
+                      {
+                        'iconAsset': '@config.cancelIcon',
+                        'type': 'button',
+                        'variant': 'secondary',
+                        'action': 'CANCEL',
+                        'label': 'Cancel',
+                      },
+                    ],
+                  },
                   'backgroundAsset': '@config.backgroundAsset',
                   'children': [
                     {
                       'camera': {
-                        'pos': {
-                          'x': [
-                            '/',
-                            [
-                              '+',
-                              [
-                                'array/min',
-                                '@entity.tiles',
-                                'x',
-                              ],
-                              [
-                                'array/max',
-                                '@entity.tiles',
-                                'x',
-                              ],
-                            ],
-                            2,
-                          ],
-                          'y': [
-                            '/',
-                            [
-                              '+',
-                              [
-                                'array/min',
-                                '@entity.tiles',
-                                'y',
-                              ],
-                              [
-                                'array/max',
-                                '@entity.tiles',
-                                'y',
-                              ],
-                            ],
-                            2,
-                          ],
-                        },
                         'zoom': [
                           'math/min',
                           1,
@@ -3318,8 +2480,79 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                             ],
                           ],
                         ],
+                        'pos': {
+                          'y': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@entity.tiles',
+                                'y',
+                              ],
+                              [
+                                'array/max',
+                                '@entity.tiles',
+                                'y',
+                              ],
+                            ],
+                            2,
+                          ],
+                          'x': [
+                            '/',
+                            [
+                              '+',
+                              [
+                                'array/min',
+                                '@entity.tiles',
+                                'x',
+                              ],
+                              [
+                                'array/max',
+                                '@entity.tiles',
+                                'x',
+                              ],
+                            ],
+                            2,
+                          ],
+                        },
                       },
+                      'projection': '@config.projection',
+                      'tileClickEvent': 'TILE_CLICK',
+                      'showMinimap': '@config.showMinimap',
+                      'type': 'canvas',
+                      'unitClickEvent': 'UNIT_CLICK',
                       'children': [
+                        {
+                          'type': 'draw-shape-layer',
+                          'items': [
+                            'array/map',
+                            '@entity.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'position': {
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                },
+                                'stroke': 'rgba(255,255,255,0.35)',
+                                'fill': '#5c94fc',
+                                'shape': 'cell',
+                                'strokeWidth': 1,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                        },
                         {
                           'items': [
                             'array/map',
@@ -3328,7 +2561,8 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                               'fn',
                               't',
                               {
-                                'fill': '#5c94fc',
+                                'type': 'draw-sprite',
+                                'anchor': 'center',
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -3341,24 +2575,7 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                     'y',
                                   ],
                                 },
-                                'shape': 'cell',
-                                'stroke': 'rgba(255,255,255,0.35)',
-                                'strokeWidth': 1,
-                                'type': 'draw-shape',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.tiles',
-                            [
-                              'fn',
-                              't',
-                              {
-                                'anchor': 'center',
+                                'width': 1,
                                 'asset': [
                                   'if',
                                   [
@@ -3390,20 +2607,6 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                   ],
                                 ],
                                 'height': 1,
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@t',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@t',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                                'width': 1,
                               },
                             ],
                           ],
@@ -3417,33 +2620,34 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                               'fn',
                               'f',
                               {
+                                'type': 'draw-sprite',
+                                'width': 1,
+                                'height': 1,
+                                'position': {
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                },
                                 'anchor': 'ground',
                                 'asset': [
                                   'object/get',
                                   '@f',
                                   'assetUrl',
                                 ],
-                                'height': 1,
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@f',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                                'width': 1,
                               },
                             ],
                           ],
                           'type': 'draw-sprite-layer',
                         },
                         {
+                          'type': 'draw-shape-layer',
                           'items': [
                             'array/map',
                             '@entity.validMoves',
@@ -3451,27 +2655,27 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                               'fn',
                               'm',
                               {
+                                'type': 'draw-shape',
+                                'shape': 'cell',
                                 'fill': 'rgba(74,222,128,0.4)',
                                 'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@m',
-                                    'x',
-                                  ],
                                   'y': [
                                     'object/get',
                                     '@m',
                                     'z',
                                   ],
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
                                 },
-                                'shape': 'cell',
-                                'type': 'draw-shape',
                               },
                             ],
                           ],
-                          'type': 'draw-shape-layer',
                         },
                         {
+                          'type': 'draw-shape-layer',
                           'items': [
                             'array/map',
                             [
@@ -3495,21 +2699,20 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                               'fn',
                               'u',
                               {
+                                'strokeWidth': 3,
+                                'radiusY': 0.2,
+                                'radiusX': 0.5,
                                 'position': [
                                   'object/get',
                                   '@u',
                                   'position',
                                 ],
-                                'radiusX': 0.5,
-                                'radiusY': 0.2,
                                 'shape': 'ellipse',
                                 'stroke': 'rgba(0,200,255,0.8)',
-                                'strokeWidth': 3,
                                 'type': 'draw-shape',
                               },
                             ],
                           ],
-                          'type': 'draw-shape-layer',
                         },
                         {
                           'items': [
@@ -3583,7 +2786,6 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                     ],
                                   ],
                                   {
-                                    'anchor': 'ground',
                                     'asset': [
                                       'if',
                                       [
@@ -3665,19 +2867,20 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                       ],
                                       '@unitAsset',
                                     ],
-                                    'height': 0.5,
                                     'id': [
                                       'object/get',
                                       '@u',
                                       'id',
                                     ],
+                                    'anchor': 'ground',
+                                    'width': 0.5,
                                     'position': [
                                       'object/get',
                                       '@u',
                                       'position',
                                     ],
+                                    'height': 0.5,
                                     'type': 'draw-sprite',
-                                    'width': 0.5,
                                   },
                                 ],
                               ],
@@ -3699,6 +2902,7 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                           'type': 'draw-sprite-layer',
                         },
                         {
+                          'type': 'draw-shape-layer',
                           'items': [
                             'array/map',
                             '@entity.units',
@@ -3706,25 +2910,25 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                               'fn',
                               'u',
                               {
-                                'anchor': 'ground',
-                                'fill': 'rgba(0,0,0,0.6)',
+                                'type': 'draw-shape',
+                                'shape': 'rect',
                                 'height': 0.12,
                                 'offsetX': -0.25,
+                                'fill': 'rgba(0,0,0,0.6)',
                                 'offsetY': -0.6,
+                                'width': 0.5,
+                                'anchor': 'ground',
                                 'position': [
                                   'object/get',
                                   '@u',
                                   'position',
                                 ],
-                                'shape': 'rect',
-                                'type': 'draw-shape',
-                                'width': 0.5,
                               },
                             ],
                           ],
-                          'type': 'draw-shape-layer',
                         },
                         {
+                          'type': 'draw-shape-layer',
                           'items': [
                             'array/map',
                             '@entity.units',
@@ -3732,18 +2936,9 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                               'fn',
                               'u',
                               {
-                                'anchor': 'ground',
                                 'fill': '#22c55e',
                                 'height': 0.12,
                                 'offsetX': -0.25,
-                                'offsetY': -0.6,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'shape': 'rect',
-                                'type': 'draw-shape',
                                 'width': [
                                   '*',
                                   0.5,
@@ -3761,12 +2956,21 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                     ],
                                   ],
                                 ],
+                                'type': 'draw-shape',
+                                'anchor': 'ground',
+                                'offsetY': -0.6,
+                                'shape': 'rect',
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
                               },
                             ],
                           ],
-                          'type': 'draw-shape-layer',
                         },
                         {
+                          'type': 'draw-text-layer',
                           'items': [
                             'array/map',
                             '@entity.units',
@@ -3774,34 +2978,33 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                               'fn',
                               'u',
                               {
-                                'color': '#ffffff',
-                                'offsetY': -0.85,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
                                 'text': [
                                   'object/get',
                                   '@u',
                                   'name',
                                 ],
                                 'type': 'draw-text',
+                                'offsetY': -0.85,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'color': '#ffffff',
                               },
                             ],
                           ],
-                          'type': 'draw-text-layer',
                         },
                         {
-                          'items': '@entity.fx',
-                          'presets': '@config.fxPresets',
                           'sprites': [
                             'object/get',
                             '@config.assetManifest',
                             'effects',
                           ],
-                          'tickMs': 500,
                           'type': 'draw-fx-layer',
+                          'tickMs': 500,
+                          'items': '@entity.fx',
+                          'presets': '@config.fxPresets',
                         },
                         {
                           'items': [
@@ -3955,12 +3158,12 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                                   'url': '@warmUrl',
                                 },
                                 'height': 0.5,
-                                'opacity': 0,
                                 'position': {
-                                  'x': 0,
                                   'y': 0,
+                                  'x': 0,
                                 },
                                 'type': 'draw-sprite',
+                                'opacity': 0,
                                 'width': 0.5,
                               },
                             ],
@@ -3968,84 +3171,881 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
                           'type': 'draw-sprite-layer',
                         },
                       ],
-                      'projection': '@config.projection',
-                      'showMinimap': '@config.showMinimap',
-                      'tileClickEvent': 'TILE_CLICK',
-                      'type': 'canvas',
-                      'unitClickEvent': 'UNIT_CLICK',
                     },
                   ],
-                  'hud': {
-                    'children': [
-                      {
-                        'stats': [
-                          {
-                            'iconUrl': '@config.crewIcon',
-                            'label': 'Crew',
-                            'value': '@entity.crewCount',
-                          },
-                          {
-                            'iconUrl': '@config.oxygenIcon',
-                            'label': 'Oxygen',
-                            'value': '@entity.oxygen',
-                          },
-                        ],
-                        'type': 'game-hud',
-                      },
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'content': 'Status',
-                            'type': 'typography',
-                            'variant': 'caption',
-                          },
-                          {
-                            'label': '@entity.phase',
-                            'type': 'badge',
-                            'variant': [
-                              'if',
-                              [
-                                '==',
-                                '@entity.phase',
-                                'movement',
-                              ],
-                              'info',
-                              'neutral',
-                            ],
-                          },
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'xs',
-                        'type': 'stack',
-                      },
-                      {
-                        'label': 'O2',
-                        'type': 'timer-display',
-                        'value': '@entity.oxygen',
-                      },
-                      {
-                        'action': 'CANCEL',
-                        'iconAsset': '@config.cancelIcon',
-                        'label': 'Cancel',
-                        'type': 'button',
-                        'variant': 'secondary',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'md',
-                    'justify': 'between',
-                    'type': 'stack',
-                  },
                   'hudBackgroundAsset': '@config.hudBackgroundAsset',
-                  'type': 'game-shell',
                 },
               ],
             ],
-            'interval': 100,
-            'name': 'renderTick',
           },
         ],
+        'config': {
+          'hudBackgroundAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'HUD Background Asset',
+            'description': 'HUD panel background sprite (theme chrome).',
+            'tier': 'presentation',
+            'properties': {
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'backgroundAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Background Asset',
+            'description': 'Game-shell background panel sprite (theme chrome).',
+            'tier': 'presentation',
+            'properties': {
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'cancelIcon': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Cancel Icon',
+            'description': 'Icon asset for the Cancel button.',
+            'tier': 'presentation',
+            'properties': {
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'showMinimap': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Minimap',
+            'description': 'Whether the canvas draws a minimap.',
+            'tier': 'presentation',
+          },
+          'fxPresets': {
+            'type': '[FxPreset]',
+            'default': [],
+            'label': 'Fx Presets',
+            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type; its composed mechanics currently emit none, so the channel is forward-compat only.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'gravity': {
+                  'name': 'gravity',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vz': {
+                  'name': 'vz',
+                  'type': 'number',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'shape': {
+                  'name': 'shape',
+                  'type': 'string',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'glow': {
+                  'name': 'glow',
+                  'type': 'number',
+                  'required': false,
+                },
+                'count': {
+                  'name': 'count',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color2': {
+                  'name': 'color2',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'crewIcon': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Crew Icon',
+            'description': 'Icon asset for the Crew HUD stat.',
+            'tier': 'presentation',
+            'properties': {
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+            },
+          },
+          'oxygenIcon': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Oxygen Icon',
+            'description': 'Icon asset for the Oxygen HUD stat.',
+            'tier': 'presentation',
+            'properties': {
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'movementRange': {
+            'type': 'number',
+            'default': 2,
+            'label': 'Movement Range',
+            'description': 'Max manhattan distance a selected crew unit may move.',
+            'tier': 'domain',
+          },
+          'oxygen': {
+            'type': 'number',
+            'default': 100,
+            'label': 'Oxygen',
+            'description': 'Initial HUD oxygen display value. Cosmetic only: the source board never depletes it, so no atom writes it after INIT.',
+            'tier': 'domain',
+          },
+          'gridWidth': {
+            'type': 'number',
+            'default': 7,
+            'label': 'Grid Width',
+            'description': 'Grid column count (matches CrewAuthority.gridWidth).',
+            'tier': 'presentation',
+          },
+          'gridHeight': {
+            'type': 'number',
+            'default': 7,
+            'label': 'Grid Height',
+            'description': 'Grid row count (matches CrewAuthority.gridHeight).',
+            'tier': 'presentation',
+          },
+          'crewCount': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Crew Count',
+            'description': 'Initial HUD crew-count display value. Cosmetic only: the source board never changes it after INIT.',
+            'tier': 'domain',
+          },
+          'assetManifest': {
+            'type': 'AssetManifest',
+            'default': {
+              'features': {},
+              'effects': {},
+              'terrains': {},
+              'units': {},
+            },
+            'label': 'Asset Manifest',
+            'description': 'Terrain/unit/feature/effect sprite manifest.',
+            'tier': 'presentation',
+            'properties': {
+              'features': {
+                'name': 'features',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'terrains': {
+                'name': 'terrains',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                  },
+                },
+              },
+              'effects': {
+                'name': 'effects',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'units': {
+                'name': 'units',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'features': {
+            'type': '[Feature]',
+            'default': [],
+            'label': 'Features',
+            'description': 'Decorative environment features (e.g. consoles) drawn on the board.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'projection': {
+            'type': 'string',
+            'default': 'flat',
+            'label': 'Projection',
+            'description': 'canvas-2d projection: flat or isometric.',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

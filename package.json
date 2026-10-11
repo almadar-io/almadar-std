@@ -1,6 +1,6 @@
 {
   "name": "@almadar/std",
-  "version": "16.248.0",
+  "version": "16.249.0",
   "description": "Standard library operators for Almadar (math, string, array, etc.)",
   "type": "module",
   "main": "./dist/index.js",
@@ -43,13 +43,11 @@
       "require": "./dist/factory-runtime/index.js",
       "types": "./dist/factory-runtime/index.d.ts"
     },
-    "./canonical-operators.json": "./canonical-operators.json",
-    "./i18n/*": "./i18n/*"
+    "./canonical-operators.json": "./canonical-operators.json"
   },
   "files": [
     "dist",
     "canonical-operators.json",
-    "i18n",
     "behaviors/registry/agent",
     "behaviors/registry/infra",
     "behaviors/registry/ml",
@@ -64,10 +62,9 @@
     "behaviors/lolo/ui/game",
     "behaviors/lolo/ui/avl",
     "behaviors/lolo/ui/learning",
-    "behaviors/behaviors-registry.json",
-    "behaviors/registry/factory-signatures.json",
     "behaviors/lolo-behavior-contracts.json",
-    "behaviors/signatures.lolo"
+    "behaviors/signatures.lolo",
+    "sidecars.lock.json"
   ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
@@ -75,9 +72,9 @@
   },
   "orb": {
     "prefix": "almadar-std",
-    "registry": "behaviors/registry",
-    "index": "behaviors/behaviors-registry.json",
-    "factorySignatures": "behaviors/registry/factory-signatures.json",
+    "source": "behaviors/lolo",
+    "index": "dist/behaviors-registry.json",
+    "factorySignatures": "dist/registry/factory-signatures.json",
     "loloContracts": "behaviors/lolo-behavior-contracts.json",
     "signatures": "behaviors/signatures.lolo",
     "embeddings": [
@@ -85,6 +82,10 @@
       "dist/knob-embeddings.json"
     ],
     "compiler": ">=4.10.0"
+  },
+  "orbLanguage": {
+    "compiler": ">=17.11.2",
+    "operators": "canonical-operators.json"
   },
   "scripts": {
     "build:embeddings": "node scripts/embed.mjs",
@@ -96,14 +97,19 @@
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm run build",
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "git config core.hooksPath .githooks",
+    "build:loaders": "tsup --config tsup.loaders.config.ts",
+    "materialize": "node scripts/materialize-registry.mjs"
   },
   "dependencies": {
-    "@almadar/core": "^10.123.0"
+    "@almadar/core": "^10.125.0"
   },
   "devDependencies": {
+    "@almadar/orb": "^17.11.2",
     "@almadar/eslint-plugin": "^2.21.0",
     "@almadar/llm": "^2.62.0",
+    "@almadar/lolo-ar": "^1.1.0",
+    "@almadar/lolo-sl": "^1.1.0",
     "@types/node": "^20.0.0",
     "@typescript-eslint/parser": "8.65.0",
     "eslint": "10.0.0",
@@ -112,7 +118,8 @@
     "vitest": "^1.4.0",
     "turbo": "^2.8.17",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "typescript": "npm:@typescript/typescript6@^6.0.2"
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "@almadar/db": "^0.1.3"
   },
   "repository": {
     "type": "git",

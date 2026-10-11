@@ -49,10 +49,10 @@ export interface StdZoneCardZoneChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdZoneCardConfig {
-  /** Default: `true` */
-  running?: boolean;
   /** Default: `120` */
   ttlTicks?: number;
+  /** Default: `true` */
+  running?: boolean;
   /** Default: `[]` */
   zones?: EntityRow[];
 }

@@ -46,24 +46,24 @@ export interface StdLearnFxCuesBurstPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnFxCuesConfig {
-  /** Default: `[]` */
-  bandCues?: EntityRow[];
-  /** Default: `{"color":"#facc15","effect":"confetti","particleCount":40,"space":"screen","ttl":5,"type":"celebration","x":0.5,"z":0.45}` */
-  celebrationCue?: EntityRow;
-  /** Default: `{"color":"#4ade80","effect":"sparkle","particleCount":10,"space":"screen","ttl":1.5,"type":"correct","x":0.5,"z":0.35}` */
-  correctCue?: EntityRow;
-  /** Default: `{"color":"#a5b4fc","effect":"sparkle","particleCount":4,"space":"screen","ttl":1.5,"type":"progress","x":0.5,"z":0.35}` */
-  progressCue?: EntityRow;
   /** Default: `true` */
   running?: boolean;
-  /** Default: `{"color":"#fbbf24","effect":"streak-glow","space":"screen","ttl":2.5,"type":"streak","x":0.5,"z":0.2}` */
-  streakCue?: EntityRow;
+  /** Default: `{"x":0.5,"space":"screen","z":0.35,"color":"#fda4af","ttl":1,"type":"wrong","effect":"shake"}` */
+  wrongCue?: EntityRow;
+  /** Default: `{"effect":"confetti","z":0.45,"type":"celebration","x":0.5,"particleCount":40,"color":"#facc15","ttl":5,"space":"screen"}` */
+  celebrationCue?: EntityRow;
   /** Default: `3` */
   streakThreshold?: number;
+  /** Default: `{"color":"#fbbf24","type":"streak","ttl":2.5,"space":"screen","x":0.5,"effect":"streak-glow","z":0.2}` */
+  streakCue?: EntityRow;
+  /** Default: `[]` */
+  bandCues?: EntityRow[];
   /** Default: `[]` */
   verdictCues?: EntityRow[];
-  /** Default: `{"color":"#fda4af","effect":"shake","space":"screen","ttl":1,"type":"wrong","x":0.5,"z":0.35}` */
-  wrongCue?: EntityRow;
+  /** Default: `{"color":"#a5b4fc","particleCount":4,"z":0.35,"effect":"sparkle","x":0.5,"ttl":1.5,"space":"screen","type":"progress"}` */
+  progressCue?: EntityRow;
+  /** Default: `{"x":0.5,"particleCount":10,"effect":"sparkle","space":"screen","ttl":1.5,"color":"#4ade80","z":0.35,"type":"correct"}` */
+  correctCue?: EntityRow;
 }
 
 /**

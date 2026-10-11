@@ -197,104 +197,104 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'pendingMessages',
+            'type': 'array',
             'default': [],
-            'description': 'The conversation being compacted.',
             'items': {
+              'type': 'object',
               'properties': {
                 'content': {
                   'name': 'content',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'role': {
                   'name': 'role',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'user',
                     'assistant',
                   ],
                 },
               },
-              'type': 'object',
             },
-            'name': 'pendingMessages',
-            'type': 'array',
+            'description': 'The conversation being compacted.',
           },
           {
+            'name': 'lastSize',
+            'type': 'number',
             'default': 0,
             'description': 'Turns in the last conversation compacted.',
-            'name': 'lastSize',
             'synonyms': 'size, length',
-            'type': 'number',
           },
           {
-            'default': '',
-            'description': 'The ephemeral conversation\'s own instructions, carried through a summarizing.',
             'name': 'pendingInstructions',
             'type': 'string',
+            'default': '',
+            'description': 'The ephemeral conversation\'s own instructions, carried through a summarizing.',
           },
           {
+            'name': 'pendingTools',
+            'type': 'array',
             'default': [],
-            'description': 'The ephemeral conversation\'s own tools, carried through a summarizing.',
             'items': {
-              'properties': {
-                'AgentToolInput': {
-                  'name': 'AgentToolInput',
-                  'properties': {
-                    'event': {
-                      'name': 'event',
-                      'required': true,
-                      'type': 'EventAddress',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'AgentToolRead': {
-                  'name': 'AgentToolRead',
-                  'properties': {
-                    'read': {
-                      'name': 'read',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'AgentToolScope': {
-                  'name': 'AgentToolScope',
-                  'properties': {
-                    'scope': {
-                      'name': 'scope',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'declared',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-              },
               'type': 'union',
               'values': [
                 'AgentToolScope',
                 'AgentToolInput',
                 'AgentToolRead',
               ],
+              'properties': {
+                'AgentToolInput': {
+                  'name': 'AgentToolInput',
+                  'type': 'object',
+                  'properties': {
+                    'event': {
+                      'name': 'event',
+                      'type': 'EventAddress',
+                      'required': true,
+                    },
+                  },
+                },
+                'AgentToolRead': {
+                  'name': 'AgentToolRead',
+                  'type': 'object',
+                  'properties': {
+                    'read': {
+                      'name': 'read',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+                'AgentToolScope': {
+                  'name': 'AgentToolScope',
+                  'type': 'object',
+                  'properties': {
+                    'scope': {
+                      'name': 'scope',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'declared',
+                      ],
+                    },
+                  },
+                },
+              },
             },
-            'name': 'pendingTools',
-            'type': 'array',
+            'description': 'The ephemeral conversation\'s own tools, carried through a summarizing.',
           },
           {
-            'default': false,
-            'description': 'The conversation being compacted is ephemeral.',
             'name': 'pendingEphemeral',
             'type': 'boolean',
+            'default': false,
+            'description': 'The conversation being compacted is ephemeral.',
           },
         ];
         const extras = params.fields ?? [];
@@ -305,17 +305,7 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'keepMessages': {
-            'default': 12,
-            'description': 'The most recent turns sent to the model word for word; older turns are summarized.',
-            'label': 'Turns kept verbatim',
-            'synonyms': 'window, history length, context size',
-            'tier': 'policy',
-            'type': 'number',
-          },
-        },
+        'name': 'AgentContextCompactor',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -350,14 +340,20 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
             'resource': '@entity.pendingTools',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AgentContextWindow',
         'emits': [
           {
-            'description': 'The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation\'s own `instructions`, `tools` and `ephemeral` flag pass through untouched.',
             'event': 'COMPACTED',
+            'description': 'The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation\'s own `instructions`, `tools` and `ephemeral` flag pass through untouched.',
+            'synonyms': 'compacted, trimmed, bounded',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'AgentChatMessage',
                 'name': 'messages',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'role',
@@ -369,12 +365,11 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'AgentChatMessage',
               },
               {
                 'name': 'instructions',
@@ -389,12 +384,11 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                 'type': 'boolean',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'compacted, trimmed, bounded',
-            'tier': 'domain',
           },
           {
             'event': 'ContextSummarized',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'summary',
@@ -405,37 +399,43 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                 'type': '[string]',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'ContextSummarizeFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'AgentContextWindow',
-        'name': 'AgentContextCompactor',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+            {
+              'name': 'summarizing',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Bound this conversation for the model. An ephemeral conversation\'s own `instructions`, `tools` and `ephemeral` flag ride along.',
               'key': 'COMPACT',
               'name': 'Compact',
+              'description': 'Bound this conversation for the model. An ephemeral conversation\'s own `instructions`, `tools` and `ephemeral` flag ride along.',
               'payloadSchema': [
                 {
                   'name': 'messages',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'role',
@@ -447,12 +447,10 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
                 },
                 {
                   'name': 'instructions',
@@ -471,6 +469,7 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
             {
               'key': 'ContextSummarized',
               'name': 'Context summarized',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'summary',
@@ -481,27 +480,29 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   'type': '[string]',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'ContextSummarizeFailed',
               'name': 'Context summarize failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation\'s own `instructions`, `tools` and `ephemeral` flag pass through untouched.',
               'key': 'COMPACTED',
               'name': 'Compacted',
+              'description': 'The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation\'s own `instructions`, `tools` and `ephemeral` flag pass through untouched.',
+              'synonyms': 'compacted, trimmed, bounded',
+              'tier': 'domain',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChatMessage',
                   'name': 'messages',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'role',
@@ -513,12 +514,11 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'AgentChatMessage',
                 },
                 {
                   'name': 'instructions',
@@ -533,21 +533,13 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   'type': 'boolean',
                 },
               ],
-              'synonyms': 'compacted, trimmed, bounded',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
-            },
-            {
-              'name': 'summarizing',
             },
           ],
           'transitions': [
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -555,11 +547,19 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   0,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'COMPACT',
+              'guard': [
+                '<=',
+                [
+                  'array/len',
+                  '@payload.messages',
+                ],
+                '@config.keepMessages',
+              ],
               'effects': [
                 [
                   'set',
@@ -579,11 +579,6 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                       true,
                       false,
                     ],
-                    'instructions': [
-                      'str/default',
-                      '@payload.instructions',
-                      '',
-                    ],
                     'messages': '@payload.messages',
                     'tools': [
                       'object/get',
@@ -591,22 +586,27 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                       'tools',
                       [],
                     ],
+                    'instructions': [
+                      'str/default',
+                      '@payload.instructions',
+                      '',
+                    ],
                   },
                 ],
               ],
-              'event': 'COMPACT',
+            },
+            {
               'from': 'ready',
+              'to': 'summarizing',
+              'event': 'COMPACT',
               'guard': [
-                '<=',
+                '>',
                 [
                   'array/len',
                   '@payload.messages',
                 ],
                 '@config.keepMessages',
               ],
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -680,25 +680,17 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   },
                   {
                     'emit': {
-                      'failure': 'ContextSummarizeFailed',
                       'success': 'ContextSummarized',
+                      'failure': 'ContextSummarizeFailed',
                     },
                   },
                 ],
               ],
-              'event': 'COMPACT',
-              'from': 'ready',
-              'guard': [
-                '>',
-                [
-                  'array/len',
-                  '@payload.messages',
-                ],
-                '@config.keepMessages',
-              ],
-              'to': 'summarizing',
             },
             {
+              'from': 'summarizing',
+              'to': 'ready',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -706,18 +698,19 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                   0,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'summarizing',
-              'to': 'ready',
             },
             {
+              'from': 'summarizing',
+              'to': 'ready',
+              'event': 'ContextSummarized',
               'effects': [
                 [
                   'emit',
                   'COMPACTED',
                   {
-                    'ephemeral': '@entity.pendingEphemeral',
                     'instructions': '@entity.pendingInstructions',
+                    'tools': '@entity.pendingTools',
+                    'ephemeral': '@entity.pendingEphemeral',
                     'messages': [
                       'array/prepend',
                       [
@@ -726,54 +719,61 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
                         '@config.keepMessages',
                       ],
                       {
+                        'role': 'assistant',
                         'content': [
                           'str/concat',
                           'Earlier in this conversation: ',
                           '@payload.summary',
                         ],
-                        'role': 'assistant',
                       },
                     ],
-                    'tools': '@entity.pendingTools',
                   },
                 ],
               ],
-              'event': 'ContextSummarized',
-              'from': 'summarizing',
-              'to': 'ready',
             },
             {
+              'from': 'summarizing',
+              'to': 'ready',
+              'event': 'ContextSummarizeFailed',
               'effects': [
                 [
                   'emit',
                   'COMPACTED',
                   {
-                    'ephemeral': '@entity.pendingEphemeral',
-                    'instructions': '@entity.pendingInstructions',
                     'messages': [
                       'array/takeLast',
                       '@entity.pendingMessages',
                       '@config.keepMessages',
                     ],
                     'tools': '@entity.pendingTools',
+                    'ephemeral': '@entity.pendingEphemeral',
+                    'instructions': '@entity.pendingInstructions',
                   },
                 ],
                 [
                   'render-ui',
                   'toast',
                   {
-                    'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'warning',
+                    'type': 'alert',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'ContextSummarizeFailed',
-              'from': 'summarizing',
-              'to': 'ready',
             },
           ],
         },
+        'config': {
+          'keepMessages': {
+            'type': 'number',
+            'default': 12,
+            'label': 'Turns kept verbatim',
+            'description': 'The most recent turns sent to the model word for word; older turns are summarized.',
+            'synonyms': 'window, history length, context size',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

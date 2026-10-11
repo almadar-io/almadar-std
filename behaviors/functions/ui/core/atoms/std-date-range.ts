@@ -186,20 +186,20 @@ export function stdDateRangeDateRangeOrbital(params: StdDateRangeDateRangeOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
+            'type': 'string',
             'required': true,
-            'type': 'string',
           },
           {
-            'description': 'The start date of the date range.',
             'name': 'from',
-            'synonyms': 'start, beginning, initial',
             'type': 'string',
+            'description': 'The start date of the date range.',
+            'synonyms': 'start, beginning, initial',
           },
           {
-            'description': 'The end date of a date range.',
             'name': 'to',
-            'synonyms': 'end date, finish date, end, final date',
             'type': 'string',
+            'description': 'The end date of a date range.',
+            'synonyms': 'end date, finish date, end, final date',
           },
         ];
         const extras = params.fields ?? [];
@@ -210,37 +210,7 @@ export function stdDateRangeDateRangeOrbital(params: StdDateRangeDateRangeOrbita
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'buttonLabel': {
-            'default': 'Date range',
-            'description': 'Text on the toolbar button that opens the popover',
-            'label': 'Trigger button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'event': {
-            'default': 'DATE_RANGE_CHANGED',
-            'description': 'Event name emitted when the user picks a new range',
-            'label': 'Change event',
-            'tier': 'internal',
-            'type': 'event',
-          },
-          'fromLabel': {
-            'default': 'From',
-            'description': 'Caption shown above the start-date input',
-            'label': 'Start-date label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'toLabel': {
-            'default': 'To',
-            'description': 'Caption shown above the end-date input',
-            'label': 'End-date label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-        },
+        'name': 'DateRangeFilter',
         'effectRow': [
           {
             'kind': 'render-ui',
@@ -255,30 +225,35 @@ export function stdDateRangeDateRangeOrbital(params: StdDateRangeDateRangeOrbita
             'resource': '@entity.to',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'DateRange',
         'emits': [
           {
-            'description': 'Signals a change in the selected date range.',
             'event': 'DATE_RANGE_CHANGED',
+            'description': 'Signals a change in the selected date range.',
+            'synonyms': 'range-updated, date-selection, filter-change',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'from',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'to',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'synonyms': 'range-updated, date-selection, filter-change',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'DateRange',
-        'name': 'DateRangeFilter',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -289,64 +264,61 @@ export function stdDateRangeDateRangeOrbital(params: StdDateRangeDateRangeOrbita
               'name': 'Open Date Range',
             },
             {
-              'description': 'Signals a change in the selected date range.',
               'key': 'DATE_RANGE_CHANGED',
               'name': 'Date Range Changed',
+              'description': 'Signals a change in the selected date range.',
+              'synonyms': 'range-updated, date-selection, filter-change',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'from',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'to',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'range-updated, date-selection, filter-change',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'content': {
+                      'event': '@config.event',
+                      'type': 'date-range-picker',
+                      'fromLabel': '@config.fromLabel',
+                      'toLabel': '@config.toLabel',
+                    },
+                    'position': 'bottom',
                     'children': [
                       {
                         'action': 'OPEN_DATE_RANGE',
-                        'icon': 'calendar',
                         'label': '@config.buttonLabel',
-                        'size': 'sm',
                         'type': 'button',
+                        'icon': 'calendar',
+                        'size': 'sm',
                         'variant': 'secondary',
                       },
                     ],
-                    'content': {
-                      'event': '@config.event',
-                      'fromLabel': '@config.fromLabel',
-                      'toLabel': '@config.toLabel',
-                      'type': 'date-range-picker',
-                    },
-                    'position': 'bottom',
                     'type': 'popover',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'OPEN_DATE_RANGE',
               'effects': [
                 [
                   'set',
@@ -354,11 +326,11 @@ export function stdDateRangeDateRangeOrbital(params: StdDateRangeDateRangeOrbita
                   '@entity.from',
                 ],
               ],
-              'event': 'OPEN_DATE_RANGE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DATE_RANGE_CHANGED',
               'effects': [
                 [
                   'set',
@@ -374,35 +346,63 @@ export function stdDateRangeDateRangeOrbital(params: StdDateRangeDateRangeOrbita
                   'render-ui',
                   'main',
                   {
+                    'position': 'bottom',
+                    'type': 'popover',
                     'children': [
                       {
-                        'action': 'OPEN_DATE_RANGE',
+                        'type': 'button',
+                        'size': 'sm',
+                        'variant': 'secondary',
                         'icon': 'calendar',
                         'label': '@config.buttonLabel',
-                        'size': 'sm',
-                        'type': 'button',
-                        'variant': 'secondary',
+                        'action': 'OPEN_DATE_RANGE',
                       },
                     ],
                     'content': {
-                      'event': '@config.event',
-                      'from': '@entity.from',
                       'fromLabel': '@config.fromLabel',
-                      'to': '@entity.to',
+                      'from': '@entity.from',
                       'toLabel': '@config.toLabel',
+                      'event': '@config.event',
+                      'to': '@entity.to',
                       'type': 'date-range-picker',
                     },
-                    'position': 'bottom',
-                    'type': 'popover',
                   },
                 ],
               ],
-              'event': 'DATE_RANGE_CHANGED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'buttonLabel': {
+            'type': 'string',
+            'default': 'Date range',
+            'label': 'Trigger button',
+            'description': 'Text on the toolbar button that opens the popover',
+            'tier': 'presentation',
+          },
+          'event': {
+            'type': 'event',
+            'default': 'DATE_RANGE_CHANGED',
+            'label': 'Change event',
+            'description': 'Event name emitted when the user picks a new range',
+            'tier': 'internal',
+          },
+          'fromLabel': {
+            'type': 'string',
+            'default': 'From',
+            'label': 'Start-date label',
+            'description': 'Caption shown above the start-date input',
+            'tier': 'presentation',
+          },
+          'toLabel': {
+            'type': 'string',
+            'default': 'To',
+            'label': 'End-date label',
+            'description': 'Caption shown above the end-date input',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

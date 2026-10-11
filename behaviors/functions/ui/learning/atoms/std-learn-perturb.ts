@@ -78,60 +78,60 @@ export interface StdLearnPerturbShockAppliedPayload {
 export interface StdLearnPerturbConfig {
   /** Default: `true` */
   autoRun?: boolean;
-  /** Default: `20` */
-  duration?: number;
-  /** Default: `2` */
-  gridStep?: number;
-  /** Default: `360` */
-  height?: number;
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `0.8` */
-  rateDefault?: number;
-  /** Default: `"Recovery rate"` */
-  rateLabel?: string;
   /** Default: `3` */
   rateMax?: number;
-  /** Default: `0.05` */
-  rateMin?: number;
-  /** Default: `0.05` */
-  rateStep?: number;
+  /** Default: `"Recovery rate"` */
+  rateLabel?: string;
+  /** Default: `20` */
+  duration?: number;
+  /** Default: `360` */
+  height?: number;
+  /** Default: `30` */
+  setpointMin?: number;
+  /** Default: `"highlight"` */
+  valueColor?: string;
+  /** Default: `4` */
+  shockSize?: number;
   /** Default: `"guide"` */
   setpointColor?: string;
   /** Default: `37` */
   setpointDefault?: number;
-  /** Default: `"Setpoint"` */
-  setpointLabel?: string;
-  /** Default: `44` */
-  setpointMax?: number;
-  /** Default: `30` */
-  setpointMin?: number;
-  /** Default: `0.5` */
-  setpointStep?: number;
-  /** Default: `"− Shock down"` */
-  shockDownLabel?: string;
-  /** Default: `4` */
-  shockSize?: number;
-  /** Default: `"+ Shock up"` */
-  shockUpLabel?: string;
-  /** Default: `""` */
-  summary?: string;
-  /** Default: `"Run the system, shock it off its setpoint, and watch it recover — then move the setpoint mid-run."` */
-  taskText?: string;
-  /** Default: `"Equilibrium & Shock"` */
-  title?: string;
-  /** Default: `"highlight"` */
-  valueColor?: string;
-  /** Default: `"Temperature"` */
-  valueLabel?: string;
-  /** Default: `46` */
-  valueMax?: number;
   /** Default: `28` */
   valueMin?: number;
-  /** Default: `37` */
-  valueStart?: number;
+  /** Default: `"Temperature"` */
+  valueLabel?: string;
+  /** Default: `44` */
+  setpointMax?: number;
+  /** Default: `0.5` */
+  setpointStep?: number;
   /** Default: `600` */
   width?: number;
+  /** Default: `0.05` */
+  rateMin?: number;
+  /** Default: `""` */
+  matchMode?: string;
+  /** Default: `"+ Shock up"` */
+  shockUpLabel?: string;
+  /** Default: `37` */
+  valueStart?: number;
+  /** Default: `"Equilibrium & Shock"` */
+  title?: string;
+  /** Default: `"Setpoint"` */
+  setpointLabel?: string;
+  /** Default: `2` */
+  gridStep?: number;
+  /** Default: `0.8` */
+  rateDefault?: number;
+  /** Default: `46` */
+  valueMax?: number;
+  /** Default: `"Run the system, shock it off its setpoint, and watch it recover — then move the setpoint mid-run."` */
+  taskText?: string;
+  /** Default: `"− Shock down"` */
+  shockDownLabel?: string;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `0.05` */
+  rateStep?: number;
 }
 
 /**

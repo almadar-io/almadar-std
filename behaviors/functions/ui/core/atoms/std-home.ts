@@ -31,20 +31,20 @@ const ALIAS = 'Home';
  * without modifying its state-machine topology.
  */
 export interface StdHomeConfig {
-  /** Default: `"start"` */
-  alignment?: unknown;
   /** Default: `"@config.greeting"` */
   headline?: unknown;
-  /** Default: `"@config.summary"` */
-  lede?: unknown;
-  /** Default: `"header"` */
-  look?: unknown;
-  /** Default: `"@config.primaryActionHref"` */
-  primaryHref?: unknown;
   /** Default: `"@config.primaryActionLabel"` */
   primaryLabel?: unknown;
   /** Default: `"plain"` */
   surface?: unknown;
+  /** Default: `"start"` */
+  alignment?: unknown;
+  /** Default: `"header"` */
+  look?: unknown;
+  /** Default: `"@config.summary"` */
+  lede?: unknown;
+  /** Default: `"@config.primaryActionHref"` */
+  primaryHref?: unknown;
   /** Default: `true` */
   texture?: unknown;
 }

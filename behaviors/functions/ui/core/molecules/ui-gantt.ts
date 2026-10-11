@@ -53,55 +53,55 @@ export interface StdUiGanttGanttLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGanttConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `"BAR_CLICK"` */
-  barClickEvent?: string;
-  className?: string;
-  /** Default: `28` */
-  dayWidth?: number;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  durationField?: string;
-  /** Default: `"end"` */
-  endField?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  groupField?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  lang?: string;
   /** Default: `[]` */
   links?: EntityRow[];
-  /** Default: `"2024-01-01"` */
-  rangeEnd?: string;
-  /** Default: `"2024-01-01"` */
-  rangeStart?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `true` */
-  selfFetch?: boolean;
-  /** Default: `true` */
-  showToday?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `"start"` */
-  startField?: string;
   /** Default: `{"item":"default"}` */
   statusColorMap?: Record<string, TraitConfig>;
-  /** Default: `"status"` */
-  statusField?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"BAR_CLICK"` */
+  barClickEvent?: string;
+  lang?: string;
+  ariaBusy?: boolean;
+  /** Default: `"2024-01-01"` */
+  rangeStart?: string;
+  ariaLabelledby?: string;
+  /** Default: `true` */
+  selfFetch?: boolean;
+  /** Default: `28` */
+  dayWidth?: number;
+  ariaPressed?: 'true' | 'false' | 'mixed';
   /** Default: `"auto"` */
   surface?: 'auto' | 'none';
+  /** Default: `"2024-01-01"` */
+  rangeEnd?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `true` */
+  showToday?: boolean;
   tabIndex?: number;
+  enterDelay?: number;
+  ariaDescribedby?: string;
+  ariaSelected?: boolean;
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `"title"` */
   titleField?: string;
+  /** Default: `"end"` */
+  endField?: string;
+  error?: EntityRow;
+  /** Default: `"status"` */
+  statusField?: string;
+  groupField?: string;
+  ariaLabel?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  className?: string;
+  ariaExpanded?: boolean;
+  /** Default: `"start"` */
+  startField?: string;
+  ariaHidden?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  durationField?: string;
 }
 
 /**

@@ -46,20 +46,20 @@ export interface StdUiAgentActivityFeedJumpPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAgentActivityFeedConfig {
-  /** Default: `[]` */
-  activities?: EntityRow[];
-  className?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   emptyDescription?: string;
-  emptyTitle?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
   /** Default: `true` */
   followLatest?: boolean;
+  emptyTitle?: string;
   /** Default: `"JUMP"` */
   onJump?: string;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `false` */
   working?: boolean;
+  enterDelay?: number;
+  className?: string;
+  /** Default: `[]` */
+  activities?: EntityRow[];
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
 }
 
 /**

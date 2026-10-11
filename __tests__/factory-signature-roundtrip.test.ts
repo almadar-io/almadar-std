@@ -23,8 +23,9 @@ import type {
   OrbitalSchema,
   TraitRef,
 } from '@almadar/core';
+import { STD_REGISTRY } from './std-registry.js';
 
-const REGISTRY = path.resolve(__dirname, '..', 'behaviors', 'registry');
+const REGISTRY = STD_REGISTRY;
 const FUNCTIONS = path.resolve(__dirname, '..', 'behaviors', 'functions');
 const TIERS = ['atoms', 'molecules', 'organisms'] as const;
 const TOPICS = ['core', 'agent', 'core-variations', 'infra'] as const;

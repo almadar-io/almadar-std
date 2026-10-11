@@ -199,18 +199,18 @@ export function stdPageOpenPageOpenOrbital(params: StdPageOpenPageOpenOrbitalPar
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
+            'name': 'opened',
+            'type': 'number',
             'default': 0,
             'description': 'How many pages were opened',
-            'name': 'opened',
             'synonyms': 'count',
-            'type': 'number',
           },
           {
+            'name': 'errorMessage',
+            'type': 'string',
             'default': '',
             'description': 'Why the last page could not be opened; blank = none',
-            'name': 'errorMessage',
             'synonyms': 'error, failure reason',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -221,17 +221,7 @@ export function stdPageOpenPageOpenOrbital(params: StdPageOpenPageOpenOrbitalPar
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'statusSlot': {
-            'default': 'main',
-            'description': 'Where the atom shows its one-line status; an organism running it in the background sends it to `system`',
-            'label': 'Status slot',
-            'synonyms': 'status area, slot',
-            'tier': 'presentation',
-            'type': 'slot',
-          },
-        },
+        'name': 'PageOpen',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -247,8 +237,8 @@ export function stdPageOpenPageOpenOrbital(params: StdPageOpenPageOpenOrbitalPar
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.statusSlot',
+            'resolved': false,
           },
           {
             'kind': 'render-ui',
@@ -263,182 +253,184 @@ export function stdPageOpenPageOpenOrbital(params: StdPageOpenPageOpenOrbitalPar
             'resource': '@entity.opened',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'PageOpenRecord',
         'emits': [
           {
-            'description': 'The page service opened the tab',
             'event': 'TAB_OPENED',
+            'description': 'The page service opened the tab',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'tab',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The page service could not open the tab',
             'event': 'OPEN_CALL_FAILED',
+            'description': 'The page service could not open the tab',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The page is open in a new, focused tab',
             'event': 'OPENED',
-            'payloadSchema': [
-              {
-                'name': 'tab',
-                'required': true,
-                'type': 'number',
-              },
-            ],
-            'scope': 'external',
+            'description': 'The page is open in a new, focused tab',
             'synonyms': 'opened, launched, visited',
             'tier': 'primary',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'tab',
+                'type': 'number',
+                'required': true,
+              },
+            ],
           },
           {
-            'description': 'The page could not be opened',
             'event': 'OPEN_FAILED',
+            'description': 'The page could not be opened',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'PageOpenRecord',
-        'name': 'PageOpen',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Open `url` in a new, focused tab — wire it to something the person does',
-              'external': true,
               'key': 'OPEN',
               'name': 'Open',
+              'description': 'Open `url` in a new, focused tab — wire it to something the person does',
               'payloadSchema': [
                 {
                   'name': 'url',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
+              'external': true,
             },
             {
-              'description': 'The page service opened the tab',
               'key': 'TAB_OPENED',
               'name': 'Tab Opened',
+              'description': 'The page service opened the tab',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'tab',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'The page service could not open the tab',
               'key': 'OPEN_CALL_FAILED',
               'name': 'Open Call Failed',
+              'description': 'The page service could not open the tab',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'The page is open in a new, focused tab',
               'key': 'OPENED',
               'name': 'Opened',
+              'description': 'The page is open in a new, focused tab',
+              'synonyms': 'opened, launched, visited',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'tab',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'synonyms': 'opened, launched, visited',
-              'tier': 'primary',
             },
             {
-              'description': 'The page could not be opened',
               'key': 'OPEN_FAILED',
               'name': 'Open Failed',
+              'description': 'The page could not be opened',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
             },
           ],
           'transitions': [
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   '@config.statusSlot',
                   {
-                    'content': 'Ready to open pages',
-                    'role': 'status',
                     'type': 'typography',
                     'variant': 'body',
+                    'content': 'Ready to open pages',
+                    'role': 'status',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'OPEN',
               'effects': [
                 [
                   'call-service',
                   'page',
                   'openTab',
                   {
-                    'active': true,
                     'url': '@payload.url',
+                    'active': true,
                   },
                   {
                     'emit': {
-                      'failure': 'OPEN_CALL_FAILED',
                       'success': 'TAB_OPENED',
+                      'failure': 'OPEN_CALL_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'OPEN',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'TAB_OPENED',
               'effects': [
                 [
                   'set',
@@ -457,11 +449,11 @@ export function stdPageOpenPageOpenOrbital(params: StdPageOpenPageOpenOrbitalPar
                   },
                 ],
               ],
-              'event': 'TAB_OPENED',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'OPEN_CALL_FAILED',
               'effects': [
                 [
                   'set',
@@ -479,23 +471,31 @@ export function stdPageOpenPageOpenOrbital(params: StdPageOpenPageOpenOrbitalPar
                   'render-ui',
                   'toast',
                   {
+                    'type': 'alert',
                     'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t open the page — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'OPEN_CALL_FAILED',
-              'from': 'ready',
-              'to': 'ready',
             },
           ],
         },
+        'config': {
+          'statusSlot': {
+            'type': 'slot',
+            'default': 'main',
+            'label': 'Status slot',
+            'description': 'Where the atom shows its one-line status; an organism running it in the background sends it to `system`',
+            'synonyms': 'status area, slot',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -39,22 +39,22 @@ export type StdUiAtlasImageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAtlasImageConfig {
-  alt?: string;
-  ariaHidden?: boolean;
-  asset?: EntityRow;
-  className?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   enterDelay?: number;
-  /** Default: `false` */
-  fill?: boolean;
-  /** Default: `"contain"` */
-  fit?: 'contain' | 'cover' | 'fill';
   height?: number;
   size?: number;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `"contain"` */
+  fit?: 'contain' | 'cover' | 'fill';
+  alt?: string;
+  /** Default: `false` */
+  fill?: boolean;
+  ariaHidden?: boolean;
+  asset?: EntityRow;
+  width?: number;
+  className?: string;
   /** Default: `{}` */
   style?: Record<string, TraitConfig>;
-  width?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
 }
 
 /**

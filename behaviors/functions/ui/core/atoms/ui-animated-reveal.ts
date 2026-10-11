@@ -39,46 +39,46 @@ export type StdUiAnimatedRevealEventKey = 'ENTER' | 'INIT' | 'LEAVE' | 'REVEAL';
  * without modifying its state-machine topology.
  */
 export interface StdUiAnimatedRevealConfig {
+  /** Default: `0` */
+  delay?: number;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaDescribedby?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  className?: string;
+  /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
+  easing?: string;
+  ariaLabelledby?: string;
+  ariaSelected?: boolean;
+  /** Default: `"ENTER"` */
+  enterEvent?: string;
+  tabIndex?: number;
+  enterDelay?: number;
+  /** Default: `600` */
+  duration?: number;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaExpanded?: boolean;
+  /** Default: `0.15` */
+  threshold?: number;
+  /** Default: `true` */
+  once?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"REVEAL"` */
+  revealEvent?: string;
+  /** Default: `"scroll"` */
+  trigger?: 'scroll' | 'hover' | 'manual';
+  children?: PatternValue;
+  lang?: string;
+  ariaLabel?: string;
   animate?: boolean;
+  /** Default: `"LEAVE"` */
+  leaveEvent?: string;
   /** Default: `"fade-up"` */
   animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
   ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
   ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  children?: PatternValue;
-  className?: string;
-  /** Default: `0` */
-  delay?: number;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `600` */
-  duration?: number;
-  /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
-  easing?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `"ENTER"` */
-  enterEvent?: string;
-  lang?: string;
-  /** Default: `"LEAVE"` */
-  leaveEvent?: string;
-  /** Default: `true` */
-  once?: boolean;
-  /** Default: `"REVEAL"` */
-  revealEvent?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
-  /** Default: `0.15` */
-  threshold?: number;
-  /** Default: `"scroll"` */
-  trigger?: 'scroll' | 'hover' | 'manual';
 }
 
 /**

@@ -61,36 +61,36 @@ export interface StdGanttSchedulePayload {
  * without modifying its state-machine topology.
  */
 export interface StdGanttScheduleConfig {
-  /** Default: `28` */
-  dayWidth?: number;
   /** Default: `""` */
-  durationField?: string;
+  rangeEnd?: string;
+  /** Default: `{}` */
+  statusColorMap?: Record<string, TraitConfig>;
   /** Default: `"end"` */
   endField?: string;
+  /** Default: `"title"` */
+  labelField?: string;
+  /** Default: `true` */
+  showToday?: boolean;
+  /** Default: `[]` */
+  include?: string[];
+  /** Default: `"status"` */
+  statusField?: string;
+  /** Default: `"start"` */
+  startField?: string;
+  /** Default: `""` */
+  durationField?: string;
+  /** Default: `"Schedule"` */
+  title?: string;
   /** Default: `""` */
   groupField?: string;
   /** Default: `[]` */
-  include?: string[];
-  /** Default: `"title"` */
-  labelField?: string;
-  /** Default: `[]` */
   links?: EntityRow[];
-  /** Default: `""` */
-  onBarClick?: string;
-  /** Default: `""` */
-  rangeEnd?: string;
+  /** Default: `28` */
+  dayWidth?: number;
   /** Default: `""` */
   rangeStart?: string;
-  /** Default: `true` */
-  showToday?: boolean;
-  /** Default: `"start"` */
-  startField?: string;
-  /** Default: `{}` */
-  statusColorMap?: Record<string, TraitConfig>;
-  /** Default: `"status"` */
-  statusField?: string;
-  /** Default: `"Schedule"` */
-  title?: string;
+  /** Default: `""` */
+  onBarClick?: string;
 }
 
 /**

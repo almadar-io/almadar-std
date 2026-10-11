@@ -73,38 +73,38 @@ export interface StdLearnEstimateLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnEstimateConfig {
-  /** Default: `0.25` */
-  closePct?: number;
-  /** Default: `1` */
-  closePoints?: number;
-  /** Default: `0.05` */
-  exactPct?: number;
-  /** Default: `2` */
-  exactPoints?: number;
-  /** Default: `"Lock In"` */
-  lockLabel?: string;
   /** Default: `""` */
   matchMode?: string;
-  /** Default: `"Next"` */
-  nextLabel?: string;
-  /** Default: `[{"answer":300,"hint":"Light covers 300,000 km every second.","prompt":"How many meters does light travel in one microsecond?","unit":"m"},{"answer":212,"hint":"It is 100 °C.","prompt":"What is the boiling point of water at sea level, in Fahrenheit?","unit":"°F"},{"answer":11.6,"hint":"A day is 86,400 seconds.","prompt":"Roughly how many days is one million seconds?","unit":"days"}]` */
-  prompts?: EntityRow[];
-  /** Default: `"Try Again"` */
-  retryLabel?: string;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `100` */
-  sliderDefault?: number;
-  /** Default: `500` */
-  sliderMax?: number;
-  /** Default: `0` */
-  sliderMin?: number;
-  /** Default: `0.1` */
-  sliderStep?: number;
-  /** Default: `""` */
-  summary?: string;
   /** Default: `"Estimate It"` */
   title?: string;
+  /** Default: `0.25` */
+  closePct?: number;
+  /** Default: `0` */
+  sliderMin?: number;
+  /** Default: `100` */
+  sliderDefault?: number;
+  /** Default: `"Try Again"` */
+  retryLabel?: string;
+  /** Default: `"Lock In"` */
+  lockLabel?: string;
+  /** Default: `0.05` */
+  exactPct?: number;
+  /** Default: `[{"answer":300,"unit":"m","prompt":"How many meters does light travel in one microsecond?","hint":"Light covers 300,000 km every second."},{"unit":"°F","answer":212,"hint":"It is 100 °C.","prompt":"What is the boiling point of water at sea level, in Fahrenheit?"},{"hint":"A day is 86,400 seconds.","answer":11.6,"prompt":"Roughly how many days is one million seconds?","unit":"days"}]` */
+  prompts?: EntityRow[];
+  /** Default: `"Next"` */
+  nextLabel?: string;
+  /** Default: `1` */
+  closePoints?: number;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `2` */
+  exactPoints?: number;
+  /** Default: `500` */
+  sliderMax?: number;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
+  /** Default: `0.1` */
+  sliderStep?: number;
 }
 
 /**

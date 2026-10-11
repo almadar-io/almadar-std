@@ -39,20 +39,20 @@ export type StdUiDrawSpriteEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawSpriteConfig {
-  anchor?: 'top-left' | 'ground' | 'center';
-  animation?: string;
-  asset?: EntityRow;
-  clockMs?: number;
-  flipX?: boolean;
-  frame?: EntityRow;
-  height?: number;
-  loop?: boolean;
-  opacity?: number;
-  /** Default: `{"x":1,"y":1,"z":1}` */
-  position?: EntityRow;
   rotation?: number;
   shadow?: EntityRow;
+  anchor?: 'top-left' | 'ground' | 'center';
+  flipX?: boolean;
+  animation?: string;
+  opacity?: number;
+  asset?: EntityRow;
+  frame?: EntityRow;
+  clockMs?: number;
   width?: number;
+  loop?: boolean;
+  height?: number;
+  /** Default: `{"z":1,"x":1,"y":1}` */
+  position?: EntityRow;
 }
 
 /**

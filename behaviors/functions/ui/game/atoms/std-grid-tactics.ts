@@ -56,16 +56,16 @@ export interface StdGridTacticsUnitsChangedPayload {
 export interface StdGridTacticsConfig {
   /** Default: `1` */
   attackDamage?: number;
-  /** Default: `12` */
-  gridHeight?: number;
+  /** Default: `[]` */
+  units?: EntityRow[];
   /** Default: `12` */
   gridWidth?: number;
   /** Default: `true` */
   running?: boolean;
   /** Default: `[]` */
   tiles?: EntityRow[];
-  /** Default: `[]` */
-  units?: EntityRow[];
+  /** Default: `12` */
+  gridHeight?: number;
 }
 
 /**

@@ -98,16 +98,16 @@ export interface StdNotificationPreferencesPreferenceDeletedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdNotificationPreferencesConfig {
-  /** Default: `[{"event":"EDIT","icon":"pencil","label":"Edit","variant":"secondary"},{"event":"DELETE","icon":"trash-2","label":"Delete","variant":"danger"}]` */
+  /** Default: `"Notification preferences"` */
+  title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
+  /** Default: `[{"label":"Edit","event":"EDIT","variant":"secondary","icon":"pencil"},{"icon":"trash-2","event":"DELETE","variant":"danger","label":"Delete"}]` */
   itemActions?: EntityRow[];
   /** Default: `"EDIT"` */
   itemClickEvent?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"Notification preferences"` */
-  title?: string;
-  /** Default: `""` */
-  viewerRole?: string;
 }
 
 /**
@@ -292,8 +292,8 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
     name: 'NotificationPreferencesOrbital',
     uses: [
       {
-        'as': 'Modal',
         'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
       },
     ],
     entity: {
@@ -304,29 +304,27 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'The person this preference row belongs to.',
             'name': 'personId',
-            'required': true,
-            'synonyms': 'user, recipient, owner, account',
             'type': 'string',
+            'required': true,
+            'description': 'The person this preference row belongs to.',
+            'synonyms': 'user, recipient, owner, account',
           },
           {
+            'name': 'eventKey',
+            'type': 'string',
             'default': '',
             'description': 'Event key this preference applies to (matches a notify listener\'s eventKey); blank = all events.',
-            'name': 'eventKey',
             'synonyms': 'event, trigger, topic, subscription',
-            'type': 'string',
           },
           {
-            'default': 'in_app',
-            'description': 'Delivery channel override for this person.',
             'name': 'channel',
-            'synonyms': 'preferred channel, delivery method',
             'type': 'string',
+            'default': 'in_app',
             'values': [
               'in_app',
               'email',
@@ -335,39 +333,41 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
               'sms',
               'webhook',
             ],
+            'description': 'Delivery channel override for this person.',
+            'synonyms': 'preferred channel, delivery method',
           },
           {
-            'default': 'instant',
-            'description': 'Delivery mode: instant (default), digest (deferred to a batch cycle), or off (muted).',
             'name': 'mode',
-            'synonyms': 'delivery mode, frequency, cadence, mute, defer',
             'type': 'string',
+            'default': 'instant',
             'values': [
               'instant',
               'digest',
               'off',
             ],
+            'description': 'Delivery mode: instant (default), digest (deferred to a batch cycle), or off (muted).',
+            'synonyms': 'delivery mode, frequency, cadence, mute, defer',
           },
           {
+            'name': 'quietHours',
+            'type': 'string',
             'default': '',
             'description': 'Quiet-hours window as "HH:MM-HH:MM" (e.g. 22:00-07:00); blank or equal start/end = disabled.',
-            'name': 'quietHours',
             'synonyms': 'do not disturb, quiet window, night mode',
-            'type': 'string',
           },
           {
+            'name': 'createdAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when this preference row was created.',
-            'name': 'createdAt',
             'synonyms': 'creation time, created',
-            'type': 'number',
           },
           {
+            'name': 'updatedAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when this preference row was last updated.',
-            'name': 'updatedAt',
             'synonyms': 'modified, last updated',
-            'type': 'number',
           },
         ];
         const extras = params.fields ?? [];
@@ -378,150 +378,55 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
     } as Entity,
     auxiliaryEntities: [
       {
+        'name': 'GateView',
+        'persistence': 'runtime',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'personId',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: personId of the consult currently in flight.',
-            'name': 'personId',
             'synonyms': 'current person',
-            'type': 'string',
           },
           {
+            'name': 'eventKey',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: effective event key of the consult currently in flight (payload eventKey, or the configured eventKey when the payload is blank).',
-            'name': 'eventKey',
             'synonyms': 'current event key',
-            'type': 'string',
           },
           {
+            'name': 'channel',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: resolved channel for the current consult.',
-            'name': 'channel',
             'synonyms': 'resolved channel',
-            'type': 'string',
           },
           {
+            'name': 'mode',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: resolved delivery mode for the current consult.',
-            'name': 'mode',
             'synonyms': 'resolved mode',
-            'type': 'string',
           },
           {
+            'name': 'quietHours',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: quiet-hours window of the matched row for the current consult; blank = none.',
-            'name': 'quietHours',
             'synonyms': 'resolved quiet hours',
-            'type': 'string',
           },
         ],
-        'name': 'GateView',
-        'persistence': 'runtime',
       },
     ] as EntityRef[],
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'itemActions': {
-            'default': [
-              {
-                'event': 'EDIT',
-                'icon': 'pencil',
-                'label': 'Edit',
-                'variant': 'secondary',
-              },
-              {
-                'event': 'DELETE',
-                'icon': 'trash-2',
-                'label': 'Delete',
-                'variant': 'danger',
-              },
-            ],
-            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-                'when': {
-                  'name': 'when',
-                  'required': false,
-                  'type': 'SExpr',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Row actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'itemClickEvent': {
-            'default': 'EDIT',
-            'description': 'Event emitted when a row is clicked; opens the preference for editing. Empty disables the row click.',
-            'label': 'Row click',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Layer 2 visual treatment for the preference data table rendered by this atom.',
-            'label': 'Table look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'title': {
-            'default': 'Notification preferences',
-            'description': 'Heading shown above the preference list',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
-        },
+        'name': 'PreferencesManage',
         'effectRow': [
           {
             'kind': 'fetch',
@@ -540,89 +445,39 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
             'resource': 'toast',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'NotificationPreference',
         'emits': [
           {
-            'description': 'Opens the blank preference modal.',
             'event': 'CREATE',
+            'description': 'Opens the blank preference modal.',
             'synonyms': 'add, new, insert',
             'tier': 'domain',
           },
           {
-            'description': 'Opens a preference row in the edit modal.',
             'event': 'EDIT',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'entity': 'NotificationPreference',
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'personId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'eventKey',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'channel',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'mode',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'quietHours',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'createdAt',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'updatedAt',
-                    'type': 'number',
-                  },
-                ],
-                'type': 'object',
-              },
-            ],
+            'description': 'Opens a preference row in the edit modal.',
             'synonyms': 'modify, update, change',
             'tier': 'domain',
-          },
-          {
-            'description': 'Removes a preference row.',
-            'event': 'DELETE',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'NotificationPreference',
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'personId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'eventKey',
@@ -631,10 +486,23 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   {
                     'name': 'channel',
                     'type': 'string',
+                    'values': [
+                      'in_app',
+                      'email',
+                      'push',
+                      'slack',
+                      'sms',
+                      'webhook',
+                    ],
                   },
                   {
                     'name': 'mode',
                     'type': 'string',
+                    'values': [
+                      'instant',
+                      'digest',
+                      'off',
+                    ],
                   },
                   {
                     'name': 'quietHours',
@@ -649,29 +517,34 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                     'type': 'number',
                   },
                 ],
-                'type': 'object',
+                'entity': 'NotificationPreference',
               },
             ],
+          },
+          {
+            'event': 'DELETE',
+            'description': 'Removes a preference row.',
             'synonyms': 'remove, discard, clear',
             'tier': 'domain',
-          },
-          {
-            'description': 'The preference collection finished loading.',
-            'event': 'PreferencesLoaded',
             'payloadSchema': [
               {
-                'entity': 'NotificationPreference',
-                'name': 'data',
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'personId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'eventKey',
@@ -680,10 +553,23 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   {
                     'name': 'channel',
                     'type': 'string',
+                    'values': [
+                      'in_app',
+                      'email',
+                      'push',
+                      'slack',
+                      'sms',
+                      'webhook',
+                    ],
                   },
                   {
                     'name': 'mode',
                     'type': 'string',
+                    'values': [
+                      'instant',
+                      'digest',
+                      'off',
+                    ],
                   },
                   {
                     'name': 'quietHours',
@@ -698,44 +584,77 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'NotificationPreference',
               },
             ],
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'domain',
           },
           {
-            'description': 'The preference collection failed to load.',
-            'event': 'PreferencesLoadFailed',
+            'event': 'PreferencesLoaded',
+            'description': 'The preference collection finished loading.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'name': 'error',
-                'type': 'string',
-              },
-              {
-                'name': 'code',
-                'type': 'string',
+                'name': 'data',
+                'type': '[object]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'personId',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'eventKey',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'channel',
+                    'type': 'string',
+                    'values': [
+                      'in_app',
+                      'email',
+                      'push',
+                      'slack',
+                      'sms',
+                      'webhook',
+                    ],
+                  },
+                  {
+                    'name': 'mode',
+                    'type': 'string',
+                    'values': [
+                      'instant',
+                      'digest',
+                      'off',
+                    ],
+                  },
+                  {
+                    'name': 'quietHours',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'updatedAt',
+                    'type': 'number',
+                  },
+                ],
+                'entity': 'NotificationPreference',
               },
             ],
+          },
+          {
+            'event': 'PreferencesLoadFailed',
+            'description': 'The preference collection failed to load.',
             'synonyms': 'error, failure, load error',
             'tier': 'internal',
-          },
-          {
-            'description': 'A preference row persisted (create or update).',
-            'event': 'PreferenceSaved',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'synonyms': 'created, updated, persisted',
-            'tier': 'domain',
-          },
-          {
-            'description': 'A preference persist failed.',
-            'event': 'PreferenceSaveFailed',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -746,393 +665,73 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                 'type': 'string',
               },
             ],
-            'synonyms': 'failed, error, unsuccessful',
-            'tier': 'internal',
           },
           {
-            'description': 'A preference row was deleted.',
-            'event': 'PreferenceDeleted',
+            'event': 'PreferenceSaved',
+            'description': 'A preference row persisted (create or update).',
+            'synonyms': 'created, updated, persisted',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'id',
+                'type': 'string',
                 'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'PreferenceSaveFailed',
+            'description': 'A preference persist failed.',
+            'synonyms': 'failed, error, unsuccessful',
+            'tier': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
                 'type': 'string',
               },
             ],
+          },
+          {
+            'event': 'PreferenceDeleted',
+            'description': 'A preference row was deleted.',
             'synonyms': 'removed, purged, discarded',
             'tier': 'domain',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
           },
         ],
-        'linkedEntity': 'NotificationPreference',
         'listens': [
           {
             'event': 'PREFERENCE_CREATED',
+            'triggers': 'DO_CREATE',
             'source': {
               'kind': 'trait',
               'trait': ('PreferenceCreate' satisfies _StdNotificationPreferencesListenTraitName),
             },
-            'triggers': 'DO_CREATE',
           },
           {
             'event': 'PREFERENCE_UPDATED',
+            'triggers': 'DO_UPDATE',
             'source': {
               'kind': 'trait',
               'trait': ('PreferenceEdit' satisfies _StdNotificationPreferencesListenTraitName),
             },
-            'triggers': 'DO_UPDATE',
           },
         ],
-        'name': 'PreferencesManage',
-        'scope': 'collection',
         'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'The preference collection finished loading.',
-              'key': 'PreferencesLoaded',
-              'name': 'Preferences loaded',
-              'payloadSchema': [
-                {
-                  'entity': 'NotificationPreference',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'personId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'eventKey',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'channel',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'mode',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'quietHours',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'updatedAt',
-                      'type': 'number',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'domain',
-            },
-            {
-              'description': 'The preference collection failed to load.',
-              'key': 'PreferencesLoadFailed',
-              'name': 'Preferences load failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'error, failure, load error',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Removes a preference row.',
-              'key': 'DELETE',
-              'name': 'Delete',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'NotificationPreference',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'personId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'eventKey',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'channel',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'mode',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'quietHours',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'updatedAt',
-                      'type': 'number',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'remove, discard, clear',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Create persist requested; the modal\'s SAVE payload carries the full form row.',
-              'key': 'DO_CREATE',
-              'name': 'Do Create',
-              'payloadSchema': [
-                {
-                  'entity': 'NotificationPreference',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'personId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'eventKey',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'channel',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'mode',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'quietHours',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'updatedAt',
-                      'type': 'number',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'add, new, insert',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Update persist requested; the modal\'s SAVE payload carries the full form row.',
-              'key': 'DO_UPDATE',
-              'name': 'Do Update',
-              'payloadSchema': [
-                {
-                  'entity': 'NotificationPreference',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'personId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'eventKey',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'channel',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'mode',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'quietHours',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'updatedAt',
-                      'type': 'number',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'modified, changed, refreshed',
-              'tier': 'internal',
-            },
-            {
-              'description': 'A preference row persisted (create or update).',
-              'key': 'PreferenceSaved',
-              'name': 'Preference saved',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'created, updated, persisted',
-              'tier': 'domain',
-            },
-            {
-              'description': 'A preference row was deleted.',
-              'key': 'PreferenceDeleted',
-              'name': 'Preference deleted',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'removed, purged, discarded',
-              'tier': 'domain',
-            },
-            {
-              'description': 'A preference persist failed.',
-              'key': 'PreferenceSaveFailed',
-              'name': 'Preference save failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'failed, error, unsuccessful',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Retries loading the preference collection after a failure.',
-              'key': 'RETRY',
-              'name': 'Retry',
-              'synonyms': 'try again, reload',
-              'tier': 'presentation',
-            },
-            {
-              'description': 'Opens the blank preference modal.',
-              'key': 'CREATE',
-              'name': 'Create',
-              'synonyms': 'add, new, insert',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Opens a preference row in the edit modal.',
-              'key': 'EDIT',
-              'name': 'Edit',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'NotificationPreference',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'personId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'eventKey',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'channel',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'mode',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'quietHours',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'updatedAt',
-                      'type': 'number',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'modify, update, change',
-              'tier': 'domain',
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'loading',
+              'isInitial': true,
             },
             {
               'name': 'browsing',
@@ -1141,16 +740,428 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
               'name': 'error',
             },
           ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'PreferencesLoaded',
+              'name': 'Preferences loaded',
+              'description': 'The preference collection finished loading.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'personId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'eventKey',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'channel',
+                      'type': 'string',
+                      'values': [
+                        'in_app',
+                        'email',
+                        'push',
+                        'slack',
+                        'sms',
+                        'webhook',
+                      ],
+                    },
+                    {
+                      'name': 'mode',
+                      'type': 'string',
+                      'values': [
+                        'instant',
+                        'digest',
+                        'off',
+                      ],
+                    },
+                    {
+                      'name': 'quietHours',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'updatedAt',
+                      'type': 'number',
+                    },
+                  ],
+                  'entity': 'NotificationPreference',
+                },
+              ],
+            },
+            {
+              'key': 'PreferencesLoadFailed',
+              'name': 'Preferences load failed',
+              'description': 'The preference collection failed to load.',
+              'synonyms': 'error, failure, load error',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'description': 'Removes a preference row.',
+              'synonyms': 'remove, discard, clear',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'personId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'eventKey',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'channel',
+                      'type': 'string',
+                      'values': [
+                        'in_app',
+                        'email',
+                        'push',
+                        'slack',
+                        'sms',
+                        'webhook',
+                      ],
+                    },
+                    {
+                      'name': 'mode',
+                      'type': 'string',
+                      'values': [
+                        'instant',
+                        'digest',
+                        'off',
+                      ],
+                    },
+                    {
+                      'name': 'quietHours',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'updatedAt',
+                      'type': 'number',
+                    },
+                  ],
+                  'entity': 'NotificationPreference',
+                },
+              ],
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'description': 'Create persist requested; the modal\'s SAVE payload carries the full form row.',
+              'synonyms': 'add, new, insert',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'personId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'eventKey',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'channel',
+                      'type': 'string',
+                      'values': [
+                        'in_app',
+                        'email',
+                        'push',
+                        'slack',
+                        'sms',
+                        'webhook',
+                      ],
+                    },
+                    {
+                      'name': 'mode',
+                      'type': 'string',
+                      'values': [
+                        'instant',
+                        'digest',
+                        'off',
+                      ],
+                    },
+                    {
+                      'name': 'quietHours',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'updatedAt',
+                      'type': 'number',
+                    },
+                  ],
+                  'entity': 'NotificationPreference',
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'description': 'Update persist requested; the modal\'s SAVE payload carries the full form row.',
+              'synonyms': 'modified, changed, refreshed',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'personId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'eventKey',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'channel',
+                      'type': 'string',
+                      'values': [
+                        'in_app',
+                        'email',
+                        'push',
+                        'slack',
+                        'sms',
+                        'webhook',
+                      ],
+                    },
+                    {
+                      'name': 'mode',
+                      'type': 'string',
+                      'values': [
+                        'instant',
+                        'digest',
+                        'off',
+                      ],
+                    },
+                    {
+                      'name': 'quietHours',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'updatedAt',
+                      'type': 'number',
+                    },
+                  ],
+                  'entity': 'NotificationPreference',
+                },
+              ],
+            },
+            {
+              'key': 'PreferenceSaved',
+              'name': 'Preference saved',
+              'description': 'A preference row persisted (create or update).',
+              'synonyms': 'created, updated, persisted',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PreferenceDeleted',
+              'name': 'Preference deleted',
+              'description': 'A preference row was deleted.',
+              'synonyms': 'removed, purged, discarded',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PreferenceSaveFailed',
+              'name': 'Preference save failed',
+              'description': 'A preference persist failed.',
+              'synonyms': 'failed, error, unsuccessful',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+              'description': 'Retries loading the preference collection after a failure.',
+              'synonyms': 'try again, reload',
+              'tier': 'presentation',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+              'description': 'Opens the blank preference modal.',
+              'synonyms': 'add, new, insert',
+              'tier': 'domain',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'description': 'Opens a preference row in the edit modal.',
+              'synonyms': 'modify, update, change',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'personId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'eventKey',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'channel',
+                      'type': 'string',
+                      'values': [
+                        'in_app',
+                        'email',
+                        'push',
+                        'slack',
+                        'sms',
+                        'webhook',
+                      ],
+                    },
+                    {
+                      'name': 'mode',
+                      'type': 'string',
+                      'values': [
+                        'instant',
+                        'digest',
+                        'off',
+                      ],
+                    },
+                    {
+                      'name': 'quietHours',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'updatedAt',
+                      'type': 'number',
+                    },
+                  ],
+                  'entity': 'NotificationPreference',
+                },
+              ],
+            },
+          ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('NotificationPreference' satisfies _StdNotificationPreferencesEntityName),
                   {
                     'emit': {
-                      'failure': 'PreferencesLoadFailed',
                       'success': 'PreferencesLoaded',
+                      'failure': 'PreferencesLoadFailed',
                     },
                   },
                 ],
@@ -1164,22 +1175,22 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                         'variant': 'header',
                       },
                       {
-                        'rows': 6,
                         'type': 'skeleton',
                         'variant': 'grid',
+                        'rows': 6,
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'PreferencesLoaded',
               'effects': [
                 [
                   'render-ui',
@@ -1187,13 +1198,18 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   {
                     'children': [
                       {
+                        'justify': 'between',
+                        'direction': 'horizontal',
                         'children': [
                           {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'name': 'bell',
-                                'size': 'lg',
                                 'type': 'icon',
+                                'size': 'lg',
                               },
                               {
                                 'content': '@config.title',
@@ -1201,56 +1217,25 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                                 'variant': 'h3',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
                           },
                           {
-                            'action': 'CREATE',
-                            'icon': 'plus',
-                            'label': 'New preference',
-                            'type': 'button',
                             'variant': 'primary',
+                            'action': 'CREATE',
+                            'label': 'New preference',
+                            'icon': 'plus',
+                            'type': 'button',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
                         'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'data-grid',
                         'cols': 1,
-                        'entity': '@payload.data',
-                        'fields': [
-                          {
-                            'label': 'Person',
-                            'name': 'personId',
-                            'variant': 'h4',
-                          },
-                          {
-                            'label': 'Event',
-                            'name': 'eventKey',
-                            'variant': 'caption',
-                          },
-                          {
-                            'label': 'Channel',
-                            'name': 'channel',
-                            'variant': 'badge',
-                          },
-                          {
-                            'label': 'Mode',
-                            'name': 'mode',
-                            'variant': 'badge',
-                          },
-                          {
-                            'label': 'Quiet hours',
-                            'name': 'quietHours',
-                            'variant': 'caption',
-                          },
-                        ],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'gap': 'sm',
                         'itemActions': [
                           'array/filter',
@@ -1286,54 +1271,80 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                             ],
                           ],
                         ],
-                        'itemClickEvent': '@config.itemClickEvent',
+                        'entity': '@payload.data',
+                        'fields': [
+                          {
+                            'variant': 'h4',
+                            'name': 'personId',
+                            'label': 'Person',
+                          },
+                          {
+                            'name': 'eventKey',
+                            'variant': 'caption',
+                            'label': 'Event',
+                          },
+                          {
+                            'name': 'channel',
+                            'label': 'Channel',
+                            'variant': 'badge',
+                          },
+                          {
+                            'label': 'Mode',
+                            'name': 'mode',
+                            'variant': 'badge',
+                          },
+                          {
+                            'name': 'quietHours',
+                            'label': 'Quiet hours',
+                            'variant': 'caption',
+                          },
+                        ],
                         'look': '@config.tableLook',
-                        'type': 'data-grid',
                       },
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'PreferencesLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'PreferencesLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
-                        'message': '@payload.error',
                         'type': 'alert',
+                        'message': '@payload.error',
                         'variant': 'error',
                       },
                       {
-                        'action': 'RETRY',
-                        'icon': 'rotate-ccw',
-                        'label': 'Retry',
                         'type': 'button',
+                        'action': 'RETRY',
+                        'label': 'Retry',
                         'variant': 'primary',
+                        'icon': 'rotate-ccw',
                       },
                     ],
                     'className': 'py-12',
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
-              'event': 'PreferencesLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1349,28 +1360,28 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
-                        'rows': 6,
                         'type': 'skeleton',
                         'variant': 'grid',
+                        'rows': 6,
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'DELETE',
               'effects': [
                 [
                   'persist',
@@ -1385,11 +1396,11 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   },
                 ],
               ],
-              'event': 'DELETE',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'DO_CREATE',
               'effects': [
                 [
                   'persist',
@@ -1398,17 +1409,17 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'PreferenceSaveFailed',
                       'success': 'PreferenceSaved',
+                      'failure': 'PreferenceSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'DO_CREATE',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'DO_UPDATE',
               'effects': [
                 [
                   'persist',
@@ -1417,26 +1428,26 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'PreferenceSaveFailed',
                       'success': 'PreferenceSaved',
+                      'failure': 'PreferenceSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'DO_UPDATE',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'PreferenceSaved',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
-                    'message': 'Notification preference saved',
                     'type': 'alert',
                     'variant': 'success',
+                    'dismissible': true,
+                    'message': 'Notification preference saved',
                   },
                 ],
                 [
@@ -1444,25 +1455,25 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   ('NotificationPreference' satisfies _StdNotificationPreferencesEntityName),
                   {
                     'emit': {
-                      'failure': 'PreferencesLoadFailed',
                       'success': 'PreferencesLoaded',
+                      'failure': 'PreferencesLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'PreferenceSaved',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'PreferenceDeleted',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
-                    'message': 'Notification preference removed',
                     'type': 'alert',
+                    'message': 'Notification preference removed',
+                    'dismissible': true,
                     'variant': 'info',
                   },
                 ],
@@ -1471,103 +1482,66 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   ('NotificationPreference' satisfies _StdNotificationPreferencesEntityName),
                   {
                     'emit': {
-                      'failure': 'PreferencesLoadFailed',
                       'success': 'PreferencesLoaded',
+                      'failure': 'PreferencesLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'PreferenceDeleted',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'PreferenceSaveFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
                     'dismissible': true,
-                    'message': 'Could not save the notification preference',
-                    'type': 'alert',
                     'variant': 'warning',
+                    'type': 'alert',
+                    'message': 'Could not save the notification preference',
                   },
                 ],
               ],
-              'event': 'PreferenceSaveFailed',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'align': 'center',
-                    'children': [
-                      {
-                        'message': '@payload.error',
-                        'type': 'alert',
-                        'variant': 'error',
-                      },
-                      {
-                        'action': 'RETRY',
-                        'icon': 'rotate-ccw',
-                        'label': 'Retry',
-                        'type': 'button',
-                        'variant': 'primary',
-                      },
-                    ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'PreferencesLoadFailed',
               'from': 'browsing',
               'to': 'error',
-            },
-            {
+              'event': 'PreferencesLoadFailed',
               'effects': [
-                [
-                  'fetch',
-                  ('NotificationPreference' satisfies _StdNotificationPreferencesEntityName),
-                  {
-                    'emit': {
-                      'failure': 'PreferencesLoadFailed',
-                      'success': 'PreferencesLoaded',
-                    },
-                  },
-                ],
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
                     'children': [
                       {
-                        'type': 'skeleton',
-                        'variant': 'header',
+                        'type': 'alert',
+                        'variant': 'error',
+                        'message': '@payload.error',
                       },
                       {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'grid',
+                        'label': 'Retry',
+                        'variant': 'primary',
+                        'type': 'button',
+                        'icon': 'rotate-ccw',
+                        'action': 'RETRY',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'className': 'py-12',
+                    'align': 'center',
+                    'direction': 'vertical',
                   },
                 ],
               ],
+            },
+            {
+              'from': 'error',
+              'to': 'loading',
               'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
-            },
-            {
               'effects': [
                 [
                   'fetch',
@@ -1583,33 +1557,171 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
+                        'variant': 'grid',
                         'rows': 6,
                         'type': 'skeleton',
-                        'variant': 'grid',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'RETRY',
+            },
+            {
               'from': 'error',
               'to': 'loading',
+              'event': 'RETRY',
+              'effects': [
+                [
+                  'fetch',
+                  ('NotificationPreference' satisfies _StdNotificationPreferencesEntityName),
+                  {
+                    'emit': {
+                      'success': 'PreferencesLoaded',
+                      'failure': 'PreferencesLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'variant': 'grid',
+                        'rows': 6,
+                        'type': 'skeleton',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
             },
           ],
         },
+        'config': {
+          'title': {
+            'type': 'string',
+            'default': 'Notification preferences',
+            'label': 'Section title',
+            'description': 'Heading shown above the preference list',
+            'tier': 'presentation',
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'itemActions': {
+            'type': '[ItemAction]',
+            'default': [
+              {
+                'label': 'Edit',
+                'event': 'EDIT',
+                'variant': 'secondary',
+                'icon': 'pencil',
+              },
+              {
+                'icon': 'trash-2',
+                'event': 'DELETE',
+                'variant': 'danger',
+                'label': 'Delete',
+              },
+            ],
+            'label': 'Row actions',
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'when': {
+                  'name': 'when',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'itemClickEvent': {
+            'type': 'event',
+            'default': 'EDIT',
+            'label': 'Row click',
+            'description': 'Event emitted when a row is clicked; opens the preference for editing. Empty disables the row click.',
+            'tier': 'presentation',
+          },
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Table look',
+            'description': 'Layer 2 visual treatment for the preference data table rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
       makeTraitRef({
+        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdNotificationPreferencesNotificationPreferencesOrbitalUsesRef),
+        'name': 'PreferenceCreate',
+        'linkedEntity': 'NotificationPreference',
         'config': {
+          'title': {
+            'type': 'unknown',
+            'default': 'New notification preference',
+          },
           'fields': {
+            'type': 'unknown',
             'default': [
               'personId',
               'eventKey',
@@ -1617,42 +1729,42 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
               'mode',
               'quietHours',
             ],
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'plus-circle',
-            'type': 'unknown',
           },
           'mode': {
+            'type': 'unknown',
             'default': 'create',
-            'type': 'unknown',
           },
-          'title': {
-            'default': 'New notification preference',
+          'icon': {
             'type': 'unknown',
+            'default': 'plus-circle',
           },
         },
         'events': {
           'OPEN': 'CREATE',
           'SAVE': 'PREFERENCE_CREATED',
         },
-        'linkedEntity': 'NotificationPreference',
         'listens': [
           {
             'event': 'CREATE',
+            'triggers': 'CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'PreferencesManage',
             },
-            'triggers': 'CREATE',
           },
         ],
-        'name': 'PreferenceCreate',
-        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdNotificationPreferencesNotificationPreferencesOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdNotificationPreferencesNotificationPreferencesOrbitalUsesRef),
+        'name': 'PreferenceEdit',
+        'linkedEntity': 'NotificationPreference',
         'config': {
+          'icon': {
+            'type': 'unknown',
+            'default': 'pencil',
+          },
           'fields': {
+            'type': 'unknown',
             'default': [
               'personId',
               'eventKey',
@@ -1660,51 +1772,33 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
               'mode',
               'quietHours',
             ],
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'pencil',
-            'type': 'unknown',
           },
           'mode': {
-            'default': 'edit',
             'type': 'unknown',
+            'default': 'edit',
           },
           'title': {
-            'default': 'Edit notification preference',
             'type': 'unknown',
+            'default': 'Edit notification preference',
           },
         },
         'events': {
           'OPEN': 'EDIT',
           'SAVE': 'PREFERENCE_UPDATED',
         },
-        'linkedEntity': 'NotificationPreference',
         'listens': [
           {
             'event': 'EDIT',
+            'triggers': 'EDIT',
             'source': {
               'kind': 'trait',
               'trait': 'PreferencesManage',
             },
-            'triggers': 'EDIT',
           },
         ],
-        'name': 'PreferenceEdit',
-        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdNotificationPreferencesNotificationPreferencesOrbitalUsesRef),
       }),
       {
-        'category': 'lifecycle',
-        'config': {
-          'eventKey': {
-            'default': '',
-            'description': 'Stable key naming the event this gate checks preferences for (e.g. \'BudgetThreshold\' — the std-finance-tracker NotifyOnEventListener convention). A blank CHECK_PREFERENCE payload eventKey falls back to this value. Preference rows whose eventKey is blank apply to every event.',
-            'label': 'Event key',
-            'synonyms': 'preference key, event name, subscription key, notification topic',
-            'tier': 'policy',
-            'type': 'string',
-          },
-        },
+        'name': 'PreferenceGate',
         'effectRow': [
           {
             'kind': 'emit',
@@ -1739,10 +1833,15 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
             'resource': '@entity.quietHours',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'GateView',
         'emits': [
           {
-            'description': 'The gate\'s verdict for a CHECK_PREFERENCE consult: resolved channel and mode, and whether quiet hours suppress delivery right now. Fail-open: no row or failed lookup = { channel: in_app, mode: instant, suppressed: false }.',
             'event': 'PREFERENCE_RESOLVED',
+            'description': 'The gate\'s verdict for a CHECK_PREFERENCE consult: resolved channel and mode, and whether quiet hours suppress delivery right now. Fail-open: no row or failed lookup = { channel: in_app, mode: instant, suppressed: false }.',
+            'synonyms': 'verdict, preference answer, gate result, resolved preference',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'personId',
@@ -1765,27 +1864,25 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                 'type': 'boolean',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'verdict, preference answer, gate result, resolved preference',
-            'tier': 'domain',
           },
           {
-            'description': 'NotificationPreference rows loaded; the arm filters to the (personId, eventKey) match and resolves the verdict',
             'event': 'PREFERENCE_ROWS_LOADED',
+            'description': 'NotificationPreference rows loaded; the arm filters to the (personId, eventKey) match and resolves the verdict',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'NotificationPreference',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'personId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'eventKey',
@@ -1794,10 +1891,23 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   {
                     'name': 'channel',
                     'type': 'string',
+                    'values': [
+                      'in_app',
+                      'email',
+                      'push',
+                      'slack',
+                      'sms',
+                      'webhook',
+                    ],
                   },
                   {
                     'name': 'mode',
                     'type': 'string',
+                    'values': [
+                      'instant',
+                      'digest',
+                      'off',
+                    ],
                   },
                   {
                     'name': 'quietHours',
@@ -1812,33 +1922,37 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'NotificationPreference',
               },
             ],
-            'tier': 'internal',
           },
           {
-            'description': 'The preference fetch failed — the arm emits the fail-open verdict',
             'event': 'PREFERENCE_CHECK_FAILED',
+            'description': 'The preference fetch failed — the arm emits the fail-open verdict',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'GateView',
-        'name': 'PreferenceGate',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
-              'description': 'Consult the gate for a person\'s effective notification preference.',
               'key': 'CHECK_PREFERENCE',
               'name': 'Check Preference',
+              'description': 'Consult the gate for a person\'s effective notification preference.',
+              'synonyms': 'check preference, resolve preference, should notify, gate notification',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'personId',
@@ -1849,27 +1963,26 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   'type': 'string',
                 },
               ],
-              'synonyms': 'check preference, resolve preference, should notify, gate notification',
-              'tier': 'domain',
             },
             {
-              'description': 'NotificationPreference rows loaded; the arm filters to the (personId, eventKey) match and resolves the verdict',
               'key': 'PREFERENCE_ROWS_LOADED',
               'name': 'Preference Rows Loaded',
+              'description': 'NotificationPreference rows loaded; the arm filters to the (personId, eventKey) match and resolves the verdict',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'NotificationPreference',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'personId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'eventKey',
@@ -1878,10 +1991,23 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                     {
                       'name': 'channel',
                       'type': 'string',
+                      'values': [
+                        'in_app',
+                        'email',
+                        'push',
+                        'slack',
+                        'sms',
+                        'webhook',
+                      ],
                     },
                     {
                       'name': 'mode',
                       'type': 'string',
+                      'values': [
+                        'instant',
+                        'digest',
+                        'off',
+                      ],
                     },
                     {
                       'name': 'quietHours',
@@ -1896,28 +2022,29 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'NotificationPreference',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The preference fetch failed — the arm emits the fail-open verdict',
               'key': 'PREFERENCE_CHECK_FAILED',
               'name': 'Preference Check Failed',
+              'description': 'The preference fetch failed — the arm emits the fail-open verdict',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The gate\'s verdict for a CHECK_PREFERENCE consult: resolved channel and mode, and whether quiet hours suppress delivery right now. Fail-open: no row or failed lookup = { channel: in_app, mode: instant, suppressed: false }.',
               'key': 'PREFERENCE_RESOLVED',
               'name': 'Preference Resolved',
+              'description': 'The gate\'s verdict for a CHECK_PREFERENCE consult: resolved channel and mode, and whether quiet hours suppress delivery right now. Fail-open: no row or failed lookup = { channel: in_app, mode: instant, suppressed: false }.',
+              'synonyms': 'verdict, preference answer, gate result, resolved preference',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'personId',
@@ -1940,18 +2067,13 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   'type': 'boolean',
                 },
               ],
-              'synonyms': 'verdict, preference answer, gate result, resolved preference',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CHECK_PREFERENCE',
               'effects': [
                 [
                   'set',
@@ -1983,11 +2105,11 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   },
                 ],
               ],
-              'event': 'CHECK_PREFERENCE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PREFERENCE_ROWS_LOADED',
               'effects': [
                 [
                   'set',
@@ -2306,9 +2428,9 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   'PREFERENCE_RESOLVED',
                   {
                     'channel': '@entity.channel',
-                    'eventKey': '@entity.eventKey',
-                    'mode': '@entity.mode',
                     'personId': '@entity.personId',
+                    'mode': '@entity.mode',
+                    'eventKey': '@entity.eventKey',
                     'suppressed': [
                       'and',
                       [
@@ -2471,39 +2593,47 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                   },
                 ],
               ],
-              'event': 'PREFERENCE_ROWS_LOADED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PREFERENCE_CHECK_FAILED',
               'effects': [
                 [
                   'emit',
                   'PREFERENCE_RESOLVED',
                   {
                     'channel': 'in_app',
-                    'eventKey': '@entity.eventKey',
-                    'mode': 'instant',
-                    'personId': '@entity.personId',
                     'suppressed': false,
+                    'mode': 'instant',
+                    'eventKey': '@entity.eventKey',
+                    'personId': '@entity.personId',
                   },
                 ],
                 [
                   'render-ui',
                   'toast',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
                     'variant': 'error',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'PREFERENCE_CHECK_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'eventKey': {
+            'type': 'string',
+            'default': '',
+            'label': 'Event key',
+            'description': 'Stable key naming the event this gate checks preferences for (e.g. \'BudgetThreshold\' — the std-finance-tracker NotifyOnEventListener convention). A blank CHECK_PREFERENCE payload eventKey falls back to this value. Preference rows whose eventKey is blank apply to every event.',
+            'synonyms': 'preference key, event name, subscription key, notification topic',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

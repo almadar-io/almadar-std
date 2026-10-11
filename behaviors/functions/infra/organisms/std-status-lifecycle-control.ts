@@ -56,9 +56,9 @@ export interface StdStatusLifecycleControlTransitionRequestedPayload {
  */
 export interface StdStatusLifecycleControlConfig {
   /** Default: `""` */
-  currentStatus?: string;
-  /** Default: `""` */
   recordId?: string;
+  /** Default: `""` */
+  currentStatus?: string;
   /** Default: `[]` */
   transitions?: EntityRow[];
 }
@@ -114,8 +114,8 @@ export function stdStatusLifecycleControlStatusLifecycleControlOrbital(params: S
     name: 'StatusLifecycleControlOrbital',
     uses: [
       {
-        'as': 'Badge',
         'from': 'std/behaviors/ui-badge',
+        'as': 'Badge',
       },
     ],
     entity: {
@@ -125,8 +125,8 @@ export function stdStatusLifecycleControlStatusLifecycleControlOrbital(params: S
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -137,55 +137,11 @@ export function stdStatusLifecycleControlStatusLifecycleControlOrbital(params: S
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'currentStatus': {
-            'default': '',
-            'description': 'The record\'s current status, shown as a badge and used to compute which transitions are legal. Forward the host entity\'s status field at the embed site (e.g. currentStatus={@entity.status}).',
-            'label': 'Current status',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'recordId': {
-            'default': '',
-            'description': 'id of the record whose status this control changes. Forward the host entity\'s id at the embed site (e.g. recordId={@entity.id}).',
-            'label': 'Record id',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'transitions': {
-            'default': [],
-            'description': 'Legal transitions as { from, to, event, label } — pass the SAME table given to the paired StatusMachine trait\'s config.transitions so the rendered buttons never offer a move the atom would reject.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'string',
-                },
-                'from': {
-                  'name': 'from',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'to': {
-                  'name': 'to',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Which status moves are allowed?',
-            'synonyms': 'edges, allowed moves, status flow, workflow transitions',
-            'tier': 'domain',
-            'type': '[TransitionSpec]',
-          },
+        'name': 'StatusLifecycleControl',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -197,10 +153,15 @@ export function stdStatusLifecycleControlStatusLifecycleControlOrbital(params: S
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'StatusControlItem',
         'emits': [
           {
-            'description': 'Fired when the viewer picks a legal next status from the control.',
             'event': 'ChangeStatusRequested',
+            'description': 'Fired when the viewer picks a legal next status from the control.',
+            'synonyms': 'status change, workflow transition, stage change',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -215,54 +176,51 @@ export function stdStatusLifecycleControlStatusLifecycleControlOrbital(params: S
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'status change, workflow transition, stage change',
-            'tier': 'primary',
           },
           {
-            'description': 'A legal-transition button was clicked.',
             'event': 'TRANSITION_REQUESTED',
+            'description': 'A legal-transition button was clicked.',
+            'synonyms': 'transition clicked, move selected',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'to',
                 'type': 'string',
               },
             ],
-            'synonyms': 'transition clicked, move selected',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'StatusControlItem',
-        'name': 'StatusLifecycleControl',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'A legal-transition button was clicked.',
               'key': 'TRANSITION_REQUESTED',
               'name': 'Transition Requested',
+              'description': 'A legal-transition button was clicked.',
+              'synonyms': 'transition clicked, move selected',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'to',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'transition clicked, move selected',
-              'tier': 'internal',
             },
             {
-              'description': 'Fired when the viewer picks a legal next status from the control.',
               'key': 'ChangeStatusRequested',
               'name': 'Change status requested',
+              'description': 'Fired when the viewer picks a legal next status from the control.',
+              'synonyms': 'status change, workflow transition, stage change',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -277,27 +235,23 @@ export function stdStatusLifecycleControlStatusLifecycleControlOrbital(params: S
                   'type': 'string',
                 },
               ],
-              'synonyms': 'status change, workflow transition, stage change',
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'direction': 'horizontal',
                     'children': [
                       '@trait.InlineBadgeRender1',
                       {
+                        'direction': 'horizontal',
                         'children': [
                           'array/map',
                           [
@@ -321,7 +275,14 @@ export function stdStatusLifecycleControlStatusLifecycleControlOrbital(params: S
                             'fn',
                             't',
                             {
+                              'variant': 'secondary',
                               'action': 'TRANSITION_REQUESTED',
+                              'label': [
+                                'object/get',
+                                '@t',
+                                'label',
+                              ],
+                              'type': 'button',
                               'actionPayload': {
                                 'to': [
                                   'object/get',
@@ -329,64 +290,103 @@ export function stdStatusLifecycleControlStatusLifecycleControlOrbital(params: S
                                   'to',
                                 ],
                               },
-                              'label': [
-                                'object/get',
-                                '@t',
-                                'label',
-                              ],
-                              'type': 'button',
-                              'variant': 'secondary',
                             },
                           ],
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
                         'type': 'stack',
                       },
                     ],
-                    'direction': 'horizontal',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'TRANSITION_REQUESTED',
               'effects': [
                 [
                   'emit',
                   'ChangeStatusRequested',
                   {
-                    'from': '@config.currentStatus',
                     'id': '@config.recordId',
+                    'from': '@config.currentStatus',
                     'to': '@payload.to',
                   },
                 ],
               ],
-              'event': 'TRANSITION_REQUESTED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
-      } satisfies Trait,
-      makeTraitRef({
         'config': {
-          'label': {
-            'default': '@config.currentStatus',
-            'type': 'unknown',
+          'recordId': {
+            'type': 'string',
+            'default': '',
+            'label': 'Record id',
+            'description': 'id of the record whose status this control changes. Forward the host entity\'s id at the embed site (e.g. recordId={@entity.id}).',
+            'tier': 'internal',
           },
-          'variant': {
-            'default': 'neutral',
-            'type': 'unknown',
+          'currentStatus': {
+            'type': 'string',
+            'default': '',
+            'label': 'Current status',
+            'description': 'The record\'s current status, shown as a badge and used to compute which transitions are legal. Forward the host entity\'s status field at the embed site (e.g. currentStatus={@entity.status}).',
+            'tier': 'internal',
+          },
+          'transitions': {
+            'type': '[TransitionSpec]',
+            'default': [],
+            'label': 'Which status moves are allowed?',
+            'description': 'Legal transitions as { from, to, event, label } — pass the SAME table given to the paired StatusMachine trait\'s config.transitions so the rendered buttons never offer a move the atom would reject.',
+            'synonyms': 'edges, allowed moves, status flow, workflow transitions',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
+                'to': {
+                  'name': 'to',
+                  'type': 'string',
+                  'required': true,
+                },
+                'from': {
+                  'name': 'from',
+                  'type': 'string',
+                  'required': true,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
           },
         },
-        'linkedEntity': 'StatusControlItem',
-        'name': 'InlineBadgeRender1',
+        'scope': 'instance',
+      } satisfies Trait,
+      makeTraitRef({
         'ref': ('Badge.traits.BadgeRender' satisfies _StdStatusLifecycleControlStatusLifecycleControlOrbitalUsesRef),
+        'name': 'InlineBadgeRender1',
+        'linkedEntity': 'StatusControlItem',
+        'config': {
+          'label': {
+            'type': 'unknown',
+            'default': '@config.currentStatus',
+          },
+          'variant': {
+            'type': 'unknown',
+            'default': 'neutral',
+          },
+        },
       }),
     ],
     pages: [

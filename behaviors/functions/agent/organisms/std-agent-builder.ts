@@ -145,45 +145,45 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'default': '',
             'name': 'request',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'orbitalName',
             'type': 'string',
+            'default': '',
           },
           {
+            'name': 'queryVector',
+            'type': 'array',
             'default': [],
             'items': {
               'type': 'number',
             },
-            'name': 'queryVector',
-            'type': 'array',
           },
           {
             'name': 'pick',
             'type': 'trait',
           },
           {
-            'default': '',
             'name': 'behavior',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'error',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'searching',
@@ -201,21 +201,7 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'scope': {
-            'default': [
-              'almadar-std/ui/core/molecules',
-            ],
-            'description': 'Registry folders (`<prefix>/<topic>[/<tier>]`) the builder may pick from.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Where to look for building blocks',
-            'tier': 'domain',
-            'type': '[string]',
-          },
-        },
+        'name': 'BuilderPipeline',
         'effectRow': [
           {
             'kind': 'behavior/catalog',
@@ -268,58 +254,60 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'BuilderProcess',
         'emits': [
           {
             'event': 'BUILD_COMPLETE',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'orbitalName',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'behavior',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'BUILD_REJECTED',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'BuildIssue',
                 'name': 'errors',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'code',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'message',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'type': '[object]',
+                'entity': 'BuildIssue',
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'REQUEST_EMBEDDED',
             'payloadSchema': [
               {
                 'name': 'embeddings',
-                'required': true,
                 'type': '[[number]]',
+                'required': true,
               },
             ],
           },
@@ -327,26 +315,26 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
             'event': 'CATALOG_LISTED',
             'payloadSchema': [
               {
-                'entity': 'CatalogHit',
                 'name': 'result',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'behavior',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'traits',
-                    'required': true,
                     'type': '[trait]',
+                    'required': true,
                   },
                   {
                     'name': 'vectors',
                     'type': 'Map<string,[number]>',
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'CatalogHit',
               },
             ],
           },
@@ -355,15 +343,15 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
             'payloadSchema': [
               {
                 'name': 'result',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'behavior',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
             ],
           },
@@ -372,193 +360,34 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'BuildIssue',
                 'name': 'errors',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'code',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'message',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'type': '[object]',
+                'entity': 'BuildIssue',
               },
             ],
           },
         ],
-        'linkedEntity': 'BuilderProcess',
-        'name': 'BuilderPipeline',
-        'scope': 'instance',
         'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'external': true,
-              'key': 'START',
-              'name': 'Start',
-              'payloadSchema': [
-                {
-                  'name': 'request',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'orbitalName',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'key': 'REQUEST_EMBEDDED',
-              'name': 'Request Embedded',
-              'payloadSchema': [
-                {
-                  'name': 'embeddings',
-                  'required': true,
-                  'type': '[[number]]',
-                },
-              ],
-            },
-            {
-              'key': 'CATALOG_LISTED',
-              'name': 'Catalog Listed',
-              'payloadSchema': [
-                {
-                  'entity': 'CatalogHit',
-                  'name': 'result',
-                  'properties': [
-                    {
-                      'name': 'behavior',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'traits',
-                      'required': true,
-                      'type': '[trait]',
-                    },
-                    {
-                      'name': 'vectors',
-                      'type': 'Map<string,[number]>',
-                    },
-                  ],
-                  'required': true,
-                  'type': '[object]',
-                },
-              ],
-            },
-            {
-              'key': 'BUILD_FAILED',
-              'name': 'Build Failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'BuildIssue',
-                  'name': 'errors',
-                  'properties': [
-                    {
-                      'name': 'code',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'message',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-            },
-            {
-              'key': 'BUILT',
-              'name': 'Built',
-              'payloadSchema': [
-                {
-                  'name': 'result',
-                  'properties': [
-                    {
-                      'name': 'behavior',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-              ],
-            },
-            {
-              'key': 'RESET',
-              'name': 'Reset',
-            },
-            {
-              'key': 'BUILD_COMPLETE',
-              'name': 'Build Complete',
-              'payloadSchema': [
-                {
-                  'name': 'orbitalName',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'behavior',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'key': 'BUILD_REJECTED',
-              'name': 'Build Rejected',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'BuildIssue',
-                  'name': 'errors',
-                  'properties': [
-                    {
-                      'name': 'code',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'message',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'idle',
+              'isInitial': true,
             },
             {
               'name': 'searching',
@@ -573,8 +402,167 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
               'name': 'failed',
             },
           ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'START',
+              'name': 'Start',
+              'payloadSchema': [
+                {
+                  'name': 'request',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'orbitalName',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+              'external': true,
+            },
+            {
+              'key': 'REQUEST_EMBEDDED',
+              'name': 'Request Embedded',
+              'payloadSchema': [
+                {
+                  'name': 'embeddings',
+                  'type': '[[number]]',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CATALOG_LISTED',
+              'name': 'Catalog Listed',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'type': '[object]',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'behavior',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'traits',
+                      'type': '[trait]',
+                      'required': true,
+                    },
+                    {
+                      'name': 'vectors',
+                      'type': 'Map<string,[number]>',
+                    },
+                  ],
+                  'entity': 'CatalogHit',
+                },
+              ],
+            },
+            {
+              'key': 'BUILD_FAILED',
+              'name': 'Build Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'errors',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'code',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'message',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'BuildIssue',
+                },
+              ],
+            },
+            {
+              'key': 'BUILT',
+              'name': 'Built',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'behavior',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'BUILD_COMPLETE',
+              'name': 'Build Complete',
+              'payloadSchema': [
+                {
+                  'name': 'orbitalName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'behavior',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'BUILD_REJECTED',
+              'name': 'Build Rejected',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'errors',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'code',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'message',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'BuildIssue',
+                },
+              ],
+            },
+          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -586,16 +574,16 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'main',
                   {
                     'content': 'Ready to build.',
-                    'type': 'typography',
                     'variant': 'caption',
+                    'type': 'typography',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'searching',
+              'event': 'START',
               'effects': [
                 [
                   'set',
@@ -629,11 +617,11 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   },
                 ],
               ],
-              'event': 'START',
-              'from': 'idle',
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'searching',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -641,11 +629,19 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'searching',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'searching',
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'searching',
+              'event': 'REQUEST_EMBEDDED',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.embeddings',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'set',
@@ -668,19 +664,19 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   },
                 ],
               ],
-              'event': 'REQUEST_EMBEDDED',
+            },
+            {
               'from': 'searching',
+              'to': 'failed',
+              'event': 'REQUEST_EMBEDDED',
               'guard': [
-                '>',
+                '=',
                 [
                   'array/len',
                   '@payload.embeddings',
                 ],
                 0,
               ],
-              'to': 'searching',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -696,9 +692,9 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'render-ui',
                   'main',
                   {
-                    'content': 'Build failed: the model returned no embedding.',
                     'type': 'typography',
                     'variant': 'caption',
+                    'content': 'Build failed: the model returned no embedding.',
                   },
                 ],
                 [
@@ -710,19 +706,19 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   },
                 ],
               ],
-              'event': 'REQUEST_EMBEDDED',
+            },
+            {
               'from': 'searching',
+              'to': 'building',
+              'event': 'CATALOG_LISTED',
               'guard': [
-                '=',
+                '>',
                 [
                   'array/len',
-                  '@payload.embeddings',
+                  '@payload.result',
                 ],
                 0,
               ],
-              'to': 'failed',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -779,25 +775,25 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   ],
                   {
                     'emit': {
-                      'failure': 'BUILD_FAILED',
                       'success': 'BUILT',
+                      'failure': 'BUILD_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'CATALOG_LISTED',
+            },
+            {
               'from': 'searching',
+              'to': 'failed',
+              'event': 'CATALOG_LISTED',
               'guard': [
-                '>',
+                '=',
                 [
                   'array/len',
                   '@payload.result',
                 ],
                 0,
               ],
-              'to': 'building',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -813,25 +809,17 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'render-ui',
                   'main',
                   {
-                    'content': 'No building block in scope.',
-                    'type': 'typography',
                     'variant': 'caption',
+                    'type': 'typography',
+                    'content': 'No building block in scope.',
                   },
                 ],
               ],
-              'event': 'CATALOG_LISTED',
-              'from': 'searching',
-              'guard': [
-                '=',
-                [
-                  'array/len',
-                  '@payload.result',
-                ],
-                0,
-              ],
-              'to': 'failed',
             },
             {
+              'from': 'searching',
+              'to': 'failed',
+              'event': 'BUILD_FAILED',
               'effects': [
                 [
                   'set',
@@ -847,21 +835,21 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'render-ui',
                   'main',
                   {
+                    'variant': 'caption',
                     'content': [
                       'str/concat',
                       'Build failed: ',
                       '@payload.error',
                     ],
                     'type': 'typography',
-                    'variant': 'caption',
                   },
                 ],
               ],
-              'event': 'BUILD_FAILED',
-              'from': 'searching',
-              'to': 'failed',
             },
             {
+              'from': 'building',
+              'to': 'building',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -869,11 +857,11 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'building',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'building',
-              'to': 'building',
             },
             {
+              'from': 'building',
+              'to': 'done',
+              'event': 'BUILT',
               'effects': [
                 [
                   'set',
@@ -893,6 +881,7 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'render-ui',
                   'main',
                   {
+                    'variant': 'caption',
                     'content': [
                       'str/concat',
                       'Built ',
@@ -903,7 +892,6 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                       ],
                     ],
                     'type': 'typography',
-                    'variant': 'caption',
                   },
                 ],
                 [
@@ -919,11 +907,11 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   },
                 ],
               ],
-              'event': 'BUILT',
-              'from': 'building',
-              'to': 'done',
             },
             {
+              'from': 'building',
+              'to': 'failed',
+              'event': 'BUILD_FAILED',
               'effects': [
                 [
                   'set',
@@ -939,12 +927,12 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'render-ui',
                   'main',
                   {
+                    'type': 'typography',
                     'content': [
                       'str/concat',
                       'Build failed: ',
                       '@payload.error',
                     ],
-                    'type': 'typography',
                     'variant': 'caption',
                   },
                 ],
@@ -952,16 +940,16 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'emit',
                   'BUILD_REJECTED',
                   {
-                    'error': '@payload.error',
                     'errors': '@payload.errors',
+                    'error': '@payload.error',
                   },
                 ],
               ],
-              'event': 'BUILD_FAILED',
-              'from': 'building',
-              'to': 'failed',
             },
             {
+              'from': 'done',
+              'to': 'done',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -969,11 +957,11 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'done',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'done',
-              'to': 'done',
             },
             {
+              'from': 'done',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -990,16 +978,16 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'main',
                   {
                     'content': 'Ready to build.',
-                    'type': 'typography',
                     'variant': 'caption',
+                    'type': 'typography',
                   },
                 ],
               ],
-              'event': 'RESET',
-              'from': 'done',
-              'to': 'idle',
             },
             {
+              'from': 'failed',
+              'to': 'failed',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1007,11 +995,11 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'failed',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'failed',
-              'to': 'failed',
             },
             {
+              'from': 'failed',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -1027,18 +1015,30 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
                   'render-ui',
                   'main',
                   {
-                    'content': 'Ready to build.',
                     'type': 'typography',
+                    'content': 'Ready to build.',
                     'variant': 'caption',
                   },
                 ],
               ],
-              'event': 'RESET',
-              'from': 'failed',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'scope': {
+            'type': '[string]',
+            'default': [
+              'almadar-std/ui/core/molecules',
+            ],
+            'label': 'Where to look for building blocks',
+            'description': 'Registry folders (`<prefix>/<topic>[/<tier>]`) the builder may pick from.',
+            'tier': 'domain',
+            'items': {
+              'type': 'string',
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

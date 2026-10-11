@@ -46,16 +46,16 @@ export interface StdTabsTabChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTabsConfig {
-  /** Default: `{"activeTab":"@entity.activeTab","items":"@entity.items","orientation":"@config.orientation","tabChangeEvent":"TAB_CHANGED","type":"tabs","variant":"@config.variant"}` */
-  bodyContent?: unknown;
   /** Default: `"overview"` */
   defaultTab?: string;
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
-  /** Default: `[{"icon":"info","id":"overview","label":"Overview"},{"icon":"list","id":"details","label":"Details"},{"icon":"settings","id":"settings","label":"Settings"}]` */
+  /** Default: `[{"label":"Overview","icon":"info","id":"overview"},{"id":"details","icon":"list","label":"Details"},{"id":"settings","icon":"settings","label":"Settings"}]` */
   tabs?: EntityRow[];
   /** Default: `"default"` */
   variant?: 'default' | 'pills' | 'underline';
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
+  /** Default: `{"items":"@entity.items","type":"tabs","orientation":"@config.orientation","activeTab":"@entity.activeTab","variant":"@config.variant","tabChangeEvent":"TAB_CHANGED"}` */
+  bodyContent?: unknown;
 }
 
 /**
@@ -187,52 +187,52 @@ export function stdTabsTabsItemOrbital(params: StdTabsTabsItemOrbitalParams = {}
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'activeTab',
+            'type': 'string',
             'default': '',
             'description': 'The currently selected tab\'s identifier.',
-            'name': 'activeTab',
             'synonyms': 'selection, currentTab, highlightedTab',
-            'type': 'string',
           },
           {
+            'name': 'items',
+            'type': 'array',
             'default': [],
-            'description': 'A collection of tab specifications defining the tab structure.',
             'items': {
+              'type': 'object',
               'properties': {
-                'badge': {
-                  'name': 'badge',
-                  'required': false,
-                  'type': 'string',
-                },
-                'content': {
-                  'name': 'content',
-                  'required': false,
-                  'type': 'trait',
-                },
                 'icon': {
                   'name': 'icon',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
+                },
+                'badge': {
+                  'name': 'badge',
+                  'type': 'string',
+                  'required': false,
                 },
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'label': {
                   'name': 'label',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
+                },
+                'content': {
+                  'name': 'content',
+                  'type': 'trait',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'items',
+            'description': 'A collection of tab specifications defining the tab structure.',
             'synonyms': 'tabs, tab list, tab definitions',
-            'type': 'array',
           },
         ];
         const extras = params.fields ?? [];
@@ -243,105 +243,14 @@ export function stdTabsTabsItemOrbital(params: StdTabsTabsItemOrbitalParams = {}
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'bodyContent': {
-            'default': {
-              'activeTab': '@entity.activeTab',
-              'items': '@entity.items',
-              'orientation': '@config.orientation',
-              'tabChangeEvent': 'TAB_CHANGED',
-              'type': 'tabs',
-              'variant': '@config.variant',
-            },
-            'description': 'Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens.',
-            'label': 'Body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
-          'defaultTab': {
-            'default': 'overview',
-            'description': 'Tab id selected on first render',
-            'label': 'Default tab',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'orientation': {
-            'default': 'horizontal',
-            'description': 'Horizontal strip or vertical rail layout',
-            'label': 'Orientation',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'horizontal',
-              'vertical',
-            ],
-          },
-          'tabs': {
-            'default': [
-              {
-                'icon': 'info',
-                'id': 'overview',
-                'label': 'Overview',
-              },
-              {
-                'icon': 'list',
-                'id': 'details',
-                'label': 'Details',
-              },
-              {
-                'icon': 'settings',
-                'id': 'settings',
-                'label': 'Settings',
-              },
-            ],
-            'description': 'Tab entries with id, label, icon, badge, and optional content trait',
-            'items': {
-              'properties': {
-                'badge': {
-                  'name': 'badge',
-                  'required': false,
-                  'type': 'string',
-                },
-                'content': {
-                  'name': 'content',
-                  'required': false,
-                  'type': 'trait',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Tabs',
-            'tier': 'presentation',
-            'type': '[TabSpec]',
-          },
-          'variant': {
-            'default': 'default',
-            'description': 'Visual style of the tab strip',
-            'label': 'Tab style',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'default',
-              'pills',
-              'underline',
-            ],
-          },
+        'name': 'TabsItemTabs',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'activeTab',
+            'items',
+          ],
         },
         'effectRow': [
           {
@@ -357,62 +266,56 @@ export function stdTabsTabsItemOrbital(params: StdTabsTabsItemOrbitalParams = {}
             'resource': '@entity.items',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'TabsItem',
         'emits': [
           {
-            'description': 'Signals a tab selection has occurred.',
             'event': 'TAB_CHANGED',
+            'description': 'Signals a tab selection has occurred.',
+            'synonyms': 'selected, activated, switched',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'tabId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'selected, activated, switched',
-            'tier': 'domain',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'activeTab',
-            'items',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'TabsItem',
-        'name': 'TabsItemTabs',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals a tab selection has occurred.',
               'key': 'TAB_CHANGED',
               'name': 'Tab Changed',
+              'description': 'Signals a tab selection has occurred.',
+              'synonyms': 'selected, activated, switched',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'tabId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'selected, activated, switched',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -430,11 +333,11 @@ export function stdTabsTabsItemOrbital(params: StdTabsTabsItemOrbitalParams = {}
                   '@config.bodyContent',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'TAB_CHANGED',
               'effects': [
                 [
                   'set',
@@ -452,12 +355,109 @@ export function stdTabsTabsItemOrbital(params: StdTabsTabsItemOrbitalParams = {}
                   '@config.bodyContent',
                 ],
               ],
-              'event': 'TAB_CHANGED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'defaultTab': {
+            'type': 'string',
+            'default': 'overview',
+            'label': 'Default tab',
+            'description': 'Tab id selected on first render',
+            'tier': 'presentation',
+          },
+          'tabs': {
+            'type': '[TabSpec]',
+            'default': [
+              {
+                'label': 'Overview',
+                'icon': 'info',
+                'id': 'overview',
+              },
+              {
+                'id': 'details',
+                'icon': 'list',
+                'label': 'Details',
+              },
+              {
+                'id': 'settings',
+                'icon': 'settings',
+                'label': 'Settings',
+              },
+            ],
+            'label': 'Tabs',
+            'description': 'Tab entries with id, label, icon, badge, and optional content trait',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'badge': {
+                  'name': 'badge',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'content': {
+                  'name': 'content',
+                  'type': 'trait',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'variant': {
+            'type': 'string',
+            'default': 'default',
+            'label': 'Tab style',
+            'description': 'Visual style of the tab strip',
+            'tier': 'presentation',
+            'values': [
+              'default',
+              'pills',
+              'underline',
+            ],
+          },
+          'orientation': {
+            'type': 'string',
+            'default': 'horizontal',
+            'label': 'Orientation',
+            'description': 'Horizontal strip or vertical rail layout',
+            'tier': 'presentation',
+            'values': [
+              'horizontal',
+              'vertical',
+            ],
+          },
+          'bodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'items': '@entity.items',
+              'type': 'tabs',
+              'orientation': '@config.orientation',
+              'activeTab': '@entity.activeTab',
+              'variant': '@config.variant',
+              'tabChangeEvent': 'TAB_CHANGED',
+            },
+            'label': 'Body content tree',
+            'description': 'Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens.',
+            'tier': 'internal',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

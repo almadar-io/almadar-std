@@ -196,105 +196,105 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': '',
             'name': 'query',
             'type': 'string',
+            'default': '',
           },
           {
+            'name': 'candidates',
+            'type': 'array',
             'default': [],
             'items': {
               'type': 'string',
             },
-            'name': 'candidates',
-            'type': 'array',
           },
           {
+            'name': 'embeddings',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'array',
               'items': {
                 'type': 'number',
               },
-              'type': 'array',
             },
-            'name': 'embeddings',
-            'type': 'array',
           },
           {
+            'name': 'queryVector',
+            'type': 'array',
             'default': [],
             'items': {
               'type': 'number',
             },
-            'name': 'queryVector',
-            'type': 'array',
           },
           {
+            'name': 'candidateVectors',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'array',
               'items': {
                 'type': 'number',
               },
-              'type': 'array',
             },
-            'name': 'candidateVectors',
-            'type': 'array',
           },
           {
-            'default': 0,
             'name': 'matchIndex',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'matchScore',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'matchMargin',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
             'name': 'reason',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': {},
             'name': 'request',
+            'type': 'object',
+            'default': {},
             'properties': {
               'accepted': {
+                'name': 'accepted',
+                'type': 'array',
+                'required': true,
                 'items': {
                   'type': 'scalar',
                 },
-                'name': 'accepted',
-                'required': true,
-                'type': 'array',
               },
               'candidate': {
                 'name': 'candidate',
-                'required': true,
                 'type': 'scalar',
-              },
-              'categories': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'categories',
                 'required': true,
-                'type': 'array',
               },
               'key': {
                 'name': 'key',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
+              },
+              'categories': {
+                'name': 'categories',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'string',
+                },
               },
             },
-            'type': 'object',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'embedding',
@@ -310,23 +310,7 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'floor': {
-            'default': 0.82,
-            'description': 'Minimum cosine score for a confident match',
-            'label': 'Match floor',
-            'tier': 'policy',
-            'type': 'float',
-          },
-          'margin': {
-            'default': 0.05,
-            'description': 'Minimum gap between the best and second-best score required to trust the match',
-            'label': 'Match margin',
-            'tier': 'policy',
-            'type': 'float',
-          },
-        },
+        'name': 'SimilarityRun',
         'effectRow': [
           {
             'kind': 'emit',
@@ -384,81 +368,92 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'SimilarityComparison',
         'emits': [
           {
-            'description': 'Raw embeddings from llm/embed — query vector at index 0, candidate vectors following in input order',
             'event': 'EMBEDDED',
+            'description': 'Raw embeddings from llm/embed — query vector at index 0, candidate vectors following in input order',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'result',
-                'required': true,
                 'type': '[[float]]',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Candidate matched with high confidence — score at or above floor, with a clear margin over the runner-up',
             'event': 'SIMILARITY_MATCHED',
+            'description': 'Candidate matched with high confidence — score at or above floor, with a clear margin over the runner-up',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'index',
-                'required': true,
                 'type': 'int',
+                'required': true,
               },
               {
                 'name': 'score',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
           {
-            'description': 'No confident match — reason is one of: empty candidate list, below floor, thin margin, embedding unavailable. request echoes the originating request untouched so the next rung can project its own inputs out of it',
             'event': 'SIMILARITY_ABSTAINED',
+            'description': 'No confident match — reason is one of: empty candidate list, below floor, thin margin, embedding unavailable. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'reason',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'request',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'candidate',
-                    'required': true,
                     'type': 'scalar',
+                    'required': true,
                   },
                   {
                     'name': 'key',
-                    'required': true,
                     'type': 'scalar',
+                    'required': true,
                   },
                   {
                     'name': 'accepted',
-                    'required': true,
                     'type': '[scalar]',
+                    'required': true,
                   },
                   {
                     'name': 'categories',
-                    'required': true,
                     'type': '[string]',
+                    'required': true,
                   },
                 ],
-                'type': 'object',
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'SimilarityComparison',
-        'name': 'SimilarityRun',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'embedding',
+            },
+            {
+              'name': 'resolved',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -470,54 +465,54 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
               'payloadSchema': [
                 {
                   'name': 'query',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'candidates',
-                  'required': true,
                   'type': '[string]',
+                  'required': true,
                 },
                 {
                   'name': 'request',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'candidate',
-                      'required': true,
                       'type': 'scalar',
+                      'required': true,
                     },
                     {
                       'name': 'key',
-                      'required': true,
                       'type': 'scalar',
+                      'required': true,
                     },
                     {
                       'name': 'accepted',
-                      'required': true,
                       'type': '[scalar]',
+                      'required': true,
                     },
                     {
                       'name': 'categories',
-                      'required': true,
                       'type': '[string]',
+                      'required': true,
                     },
                   ],
-                  'type': 'object',
                 },
               ],
             },
             {
-              'description': 'Raw embeddings from llm/embed — query vector at index 0, candidate vectors following in input order',
               'key': 'EMBEDDED',
               'name': 'Embedded',
+              'description': 'Raw embeddings from llm/embed — query vector at index 0, candidate vectors following in input order',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'result',
-                  'required': true,
                   'type': '[[float]]',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
               'key': 'EMBED_FAILED',
@@ -528,77 +523,68 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
               'name': 'Reset',
             },
             {
-              'description': 'Candidate matched with high confidence — score at or above floor, with a clear margin over the runner-up',
               'key': 'SIMILARITY_MATCHED',
               'name': 'Similarity Matched',
+              'description': 'Candidate matched with high confidence — score at or above floor, with a clear margin over the runner-up',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'index',
-                  'required': true,
                   'type': 'int',
+                  'required': true,
                 },
                 {
                   'name': 'score',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'No confident match — reason is one of: empty candidate list, below floor, thin margin, embedding unavailable. request echoes the originating request untouched so the next rung can project its own inputs out of it',
               'key': 'SIMILARITY_ABSTAINED',
               'name': 'Similarity Abstained',
+              'description': 'No confident match — reason is one of: empty candidate list, below floor, thin margin, embedding unavailable. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'reason',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'request',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'candidate',
-                      'required': true,
                       'type': 'scalar',
+                      'required': true,
                     },
                     {
                       'name': 'key',
-                      'required': true,
                       'type': 'scalar',
+                      'required': true,
                     },
                     {
                       'name': 'accepted',
-                      'required': true,
                       'type': '[scalar]',
+                      'required': true,
                     },
                     {
                       'name': 'categories',
-                      'required': true,
                       'type': '[string]',
+                      'required': true,
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'embedding',
-            },
-            {
-              'name': 'resolved',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -656,11 +642,19 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'embedding',
+              'event': 'COMPARE',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.candidates',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'set',
@@ -697,19 +691,19 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                   },
                 ],
               ],
-              'event': 'COMPARE',
+            },
+            {
               'from': 'idle',
+              'to': 'resolved',
+              'event': 'COMPARE',
               'guard': [
-                '>',
+                '==',
                 [
                   'array/len',
                   '@payload.candidates',
                 ],
                 0,
               ],
-              'to': 'embedding',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -770,24 +764,16 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                   'emit',
                   'SIMILARITY_ABSTAINED',
                   {
-                    'reason': 'empty candidate list',
                     'request': '@entity.request',
+                    'reason': 'empty candidate list',
                   },
                 ],
               ],
-              'event': 'COMPARE',
-              'from': 'idle',
-              'guard': [
-                '==',
-                [
-                  'array/len',
-                  '@payload.candidates',
-                ],
-                0,
-              ],
-              'to': 'resolved',
             },
             {
+              'from': 'embedding',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -845,11 +831,11 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'embedding',
-              'to': 'idle',
             },
             {
+              'from': 'embedding',
+              'to': 'resolved',
+              'event': 'EMBEDDED',
               'effects': [
                 [
                   'set',
@@ -907,8 +893,8 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                       'emit',
                       'SIMILARITY_ABSTAINED',
                       {
-                        'reason': 'embedding result incomplete',
                         'request': '@entity.request',
+                        'reason': 'embedding result incomplete',
                       },
                     ],
                   ],
@@ -1034,11 +1020,11 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                   ],
                 ],
               ],
-              'event': 'EMBEDDED',
-              'from': 'embedding',
-              'to': 'resolved',
             },
             {
+              'from': 'embedding',
+              'to': 'resolved',
+              'event': 'EMBED_FAILED',
               'effects': [
                 [
                   'set',
@@ -1084,16 +1070,16 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                   'emit',
                   'SIMILARITY_ABSTAINED',
                   {
-                    'reason': 'embedding unavailable',
                     'request': '@entity.request',
+                    'reason': 'embedding unavailable',
                   },
                 ],
               ],
-              'event': 'EMBED_FAILED',
-              'from': 'embedding',
-              'to': 'resolved',
             },
             {
+              'from': 'resolved',
+              'to': 'resolved',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1101,11 +1087,11 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                   'resolved',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'resolved',
-              'to': 'resolved',
             },
             {
+              'from': 'resolved',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -1163,12 +1149,26 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'resolved',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'floor': {
+            'type': 'float',
+            'default': 0.82,
+            'label': 'Match floor',
+            'description': 'Minimum cosine score for a confident match',
+            'tier': 'policy',
+          },
+          'margin': {
+            'type': 'float',
+            'default': 0.05,
+            'label': 'Match margin',
+            'description': 'Minimum gap between the best and second-best score required to trust the match',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

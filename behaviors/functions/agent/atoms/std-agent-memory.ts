@@ -273,88 +273,88 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Whose memory this is (the real @user). The binding organism scopes @read to it.',
             'name': 'ownerId',
+            'type': 'string',
             'required': true,
+            'description': 'Whose memory this is (the real @user). The binding organism scopes @read to it.',
             'synonyms': 'user, owner, account',
-            'type': 'string',
           },
           {
-            'description': 'What is remembered.',
             'name': 'content',
-            'required': true,
-            'synonyms': 'memory, note, fact',
             'type': 'string',
+            'required': true,
+            'description': 'What is remembered.',
+            'synonyms': 'memory, note, fact',
           },
           {
+            'name': 'embedding',
+            'type': 'array',
             'default': [],
-            'description': 'The content\'s embedding, for similarity recall.',
             'items': {
               'type': 'number',
             },
-            'name': 'embedding',
-            'type': 'array',
+            'description': 'The content\'s embedding, for similarity recall.',
           },
           {
+            'name': 'createdAt',
+            'type': 'number',
             'default': 0,
             'description': 'When it was remembered (ms).',
-            'name': 'createdAt',
             'synonyms': 'time, timestamp',
-            'type': 'number',
           },
           {
+            'name': 'pendingMessages',
+            'type': 'array',
             'default': [],
-            'description': 'The conversation a recall is running for.',
-            'intrinsic': true,
             'items': {
+              'type': 'object',
               'properties': {
-                'content': {
-                  'name': 'content',
-                  'required': true,
-                  'type': 'string',
-                },
                 'role': {
                   'name': 'role',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'user',
                     'assistant',
                   ],
                 },
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': true,
+                },
               },
-              'type': 'object',
             },
-            'name': 'pendingMessages',
-            'type': 'array',
+            'intrinsic': true,
+            'description': 'The conversation a recall is running for.',
           },
           {
-            'default': '',
-            'description': 'The turn a recall is running for.',
-            'intrinsic': true,
             'name': 'pendingQuery',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'The turn a recall is running for.',
           },
           {
-            'default': '',
-            'description': 'The exchange being remembered.',
-            'intrinsic': true,
             'name': 'pendingContent',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'The exchange being remembered.',
           },
           {
+            'name': 'queryVector',
+            'type': 'array',
             'default': [],
-            'description': 'The recall query\'s embedding.',
-            'intrinsic': true,
             'items': {
               'type': 'number',
             },
-            'name': 'queryVector',
-            'type': 'array',
+            'intrinsic': true,
+            'description': 'The recall query\'s embedding.',
           },
         ];
         const extras = params.fields ?? [];
@@ -365,15 +365,16 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'recallLimit': {
-            'default': 3,
-            'description': 'How many of the closest memories go to the model with each request.',
-            'label': 'Memories recalled per request',
-            'tier': 'policy',
-            'type': 'number',
-          },
+        'name': 'AgentMemoryRecall',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'pendingContent',
+            'pendingMessages',
+            'pendingQuery',
+            'queryVector',
+          ],
         },
         'effectRow': [
           {
@@ -417,14 +418,20 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
             'resource': '@entity.queryVector',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'AgentMemory',
         'emits': [
           {
-            'description': 'The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through.',
             'event': 'RECALLED',
+            'description': 'The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through.',
+            'synonyms': 'recalled, remembered, context ready',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'AgentChatMessage',
                 'name': 'messages',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'role',
@@ -436,12 +443,11 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'AgentChatMessage',
               },
               {
                 'name': 'context',
@@ -460,62 +466,61 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                 'type': 'boolean',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'recalled, remembered, context ready',
-            'tier': 'domain',
           },
           {
-            'description': 'What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load).',
             'event': 'ASSISTANT_MEMORIES_LOADED',
+            'description': 'What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load).',
+            'synonyms': 'memories, what I remember',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'AgentMemoryRow',
                 'name': 'data',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'createdAt',
                     'type': 'number',
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'AgentMemoryRow',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'memories, what I remember',
-            'tier': 'domain',
           },
           {
             'event': 'MemoriesForList',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AgentMemory',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'embedding',
@@ -527,6 +532,7 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                   {
                     'name': 'pendingMessages',
+                    'type': '[object]',
                     'properties': [
                       {
                         'name': 'role',
@@ -538,11 +544,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                       },
                       {
                         'name': 'content',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                     ],
-                    'type': '[object]',
                   },
                   {
                     'name': 'pendingQuery',
@@ -557,14 +562,14 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                     'type': '[number]',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentMemory',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'MemoryListFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -575,18 +580,17 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
-            'description': 'A new memory was stored — payload is the created AgentMemory row itself.',
             'event': 'MEMORY_STORED',
-            'scope': 'external',
+            'description': 'A new memory was stored — payload is the created AgentMemory row itself.',
             'synonyms': 'remembered, stored, saved',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
             'event': 'AgentMemoriesLoadFailed',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -597,29 +601,30 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                 'type': 'string',
               },
             ],
-            'tier': 'internal',
           },
           {
             'event': 'MemoriesForRecall',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AgentMemory',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'embedding',
@@ -631,6 +636,7 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                   {
                     'name': 'pendingMessages',
+                    'type': '[object]',
                     'properties': [
                       {
                         'name': 'role',
@@ -642,11 +648,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                       },
                       {
                         'name': 'content',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                     ],
-                    'type': '[object]',
                   },
                   {
                     'name': 'pendingQuery',
@@ -661,97 +666,95 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                     'type': '[number]',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentMemory',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'MemoryEmbedded',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'embeddings',
                 'type': '[[number]]',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'MemoryEmbedFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'pendingContent',
-            'pendingMessages',
-            'pendingQuery',
-            'queryVector',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentMemory',
         'listens': [
           {
             'event': 'ASSISTANT_MEMORIES_REQUESTED',
+            'triggers': 'LIST',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'LIST',
           },
         ],
-        'name': 'AgentMemoryRecall',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+            {
+              'name': 'recalling',
+            },
+            {
+              'name': 'remembering',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'A new memory was stored — payload is the created AgentMemory row itself.',
               'key': 'MEMORY_STORED',
               'name': 'Memory Stored',
+              'description': 'A new memory was stored — payload is the created AgentMemory row itself.',
               'synonyms': 'remembered, stored, saved',
               'tier': 'domain',
             },
             {
-              'description': 'List what the assistant remembers for this person.',
               'key': 'LIST',
               'name': 'List',
+              'description': 'List what the assistant remembers for this person.',
             },
             {
               'key': 'MemoriesForList',
               'name': 'Memories for list',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentMemory',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'embedding',
@@ -763,6 +766,7 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                     },
                     {
                       'name': 'pendingMessages',
+                      'type': '[object]',
                       'properties': [
                         {
                           'name': 'role',
@@ -774,11 +778,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                         },
                         {
                           'name': 'content',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                       ],
-                      'type': '[object]',
                     },
                     {
                       'name': 'pendingQuery',
@@ -793,14 +796,14 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                       'type': '[number]',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentMemory',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'MemoryListFailed',
               'name': 'Memory list failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -811,15 +814,16 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'Recall what is relevant to this conversation\'s last turn. An ephemeral conversation skips the recall.',
               'key': 'RECALL',
               'name': 'Recall',
+              'description': 'Recall what is relevant to this conversation\'s last turn. An ephemeral conversation skips the recall.',
               'payloadSchema': [
                 {
                   'name': 'messages',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'role',
@@ -831,12 +835,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
                 },
                 {
                   'name': 'instructions',
@@ -853,14 +855,14 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               ],
             },
             {
-              'description': 'Remember the exchange just answered. An ephemeral conversation is never remembered.',
               'key': 'REMEMBER',
               'name': 'Remember',
+              'description': 'Remember the exchange just answered. An ephemeral conversation is never remembered.',
               'payloadSchema': [
                 {
                   'name': 'reply',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ephemeral',
@@ -871,36 +873,37 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
             {
               'key': 'MemoryEmbedded',
               'name': 'Memory embedded',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'embeddings',
                   'type': '[[number]]',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'MemoriesForRecall',
               'name': 'Memories for recall',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentMemory',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'embedding',
@@ -912,6 +915,7 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                     },
                     {
                       'name': 'pendingMessages',
+                      'type': '[object]',
                       'properties': [
                         {
                           'name': 'role',
@@ -923,11 +927,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                         },
                         {
                           'name': 'content',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                       ],
-                      'type': '[object]',
                     },
                     {
                       'name': 'pendingQuery',
@@ -942,25 +945,25 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                       'type': '[number]',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentMemory',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'MemoryEmbedFailed',
               'name': 'Memory embed failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'AgentMemoriesLoadFailed',
               'name': 'Agent memories load failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -971,16 +974,18 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through.',
               'key': 'RECALLED',
               'name': 'Recalled',
+              'description': 'The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through.',
+              'synonyms': 'recalled, remembered, context ready',
+              'tier': 'domain',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChatMessage',
                   'name': 'messages',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'role',
@@ -992,12 +997,11 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'AgentChatMessage',
                 },
                 {
                   'name': 'context',
@@ -1016,55 +1020,44 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   'type': 'boolean',
                 },
               ],
-              'synonyms': 'recalled, remembered, context ready',
-              'tier': 'domain',
             },
             {
-              'description': 'What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load).',
               'key': 'ASSISTANT_MEMORIES_LOADED',
               'name': 'Assistant Memories Loaded',
+              'description': 'What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load).',
+              'synonyms': 'memories, what I remember',
+              'tier': 'domain',
               'payloadSchema': [
                 {
-                  'entity': 'AgentMemoryRow',
                   'name': 'data',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'createdAt',
                       'type': 'number',
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'AgentMemoryRow',
                 },
               ],
-              'synonyms': 'memories, what I remember',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
-            },
-            {
-              'name': 'recalling',
-            },
-            {
-              'name': 'remembering',
             },
           ],
           'transitions': [
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1072,11 +1065,11 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   '',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'MEMORY_STORED',
               'effects': [
                 [
                   'set',
@@ -1084,11 +1077,11 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   '',
                 ],
               ],
-              'event': 'MEMORY_STORED',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'LIST',
               'effects': [
                 [
                   'fetch',
@@ -1101,11 +1094,11 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                 ],
               ],
-              'event': 'LIST',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'MemoriesForList',
               'effects': [
                 [
                   'emit',
@@ -1124,19 +1117,19 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                         'item',
                         {
                           'content': '@item.content',
-                          'createdAt': '@item.createdAt',
                           'id': '@item.id',
+                          'createdAt': '@item.createdAt',
                         },
                       ],
                     ],
                   },
                 ],
               ],
-              'event': 'MemoriesForList',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'MemoryListFailed',
               'effects': [
                 [
                   'emit',
@@ -1149,45 +1142,49 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   'render-ui',
                   'toast',
                   {
-                    'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'error',
+                    'type': 'alert',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'MemoryListFailed',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'RECALL',
+              'guard': '@payload.ephemeral',
               'effects': [
                 [
                   'emit',
                   'RECALLED',
                   {
                     'context': '',
-                    'ephemeral': true,
                     'instructions': [
                       'str/default',
                       '@payload.instructions',
                       '',
                     ],
-                    'messages': '@payload.messages',
                     'tools': [
                       'object/get',
                       '@payload',
                       'tools',
                       [],
                     ],
+                    'ephemeral': true,
+                    'messages': '@payload.messages',
                   },
                 ],
               ],
-              'event': 'RECALL',
-              'from': 'ready',
-              'guard': '@payload.ephemeral',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'recalling',
+              'event': 'RECALL',
+              'guard': [
+                'not',
+                '@payload.ephemeral',
+              ],
               'effects': [
                 [
                   'set',
@@ -1230,21 +1227,21 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                 ],
               ],
-              'event': 'RECALL',
+            },
+            {
               'from': 'ready',
+              'to': 'ready',
+              'event': 'REMEMBER',
+              'guard': '@payload.ephemeral',
+            },
+            {
+              'from': 'ready',
+              'to': 'remembering',
+              'event': 'REMEMBER',
               'guard': [
                 'not',
                 '@payload.ephemeral',
               ],
-              'to': 'recalling',
-            },
-            {
-              'event': 'REMEMBER',
-              'from': 'ready',
-              'guard': '@payload.ephemeral',
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -1280,15 +1277,11 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                 ],
               ],
-              'event': 'REMEMBER',
-              'from': 'ready',
-              'guard': [
-                'not',
-                '@payload.ephemeral',
-              ],
-              'to': 'remembering',
             },
             {
+              'from': 'recalling',
+              'to': 'ready',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1296,11 +1289,11 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   '',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'recalling',
-              'to': 'ready',
             },
             {
+              'from': 'recalling',
+              'to': 'recalling',
+              'event': 'MemoryEmbedded',
               'effects': [
                 [
                   'set',
@@ -1333,11 +1326,11 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                 ],
               ],
-              'event': 'MemoryEmbedded',
-              'from': 'recalling',
-              'to': 'recalling',
             },
             {
+              'from': 'recalling',
+              'to': 'ready',
+              'event': 'MemoriesForRecall',
               'effects': [
                 [
                   'emit',
@@ -1387,12 +1380,12 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                                 'fn',
                                 'item',
                                 {
-                                  'content': '@item.content',
                                   'score': [
                                     'array/cosine',
                                     '@item.embedding',
                                     '@entity.queryVector',
                                   ],
+                                  'content': '@item.content',
                                 },
                               ],
                             ],
@@ -1413,59 +1406,59 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                 ],
               ],
-              'event': 'MemoriesForRecall',
-              'from': 'recalling',
-              'to': 'ready',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'RECALLED',
-                  {
-                    'context': '',
-                    'messages': '@entity.pendingMessages',
-                  },
-                ],
-                [
-                  'render-ui',
-                  'toast',
-                  {
-                    'message': '@payload.error',
-                    'type': 'alert',
-                    'variant': 'warning',
-                  },
-                ],
-              ],
+              'from': 'recalling',
+              'to': 'ready',
               'event': 'MemoryEmbedFailed',
-              'from': 'recalling',
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
                   'emit',
                   'RECALLED',
                   {
-                    'context': '',
                     'messages': '@entity.pendingMessages',
+                    'context': '',
                   },
                 ],
                 [
                   'render-ui',
                   'toast',
                   {
+                    'variant': 'warning',
                     'message': '@payload.error',
                     'type': 'alert',
-                    'variant': 'warning',
                   },
                 ],
               ],
-              'event': 'AgentMemoriesLoadFailed',
-              'from': 'recalling',
-              'to': 'ready',
             },
             {
+              'from': 'recalling',
+              'to': 'ready',
+              'event': 'AgentMemoriesLoadFailed',
+              'effects': [
+                [
+                  'emit',
+                  'RECALLED',
+                  {
+                    'messages': '@entity.pendingMessages',
+                    'context': '',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'variant': 'warning',
+                    'type': 'alert',
+                    'message': '@payload.error',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'remembering',
+              'to': 'ready',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1473,11 +1466,11 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   '',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'remembering',
-              'to': 'ready',
             },
             {
+              'from': 'remembering',
+              'to': 'ready',
+              'event': 'MemoryEmbedded',
               'effects': [
                 [
                   'persist',
@@ -1485,12 +1478,12 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   ('AgentMemory' satisfies _StdAgentMemoryEntityName),
                   {
                     'content': '@entity.pendingContent',
-                    'createdAt': '@now',
                     'embedding': [
                       'array/first',
                       '@payload.embeddings',
                     ],
                     'ownerId': '@user.id',
+                    'createdAt': '@now',
                   },
                   {
                     'emit': {
@@ -1499,11 +1492,11 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                 ],
               ],
-              'event': 'MemoryEmbedded',
-              'from': 'remembering',
-              'to': 'ready',
             },
             {
+              'from': 'remembering',
+              'to': 'ready',
+              'event': 'MemoryEmbedFailed',
               'effects': [
                 [
                   'render-ui',
@@ -1515,15 +1508,27 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                 ],
               ],
-              'event': 'MemoryEmbedFailed',
-              'from': 'remembering',
-              'to': 'ready',
             },
           ],
         },
+        'config': {
+          'recallLimit': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Memories recalled per request',
+            'description': 'How many of the closest memories go to the model with each request.',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'interaction',
+        'name': 'AgentMemoryBrowse',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
         'effectRow': [
           {
             'kind': 'fetch',
@@ -1534,29 +1539,32 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AgentMemory',
         'emits': [
           {
-            'description': 'The stored memories finished loading.',
             'event': 'AgentMemoriesLoaded',
+            'description': 'The stored memories finished loading.',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AgentMemory',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'embedding',
@@ -1568,6 +1576,7 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   },
                   {
                     'name': 'pendingMessages',
+                    'type': '[object]',
                     'properties': [
                       {
                         'name': 'role',
@@ -1579,11 +1588,10 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                       },
                       {
                         'name': 'content',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                     ],
-                    'type': '[object]',
                   },
                   {
                     'name': 'pendingQuery',
@@ -1598,13 +1606,13 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                     'type': '[number]',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentMemory',
               },
             ],
-            'tier': 'internal',
           },
           {
             'event': 'AgentMemoriesLoadFailed',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1615,56 +1623,54 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                 'type': 'string',
               },
             ],
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentMemory',
         'listens': [
           {
             'event': 'MEMORY_STORED',
+            'triggers': 'MEMORY_STORED',
             'source': {
               'kind': 'trait',
               'trait': ('AgentMemoryRecall' satisfies _StdAgentMemoryListenTraitName),
             },
-            'triggers': 'MEMORY_STORED',
           },
         ],
-        'name': 'AgentMemoryBrowse',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'The stored memories finished loading.',
               'key': 'AgentMemoriesLoaded',
               'name': 'Agent memories loaded',
+              'description': 'The stored memories finished loading.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentMemory',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'embedding',
@@ -1691,14 +1697,14 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                       'type': '[number]',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentMemory',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'AgentMemoriesLoadFailed',
               'name': 'Agent memories load failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1709,29 +1715,25 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'MEMORY_STORED',
               'name': 'Memory Stored',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'browsing',
-            },
-          ],
           'transitions': [
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('AgentMemory' satisfies _StdAgentMemoryEntityName),
                   {
                     'emit': {
-                      'failure': 'AgentMemoriesLoadFailed',
                       'success': 'AgentMemoriesLoaded',
+                      'failure': 'AgentMemoriesLoadFailed',
                     },
                   },
                 ],
@@ -1739,83 +1741,81 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
                   'render-ui',
                   'main',
                   {
-                    'rows': 6,
                     'type': 'skeleton',
+                    'rows': 6,
                     'variant': 'list',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'AgentMemoriesLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'emptyTitle': 'Nothing remembered yet',
+                    'fields': [],
                     'entity': [
                       'array/sort',
                       '@payload.data',
                       'createdAt',
                       'desc',
                     ],
-                    'fields': [],
-                    'gap': 'sm',
+                    'emptyTitle': 'Nothing remembered yet',
                     'renderItem': [
                       'fn',
                       'item',
                       {
-                        'content': '@item.content',
                         'type': 'typography',
                         'variant': 'body',
+                        'content': '@item.content',
                       },
                     ],
+                    'gap': 'sm',
                     'type': 'data-list',
                   },
                 ],
               ],
-              'event': 'AgentMemoriesLoaded',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'AgentMemoriesLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'error',
+                    'type': 'alert',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'AgentMemoriesLoadFailed',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'MEMORY_STORED',
               'effects': [
                 [
                   'fetch',
                   ('AgentMemory' satisfies _StdAgentMemoryEntityName),
                   {
                     'emit': {
-                      'failure': 'AgentMemoriesLoadFailed',
                       'success': 'AgentMemoriesLoaded',
+                      'failure': 'AgentMemoriesLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'MEMORY_STORED',
-              'from': 'browsing',
-              'to': 'browsing',
             },
           ],
         },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

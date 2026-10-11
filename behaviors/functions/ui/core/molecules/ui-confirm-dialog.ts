@@ -46,47 +46,47 @@ export interface StdUiConfirmDialogOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiConfirmDialogConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  cancelLabel?: string;
   cancelText?: string;
-  className?: string;
-  confirmLabel?: string;
-  confirmText?: string;
-  description?: PatternValue;
-  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaLabel?: string;
+  tabIndex?: number;
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
   error?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `true` */
-  isOpen?: boolean;
-  lang?: string;
-  message?: PatternValue;
-  /** Default: `"CLOSE"` */
-  onClose?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `"CONFIRM"` */
   onConfirm?: string;
-  /** Default: `"EXITED"` */
-  onExited?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `"sm"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
+  ariaHidden?: boolean;
   /** Default: `""` */
   title?: string;
+  /** Default: `"EXITED"` */
+  onExited?: string;
+  ariaBusy?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `false` */
+  isLoading?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  message?: PatternValue;
+  description?: PatternValue;
+  /** Default: `true` */
+  isOpen?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  cancelLabel?: string;
+  /** Default: `"CLOSE"` */
+  onClose?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  confirmText?: string;
+  lang?: string;
+  /** Default: `"sm"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  ariaExpanded?: boolean;
   /** Default: `"danger"` */
   variant?: 'danger' | 'warning' | 'info' | 'default';
+  className?: string;
+  ariaDescribedby?: string;
+  confirmLabel?: string;
+  ariaSelected?: boolean;
+  ariaLabelledby?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
 }
 
 /**

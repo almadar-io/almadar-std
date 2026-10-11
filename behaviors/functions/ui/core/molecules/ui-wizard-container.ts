@@ -60,45 +60,45 @@ export interface StdUiWizardContainerBackPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardContainerConfig {
-  /** Default: `true` */
-  allowBack?: boolean;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `"BACK"` */
-  backEvent?: string;
-  className?: string;
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `"COMPLETE"` */
-  completeEvent?: string;
-  currentStep?: unknown;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  isLoading?: boolean;
-  lang?: string;
-  /** Default: `"NEXT"` */
-  nextEvent?: string;
   /** Default: `"COMPLETE"` */
   onComplete?: string;
   /** Default: `"STEP_CHANGE"` */
   onStepChange?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `"COMPLETE"` */
+  completeEvent?: string;
+  ariaBusy?: boolean;
+  error?: EntityRow;
+  ariaDescribedby?: string;
+  ariaHidden?: boolean;
+  tabIndex?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  enterDelay?: number;
+  ariaExpanded?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `[{"contextMenu":["Item","Item 2"],"id":"Id","lawReferences":[{"article":"Article","description":"Description","law":"Law"},{"description":"Description 2","law":"Law 2","article":"Article 2"}],"globalVariablesRequired":["Item","Item 2"],"title":"Title","localVariables":["Item","Item 2"],"optional":false,"content":"Content","entityMapping":{"mode":"Mode","parentField":"Parent Field","idField":"Id Field","entity":"Entity"},"validationRules":[{"message":"Message","condition":{}},{"condition":{},"message":"Message 2"}],"sections":[{"hiddenCalculations":[{"variable":"Variable","expression":"Expression","scope":"Scope"},{"variable":"Variable 2","expression":"Expression 2","scope":"Scope 2"}],"readOnly":false,"subsections":[],"repeatable":false,"fields":[{"entityField":"Entity Field","items":[],"minDate":"Min Date","displayFields":[],"repeatable":false,"hiddenCalculations":[],"stats":[],"options":[],"placeholder":"Placeholder","readOnly":false,"maxLength":1,"minLength":1,"defaultValue":[],"label":"Label","id":"Id","contextMenu":[],"required":false,"type":"Type"},{"type":"Type 2","maxLength":2,"repeatable":true,"placeholder":"Placeholder 2","id":"Id 2","required":true,"readOnly":true,"contextMenu":[],"entityField":"Entity Field 2","stats":[],"defaultValue":[],"label":"Label 2","minLength":2,"options":[],"items":[],"minDate":"Min Date 2","displayFields":[],"hiddenCalculations":[]}],"id":"Id","addButtonLabel":"Add Button Label","description":"Description","title":"Title","minItems":1},{"id":"Id 2","hiddenCalculations":[{"scope":"Scope","variable":"Variable","expression":"Expression"},{"expression":"Expression 2","variable":"Variable 2","scope":"Scope 2"}],"readOnly":true,"title":"Title 2","repeatable":true,"description":"Description 2","fields":[{"type":"Type","defaultValue":[],"hiddenCalculations":[],"required":false,"maxLength":1,"options":[],"stats":[],"repeatable":false,"entityField":"Entity Field","label":"Label","displayFields":[],"id":"Id","readOnly":false,"contextMenu":[],"minDate":"Min Date","minLength":1,"placeholder":"Placeholder","items":[]},{"hiddenCalculations":[],"id":"Id 2","options":[],"required":true,"placeholder":"Placeholder 2","items":[],"stats":[],"label":"Label 2","readOnly":true,"defaultValue":[],"minLength":2,"minDate":"Min Date 2","repeatable":true,"displayFields":[],"contextMenu":[],"entityField":"Entity Field 2","maxLength":2,"type":"Type 2"}],"addButtonLabel":"Add Button Label 2","subsections":[],"minItems":2}],"globalVariablesSet":["Item","Item 2"],"description":"Description","phase":"Phase","tabId":"Tab Id","name":"Name"},{"contextMenu":["Item","Item 2"],"description":"Description 2","content":"Content 2","phase":"Phase 2","tabId":"Tab Id 2","id":"Id 2","globalVariablesRequired":["Item","Item 2"],"name":"Name 2","globalVariablesSet":["Item","Item 2"],"validationRules":[{"message":"Message","condition":{}},{"message":"Message 2","condition":{}}],"entityMapping":{"mode":"Mode 2","entity":"Entity 2","parentField":"Parent Field 2","idField":"Id Field 2"},"lawReferences":[{"article":"Article","description":"Description","law":"Law"},{"law":"Law 2","article":"Article 2","description":"Description 2"}],"title":"Title 2","optional":true,"localVariables":["Item","Item 2"],"sections":[{"minItems":1,"subsections":[],"fields":[{"defaultValue":[],"hiddenCalculations":[],"items":[],"id":"Id","required":false,"contextMenu":[],"placeholder":"Placeholder","stats":[],"minLength":1,"repeatable":false,"entityField":"Entity Field","minDate":"Min Date","displayFields":[],"readOnly":false,"maxLength":1,"type":"Type","label":"Label","options":[]},{"items":[],"minDate":"Min Date 2","minLength":2,"id":"Id 2","label":"Label 2","placeholder":"Placeholder 2","repeatable":true,"readOnly":true,"stats":[],"displayFields":[],"maxLength":2,"entityField":"Entity Field 2","hiddenCalculations":[],"required":true,"options":[],"type":"Type 2","contextMenu":[],"defaultValue":[]}],"title":"Title","addButtonLabel":"Add Button Label","id":"Id","hiddenCalculations":[{"scope":"Scope","expression":"Expression","variable":"Variable"},{"variable":"Variable 2","expression":"Expression 2","scope":"Scope 2"}],"readOnly":false,"repeatable":false,"description":"Description"},{"subsections":[],"addButtonLabel":"Add Button Label 2","title":"Title 2","id":"Id 2","fields":[{"minLength":1,"maxLength":1,"readOnly":false,"minDate":"Min Date","items":[],"label":"Label","contextMenu":[],"id":"Id","required":false,"placeholder":"Placeholder","defaultValue":[],"hiddenCalculations":[],"stats":[],"type":"Type","displayFields":[],"repeatable":false,"options":[],"entityField":"Entity Field"},{"stats":[],"defaultValue":[],"id":"Id 2","required":true,"minLength":2,"entityField":"Entity Field 2","maxLength":2,"contextMenu":[],"readOnly":true,"minDate":"Min Date 2","items":[],"type":"Type 2","repeatable":true,"label":"Label 2","options":[],"placeholder":"Placeholder 2","hiddenCalculations":[],"displayFields":[]}],"readOnly":true,"description":"Description 2","hiddenCalculations":[{"scope":"Scope","variable":"Variable","expression":"Expression"},{"scope":"Scope 2","variable":"Variable 2","expression":"Expression 2"}],"minItems":2,"repeatable":true}]}]` */
+  steps?: EntityRow[];
   /** Default: `true` */
   showProgress?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `[{"content":"Content","contextMenu":["Item","Item 2"],"description":"Description","entityMapping":{"entity":"Entity","idField":"Id Field","mode":"Mode","parentField":"Parent Field"},"globalVariablesRequired":["Item","Item 2"],"globalVariablesSet":["Item","Item 2"],"id":"Id","lawReferences":[{"article":"Article","description":"Description","law":"Law"},{"article":"Article 2","description":"Description 2","law":"Law 2"}],"localVariables":["Item","Item 2"],"name":"Name","optional":false,"phase":"Phase","sections":[{"addButtonLabel":"Add Button Label","description":"Description","fields":[{"contextMenu":[],"defaultValue":[],"displayFields":[],"entityField":"Entity Field","hiddenCalculations":[],"id":"Id","items":[],"label":"Label","maxLength":1,"minDate":"Min Date","minLength":1,"options":[],"placeholder":"Placeholder","readOnly":false,"repeatable":false,"required":false,"stats":[],"type":"Type"},{"contextMenu":[],"defaultValue":[],"displayFields":[],"entityField":"Entity Field 2","hiddenCalculations":[],"id":"Id 2","items":[],"label":"Label 2","maxLength":2,"minDate":"Min Date 2","minLength":2,"options":[],"placeholder":"Placeholder 2","readOnly":true,"repeatable":true,"required":true,"stats":[],"type":"Type 2"}],"hiddenCalculations":[{"expression":"Expression","scope":"Scope","variable":"Variable"},{"expression":"Expression 2","scope":"Scope 2","variable":"Variable 2"}],"id":"Id","minItems":1,"readOnly":false,"repeatable":false,"subsections":[],"title":"Title"},{"addButtonLabel":"Add Button Label 2","description":"Description 2","fields":[{"contextMenu":[],"defaultValue":[],"displayFields":[],"entityField":"Entity Field","hiddenCalculations":[],"id":"Id","items":[],"label":"Label","maxLength":1,"minDate":"Min Date","minLength":1,"options":[],"placeholder":"Placeholder","readOnly":false,"repeatable":false,"required":false,"stats":[],"type":"Type"},{"contextMenu":[],"defaultValue":[],"displayFields":[],"entityField":"Entity Field 2","hiddenCalculations":[],"id":"Id 2","items":[],"label":"Label 2","maxLength":2,"minDate":"Min Date 2","minLength":2,"options":[],"placeholder":"Placeholder 2","readOnly":true,"repeatable":true,"required":true,"stats":[],"type":"Type 2"}],"hiddenCalculations":[{"expression":"Expression","scope":"Scope","variable":"Variable"},{"expression":"Expression 2","scope":"Scope 2","variable":"Variable 2"}],"id":"Id 2","minItems":2,"readOnly":true,"repeatable":true,"subsections":[],"title":"Title 2"}],"tabId":"Tab Id","title":"Title","validationRules":[{"condition":{},"message":"Message"},{"condition":{},"message":"Message 2"}]},{"content":"Content 2","contextMenu":["Item","Item 2"],"description":"Description 2","entityMapping":{"entity":"Entity 2","idField":"Id Field 2","mode":"Mode 2","parentField":"Parent Field 2"},"globalVariablesRequired":["Item","Item 2"],"globalVariablesSet":["Item","Item 2"],"id":"Id 2","lawReferences":[{"article":"Article","description":"Description","law":"Law"},{"article":"Article 2","description":"Description 2","law":"Law 2"}],"localVariables":["Item","Item 2"],"name":"Name 2","optional":true,"phase":"Phase 2","sections":[{"addButtonLabel":"Add Button Label","description":"Description","fields":[{"contextMenu":[],"defaultValue":[],"displayFields":[],"entityField":"Entity Field","hiddenCalculations":[],"id":"Id","items":[],"label":"Label","maxLength":1,"minDate":"Min Date","minLength":1,"options":[],"placeholder":"Placeholder","readOnly":false,"repeatable":false,"required":false,"stats":[],"type":"Type"},{"contextMenu":[],"defaultValue":[],"displayFields":[],"entityField":"Entity Field 2","hiddenCalculations":[],"id":"Id 2","items":[],"label":"Label 2","maxLength":2,"minDate":"Min Date 2","minLength":2,"options":[],"placeholder":"Placeholder 2","readOnly":true,"repeatable":true,"required":true,"stats":[],"type":"Type 2"}],"hiddenCalculations":[{"expression":"Expression","scope":"Scope","variable":"Variable"},{"expression":"Expression 2","scope":"Scope 2","variable":"Variable 2"}],"id":"Id","minItems":1,"readOnly":false,"repeatable":false,"subsections":[],"title":"Title"},{"addButtonLabel":"Add Button Label 2","description":"Description 2","fields":[{"contextMenu":[],"defaultValue":[],"displayFields":[],"entityField":"Entity Field","hiddenCalculations":[],"id":"Id","items":[],"label":"Label","maxLength":1,"minDate":"Min Date","minLength":1,"options":[],"placeholder":"Placeholder","readOnly":false,"repeatable":false,"required":false,"stats":[],"type":"Type"},{"contextMenu":[],"defaultValue":[],"displayFields":[],"entityField":"Entity Field 2","hiddenCalculations":[],"id":"Id 2","items":[],"label":"Label 2","maxLength":2,"minDate":"Min Date 2","minLength":2,"options":[],"placeholder":"Placeholder 2","readOnly":true,"repeatable":true,"required":true,"stats":[],"type":"Type 2"}],"hiddenCalculations":[{"expression":"Expression","scope":"Scope","variable":"Variable"},{"expression":"Expression 2","scope":"Scope 2","variable":"Variable 2"}],"id":"Id 2","minItems":2,"readOnly":true,"repeatable":true,"subsections":[],"title":"Title 2"}],"tabId":"Tab Id 2","title":"Title 2","validationRules":[{"condition":{},"message":"Message"},{"condition":{},"message":"Message 2"}]}]` */
-  steps?: EntityRow[];
-  tabIndex?: number;
+  /** Default: `"NEXT"` */
+  nextEvent?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `"BACK"` */
+  backEvent?: string;
+  currentStep?: unknown;
+  isLoading?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `false` */
+  compact?: boolean;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  className?: string;
+  /** Default: `true` */
+  allowBack?: boolean;
+  ariaSelected?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  lang?: string;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
 }
 
 /**

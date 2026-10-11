@@ -59,40 +59,40 @@ export interface StdLearnTour3dLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnTour3dConfig {
-  /** Default: `0.6` */
-  azimuth?: number;
-  /** Default: `[]` */
-  backdrop?: EntityRow[];
-  /** Default: `""` */
-  backgroundColor?: string;
+  /** Default: `{}` */
+  post?: EntityRow;
   /** Default: `[]` */
   edges?: EntityRow[];
-  /** Default: `50` */
-  fov?: number;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `{}` */
-  lighting?: EntityRow;
   /** Default: `""` */
   matchMode?: string;
   /** Default: `{}` */
-  post?: EntityRow;
-  /** Default: `"Reset"` */
-  resetLabel?: string;
+  lighting?: EntityRow;
+  /** Default: `"Next station"` */
+  tourLabel?: string;
+  /** Default: `[{"caption":"The first stop on the tour — the camera retargets here and the narration reads its caption.","id":"alpha","z":0,"opacity":1,"name":"Station Alpha","color":"series-1","radius":1,"y":0,"shape":"sphere","x":0},{"opacity":1,"z":-1,"color":"series-2","x":3,"radius":0.8,"id":"beta","name":"Station Beta","caption":"The second stop — press Tour again or click a shape to advance the selection.","y":1,"shape":"sphere"},{"x":-3,"id":"gamma","name":"Station Gamma","shape":"sphere","color":"series-3","opacity":1,"caption":"The final stop — once every station has been visited the tour marks itself complete.","z":1,"y":-1,"radius":0.8}]` */
+  stations?: EntityRow[];
+  /** Default: `50` */
+  fov?: number;
+  /** Default: `600` */
+  width?: number;
   /** Default: `"config"` */
   rosterSource?: 'config' | 'event';
-  /** Default: `[{"caption":"The first stop on the tour — the camera retargets here and the narration reads its caption.","color":"series-1","id":"alpha","name":"Station Alpha","opacity":1,"radius":1,"shape":"sphere","x":0,"y":0,"z":0},{"caption":"The second stop — press Tour again or click a shape to advance the selection.","color":"series-2","id":"beta","name":"Station Beta","opacity":1,"radius":0.8,"shape":"sphere","x":3,"y":1,"z":-1},{"caption":"The final stop — once every station has been visited the tour marks itself complete.","color":"series-3","id":"gamma","name":"Station Gamma","opacity":1,"radius":0.8,"shape":"sphere","x":-3,"y":-1,"z":1}]` */
-  stations?: EntityRow[];
+  /** Default: `"Reset"` */
+  resetLabel?: string;
   /** Default: `""` */
   summary?: string;
   /** Default: `"3D Guided Tour"` */
   title?: string;
-  /** Default: `"Next station"` */
-  tourLabel?: string;
-  /** Default: `600` */
-  width?: number;
+  /** Default: `[]` */
+  backdrop?: EntityRow[];
   /** Default: `1` */
   zoom?: number;
+  /** Default: `400` */
+  height?: number;
+  /** Default: `0.6` */
+  azimuth?: number;
+  /** Default: `""` */
+  backgroundColor?: string;
 }
 
 /**

@@ -21,8 +21,9 @@ import {
   extractManifest,
 } from '../factory-runtime/index.js';
 import type { OrbitalTraitOverride } from '../factory-runtime/index.js';
+import { STD_REGISTRY } from './std-registry.js';
 
-const REGISTRY_ROOT = join(__dirname, '..', 'behaviors', 'registry');
+const REGISTRY_ROOT = STD_REGISTRY;
 const SIGNATURES_PATH = join(__dirname, '..', 'behaviors', 'registry', 'factory-signatures.json');
 
 // ─── Config-override round-trip helpers ───────────────────────────────────────

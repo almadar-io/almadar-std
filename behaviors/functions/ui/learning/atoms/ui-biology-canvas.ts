@@ -46,70 +46,70 @@ export interface StdUiBiologyCanvasShapeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBiologyCanvasConfig {
+  /** Default: `600` */
+  width?: number;
   /** Default: `false` */
   animate?: boolean;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  backgroundColor?: string;
-  /** Default: `[]` */
-  bands?: EntityRow[];
-  camera?: EntityRow;
-  className?: string;
-  /** Default: `[]` */
-  compartments?: EntityRow[];
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `[]` */
-  edges?: EntityRow[];
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
+  helix3d?: EntityRow;
   /** Default: `400` */
   height?: number;
-  helix?: EntityRow;
-  helix3d?: EntityRow;
+  error?: EntityRow;
+  backgroundColor?: string;
+  ariaHidden?: boolean;
+  /** Default: `[]` */
+  traces?: EntityRow[];
   interactive?: boolean;
-  isLoading?: boolean;
+  ariaSelected?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaExpanded?: boolean;
+  /** Default: `[]` */
+  compartments?: EntityRow[];
+  ariaLive?: 'off' | 'polite' | 'assertive';
   /** Default: `{"item":"INIT"}` */
   keyMap?: Record<string, TraitConfig>;
+  shadows?: boolean;
+  tabIndex?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  camera?: EntityRow;
+  lighting?: EntityRow;
+  /** Default: `[]` */
+  nodes?: EntityRow[];
+  title?: string;
+  /** Default: `"SHAPE_CLICK"` */
+  onShapeClick?: string;
+  ariaLabelledby?: string;
+  ariaLabel?: string;
+  /** Default: `[]` */
+  shapes?: EntityRow[];
+  /** Default: `"2d"` */
+  mode?: '2d' | '3d';
+  ariaDescribedby?: string;
+  /** Default: `[]` */
+  readouts?: EntityRow[];
+  /** Default: `"timeline"` */
+  stageStyle?: 'timeline' | 'ring';
+  enterDelay?: number;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `[]` */
+  edges?: EntityRow[];
+  post?: EntityRow;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  helix?: EntityRow;
+  isLoading?: boolean;
+  /** Default: `[]` */
+  stages?: EntityRow[];
+  ariaBusy?: boolean;
+  /** Default: `[]` */
+  bands?: EntityRow[];
+  showGrid?: boolean;
+  /** Default: `[]` */
+  series?: string[];
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `{"item":"INIT"}` */
   keyUpMap?: Record<string, TraitConfig>;
   lang?: string;
-  lighting?: EntityRow;
-  /** Default: `"2d"` */
-  mode?: '2d' | '3d';
-  /** Default: `[]` */
-  nodes?: EntityRow[];
-  /** Default: `"SHAPE_CLICK"` */
-  onShapeClick?: string;
-  post?: EntityRow;
-  /** Default: `[]` */
-  readouts?: EntityRow[];
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `[]` */
-  series?: string[];
-  shadows?: boolean;
-  /** Default: `[]` */
-  shapes?: EntityRow[];
-  showGrid?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `"timeline"` */
-  stageStyle?: 'timeline' | 'ring';
-  /** Default: `[]` */
-  stages?: EntityRow[];
-  tabIndex?: number;
-  title?: string;
-  /** Default: `[]` */
-  traces?: EntityRow[];
-  /** Default: `600` */
-  width?: number;
+  className?: string;
 }
 
 /**

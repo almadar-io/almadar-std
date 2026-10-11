@@ -72,30 +72,30 @@ export interface StdLearnHotspotLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnHotspotConfig {
-  /** Default: `""` */
-  backgroundColor?: string;
+  /** Default: `"Next"` */
+  nextLabel?: string;
   /** Default: `380` */
   height?: number;
   /** Default: `"success"` */
   hitColor?: string;
   /** Default: `""` */
-  matchMode?: string;
-  /** Default: `"Next"` */
-  nextLabel?: string;
-  /** Default: `[{"explanation":"The nucleus holds the DNA.","prompt":"Tap the part that stores the cell's genetic material.","targetId":"nucleus"},{"explanation":"Mitochondria run cellular respiration.","prompt":"Tap the part that produces the cell's energy.","targetId":"mitochondrion"},{"explanation":"Ribosomes translate mRNA into protein.","prompt":"Tap the part that builds proteins.","targetId":"ribosome"}]` */
-  prompts?: EntityRow[];
-  /** Default: `"Try Again"` */
-  retryLabel?: string;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `[{"color":"series-1","id":"nucleus","label":"Nucleus","radius":34,"x":300,"y":170},{"color":"series-2","id":"membrane","label":"Membrane","radius":26,"x":130,"y":120},{"color":"series-3","id":"mitochondrion","label":"Mitochondrion","radius":24,"x":460,"y":120},{"color":"series-4","id":"ribosome","label":"Ribosome","radius":18,"x":200,"y":280},{"color":"series-5","id":"vacuole","label":"Vacuole","radius":28,"x":420,"y":280}]` */
+  backgroundColor?: string;
+  /** Default: `[{"x":300,"y":170,"label":"Nucleus","radius":34,"id":"nucleus","color":"series-1"},{"y":120,"x":130,"id":"membrane","color":"series-2","label":"Membrane","radius":26},{"radius":24,"label":"Mitochondrion","id":"mitochondrion","color":"series-3","x":460,"y":120},{"label":"Ribosome","radius":18,"y":280,"color":"series-4","x":200,"id":"ribosome"},{"x":420,"y":280,"label":"Vacuole","color":"series-5","id":"vacuole","radius":28}]` */
   shapes?: EntityRow[];
   /** Default: `""` */
   summary?: string;
-  /** Default: `"Tap the Part"` */
-  title?: string;
   /** Default: `600` */
   width?: number;
+  /** Default: `[{"prompt":"Tap the part that stores the cell's genetic material.","explanation":"The nucleus holds the DNA.","targetId":"nucleus"},{"explanation":"Mitochondria run cellular respiration.","targetId":"mitochondrion","prompt":"Tap the part that produces the cell's energy."},{"targetId":"ribosome","explanation":"Ribosomes translate mRNA into protein.","prompt":"Tap the part that builds proteins."}]` */
+  prompts?: EntityRow[];
+  /** Default: `"Try Again"` */
+  retryLabel?: string;
+  /** Default: `"Tap the Part"` */
+  title?: string;
+  /** Default: `""` */
+  matchMode?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
 }
 
 /**

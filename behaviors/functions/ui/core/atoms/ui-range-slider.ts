@@ -53,46 +53,46 @@ export interface StdUiRangeSliderChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRangeSliderConfig {
-  /** Default: `"ACTION"` */
-  action?: string;
-  actionPayload?: unknown;
   ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  buffered?: number;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `false` */
-  disabled?: boolean;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
+  actionPayload?: unknown;
   lang?: string;
-  /** Default: `100` */
-  max?: number;
+  tabIndex?: number;
   /** Default: `0` */
   min?: number;
+  className?: string;
   /** Default: `"CHANGE"` */
   onChange?: string;
+  ariaExpanded?: boolean;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `false` */
+  showTooltip?: boolean;
+  /** Default: `"ACTION"` */
+  action?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `1` */
+  step?: number;
+  ariaSelected?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   /** Default: `false` */
   showTicks?: boolean;
   /** Default: `false` */
-  showTooltip?: boolean;
+  disabled?: boolean;
+  ariaLabel?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `1` */
-  step?: number;
-  tabIndex?: number;
+  ariaHidden?: boolean;
   /** Default: `0` */
   value?: number;
+  ariaDescribedby?: string;
+  ariaLabelledby?: string;
+  enterDelay?: number;
+  /** Default: `100` */
+  max?: number;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  buffered?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaLive?: 'off' | 'polite' | 'assertive';
 }
 
 /**

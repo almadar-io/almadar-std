@@ -37,26 +37,26 @@ export type StdPlatformerBoard2dListenKey = 'PLAT_JUMP' | 'PLAT_PLACE' | 'PLAT_S
  * without modifying its state-machine topology.
  */
 export interface StdPlatformerBoard2dConfig {
-  /** Default: `550` */
-  gravity?: unknown;
-  /** Default: `365` */
-  jumpStrength?: unknown;
-  /** Default: `460` */
-  killY?: unknown;
   /** Default: `600` */
   maxFallSpeed?: unknown;
-  /** Default: `120` */
-  moveSpeed?: unknown;
-  /** Default: `[{"height":32,"id":"g0","type":"ground","width":800,"x":0,"y":368},{"height":16,"id":"p1","type":"platform","width":160,"x":150,"y":280},{"height":16,"id":"p2","type":"platform","width":160,"x":420,"y":220},{"height":16,"id":"h1","type":"hazard","width":80,"x":580,"y":300},{"height":28,"id":"goal","type":"goal","width":64,"x":700,"y":340}]` */
+  /** Default: `365` */
+  jumpStrength?: unknown;
+  /** Default: `550` */
+  gravity?: unknown;
+  /** Default: `[{"height":32,"width":800,"x":0,"type":"ground","y":368,"id":"g0"},{"x":150,"width":160,"height":16,"type":"platform","id":"p1","y":280},{"x":420,"width":160,"y":220,"type":"platform","height":16,"id":"p2"},{"y":300,"x":580,"id":"h1","height":16,"type":"hazard","width":80},{"y":340,"x":700,"width":64,"height":28,"type":"goal","id":"goal"}]` */
   platforms?: unknown;
+  /** Default: `460` */
+  killY?: unknown;
   /** Default: `true` */
   running?: unknown;
-  /** Default: `{"facingRight":true,"grounded":false,"height":48,"vx":0,"vy":0,"width":32,"x":80,"y":320}` */
-  spawn?: unknown;
   /** Default: `768` */
   xMax?: unknown;
+  /** Default: `120` */
+  moveSpeed?: unknown;
   /** Default: `0` */
   xMin?: unknown;
+  /** Default: `{"y":320,"facingRight":true,"vy":0,"x":80,"height":48,"grounded":false,"vx":0,"width":32}` */
+  spawn?: unknown;
 }
 
 type _StdPlatformerBoard2dEntityName = 'GameState' | 'PlatformerBodyData' | 'FxState' | 'FlowState';
@@ -110,16 +110,16 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
     name: 'PlatformerBoard2DOrbital',
     uses: [
       {
-        'as': 'Body',
         'from': 'std/behaviors/std-platformer-body',
+        'as': 'Body',
       },
       {
-        'as': 'Particles',
         'from': 'std/behaviors/std-fx-particles',
+        'as': 'Particles',
       },
       {
-        'as': 'Gate',
         'from': 'std/behaviors/std-objective-flow',
+        'as': 'Gate',
       },
     ],
     entity: {
@@ -130,244 +130,244 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'body',
+            'type': 'object',
             'default': {
-              'facingRight': true,
               'grounded': false,
               'height': 48,
               'vx': 0,
-              'vy': 0,
+              'facingRight': true,
               'width': 32,
-              'x': 80,
+              'vy': 0,
               'y': 320,
+              'x': 80,
             },
-            'name': 'body',
             'properties': {
-              'facingRight': {
-                'name': 'facingRight',
-                'required': false,
-                'type': 'boolean',
+              'height': {
+                'name': 'height',
+                'type': 'number',
+                'required': true,
               },
               'grounded': {
                 'name': 'grounded',
-                'required': false,
                 'type': 'boolean',
-              },
-              'height': {
-                'name': 'height',
-                'required': true,
-                'type': 'number',
+                'required': false,
               },
               'vx': {
                 'name': 'vx',
+                'type': 'number',
                 'required': false,
-                'type': 'number',
-              },
-              'vy': {
-                'name': 'vy',
-                'required': false,
-                'type': 'number',
-              },
-              'width': {
-                'name': 'width',
-                'required': true,
-                'type': 'number',
-              },
-              'x': {
-                'name': 'x',
-                'required': true,
-                'type': 'number',
               },
               'y': {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
+              },
+              'width': {
+                'name': 'width',
+                'type': 'number',
+                'required': true,
+              },
+              'facingRight': {
+                'name': 'facingRight',
+                'type': 'boolean',
+                'required': false,
+              },
+              'x': {
+                'name': 'x',
+                'type': 'number',
+                'required': true,
+              },
+              'vy': {
+                'name': 'vy',
+                'type': 'number',
+                'required': false,
               },
             },
-            'type': 'object',
           },
           {
-            'default': false,
             'name': 'fell',
             'type': 'boolean',
+            'default': false,
           },
           {
-            'default': '',
             'name': 'hazardId',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'goalId',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': false,
             'name': 'skating',
             'type': 'boolean',
+            'default': false,
           },
           {
+            'name': 'curveMods',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
-                'a': {
-                  'name': 'a',
-                  'required': true,
-                  'type': 'number',
-                },
-                'h': {
-                  'name': 'h',
-                  'required': true,
-                  'type': 'number',
-                },
                 'k': {
                   'name': 'k',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 'x0': {
                   'name': 'x0',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
+                },
+                'a': {
+                  'name': 'a',
+                  'type': 'number',
+                  'required': true,
+                },
+                'h': {
+                  'name': 'h',
+                  'type': 'number',
+                  'required': true,
                 },
                 'x1': {
                   'name': 'x1',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'curveMods',
-            'type': 'array',
           },
           {
+            'name': 'fx',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
-                'bornAt': {
-                  'name': 'bornAt',
-                  'required': false,
+                'x': {
+                  'name': 'x',
                   'type': 'number',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
                   'required': true,
-                  'type': 'string',
-                },
-                'maxTtl': {
-                  'name': 'maxTtl',
-                  'required': false,
-                  'type': 'number',
-                },
-                'message': {
-                  'name': 'message',
-                  'required': false,
-                  'type': 'string',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'ttl': {
-                  'name': 'ttl',
-                  'required': true,
-                  'type': 'number',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
                 },
                 'vz': {
                   'name': 'vz',
+                  'type': 'number',
                   'required': false,
-                  'type': 'number',
                 },
-                'x': {
-                  'name': 'x',
-                  'required': true,
+                'size': {
+                  'name': 'size',
                   'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
                   'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
                   'type': 'number',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'bornAt': {
+                  'name': 'bornAt',
+                  'type': 'number',
+                  'required': false,
                 },
                 'z': {
                   'name': 'z',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'message': {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'maxTtl': {
+                  'name': 'maxTtl',
+                  'type': 'number',
+                  'required': false,
+                },
+                'ttl': {
+                  'name': 'ttl',
+                  'type': 'number',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'fx',
-            'type': 'array',
           },
           {
-            'default': 'none',
             'name': 'result',
             'type': 'string',
+            'default': 'none',
           },
           {
-            'default': 0,
             'name': 'score',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 3,
             'name': 'lives',
             'type': 'number',
+            'default': 3,
           },
           {
-            'default': 1,
             'name': 'objectivesLeft',
             'type': 'number',
+            'default': 1,
           },
           {
-            'default': 0,
             'name': 'frame',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': false,
             'name': 'celebrated',
             'type': 'boolean',
+            'default': false,
           },
         ];
         const extras = params.fields ?? [];
@@ -378,1116 +378,207 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Body.traits.PlatformerBody' satisfies _StdPlatformerBoard2dPlatformerBoard2DOrbitalUsesRef),
+        'name': 'BodyAuthority',
+        'linkedEntity': 'GameState',
         'config': {
-          'gravity': {
-            'default': 550,
+          'maxFallSpeed': {
             'type': 'unknown',
+            'default': 600,
           },
           'jumpStrength': {
+            'type': 'unknown',
             'default': 365,
-            'type': 'unknown',
           },
-          'killY': {
-            'default': 460,
+          'gravity': {
             'type': 'unknown',
-          },
-          'maxFallSpeed': {
-            'default': 600,
-            'type': 'unknown',
-          },
-          'moveSpeed': {
-            'default': 120,
-            'type': 'unknown',
+            'default': 550,
           },
           'platforms': {
+            'type': 'unknown',
             'default': [
               {
                 'height': 32,
-                'id': 'g0',
-                'type': 'ground',
                 'width': 800,
                 'x': 0,
+                'type': 'ground',
                 'y': 368,
+                'id': 'g0',
               },
               {
-                'height': 16,
-                'id': 'p1',
-                'type': 'platform',
-                'width': 160,
                 'x': 150,
+                'width': 160,
+                'height': 16,
+                'type': 'platform',
+                'id': 'p1',
                 'y': 280,
               },
               {
+                'x': 420,
+                'width': 160,
+                'y': 220,
+                'type': 'platform',
                 'height': 16,
                 'id': 'p2',
-                'type': 'platform',
-                'width': 160,
-                'x': 420,
-                'y': 220,
               },
               {
-                'height': 16,
+                'y': 300,
+                'x': 580,
                 'id': 'h1',
+                'height': 16,
                 'type': 'hazard',
                 'width': 80,
-                'x': 580,
-                'y': 300,
               },
               {
-                'height': 28,
-                'id': 'goal',
-                'type': 'goal',
-                'width': 64,
-                'x': 700,
                 'y': 340,
+                'x': 700,
+                'width': 64,
+                'height': 28,
+                'type': 'goal',
+                'id': 'goal',
               },
             ],
+          },
+          'killY': {
             'type': 'unknown',
+            'default': 460,
           },
           'running': {
+            'type': 'unknown',
             'default': true,
-            'type': 'unknown',
-          },
-          'spawn': {
-            'default': {
-              'facingRight': true,
-              'grounded': false,
-              'height': 48,
-              'vx': 0,
-              'vy': 0,
-              'width': 32,
-              'x': 80,
-              'y': 320,
-            },
-            'type': 'unknown',
           },
           'xMax': {
-            'default': 768,
             'type': 'unknown',
+            'default': 768,
+          },
+          'moveSpeed': {
+            'type': 'unknown',
+            'default': 120,
           },
           'xMin': {
-            'default': 0,
             'type': 'unknown',
+            'default': 0,
+          },
+          'spawn': {
+            'type': 'unknown',
+            'default': {
+              'y': 320,
+              'facingRight': true,
+              'vy': 0,
+              'x': 80,
+              'height': 48,
+              'grounded': false,
+              'vx': 0,
+              'width': 32,
+            },
           },
         },
         'events': {
-          'BODY_FELL': 'PLAT_FELL',
+          'STEER': 'PLAT_STEER',
+          'BODY_MOVED': 'PLAT_MOVED',
           'BODY_GOAL': 'PLAT_GOAL',
           'BODY_HAZARD': 'PLAT_HAZARD',
-          'BODY_JUMPED': 'PLAT_JUMPED',
           'BODY_LANDED': 'PLAT_LANDED',
-          'BODY_MOVED': 'PLAT_MOVED',
-          'JUMP': 'PLAT_JUMP',
           'PLACE': 'PLAT_PLACE',
-          'STEER': 'PLAT_STEER',
+          'JUMP': 'PLAT_JUMP',
+          'BODY_JUMPED': 'PLAT_JUMPED',
+          'BODY_FELL': 'PLAT_FELL',
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'PLAT_JUMP',
+            'triggers': 'PLAT_JUMP',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerIntent',
             },
-            'triggers': 'PLAT_JUMP',
           },
           {
             'event': 'PLAT_PLACE',
+            'triggers': 'PLAT_PLACE',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerIntent',
             },
-            'triggers': 'PLAT_PLACE',
           },
           {
             'event': 'PLAT_STEER',
+            'triggers': 'PLAT_STEER',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerIntent',
             },
-            'triggers': 'PLAT_STEER',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerIntent',
             },
-            'triggers': 'RESTART',
           },
         ],
-        'name': 'BodyAuthority',
-        'ref': ('Body.traits.PlatformerBody' satisfies _StdPlatformerBoard2dPlatformerBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Particles.traits.FxParticles' satisfies _StdPlatformerBoard2dPlatformerBoard2DOrbitalUsesRef),
+        'name': 'FxDecay',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'BURST',
+            'triggers': 'BURST',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerIntent',
             },
-            'triggers': 'BURST',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerIntent',
             },
-            'triggers': 'RESTART',
           },
         ],
-        'name': 'FxDecay',
-        'ref': ('Particles.traits.FxParticles' satisfies _StdPlatformerBoard2dPlatformerBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Gate.traits.ObjectiveFlow' satisfies _StdPlatformerBoard2dPlatformerBoard2DOrbitalUsesRef),
+        'name': 'RoundGate',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'PROGRESS',
+            'triggers': 'PROGRESS',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerIntent',
             },
-            'triggers': 'PROGRESS',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerIntent',
             },
-            'triggers': 'RESTART',
           },
         ],
-        'name': 'RoundGate',
-        'ref': ('Gate.traits.ObjectiveFlow' satisfies _StdPlatformerBoard2dPlatformerBoard2DOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'backgroundAsset': {
-            'default': {},
-            'description': 'Game-shell background panel sprite (theme chrome)',
-            'label': 'Background Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'backgroundImage': {
-            'default': {},
-            'description': 'Canvas background image Asset',
-            'label': 'Background Image',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'bgColor': {
-            'default': '#5c94fc',
-            'description': 'Canvas background color',
-            'label': 'Bg Color',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'clearTitle': {
-            'default': 'YOU WIN!',
-            'description': 'Overlay title when the goal tile is reached',
-            'label': 'Clear Title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'directionAssets': {
-            'default': {},
-            'description': 'D-pad direction icon sprites',
-            'label': 'Direction Assets',
-            'properties': {
-              'down': {
-                'name': 'down',
-                'properties': {
-                  'animations': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'animations',
-                    'required': false,
-                    'type': 'array',
-                  },
-                  'aspect': {
-                    'name': 'aspect',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'atlas': {
-                    'name': 'atlas',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'category': {
-                    'name': 'category',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'dimension': {
-                    'name': 'dimension',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'name': {
-                    'name': 'name',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'role': {
-                    'name': 'role',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'sprite': {
-                    'name': 'sprite',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'style': {
-                    'name': 'style',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'thumbnailUrl': {
-                    'name': 'thumbnailUrl',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'url': {
-                    'name': 'url',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'variant': {
-                    'name': 'variant',
-                    'required': false,
-                    'type': 'string',
-                  },
-                },
-                'required': false,
-                'type': 'object',
-              },
-              'left': {
-                'name': 'left',
-                'properties': {
-                  'animations': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'animations',
-                    'required': false,
-                    'type': 'array',
-                  },
-                  'aspect': {
-                    'name': 'aspect',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'atlas': {
-                    'name': 'atlas',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'category': {
-                    'name': 'category',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'dimension': {
-                    'name': 'dimension',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'name': {
-                    'name': 'name',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'role': {
-                    'name': 'role',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'sprite': {
-                    'name': 'sprite',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'style': {
-                    'name': 'style',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'thumbnailUrl': {
-                    'name': 'thumbnailUrl',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'url': {
-                    'name': 'url',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'variant': {
-                    'name': 'variant',
-                    'required': false,
-                    'type': 'string',
-                  },
-                },
-                'required': false,
-                'type': 'object',
-              },
-              'right': {
-                'name': 'right',
-                'properties': {
-                  'animations': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'animations',
-                    'required': false,
-                    'type': 'array',
-                  },
-                  'aspect': {
-                    'name': 'aspect',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'atlas': {
-                    'name': 'atlas',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'category': {
-                    'name': 'category',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'dimension': {
-                    'name': 'dimension',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'name': {
-                    'name': 'name',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'role': {
-                    'name': 'role',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'sprite': {
-                    'name': 'sprite',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'style': {
-                    'name': 'style',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'thumbnailUrl': {
-                    'name': 'thumbnailUrl',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'url': {
-                    'name': 'url',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'variant': {
-                    'name': 'variant',
-                    'required': false,
-                    'type': 'string',
-                  },
-                },
-                'required': false,
-                'type': 'object',
-              },
-              'up': {
-                'name': 'up',
-                'properties': {
-                  'animations': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'animations',
-                    'required': false,
-                    'type': 'array',
-                  },
-                  'aspect': {
-                    'name': 'aspect',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'atlas': {
-                    'name': 'atlas',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'category': {
-                    'name': 'category',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'dimension': {
-                    'name': 'dimension',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'name': {
-                    'name': 'name',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'role': {
-                    'name': 'role',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'sprite': {
-                    'name': 'sprite',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'style': {
-                    'name': 'style',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'thumbnailUrl': {
-                    'name': 'thumbnailUrl',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'url': {
-                    'name': 'url',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'variant': {
-                    'name': 'variant',
-                    'required': false,
-                    'type': 'string',
-                  },
-                },
-                'required': false,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'DirectionAssets',
-          },
-          'fxPresets': {
-            'default': [
-              {
-                'color': '#ffe066',
-                'color2': '#fff4cc',
-                'count': 6,
-                'glow': 0.15,
-                'shape': 'spark',
-                'size': 22,
-                'type': 'score',
-                'vy': -35,
-              },
-              {
-                'color': '#ef4444',
-                'color2': '#7f1d1d',
-                'count': 5,
-                'glow': 0.12,
-                'gravity': 40,
-                'shape': 'spark',
-                'size': 20,
-                'type': 'damage',
-              },
-            ],
-            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its intent trait emits (goal score, hazard/fell damage).',
-            'items': {
-              'properties': {
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'color2': {
-                  'name': 'color2',
-                  'required': false,
-                  'type': 'string',
-                },
-                'count': {
-                  'name': 'count',
-                  'required': false,
-                  'type': 'number',
-                },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'glow': {
-                  'name': 'glow',
-                  'required': false,
-                  'type': 'number',
-                },
-                'gravity': {
-                  'name': 'gravity',
-                  'required': false,
-                  'type': 'number',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'shape': {
-                  'name': 'shape',
-                  'required': false,
-                  'type': 'string',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Fx Presets',
-            'tier': 'presentation',
-            'type': '[FxPreset]',
-          },
-          'goalScore': {
-            'default': 100,
-            'description': 'Points awarded when the body touches the goal tile',
-            'label': 'Goal Score',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'hudBackgroundAsset': {
-            'default': {},
-            'description': 'HUD panel background sprite (theme chrome)',
-            'label': 'HUD Background Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'lostTitle': {
-            'default': 'GAME OVER',
-            'description': 'Overlay title when lives run out',
-            'label': 'Lost Title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'platforms': {
-            'default': [
-              {
-                'height': 32,
-                'id': 'g0',
-                'type': 'ground',
-                'width': 800,
-                'x': 0,
-                'y': 368,
-              },
-              {
-                'height': 16,
-                'id': 'p1',
-                'type': 'platform',
-                'width': 160,
-                'x': 150,
-                'y': 280,
-              },
-              {
-                'height': 16,
-                'id': 'p2',
-                'type': 'platform',
-                'width': 160,
-                'x': 420,
-                'y': 220,
-              },
-              {
-                'height': 16,
-                'id': 'h1',
-                'type': 'hazard',
-                'width': 80,
-                'x': 580,
-                'y': 300,
-              },
-              {
-                'height': 28,
-                'id': 'goal',
-                'type': 'goal',
-                'width': 64,
-                'x': 700,
-                'y': 340,
-              },
-            ],
-            'description': 'Level geometry rendered by the canvas (must match BodyAuthority.platforms, which owns collision — override both together)',
-            'items': {
-              'properties': {
-                'height': {
-                  'name': 'height',
-                  'required': true,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'ground',
-                    'platform',
-                    'hazard',
-                    'goal',
-                  ],
-                },
-                'width': {
-                  'name': 'width',
-                  'required': true,
-                  'type': 'number',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Platforms',
-            'tier': 'domain',
-            'type': '[PlatformerPlatform]',
-          },
-          'playerSprite': {
-            'default': {},
-            'description': 'Player sprite Asset; its atlas must expose adventurer_idle/walk1/walk2/jump frames (or override the sprite-selection expression)',
-            'label': 'Player Sprite',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'respawnX': {
-            'default': 80,
-            'description': 'X the body teleports to after hazard/pit damage (matches BodyAuthority spawn.x)',
-            'label': 'Respawn X',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'respawnY': {
-            'default': 320,
-            'description': 'Y the body teleports to after hazard/pit damage (matches BodyAuthority spawn.y)',
-            'label': 'Respawn Y',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'startLives': {
-            'default': 3,
-            'description': 'Lives seeded on INIT/PLAY_AGAIN; hazard or pit contact costs one, zero loses the round',
-            'label': 'Start Lives',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'tileSprites': {
-            'default': {},
-            'description': 'Map of platform type (ground/platform/hazard/goal) to tile sprite Asset',
-            'items': {
-              'properties': {
-                'animations': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'animations',
-                  'required': false,
-                  'type': 'array',
-                },
-                'aspect': {
-                  'name': 'aspect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'atlas': {
-                  'name': 'atlas',
-                  'required': false,
-                  'type': 'string',
-                },
-                'category': {
-                  'name': 'category',
-                  'required': false,
-                  'type': 'string',
-                },
-                'dimension': {
-                  'name': 'dimension',
-                  'required': false,
-                  'type': 'string',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': false,
-                  'type': 'string',
-                },
-                'role': {
-                  'name': 'role',
-                  'required': false,
-                  'type': 'string',
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'required': false,
-                  'type': 'string',
-                },
-                'style': {
-                  'name': 'style',
-                  'required': false,
-                  'type': 'string',
-                },
-                'thumbnailUrl': {
-                  'name': 'thumbnailUrl',
-                  'required': false,
-                  'type': 'string',
-                },
-                'url': {
-                  'name': 'url',
-                  'required': false,
-                  'type': 'string',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Tile Sprites',
-            'tier': 'presentation',
-            'type': 'Map<string,Asset>',
-          },
-          'worldHeight': {
-            'default': 400,
-            'description': 'World pixel height (camera + canvas bounds)',
-            'label': 'World Height',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'worldWidth': {
-            'default': 800,
-            'description': 'World pixel width (camera + canvas bounds)',
-            'label': 'World Width',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-        },
+        'name': 'PlatformerIntent',
         'effectRow': [
           {
             'kind': 'emit',
@@ -1548,184 +639,188 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
             'site': 'tick',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'GameState',
         'emits': [
           {
-            'description': 'Move-left intent from ArrowLeft/KeyA keydown or d-pad (forwarded to the body authority as STEER dir −1)',
             'event': 'LEFT',
+            'description': 'Move-left intent from ArrowLeft/KeyA keydown or d-pad (forwarded to the body authority as STEER dir −1)',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Move-right intent from ArrowRight/KeyD keydown or d-pad (forwarded to the body authority as STEER dir +1)',
             'event': 'RIGHT',
+            'description': 'Move-right intent from ArrowRight/KeyD keydown or d-pad (forwarded to the body authority as STEER dir +1)',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Horizontal key release (keyUpMap or d-pad directionReleaseEvents); forwarded as STEER dir 0 so the body stops',
             'event': 'STOP',
+            'description': 'Horizontal key release (keyUpMap or d-pad directionReleaseEvents); forwarded as STEER dir 0 so the body stops',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Jump intent from Space/ArrowUp/KeyW or d-pad up; forwarded to the body authority, which accepts it only while grounded',
             'event': 'JUMP',
+            'description': 'Jump intent from Space/ArrowUp/KeyW or d-pad up; forwarded to the body authority, which accepts it only while grounded',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Renamed STEER consumed by the platformer-body authority: −1/0/+1 × moveSpeed horizontal velocity',
             'event': 'PLAT_STEER',
+            'description': 'Renamed STEER consumed by the platformer-body authority: −1/0/+1 × moveSpeed horizontal velocity',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'dir',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Renamed JUMP consumed by the platformer-body authority (grounded-gated vertical kick)',
             'event': 'PLAT_JUMP',
+            'description': 'Renamed JUMP consumed by the platformer-body authority (grounded-gated vertical kick)',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Renamed PLACE consumed by the platformer-body authority; hazard/pit respawn teleport',
             'event': 'PLAT_PLACE',
+            'description': 'Renamed PLACE consumed by the platformer-body authority; hazard/pit respawn teleport',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Goal-tile contact signal from the platformer-body authority (renamed BODY_GOAL); scores and trips the win gate',
             'event': 'PLAT_GOAL',
+            'description': 'Goal-tile contact signal from the platformer-body authority (renamed BODY_GOAL); scores and trips the win gate',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Hazard-tile contact signal from the platformer-body authority (renamed BODY_HAZARD); costs a life and respawns',
             'event': 'PLAT_HAZARD',
+            'description': 'Hazard-tile contact signal from the platformer-body authority (renamed BODY_HAZARD); costs a life and respawns',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Pit-fall signal from the platformer-body authority (renamed BODY_FELL); costs a life and respawns',
             'event': 'PLAT_FELL',
+            'description': 'Pit-fall signal from the platformer-body authority (renamed BODY_FELL); costs a life and respawns',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Floating-text particle batch spawned on score/damage; fx-particles fades it',
             'event': 'BURST',
+            'description': 'Floating-text particle batch spawned on score/damage; fx-particles fades it',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'Fx',
                 'name': 'particles',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'type',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'x',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'z',
@@ -1741,8 +836,8 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                   },
                   {
                     'name': 'ttl',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'maxTtl',
@@ -1785,314 +880,316 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'Fx',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Sparse win/lose signal consumed by the objective-flow gate: objectivesLeft 0 = won, movesLeft 0 = lost',
             'event': 'PROGRESS',
+            'description': 'Sparse win/lose signal consumed by the objective-flow gate: objectivesLeft 0 = won, movesLeft 0 = lost',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'objectivesLeft',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'movesLeft',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Win/lose resolution from the objective-flow gate; guarded by celebrated so it lands once',
             'event': 'GAME_END',
+            'description': 'Win/lose resolution from the objective-flow gate; guarded by celebrated so it lands once',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'result',
+                'type': 'string',
                 'required': true,
-                'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Broadcast reset consumed by the platformer-body and objective-flow authorities on INIT/PLAY_AGAIN',
             'event': 'RESTART',
+            'description': 'Broadcast reset consumed by the platformer-body and objective-flow authorities on INIT/PLAY_AGAIN',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'End-overlay restart button; reseeds score/lives/objectives and broadcasts RESTART',
             'event': 'PLAY_AGAIN',
+            'description': 'End-overlay restart button; reseeds score/lives/objectives and broadcasts RESTART',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'PLAT_FELL',
+            'triggers': 'PLAT_FELL',
             'source': {
               'kind': 'trait',
               'trait': ('BodyAuthority' satisfies _StdPlatformerBoard2dListenTraitName),
             },
-            'triggers': 'PLAT_FELL',
           },
           {
             'event': 'PLAT_GOAL',
+            'triggers': 'PLAT_GOAL',
             'source': {
               'kind': 'trait',
               'trait': ('BodyAuthority' satisfies _StdPlatformerBoard2dListenTraitName),
             },
-            'triggers': 'PLAT_GOAL',
           },
           {
             'event': 'PLAT_HAZARD',
+            'triggers': 'PLAT_HAZARD',
             'source': {
               'kind': 'trait',
               'trait': ('BodyAuthority' satisfies _StdPlatformerBoard2dListenTraitName),
             },
-            'triggers': 'PLAT_HAZARD',
           },
           {
             'event': 'GAME_END',
+            'triggers': 'GAME_END',
             'source': {
               'kind': 'trait',
               'trait': ('RoundGate' satisfies _StdPlatformerBoard2dListenTraitName),
             },
-            'triggers': 'GAME_END',
           },
         ],
-        'name': 'PlatformerIntent',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'playing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Move-left intent from ArrowLeft/KeyA keydown or d-pad (forwarded to the body authority as STEER dir −1)',
               'key': 'LEFT',
               'name': 'Left',
+              'description': 'Move-left intent from ArrowLeft/KeyA keydown or d-pad (forwarded to the body authority as STEER dir −1)',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Move-right intent from ArrowRight/KeyD keydown or d-pad (forwarded to the body authority as STEER dir +1)',
               'key': 'RIGHT',
               'name': 'Right',
+              'description': 'Move-right intent from ArrowRight/KeyD keydown or d-pad (forwarded to the body authority as STEER dir +1)',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Horizontal key release (keyUpMap or d-pad directionReleaseEvents); forwarded as STEER dir 0 so the body stops',
               'key': 'STOP',
               'name': 'Stop',
+              'description': 'Horizontal key release (keyUpMap or d-pad directionReleaseEvents); forwarded as STEER dir 0 so the body stops',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Jump intent from Space/ArrowUp/KeyW or d-pad up; forwarded to the body authority, which accepts it only while grounded',
               'key': 'JUMP',
               'name': 'Jump',
+              'description': 'Jump intent from Space/ArrowUp/KeyW or d-pad up; forwarded to the body authority, which accepts it only while grounded',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Goal-tile contact signal from the platformer-body authority (renamed BODY_GOAL); scores and trips the win gate',
               'key': 'PLAT_GOAL',
               'name': 'Plat Goal',
+              'description': 'Goal-tile contact signal from the platformer-body authority (renamed BODY_GOAL); scores and trips the win gate',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Hazard-tile contact signal from the platformer-body authority (renamed BODY_HAZARD); costs a life and respawns',
               'key': 'PLAT_HAZARD',
               'name': 'Plat Hazard',
+              'description': 'Hazard-tile contact signal from the platformer-body authority (renamed BODY_HAZARD); costs a life and respawns',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Pit-fall signal from the platformer-body authority (renamed BODY_FELL); costs a life and respawns',
               'key': 'PLAT_FELL',
               'name': 'Plat Fell',
+              'description': 'Pit-fall signal from the platformer-body authority (renamed BODY_FELL); costs a life and respawns',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Win/lose resolution from the objective-flow gate; guarded by celebrated so it lands once',
               'key': 'GAME_END',
               'name': 'Game End',
+              'description': 'Win/lose resolution from the objective-flow gate; guarded by celebrated so it lands once',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'result',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'End-overlay restart button; reseeds score/lives/objectives and broadcasts RESTART',
               'key': 'PLAY_AGAIN',
               'name': 'Play Again',
+              'description': 'End-overlay restart button; reseeds score/lives/objectives and broadcasts RESTART',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Renamed STEER consumed by the platformer-body authority: −1/0/+1 × moveSpeed horizontal velocity',
               'key': 'PLAT_STEER',
               'name': 'Plat Steer',
+              'description': 'Renamed STEER consumed by the platformer-body authority: −1/0/+1 × moveSpeed horizontal velocity',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'dir',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Renamed JUMP consumed by the platformer-body authority (grounded-gated vertical kick)',
               'key': 'PLAT_JUMP',
               'name': 'Plat Jump',
+              'description': 'Renamed JUMP consumed by the platformer-body authority (grounded-gated vertical kick)',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Renamed PLACE consumed by the platformer-body authority; hazard/pit respawn teleport',
               'key': 'PLAT_PLACE',
               'name': 'Plat Place',
+              'description': 'Renamed PLACE consumed by the platformer-body authority; hazard/pit respawn teleport',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Floating-text particle batch spawned on score/damage; fx-particles fades it',
               'key': 'BURST',
               'name': 'Burst',
+              'description': 'Floating-text particle batch spawned on score/damage; fx-particles fades it',
+              'tier': 'domain',
               'payloadSchema': [
                 {
-                  'entity': 'Fx',
                   'name': 'particles',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'type',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'x',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'z',
@@ -2108,8 +1205,8 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                     },
                     {
                       'name': 'ttl',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'maxTtl',
@@ -2152,50 +1249,46 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'Fx',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Sparse win/lose signal consumed by the objective-flow gate: objectivesLeft 0 = won, movesLeft 0 = lost',
               'key': 'PROGRESS',
               'name': 'Progress',
+              'description': 'Sparse win/lose signal consumed by the objective-flow gate: objectivesLeft 0 = won, movesLeft 0 = lost',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'objectivesLeft',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'movesLeft',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Broadcast reset consumed by the platformer-body and objective-flow authorities on INIT/PLAY_AGAIN',
               'key': 'RESTART',
               'name': 'Restart',
+              'description': 'Broadcast reset consumed by the platformer-body and objective-flow authorities on INIT/PLAY_AGAIN',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'playing',
             },
           ],
           'transitions': [
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -2228,31 +1321,104 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                   'render-ui',
                   'main',
                   {
-                    'backgroundAsset': '@config.backgroundAsset',
+                    'type': 'game-shell',
+                    'overlay': [
+                      'if',
+                      [
+                        '==',
+                        '@entity.result',
+                        'won',
+                      ],
+                      {
+                        'title': '@config.clearTitle',
+                        'subtitle': [
+                          'str/concat',
+                          'Score: ',
+                          '@entity.score',
+                        ],
+                        'options': [
+                          {
+                            'event': 'PLAY_AGAIN',
+                            'id': 'again',
+                            'variant': 'primary',
+                            'label': 'Play Again',
+                          },
+                        ],
+                        'type': 'game-menu',
+                      },
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@entity.result',
+                          'lost',
+                        ],
+                        {
+                          'options': [
+                            {
+                              'label': 'Play Again',
+                              'event': 'PLAY_AGAIN',
+                              'variant': 'primary',
+                              'id': 'again',
+                            },
+                          ],
+                          'title': '@config.lostTitle',
+                          'subtitle': [
+                            'str/concat',
+                            'Score: ',
+                            '@entity.score',
+                          ],
+                          'type': 'game-menu',
+                        },
+                        null,
+                      ],
+                    ],
+                    'hud': {
+                      'direction': 'horizontal',
+                      'children': [
+                        {
+                          'type': 'game-hud',
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'label': 'Lives',
+                              'value': '@entity.lives',
+                            },
+                          ],
+                        },
+                        {
+                          'kind': 'dpad',
+                          'type': 'control-grid',
+                          'directionAssets': '@config.directionAssets',
+                          'directionReleaseEvents': {
+                            'right': 'STOP',
+                            'left': 'STOP',
+                          },
+                          'directionEvents': {
+                            'up': 'JUMP',
+                            'left': 'LEFT',
+                            'right': 'RIGHT',
+                          },
+                        },
+                      ],
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
                     'children': [
                       {
                         'backgroundColor': '@config.bgColor',
-                        'backgroundImage': '@config.backgroundImage',
-                        'camera': {
-                          'mode': 'follow',
-                          'pos': {
-                            'x': [
-                              '/',
-                              '@config.worldWidth',
-                              2,
-                            ],
-                            'y': [
-                              '/',
-                              '@config.worldHeight',
-                              2,
-                            ],
-                          },
-                          'target': {
-                            'x': '@entity.body.x',
-                            'y': '@entity.body.y',
-                          },
-                          'zoom': 1,
+                        'worldHeight': '@config.worldHeight',
+                        'keyUpMap': {
+                          'ArrowRight': 'STOP',
+                          'KeyD': 'STOP',
+                          'KeyA': 'STOP',
+                          'ArrowLeft': 'STOP',
                         },
+                        'type': 'canvas',
                         'drawables': [
                           {
                             'items': [
@@ -2262,20 +1428,6 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                                 'fn',
                                 'p',
                                 {
-                                  'asset': [
-                                    'object/get',
-                                    '@config.tileSprites',
-                                    [
-                                      'object/get',
-                                      '@p',
-                                      'type',
-                                    ],
-                                  ],
-                                  'height': [
-                                    'object/get',
-                                    '@p',
-                                    'height',
-                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2289,10 +1441,24 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                                     ],
                                   },
                                   'type': 'draw-sprite',
+                                  'asset': [
+                                    'object/get',
+                                    '@config.tileSprites',
+                                    [
+                                      'object/get',
+                                      '@p',
+                                      'type',
+                                    ],
+                                  ],
                                   'width': [
                                     'object/get',
                                     '@p',
                                     'width',
+                                  ],
+                                  'height': [
+                                    'object/get',
+                                    '@p',
+                                    'height',
                                   ],
                                 },
                               ],
@@ -2300,22 +1466,23 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                             'type': 'draw-sprite-layer',
                           },
                           {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               [
                                 'object/merge',
                                 {
+                                  'position': {
+                                    'y': '@entity.body.y',
+                                    'x': '@entity.body.x',
+                                  },
+                                  'width': '@entity.body.width',
+                                  'type': 'draw-sprite',
+                                  'frame': '@entity.frame',
                                   'flipX': [
                                     'not',
                                     '@entity.body.facingRight',
                                   ],
-                                  'frame': '@entity.frame',
                                   'height': '@entity.body.height',
-                                  'position': {
-                                    'x': '@entity.body.x',
-                                    'y': '@entity.body.y',
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': '@entity.body.width',
                                 },
                                 {
                                   'asset': [
@@ -2355,132 +1522,63 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                                 },
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                           {
-                            'items': '@entity.fx',
                             'presets': '@config.fxPresets',
-                            'tickMs': 500,
                             'type': 'draw-fx-layer',
+                            'items': '@entity.fx',
+                            'tickMs': 500,
                           },
                         ],
+                        'camera': {
+                          'target': {
+                            'y': '@entity.body.y',
+                            'x': '@entity.body.x',
+                          },
+                          'zoom': 1,
+                          'pos': {
+                            'y': [
+                              '/',
+                              '@config.worldHeight',
+                              2,
+                            ],
+                            'x': [
+                              '/',
+                              '@config.worldWidth',
+                              2,
+                            ],
+                          },
+                          'mode': 'follow',
+                        },
                         'keyMap': {
+                          'ArrowUp': 'JUMP',
+                          'Space': 'JUMP',
+                          'KeyD': 'RIGHT',
                           'ArrowLeft': 'LEFT',
                           'ArrowRight': 'RIGHT',
-                          'ArrowUp': 'JUMP',
                           'KeyA': 'LEFT',
-                          'KeyD': 'RIGHT',
                           'KeyW': 'JUMP',
-                          'Space': 'JUMP',
                         },
-                        'keyUpMap': {
-                          'ArrowLeft': 'STOP',
-                          'ArrowRight': 'STOP',
-                          'KeyA': 'STOP',
-                          'KeyD': 'STOP',
-                        },
+                        'backgroundImage': '@config.backgroundImage',
                         'projection': 'side',
-                        'type': 'canvas',
-                        'worldHeight': '@config.worldHeight',
                         'worldWidth': '@config.worldWidth',
                       },
                     ],
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'label': 'Score',
-                              'value': '@entity.score',
-                            },
-                            {
-                              'label': 'Lives',
-                              'value': '@entity.lives',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'directionAssets': '@config.directionAssets',
-                          'directionEvents': {
-                            'left': 'LEFT',
-                            'right': 'RIGHT',
-                            'up': 'JUMP',
-                          },
-                          'directionReleaseEvents': {
-                            'left': 'STOP',
-                            'right': 'STOP',
-                          },
-                          'kind': 'dpad',
-                          'type': 'control-grid',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
                     'hudBackgroundAsset': '@config.hudBackgroundAsset',
-                    'overlay': [
-                      'if',
-                      [
-                        '==',
-                        '@entity.result',
-                        'won',
-                      ],
-                      {
-                        'options': [
-                          {
-                            'event': 'PLAY_AGAIN',
-                            'id': 'again',
-                            'label': 'Play Again',
-                            'variant': 'primary',
-                          },
-                        ],
-                        'subtitle': [
-                          'str/concat',
-                          'Score: ',
-                          '@entity.score',
-                        ],
-                        'title': '@config.clearTitle',
-                        'type': 'game-menu',
-                      },
-                      [
-                        'if',
-                        [
-                          '==',
-                          '@entity.result',
-                          'lost',
-                        ],
-                        {
-                          'options': [
-                            {
-                              'event': 'PLAY_AGAIN',
-                              'id': 'again',
-                              'label': 'Play Again',
-                              'variant': 'primary',
-                            },
-                          ],
-                          'subtitle': [
-                            'str/concat',
-                            'Score: ',
-                            '@entity.score',
-                          ],
-                          'title': '@config.lostTitle',
-                          'type': 'game-menu',
-                        },
-                        null,
-                      ],
-                    ],
-                    'type': 'game-shell',
+                    'backgroundAsset': '@config.backgroundAsset',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'playing',
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'LEFT',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
               'effects': [
                 [
                   'emit',
@@ -2490,16 +1588,16 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                   },
                 ],
               ],
-              'event': 'LEFT',
+            },
+            {
               'from': 'playing',
+              'to': 'playing',
+              'event': 'RIGHT',
               'guard': [
                 '==',
                 '@entity.result',
                 'none',
               ],
-              'to': 'playing',
-            },
-            {
               'effects': [
                 [
                   'emit',
@@ -2509,16 +1607,16 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                   },
                 ],
               ],
-              'event': 'RIGHT',
+            },
+            {
               'from': 'playing',
+              'to': 'playing',
+              'event': 'STOP',
               'guard': [
                 '==',
                 '@entity.result',
                 'none',
               ],
-              'to': 'playing',
-            },
-            {
               'effects': [
                 [
                   'emit',
@@ -2528,16 +1626,16 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                   },
                 ],
               ],
-              'event': 'STOP',
+            },
+            {
               'from': 'playing',
+              'to': 'playing',
+              'event': 'JUMP',
               'guard': [
                 '==',
                 '@entity.result',
                 'none',
               ],
-              'to': 'playing',
-            },
-            {
               'effects': [
                 [
                   'emit',
@@ -2545,16 +1643,16 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                   {},
                 ],
               ],
-              'event': 'JUMP',
+            },
+            {
               'from': 'playing',
+              'to': 'playing',
+              'event': 'PLAT_GOAL',
               'guard': [
                 '==',
                 '@entity.result',
                 'none',
               ],
-              'to': 'playing',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -2598,11 +1696,6 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                         'fn',
                         'p',
                         {
-                          'id': [
-                            'str/concat',
-                            'fx-goal-',
-                            '@payload.id',
-                          ],
                           'message': [
                             'str/concat',
                             '+',
@@ -2610,8 +1703,13 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                           ],
                           'ttl': 3,
                           'type': 'score',
-                          'x': '@payload.x',
+                          'id': [
+                            'str/concat',
+                            'fx-goal-',
+                            '@payload.id',
+                          ],
                           'z': '@payload.y',
+                          'x': '@payload.x',
                         },
                       ],
                     ],
@@ -2621,21 +1719,21 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                   'emit',
                   'PROGRESS',
                   {
-                    'movesLeft': '@entity.lives',
                     'objectivesLeft': 0,
+                    'movesLeft': '@entity.lives',
                   },
                 ],
               ],
-              'event': 'PLAT_GOAL',
+            },
+            {
               'from': 'playing',
+              'to': 'playing',
+              'event': 'PLAT_HAZARD',
               'guard': [
                 '==',
                 '@entity.result',
                 'none',
               ],
-              'to': 'playing',
-            },
-            {
               'effects': [
                 [
                   'if',
@@ -2659,8 +1757,8 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                       'emit',
                       'PROGRESS',
                       {
-                        'movesLeft': 0,
                         'objectivesLeft': 1,
+                        'movesLeft': 0,
                       },
                     ],
                   ],
@@ -2703,16 +1801,16 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                             'fn',
                             'p',
                             {
+                              'ttl': 3,
                               'id': [
                                 'str/concat',
                                 'fx-hazard-',
                                 '@payload.id',
                               ],
-                              'message': '-1',
-                              'ttl': 3,
                               'type': 'damage',
-                              'x': '@payload.x',
                               'z': '@payload.y',
+                              'x': '@payload.x',
+                              'message': '-1',
                             },
                           ],
                         ],
@@ -2722,23 +1820,23 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                       'emit',
                       'PLAT_PLACE',
                       {
-                        'x': '@config.respawnX',
                         'y': '@config.respawnY',
+                        'x': '@config.respawnX',
                       },
                     ],
                   ],
                 ],
               ],
-              'event': 'PLAT_HAZARD',
+            },
+            {
               'from': 'playing',
+              'to': 'playing',
+              'event': 'PLAT_FELL',
               'guard': [
                 '==',
                 '@entity.result',
                 'none',
               ],
-              'to': 'playing',
-            },
-            {
               'effects': [
                 [
                   'if',
@@ -2762,8 +1860,8 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                       'emit',
                       'PROGRESS',
                       {
-                        'movesLeft': 0,
                         'objectivesLeft': 1,
+                        'movesLeft': 0,
                       },
                     ],
                   ],
@@ -2791,12 +1889,12 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                             'fn',
                             'fid',
                             {
-                              'id': '@fid',
-                              'message': '-1',
-                              'ttl': 3,
-                              'type': 'damage',
-                              'x': '@payload.x',
                               'z': '@config.worldHeight',
+                              'x': '@payload.x',
+                              'ttl': 3,
+                              'id': '@fid',
+                              'type': 'damage',
+                              'message': '-1',
                             },
                           ],
                         ],
@@ -2813,16 +1911,16 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                   ],
                 ],
               ],
-              'event': 'PLAT_FELL',
-              'from': 'playing',
-              'guard': [
-                '==',
-                '@entity.result',
-                'none',
-              ],
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'GAME_END',
+              'guard': [
+                '==',
+                '@entity.celebrated',
+                false,
+              ],
               'effects': [
                 [
                   'set',
@@ -2830,16 +1928,11 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                   true,
                 ],
               ],
-              'event': 'GAME_END',
-              'from': 'playing',
-              'guard': [
-                '==',
-                '@entity.celebrated',
-                false,
-              ],
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'PLAY_AGAIN',
               'effects': [
                 [
                   'set',
@@ -2869,14 +1962,13 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                   },
                 ],
               ],
-              'event': 'PLAY_AGAIN',
-              'from': 'playing',
-              'to': 'playing',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'renderTick',
+            'interval': 100,
             'effects': [
               [
                 'set',
@@ -2895,30 +1987,23 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                 'render-ui',
                 'main',
                 {
-                  'backgroundAsset': '@config.backgroundAsset',
                   'children': [
                     {
-                      'backgroundColor': '@config.bgColor',
-                      'backgroundImage': '@config.backgroundImage',
-                      'camera': {
-                        'mode': 'follow',
-                        'pos': {
-                          'x': [
-                            '/',
-                            '@config.worldWidth',
-                            2,
-                          ],
-                          'y': [
-                            '/',
-                            '@config.worldHeight',
-                            2,
-                          ],
-                        },
-                        'target': {
-                          'x': '@entity.body.x',
-                          'y': '@entity.body.y',
-                        },
-                        'zoom': 1,
+                      'keyUpMap': {
+                        'KeyD': 'STOP',
+                        'KeyA': 'STOP',
+                        'ArrowLeft': 'STOP',
+                        'ArrowRight': 'STOP',
+                      },
+                      'worldWidth': '@config.worldWidth',
+                      'keyMap': {
+                        'Space': 'JUMP',
+                        'KeyD': 'RIGHT',
+                        'ArrowUp': 'JUMP',
+                        'ArrowLeft': 'LEFT',
+                        'KeyA': 'LEFT',
+                        'ArrowRight': 'RIGHT',
+                        'KeyW': 'JUMP',
                       },
                       'drawables': [
                         {
@@ -2943,6 +2028,7 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                                   '@p',
                                   'height',
                                 ],
+                                'type': 'draw-sprite',
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -2955,7 +2041,6 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                                     'y',
                                   ],
                                 },
-                                'type': 'draw-sprite',
                                 'width': [
                                   'object/get',
                                   '@p',
@@ -2967,22 +2052,23 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                           'type': 'draw-sprite-layer',
                         },
                         {
+                          'type': 'draw-sprite-layer',
                           'items': [
                             [
                               'object/merge',
                               {
+                                'position': {
+                                  'y': '@entity.body.y',
+                                  'x': '@entity.body.x',
+                                },
+                                'frame': '@entity.frame',
+                                'width': '@entity.body.width',
                                 'flipX': [
                                   'not',
                                   '@entity.body.facingRight',
                                 ],
-                                'frame': '@entity.frame',
                                 'height': '@entity.body.height',
-                                'position': {
-                                  'x': '@entity.body.x',
-                                  'y': '@entity.body.y',
-                                },
                                 'type': 'draw-sprite',
-                                'width': '@entity.body.width',
                               },
                               {
                                 'asset': [
@@ -3022,72 +2108,43 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                               },
                             ],
                           ],
-                          'type': 'draw-sprite-layer',
                         },
                         {
-                          'items': '@entity.fx',
                           'presets': '@config.fxPresets',
                           'tickMs': 500,
+                          'items': '@entity.fx',
                           'type': 'draw-fx-layer',
                         },
                       ],
-                      'keyMap': {
-                        'ArrowLeft': 'LEFT',
-                        'ArrowRight': 'RIGHT',
-                        'ArrowUp': 'JUMP',
-                        'KeyA': 'LEFT',
-                        'KeyD': 'RIGHT',
-                        'KeyW': 'JUMP',
-                        'Space': 'JUMP',
-                      },
-                      'keyUpMap': {
-                        'ArrowLeft': 'STOP',
-                        'ArrowRight': 'STOP',
-                        'KeyA': 'STOP',
-                        'KeyD': 'STOP',
+                      'backgroundColor': '@config.bgColor',
+                      'worldHeight': '@config.worldHeight',
+                      'camera': {
+                        'zoom': 1,
+                        'pos': {
+                          'y': [
+                            '/',
+                            '@config.worldHeight',
+                            2,
+                          ],
+                          'x': [
+                            '/',
+                            '@config.worldWidth',
+                            2,
+                          ],
+                        },
+                        'target': {
+                          'y': '@entity.body.y',
+                          'x': '@entity.body.x',
+                        },
+                        'mode': 'follow',
                       },
                       'projection': 'side',
                       'type': 'canvas',
-                      'worldHeight': '@config.worldHeight',
-                      'worldWidth': '@config.worldWidth',
+                      'backgroundImage': '@config.backgroundImage',
                     },
                   ],
-                  'hud': {
-                    'children': [
-                      {
-                        'stats': [
-                          {
-                            'label': 'Score',
-                            'value': '@entity.score',
-                          },
-                          {
-                            'label': 'Lives',
-                            'value': '@entity.lives',
-                          },
-                        ],
-                        'type': 'game-hud',
-                      },
-                      {
-                        'directionAssets': '@config.directionAssets',
-                        'directionEvents': {
-                          'left': 'LEFT',
-                          'right': 'RIGHT',
-                          'up': 'JUMP',
-                        },
-                        'directionReleaseEvents': {
-                          'left': 'STOP',
-                          'right': 'STOP',
-                        },
-                        'kind': 'dpad',
-                        'type': 'control-grid',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'md',
-                    'justify': 'between',
-                    'type': 'stack',
-                  },
-                  'hudBackgroundAsset': '@config.hudBackgroundAsset',
+                  'backgroundAsset': '@config.backgroundAsset',
+                  'type': 'game-shell',
                   'overlay': [
                     'if',
                     [
@@ -3096,21 +2153,21 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                       'won',
                     ],
                     {
-                      'options': [
-                        {
-                          'event': 'PLAY_AGAIN',
-                          'id': 'again',
-                          'label': 'Play Again',
-                          'variant': 'primary',
-                        },
-                      ],
+                      'type': 'game-menu',
                       'subtitle': [
                         'str/concat',
                         'Score: ',
                         '@entity.score',
                       ],
+                      'options': [
+                        {
+                          'event': 'PLAY_AGAIN',
+                          'label': 'Play Again',
+                          'variant': 'primary',
+                          'id': 'again',
+                        },
+                      ],
                       'title': '@config.clearTitle',
-                      'type': 'game-menu',
                     },
                     [
                       'if',
@@ -3120,12 +2177,13 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                         'lost',
                       ],
                       {
+                        'title': '@config.lostTitle',
                         'options': [
                           {
                             'event': 'PLAY_AGAIN',
+                            'variant': 'primary',
                             'id': 'again',
                             'label': 'Play Again',
-                            'variant': 'primary',
                           },
                         ],
                         'subtitle': [
@@ -3133,20 +2191,962 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
                           'Score: ',
                           '@entity.score',
                         ],
-                        'title': '@config.lostTitle',
                         'type': 'game-menu',
                       },
                       null,
                     ],
                   ],
-                  'type': 'game-shell',
+                  'hud': {
+                    'direction': 'horizontal',
+                    'justify': 'between',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'stats': [
+                          {
+                            'value': '@entity.score',
+                            'label': 'Score',
+                          },
+                          {
+                            'value': '@entity.lives',
+                            'label': 'Lives',
+                          },
+                        ],
+                        'type': 'game-hud',
+                      },
+                      {
+                        'kind': 'dpad',
+                        'directionReleaseEvents': {
+                          'right': 'STOP',
+                          'left': 'STOP',
+                        },
+                        'type': 'control-grid',
+                        'directionEvents': {
+                          'up': 'JUMP',
+                          'right': 'RIGHT',
+                          'left': 'LEFT',
+                        },
+                        'directionAssets': '@config.directionAssets',
+                      },
+                    ],
+                    'gap': 'md',
+                  },
+                  'hudBackgroundAsset': '@config.hudBackgroundAsset',
                 },
               ],
             ],
-            'interval': 100,
-            'name': 'renderTick',
           },
         ],
+        'config': {
+          'goalScore': {
+            'type': 'number',
+            'default': 100,
+            'label': 'Goal Score',
+            'description': 'Points awarded when the body touches the goal tile',
+            'tier': 'domain',
+          },
+          'respawnY': {
+            'type': 'number',
+            'default': 320,
+            'label': 'Respawn Y',
+            'description': 'Y the body teleports to after hazard/pit damage (matches BodyAuthority spawn.y)',
+            'tier': 'domain',
+          },
+          'platforms': {
+            'type': '[PlatformerPlatform]',
+            'default': [
+              {
+                'x': 0,
+                'type': 'ground',
+                'width': 800,
+                'id': 'g0',
+                'height': 32,
+                'y': 368,
+              },
+              {
+                'type': 'platform',
+                'id': 'p1',
+                'height': 16,
+                'y': 280,
+                'x': 150,
+                'width': 160,
+              },
+              {
+                'width': 160,
+                'x': 420,
+                'height': 16,
+                'type': 'platform',
+                'id': 'p2',
+                'y': 220,
+              },
+              {
+                'x': 580,
+                'width': 80,
+                'type': 'hazard',
+                'id': 'h1',
+                'y': 300,
+                'height': 16,
+              },
+              {
+                'x': 700,
+                'height': 28,
+                'width': 64,
+                'id': 'goal',
+                'type': 'goal',
+                'y': 340,
+              },
+            ],
+            'label': 'Platforms',
+            'description': 'Level geometry rendered by the canvas (must match BodyAuthority.platforms, which owns collision — override both together)',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'width': {
+                  'name': 'width',
+                  'type': 'number',
+                  'required': true,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'ground',
+                    'platform',
+                    'hazard',
+                    'goal',
+                  ],
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'height': {
+                  'name': 'height',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'respawnX': {
+            'type': 'number',
+            'default': 80,
+            'label': 'Respawn X',
+            'description': 'X the body teleports to after hazard/pit damage (matches BodyAuthority spawn.x)',
+            'tier': 'domain',
+          },
+          'startLives': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Start Lives',
+            'description': 'Lives seeded on INIT/PLAY_AGAIN; hazard or pit contact costs one, zero loses the round',
+            'tier': 'domain',
+          },
+          'backgroundImage': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Background Image',
+            'description': 'Canvas background image Asset',
+            'tier': 'presentation',
+            'properties': {
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'directionAssets': {
+            'type': 'DirectionAssets',
+            'default': {},
+            'label': 'Direction Assets',
+            'description': 'D-pad direction icon sprites',
+            'tier': 'presentation',
+            'properties': {
+              'down': {
+                'name': 'down',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'aspect': {
+                    'name': 'aspect',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'atlas': {
+                    'name': 'atlas',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'sprite': {
+                    'name': 'sprite',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'animations': {
+                    'name': 'animations',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'thumbnailUrl': {
+                    'name': 'thumbnailUrl',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'category': {
+                    'name': 'category',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'dimension': {
+                    'name': 'dimension',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'url': {
+                    'name': 'url',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'variant': {
+                    'name': 'variant',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'role': {
+                    'name': 'role',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'style': {
+                    'name': 'style',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+              'up': {
+                'name': 'up',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'style': {
+                    'name': 'style',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'role': {
+                    'name': 'role',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'thumbnailUrl': {
+                    'name': 'thumbnailUrl',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'atlas': {
+                    'name': 'atlas',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'category': {
+                    'name': 'category',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'animations': {
+                    'name': 'animations',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'url': {
+                    'name': 'url',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'aspect': {
+                    'name': 'aspect',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'sprite': {
+                    'name': 'sprite',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'variant': {
+                    'name': 'variant',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'dimension': {
+                    'name': 'dimension',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+              'left': {
+                'name': 'left',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'category': {
+                    'name': 'category',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'atlas': {
+                    'name': 'atlas',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'style': {
+                    'name': 'style',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'sprite': {
+                    'name': 'sprite',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'aspect': {
+                    'name': 'aspect',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'url': {
+                    'name': 'url',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'role': {
+                    'name': 'role',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'thumbnailUrl': {
+                    'name': 'thumbnailUrl',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'variant': {
+                    'name': 'variant',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'dimension': {
+                    'name': 'dimension',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'animations': {
+                    'name': 'animations',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                },
+              },
+              'right': {
+                'name': 'right',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'style': {
+                    'name': 'style',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'role': {
+                    'name': 'role',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'url': {
+                    'name': 'url',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'atlas': {
+                    'name': 'atlas',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'thumbnailUrl': {
+                    'name': 'thumbnailUrl',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'aspect': {
+                    'name': 'aspect',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'dimension': {
+                    'name': 'dimension',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'variant': {
+                    'name': 'variant',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'sprite': {
+                    'name': 'sprite',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'category': {
+                    'name': 'category',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'animations': {
+                    'name': 'animations',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'fxPresets': {
+            'type': '[FxPreset]',
+            'default': [
+              {
+                'shape': 'spark',
+                'size': 22,
+                'type': 'score',
+                'color': '#ffe066',
+                'glow': 0.15,
+                'count': 6,
+                'vy': -35,
+                'color2': '#fff4cc',
+              },
+              {
+                'color': '#ef4444',
+                'color2': '#7f1d1d',
+                'type': 'damage',
+                'gravity': 40,
+                'glow': 0.12,
+                'size': 20,
+                'count': 5,
+                'shape': 'spark',
+              },
+            ],
+            'label': 'Fx Presets',
+            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its intent trait emits (goal score, hazard/fell damage).',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vz': {
+                  'name': 'vz',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color2': {
+                  'name': 'color2',
+                  'type': 'string',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+                'gravity': {
+                  'name': 'gravity',
+                  'type': 'number',
+                  'required': false,
+                },
+                'count': {
+                  'name': 'count',
+                  'type': 'number',
+                  'required': false,
+                },
+                'glow': {
+                  'name': 'glow',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'shape': {
+                  'name': 'shape',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'clearTitle': {
+            'type': 'string',
+            'default': 'YOU WIN!',
+            'label': 'Clear Title',
+            'description': 'Overlay title when the goal tile is reached',
+            'tier': 'presentation',
+          },
+          'lostTitle': {
+            'type': 'string',
+            'default': 'GAME OVER',
+            'label': 'Lost Title',
+            'description': 'Overlay title when lives run out',
+            'tier': 'presentation',
+          },
+          'bgColor': {
+            'type': 'string',
+            'default': '#5c94fc',
+            'label': 'Bg Color',
+            'description': 'Canvas background color',
+            'tier': 'presentation',
+          },
+          'playerSprite': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Player Sprite',
+            'description': 'Player sprite Asset; its atlas must expose adventurer_idle/walk1/walk2/jump frames (or override the sprite-selection expression)',
+            'tier': 'presentation',
+            'properties': {
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'tileSprites': {
+            'type': 'Map<string,Asset>',
+            'default': {},
+            'label': 'Tile Sprites',
+            'description': 'Map of platform type (ground/platform/hazard/goal) to tile sprite Asset',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'category': {
+                  'name': 'category',
+                  'type': 'string',
+                  'required': false,
+                },
+                'animations': {
+                  'name': 'animations',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'url': {
+                  'name': 'url',
+                  'type': 'string',
+                  'required': false,
+                },
+                'atlas': {
+                  'name': 'atlas',
+                  'type': 'string',
+                  'required': false,
+                },
+                'thumbnailUrl': {
+                  'name': 'thumbnailUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'role': {
+                  'name': 'role',
+                  'type': 'string',
+                  'required': false,
+                },
+                'aspect': {
+                  'name': 'aspect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'dimension': {
+                  'name': 'dimension',
+                  'type': 'string',
+                  'required': false,
+                },
+                'style': {
+                  'name': 'style',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'hudBackgroundAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'HUD Background Asset',
+            'description': 'HUD panel background sprite (theme chrome)',
+            'tier': 'presentation',
+            'properties': {
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'worldWidth': {
+            'type': 'number',
+            'default': 800,
+            'label': 'World Width',
+            'description': 'World pixel width (camera + canvas bounds)',
+            'tier': 'presentation',
+          },
+          'worldHeight': {
+            'type': 'number',
+            'default': 400,
+            'label': 'World Height',
+            'description': 'World pixel height (camera + canvas bounds)',
+            'tier': 'presentation',
+          },
+          'backgroundAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Background Asset',
+            'description': 'Game-shell background panel sprite (theme chrome)',
+            'tier': 'presentation',
+            'properties': {
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

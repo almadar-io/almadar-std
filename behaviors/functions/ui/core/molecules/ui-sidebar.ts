@@ -46,48 +46,48 @@ export interface StdUiSidebarCollapseChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSidebarConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `"KFlow"` */
-  brandName?: string;
-  className?: string;
-  /** Default: `"CLOSE"` */
-  closeEvent?: string;
-  /** Default: `"COLLAPSE_CHANGE"` */
-  collapseChangeEvent?: string;
-  collapsed?: boolean;
   /** Default: `false` */
   defaultCollapsed?: boolean;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
+  className?: string;
+  /** Default: `[{"subItems":[],"active":false,"isActive":false,"label":"Label","icon":"circle","href":"Href","badge":"Badge","id":"Id"},{"subItems":[],"badge":"Badge 2","isActive":true,"href":"Href 2","label":"Label 2","icon":"circle","id":"Id 2","active":true}]` */
+  items?: EntityRow[];
+  logo?: PatternValue;
+  lang?: string;
   footerContent?: PatternValue;
+  error?: EntityRow;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"KFlow"` */
+  brandName?: string;
   /** Default: `false` */
   hideCollapseButton?: boolean;
-  isLoading?: boolean;
-  /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","id":"Id","isActive":false,"label":"Label","subItems":[]},{"active":true,"badge":"Badge 2","href":"Href 2","icon":"circle","id":"Id 2","isActive":true,"label":"Label 2","subItems":[]}]` */
-  items?: EntityRow[];
-  lang?: string;
-  logo?: PatternValue;
+  ariaBusy?: boolean;
+  ariaLabelledby?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaExpanded?: boolean;
   /** Default: `"LOGO_CLICK"` */
   logoClickEvent?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
-  logoSrc?: unknown;
+  tabIndex?: number;
+  ariaLabel?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `"COLLAPSE_CHANGE"` */
+  collapseChangeEvent?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  enterDelay?: number;
   /** Default: `false` */
   showCloseButton?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
+  logoSrc?: unknown;
+  isLoading?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaSelected?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   userSection?: PatternValue;
+  ariaHidden?: boolean;
+  collapsed?: boolean;
+  /** Default: `"CLOSE"` */
+  closeEvent?: string;
+  ariaDescribedby?: string;
 }
 
 /**

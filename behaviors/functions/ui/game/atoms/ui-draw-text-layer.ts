@@ -39,7 +39,7 @@ export type StdUiDrawTextLayerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawTextLayerConfig {
-  /** Default: `[{"align":"center","anchor":"top-left","baseline":"alphabetic","color":"Color","font":"Font","id":"Id","offsetX":1,"offsetY":1,"opacity":1,"position":{"x":1,"y":1,"z":1},"text":"Text","type":"draw-text"},{"align":"end","anchor":"ground","baseline":"bottom","color":"Color 2","font":"Font 2","id":"Id 2","offsetX":2,"offsetY":2,"opacity":2,"position":{"x":2,"y":2,"z":2},"text":"Text 2","type":"draw-text"}]` */
+  /** Default: `[{"offsetX":1,"id":"Id","align":"center","position":{"z":1,"y":1,"x":1},"anchor":"top-left","opacity":1,"font":"Font","color":"Color","offsetY":1,"text":"Text","type":"draw-text","baseline":"alphabetic"},{"position":{"y":2,"x":2,"z":2},"text":"Text 2","font":"Font 2","color":"Color 2","baseline":"bottom","align":"end","type":"draw-text","anchor":"ground","id":"Id 2","offsetX":2,"offsetY":2,"opacity":2}]` */
   items?: EntityRow[];
 }
 

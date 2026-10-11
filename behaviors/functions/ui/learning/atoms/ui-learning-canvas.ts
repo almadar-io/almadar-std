@@ -53,56 +53,56 @@ export interface StdUiLearningCanvasShapeHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiLearningCanvasConfig {
-  /** Default: `false` */
-  animate?: boolean;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  backgroundColor?: string;
   className?: string;
-  description?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `[]` */
-  drawables?: PatternValue[];
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
   error?: EntityRow;
-  fontFamily?: string;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `false` */
-  interactive?: boolean;
-  isLoading?: boolean;
-  /** Default: `{"item":"INIT"}` */
-  keyMap?: Record<string, TraitConfig>;
-  /** Default: `{"item":"INIT"}` */
-  keyUpMap?: Record<string, TraitConfig>;
-  lang?: string;
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
+  lang?: string;
   /** Default: `"SHAPE_HOVER"` */
   onShapeHover?: string;
   projector?: EntityRow;
-  /** Default: `[]` */
-  readouts?: EntityRow[];
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `[]` */
-  series?: string[];
+  fontFamily?: string;
+  ariaExpanded?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   /** Default: `[]` */
   shapes?: EntityRow[];
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `[]` */
+  drawables?: PatternValue[];
+  enterDelay?: number;
+  /** Default: `400` */
+  height?: number;
+  description?: string;
   tabIndex?: number;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   /** Default: `[]` */
   traces?: EntityRow[];
+  /** Default: `false` */
+  interactive?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaBusy?: boolean;
+  backgroundColor?: string;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+  ariaDescribedby?: string;
+  /** Default: `[]` */
+  readouts?: EntityRow[];
+  /** Default: `false` */
+  animate?: boolean;
+  /** Default: `{"item":"INIT"}` */
+  keyUpMap?: Record<string, TraitConfig>;
+  ariaSelected?: boolean;
+  /** Default: `{"item":"INIT"}` */
+  keyMap?: Record<string, TraitConfig>;
+  isLoading?: boolean;
   /** Default: `600` */
   width?: number;
+  ariaHidden?: boolean;
+  /** Default: `[]` */
+  series?: string[];
+  dir?: 'ltr' | 'rtl' | 'auto';
 }
 
 /**

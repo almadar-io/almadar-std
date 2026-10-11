@@ -75,34 +75,34 @@ export interface StdMultiPartyFlowFlowLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMultiPartyFlowConfig {
-  /** Default: `"x"` */
-  cancelIcon?: string;
-  /** Default: `"Cancel transaction"` */
-  cancelLabel?: string;
-  /** Default: `"elevated"` */
-  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
   /** Default: `"alert-triangle"` */
   disputeIcon?: string;
-  /** Default: `"Open dispute"` */
-  disputeLabel?: string;
-  /** Default: `[{"actionDescription":"Authorize the funds to be held in escrow until delivery is confirmed.","actionIcon":"credit-card","actionLabel":"Confirm payment","description":"Funds the transaction and confirms receipt.","icon":"user","id":"buyer","stepLabel":"Step 1 of 2","title":"Buyer"},{"actionDescription":"Mark the item as shipped. Funds release after the buyer confirms receipt.","actionIcon":"package","actionLabel":"Confirm shipment","description":"Ships the item and uploads delivery proof.","icon":"user-check","id":"seller","stepLabel":"Step 2 of 2","title":"Seller"}]` */
-  parties?: EntityRow[];
-  /** Default: `["reason"]` */
-  reasonFields?: string[];
-  /** Default: `"unlock"` */
-  releaseIcon?: string;
-  /** Default: `"Release funds"` */
-  releaseLabel?: string;
-  /** Default: `"vertical-spacious"` */
-  timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
+  /** Default: `"Cancel transaction"` */
+  cancelLabel?: string;
   /** Default: `"Escrow transaction"` */
   title?: string;
+  /** Default: `[{"description":"Funds the transaction and confirms receipt.","icon":"user","title":"Buyer","actionDescription":"Authorize the funds to be held in escrow until delivery is confirmed.","actionLabel":"Confirm payment","id":"buyer","actionIcon":"credit-card","stepLabel":"Step 1 of 2"},{"title":"Seller","icon":"user-check","id":"seller","stepLabel":"Step 2 of 2","actionLabel":"Confirm shipment","description":"Ships the item and uploads delivery proof.","actionIcon":"package","actionDescription":"Mark the item as shipped. Funds release after the buyer confirms receipt."}]` */
+  parties?: EntityRow[];
+  /** Default: `"x"` */
+  cancelIcon?: string;
+  /** Default: `"Release funds"` */
+  releaseLabel?: string;
   /** Default: `"$0.00"` */
   transactionAmount?: string;
+  /** Default: `"vertical-spacious"` */
+  timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
+  /** Default: `"unlock"` */
+  releaseIcon?: string;
+  /** Default: `["reason"]` */
+  reasonFields?: string[];
   /** Default: `""` */
   transactionReference?: string;
+  /** Default: `"Open dispute"` */
+  disputeLabel?: string;
   /** Default: `"Sale of item"` */
   transactionSubject?: string;
+  /** Default: `"elevated"` */
+  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
 }
 
 /**
@@ -245,145 +245,147 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'parties',
+            'type': 'array',
             'default': [],
-            'description': 'A list of participants involved in the transaction.',
             'items': {
+              'type': 'object',
               'properties': {
-                'actionIcon': {
-                  'name': 'actionIcon',
-                  'required': false,
+                'title': {
+                  'name': 'title',
                   'type': 'string',
+                  'required': true,
                 },
-                'actionLabel': {
-                  'name': 'actionLabel',
-                  'required': false,
+                'id': {
+                  'name': 'id',
                   'type': 'string',
-                },
-                'actor': {
-                  'name': 'actor',
-                  'required': false,
-                  'type': 'string',
-                },
-                'description': {
-                  'name': 'description',
-                  'required': false,
-                  'type': 'string',
+                  'required': true,
                 },
                 'icon': {
                   'name': 'icon',
+                  'type': 'string',
                   'required': false,
-                  'type': 'string',
                 },
-                'id': {
-                  'name': 'id',
-                  'required': true,
+                'actionLabel': {
+                  'name': 'actionLabel',
                   'type': 'string',
+                  'required': false,
                 },
-                'title': {
-                  'name': 'title',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'parties',
-            'synonyms': 'participants, actors, members, roles',
-            'type': 'array',
-          },
-          {
-            'default': 0,
-            'description': 'The numerical position of the current party in the list.',
-            'name': 'currentPartyIndex',
-            'synonyms': 'index, position, order',
-            'type': 'number',
-          },
-          {
-            'default': 0,
-            'description': 'The total number of participants involved in the process.',
-            'name': 'totalParties',
-            'synonyms': 'count, size, quantity, number_of_parties',
-            'type': 'number',
-          },
-          {
-            'default': '',
-            'description': 'Unique identifier for the currently active party.',
-            'name': 'currentPartyId',
-            'synonyms': 'party identifier, party key, party reference',
-            'type': 'string',
-          },
-          {
-            'default': '',
-            'description': 'The descriptive name of the current party involved.',
-            'name': 'currentPartyTitle',
-            'synonyms': 'party name, party label, party identifier',
-            'type': 'string',
-          },
-          {
-            'default': '',
-            'description': 'The identifier of the currently active participant.',
-            'name': 'currentPartyActor',
-            'synonyms': 'actor, identifier, user, participant',
-            'type': 'string',
-          },
-          {
-            'default': 'user',
-            'description': 'Icon representing the current party in the multi-party flow.',
-            'name': 'currentPartyIcon',
-            'synonyms': 'image, icon, avatar',
-            'type': 'string',
-          },
-          {
-            'default': 'Confirm',
-            'description': 'The text displayed for the current action being performed.',
-            'name': 'currentActionLabel',
-            'synonyms': 'action, task, operation, step',
-            'type': 'string',
-          },
-          {
-            'default': 'check',
-            'description': 'Icon representing the current action being performed.',
-            'name': 'currentActionIcon',
-            'synonyms': 'icon, image, symbol',
-            'type': 'string',
-          },
-          {
-            'default': '',
-            'description': 'A brief explanation of the action being performed.',
-            'name': 'currentActionDescription',
-            'synonyms': 'action, description, task, operation',
-            'type': 'string',
-          },
-          {
-            'default': 'Step 1',
-            'description': 'The text displayed for the current stage of the process.',
-            'name': 'currentStepLabel',
-            'synonyms': 'step, stage, status, phase',
-            'type': 'string',
-          },
-          {
-            'default': [],
-            'description': 'Records of changes and events related to the view.',
-            'items': {
-              'properties': {
                 'description': {
                   'name': 'description',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
+                },
+                'actor': {
+                  'name': 'actor',
+                  'type': 'string',
+                  'required': false,
+                },
+                'actionIcon': {
+                  'name': 'actionIcon',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+            'description': 'A list of participants involved in the transaction.',
+            'synonyms': 'participants, actors, members, roles',
+          },
+          {
+            'name': 'currentPartyIndex',
+            'type': 'number',
+            'default': 0,
+            'description': 'The numerical position of the current party in the list.',
+            'synonyms': 'index, position, order',
+          },
+          {
+            'name': 'totalParties',
+            'type': 'number',
+            'default': 0,
+            'description': 'The total number of participants involved in the process.',
+            'synonyms': 'count, size, quantity, number_of_parties',
+          },
+          {
+            'name': 'currentPartyId',
+            'type': 'string',
+            'default': '',
+            'description': 'Unique identifier for the currently active party.',
+            'synonyms': 'party identifier, party key, party reference',
+          },
+          {
+            'name': 'currentPartyTitle',
+            'type': 'string',
+            'default': '',
+            'description': 'The descriptive name of the current party involved.',
+            'synonyms': 'party name, party label, party identifier',
+          },
+          {
+            'name': 'currentPartyActor',
+            'type': 'string',
+            'default': '',
+            'description': 'The identifier of the currently active participant.',
+            'synonyms': 'actor, identifier, user, participant',
+          },
+          {
+            'name': 'currentPartyIcon',
+            'type': 'string',
+            'default': 'user',
+            'description': 'Icon representing the current party in the multi-party flow.',
+            'synonyms': 'image, icon, avatar',
+          },
+          {
+            'name': 'currentActionLabel',
+            'type': 'string',
+            'default': 'Confirm',
+            'description': 'The text displayed for the current action being performed.',
+            'synonyms': 'action, task, operation, step',
+          },
+          {
+            'name': 'currentActionIcon',
+            'type': 'string',
+            'default': 'check',
+            'description': 'Icon representing the current action being performed.',
+            'synonyms': 'icon, image, symbol',
+          },
+          {
+            'name': 'currentActionDescription',
+            'type': 'string',
+            'default': '',
+            'description': 'A brief explanation of the action being performed.',
+            'synonyms': 'action, description, task, operation',
+          },
+          {
+            'name': 'currentStepLabel',
+            'type': 'string',
+            'default': 'Step 1',
+            'description': 'The text displayed for the current stage of the process.',
+            'synonyms': 'step, stage, status, phase',
+          },
+          {
+            'name': 'audit',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
                 },
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'status': {
                   'name': 'status',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'complete',
                     'active',
@@ -391,50 +393,48 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                     'error',
                   ],
                 },
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
                 'timestamp': {
                   'name': 'timestamp',
+                  'type': 'string',
                   'required': false,
-                  'type': 'string',
-                },
-                'title': {
-                  'name': 'title',
-                  'required': true,
-                  'type': 'string',
                 },
               },
-              'type': 'object',
             },
-            'name': 'audit',
+            'description': 'Records of changes and events related to the view.',
             'synonyms': 'history, log, changes, events',
-            'type': 'array',
           },
           {
+            'name': 'reason',
+            'type': 'string',
             'default': '',
             'description': 'The justification or explanation for an action or event.',
-            'name': 'reason',
             'synonyms': 'justification, explanation, cause, rationale',
-            'type': 'string',
           },
           {
+            'name': 'disputeReason',
+            'type': 'string',
             'default': '',
             'description': 'The reason provided for initiating a dispute.',
-            'name': 'disputeReason',
             'synonyms': 'dispute explanation, dispute justification, reason for dispute',
-            'type': 'string',
           },
           {
+            'name': 'cancelReason',
+            'type': 'string',
             'default': '',
             'description': 'The reason provided for cancelling the transaction.',
-            'name': 'cancelReason',
             'synonyms': 'cancellation reason, cancel explanation, rejection reason',
-            'type': 'string',
           },
           {
+            'name': 'errorMessage',
+            'type': 'string',
             'default': '',
             'description': 'A textual description of an error condition.',
-            'name': 'errorMessage',
             'synonyms': 'error, error message, problem, issue',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -445,220 +445,28 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
     } as Entity,
     traits: [
       {
-        'capabilities': [
-          'multi-party',
-        ],
-        'category': 'interaction',
-        'config': {
-          'cancelIcon': {
-            'default': 'x',
-            'description': 'Icon next to the cancel button',
-            'label': 'Cancel icon',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cancelLabel': {
-            'default': 'Cancel transaction',
-            'description': 'Label on the cancel-transaction escape-hatch button',
-            'label': 'Cancel button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cardLook': {
-            'default': 'elevated',
-            'description': 'Layer 2 visual treatment for cards rendered by this atom.',
-            'label': 'Card look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'elevated',
-              'flat-bordered',
-              'borderless-divider',
-              'ticket',
-              'invoice',
-              'chip',
-              'tile-image-first',
-            ],
-          },
-          'disputeIcon': {
-            'default': 'alert-triangle',
-            'description': 'Icon next to the dispute button',
-            'label': 'Dispute icon',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'disputeLabel': {
-            'default': 'Open dispute',
-            'description': 'Label on the open-dispute escape-hatch button',
-            'label': 'Dispute button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'parties': {
-            'default': [
-              {
-                'actionDescription': 'Authorize the funds to be held in escrow until delivery is confirmed.',
-                'actionIcon': 'credit-card',
-                'actionLabel': 'Confirm payment',
-                'description': 'Funds the transaction and confirms receipt.',
-                'icon': 'user',
-                'id': 'buyer',
-                'stepLabel': 'Step 1 of 2',
-                'title': 'Buyer',
-              },
-              {
-                'actionDescription': 'Mark the item as shipped. Funds release after the buyer confirms receipt.',
-                'actionIcon': 'package',
-                'actionLabel': 'Confirm shipment',
-                'description': 'Ships the item and uploads delivery proof.',
-                'icon': 'user-check',
-                'id': 'seller',
-                'stepLabel': 'Step 2 of 2',
-                'title': 'Seller',
-              },
-            ],
-            'description': 'Ordered participants with role, actor name, and required action. stepLabel entries should track the party count when overriding.',
-            'items': {
-              'properties': {
-                'actionDescription': {
-                  'name': 'actionDescription',
-                  'required': false,
-                  'type': 'string',
-                },
-                'actionIcon': {
-                  'name': 'actionIcon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'actionLabel': {
-                  'name': 'actionLabel',
-                  'required': false,
-                  'type': 'string',
-                },
-                'actor': {
-                  'name': 'actor',
-                  'required': false,
-                  'type': 'string',
-                },
-                'description': {
-                  'name': 'description',
-                  'required': false,
-                  'type': 'string',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'key': {
-                  'name': 'key',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': false,
-                  'type': 'string',
-                },
-                'role': {
-                  'name': 'role',
-                  'required': false,
-                  'type': 'string',
-                },
-                'stepLabel': {
-                  'name': 'stepLabel',
-                  'required': false,
-                  'type': 'string',
-                },
-                'title': {
-                  'name': 'title',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Parties',
-            'tier': 'domain',
-            'type': '[PartySpec]',
-          },
-          'reasonFields': {
-            'default': [
-              'reason',
-            ],
-            'description': 'Form fields shown when capturing a dispute or cancel reason',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Reason fields',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'releaseIcon': {
-            'default': 'unlock',
-            'description': 'Icon next to the release button',
-            'label': 'Release icon',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'releaseLabel': {
-            'default': 'Release funds',
-            'description': 'Label on the final-release primary button',
-            'label': 'Release button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'timelineLook': {
-            'default': 'vertical-spacious',
-            'description': 'Layer 2 visual treatment for the timeline.',
-            'label': 'Timeline look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'vertical-compact',
-              'vertical-spacious',
-              'horizontal',
-              'swimlane',
-            ],
-          },
-          'title': {
-            'default': 'Escrow transaction',
-            'description': 'Heading shown above the transaction view',
-            'label': 'Page title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'transactionAmount': {
-            'default': '$0.00',
-            'description': 'Formatted amount held in escrow',
-            'label': 'Amount',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'transactionReference': {
-            'default': '',
-            'description': 'External identifier shown in the summary',
-            'label': 'Reference',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'transactionSubject': {
-            'default': 'Sale of item',
-            'description': 'Short description of what is being transacted',
-            'label': 'Subject',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'MultiPartyTransaction',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'audit',
+            'cancelReason',
+            'currentActionDescription',
+            'currentActionIcon',
+            'currentActionLabel',
+            'currentPartyActor',
+            'currentPartyIcon',
+            'currentPartyId',
+            'currentPartyIndex',
+            'currentPartyTitle',
+            'currentStepLabel',
+            'disputeReason',
+            'errorMessage',
+            'parties',
+            'reason',
+            'totalParties',
+          ],
         },
         'effectRow': [
           {
@@ -734,82 +542,89 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
             'resource': '@entity.totalParties',
           },
         ],
+        'category': 'interaction',
+        'capabilities': [
+          'multi-party',
+        ],
+        'linkedEntity': 'MultiPartyView',
         'emits': [
           {
-            'description': 'Signals a party\'s acceptance or agreement within the flow.',
             'event': 'PARTY_CONFIRM',
+            'description': 'Signals a party\'s acceptance or agreement within the flow.',
+            'synonyms': 'accept, acknowledge, confirm, approve',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'partyKey',
                 'type': 'string',
               },
             ],
-            'synonyms': 'accept, acknowledge, confirm, approve',
-            'tier': 'domain',
           },
           {
-            'description': 'Signals the dispute process has been initiated.',
             'event': 'OPEN_DISPUTE',
+            'description': 'Signals the dispute process has been initiated.',
             'synonyms': 'dispute, challenge, contest',
             'tier': 'domain',
           },
           {
-            'description': 'Indicates a transaction cancellation request has been initiated.',
             'event': 'CANCEL_TRANSACTION',
+            'description': 'Indicates a transaction cancellation request has been initiated.',
             'synonyms': 'terminate, end, void, revoke',
             'tier': 'domain',
           },
           {
-            'description': 'Signals a dispute submission request.',
             'event': 'SUBMIT_DISPUTE',
-            'payloadSchema': [
-              {
-                'name': 'data',
-                'required': true,
-                'type': '@entity',
-              },
-            ],
+            'description': 'Signals a dispute submission request.',
             'synonyms': 'dispute, challenge, contest',
             'tier': 'domain',
-          },
-          {
-            'description': 'Signals a cancellation request has been submitted.',
-            'event': 'SUBMIT_CANCEL',
             'payloadSchema': [
               {
                 'name': 'data',
-                'required': true,
                 'type': '@entity',
+                'required': true,
               },
             ],
-            'synonyms': 'request cancel, initiate cancellation, submit termination',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a reason was provided for transaction cancellation.',
+            'event': 'SUBMIT_CANCEL',
+            'description': 'Signals a cancellation request has been submitted.',
+            'synonyms': 'request cancel, initiate cancellation, submit termination',
+            'tier': 'domain',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '@entity',
+                'required': true,
+              },
+            ],
+          },
+          {
             'event': 'CANCEL_REASON',
+            'description': 'Indicates a reason was provided for transaction cancellation.',
             'synonyms': 'reason, explanation, justification',
             'tier': 'presentation',
           },
           {
-            'description': 'Transaction funds are distributed to the intended recipients.',
             'event': 'RELEASE',
+            'description': 'Transaction funds are distributed to the intended recipients.',
             'synonyms': 'complete, finalize, distribute, payout',
             'tier': 'domain',
           },
           {
-            'description': 'Initiates a reset of the current transaction flow.',
             'event': 'RESTART',
+            'description': 'Initiates a reset of the current transaction flow.',
             'synonyms': 'reset, refresh, reinitialize',
             'tier': 'presentation',
           },
           {
-            'description': 'Signals successful loading of the transaction flow data.',
             'event': 'FlowLoaded',
+            'description': 'Signals successful loading of the transaction flow data.',
+            'synonyms': 'loaded, initialized, ready',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ObjectSpec',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -824,15 +639,15 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ObjectSpec',
               },
             ],
-            'synonyms': 'loaded, initialized, ready',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates that loading the flow data failed.',
             'event': 'FlowLoadFailed',
+            'description': 'Indicates that loading the flow data failed.',
+            'synonyms': 'failure, error, problem, unsuccessful',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -843,196 +658,13 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                 'type': 'string',
               },
             ],
-            'synonyms': 'failure, error, problem, unsuccessful',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'audit',
-            'cancelReason',
-            'currentActionDescription',
-            'currentActionIcon',
-            'currentActionLabel',
-            'currentPartyActor',
-            'currentPartyIcon',
-            'currentPartyId',
-            'currentPartyIndex',
-            'currentPartyTitle',
-            'currentStepLabel',
-            'disputeReason',
-            'errorMessage',
-            'parties',
-            'reason',
-            'totalParties',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'MultiPartyView',
-        'name': 'MultiPartyTransaction',
-        'scope': 'instance',
         'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Signals successful loading of the transaction flow data.',
-              'key': 'FlowLoaded',
-              'name': 'Flow loaded',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'label',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'value',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'loaded, initialized, ready',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates that loading the flow data failed.',
-              'key': 'FlowLoadFailed',
-              'name': 'Flow load failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'failure, error, problem, unsuccessful',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Indicates the flow data has been successfully saved.',
-              'key': 'FlowSaved',
-              'name': 'Flow saved',
-              'payloadSchema': [
-                {
-                  'name': 'row',
-                  'type': '@entity',
-                },
-              ],
-              'synonyms': 'saved, updated, persisted',
-              'tier': 'presentation',
-            },
-            {
-              'description': 'Indicates a failure to save the current flow state.',
-              'key': 'FlowSaveFailed',
-              'name': 'Flow save failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'failed, error, unsuccessful, save error',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Signals a party\'s acceptance or agreement within the flow.',
-              'key': 'PARTY_CONFIRM',
-              'name': 'Party Confirm',
-              'payloadSchema': [
-                {
-                  'name': 'partyKey',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'accept, acknowledge, confirm, approve',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Signals the dispute process has been initiated.',
-              'key': 'OPEN_DISPUTE',
-              'name': 'Open Dispute',
-              'synonyms': 'dispute, challenge, contest',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates a transaction cancellation request has been initiated.',
-              'key': 'CANCEL_TRANSACTION',
-              'name': 'Cancel Transaction',
-              'synonyms': 'terminate, end, void, revoke',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Signals a dispute submission request.',
-              'key': 'SUBMIT_DISPUTE',
-              'name': 'Submit Dispute',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'required': true,
-                  'type': '@entity',
-                },
-              ],
-              'synonyms': 'dispute, challenge, contest',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates a reason was provided for transaction cancellation.',
-              'key': 'CANCEL_REASON',
-              'name': 'Cancel Reason',
-              'synonyms': 'reason, explanation, justification',
-              'tier': 'presentation',
-            },
-            {
-              'description': 'Signals a cancellation request has been submitted.',
-              'key': 'SUBMIT_CANCEL',
-              'name': 'Submit Cancel',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'required': true,
-                  'type': '@entity',
-                },
-              ],
-              'synonyms': 'request cancel, initiate cancellation, submit termination',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Transaction funds are distributed to the intended recipients.',
-              'key': 'RELEASE',
-              'name': 'Release',
-              'synonyms': 'complete, finalize, distribute, payout',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Initiates a reset of the current transaction flow.',
-              'key': 'RESTART',
-              'name': 'Restart',
-              'synonyms': 'reset, refresh, reinitialize',
-              'tier': 'presentation',
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'loading',
+              'isInitial': true,
             },
             {
               'name': 'awaiting',
@@ -1059,8 +691,167 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
               'name': 'error',
             },
           ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'FlowLoaded',
+              'name': 'Flow loaded',
+              'description': 'Signals successful loading of the transaction flow data.',
+              'synonyms': 'loaded, initialized, ready',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'label',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'value',
+                      'type': 'string',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              'key': 'FlowLoadFailed',
+              'name': 'Flow load failed',
+              'description': 'Indicates that loading the flow data failed.',
+              'synonyms': 'failure, error, problem, unsuccessful',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FlowSaved',
+              'name': 'Flow saved',
+              'description': 'Indicates the flow data has been successfully saved.',
+              'synonyms': 'saved, updated, persisted',
+              'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': '@entity',
+                },
+              ],
+            },
+            {
+              'key': 'FlowSaveFailed',
+              'name': 'Flow save failed',
+              'description': 'Indicates a failure to save the current flow state.',
+              'synonyms': 'failed, error, unsuccessful, save error',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PARTY_CONFIRM',
+              'name': 'Party Confirm',
+              'description': 'Signals a party\'s acceptance or agreement within the flow.',
+              'synonyms': 'accept, acknowledge, confirm, approve',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'partyKey',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OPEN_DISPUTE',
+              'name': 'Open Dispute',
+              'description': 'Signals the dispute process has been initiated.',
+              'synonyms': 'dispute, challenge, contest',
+              'tier': 'domain',
+            },
+            {
+              'key': 'CANCEL_TRANSACTION',
+              'name': 'Cancel Transaction',
+              'description': 'Indicates a transaction cancellation request has been initiated.',
+              'synonyms': 'terminate, end, void, revoke',
+              'tier': 'domain',
+            },
+            {
+              'key': 'SUBMIT_DISPUTE',
+              'name': 'Submit Dispute',
+              'description': 'Signals a dispute submission request.',
+              'synonyms': 'dispute, challenge, contest',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '@entity',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CANCEL_REASON',
+              'name': 'Cancel Reason',
+              'description': 'Indicates a reason was provided for transaction cancellation.',
+              'synonyms': 'reason, explanation, justification',
+              'tier': 'presentation',
+            },
+            {
+              'key': 'SUBMIT_CANCEL',
+              'name': 'Submit Cancel',
+              'description': 'Signals a cancellation request has been submitted.',
+              'synonyms': 'request cancel, initiate cancellation, submit termination',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '@entity',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'RELEASE',
+              'name': 'Release',
+              'description': 'Transaction funds are distributed to the intended recipients.',
+              'synonyms': 'complete, finalize, distribute, payout',
+              'tier': 'domain',
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+              'description': 'Initiates a reset of the current transaction flow.',
+              'synonyms': 'reset, refresh, reinitialize',
+              'tier': 'presentation',
+            },
+          ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1076,6 +867,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
@@ -1086,17 +879,15 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'variant': 'card',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'awaiting',
+              'event': 'FlowLoaded',
               'effects': [
                 [
                   'set',
@@ -1121,11 +912,16 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                       'fn',
                       'party',
                       {
-                        'actionIcon': [
+                        'icon': [
                           'object/get',
                           '@party',
-                          'actionIcon',
-                          'check',
+                          'icon',
+                          'user',
+                        ],
+                        'id': [
+                          'object/get',
+                          '@party',
+                          'id',
                         ],
                         'actionLabel': [
                           'object/get',
@@ -1139,27 +935,22 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           'actor',
                           '',
                         ],
-                        'description': [
+                        'actionIcon': [
                           'object/get',
                           '@party',
-                          'description',
-                          '',
-                        ],
-                        'icon': [
-                          'object/get',
-                          '@party',
-                          'icon',
-                          'user',
-                        ],
-                        'id': [
-                          'object/get',
-                          '@party',
-                          'id',
+                          'actionIcon',
+                          'check',
                         ],
                         'title': [
                           'object/get',
                           '@party',
                           'title',
+                        ],
+                        'description': [
+                          'object/get',
+                          '@party',
+                          'description',
+                          '',
                         ],
                       },
                     ],
@@ -1274,15 +1065,15 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   '@entity.audit',
                   [
                     {
+                      'status': 'complete',
                       'description': [
                         'str/concat',
                         'Reference ',
                         '@config.transactionReference',
                       ],
                       'id': 'init',
-                      'status': 'complete',
-                      'timestamp': 'Just now',
                       'title': 'Transaction opened',
+                      'timestamp': 'Just now',
                     },
                   ],
                 ],
@@ -1293,50 +1084,52 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                     'children': [
                       {
                         'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'name': 'git-pull-request',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
-                            'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
+                            'content': '@config.title',
                           },
                           {
+                            'variant': 'primary',
                             'label': 'Active',
                             'type': 'badge',
-                            'variant': 'primary',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
                         'children': [
                           {
                             'children': [
                               {
-                                'align': 'center',
+                                'type': 'stack',
+                                'gap': 'lg',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
                                     'children': [
                                       {
-                                        'color': 'muted',
                                         'content': 'Amount in escrow',
-                                        'type': 'typography',
                                         'variant': 'caption',
+                                        'type': 'typography',
+                                        'color': 'muted',
                                       },
                                       {
-                                        'content': '@config.transactionAmount',
                                         'type': 'typography',
+                                        'content': '@config.transactionAmount',
                                         'variant': 'h1',
                                       },
                                     ],
-                                    'direction': 'vertical',
-                                    'gap': 'xs',
                                     'type': 'stack',
                                   },
                                   {
@@ -1349,21 +1142,23 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                                       },
                                       {
                                         'content': '@config.transactionSubject',
-                                        'type': 'typography',
                                         'variant': 'h4',
+                                        'type': 'typography',
                                       },
                                     ],
-                                    'direction': 'vertical',
                                     'gap': 'xs',
+                                    'direction': 'vertical',
                                     'type': 'stack',
                                   },
                                   {
+                                    'type': 'stack',
+                                    'gap': 'xs',
                                     'children': [
                                       {
+                                        'variant': 'caption',
                                         'color': 'muted',
                                         'content': 'Reference',
                                         'type': 'typography',
-                                        'variant': 'caption',
                                       },
                                       {
                                         'content': '@config.transactionReference',
@@ -1372,54 +1167,59 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                                       },
                                     ],
                                     'direction': 'vertical',
-                                    'gap': 'xs',
-                                    'type': 'stack',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'lg',
-                                'type': 'stack',
+                                'align': 'center',
                               },
                             ],
-                            'direction': 'vertical',
                             'gap': 'md',
+                            'direction': 'vertical',
                             'type': 'stack',
                           },
                         ],
-                        'look': '@config.cardLook',
                         'type': 'card',
+                        'look': '@config.cardLook',
                       },
                       {
                         'content': 'Parties',
-                        'type': 'typography',
                         'variant': 'h4',
+                        'type': 'typography',
                       },
                       {
                         'entity': '@entity.parties',
+                        'type': 'data-list',
                         'fields': [],
                         'gap': 'sm',
                         'renderItem': [
                           'fn',
                           'party',
                           {
+                            'type': 'card',
                             'children': [
                               {
+                                'type': 'stack',
+                                'gap': 'md',
                                 'align': 'center',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'name': '@party.icon',
                                     'size': 'lg',
                                     'type': 'icon',
+                                    'name': '@party.icon',
                                   },
                                   {
+                                    'gap': 'xs',
+                                    'direction': 'vertical',
                                     'children': [
                                       {
+                                        'gap': 'xs',
                                         'align': 'center',
+                                        'direction': 'horizontal',
                                         'children': [
                                           {
-                                            'content': '@party.title',
                                             'type': 'typography',
                                             'variant': 'h4',
+                                            'content': '@party.title',
                                           },
                                           {
                                             'color': 'muted',
@@ -1428,63 +1228,55 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                                           },
                                           {
                                             'content': '@party.actor',
-                                            'type': 'typography',
                                             'variant': 'body',
+                                            'type': 'typography',
                                           },
                                         ],
-                                        'direction': 'horizontal',
-                                        'gap': 'xs',
                                         'type': 'stack',
                                       },
                                       {
                                         'color': 'muted',
+                                        'variant': 'caption',
                                         'content': '@party.description',
                                         'type': 'typography',
-                                        'variant': 'caption',
                                       },
                                     ],
-                                    'direction': 'vertical',
-                                    'gap': 'xs',
                                     'type': 'stack',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'md',
-                                'type': 'stack',
                               },
                             ],
                             'look': '@config.cardLook',
-                            'type': 'card',
                           },
                         ],
-                        'type': 'data-list',
                       },
                       {
-                        'content': 'Progress',
-                        'type': 'typography',
                         'variant': 'h4',
+                        'type': 'typography',
+                        'content': 'Progress',
                       },
                       {
-                        'currentStep': '@entity.currentPartyIndex',
                         'steps': '@entity.parties',
                         'type': 'wizard-progress',
+                        'currentStep': '@entity.currentPartyIndex',
                       },
                       {
                         'children': [
                           {
+                            'type': 'stack',
+                            'gap': 'md',
                             'children': [
                               {
-                                'align': 'center',
                                 'children': [
                                   {
-                                    'name': 'clock',
                                     'type': 'icon',
+                                    'name': 'clock',
                                   },
                                   {
-                                    'color': 'muted',
                                     'content': '@entity.currentStepLabel',
-                                    'type': 'typography',
+                                    'color': 'muted',
                                     'variant': 'caption',
+                                    'type': 'typography',
                                   },
                                   {
                                     'color': 'muted',
@@ -1493,103 +1285,102 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                                   },
                                   {
                                     'color': 'muted',
+                                    'variant': 'caption',
                                     'content': 'Waiting for',
                                     'type': 'typography',
-                                    'variant': 'caption',
                                   },
                                   {
-                                    'content': '@entity.currentPartyActor',
-                                    'type': 'typography',
                                     'variant': 'body',
+                                    'content': '@entity.currentPartyActor',
                                     'weight': 'bold',
+                                    'type': 'typography',
                                   },
                                 ],
+                                'align': 'center',
                                 'direction': 'horizontal',
-                                'gap': 'sm',
                                 'type': 'stack',
+                                'gap': 'sm',
                               },
                               {
                                 'content': '@entity.currentActionDescription',
-                                'type': 'typography',
                                 'variant': 'body',
+                                'type': 'typography',
                               },
                               {
-                                'action': 'PARTY_CONFIRM',
+                                'variant': 'primary',
+                                'type': 'button',
+                                'label': '@entity.currentActionLabel',
+                                'icon': '@entity.currentActionIcon',
                                 'actionPayload': {
                                   'partyKey': '@entity.currentPartyId',
                                 },
-                                'icon': '@entity.currentActionIcon',
-                                'label': '@entity.currentActionLabel',
-                                'type': 'button',
-                                'variant': 'primary',
+                                'action': 'PARTY_CONFIRM',
                               },
                             ],
                             'direction': 'vertical',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                         ],
                         'look': '@config.cardLook',
-                        'type': 'card',
                         'variant': 'elevated',
+                        'type': 'card',
                       },
                       {
-                        'content': 'Activity',
                         'type': 'typography',
                         'variant': 'h4',
+                        'content': 'Activity',
                       },
                       {
-                        'dateField': 'timestamp',
-                        'descriptionField': 'description',
-                        'entity': '@entity.audit',
+                        'type': 'timeline',
                         'fields': [
                           'title',
                           'description',
                           'timestamp',
                           'status',
                         ],
-                        'look': '@config.timelineLook',
+                        'entity': '@entity.audit',
+                        'dateField': 'timestamp',
                         'statusField': 'status',
+                        'look': '@config.timelineLook',
                         'titleField': 'title',
-                        'type': 'timeline',
+                        'descriptionField': 'description',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'action': 'OPEN_DISPUTE',
-                            'icon': '@config.disputeIcon',
                             'label': '@config.disputeLabel',
                             'type': 'button',
+                            'icon': '@config.disputeIcon',
+                            'action': 'OPEN_DISPUTE',
                             'variant': 'danger',
                           },
                           {
-                            'action': 'CANCEL_TRANSACTION',
-                            'icon': '@config.cancelIcon',
                             'label': '@config.cancelLabel',
                             'type': 'button',
                             'variant': 'ghost',
+                            'icon': '@config.cancelIcon',
+                            'action': 'CANCEL_TRANSACTION',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'gap': 'sm',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'FlowLoaded',
-              'from': 'loading',
-              'to': 'awaiting',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'FlowLoadFailed',
               'effects': [
                 [
                   'set',
@@ -1600,32 +1391,32 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'type': 'error-state',
                     'message': '@entity.errorMessage',
                     'title': 'Failed to load',
-                    'type': 'error-state',
                   },
                 ],
               ],
-              'event': 'FlowLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'loading',
+              'to': 'awaiting',
+              'event': 'FlowSaved',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'title': 'Refreshing…',
                     'type': 'loading-state',
+                    'title': 'Refreshing…',
                   },
                 ],
               ],
-              'event': 'FlowSaved',
-              'from': 'loading',
-              'to': 'awaiting',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'FlowSaveFailed',
               'effects': [
                 [
                   'set',
@@ -1636,17 +1427,17 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
-                    'message': '@entity.errorMessage',
-                    'title': 'Save failed',
                     'type': 'error-state',
+                    'title': 'Save failed',
+                    'message': '@entity.errorMessage',
                   },
                 ],
               ],
-              'event': 'FlowSaveFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'awaiting',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1662,27 +1453,39 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
-                        'type': 'skeleton',
                         'variant': 'card',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'awaiting',
-              'to': 'loading',
             },
             {
+              'from': 'awaiting',
+              'to': 'awaiting',
+              'event': 'PARTY_CONFIRM',
+              'guard': [
+                'not',
+                [
+                  '=',
+                  [
+                    '+',
+                    '@entity.currentPartyIndex',
+                    1,
+                  ],
+                  '@entity.totalParties',
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -1691,12 +1494,6 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                     'array/append',
                     '@entity.audit',
                     {
-                      'description': [
-                        'str/concat',
-                        '@entity.currentPartyActor',
-                        ' completed: ',
-                        '@entity.currentActionLabel',
-                      ],
                       'id': [
                         'str/concat',
                         'confirm-',
@@ -1707,15 +1504,21 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           '',
                         ],
                       ],
-                      'status': 'complete',
                       'timestamp': [
                         'time/now',
+                      ],
+                      'description': [
+                        'str/concat',
+                        '@entity.currentPartyActor',
+                        ' completed: ',
+                        '@entity.currentActionLabel',
                       ],
                       'title': [
                         'str/concat',
                         '@entity.currentPartyTitle',
                         ' confirmed',
                       ],
+                      'status': 'complete',
                     },
                   ],
                 ],
@@ -1844,49 +1647,51 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
                             'name': 'git-pull-request',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
-                            'content': '@config.title',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': '@config.title',
                           },
                           {
-                            'label': 'Active',
                             'type': 'badge',
                             'variant': 'primary',
+                            'label': 'Active',
                           },
                         ],
                         'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
                         'children': [
                           {
                             'children': [
                               {
-                                'align': 'center',
                                 'children': [
                                   {
                                     'children': [
                                       {
-                                        'color': 'muted',
-                                        'content': 'Amount in escrow',
                                         'type': 'typography',
                                         'variant': 'caption',
+                                        'color': 'muted',
+                                        'content': 'Amount in escrow',
                                       },
                                       {
-                                        'content': '@config.transactionAmount',
                                         'type': 'typography',
                                         'variant': 'h1',
+                                        'content': '@config.transactionAmount',
                                       },
                                     ],
                                     'direction': 'vertical',
@@ -1894,217 +1699,218 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                                     'type': 'stack',
                                   },
                                   {
+                                    'gap': 'xs',
+                                    'type': 'stack',
                                     'children': [
                                       {
                                         'color': 'muted',
+                                        'variant': 'caption',
                                         'content': 'Subject',
                                         'type': 'typography',
-                                        'variant': 'caption',
                                       },
                                       {
                                         'content': '@config.transactionSubject',
-                                        'type': 'typography',
                                         'variant': 'h4',
+                                        'type': 'typography',
                                       },
                                     ],
                                     'direction': 'vertical',
-                                    'gap': 'xs',
-                                    'type': 'stack',
                                   },
                                   {
+                                    'gap': 'xs',
                                     'children': [
                                       {
-                                        'color': 'muted',
                                         'content': 'Reference',
-                                        'type': 'typography',
                                         'variant': 'caption',
+                                        'type': 'typography',
+                                        'color': 'muted',
                                       },
                                       {
-                                        'content': '@config.transactionReference',
-                                        'type': 'typography',
                                         'variant': 'body',
+                                        'type': 'typography',
+                                        'content': '@config.transactionReference',
                                       },
                                     ],
                                     'direction': 'vertical',
-                                    'gap': 'xs',
                                     'type': 'stack',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'lg',
                                 'type': 'stack',
+                                'gap': 'lg',
+                                'direction': 'horizontal',
+                                'align': 'center',
                               },
                             ],
-                            'direction': 'vertical',
                             'gap': 'md',
                             'type': 'stack',
+                            'direction': 'vertical',
                           },
                         ],
                         'look': '@config.cardLook',
                         'type': 'card',
                       },
                       {
-                        'content': 'Parties',
-                        'type': 'typography',
                         'variant': 'h4',
+                        'type': 'typography',
+                        'content': 'Parties',
                       },
                       {
-                        'entity': '@entity.parties',
-                        'fields': [],
-                        'gap': 'sm',
+                        'type': 'data-list',
                         'renderItem': [
                           'fn',
                           'party',
                           {
+                            'type': 'card',
                             'children': [
                               {
+                                'direction': 'horizontal',
+                                'type': 'stack',
                                 'align': 'center',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'name': '@party.icon',
-                                    'size': 'lg',
                                     'type': 'icon',
+                                    'size': 'lg',
+                                    'name': '@party.icon',
                                   },
                                   {
+                                    'type': 'stack',
+                                    'gap': 'xs',
+                                    'direction': 'vertical',
                                     'children': [
                                       {
                                         'align': 'center',
                                         'children': [
                                           {
-                                            'content': '@party.title',
                                             'type': 'typography',
+                                            'content': '@party.title',
                                             'variant': 'h4',
                                           },
                                           {
-                                            'color': 'muted',
                                             'content': '·',
+                                            'color': 'muted',
                                             'type': 'typography',
                                           },
                                           {
                                             'content': '@party.actor',
-                                            'type': 'typography',
                                             'variant': 'body',
+                                            'type': 'typography',
                                           },
                                         ],
+                                        'type': 'stack',
                                         'direction': 'horizontal',
                                         'gap': 'xs',
-                                        'type': 'stack',
                                       },
                                       {
-                                        'color': 'muted',
-                                        'content': '@party.description',
                                         'type': 'typography',
                                         'variant': 'caption',
+                                        'content': '@party.description',
+                                        'color': 'muted',
                                       },
                                     ],
-                                    'direction': 'vertical',
-                                    'gap': 'xs',
-                                    'type': 'stack',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'md',
-                                'type': 'stack',
                               },
                             ],
                             'look': '@config.cardLook',
-                            'type': 'card',
                           },
                         ],
-                        'type': 'data-list',
+                        'fields': [],
+                        'entity': '@entity.parties',
+                        'gap': 'sm',
                       },
                       {
                         'content': 'Progress',
-                        'type': 'typography',
                         'variant': 'h4',
+                        'type': 'typography',
                       },
                       {
-                        'currentStep': '@entity.currentPartyIndex',
                         'steps': '@entity.parties',
                         'type': 'wizard-progress',
+                        'currentStep': '@entity.currentPartyIndex',
                       },
                       {
+                        'variant': 'elevated',
+                        'type': 'card',
                         'children': [
                           {
                             'children': [
                               {
+                                'direction': 'horizontal',
                                 'align': 'center',
+                                'type': 'stack',
                                 'children': [
                                   {
                                     'name': 'clock',
                                     'type': 'icon',
                                   },
                                   {
-                                    'color': 'muted',
+                                    'variant': 'caption',
                                     'content': '@entity.currentStepLabel',
                                     'type': 'typography',
-                                    'variant': 'caption',
+                                    'color': 'muted',
                                   },
                                   {
-                                    'color': 'muted',
                                     'content': '·',
-                                    'type': 'typography',
-                                  },
-                                  {
                                     'color': 'muted',
-                                    'content': 'Waiting for',
                                     'type': 'typography',
-                                    'variant': 'caption',
                                   },
                                   {
-                                    'content': '@entity.currentPartyActor',
+                                    'variant': 'caption',
+                                    'content': 'Waiting for',
+                                    'color': 'muted',
                                     'type': 'typography',
-                                    'variant': 'body',
+                                  },
+                                  {
                                     'weight': 'bold',
+                                    'content': '@entity.currentPartyActor',
+                                    'variant': 'body',
+                                    'type': 'typography',
                                   },
                                 ],
-                                'direction': 'horizontal',
                                 'gap': 'sm',
-                                'type': 'stack',
                               },
                               {
-                                'content': '@entity.currentActionDescription',
                                 'type': 'typography',
+                                'content': '@entity.currentActionDescription',
                                 'variant': 'body',
                               },
                               {
                                 'action': 'PARTY_CONFIRM',
+                                'label': '@entity.currentActionLabel',
+                                'type': 'button',
+                                'icon': '@entity.currentActionIcon',
+                                'variant': 'primary',
                                 'actionPayload': {
                                   'partyKey': '@entity.currentPartyId',
                                 },
-                                'icon': '@entity.currentActionIcon',
-                                'label': '@entity.currentActionLabel',
-                                'type': 'button',
-                                'variant': 'primary',
                               },
                             ],
                             'direction': 'vertical',
-                            'gap': 'md',
                             'type': 'stack',
+                            'gap': 'md',
                           },
                         ],
                         'look': '@config.cardLook',
-                        'type': 'card',
-                        'variant': 'elevated',
                       },
                       {
-                        'content': 'Activity',
-                        'type': 'typography',
                         'variant': 'h4',
+                        'type': 'typography',
+                        'content': 'Activity',
                       },
                       {
-                        'dateField': 'timestamp',
                         'descriptionField': 'description',
-                        'entity': '@entity.audit',
                         'fields': [
                           'title',
                           'description',
                           'timestamp',
                           'status',
                         ],
+                        'entity': '@entity.audit',
+                        'dateField': 'timestamp',
+                        'titleField': 'title',
                         'look': '@config.timelineLook',
                         'statusField': 'status',
-                        'titleField': 'title',
                         'type': 'timeline',
                       },
                       {
@@ -2121,41 +1927,35 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                             'variant': 'danger',
                           },
                           {
-                            'action': 'CANCEL_TRANSACTION',
                             'icon': '@config.cancelIcon',
                             'label': '@config.cancelLabel',
-                            'type': 'button',
+                            'action': 'CANCEL_TRANSACTION',
                             'variant': 'ghost',
+                            'type': 'button',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
+                        'direction': 'horizontal',
                         'type': 'stack',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'PARTY_CONFIRM',
-              'from': 'awaiting',
-              'guard': [
-                'not',
-                [
-                  '=',
-                  [
-                    '+',
-                    '@entity.currentPartyIndex',
-                    1,
-                  ],
-                  '@entity.totalParties',
-                ],
-              ],
-              'to': 'awaiting',
             },
             {
+              'from': 'awaiting',
+              'to': 'funded',
+              'event': 'PARTY_CONFIRM',
+              'guard': [
+                '=',
+                [
+                  '+',
+                  '@entity.currentPartyIndex',
+                  1,
+                ],
+                '@entity.totalParties',
+              ],
               'effects': [
                 [
                   'set',
@@ -2164,11 +1964,20 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                     'array/append',
                     '@entity.audit',
                     {
+                      'status': 'complete',
+                      'title': [
+                        'str/concat',
+                        '@entity.currentPartyTitle',
+                        ' confirmed',
+                      ],
                       'description': [
                         'str/concat',
                         '@entity.currentPartyActor',
                         ' completed: ',
                         '@entity.currentActionLabel',
+                      ],
+                      'timestamp': [
+                        'time/now',
                       ],
                       'id': [
                         'str/concat',
@@ -2180,15 +1989,6 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           '',
                         ],
                       ],
-                      'status': 'complete',
-                      'timestamp': [
-                        'time/now',
-                      ],
-                      'title': [
-                        'str/concat',
-                        '@entity.currentPartyTitle',
-                        ' confirmed',
-                      ],
                     },
                   ],
                 ],
@@ -2199,17 +1999,17 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                     'array/append',
                     '@entity.audit',
                     {
+                      'id': 'all-confirmed',
+                      'title': 'All parties confirmed',
+                      'timestamp': [
+                        'time/now',
+                      ],
+                      'status': 'complete',
                       'description': [
                         'str/concat',
                         '@config.transactionAmount',
                         ' is now funded and ready for release.',
                       ],
-                      'id': 'all-confirmed',
-                      'status': 'complete',
-                      'timestamp': [
-                        'time/now',
-                      ],
-                      'title': 'All parties confirmed',
                     },
                   ],
                 ],
@@ -2217,49 +2017,56 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'type': 'stack',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
+                            'type': 'icon',
                             'name': 'lock',
                             'size': 'lg',
-                            'type': 'icon',
                           },
                           {
                             'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                           {
+                            'variant': 'success',
                             'label': 'Funded',
                             'type': 'badge',
-                            'variant': 'success',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
+                        'look': '@config.cardLook',
                         'children': [
                           {
+                            'gap': 'md',
+                            'type': 'stack',
                             'children': [
                               {
                                 'align': 'center',
+                                'type': 'stack',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'children': [
                                       {
                                         'color': 'muted',
                                         'content': 'Amount in escrow',
-                                        'type': 'typography',
                                         'variant': 'caption',
+                                        'type': 'typography',
                                       },
                                       {
-                                        'content': '@config.transactionAmount',
                                         'type': 'typography',
                                         'variant': 'h1',
+                                        'content': '@config.transactionAmount',
                                       },
                                     ],
                                     'direction': 'vertical',
@@ -2267,59 +2074,57 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                                     'type': 'stack',
                                   },
                                   {
+                                    'type': 'stack',
                                     'children': [
                                       {
-                                        'color': 'muted',
-                                        'content': 'Subject',
                                         'type': 'typography',
+                                        'content': 'Subject',
                                         'variant': 'caption',
+                                        'color': 'muted',
                                       },
                                       {
-                                        'content': '@config.transactionSubject',
                                         'type': 'typography',
+                                        'content': '@config.transactionSubject',
                                         'variant': 'h4',
                                       },
                                     ],
                                     'direction': 'vertical',
                                     'gap': 'xs',
-                                    'type': 'stack',
                                   },
                                   {
-                                    'children': [
-                                      {
-                                        'color': 'muted',
-                                        'content': 'Reference',
-                                        'type': 'typography',
-                                        'variant': 'caption',
-                                      },
-                                      {
-                                        'content': '@config.transactionReference',
-                                        'type': 'typography',
-                                        'variant': 'body',
-                                      },
-                                    ],
-                                    'direction': 'vertical',
                                     'gap': 'xs',
                                     'type': 'stack',
+                                    'direction': 'vertical',
+                                    'children': [
+                                      {
+                                        'variant': 'caption',
+                                        'color': 'muted',
+                                        'type': 'typography',
+                                        'content': 'Reference',
+                                      },
+                                      {
+                                        'variant': 'body',
+                                        'content': '@config.transactionReference',
+                                        'type': 'typography',
+                                      },
+                                    ],
                                   },
                                 ],
-                                'direction': 'horizontal',
                                 'gap': 'lg',
-                                'type': 'stack',
                               },
                             ],
                             'direction': 'vertical',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                         ],
-                        'look': '@config.cardLook',
                         'type': 'card',
                       },
                       {
+                        'look': '@config.cardLook',
+                        'variant': 'elevated',
                         'children': [
                           {
-                            'align': 'center',
+                            'type': 'stack',
+                            'gap': 'md',
                             'children': [
                               {
                                 'name': 'check-circle',
@@ -2327,49 +2132,46 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                                 'type': 'icon',
                               },
                               {
-                                'align': 'center',
-                                'content': 'All parties confirmed',
                                 'type': 'typography',
+                                'align': 'center',
                                 'variant': 'h2',
+                                'content': 'All parties confirmed',
                               },
                               {
-                                'align': 'center',
-                                'color': 'muted',
-                                'content': 'Funds are held in escrow and ready for release to the seller.',
                                 'type': 'typography',
+                                'content': 'Funds are held in escrow and ready for release to the seller.',
+                                'color': 'muted',
                                 'variant': 'body',
+                                'align': 'center',
                               },
                               {
-                                'align': 'center',
                                 'children': [
                                   {
-                                    'action': 'RELEASE',
                                     'icon': '@config.releaseIcon',
                                     'label': '@config.releaseLabel',
                                     'type': 'button',
                                     'variant': 'success',
+                                    'action': 'RELEASE',
                                   },
                                   {
-                                    'action': 'OPEN_DISPUTE',
                                     'icon': '@config.disputeIcon',
                                     'label': '@config.disputeLabel',
-                                    'type': 'button',
+                                    'action': 'OPEN_DISPUTE',
                                     'variant': 'danger',
+                                    'type': 'button',
                                   },
                                 ],
                                 'direction': 'horizontal',
                                 'gap': 'sm',
                                 'type': 'stack',
+                                'align': 'center',
                               },
                             ],
+                            'align': 'center',
                             'direction': 'vertical',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                         ],
-                        'look': '@config.cardLook',
                         'type': 'card',
-                        'variant': 'elevated',
                       },
                       {
                         'content': 'Activity',
@@ -2377,41 +2179,30 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'variant': 'h4',
                       },
                       {
-                        'dateField': 'timestamp',
-                        'descriptionField': 'description',
-                        'entity': '@entity.audit',
                         'fields': [
                           'title',
                           'description',
                           'timestamp',
                           'status',
                         ],
-                        'look': '@config.timelineLook',
+                        'dateField': 'timestamp',
                         'statusField': 'status',
+                        'look': '@config.timelineLook',
                         'titleField': 'title',
                         'type': 'timeline',
+                        'entity': '@entity.audit',
+                        'descriptionField': 'description',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'PARTY_CONFIRM',
-              'from': 'awaiting',
-              'guard': [
-                '=',
-                [
-                  '+',
-                  '@entity.currentPartyIndex',
-                  1,
-                ],
-                '@entity.totalParties',
-              ],
-              'to': 'funded',
             },
             {
+              'from': 'awaiting',
+              'to': 'capturing_dispute',
+              'event': 'OPEN_DISPUTE',
               'effects': [
                 [
                   'set',
@@ -2422,21 +2213,25 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
+                            'type': 'button',
                             'action': 'CANCEL_REASON',
                             'icon': 'arrow-left',
-                            'label': 'Back',
-                            'type': 'button',
                             'variant': 'ghost',
+                            'label': 'Back',
                           },
                           {
-                            'name': 'alert-triangle',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
+                            'name': 'alert-triangle',
                           },
                           {
                             'content': 'Open a dispute',
@@ -2444,50 +2239,46 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                             'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
+                        'align': 'center',
                       },
                       {
                         'children': [
                           {
+                            'gap': 'sm',
                             'children': [
                               {
-                                'color': 'muted',
                                 'content': 'Describe the issue so all parties and the escrow officer can review. Funds will remain in escrow until the dispute is resolved.',
                                 'type': 'typography',
                                 'variant': 'body',
+                                'color': 'muted',
                               },
                               {
-                                'cancelEvent': 'CANCEL_REASON',
-                                'entity': '@entity',
-                                'fields': '@config.reasonFields',
-                                'mode': 'edit',
                                 'submitEvent': 'SUBMIT_DISPUTE',
-                                'submitLabel': 'Submit dispute',
                                 'type': 'form-section',
+                                'fields': '@config.reasonFields',
+                                'submitLabel': 'Submit dispute',
+                                'entity': '@entity',
+                                'mode': 'edit',
+                                'cancelEvent': 'CANCEL_REASON',
                               },
                             ],
-                            'direction': 'vertical',
-                            'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'vertical',
                           },
                         ],
-                        'look': '@config.cardLook',
                         'type': 'card',
+                        'look': '@config.cardLook',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'OPEN_DISPUTE',
-              'from': 'awaiting',
-              'to': 'capturing_dispute',
             },
             {
+              'from': 'awaiting',
+              'to': 'capturing_cancel',
+              'event': 'CANCEL_TRANSACTION',
               'effects': [
                 [
                   'set',
@@ -2500,70 +2291,70 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   {
                     'children': [
                       {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'align': 'center',
                         'children': [
                           {
-                            'action': 'CANCEL_REASON',
                             'icon': 'arrow-left',
+                            'action': 'CANCEL_REASON',
                             'label': 'Back',
                             'type': 'button',
                             'variant': 'ghost',
                           },
                           {
                             'name': 'x-circle',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
-                            'content': 'Cancel transaction',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
+                            'content': 'Cancel transaction',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
                         'children': [
                           {
+                            'type': 'stack',
                             'children': [
                               {
-                                'color': 'muted',
-                                'content': 'Tell the other parties why this transaction is being cancelled. Any escrowed funds will be returned to the buyer.',
-                                'type': 'typography',
                                 'variant': 'body',
+                                'content': 'Tell the other parties why this transaction is being cancelled. Any escrowed funds will be returned to the buyer.',
+                                'color': 'muted',
+                                'type': 'typography',
                               },
                               {
                                 'cancelEvent': 'CANCEL_REASON',
-                                'entity': '@entity',
-                                'fields': '@config.reasonFields',
-                                'mode': 'edit',
-                                'submitEvent': 'SUBMIT_CANCEL',
                                 'submitLabel': 'Cancel transaction',
                                 'type': 'form-section',
+                                'mode': 'edit',
+                                'submitEvent': 'SUBMIT_CANCEL',
+                                'entity': '@entity',
+                                'fields': '@config.reasonFields',
                               },
                             ],
                             'direction': 'vertical',
                             'gap': 'sm',
-                            'type': 'stack',
                           },
                         ],
-                        'look': '@config.cardLook',
                         'type': 'card',
+                        'look': '@config.cardLook',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'CANCEL_TRANSACTION',
-              'from': 'awaiting',
-              'to': 'capturing_cancel',
             },
             {
+              'from': 'capturing_dispute',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -2579,27 +2370,27 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'type': 'skeleton',
                         'variant': 'card',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'capturing_dispute',
-              'to': 'loading',
             },
             {
+              'from': 'capturing_dispute',
+              'to': 'disputed',
+              'event': 'SUBMIT_DISPUTE',
               'effects': [
                 [
                   'set',
@@ -2618,12 +2409,12 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                     'array/append',
                     '@entity.audit',
                     {
-                      'description': '@entity.disputeReason',
                       'id': 'dispute-opened',
                       'status': 'error',
                       'timestamp': [
                         'time/now',
                       ],
+                      'description': '@entity.disputeReason',
                       'title': 'Dispute opened',
                     },
                   ],
@@ -2632,62 +2423,65 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
+                            'type': 'icon',
                             'name': 'alert-triangle',
                             'size': 'lg',
-                            'type': 'icon',
                           },
                           {
+                            'variant': 'h3',
                             'content': '@config.title',
                             'type': 'typography',
-                            'variant': 'h3',
                           },
                           {
                             'label': 'Disputed',
-                            'type': 'badge',
                             'variant': 'danger',
+                            'type': 'badge',
                           },
                         ],
+                        'align': 'center',
+                        'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
+                        'type': 'card',
+                        'look': '@config.cardLook',
                         'children': [
                           {
+                            'gap': 'sm',
+                            'direction': 'vertical',
                             'children': [
                               {
-                                'color': 'muted',
-                                'content': 'Reason for dispute',
                                 'type': 'typography',
+                                'content': 'Reason for dispute',
                                 'variant': 'caption',
+                                'color': 'muted',
                               },
                               {
+                                'variant': 'body',
                                 'content': '@entity.disputeReason',
                                 'type': 'typography',
-                                'variant': 'body',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
                                 'color': 'muted',
-                                'content': 'An escrow officer will contact all parties within one business day. Funds remain held until resolution.',
-                                'type': 'typography',
                                 'variant': 'caption',
+                                'type': 'typography',
+                                'content': 'An escrow officer will contact all parties within one business day. Funds remain held until resolution.',
                               },
                             ],
-                            'direction': 'vertical',
-                            'gap': 'sm',
                             'type': 'stack',
                           },
                         ],
-                        'look': '@config.cardLook',
-                        'type': 'card',
                       },
                       {
                         'content': 'Activity',
@@ -2695,9 +2489,6 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'variant': 'h4',
                       },
                       {
-                        'dateField': 'timestamp',
-                        'descriptionField': 'description',
-                        'entity': '@entity.audit',
                         'fields': [
                           'title',
                           'description',
@@ -2705,65 +2496,29 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           'status',
                         ],
                         'look': '@config.timelineLook',
-                        'statusField': 'status',
-                        'titleField': 'title',
                         'type': 'timeline',
+                        'entity': '@entity.audit',
+                        'titleField': 'title',
+                        'statusField': 'status',
+                        'dateField': 'timestamp',
+                        'descriptionField': 'description',
                       },
                       {
-                        'action': 'RESTART',
+                        'variant': 'secondary',
                         'icon': 'rotate-ccw',
                         'label': 'Start a new transaction',
+                        'action': 'RESTART',
                         'type': 'button',
-                        'variant': 'secondary',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SUBMIT_DISPUTE',
-              'from': 'capturing_dispute',
-              'to': 'disputed',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
-                  {
-                    'emit': {
-                      'failure': 'FlowLoadFailed',
-                      'success': 'FlowLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'type': 'skeleton',
-                        'variant': 'card',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'CANCEL_REASON',
               'from': 'capturing_dispute',
               'to': 'loading',
-            },
-            {
+              'event': 'CANCEL_REASON',
               'effects': [
                 [
                   'fetch',
@@ -2779,27 +2534,63 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
-                        'type': 'skeleton',
                         'variant': 'card',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
+            },
+            {
               'from': 'capturing_cancel',
               'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'success': 'FlowLoaded',
+                      'failure': 'FlowLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'variant': 'header',
+                        'type': 'skeleton',
+                      },
+                      {
+                        'variant': 'card',
+                        'type': 'skeleton',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'capturing_cancel',
+              'to': 'cancelled',
+              'event': 'SUBMIT_CANCEL',
               'effects': [
                 [
                   'set',
@@ -2818,13 +2609,13 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                     'array/append',
                     '@entity.audit',
                     {
-                      'description': '@entity.cancelReason',
-                      'id': 'cancelled',
-                      'status': 'error',
+                      'title': 'Transaction cancelled',
                       'timestamp': [
                         'time/now',
                       ],
-                      'title': 'Transaction cancelled',
+                      'id': 'cancelled',
+                      'description': '@entity.cancelReason',
+                      'status': 'error',
                     },
                   ],
                 ],
@@ -2832,9 +2623,12 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'name': 'x-circle',
@@ -2842,29 +2636,31 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                             'type': 'icon',
                           },
                           {
-                            'content': '@config.title',
                             'type': 'typography',
+                            'content': '@config.title',
                             'variant': 'h3',
                           },
                           {
-                            'label': 'Cancelled',
                             'type': 'badge',
+                            'label': 'Cancelled',
                             'variant': 'warning',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
+                        'align': 'center',
                       },
                       {
+                        'type': 'card',
+                        'look': '@config.cardLook',
                         'children': [
                           {
+                            'gap': 'sm',
+                            'direction': 'vertical',
                             'children': [
                               {
-                                'color': 'muted',
-                                'content': 'Reason for cancellation',
-                                'type': 'typography',
                                 'variant': 'caption',
+                                'color': 'muted',
+                                'type': 'typography',
+                                'content': 'Reason for cancellation',
                               },
                               {
                                 'content': '@entity.cancelReason',
@@ -2875,103 +2671,62 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                                 'type': 'divider',
                               },
                               {
-                                'color': 'muted',
                                 'content': 'Any escrowed funds have been returned to the buyer.',
                                 'type': 'typography',
                                 'variant': 'caption',
+                                'color': 'muted',
                               },
                             ],
-                            'direction': 'vertical',
-                            'gap': 'sm',
                             'type': 'stack',
                           },
                         ],
-                        'look': '@config.cardLook',
-                        'type': 'card',
                       },
                       {
-                        'content': 'Activity',
                         'type': 'typography',
+                        'content': 'Activity',
                         'variant': 'h4',
                       },
                       {
+                        'statusField': 'status',
                         'dateField': 'timestamp',
-                        'descriptionField': 'description',
+                        'titleField': 'title',
                         'entity': '@entity.audit',
+                        'type': 'timeline',
+                        'descriptionField': 'description',
+                        'look': '@config.timelineLook',
                         'fields': [
                           'title',
                           'description',
                           'timestamp',
                           'status',
                         ],
-                        'look': '@config.timelineLook',
-                        'statusField': 'status',
-                        'titleField': 'title',
-                        'type': 'timeline',
                       },
                       {
-                        'action': 'RESTART',
-                        'icon': 'rotate-ccw',
-                        'label': 'Start a new transaction',
-                        'type': 'button',
                         'variant': 'secondary',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'action': 'RESTART',
+                        'label': 'Start a new transaction',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SUBMIT_CANCEL',
-              'from': 'capturing_cancel',
-              'to': 'cancelled',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
-                  {
-                    'emit': {
-                      'failure': 'FlowLoadFailed',
-                      'success': 'FlowLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'type': 'skeleton',
-                        'variant': 'card',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'CANCEL_REASON',
               'from': 'capturing_cancel',
               'to': 'loading',
-            },
-            {
+              'event': 'CANCEL_REASON',
               'effects': [
                 [
                   'fetch',
                   ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
                   {
                     'emit': {
-                      'failure': 'FlowLoadFailed',
                       'success': 'FlowLoaded',
+                      'failure': 'FlowLoadFailed',
                     },
                   },
                 ],
@@ -2979,27 +2734,63 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
-                        'type': 'skeleton',
                         'variant': 'card',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
+            },
+            {
               'from': 'funded',
               'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'success': 'FlowLoaded',
+                      'failure': 'FlowLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'variant': 'header',
+                        'type': 'skeleton',
+                      },
+                      {
+                        'variant': 'card',
+                        'type': 'skeleton',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'funded',
+              'to': 'released',
+              'event': 'RELEASE',
               'effects': [
                 [
                   'set',
@@ -3008,17 +2799,17 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                     'array/append',
                     '@entity.audit',
                     {
+                      'title': 'Funds released',
+                      'timestamp': [
+                        'time/now',
+                      ],
+                      'status': 'complete',
+                      'id': 'released',
                       'description': [
                         'str/concat',
                         '@config.transactionAmount',
                         ' released to the seller. Transaction complete.',
                       ],
-                      'id': 'released',
-                      'status': 'complete',
-                      'timestamp': [
-                        'time/now',
-                      ],
-                      'title': 'Funds released',
                     },
                   ],
                 ],
@@ -3026,75 +2817,81 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
-                            'name': 'check-circle',
                             'size': 'lg',
                             'type': 'icon',
+                            'name': 'check-circle',
                           },
                           {
-                            'content': '@config.title',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': '@config.title',
                           },
                           {
+                            'variant': 'success',
                             'label': 'Completed',
                             'type': 'badge',
-                            'variant': 'success',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'gap': 'sm',
+                        'align': 'center',
                       },
                       {
+                        'look': '@config.cardLook',
+                        'type': 'card',
                         'children': [
                           {
-                            'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'check-circle',
-                                'size': 'xl',
                                 'type': 'icon',
+                                'size': 'xl',
+                                'name': 'check-circle',
                               },
                               {
                                 'align': 'center',
-                                'content': 'Transaction complete',
                                 'type': 'typography',
+                                'content': 'Transaction complete',
                                 'variant': 'h2',
                               },
                               {
-                                'align': 'center',
+                                'variant': 'h1',
                                 'content': '@config.transactionAmount',
                                 'type': 'typography',
-                                'variant': 'h1',
+                                'align': 'center',
                               },
                               {
-                                'align': 'center',
-                                'color': 'muted',
                                 'content': 'Funds have been released to the seller.',
-                                'type': 'typography',
+                                'color': 'muted',
                                 'variant': 'body',
+                                'type': 'typography',
+                                'align': 'center',
                               },
                             ],
-                            'direction': 'vertical',
                             'gap': 'md',
-                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'vertical',
                           },
                         ],
-                        'look': '@config.cardLook',
-                        'type': 'card',
                       },
                       {
-                        'content': 'Activity',
                         'type': 'typography',
+                        'content': 'Activity',
                         'variant': 'h4',
                       },
                       {
-                        'dateField': 'timestamp',
+                        'look': '@config.timelineLook',
+                        'titleField': 'title',
+                        'type': 'timeline',
+                        'statusField': 'status',
                         'descriptionField': 'description',
                         'entity': '@entity.audit',
                         'fields': [
@@ -3103,30 +2900,24 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           'timestamp',
                           'status',
                         ],
-                        'look': '@config.timelineLook',
-                        'statusField': 'status',
-                        'titleField': 'title',
-                        'type': 'timeline',
+                        'dateField': 'timestamp',
                       },
                       {
-                        'action': 'RESTART',
-                        'icon': 'rotate-ccw',
-                        'label': 'Start a new transaction',
                         'type': 'button',
+                        'label': 'Start a new transaction',
+                        'action': 'RESTART',
                         'variant': 'secondary',
+                        'icon': 'rotate-ccw',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'RELEASE',
-              'from': 'funded',
-              'to': 'released',
             },
             {
+              'from': 'funded',
+              'to': 'capturing_dispute',
+              'event': 'OPEN_DISPUTE',
               'effects': [
                 [
                   'set',
@@ -3139,18 +2930,18 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   {
                     'children': [
                       {
-                        'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
+                            'type': 'button',
+                            'label': 'Back',
                             'action': 'CANCEL_REASON',
                             'icon': 'arrow-left',
-                            'label': 'Back',
-                            'type': 'button',
                             'variant': 'ghost',
                           },
                           {
-                            'name': 'alert-triangle',
                             'size': 'lg',
+                            'name': 'alert-triangle',
                             'type': 'icon',
                           },
                           {
@@ -3159,94 +2950,58 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                             'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'align': 'center',
+                        'gap': 'sm',
                       },
                       {
+                        'look': '@config.cardLook',
+                        'type': 'card',
                         'children': [
                           {
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
+                                'variant': 'body',
                                 'color': 'muted',
                                 'content': 'Describe the issue so all parties and the escrow officer can review. Funds will remain in escrow until the dispute is resolved.',
                                 'type': 'typography',
-                                'variant': 'body',
                               },
                               {
-                                'cancelEvent': 'CANCEL_REASON',
-                                'entity': '@entity',
-                                'fields': '@config.reasonFields',
-                                'mode': 'edit',
-                                'submitEvent': 'SUBMIT_DISPUTE',
-                                'submitLabel': 'Submit dispute',
                                 'type': 'form-section',
+                                'mode': 'edit',
+                                'cancelEvent': 'CANCEL_REASON',
+                                'submitLabel': 'Submit dispute',
+                                'submitEvent': 'SUBMIT_DISPUTE',
+                                'fields': '@config.reasonFields',
+                                'entity': '@entity',
                               },
                             ],
                             'direction': 'vertical',
-                            'gap': 'sm',
-                            'type': 'stack',
                           },
                         ],
-                        'look': '@config.cardLook',
-                        'type': 'card',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'OPEN_DISPUTE',
-              'from': 'funded',
-              'to': 'capturing_dispute',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
-                  {
-                    'emit': {
-                      'failure': 'FlowLoadFailed',
-                      'success': 'FlowLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'type': 'skeleton',
-                        'variant': 'card',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'INIT',
               'from': 'released',
               'to': 'loading',
-            },
-            {
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
                   {
                     'emit': {
-                      'failure': 'FlowLoadFailed',
                       'success': 'FlowLoaded',
+                      'failure': 'FlowLoadFailed',
                     },
                   },
                 ],
@@ -3265,16 +3020,16 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'RESTART',
+            },
+            {
               'from': 'released',
               'to': 'loading',
-            },
-            {
+              'event': 'RESTART',
               'effects': [
                 [
                   'fetch',
@@ -3290,35 +3045,35 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
-                        'type': 'skeleton',
                         'variant': 'card',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
+            },
+            {
               'from': 'disputed',
               'to': 'loading',
-            },
-            {
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
                   {
                     'emit': {
-                      'failure': 'FlowLoadFailed',
                       'success': 'FlowLoaded',
+                      'failure': 'FlowLoadFailed',
                     },
                   },
                 ],
@@ -3328,97 +3083,61 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                   {
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
-                        'type': 'skeleton',
                         'variant': 'card',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'RESTART',
+            },
+            {
               'from': 'disputed',
               'to': 'loading',
-            },
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
-                  {
-                    'emit': {
-                      'failure': 'FlowLoadFailed',
-                      'success': 'FlowLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'type': 'skeleton',
-                        'variant': 'card',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'cancelled',
-              'to': 'loading',
-            },
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
-                  {
-                    'emit': {
-                      'failure': 'FlowLoadFailed',
-                      'success': 'FlowLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'type': 'skeleton',
-                        'variant': 'card',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
               'event': 'RESTART',
-              'from': 'cancelled',
-              'to': 'loading',
+              'effects': [
+                [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FlowLoadFailed',
+                      'success': 'FlowLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'variant': 'header',
+                        'type': 'skeleton',
+                      },
+                      {
+                        'variant': 'card',
+                        'type': 'skeleton',
+                      },
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'cancelled',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -3440,22 +3159,303 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'variant': 'header',
                       },
                       {
-                        'type': 'skeleton',
                         'variant': 'card',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
+            },
+            {
+              'from': 'cancelled',
+              'to': 'loading',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'success': 'FlowLoaded',
+                      'failure': 'FlowLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'variant': 'card',
+                        'type': 'skeleton',
+                      },
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
               'from': 'error',
               'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  ('MultiPartyView' satisfies _StdMultiPartyFlowEntityName),
+                  {
+                    'emit': {
+                      'success': 'FlowLoaded',
+                      'failure': 'FlowLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'variant': 'header',
+                        'type': 'skeleton',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'card',
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
           ],
         },
+        'config': {
+          'disputeIcon': {
+            'type': 'string',
+            'default': 'alert-triangle',
+            'label': 'Dispute icon',
+            'description': 'Icon next to the dispute button',
+            'tier': 'presentation',
+          },
+          'cancelLabel': {
+            'type': 'string',
+            'default': 'Cancel transaction',
+            'label': 'Cancel button',
+            'description': 'Label on the cancel-transaction escape-hatch button',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Escrow transaction',
+            'label': 'Page title',
+            'description': 'Heading shown above the transaction view',
+            'tier': 'presentation',
+          },
+          'parties': {
+            'type': '[PartySpec]',
+            'default': [
+              {
+                'description': 'Funds the transaction and confirms receipt.',
+                'icon': 'user',
+                'title': 'Buyer',
+                'actionDescription': 'Authorize the funds to be held in escrow until delivery is confirmed.',
+                'actionLabel': 'Confirm payment',
+                'id': 'buyer',
+                'actionIcon': 'credit-card',
+                'stepLabel': 'Step 1 of 2',
+              },
+              {
+                'title': 'Seller',
+                'icon': 'user-check',
+                'id': 'seller',
+                'stepLabel': 'Step 2 of 2',
+                'actionLabel': 'Confirm shipment',
+                'description': 'Ships the item and uploads delivery proof.',
+                'actionIcon': 'package',
+                'actionDescription': 'Mark the item as shipped. Funds release after the buyer confirms receipt.',
+              },
+            ],
+            'label': 'Parties',
+            'description': 'Ordered participants with role, actor name, and required action. stepLabel entries should track the party count when overriding.',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'actionDescription': {
+                  'name': 'actionDescription',
+                  'type': 'string',
+                  'required': false,
+                },
+                'actionIcon': {
+                  'name': 'actionIcon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+                'key': {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': false,
+                },
+                'actionLabel': {
+                  'name': 'actionLabel',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': false,
+                },
+                'stepLabel': {
+                  'name': 'stepLabel',
+                  'type': 'string',
+                  'required': false,
+                },
+                'role': {
+                  'name': 'role',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'actor': {
+                  'name': 'actor',
+                  'type': 'string',
+                  'required': false,
+                },
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'cancelIcon': {
+            'type': 'string',
+            'default': 'x',
+            'label': 'Cancel icon',
+            'description': 'Icon next to the cancel button',
+            'tier': 'presentation',
+          },
+          'releaseLabel': {
+            'type': 'string',
+            'default': 'Release funds',
+            'label': 'Release button',
+            'description': 'Label on the final-release primary button',
+            'tier': 'presentation',
+          },
+          'transactionAmount': {
+            'type': 'string',
+            'default': '$0.00',
+            'label': 'Amount',
+            'description': 'Formatted amount held in escrow',
+            'tier': 'presentation',
+          },
+          'timelineLook': {
+            'type': 'string',
+            'default': 'vertical-spacious',
+            'label': 'Timeline look',
+            'description': 'Layer 2 visual treatment for the timeline.',
+            'tier': 'presentation',
+            'values': [
+              'vertical-compact',
+              'vertical-spacious',
+              'horizontal',
+              'swimlane',
+            ],
+          },
+          'releaseIcon': {
+            'type': 'string',
+            'default': 'unlock',
+            'label': 'Release icon',
+            'description': 'Icon next to the release button',
+            'tier': 'presentation',
+          },
+          'reasonFields': {
+            'type': '[string]',
+            'default': [
+              'reason',
+            ],
+            'label': 'Reason fields',
+            'description': 'Form fields shown when capturing a dispute or cancel reason',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'transactionReference': {
+            'type': 'string',
+            'default': '',
+            'label': 'Reference',
+            'description': 'External identifier shown in the summary',
+            'tier': 'presentation',
+          },
+          'disputeLabel': {
+            'type': 'string',
+            'default': 'Open dispute',
+            'label': 'Dispute button',
+            'description': 'Label on the open-dispute escape-hatch button',
+            'tier': 'presentation',
+          },
+          'transactionSubject': {
+            'type': 'string',
+            'default': 'Sale of item',
+            'label': 'Subject',
+            'description': 'Short description of what is being transacted',
+            'tier': 'presentation',
+          },
+          'cardLook': {
+            'type': 'string',
+            'default': 'elevated',
+            'label': 'Card look',
+            'description': 'Layer 2 visual treatment for cards rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'elevated',
+              'flat-bordered',
+              'borderless-divider',
+              'ticket',
+              'invoice',
+              'chip',
+              'tile-image-first',
+            ],
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

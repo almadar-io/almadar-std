@@ -39,9 +39,9 @@ export type StdDetailLayoutEventKey = 'BACK' | 'CRUMB_NAV' | 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdDetailLayoutConfig {
+  contentTrait?: TraitFieldRef;
   /** Default: `"Back"` */
   backLabel?: string;
-  contentTrait?: TraitFieldRef;
 }
 
 /**

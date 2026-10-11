@@ -10,7 +10,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STD_OPERATORS, STD_OPERATORS_BY_MODULE } from '../registry.js';
-import type { OperatorEffectMeta, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
+import type { EffectHost, OperatorEffectMeta, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
@@ -106,6 +106,7 @@ interface CanonicalOperatorEntry {
      */
     lambdaArgPosition?: number;
     runsOn?: RunsOn;
+    host?: EffectHost;
     /** 0-indexed argument naming a data effect's target entity; the effect runs where that entity lives. */
     entityArgPosition?: number;
     /** Enrichment (docs): human title, parameter docs, lolo examples, provenance. */
@@ -166,6 +167,7 @@ function toCanonicalEntry(
     if (meta.effect) entry.effect = meta.effect;
     if (meta.returnSemantics) entry.returnSemantics = meta.returnSemantics;
     if (meta.runsOn) entry.runsOn = meta.runsOn;
+    if (meta.host) entry.host = meta.host;
     if (meta.entityArgPosition != null) entry.entityArgPosition = meta.entityArgPosition;
     if (meta.acceptsLambda && meta.lambdaArgPosition != null) {
         entry.lambdaArgPosition = meta.lambdaArgPosition;

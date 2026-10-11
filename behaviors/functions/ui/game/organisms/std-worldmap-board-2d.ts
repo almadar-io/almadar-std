@@ -37,18 +37,18 @@ export type StdWorldmapBoard2dListenKey = 'ATTACK' | 'MOVE';
  * without modifying its state-machine topology.
  */
 export interface StdWorldmapBoard2dConfig {
-  /** Default: `1` */
-  attackDamage?: unknown;
-  /** Default: `4` */
-  gridHeight?: unknown;
-  /** Default: `4` */
-  gridWidth?: unknown;
   /** Default: `true` */
   running?: unknown;
+  /** Default: `4` */
+  gridWidth?: unknown;
+  /** Default: `[{"unitType":"hero","y":0,"health":3,"name":"Hero","maxHealth":3,"sprite":{"aspect":"1:1","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","thumbnailUrl":"","category":"unit","name":"player-unit","variant":"default","role":"player","style":"vector","dimension":"2d","animations":["idle"]},"position":{"y":0,"x":0},"z":0,"animation":"idle","team":"player","frame":0,"x":0,"id":"hero"},{"y":3,"frame":0,"name":"Guard","unitType":"guard","maxHealth":3,"health":3,"team":"enemy","z":0,"id":"guard","animation":"idle","x":3,"sprite":{"role":"enemy","category":"unit","aspect":"1:1","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","variant":"default","animations":["idle"],"thumbnailUrl":"","dimension":"2d","style":"vector","name":"enemy-unit"},"position":{"x":3,"y":3}}]` */
+  units?: unknown;
+  /** Default: `4` */
+  gridHeight?: unknown;
+  /** Default: `1` */
+  attackDamage?: unknown;
   /** Default: `[]` */
   tiles?: unknown;
-  /** Default: `[{"animation":"idle","frame":0,"health":3,"id":"hero","maxHealth":3,"name":"Hero","position":{"x":0,"y":0},"sprite":{"animations":["idle"],"aspect":"1:1","category":"unit","dimension":"2d","name":"player-unit","role":"player","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","variant":"default"},"team":"player","unitType":"hero","x":0,"y":0,"z":0},{"animation":"idle","frame":0,"health":3,"id":"guard","maxHealth":3,"name":"Guard","position":{"x":3,"y":3},"sprite":{"animations":["idle"],"aspect":"1:1","category":"unit","dimension":"2d","name":"enemy-unit","role":"enemy","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","variant":"default"},"team":"enemy","unitType":"guard","x":3,"y":3,"z":0}]` */
-  units?: unknown;
 }
 
 type _StdWorldmapBoard2dEntityName = 'GameState' | 'TacticsState' | 'RoundState' | 'GoldData';
@@ -102,16 +102,16 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
     name: 'WorldMapBoard2DOrbital',
     uses: [
       {
-        'as': 'Tactics',
         'from': 'std/behaviors/std-grid-tactics',
+        'as': 'Tactics',
       },
       {
-        'as': 'Round',
         'from': 'std/behaviors/std-round-flow',
+        'as': 'Round',
       },
       {
-        'as': 'Gold',
         'from': 'std/behaviors/std-gold',
+        'as': 'Gold',
       },
     ],
     entity: {
@@ -122,748 +122,748 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'units',
+            'type': 'array',
             'default': [
               {
-                'animation': 'idle',
-                'frame': 0,
-                'health': 3,
+                'unitType': 'hero',
+                'z': 0,
                 'id': 'hero',
+                'x': 0,
+                'team': 'player',
+                'frame': 0,
                 'maxHealth': 3,
-                'name': 'Hero',
-                'position': {
-                  'x': 0,
-                  'y': 0,
-                },
                 'sprite': {
+                  'aspect': '1:1',
+                  'style': 'vector',
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
-                  'category': 'unit',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
                   'dimension': '2d',
                   'name': 'player-unit',
-                  'role': 'player',
-                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'category': 'unit',
+                  'role': 'player',
                   'variant': 'default',
                 },
-                'team': 'player',
-                'unitType': 'hero',
-                'x': 0,
+                'animation': 'idle',
+                'health': 3,
+                'position': {
+                  'y': 0,
+                  'x': 0,
+                },
+                'name': 'Hero',
                 'y': 0,
-                'z': 0,
               },
               {
+                'unitType': 'guard',
                 'animation': 'idle',
-                'frame': 0,
-                'health': 3,
-                'id': 'guard',
-                'maxHealth': 3,
+                'y': 3,
+                'z': 0,
                 'name': 'Guard',
                 'position': {
                   'x': 3,
                   'y': 3,
                 },
+                'x': 3,
+                'frame': 0,
+                'id': 'guard',
+                'maxHealth': 3,
+                'health': 3,
                 'sprite': {
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'enemy-unit',
-                  'role': 'enemy',
                   'style': 'vector',
-                  'thumbnailUrl': '',
+                  'name': 'enemy-unit',
+                  'aspect': '1:1',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'thumbnailUrl': '',
+                  'category': 'unit',
                   'variant': 'default',
+                  'role': 'enemy',
+                  'dimension': '2d',
                 },
                 'team': 'enemy',
-                'unitType': 'guard',
-                'x': 3,
-                'y': 3,
-                'z': 0,
               },
             ],
             'items': {
+              'type': 'object',
               'properties': {
-                'animation': {
-                  'name': 'animation',
-                  'required': false,
+                'name': {
+                  'name': 'name',
                   'type': 'string',
+                  'required': false,
                 },
                 'frame': {
                   'name': 'frame',
-                  'required': false,
                   'type': 'number',
-                },
-                'health': {
-                  'name': 'health',
                   'required': false,
-                  'type': 'number',
                 },
-                'id': {
-                  'name': 'id',
-                  'required': true,
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': false,
+                },
+                'unitType': {
+                  'name': 'unitType',
                   'type': 'string',
-                },
-                'maxHealth': {
-                  'name': 'maxHealth',
                   'required': false,
-                  'type': 'number',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': false,
-                  'type': 'string',
-                },
-                'position': {
-                  'name': 'position',
-                  'properties': {
-                    'x': {
-                      'name': 'x',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'y': {
-                      'name': 'y',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
                 },
                 'sprite': {
                   'name': 'sprite',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
+                    'sprite': {
+                      'name': 'sprite',
                       'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
                       'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
                     },
                     'dimension': {
                       'name': 'dimension',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
                       'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
                     },
                     'style': {
                       'name': 'style',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                     },
                     'thumbnailUrl': {
                       'name': 'thumbnailUrl',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
                     },
                     'url': {
                       'name': 'url',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                     },
                     'variant': {
                       'name': 'variant',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
                     },
                   },
-                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'position': {
+                  'name': 'position',
                   'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
                 },
                 'team': {
                   'name': 'team',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'player',
                     'enemy',
                     'neutral',
                   ],
                 },
-                'unitType': {
-                  'name': 'unitType',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': false,
+                'health': {
+                  'name': 'health',
                   'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
                   'required': false,
-                  'type': 'number',
                 },
                 'z': {
                   'name': 'z',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
+                },
+                'maxHealth': {
+                  'name': 'maxHealth',
+                  'type': 'number',
+                  'required': false,
+                },
+                'animation': {
+                  'name': 'animation',
+                  'type': 'string',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'units',
-            'type': 'array',
           },
           {
+            'name': 'tiles',
+            'type': 'array',
             'default': [
               {
                 'id': 't-0-0',
+                'y': 0,
+                'x': 0,
                 'passable': true,
-                'terrain': 'grass',
                 'terrainSprite': {
+                  'role': 'tile',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'style': 'vector',
+                  'aspect': '1:1',
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'variant': 'default',
+                  'category': 'terrain',
+                  'name': 'grass',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
+                },
+                'terrain': 'grass',
+              },
+              {
+                'y': 1,
+                'x': 0,
+                'terrain': 'grass',
+                'terrainSprite': {
                   'category': 'terrain',
-                  'dimension': '2d',
                   'name': 'grass',
+                  'dimension': '2d',
                   'role': 'tile',
                   'style': 'vector',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'animations': [
+                    'static',
+                  ],
                   'variant': 'default',
+                  'aspect': '1:1',
                 },
-                'x': 0,
-                'y': 0,
-              },
-              {
                 'id': 't-0-1',
                 'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': 'default',
-                },
-                'x': 0,
-                'y': 1,
               },
               {
+                'passable': true,
+                'terrain': 'grass',
                 'id': 't-0-2',
-                'passable': true,
-                'terrain': 'grass',
                 'terrainSprite': {
+                  'style': 'vector',
+                  'name': 'grass',
+                  'aspect': '1:1',
+                  'category': 'terrain',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
                   'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
                   'variant': 'default',
                 },
                 'x': 0,
                 'y': 2,
               },
               {
+                'passable': true,
+                'terrainSprite': {
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'role': 'tile',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'variant': 'default',
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'animations': [
+                    'static',
+                  ],
+                  'name': 'grass',
+                  'aspect': '1:1',
+                },
                 'id': 't-0-3',
-                'passable': true,
                 'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': 'default',
-                },
                 'x': 0,
                 'y': 3,
               },
               {
+                'terrain': 'grass',
+                'passable': true,
+                'y': 0,
                 'id': 't-1-0',
-                'passable': true,
-                'terrain': 'grass',
                 'terrainSprite': {
+                  'variant': 'default',
+                  'aspect': '1:1',
+                  'thumbnailUrl': '',
+                  'style': 'vector',
+                  'name': 'grass',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
                   'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': 'default',
+                  'category': 'terrain',
+                  'role': 'tile',
                 },
                 'x': 1,
-                'y': 0,
               },
               {
+                'y': 1,
+                'passable': true,
+                'terrainSprite': {
+                  'name': 'grass',
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'style': 'vector',
+                  'dimension': '2d',
+                  'variant': 'default',
+                  'thumbnailUrl': '',
+                  'aspect': '1:1',
+                  'role': 'tile',
+                  'animations': [
+                    'static',
+                  ],
+                },
+                'terrain': 'grass',
                 'id': 't-1-1',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': 'default',
-                },
                 'x': 1,
-                'y': 1,
               },
               {
+                'passable': true,
+                'x': 1,
                 'id': 't-1-2',
-                'passable': true,
-                'terrain': 'grass',
                 'terrainSprite': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'style': 'vector',
+                  'aspect': '1:1',
+                  'dimension': '2d',
+                  'name': 'grass',
+                  'thumbnailUrl': '',
+                  'category': 'terrain',
+                  'role': 'tile',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'variant': 'default',
                 },
-                'x': 1,
+                'terrain': 'grass',
                 'y': 2,
               },
               {
+                'y': 3,
+                'passable': true,
+                'x': 1,
                 'id': 't-1-3',
-                'passable': true,
-                'terrain': 'grass',
                 'terrainSprite': {
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
                   'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'variant': 'default',
+                  'name': 'grass',
+                  'dimension': '2d',
+                  'role': 'tile',
+                  'aspect': '1:1',
                 },
-                'x': 1,
-                'y': 3,
+                'terrain': 'grass',
               },
               {
+                'x': 2,
+                'terrainSprite': {
+                  'name': 'grass',
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'style': 'vector',
+                  'variant': 'default',
+                  'category': 'terrain',
+                  'animations': [
+                    'static',
+                  ],
+                  'role': 'tile',
+                  'aspect': '1:1',
+                },
+                'passable': true,
+                'y': 0,
                 'id': 't-2-0',
-                'passable': true,
                 'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': 'default',
-                },
-                'x': 2,
-                'y': 0,
               },
               {
+                'passable': true,
+                'x': 2,
+                'terrain': 'grass',
                 'id': 't-2-1',
-                'passable': true,
-                'terrain': 'grass',
                 'terrainSprite': {
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'style': 'vector',
+                  'category': 'terrain',
+                  'role': 'tile',
+                  'aspect': '1:1',
                   'variant': 'default',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
+                  'dimension': '2d',
                 },
-                'x': 2,
                 'y': 1,
               },
               {
+                'passable': true,
+                'y': 2,
+                'terrainSprite': {
+                  'name': 'grass',
+                  'role': 'tile',
+                  'style': 'vector',
+                  'variant': 'default',
+                  'animations': [
+                    'static',
+                  ],
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'aspect': '1:1',
+                  'category': 'terrain',
+                },
+                'terrain': 'grass',
+                'x': 2,
                 'id': 't-2-2',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': 'default',
-                },
-                'x': 2,
-                'y': 2,
               },
               {
-                'id': 't-2-3',
                 'passable': true,
                 'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': 'default',
-                },
-                'x': 2,
                 'y': 3,
-              },
-              {
-                'id': 't-3-0',
-                'passable': true,
-                'terrain': 'grass',
+                'x': 2,
+                'id': 't-2-3',
                 'terrainSprite': {
+                  'role': 'tile',
+                  'thumbnailUrl': '',
+                  'variant': 'default',
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
                   'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
+                  'category': 'terrain',
                   'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': 'default',
+                  'aspect': '1:1',
                 },
-                'x': 3,
+              },
+              {
                 'y': 0,
-              },
-              {
-                'id': 't-3-1',
+                'x': 3,
                 'passable': true,
-                'terrain': 'grass',
                 'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
+                  'role': 'tile',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'aspect': '1:1',
                   'category': 'terrain',
                   'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
+                  'animations': [
+                    'static',
+                  ],
                   'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'variant': 'default',
+                  'name': 'grass',
                 },
+                'id': 't-3-0',
+                'terrain': 'grass',
+              },
+              {
+                'passable': true,
                 'x': 3,
                 'y': 1,
-              },
-              {
-                'id': 't-3-2',
-                'passable': true,
+                'id': 't-3-1',
                 'terrain': 'grass',
                 'terrainSprite': {
                   'animations': [
                     'static',
                   ],
+                  'thumbnailUrl': '',
                   'aspect': '1:1',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                   'category': 'terrain',
                   'dimension': '2d',
                   'name': 'grass',
+                  'style': 'vector',
+                  'variant': 'default',
+                  'role': 'tile',
+                },
+              },
+              {
+                'terrain': 'grass',
+                'passable': true,
+                'terrainSprite': {
+                  'category': 'terrain',
+                  'aspect': '1:1',
+                  'animations': [
+                    'static',
+                  ],
                   'role': 'tile',
                   'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
+                  'name': 'grass',
                   'variant': 'default',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
-                'x': 3,
                 'y': 2,
+                'id': 't-3-2',
+                'x': 3,
               },
               {
-                'id': 't-3-3',
-                'passable': true,
                 'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': 'default',
-                },
                 'x': 3,
                 'y': 3,
+                'passable': true,
+                'terrainSprite': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'thumbnailUrl': '',
+                  'style': 'vector',
+                  'variant': 'default',
+                  'dimension': '2d',
+                  'category': 'terrain',
+                  'role': 'tile',
+                  'aspect': '1:1',
+                  'name': 'grass',
+                  'animations': [
+                    'static',
+                  ],
+                },
+                'id': 't-3-3',
               },
             ],
             'items': {
+              'type': 'object',
               'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'passable': {
-                  'name': 'passable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'required': false,
-                  'type': 'string',
-                },
                 'terrainSprite': {
                   'name': 'terrainSprite',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
                     'name': {
                       'name': 'name',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
                       'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
                     },
                     'thumbnailUrl': {
                       'name': 'thumbnailUrl',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
                       'required': false,
-                      'type': 'string',
                     },
                     'variant': {
                       'name': 'variant',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
                     },
                   },
-                  'required': false,
-                  'type': 'object',
                 },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
+                'terrain': {
+                  'name': 'terrain',
+                  'type': 'string',
+                  'required': false,
                 },
                 'y': {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'passable': {
+                  'name': 'passable',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'tiles',
-            'type': 'array',
           },
           {
-            'default': 'none',
             'name': 'result',
             'type': 'string',
+            'default': 'none',
           },
           {
-            'default': 0,
             'name': 'gold',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
             'name': 'selectedHeroId',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': [],
-            'items': {
-              'properties': {
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
             'name': 'validMoves',
             'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
           },
           {
+            'name': 'waypoints',
+            'type': 'array',
             'default': [],
             'items': {
               'type': 'string',
             },
-            'name': 'waypoints',
-            'type': 'array',
           },
           {
-            'default': 0,
             'name': 'turn',
             'type': 'number',
+            'default': 0,
           },
           {
+            'name': 'effects',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
                 'key': {
                   'name': 'key',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'ttl': {
                   'name': 'ttl',
-                  'required': true,
                   'type': 'number',
-                },
-                'x': {
-                  'name': 'x',
                   'required': true,
-                  'type': 'number',
                 },
                 'y': {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'effects',
-            'type': 'array',
           },
         ];
         const extras = params.fields ?? [];
@@ -874,1170 +874,169 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Tactics.traits.GridTactics' satisfies _StdWorldmapBoard2dWorldMapBoard2DOrbitalUsesRef),
+        'name': 'TacticsAuthority',
+        'linkedEntity': 'GameState',
         'config': {
-          'attackDamage': {
-            'default': 1,
+          'running': {
             'type': 'unknown',
-          },
-          'gridHeight': {
-            'default': 4,
-            'type': 'unknown',
+            'default': true,
           },
           'gridWidth': {
+            'type': 'unknown',
             'default': 4,
-            'type': 'unknown',
-          },
-          'running': {
-            'default': true,
-            'type': 'unknown',
-          },
-          'tiles': {
-            'default': [],
-            'type': 'unknown',
           },
           'units': {
+            'type': 'unknown',
             'default': [
               {
-                'animation': 'idle',
-                'frame': 0,
+                'unitType': 'hero',
+                'y': 0,
                 'health': 3,
-                'id': 'hero',
-                'maxHealth': 3,
                 'name': 'Hero',
-                'position': {
-                  'x': 0,
-                  'y': 0,
-                },
+                'maxHealth': 3,
                 'sprite': {
+                  'aspect': '1:1',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'thumbnailUrl': '',
+                  'category': 'unit',
+                  'name': 'player-unit',
+                  'variant': 'default',
+                  'role': 'player',
+                  'style': 'vector',
+                  'dimension': '2d',
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'player-unit',
-                  'role': 'player',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
-                  'variant': 'default',
                 },
-                'team': 'player',
-                'unitType': 'hero',
-                'x': 0,
-                'y': 0,
+                'position': {
+                  'y': 0,
+                  'x': 0,
+                },
                 'z': 0,
+                'animation': 'idle',
+                'team': 'player',
+                'frame': 0,
+                'x': 0,
+                'id': 'hero',
               },
               {
-                'animation': 'idle',
+                'y': 3,
                 'frame': 0,
-                'health': 3,
-                'id': 'guard',
-                'maxHealth': 3,
                 'name': 'Guard',
+                'unitType': 'guard',
+                'maxHealth': 3,
+                'health': 3,
+                'team': 'enemy',
+                'z': 0,
+                'id': 'guard',
+                'animation': 'idle',
+                'x': 3,
+                'sprite': {
+                  'role': 'enemy',
+                  'category': 'unit',
+                  'aspect': '1:1',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'variant': 'default',
+                  'animations': [
+                    'idle',
+                  ],
+                  'thumbnailUrl': '',
+                  'dimension': '2d',
+                  'style': 'vector',
+                  'name': 'enemy-unit',
+                },
                 'position': {
                   'x': 3,
                   'y': 3,
                 },
-                'sprite': {
-                  'animations': [
-                    'idle',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'enemy-unit',
-                  'role': 'enemy',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
-                  'variant': 'default',
-                },
-                'team': 'enemy',
-                'unitType': 'guard',
-                'x': 3,
-                'y': 3,
-                'z': 0,
               },
             ],
+          },
+          'gridHeight': {
             'type': 'unknown',
+            'default': 4,
+          },
+          'attackDamage': {
+            'type': 'unknown',
+            'default': 1,
+          },
+          'tiles': {
+            'type': 'unknown',
+            'default': [],
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'ATTACK',
+            'triggers': 'ATTACK',
             'source': {
               'kind': 'trait',
               'trait': 'WorldMapIntent',
             },
-            'triggers': 'ATTACK',
           },
           {
             'event': 'MOVE',
+            'triggers': 'MOVE',
             'source': {
               'kind': 'trait',
               'trait': 'WorldMapIntent',
             },
-            'triggers': 'MOVE',
           },
         ],
-        'name': 'TacticsAuthority',
-        'ref': ('Tactics.traits.GridTactics' satisfies _StdWorldmapBoard2dWorldMapBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Round.traits.RoundFlow' satisfies _StdWorldmapBoard2dWorldMapBoard2DOrbitalUsesRef),
+        'name': 'RoundLogic',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'UNITS_CHANGED',
+            'triggers': 'UNITS_CHANGED',
             'source': {
               'kind': 'trait',
               'trait': 'TacticsAuthority',
             },
-            'triggers': 'UNITS_CHANGED',
           },
         ],
-        'name': 'RoundLogic',
-        'ref': ('Round.traits.RoundFlow' satisfies _StdWorldmapBoard2dWorldMapBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Gold.traits.GoldMine' satisfies _StdWorldmapBoard2dWorldMapBoard2DOrbitalUsesRef),
+        'name': 'GoldAuthority',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
           'startGold': {
-            'default': 0,
             'type': 'unknown',
+            'default': 0,
           },
           'yieldAmount': {
-            'default': 25,
             'type': 'unknown',
+            'default': 25,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'MINE_HIT',
+            'triggers': 'MINE_HIT',
             'source': {
               'kind': 'trait',
               'trait': 'WorldMapIntent',
             },
-            'triggers': 'MINE_HIT',
           },
         ],
-        'name': 'GoldAuthority',
-        'ref': ('Gold.traits.GoldMine' satisfies _StdWorldmapBoard2dWorldMapBoard2DOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'assetManifest': {
-            'default': {
-              'effects': {},
-              'features': {},
-              'terrains': {},
-              'units': {},
-            },
-            'description': 'Terrain/unit/feature/effect sprite manifest.',
-            'label': 'Asset Manifest',
-            'properties': {
-              'effects': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'effects',
-                'required': false,
-                'type': 'object',
-              },
-              'features': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'features',
-                'required': false,
-                'type': 'object',
-              },
-              'terrains': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'terrains',
-                'required': false,
-                'type': 'object',
-              },
-              'units': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'units',
-                'required': false,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'AssetManifest',
-          },
-          'backgroundAsset': {
-            'default': {},
-            'description': 'Game-shell background panel sprite (theme chrome).',
-            'label': 'Background Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'extraAddons': {
-            'default': [],
-            'description': 'Board-specific action buttons appended after Pass Turn.',
-            'items': {
-              'properties': {
-                'action': {
-                  'name': 'action',
-                  'required': false,
-                  'type': 'string',
-                },
-                'iconAsset': {
-                  'name': 'iconAsset',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': false,
-                  'type': 'string',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Extra Addon Buttons',
-            'tier': 'presentation',
-            'type': '[HudButton]',
-          },
-          'extraStats': {
-            'default': [],
-            'description': 'Board-specific HUD stats appended after Region/Turn/Gold.',
-            'items': {
-              'properties': {
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'value': {
-                  'name': 'value',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Extra HUD Stats',
-            'tier': 'presentation',
-            'type': '[HudStat]',
-          },
-          'features': {
-            'default': [],
-            'description': 'Board features — gold mines, portals, and other decorative/interactive map markers.',
-            'items': {
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Features',
-            'tier': 'domain',
-            'type': '[Feature]',
-          },
-          'fontFamily': {
-            'default': 'future',
-            'description': 'game-shell fontFamily prop (theme chrome).',
-            'label': 'Font Family',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'goldIconAsset': {
-            'default': {},
-            'description': 'Icon sprite for the Gold HUD stat.',
-            'label': 'Gold Icon Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'gridHeight': {
-            'default': 4,
-            'description': 'Grid row count (matches TacticsAuthority.gridHeight).',
-            'label': 'Grid Height',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'gridWidth': {
-            'default': 4,
-            'description': 'Grid column count (matches TacticsAuthority.gridWidth).',
-            'label': 'Grid Width',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'hudBackgroundAsset': {
-            'default': {},
-            'description': 'HUD panel background sprite (theme chrome).',
-            'label': 'HUD Background Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'movementRange': {
-            'default': 3,
-            'description': 'Max manhattan distance the selected hero may travel in one move.',
-            'label': 'Movement Range',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'region': {
-            'default': 'Overworld',
-            'description': 'Region name shown in the HUD.',
-            'label': 'Region',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'regionIconAsset': {
-            'default': {},
-            'description': 'Icon sprite for the Region HUD stat.',
-            'label': 'Region Icon Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'travelIconAsset': {
-            'default': {},
-            'description': 'Icon sprite for the Pass Turn button.',
-            'label': 'Travel Icon Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'turnIconAsset': {
-            'default': {},
-            'description': 'Icon sprite for the Turn HUD stat.',
-            'label': 'Turn Icon Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-        },
+        'name': 'WorldMapIntent',
         'effectRow': [
           {
             'kind': 'emit',
@@ -2085,208 +1084,210 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
             'site': 'tick',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'GameState',
         'emits': [
           {
-            'description': 'Emits UI:{unitClickEvent} with { unitId } on hero selection or attack-target click',
             'event': 'HERO_SELECT',
+            'description': 'Emits UI:{unitClickEvent} with { unitId } on hero selection or attack-target click',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Emits UI:{tileClickEvent} with { x, y }',
             'event': 'HERO_MOVE',
+            'description': 'Emits UI:{tileClickEvent} with { x, y }',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Emits UI:{advanceTurnEvent} with {} when the player passes the turn without moving',
             'event': 'ADVANCE_TURN',
+            'description': 'Emits UI:{advanceTurnEvent} with {} when the player passes the turn without moving',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Hero travel intent applied by the grid-tactics authority',
             'event': 'MOVE',
+            'description': 'Hero travel intent applied by the grid-tactics authority',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Hero attack intent applied by the grid-tactics authority',
             'event': 'ATTACK',
+            'description': 'Hero attack intent applied by the grid-tactics authority',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'targetId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Hero landed on a gold-mine feature tile; the gold atom adds its yield',
             'event': 'MINE_HIT',
+            'description': 'Hero landed on a gold-mine feature tile; the gold atom adds its yield',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'GameState',
-        'name': 'WorldMapIntent',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'playing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Emits UI:{unitClickEvent} with { unitId } on hero selection or attack-target click',
               'key': 'HERO_SELECT',
               'name': 'Hero Select',
+              'description': 'Emits UI:{unitClickEvent} with { unitId } on hero selection or attack-target click',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Emits UI:{tileClickEvent} with { x, y }',
               'key': 'HERO_MOVE',
               'name': 'Hero Move',
+              'description': 'Emits UI:{tileClickEvent} with { x, y }',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Emits UI:{advanceTurnEvent} with {} when the player passes the turn without moving',
               'key': 'ADVANCE_TURN',
               'name': 'Advance Turn',
+              'description': 'Emits UI:{advanceTurnEvent} with {} when the player passes the turn without moving',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Hero travel intent applied by the grid-tactics authority',
               'key': 'MOVE',
               'name': 'Move',
+              'description': 'Hero travel intent applied by the grid-tactics authority',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Hero attack intent applied by the grid-tactics authority',
               'key': 'ATTACK',
               'name': 'Attack',
+              'description': 'Hero attack intent applied by the grid-tactics authority',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'targetId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Hero landed on a gold-mine feature tile; the gold atom adds its yield',
               'key': 'MINE_HIT',
               'name': 'Mine Hit',
+              'description': 'Hero landed on a gold-mine feature tile; the gold atom adds its yield',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'playing',
             },
           ],
           'transitions': [
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -2318,45 +1319,112 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                   'main',
                   {
                     'addons': {
+                      'type': 'stack',
+                      'gap': 'sm',
                       'children': [
                         'array/concat',
                         [
                           {
-                            'action': 'ADVANCE_TURN',
-                            'iconAsset': '@config.travelIconAsset',
-                            'label': 'Pass Turn',
                             'type': 'button',
+                            'label': 'Pass Turn',
                             'variant': 'primary',
+                            'iconAsset': '@config.travelIconAsset',
+                            'action': 'ADVANCE_TURN',
                           },
                         ],
                         '@config.extraAddons',
                       ],
                       'direction': 'vertical',
-                      'gap': 'sm',
-                      'type': 'stack',
                     },
+                    'type': 'game-shell',
+                    'overlay': [
+                      'if',
+                      [
+                        '!=',
+                        '@entity.result',
+                        'none',
+                      ],
+                      {
+                        'title': [
+                          'if',
+                          [
+                            '==',
+                            '@entity.result',
+                            'victory',
+                          ],
+                          'VICTORY',
+                          'DEFEAT',
+                        ],
+                        'options': [],
+                        'type': 'game-menu',
+                        'subtitle': [
+                          'if',
+                          [
+                            '==',
+                            '@entity.result',
+                            'victory',
+                          ],
+                          'The realm is secured',
+                          'Your heroes have fallen',
+                        ],
+                      },
+                      null,
+                    ],
                     'backgroundAsset': '@config.backgroundAsset',
+                    'hudBackgroundAsset': '@config.hudBackgroundAsset',
+                    'hud': {
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'stats': [
+                            'array/concat',
+                            [
+                              {
+                                'value': '@config.region',
+                                'iconUrl': '@config.regionIconAsset',
+                                'label': 'Region',
+                              },
+                              {
+                                'label': 'Turn',
+                                'iconUrl': '@config.turnIconAsset',
+                                'value': '@entity.turn',
+                              },
+                              {
+                                'iconUrl': '@config.goldIconAsset',
+                                'value': '@entity.gold',
+                                'label': 'Gold',
+                              },
+                            ],
+                            '@config.extraStats',
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'gap': 'xs',
+                          'children': [
+                            {
+                              'name': 'map-pin',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Waypoints',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                      ],
+                      'gap': 'md',
+                      'justify': 'between',
+                      'direction': 'horizontal',
+                    },
                     'children': [
                       {
                         'camera': {
                           'pos': {
-                            'x': [
-                              '/',
-                              [
-                                '+',
-                                [
-                                  'array/min',
-                                  '@entity.tiles',
-                                  'x',
-                                ],
-                                [
-                                  'array/max',
-                                  '@entity.tiles',
-                                  'x',
-                                ],
-                              ],
-                              2,
-                            ],
                             'y': [
                               '/',
                               [
@@ -2374,10 +1442,28 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                               ],
                               2,
                             ],
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@entity.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@entity.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
                           },
                         },
                         'children': [
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               '@entity.tiles',
@@ -2385,7 +1471,8 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                 'fn',
                                 't',
                                 {
-                                  'fill': '#5c94fc',
+                                  'strokeWidth': 1,
+                                  'shape': 'cell',
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2398,14 +1485,12 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                       'y',
                                     ],
                                   },
-                                  'shape': 'cell',
+                                  'fill': '#5c94fc',
                                   'stroke': 'rgba(255,255,255,0.35)',
-                                  'strokeWidth': 1,
                                   'type': 'draw-shape',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
                             'items': [
@@ -2417,7 +1502,20 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                   'fn',
                                   't',
                                   {
-                                    'anchor': 'center',
+                                    'position': {
+                                      'y': [
+                                        'object/get',
+                                        '@t',
+                                        'y',
+                                      ],
+                                      'x': [
+                                        'object/get',
+                                        '@t',
+                                        'x',
+                                      ],
+                                    },
+                                    'width': 0.5,
+                                    'type': 'draw-sprite',
                                     'asset': [
                                       'if',
                                       [
@@ -2449,20 +1547,7 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                       ],
                                     ],
                                     'height': 0.5,
-                                    'position': {
-                                      'x': [
-                                        'object/get',
-                                        '@t',
-                                        'x',
-                                      ],
-                                      'y': [
-                                        'object/get',
-                                        '@t',
-                                        'y',
-                                      ],
-                                    },
-                                    'type': 'draw-sprite',
-                                    'width': 0.5,
+                                    'anchor': 'center',
                                   },
                                 ],
                               ],
@@ -2490,24 +1575,24 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                 'fn',
                                 'f',
                                 {
-                                  'asset': [
-                                    'object/get',
-                                    '@f',
-                                    'sprite',
-                                  ],
                                   'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
                                     'y': [
                                       'object/get',
                                       '@f',
                                       'y',
                                     ],
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
                                   },
                                   'type': 'draw-sprite',
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
                                 },
                               ],
                             ],
@@ -2521,7 +1606,7 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                 'fn',
                                 'm',
                                 {
-                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'shape': 'cell',
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2534,14 +1619,15 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                       'y',
                                     ],
                                   },
-                                  'shape': 'cell',
                                   'type': 'draw-shape',
+                                  'fill': 'rgba(74,222,128,0.4)',
                                 },
                               ],
                             ],
                             'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               [
@@ -2565,21 +1651,20 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                 'fn',
                                 'u',
                                 {
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                  'radiusY': 0.2,
+                                  'radiusX': 0.5,
+                                  'shape': 'ellipse',
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
-                                  'radiusX': 0.5,
-                                  'radiusY': 0.2,
-                                  'shape': 'ellipse',
                                   'stroke': 'rgba(0,200,255,0.8)',
-                                  'strokeWidth': 3,
-                                  'type': 'draw-shape',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
                             'items': [
@@ -2589,7 +1674,15 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                 'fn',
                                 'u',
                                 {
+                                  'width': 0.5,
                                   'anchor': 'ground',
+                                  'type': 'draw-sprite',
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'height': 0.5,
                                   'asset': [
                                     'if',
                                     [
@@ -2620,19 +1713,11 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                       ],
                                     ],
                                   ],
-                                  'height': 0.5,
                                   'id': [
                                     'object/get',
                                     '@u',
                                     'id',
                                   ],
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
                                 },
                               ],
                             ],
@@ -2647,17 +1732,17 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                 'u',
                                 {
                                   'anchor': 'ground',
-                                  'fill': 'rgba(0,0,0,0.6)',
-                                  'height': 0.12,
-                                  'offsetX': -0.25,
-                                  'offsetY': -0.6,
                                   'position': [
                                     'object/get',
                                     '@u',
                                     'position',
                                   ],
-                                  'shape': 'rect',
+                                  'height': 0.12,
                                   'type': 'draw-shape',
+                                  'offsetX': -0.25,
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'shape': 'rect',
+                                  'offsetY': -0.6,
                                   'width': 0.5,
                                 },
                               ],
@@ -2672,18 +1757,6 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                 'fn',
                                 'u',
                                 {
-                                  'anchor': 'ground',
-                                  'fill': '#22c55e',
-                                  'height': 0.12,
-                                  'offsetX': -0.25,
-                                  'offsetY': -0.6,
-                                  'position': [
-                                    'object/get',
-                                    '@u',
-                                    'position',
-                                  ],
-                                  'shape': 'rect',
-                                  'type': 'draw-shape',
                                   'width': [
                                     '*',
                                     0.5,
@@ -2701,12 +1774,25 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                       ],
                                     ],
                                   ],
+                                  'offsetX': -0.25,
+                                  'offsetY': -0.6,
+                                  'anchor': 'ground',
+                                  'type': 'draw-shape',
+                                  'shape': 'rect',
+                                  'fill': '#22c55e',
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'height': 0.12,
                                 },
                               ],
                             ],
                             'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-text-layer',
                             'items': [
                               'array/map',
                               '@entity.units',
@@ -2715,6 +1801,7 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                 'u',
                                 {
                                   'color': '#ffffff',
+                                  'type': 'draw-text',
                                   'offsetY': -0.85,
                                   'position': [
                                     'object/get',
@@ -2726,11 +1813,9 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                                     '@u',
                                     'name',
                                   ],
-                                  'type': 'draw-text',
                                 },
                               ],
                             ],
-                            'type': 'draw-text-layer',
                           },
                           {
                             'items': [
@@ -2772,107 +1857,52 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                             'type': 'draw-sprite-layer',
                           },
                         ],
-                        'fit': true,
-                        'projection': 'isometric',
-                        'showMinimap': true,
-                        'tileClickEvent': 'HERO_MOVE',
                         'type': 'canvas',
                         'unitClickEvent': 'HERO_SELECT',
+                        'projection': 'isometric',
+                        'showMinimap': true,
+                        'fit': true,
+                        'tileClickEvent': 'HERO_MOVE',
                       },
                     ],
                     'fontFamily': '@config.fontFamily',
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            'array/concat',
-                            [
-                              {
-                                'iconUrl': '@config.regionIconAsset',
-                                'label': 'Region',
-                                'value': '@config.region',
-                              },
-                              {
-                                'iconUrl': '@config.turnIconAsset',
-                                'label': 'Turn',
-                                'value': '@entity.turn',
-                              },
-                              {
-                                'iconUrl': '@config.goldIconAsset',
-                                'label': 'Gold',
-                                'value': '@entity.gold',
-                              },
-                            ],
-                            '@config.extraStats',
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'map-pin',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Waypoints',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'xs',
-                          'type': 'stack',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'hudBackgroundAsset': '@config.hudBackgroundAsset',
-                    'overlay': [
-                      'if',
-                      [
-                        '!=',
-                        '@entity.result',
-                        'none',
-                      ],
-                      {
-                        'options': [],
-                        'subtitle': [
-                          'if',
-                          [
-                            '==',
-                            '@entity.result',
-                            'victory',
-                          ],
-                          'The realm is secured',
-                          'Your heroes have fallen',
-                        ],
-                        'title': [
-                          'if',
-                          [
-                            '==',
-                            '@entity.result',
-                            'victory',
-                          ],
-                          'VICTORY',
-                          'DEFEAT',
-                        ],
-                        'type': 'game-menu',
-                      },
-                      null,
-                    ],
-                    'type': 'game-shell',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'playing',
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'HERO_SELECT',
+              'guard': [
+                'and',
+                [
+                  '==',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  '==',
+                  [
+                    'object/get',
+                    [
+                      'array/find',
+                      '@entity.units',
+                      [
+                        'fn',
+                        'u',
+                        [
+                          '==',
+                          '@u.id',
+                          '@payload.unitId',
+                        ],
+                      ],
+                    ],
+                    'team',
+                  ],
+                  'player',
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -2895,15 +1925,15 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                           [
                             'grid/in-bounds',
                             {
-                              'x': [
-                                'object/get',
-                                '@t',
-                                'x',
-                              ],
                               'y': [
                                 'object/get',
                                 '@t',
                                 'y',
+                              ],
+                              'x': [
+                                'object/get',
+                                '@t',
+                                'x',
                               ],
                             },
                             '@config.gridWidth',
@@ -3019,15 +2049,15 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                       'fn',
                       't',
                       {
-                        'x': [
-                          'object/get',
-                          '@t',
-                          'x',
-                        ],
                         'y': [
                           'object/get',
                           '@t',
                           'y',
+                        ],
+                        'x': [
+                          'object/get',
+                          '@t',
+                          'x',
                         ],
                       },
                     ],
@@ -3039,123 +2069,11 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                   [],
                 ],
               ],
-              'event': 'HERO_SELECT',
-              'from': 'playing',
-              'guard': [
-                'and',
-                [
-                  '==',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  '==',
-                  [
-                    'object/get',
-                    [
-                      'array/find',
-                      '@entity.units',
-                      [
-                        'fn',
-                        'u',
-                        [
-                          '==',
-                          '@u.id',
-                          '@payload.unitId',
-                        ],
-                      ],
-                    ],
-                    'team',
-                  ],
-                  'player',
-                ],
-              ],
-              'to': 'playing',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'MOVE',
-                  {
-                    'unitId': '@entity.selectedHeroId',
-                    'x': '@payload.x',
-                    'y': '@payload.y',
-                  },
-                ],
-                [
-                  'if',
-                  [
-                    '==',
-                    [
-                      'object/get',
-                      [
-                        'array/find',
-                        '@config.features',
-                        [
-                          'fn',
-                          'f',
-                          [
-                            'and',
-                            [
-                              '==',
-                              [
-                                'object/get',
-                                '@f',
-                                'x',
-                              ],
-                              '@payload.x',
-                            ],
-                            [
-                              'and',
-                              [
-                                '==',
-                                [
-                                  'object/get',
-                                  '@f',
-                                  'y',
-                                ],
-                                '@payload.y',
-                              ],
-                              [
-                                '==',
-                                [
-                                  'object/get',
-                                  '@f',
-                                  'type',
-                                ],
-                                'gold_mine',
-                              ],
-                            ],
-                          ],
-                        ],
-                      ],
-                      'type',
-                    ],
-                    'gold_mine',
-                  ],
-                  [
-                    'emit',
-                    'MINE_HIT',
-                    {
-                      'id': '',
-                    },
-                  ],
-                  null,
-                ],
-                [
-                  'set',
-                  '@entity.selectedHeroId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-              ],
-              'event': 'HERO_MOVE',
               'from': 'playing',
+              'to': 'playing',
+              'event': 'HERO_MOVE',
               'guard': [
                 'and',
                 [
@@ -3175,8 +2093,8 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                     [
                       'grid/in-bounds',
                       {
-                        'x': '@payload.x',
                         'y': '@payload.y',
+                        'x': '@payload.x',
                       },
                       '@config.gridWidth',
                       '@config.gridHeight',
@@ -3205,8 +2123,8 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                             'position',
                           ],
                           {
-                            'x': '@payload.x',
                             'y': '@payload.y',
+                            'x': '@payload.x',
                           },
                         ],
                         '@config.movementRange',
@@ -3299,70 +2217,75 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                   ],
                 ],
               ],
-              'to': 'playing',
-            },
-            {
               'effects': [
                 [
                   'emit',
-                  'ATTACK',
+                  'MOVE',
                   {
-                    'targetId': '@payload.unitId',
+                    'x': '@payload.x',
+                    'y': '@payload.y',
+                    'unitId': '@entity.selectedHeroId',
                   },
                 ],
                 [
-                  'set',
-                  '@entity.effects',
+                  'if',
                   [
-                    'array/append',
-                    '@entity.effects',
+                    '==',
+                    [
+                      'object/get',
+                      [
+                        'array/find',
+                        '@config.features',
+                        [
+                          'fn',
+                          'f',
+                          [
+                            'and',
+                            [
+                              '==',
+                              [
+                                'object/get',
+                                '@f',
+                                'x',
+                              ],
+                              '@payload.x',
+                            ],
+                            [
+                              'and',
+                              [
+                                '==',
+                                [
+                                  'object/get',
+                                  '@f',
+                                  'y',
+                                ],
+                                '@payload.y',
+                              ],
+                              [
+                                '==',
+                                [
+                                  'object/get',
+                                  '@f',
+                                  'type',
+                                ],
+                                'gold_mine',
+                              ],
+                            ],
+                          ],
+                        ],
+                      ],
+                      'type',
+                    ],
+                    'gold_mine',
+                  ],
+                  [
+                    'emit',
+                    'MINE_HIT',
                     {
-                      'key': 'slash',
-                      'ttl': 4,
-                      'x': [
-                        'object/get',
-                        [
-                          'object/get',
-                          [
-                            'array/find',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                '==',
-                                '@u.id',
-                                '@payload.unitId',
-                              ],
-                            ],
-                          ],
-                          'position',
-                        ],
-                        'x',
-                      ],
-                      'y': [
-                        'object/get',
-                        [
-                          'object/get',
-                          [
-                            'array/find',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                '==',
-                                '@u.id',
-                                '@payload.unitId',
-                              ],
-                            ],
-                          ],
-                          'position',
-                        ],
-                        'y',
-                      ],
+                      'id': '',
                     },
                   ],
+                  null,
                 ],
                 [
                   'set',
@@ -3374,18 +2297,12 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                   '@entity.validMoves',
                   [],
                 ],
-                [
-                  'set',
-                  '@entity.turn',
-                  [
-                    '+',
-                    '@entity.turn',
-                    1,
-                  ],
-                ],
               ],
-              'event': 'HERO_SELECT',
+            },
+            {
               'from': 'playing',
+              'to': 'playing',
+              'event': 'HERO_SELECT',
               'guard': [
                 'and',
                 [
@@ -3467,9 +2384,98 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                   ],
                 ],
               ],
-              'to': 'playing',
+              'effects': [
+                [
+                  'emit',
+                  'ATTACK',
+                  {
+                    'targetId': '@payload.unitId',
+                  },
+                ],
+                [
+                  'set',
+                  '@entity.effects',
+                  [
+                    'array/append',
+                    '@entity.effects',
+                    {
+                      'y': [
+                        'object/get',
+                        [
+                          'object/get',
+                          [
+                            'array/find',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              [
+                                '==',
+                                '@u.id',
+                                '@payload.unitId',
+                              ],
+                            ],
+                          ],
+                          'position',
+                        ],
+                        'y',
+                      ],
+                      'x': [
+                        'object/get',
+                        [
+                          'object/get',
+                          [
+                            'array/find',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              [
+                                '==',
+                                '@u.id',
+                                '@payload.unitId',
+                              ],
+                            ],
+                          ],
+                          'position',
+                        ],
+                        'x',
+                      ],
+                      'key': 'slash',
+                      'ttl': 4,
+                    },
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.selectedHeroId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.turn',
+                  [
+                    '+',
+                    '@entity.turn',
+                    1,
+                  ],
+                ],
+              ],
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'ADVANCE_TURN',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
               'effects': [
                 [
                   'set',
@@ -3491,45 +2497,438 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                   [],
                 ],
               ],
-              'event': 'ADVANCE_TURN',
-              'from': 'playing',
-              'guard': [
-                '==',
-                '@entity.result',
-                'none',
-              ],
-              'to': 'playing',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'renderTick',
+            'interval': 100,
             'effects': [
               [
                 'render-ui',
                 'main',
                 {
+                  'fontFamily': '@config.fontFamily',
                   'addons': {
+                    'gap': 'sm',
+                    'type': 'stack',
                     'children': [
                       'array/concat',
                       [
                         {
-                          'action': 'ADVANCE_TURN',
-                          'iconAsset': '@config.travelIconAsset',
-                          'label': 'Pass Turn',
                           'type': 'button',
                           'variant': 'primary',
+                          'iconAsset': '@config.travelIconAsset',
+                          'action': 'ADVANCE_TURN',
+                          'label': 'Pass Turn',
                         },
                       ],
                       '@config.extraAddons',
                     ],
                     'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
                   },
-                  'backgroundAsset': '@config.backgroundAsset',
                   'children': [
                     {
+                      'projection': 'isometric',
+                      'unitClickEvent': 'HERO_SELECT',
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'strokeWidth': 1,
+                                'position': {
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'stroke': 'rgba(255,255,255,0.35)',
+                                'fill': '#5c94fc',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'type': 'draw-sprite-layer',
+                          'items': [
+                            'array/filter',
+                            [
+                              'array/map',
+                              '@entity.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'anchor': 'center',
+                                  'type': 'draw-sprite',
+                                  'width': 0.5,
+                                  'asset': [
+                                    'if',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@t',
+                                        'terrainSprite',
+                                      ],
+                                      'url',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@t',
+                                      'terrainSprite',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'terrains',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@t',
+                                        'terrain',
+                                      ],
+                                    ],
+                                  ],
+                                  'height': 0.5,
+                                  'position': {
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                  },
+                                },
+                              ],
+                            ],
+                            [
+                              'fn',
+                              's',
+                              [
+                                'object/get',
+                                [
+                                  'object/get',
+                                  '@s',
+                                  'asset',
+                                ],
+                                'url',
+                              ],
+                            ],
+                          ],
+                        },
+                        {
+                          'type': 'draw-sprite-layer',
+                          'items': [
+                            'array/map',
+                            '@config.features',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'type': 'draw-sprite',
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'sprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                              },
+                            ],
+                          ],
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.validMoves',
+                            [
+                              'fn',
+                              'm',
+                              {
+                                'position': {
+                                  'y': [
+                                    'object/get',
+                                    '@m',
+                                    'y',
+                                  ],
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'type': 'draw-shape',
+                                'fill': 'rgba(74,222,128,0.4)',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'type': 'draw-shape-layer',
+                          'items': [
+                            'array/map',
+                            [
+                              'array/filter',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '==',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
+                                  '@entity.selectedHeroId',
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'shape': 'ellipse',
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'radiusX': 0.5,
+                                'type': 'draw-shape',
+                                'strokeWidth': 3,
+                                'radiusY': 0.2,
+                                'stroke': 'rgba(0,200,255,0.8)',
+                              },
+                            ],
+                          ],
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'type': 'draw-sprite',
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'anchor': 'ground',
+                                'asset': [
+                                  'if',
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'sprite',
+                                    ],
+                                    'url',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'sprite',
+                                  ],
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'unitType',
+                                    ],
+                                  ],
+                                ],
+                                'height': 0.5,
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
+                                ],
+                                'width': 0.5,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'anchor': 'ground',
+                                'offsetX': -0.25,
+                                'width': 0.5,
+                                'fill': 'rgba(0,0,0,0.6)',
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'type': 'draw-shape',
+                                'shape': 'rect',
+                                'offsetY': -0.6,
+                                'height': 0.12,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'type': 'draw-shape-layer',
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'type': 'draw-shape',
+                                'offsetX': -0.25,
+                                'shape': 'rect',
+                                'height': 0.12,
+                                'fill': '#22c55e',
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'offsetY': -0.6,
+                                'width': [
+                                  '*',
+                                  0.5,
+                                  [
+                                    '/',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'maxHealth',
+                                    ],
+                                  ],
+                                ],
+                                'anchor': 'ground',
+                              },
+                            ],
+                          ],
+                        },
+                        {
+                          'type': 'draw-text-layer',
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'color': '#ffffff',
+                                'type': 'draw-text',
+                                'offsetY': -0.85,
+                                'text': [
+                                  'object/get',
+                                  '@u',
+                                  'name',
+                                ],
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                              },
+                            ],
+                          ],
+                        },
+                        {
+                          'type': 'draw-sprite-layer',
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                        },
+                      ],
+                      'tileClickEvent': 'HERO_MOVE',
                       'camera': {
                         'pos': {
                           'x': [
@@ -3568,439 +2967,39 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                           ],
                         },
                       },
-                      'children': [
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.tiles',
-                            [
-                              'fn',
-                              't',
-                              {
-                                'fill': '#5c94fc',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@t',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@t',
-                                    'y',
-                                  ],
-                                },
-                                'shape': 'cell',
-                                'stroke': 'rgba(255,255,255,0.35)',
-                                'strokeWidth': 1,
-                                'type': 'draw-shape',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/filter',
-                            [
-                              'array/map',
-                              '@entity.tiles',
-                              [
-                                'fn',
-                                't',
-                                {
-                                  'anchor': 'center',
-                                  'asset': [
-                                    'if',
-                                    [
-                                      'object/get',
-                                      [
-                                        'object/get',
-                                        '@t',
-                                        'terrainSprite',
-                                      ],
-                                      'url',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@t',
-                                      'terrainSprite',
-                                    ],
-                                    [
-                                      'object/get',
-                                      [
-                                        'object/get',
-                                        '@config.assetManifest',
-                                        'terrains',
-                                      ],
-                                      [
-                                        'object/get',
-                                        '@t',
-                                        'terrain',
-                                      ],
-                                    ],
-                                  ],
-                                  'height': 0.5,
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@t',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@t',
-                                      'y',
-                                    ],
-                                  },
-                                  'type': 'draw-sprite',
-                                  'width': 0.5,
-                                },
-                              ],
-                            ],
-                            [
-                              'fn',
-                              's',
-                              [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@s',
-                                  'asset',
-                                ],
-                                'url',
-                              ],
-                            ],
-                          ],
-                          'type': 'draw-sprite-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@config.features',
-                            [
-                              'fn',
-                              'f',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  '@f',
-                                  'sprite',
-                                ],
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@f',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-sprite-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.validMoves',
-                            [
-                              'fn',
-                              'm',
-                              {
-                                'fill': 'rgba(74,222,128,0.4)',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@m',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@m',
-                                    'y',
-                                  ],
-                                },
-                                'shape': 'cell',
-                                'type': 'draw-shape',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            [
-                              'array/filter',
-                              '@entity.units',
-                              [
-                                'fn',
-                                'u',
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    '@u',
-                                    'id',
-                                  ],
-                                  '@entity.selectedHeroId',
-                                ],
-                              ],
-                            ],
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'radiusX': 0.5,
-                                'radiusY': 0.2,
-                                'shape': 'ellipse',
-                                'stroke': 'rgba(0,200,255,0.8)',
-                                'strokeWidth': 3,
-                                'type': 'draw-shape',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'anchor': 'ground',
-                                'asset': [
-                                  'if',
-                                  [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'sprite',
-                                    ],
-                                    'url',
-                                  ],
-                                  [
-                                    'object/get',
-                                    '@u',
-                                    'sprite',
-                                  ],
-                                  [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@config.assetManifest',
-                                      'units',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'unitType',
-                                    ],
-                                  ],
-                                ],
-                                'height': 0.5,
-                                'id': [
-                                  'object/get',
-                                  '@u',
-                                  'id',
-                                ],
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'type': 'draw-sprite',
-                                'width': 0.5,
-                              },
-                            ],
-                          ],
-                          'type': 'draw-sprite-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'anchor': 'ground',
-                                'fill': 'rgba(0,0,0,0.6)',
-                                'height': 0.12,
-                                'offsetX': -0.25,
-                                'offsetY': -0.6,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'shape': 'rect',
-                                'type': 'draw-shape',
-                                'width': 0.5,
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'anchor': 'ground',
-                                'fill': '#22c55e',
-                                'height': 0.12,
-                                'offsetX': -0.25,
-                                'offsetY': -0.6,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'shape': 'rect',
-                                'type': 'draw-shape',
-                                'width': [
-                                  '*',
-                                  0.5,
-                                  [
-                                    '/',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'health',
-                                    ],
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'maxHealth',
-                                    ],
-                                  ],
-                                ],
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'color': '#ffffff',
-                                'offsetY': -0.85,
-                                'position': [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                                'text': [
-                                  'object/get',
-                                  '@u',
-                                  'name',
-                                ],
-                                'type': 'draw-text',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-text-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.effects',
-                            [
-                              'fn',
-                              'e',
-                              {
-                                'asset': [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'effects',
-                                  ],
-                                  [
-                                    'object/get',
-                                    '@e',
-                                    'key',
-                                  ],
-                                ],
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@e',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@e',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-sprite',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-sprite-layer',
-                        },
-                      ],
-                      'fit': true,
-                      'projection': 'isometric',
-                      'showMinimap': true,
-                      'tileClickEvent': 'HERO_MOVE',
                       'type': 'canvas',
-                      'unitClickEvent': 'HERO_SELECT',
+                      'showMinimap': true,
+                      'fit': true,
                     },
                   ],
-                  'fontFamily': '@config.fontFamily',
                   'hud': {
+                    'justify': 'between',
                     'children': [
                       {
+                        'type': 'game-hud',
                         'stats': [
                           'array/concat',
                           [
                             {
+                              'value': '@config.region',
                               'iconUrl': '@config.regionIconAsset',
                               'label': 'Region',
-                              'value': '@config.region',
                             },
                             {
-                              'iconUrl': '@config.turnIconAsset',
-                              'label': 'Turn',
                               'value': '@entity.turn',
+                              'label': 'Turn',
+                              'iconUrl': '@config.turnIconAsset',
                             },
                             {
-                              'iconUrl': '@config.goldIconAsset',
-                              'label': 'Gold',
                               'value': '@entity.gold',
+                              'label': 'Gold',
+                              'iconUrl': '@config.goldIconAsset',
                             },
                           ],
                           '@config.extraStats',
                         ],
-                        'type': 'game-hud',
                       },
                       {
-                        'align': 'center',
                         'children': [
                           {
                             'name': 'map-pin',
@@ -4012,17 +3011,16 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                             'variant': 'caption',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'xs',
                         'type': 'stack',
+                        'gap': 'xs',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                     ],
                     'direction': 'horizontal',
-                    'gap': 'md',
-                    'justify': 'between',
                     'type': 'stack',
+                    'gap': 'md',
                   },
-                  'hudBackgroundAsset': '@config.hudBackgroundAsset',
                   'overlay': [
                     'if',
                     [
@@ -4031,17 +3029,7 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                       'none',
                     ],
                     {
-                      'options': [],
-                      'subtitle': [
-                        'if',
-                        [
-                          '==',
-                          '@entity.result',
-                          'victory',
-                        ],
-                        'The realm is secured',
-                        'Your heroes have fallen',
-                      ],
+                      'type': 'game-menu',
                       'title': [
                         'if',
                         [
@@ -4052,18 +3040,1030 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
                         'VICTORY',
                         'DEFEAT',
                       ],
-                      'type': 'game-menu',
+                      'subtitle': [
+                        'if',
+                        [
+                          '==',
+                          '@entity.result',
+                          'victory',
+                        ],
+                        'The realm is secured',
+                        'Your heroes have fallen',
+                      ],
+                      'options': [],
                     },
                     null,
                   ],
+                  'hudBackgroundAsset': '@config.hudBackgroundAsset',
                   'type': 'game-shell',
+                  'backgroundAsset': '@config.backgroundAsset',
                 },
               ],
             ],
-            'interval': 100,
-            'name': 'renderTick',
           },
         ],
+        'config': {
+          'movementRange': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Movement Range',
+            'description': 'Max manhattan distance the selected hero may travel in one move.',
+            'tier': 'domain',
+          },
+          'gridWidth': {
+            'type': 'number',
+            'default': 4,
+            'label': 'Grid Width',
+            'description': 'Grid column count (matches TacticsAuthority.gridWidth).',
+            'tier': 'presentation',
+          },
+          'turnIconAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Turn Icon Asset',
+            'description': 'Icon sprite for the Turn HUD stat.',
+            'tier': 'presentation',
+            'properties': {
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+            },
+          },
+          'region': {
+            'type': 'string',
+            'default': 'Overworld',
+            'label': 'Region',
+            'description': 'Region name shown in the HUD.',
+            'tier': 'presentation',
+          },
+          'features': {
+            'type': '[Feature]',
+            'default': [],
+            'label': 'Features',
+            'description': 'Board features — gold mines, portals, and other decorative/interactive map markers.',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'extraAddons': {
+            'type': '[HudButton]',
+            'default': [],
+            'label': 'Extra Addon Buttons',
+            'description': 'Board-specific action buttons appended after Pass Turn.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'iconAsset': {
+                  'name': 'iconAsset',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'action': {
+                  'name': 'action',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'extraStats': {
+            'type': '[HudStat]',
+            'default': [],
+            'label': 'Extra HUD Stats',
+            'description': 'Board-specific HUD stats appended after Region/Turn/Gold.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'value': {
+                  'name': 'value',
+                  'type': 'number',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'regionIconAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Region Icon Asset',
+            'description': 'Icon sprite for the Region HUD stat.',
+            'tier': 'presentation',
+            'properties': {
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'fontFamily': {
+            'type': 'string',
+            'default': 'future',
+            'label': 'Font Family',
+            'description': 'game-shell fontFamily prop (theme chrome).',
+            'tier': 'presentation',
+          },
+          'goldIconAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Gold Icon Asset',
+            'description': 'Icon sprite for the Gold HUD stat.',
+            'tier': 'presentation',
+            'properties': {
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'backgroundAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Background Asset',
+            'description': 'Game-shell background panel sprite (theme chrome).',
+            'tier': 'presentation',
+            'properties': {
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'gridHeight': {
+            'type': 'number',
+            'default': 4,
+            'label': 'Grid Height',
+            'description': 'Grid row count (matches TacticsAuthority.gridHeight).',
+            'tier': 'presentation',
+          },
+          'hudBackgroundAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'HUD Background Asset',
+            'description': 'HUD panel background sprite (theme chrome).',
+            'tier': 'presentation',
+            'properties': {
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'assetManifest': {
+            'type': 'AssetManifest',
+            'default': {
+              'terrains': {},
+              'units': {},
+              'features': {},
+              'effects': {},
+            },
+            'label': 'Asset Manifest',
+            'description': 'Terrain/unit/feature/effect sprite manifest.',
+            'tier': 'presentation',
+            'properties': {
+              'features': {
+                'name': 'features',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'terrains': {
+                'name': 'terrains',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'effects': {
+                'name': 'effects',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'units': {
+                'name': 'units',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'travelIconAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Travel Icon Asset',
+            'description': 'Icon sprite for the Pass Turn button.',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -72,12 +72,12 @@ export interface StdMlInferInferAbstainedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMlInferConfig {
-  /** Default: `0.7` */
-  confidenceFloor?: number;
   /** Default: `""` */
   model?: string;
   /** Default: `{"ranges":{}}` */
   outputContract?: EntityRow;
+  /** Default: `0.7` */
+  confidenceFloor?: number;
 }
 
 /**
@@ -208,146 +208,146 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
+            'name': 'input',
+            'type': 'object',
             'default': {},
             'items': {
               'type': 'scalar',
             },
-            'name': 'input',
-            'type': 'object',
           },
           {
+            'name': 'output',
+            'type': 'array',
             'default': [],
             'items': {
               'type': 'number',
             },
-            'name': 'output',
-            'type': 'array',
           },
           {
-            'default': 0,
             'name': 'confidence',
             'type': 'number',
+            'default': 0,
           },
           {
+            'name': 'violations',
+            'type': 'array',
             'default': [],
             'items': {
-              'properties': {
-                'NotATensorViolation': {
-                  'name': 'NotATensorViolation',
-                  'properties': {
-                    'actualType': {
-                      'name': 'actualType',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': false,
-                      'type': 'string',
-                      'values': [
-                        'not_a_tensor',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'RangeViolationDetail': {
-                  'name': 'RangeViolationDetail',
-                  'properties': {
-                    'actualMax': {
-                      'name': 'actualMax',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'actualMin': {
-                      'name': 'actualMin',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'dim': {
-                      'name': 'dim',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'max': {
-                      'name': 'max',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'min': {
-                      'name': 'min',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': false,
-                      'type': 'string',
-                      'values': [
-                        'range_violation',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'ShapeMismatchViolation': {
-                  'name': 'ShapeMismatchViolation',
-                  'properties': {
-                    'actual': {
-                      'items': {
-                        'type': 'number',
-                      },
-                      'name': 'actual',
-                      'required': true,
-                      'type': 'array',
-                    },
-                    'expected': {
-                      'items': {
-                        'type': 'number',
-                      },
-                      'name': 'expected',
-                      'required': true,
-                      'type': 'array',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': false,
-                      'type': 'string',
-                      'values': [
-                        'shape_mismatch',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-              },
               'type': 'union',
               'values': [
                 'ShapeMismatchViolation',
                 'RangeViolationDetail',
                 'NotATensorViolation',
               ],
+              'properties': {
+                'NotATensorViolation': {
+                  'name': 'NotATensorViolation',
+                  'type': 'object',
+                  'properties': {
+                    'actualType': {
+                      'name': 'actualType',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'not_a_tensor',
+                      ],
+                    },
+                  },
+                },
+                'ShapeMismatchViolation': {
+                  'name': 'ShapeMismatchViolation',
+                  'type': 'object',
+                  'properties': {
+                    'expected': {
+                      'name': 'expected',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'number',
+                      },
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'shape_mismatch',
+                      ],
+                    },
+                    'actual': {
+                      'name': 'actual',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'number',
+                      },
+                    },
+                  },
+                },
+                'RangeViolationDetail': {
+                  'name': 'RangeViolationDetail',
+                  'type': 'object',
+                  'properties': {
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'range_violation',
+                      ],
+                    },
+                    'min': {
+                      'name': 'min',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'dim': {
+                      'name': 'dim',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'actualMax': {
+                      'name': 'actualMax',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'max': {
+                      'name': 'max',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'actualMin': {
+                      'name': 'actualMin',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+              },
             },
-            'name': 'violations',
-            'type': 'array',
           },
           {
-            'default': '',
             'name': 'reason',
             'type': 'string',
+            'default': '',
           },
           {
+            'name': 'request',
+            'type': 'object',
             'default': {},
             'items': {
               'type': 'scalar',
             },
-            'name': 'request',
-            'type': 'object',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'inferring',
@@ -363,62 +363,7 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'confidenceFloor': {
-            'default': 0.7,
-            'description': 'Minimum service-reported confidence required to answer; below this the atom abstains with reason low confidence',
-            'label': 'Confidence floor',
-            'tier': 'policy',
-            'type': 'float',
-          },
-          'model': {
-            'default': '',
-            'description': 'hf:<id> for off-the-shelf weights, or a masar checkpoint id, forwarded to the ml service infer action',
-            'label': 'Model reference',
-            'tier': 'infra',
-            'type': 'string',
-          },
-          'outputContract': {
-            'default': {
-              'ranges': {},
-            },
-            'description': 'Declared shape and per-dimension ranges the model output must satisfy; a failing check abstains with reason contract violation. Omit shape to assert ranges only — an empty shape [] asserts a SCALAR output, it does not mean unconstrained',
-            'label': 'Output contract',
-            'properties': {
-              'ranges': {
-                'items': {
-                  'properties': {
-                    'max': {
-                      'name': 'max',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'min': {
-                      'name': 'min',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'ranges',
-                'required': false,
-                'type': 'object',
-              },
-              'shape': {
-                'items': {
-                  'type': 'number',
-                },
-                'name': 'shape',
-                'required': false,
-                'type': 'array',
-              },
-            },
-            'tier': 'domain',
-            'type': 'OutputContract',
-          },
-        },
+        'name': 'InferenceRun',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -465,86 +410,97 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
             'resource': '@entity.violations',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'Inference',
         'emits': [
           {
-            'description': 'Raw ml.infer service result, flattened onto the payload by the call-service effect executor',
             'event': 'INFERRED_RAW',
+            'description': 'Raw ml.infer service result, flattened onto the payload by the call-service effect executor',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'output',
-                'required': true,
                 'type': '[float]',
+                'required': true,
               },
               {
                 'name': 'confidence',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'call-service infer failure signal — a masar cold start or a down endpoint lands here, not as a user-visible error',
             'event': 'INFER_CALL_FAILED',
+            'description': 'call-service infer failure signal — a masar cold start or a down endpoint lands here, not as a user-visible error',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The service answered, the output satisfies outputContract, and confidence clears confidenceFloor — output already clamped',
             'event': 'INFERRED',
+            'description': 'The service answered, the output satisfies outputContract, and confidence clears confidenceFloor — output already clamped',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'output',
-                'required': true,
                 'type': '[float]',
+                'required': true,
               },
               {
                 'name': 'confidence',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
               {
                 'name': 'violations',
-                'required': true,
                 'type': '[ContractViolation]',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
           {
-            'description': 'The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path. request echoes the originating request untouched so the next rung can project its own inputs out of it',
             'event': 'INFER_ABSTAINED',
+            'description': 'The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'reason',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'violations',
-                'required': true,
                 'type': '[ContractViolation]',
+                'required': true,
               },
               {
                 'name': 'request',
                 'type': 'Map<string,scalar>',
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'Inference',
-        'name': 'InferenceRun',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'inferring',
+            },
+            {
+              'name': 'resolved',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -556,8 +512,8 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
               'payloadSchema': [
                 {
                   'name': 'input',
-                  'required': true,
                   'type': 'Map<string,scalar>',
+                  'required': true,
                 },
                 {
                   'name': 'request',
@@ -566,100 +522,91 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
               ],
             },
             {
-              'description': 'Raw ml.infer service result, flattened onto the payload by the call-service effect executor',
               'key': 'INFERRED_RAW',
               'name': 'Inferred Raw',
+              'description': 'Raw ml.infer service result, flattened onto the payload by the call-service effect executor',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'output',
-                  'required': true,
                   'type': '[float]',
+                  'required': true,
                 },
                 {
                   'name': 'confidence',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'call-service infer failure signal — a masar cold start or a down endpoint lands here, not as a user-visible error',
               'key': 'INFER_CALL_FAILED',
               'name': 'Infer Call Failed',
+              'description': 'call-service infer failure signal — a masar cold start or a down endpoint lands here, not as a user-visible error',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
               'key': 'RESET',
               'name': 'Reset',
             },
             {
-              'description': 'The service answered, the output satisfies outputContract, and confidence clears confidenceFloor — output already clamped',
               'key': 'INFERRED',
               'name': 'Inferred',
+              'description': 'The service answered, the output satisfies outputContract, and confidence clears confidenceFloor — output already clamped',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'output',
-                  'required': true,
                   'type': '[float]',
+                  'required': true,
                 },
                 {
                   'name': 'confidence',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
                 {
                   'name': 'violations',
-                  'required': true,
                   'type': '[ContractViolation]',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path. request echoes the originating request untouched so the next rung can project its own inputs out of it',
               'key': 'INFER_ABSTAINED',
               'name': 'Infer Abstained',
+              'description': 'The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'reason',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'violations',
-                  'required': true,
                   'type': '[ContractViolation]',
+                  'required': true,
                 },
                 {
                   'name': 'request',
                   'type': 'Map<string,scalar>',
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'inferring',
-            },
-            {
-              'name': 'resolved',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -697,11 +644,11 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'inferring',
+              'event': 'INFER',
               'effects': [
                 [
                   'set',
@@ -734,11 +681,11 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                   },
                 ],
               ],
-              'event': 'INFER',
-              'from': 'idle',
-              'to': 'inferring',
             },
             {
+              'from': 'inferring',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -776,11 +723,11 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'inferring',
-              'to': 'idle',
             },
             {
+              'from': 'inferring',
+              'to': 'resolved',
+              'event': 'INFERRED_RAW',
               'effects': [
                 [
                   'set',
@@ -848,9 +795,9 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                           'emit',
                           'INFERRED',
                           {
-                            'confidence': '@entity.confidence',
                             'output': '@entity.output',
                             'violations': '@entity.violations',
+                            'confidence': '@entity.confidence',
                           },
                         ],
                       ],
@@ -907,20 +854,20 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                         'emit',
                         'INFER_ABSTAINED',
                         {
+                          'violations': '@entity.violations',
                           'reason': 'contract violation',
                           'request': '@entity.request',
-                          'violations': '@entity.violations',
                         },
                       ],
                     ],
                   ],
                 ],
               ],
-              'event': 'INFERRED_RAW',
-              'from': 'inferring',
-              'to': 'resolved',
             },
             {
+              'from': 'inferring',
+              'to': 'resolved',
+              'event': 'INFER_CALL_FAILED',
               'effects': [
                 [
                   'set',
@@ -951,31 +898,31 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                   'emit',
                   'INFER_ABSTAINED',
                   {
-                    'reason': 'unavailable',
-                    'request': '@entity.request',
                     'violations': '@entity.violations',
+                    'request': '@entity.request',
+                    'reason': 'unavailable',
                   },
                 ],
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t run inference — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
+                    'dismissible': true,
                     'variant': 'error',
+                    'type': 'alert',
                   },
                 ],
               ],
-              'event': 'INFER_CALL_FAILED',
-              'from': 'inferring',
-              'to': 'resolved',
             },
             {
+              'from': 'resolved',
+              'to': 'resolved',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -983,11 +930,11 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                   'resolved',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'resolved',
-              'to': 'resolved',
             },
             {
+              'from': 'resolved',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -1025,12 +972,65 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'resolved',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'model': {
+            'type': 'string',
+            'default': '',
+            'label': 'Model reference',
+            'description': 'hf:<id> for off-the-shelf weights, or a masar checkpoint id, forwarded to the ml service infer action',
+            'tier': 'infra',
+          },
+          'outputContract': {
+            'type': 'OutputContract',
+            'default': {
+              'ranges': {},
+            },
+            'label': 'Output contract',
+            'description': 'Declared shape and per-dimension ranges the model output must satisfy; a failing check abstains with reason contract violation. Omit shape to assert ranges only — an empty shape [] asserts a SCALAR output, it does not mean unconstrained',
+            'tier': 'domain',
+            'properties': {
+              'ranges': {
+                'name': 'ranges',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'max': {
+                      'name': 'max',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'min': {
+                      'name': 'min',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'shape': {
+                'name': 'shape',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'number',
+                },
+              },
+            },
+          },
+          'confidenceFloor': {
+            'type': 'float',
+            'default': 0.7,
+            'label': 'Confidence floor',
+            'description': 'Minimum service-reported confidence required to answer; below this the atom abstains with reason low confidence',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

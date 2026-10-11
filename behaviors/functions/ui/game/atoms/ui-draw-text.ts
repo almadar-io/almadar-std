@@ -39,19 +39,19 @@ export type StdUiDrawTextEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawTextConfig {
-  align?: 'center' | 'end' | 'left' | 'right' | 'start';
-  anchor?: 'top-left' | 'ground' | 'center';
   baseline?: 'alphabetic' | 'bottom' | 'hanging' | 'ideographic' | 'middle' | 'top';
+  /** Default: `{"y":1,"z":1,"x":1}` */
+  position?: EntityRow;
+  font?: string;
   /** Default: `""` */
   color?: string;
-  font?: string;
   offsetX?: number;
-  offsetY?: number;
-  opacity?: number;
-  /** Default: `{"x":1,"y":1,"z":1}` */
-  position?: EntityRow;
+  anchor?: 'top-left' | 'ground' | 'center';
   /** Default: `""` */
   text?: string;
+  opacity?: number;
+  align?: 'center' | 'end' | 'left' | 'right' | 'start';
+  offsetY?: number;
 }
 
 /**

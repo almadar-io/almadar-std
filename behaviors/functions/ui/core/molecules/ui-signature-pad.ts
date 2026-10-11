@@ -53,43 +53,43 @@ export interface StdUiSignaturePadSignPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSignaturePadConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
+  enterDelay?: number;
   ariaLabelledby?: string;
   ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `"CLEAR"` */
-  clearEvent?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
+  value?: string;
+  ariaLabel?: string;
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `200` */
-  height?: number;
-  helperText?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  label?: string;
-  lang?: string;
+  ariaDescribedby?: string;
+  tabIndex?: number;
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `"CHANGE"` */
   onChange?: string;
   /** Default: `false` */
   readOnly?: boolean;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `"SIGN"` */
-  signEvent?: string;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  strokeColor?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  helperText?: string;
+  label?: string;
   /** Default: `2` */
   strokeWidth?: number;
-  tabIndex?: number;
-  value?: string;
+  lang?: string;
+  ariaSelected?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaHidden?: boolean;
+  ariaExpanded?: boolean;
+  className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"SIGN"` */
+  signEvent?: string;
+  ariaBusy?: boolean;
+  /** Default: `200` */
+  height?: number;
+  error?: EntityRow;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  strokeColor?: string;
+  /** Default: `"CLEAR"` */
+  clearEvent?: string;
 }
 
 /**

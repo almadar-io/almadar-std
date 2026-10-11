@@ -58,12 +58,12 @@ export interface StdVelocityGateVelocityGateDeniedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdVelocityGateConfig {
-  /** Default: `[]` */
-  gates?: EntityRow[];
   /** Default: `0.6` */
   reachMargin?: number;
   /** Default: `true` */
   running?: boolean;
+  /** Default: `[]` */
+  gates?: EntityRow[];
 }
 
 /**

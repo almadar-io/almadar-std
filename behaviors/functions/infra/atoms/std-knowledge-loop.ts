@@ -314,16 +314,16 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
     name: 'KnowledgeLoopOrbital',
     uses: [
       {
-        'as': 'Typography',
         'from': 'std/behaviors/ui-typography',
+        'as': 'Typography',
       },
       {
-        'as': 'Button',
         'from': 'std/behaviors/ui-button',
+        'as': 'Button',
       },
       {
-        'as': 'Divider',
         'from': 'std/behaviors/ui-divider',
+        'as': 'Divider',
       },
     ],
     entity: {
@@ -333,40 +333,40 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'description': 'what\'s being investigated',
             'name': 'title',
-            'required': true,
             'type': 'string',
+            'required': true,
+            'description': 'what\'s being investigated',
           },
           {
-            'default': '',
-            'description': 'the current hypothesis',
             'name': 'candidateStructure',
             'type': 'string',
+            'default': '',
+            'description': 'the current hypothesis',
           },
           {
-            'default': false,
-            'description': 'did the prediction survive an honest attempt to break it',
             'name': 'survivedFalsification',
             'type': 'boolean',
+            'default': false,
+            'description': 'did the prediction survive an honest attempt to break it',
           },
           {
-            'default': false,
-            'description': 'did a different method or observer converge on the same result',
             'name': 'independentChecksAgree',
             'type': 'boolean',
+            'default': false,
+            'description': 'did a different method or observer converge on the same result',
           },
           {
-            'default': 0,
-            'description': 'the calibrated model\'s measured reliability, 0-1',
             'name': 'reliabilityScore',
             'type': 'number',
+            'default': 0,
+            'description': 'the calibrated model\'s measured reliability, 0-1',
           },
           {
-            'default': '',
-            'description': 'the next question that removes the most uncertainty',
             'name': 'nextTarget',
             'type': 'string',
+            'default': '',
+            'description': 'the next question that removes the most uncertainty',
           },
         ];
         const extras = params.fields ?? [];
@@ -377,213 +377,190 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
     } as Entity,
     traits: [
       makeTraitRef({
-        'config': {
-          'content': {
-            'default': 'Knowledge loop',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'h3',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'KnowledgeClaim',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
         'name': 'LoopTitle',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'KnowledgeClaim',
         'config': {
-          'color': {
-            'default': 'muted',
-            'type': 'unknown',
-          },
           'content': {
-            'default': 'Falsification requested — awaiting the automated check\'s verdict.',
             'type': 'unknown',
+            'default': 'Knowledge loop',
           },
           'variant': {
-            'default': 'caption',
             'type': 'unknown',
+            'default': 'h3',
           },
         },
-        'linkedEntity': 'KnowledgeClaim',
+      }),
+      makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
         'name': 'AwaitingFalsificationText',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'KnowledgeClaim',
         'config': {
-          'color': {
-            'default': 'muted',
+          'variant': {
             'type': 'unknown',
+            'default': 'caption',
           },
           'content': {
-            'default': 'Independent verification requested — awaiting the automated check\'s verdict.',
             'type': 'unknown',
+            'default': 'Falsification requested — awaiting the automated check\'s verdict.',
           },
-          'variant': {
-            'default': 'caption',
+          'color': {
             'type': 'unknown',
+            'default': 'muted',
           },
         },
-        'linkedEntity': 'KnowledgeClaim',
-        'name': 'AwaitingVerificationText',
+      }),
+      makeTraitRef({
         'ref': ('Typography.traits.TypographyRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
+        'name': 'AwaitingVerificationText',
+        'linkedEntity': 'KnowledgeClaim',
+        'config': {
+          'color': {
+            'type': 'unknown',
+            'default': 'muted',
+          },
+          'content': {
+            'type': 'unknown',
+            'default': 'Independent verification requested — awaiting the automated check\'s verdict.',
+          },
+          'variant': {
+            'type': 'unknown',
+            'default': 'caption',
+          },
+        },
       }),
       makeTraitRef({
-        'linkedEntity': 'KnowledgeClaim',
-        'name': 'LoopDivider',
         'ref': ('Divider.traits.DividerRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
+        'name': 'LoopDivider',
+        'linkedEntity': 'KnowledgeClaim',
       }),
       makeTraitRef({
-        'config': {
-          'action': {
-            'default': 'SURVIVED',
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'check',
-            'type': 'unknown',
-          },
-          'label': {
-            'default': 'Survived',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'primary',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'KnowledgeClaim',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
         'name': 'SurvivedButton',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'action': {
-            'default': 'FAILED',
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'x',
-            'type': 'unknown',
-          },
-          'label': {
-            'default': 'Failed',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'danger',
-            'type': 'unknown',
-          },
-        },
         'linkedEntity': 'KnowledgeClaim',
-        'name': 'FailedButton',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
-      }),
-      makeTraitRef({
         'config': {
-          'action': {
-            'default': 'CHECKS_AGREE',
+          'variant': {
             'type': 'unknown',
+            'default': 'primary',
           },
           'icon': {
+            'type': 'unknown',
             'default': 'check',
+          },
+          'action': {
             'type': 'unknown',
+            'default': 'SURVIVED',
           },
           'label': {
-            'default': 'Checks agree',
             'type': 'unknown',
-          },
-          'variant': {
-            'default': 'primary',
-            'type': 'unknown',
+            'default': 'Survived',
           },
         },
-        'linkedEntity': 'KnowledgeClaim',
-        'name': 'ChecksAgreeButton',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
+        'name': 'FailedButton',
+        'linkedEntity': 'KnowledgeClaim',
         'config': {
-          'action': {
-            'default': 'CHECKS_DISAGREE',
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'x',
-            'type': 'unknown',
-          },
-          'label': {
-            'default': 'Checks disagree',
-            'type': 'unknown',
-          },
           'variant': {
+            'type': 'unknown',
             'default': 'danger',
-            'type': 'unknown',
           },
-        },
-        'linkedEntity': 'KnowledgeClaim',
-        'name': 'ChecksDisagreeButton',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
           'action': {
-            'default': 'CHOOSE_NEXT_TARGET',
             'type': 'unknown',
-          },
-          'icon': {
-            'default': 'arrow-right',
-            'type': 'unknown',
+            'default': 'FAILED',
           },
           'label': {
-            'default': 'Choose next target',
             'type': 'unknown',
+            'default': 'Failed',
           },
-          'variant': {
-            'default': 'primary',
+          'icon': {
             'type': 'unknown',
+            'default': 'x',
           },
         },
-        'linkedEntity': 'KnowledgeClaim',
-        'name': 'ChooseNextTargetButton',
+      }),
+      makeTraitRef({
         'ref': ('Button.traits.ButtonRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
+        'name': 'ChecksAgreeButton',
+        'linkedEntity': 'KnowledgeClaim',
+        'config': {
+          'icon': {
+            'type': 'unknown',
+            'default': 'check',
+          },
+          'variant': {
+            'type': 'unknown',
+            'default': 'primary',
+          },
+          'action': {
+            'type': 'unknown',
+            'default': 'CHECKS_AGREE',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Checks agree',
+          },
+        },
+      }),
+      makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
+        'name': 'ChecksDisagreeButton',
+        'linkedEntity': 'KnowledgeClaim',
+        'config': {
+          'action': {
+            'type': 'unknown',
+            'default': 'CHECKS_DISAGREE',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Checks disagree',
+          },
+          'variant': {
+            'type': 'unknown',
+            'default': 'danger',
+          },
+          'icon': {
+            'type': 'unknown',
+            'default': 'x',
+          },
+        },
+      }),
+      makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdKnowledgeLoopKnowledgeLoopOrbitalUsesRef),
+        'name': 'ChooseNextTargetButton',
+        'linkedEntity': 'KnowledgeClaim',
+        'config': {
+          'variant': {
+            'type': 'unknown',
+            'default': 'primary',
+          },
+          'action': {
+            'type': 'unknown',
+            'default': 'CHOOSE_NEXT_TARGET',
+          },
+          'icon': {
+            'type': 'unknown',
+            'default': 'arrow-right',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Choose next target',
+          },
+        },
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'manualFalsification': {
-            'default': true,
-            'description': 'On: the falsification gate renders Survived / Failed buttons and a person decides. Off: no buttons render; the consumer\'s own sibling trait must answer FalsificationRequested by routing its result into SURVIVED / FAILED through a listens override.',
-            'label': 'Falsification is judged by a person',
-            'synonyms': 'manual falsification, human judged, automated check off',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'manualVerification': {
-            'default': true,
-            'description': 'On: the verification gate renders Checks-agree / Checks-disagree buttons. Off: the consumer\'s sibling trait answers VerificationRequested by routing its result into CHECKS_AGREE / CHECKS_DISAGREE through a listens override.',
-            'label': 'Verification is judged by a person',
-            'synonyms': 'manual verification, human second opinion, automated cross-check off',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'reliabilityThreshold': {
-            'default': 0.8,
-            'description': 'The measured reliability score a calibrated claim must clear before it is considered good enough to act on. Below it, the loop returns to falsification for more testing.',
-            'label': 'Reliability threshold',
-            'synonyms': 'confidence threshold, calibration bar, minimum reliability',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'requireIndependentVerification': {
-            'default': true,
-            'description': 'Whether a second, independent check must agree before the claim advances. Off skips straight to generalization once falsification survives.',
-            'label': 'Require independent verification',
-            'synonyms': 'second opinion, independent check, cross-verify',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
+        'name': 'KnowledgeLoop',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'candidateStructure',
+            'independentChecksAgree',
+            'reliabilityScore',
+            'survivedFalsification',
+            'title',
+          ],
         },
         'effectRow': [
           {
@@ -631,27 +608,15 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
             'resource': '@entity.title',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'KnowledgeClaim',
         'emits': [
           {
-            'description': 'The loop entered the falsification gate. A consumer that computes the verdict listens for this, runs its check, and routes its result into SURVIVED or FAILED via a listens override.',
             'event': 'FalsificationRequested',
-            'payloadSchema': [
-              {
-                'name': 'title',
-                'type': 'string',
-              },
-              {
-                'name': 'candidateStructure',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
+            'description': 'The loop entered the falsification gate. A consumer that computes the verdict listens for this, runs its check, and routes its result into SURVIVED or FAILED via a listens override.',
             'synonyms': 'falsify, test the prediction, try to break it',
             'tier': 'domain',
-          },
-          {
-            'description': 'The loop entered the independent-verification gate. A consumer routes its second-method result into CHECKS_AGREE or CHECKS_DISAGREE via a listens override.',
-            'event': 'VerificationRequested',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'title',
@@ -662,13 +627,13 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                 'type': 'string',
               },
             ],
-            'scope': 'external',
+          },
+          {
+            'event': 'VerificationRequested',
+            'description': 'The loop entered the independent-verification gate. A consumer routes its second-method result into CHECKS_AGREE or CHECKS_DISAGREE via a listens override.',
             'synonyms': 'verify independently, second opinion, cross-check',
             'tier': 'domain',
-          },
-          {
-            'description': 'The loop entered the calibration gate and is waiting for a reliability score (CONFIRM_SCORE, data.score), which the atom checks against reliabilityThreshold.',
-            'event': 'CalibrationRequested',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'title',
@@ -679,13 +644,30 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'calibrate, measure reliability, score it',
-            'tier': 'domain',
           },
           {
-            'description': 'A claim cleared calibration; a composing host can act on the validated result.',
+            'event': 'CalibrationRequested',
+            'description': 'The loop entered the calibration gate and is waiting for a reliability score (CONFIRM_SCORE, data.score), which the atom checks against reliabilityThreshold.',
+            'synonyms': 'calibrate, measure reliability, score it',
+            'tier': 'domain',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'title',
+                'type': 'string',
+              },
+              {
+                'name': 'candidateStructure',
+                'type': 'string',
+              },
+            ],
+          },
+          {
             'event': 'LoopConcluded',
+            'description': 'A claim cleared calibration; a composing host can act on the validated result.',
+            'synonyms': 'validated, calibrated, concluded, ready to ship',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'title',
@@ -696,38 +678,60 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                 'type': 'number',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'validated, calibrated, concluded, ready to ship',
-            'tier': 'domain',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'candidateStructure',
-            'independentChecksAgree',
-            'reliabilityScore',
-            'survivedFalsification',
-            'title',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'KnowledgeClaim',
-        'name': 'KnowledgeLoop',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'varying',
+              'isInitial': true,
+            },
+            {
+              'name': 'comparing',
+            },
+            {
+              'name': 'hypothesizing',
+            },
+            {
+              'name': 'predicting',
+            },
+            {
+              'name': 'falsifying',
+            },
+            {
+              'name': 'verifying',
+            },
+            {
+              'name': 'generalizing',
+            },
+            {
+              'name': 'isolating',
+            },
+            {
+              'name': 'composing',
+            },
+            {
+              'name': 'calibrating',
+            },
+            {
+              'name': 'selecting',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'The investigation\'s title and current hypothesis were entered.',
               'key': 'CHANGE_CONDITION',
               'name': 'Change Condition',
+              'description': 'The investigation\'s title and current hypothesis were entered.',
+              'synonyms': 'start investigation, set hypothesis',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'title',
@@ -738,11 +742,8 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'synonyms': 'start investigation, set hypothesis',
-              'tier': 'internal',
             },
             {
               'key': 'MEASURE_DIFFERENCE',
@@ -785,23 +786,23 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
               'name': 'Combine With Trusted',
             },
             {
-              'description': 'The reliability-score form committed.',
               'key': 'CONFIRM_SCORE',
               'name': 'Confirm Score',
+              'description': 'The reliability-score form committed.',
+              'synonyms': 'submit score, report reliability',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'score',
                       'type': 'number',
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'synonyms': 'submit score, report reliability',
-              'tier': 'internal',
             },
             {
               'key': 'CANCEL_SCORE',
@@ -812,43 +813,28 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
               'name': 'Choose Next Target',
             },
             {
-              'description': 'The loop entered the falsification gate. A consumer that computes the verdict listens for this, runs its check, and routes its result into SURVIVED or FAILED via a listens override.',
               'key': 'FalsificationRequested',
               'name': 'Falsification requested',
-              'payloadSchema': [
-                {
-                  'name': 'title',
-                  'type': 'string',
-                },
-                {
-                  'name': 'candidateStructure',
-                  'type': 'string',
-                },
-              ],
+              'description': 'The loop entered the falsification gate. A consumer that computes the verdict listens for this, runs its check, and routes its result into SURVIVED or FAILED via a listens override.',
               'synonyms': 'falsify, test the prediction, try to break it',
               'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'title',
+                  'type': 'string',
+                },
+                {
+                  'name': 'candidateStructure',
+                  'type': 'string',
+                },
+              ],
             },
             {
-              'description': 'The loop entered the independent-verification gate. A consumer routes its second-method result into CHECKS_AGREE or CHECKS_DISAGREE via a listens override.',
               'key': 'VerificationRequested',
               'name': 'Verification requested',
-              'payloadSchema': [
-                {
-                  'name': 'title',
-                  'type': 'string',
-                },
-                {
-                  'name': 'candidateStructure',
-                  'type': 'string',
-                },
-              ],
+              'description': 'The loop entered the independent-verification gate. A consumer routes its second-method result into CHECKS_AGREE or CHECKS_DISAGREE via a listens override.',
               'synonyms': 'verify independently, second opinion, cross-check',
               'tier': 'domain',
-            },
-            {
-              'description': 'The loop entered the calibration gate and is waiting for a reliability score (CONFIRM_SCORE, data.score), which the atom checks against reliabilityThreshold.',
-              'key': 'CalibrationRequested',
-              'name': 'Calibration requested',
               'payloadSchema': [
                 {
                   'name': 'title',
@@ -859,13 +845,30 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'type': 'string',
                 },
               ],
-              'synonyms': 'calibrate, measure reliability, score it',
-              'tier': 'domain',
             },
             {
-              'description': 'A claim cleared calibration; a composing host can act on the validated result.',
+              'key': 'CalibrationRequested',
+              'name': 'Calibration requested',
+              'description': 'The loop entered the calibration gate and is waiting for a reliability score (CONFIRM_SCORE, data.score), which the atom checks against reliabilityThreshold.',
+              'synonyms': 'calibrate, measure reliability, score it',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'title',
+                  'type': 'string',
+                },
+                {
+                  'name': 'candidateStructure',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
               'key': 'LoopConcluded',
               'name': 'Loop concluded',
+              'description': 'A claim cleared calibration; a composing host can act on the validated result.',
+              'synonyms': 'validated, calibrated, concluded, ready to ship',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'title',
@@ -876,48 +879,13 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'type': 'number',
                 },
               ],
-              'synonyms': 'validated, calibrated, concluded, ready to ship',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'varying',
-            },
-            {
-              'name': 'comparing',
-            },
-            {
-              'name': 'hypothesizing',
-            },
-            {
-              'name': 'predicting',
-            },
-            {
-              'name': 'falsifying',
-            },
-            {
-              'name': 'verifying',
-            },
-            {
-              'name': 'generalizing',
-            },
-            {
-              'name': 'isolating',
-            },
-            {
-              'name': 'composing',
-            },
-            {
-              'name': 'calibrating',
-            },
-            {
-              'name': 'selecting',
             },
           ],
           'transitions': [
             {
+              'from': 'varying',
+              'to': 'varying',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -927,11 +895,11 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
                       {
-                        'entity': '@entity',
                         'fields': [
                           'title',
                           'candidateStructure',
@@ -940,31 +908,31 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                           'reliabilityScore',
                           'nextTarget',
                         ],
-                        'title': 'Current claim',
                         'type': 'detail-panel',
+                        'entity': '@entity',
+                        'title': 'Current claim',
                       },
                       {
-                        'entity': {},
+                        'type': 'form-section',
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
-                        'mode': 'create',
                         'submitEvent': 'CHANGE_CONDITION',
-                        'type': 'form-section',
+                        'mode': 'create',
+                        'entity': {},
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'varying',
-              'to': 'varying',
             },
             {
+              'from': 'varying',
+              'to': 'comparing',
+              'event': 'CHANGE_CONDITION',
               'effects': [
                 [
                   'set',
@@ -985,11 +953,11 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   ],
                 ],
               ],
-              'event': 'CHANGE_CONDITION',
-              'from': 'varying',
-              'to': 'comparing',
             },
             {
+              'from': 'comparing',
+              'to': 'varying',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1003,7 +971,8 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
                       {
-                        'entity': '@entity',
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
                         'fields': [
                           'title',
                           'candidateStructure',
@@ -1012,36 +981,35 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                           'reliabilityScore',
                           'nextTarget',
                         ],
-                        'title': 'Current claim',
-                        'type': 'detail-panel',
+                        'entity': '@entity',
                       },
                       {
+                        'mode': 'create',
+                        'type': 'form-section',
                         'entity': {},
+                        'submitEvent': 'CHANGE_CONDITION',
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
-                        'mode': 'create',
-                        'submitEvent': 'CHANGE_CONDITION',
-                        'type': 'form-section',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'comparing',
-              'to': 'varying',
             },
             {
-              'event': 'MEASURE_DIFFERENCE',
               'from': 'comparing',
               'to': 'hypothesizing',
+              'event': 'MEASURE_DIFFERENCE',
             },
             {
+              'from': 'hypothesizing',
+              'to': 'varying',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1051,6 +1019,7 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
@@ -1068,32 +1037,31 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                         'type': 'detail-panel',
                       },
                       {
-                        'entity': {},
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
-                        'mode': 'create',
+                        'entity': {},
                         'submitEvent': 'CHANGE_CONDITION',
                         'type': 'form-section',
+                        'mode': 'create',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'hypothesizing',
-              'to': 'varying',
             },
             {
-              'event': 'FORM_GUESS',
               'from': 'hypothesizing',
               'to': 'predicting',
+              'event': 'FORM_GUESS',
             },
             {
+              'from': 'predicting',
+              'to': 'varying',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1103,11 +1071,13 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
                       {
-                        'entity': '@entity',
+                        'type': 'detail-panel',
+                        'title': 'Current claim',
                         'fields': [
                           'title',
                           'candidateStructure',
@@ -1116,31 +1086,29 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                           'reliabilityScore',
                           'nextTarget',
                         ],
-                        'title': 'Current claim',
-                        'type': 'detail-panel',
+                        'entity': '@entity',
                       },
                       {
+                        'type': 'form-section',
                         'entity': {},
+                        'mode': 'create',
+                        'submitEvent': 'CHANGE_CONDITION',
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
-                        'mode': 'create',
-                        'submitEvent': 'CHANGE_CONDITION',
-                        'type': 'form-section',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'predicting',
-              'to': 'varying',
             },
             {
+              'from': 'predicting',
+              'to': 'falsifying',
+              'event': 'EXTRAPOLATE',
               'effects': [
                 [
                   'emit',
@@ -1157,38 +1125,38 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                     'render-ui',
                     'main',
                     {
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
                       'children': [
                         '@trait.LoopTitle',
                         '@trait.LoopDivider',
                         '@trait.SurvivedButton',
                         '@trait.FailedButton',
                       ],
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
                     },
                   ],
                   [
                     'render-ui',
                     'main',
                     {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
                       'children': [
                         '@trait.LoopTitle',
                         '@trait.LoopDivider',
                         '@trait.AwaitingFalsificationText',
                       ],
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
                     },
                   ],
                 ],
               ],
-              'event': 'EXTRAPOLATE',
-              'from': 'predicting',
-              'to': 'falsifying',
             },
             {
+              'from': 'falsifying',
+              'to': 'varying',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1198,11 +1166,13 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
                       {
-                        'entity': '@entity',
                         'fields': [
                           'title',
                           'candidateStructure',
@@ -1211,31 +1181,33 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                           'reliabilityScore',
                           'nextTarget',
                         ],
+                        'entity': '@entity',
                         'title': 'Current claim',
                         'type': 'detail-panel',
                       },
                       {
-                        'entity': {},
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
-                        'mode': 'create',
+                        'entity': {},
                         'submitEvent': 'CHANGE_CONDITION',
+                        'mode': 'create',
                         'type': 'form-section',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'falsifying',
-              'to': 'varying',
             },
             {
+              'from': 'falsifying',
+              'to': 'generalizing',
+              'event': 'SURVIVED',
+              'guard': [
+                'not',
+                '@config.requireIndependentVerification',
+              ],
               'effects': [
                 [
                   'set',
@@ -1248,15 +1220,12 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   true,
                 ],
               ],
-              'event': 'SURVIVED',
-              'from': 'falsifying',
-              'guard': [
-                'not',
-                '@config.requireIndependentVerification',
-              ],
-              'to': 'generalizing',
             },
             {
+              'from': 'falsifying',
+              'to': 'verifying',
+              'event': 'SURVIVED',
+              'guard': '@config.requireIndependentVerification',
               'effects': [
                 [
                   'set',
@@ -1267,8 +1236,8 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'emit',
                   'VerificationRequested',
                   {
-                    'candidateStructure': '@entity.candidateStructure',
                     'title': '@entity.title',
+                    'candidateStructure': '@entity.candidateStructure',
                   },
                 ],
                 [
@@ -1278,6 +1247,8 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                     'render-ui',
                     'main',
                     {
+                      'gap': 'md',
+                      'type': 'stack',
                       'children': [
                         '@trait.LoopTitle',
                         '@trait.LoopDivider',
@@ -1285,32 +1256,29 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                         '@trait.ChecksDisagreeButton',
                       ],
                       'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
                     },
                   ],
                   [
                     'render-ui',
                     'main',
                     {
+                      'direction': 'vertical',
+                      'gap': 'md',
                       'children': [
                         '@trait.LoopTitle',
                         '@trait.LoopDivider',
                         '@trait.AwaitingVerificationText',
                       ],
-                      'direction': 'vertical',
-                      'gap': 'md',
                       'type': 'stack',
                     },
                   ],
                 ],
               ],
-              'event': 'SURVIVED',
-              'from': 'falsifying',
-              'guard': '@config.requireIndependentVerification',
-              'to': 'verifying',
             },
             {
+              'from': 'falsifying',
+              'to': 'hypothesizing',
+              'event': 'FAILED',
               'effects': [
                 [
                   'set',
@@ -1318,11 +1286,11 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   false,
                 ],
               ],
-              'event': 'FAILED',
-              'from': 'falsifying',
-              'to': 'hypothesizing',
             },
             {
+              'from': 'verifying',
+              'to': 'varying',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1337,6 +1305,8 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                       '@trait.LoopDivider',
                       {
                         'entity': '@entity',
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
                         'fields': [
                           'title',
                           'candidateStructure',
@@ -1345,31 +1315,29 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                           'reliabilityScore',
                           'nextTarget',
                         ],
-                        'title': 'Current claim',
-                        'type': 'detail-panel',
                       },
                       {
-                        'entity': {},
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
-                        'mode': 'create',
                         'submitEvent': 'CHANGE_CONDITION',
+                        'entity': {},
+                        'mode': 'create',
                         'type': 'form-section',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'verifying',
-              'to': 'varying',
             },
             {
+              'from': 'verifying',
+              'to': 'generalizing',
+              'event': 'CHECKS_AGREE',
               'effects': [
                 [
                   'set',
@@ -1377,11 +1345,11 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   true,
                 ],
               ],
-              'event': 'CHECKS_AGREE',
-              'from': 'verifying',
-              'to': 'generalizing',
             },
             {
+              'from': 'verifying',
+              'to': 'hypothesizing',
+              'event': 'CHECKS_DISAGREE',
               'effects': [
                 [
                   'set',
@@ -1389,11 +1357,11 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   false,
                 ],
               ],
-              'event': 'CHECKS_DISAGREE',
-              'from': 'verifying',
-              'to': 'hypothesizing',
             },
             {
+              'from': 'generalizing',
+              'to': 'varying',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1408,6 +1376,7 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                       '@trait.LoopDivider',
                       {
                         'entity': '@entity',
+                        'type': 'detail-panel',
                         'fields': [
                           'title',
                           'candidateStructure',
@@ -1417,35 +1386,34 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                           'nextTarget',
                         ],
                         'title': 'Current claim',
-                        'type': 'detail-panel',
                       },
                       {
-                        'entity': {},
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'mode': 'create',
+                        'type': 'form-section',
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
-                        'mode': 'create',
-                        'submitEvent': 'CHANGE_CONDITION',
-                        'type': 'form-section',
+                        'entity': {},
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'generalizing',
-              'to': 'varying',
             },
             {
-              'event': 'STRIP_TO_ESSENTIALS',
               'from': 'generalizing',
               'to': 'isolating',
+              'event': 'STRIP_TO_ESSENTIALS',
             },
             {
+              'from': 'isolating',
+              'to': 'varying',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1459,7 +1427,7 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
                       {
-                        'entity': '@entity',
+                        'title': 'Current claim',
                         'fields': [
                           'title',
                           'candidateStructure',
@@ -1468,36 +1436,36 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                           'reliabilityScore',
                           'nextTarget',
                         ],
-                        'title': 'Current claim',
                         'type': 'detail-panel',
+                        'entity': '@entity',
                       },
                       {
-                        'entity': {},
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'type': 'form-section',
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
                         'mode': 'create',
-                        'submitEvent': 'CHANGE_CONDITION',
-                        'type': 'form-section',
+                        'entity': {},
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'isolating',
-              'to': 'varying',
             },
             {
-              'event': 'FIND_AND_CONTROL_CAUSE',
               'from': 'isolating',
               'to': 'composing',
+              'event': 'FIND_AND_CONTROL_CAUSE',
             },
             {
+              'from': 'composing',
+              'to': 'varying',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1507,11 +1475,13 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
                       {
-                        'entity': '@entity',
+                        'type': 'detail-panel',
                         'fields': [
                           'title',
                           'candidateStructure',
@@ -1520,38 +1490,36 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                           'reliabilityScore',
                           'nextTarget',
                         ],
+                        'entity': '@entity',
                         'title': 'Current claim',
-                        'type': 'detail-panel',
                       },
                       {
                         'entity': {},
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'mode': 'create',
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
-                        'mode': 'create',
-                        'submitEvent': 'CHANGE_CONDITION',
                         'type': 'form-section',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'composing',
-              'to': 'varying',
             },
             {
+              'from': 'composing',
+              'to': 'calibrating',
+              'event': 'COMBINE_WITH_TRUSTED',
               'effects': [
                 [
                   'emit',
                   'CalibrationRequested',
                   {
-                    'candidateStructure': '@entity.candidateStructure',
                     'title': '@entity.title',
+                    'candidateStructure': '@entity.candidateStructure',
                   },
                 ],
                 [
@@ -1562,27 +1530,27 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
                       {
-                        'cancelEvent': 'CANCEL_SCORE',
+                        'mode': 'create',
                         'entity': {},
+                        'cancelEvent': 'CANCEL_SCORE',
+                        'submitEvent': 'CONFIRM_SCORE',
+                        'type': 'form-section',
                         'fields': [
                           'reliabilityScore',
                         ],
-                        'mode': 'create',
-                        'submitEvent': 'CONFIRM_SCORE',
-                        'type': 'form-section',
                       },
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'COMBINE_WITH_TRUSTED',
-              'from': 'composing',
-              'to': 'calibrating',
             },
             {
+              'from': 'calibrating',
+              'to': 'varying',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1592,11 +1560,13 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
                     'children': [
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
                       {
                         'entity': '@entity',
+                        'type': 'detail-panel',
                         'fields': [
                           'title',
                           'candidateStructure',
@@ -1606,30 +1576,37 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                           'nextTarget',
                         ],
                         'title': 'Current claim',
-                        'type': 'detail-panel',
                       },
                       {
                         'entity': {},
+                        'mode': 'create',
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
-                        'mode': 'create',
                         'submitEvent': 'CHANGE_CONDITION',
                         'type': 'form-section',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'calibrating',
-              'to': 'varying',
             },
             {
+              'from': 'calibrating',
+              'to': 'selecting',
+              'event': 'CONFIRM_SCORE',
+              'guard': [
+                '>=',
+                [
+                  'object/get',
+                  '@payload.data',
+                  'score',
+                ],
+                '@config.reliabilityThreshold',
+              ],
               'effects': [
                 [
                   'set',
@@ -1656,21 +1633,24 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
                       '@trait.ChooseNextTargetButton',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'CONFIRM_SCORE',
+            },
+            {
               'from': 'calibrating',
+              'to': 'falsifying',
+              'event': 'CONFIRM_SCORE',
               'guard': [
-                '>=',
+                '<',
                 [
                   'object/get',
                   '@payload.data',
@@ -1678,9 +1658,6 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                 ],
                 '@config.reliabilityThreshold',
               ],
-              'to': 'selecting',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -1695,8 +1672,8 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                   'emit',
                   'FalsificationRequested',
                   {
-                    'candidateStructure': '@entity.candidateStructure',
                     'title': '@entity.title',
+                    'candidateStructure': '@entity.candidateStructure',
                   },
                 ],
                 [
@@ -1706,99 +1683,90 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                     'render-ui',
                     'main',
                     {
+                      'gap': 'md',
                       'children': [
                         '@trait.LoopTitle',
                         '@trait.LoopDivider',
                         '@trait.SurvivedButton',
                         '@trait.FailedButton',
                       ],
-                      'direction': 'vertical',
-                      'gap': 'md',
                       'type': 'stack',
+                      'direction': 'vertical',
                     },
                   ],
                   [
                     'render-ui',
                     'main',
                     {
+                      'gap': 'md',
                       'children': [
                         '@trait.LoopTitle',
                         '@trait.LoopDivider',
                         '@trait.AwaitingFalsificationText',
                       ],
                       'direction': 'vertical',
-                      'gap': 'md',
                       'type': 'stack',
                     },
                   ],
                 ],
               ],
-              'event': 'CONFIRM_SCORE',
-              'from': 'calibrating',
-              'guard': [
-                '<',
-                [
-                  'object/get',
-                  '@payload.data',
-                  'score',
-                ],
-                '@config.reliabilityThreshold',
-              ],
-              'to': 'falsifying',
             },
             {
-              'event': 'CANCEL_SCORE',
               'from': 'calibrating',
               'to': 'calibrating',
+              'event': 'CANCEL_SCORE',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      '@trait.LoopTitle',
-                      '@trait.LoopDivider',
-                      {
-                        'entity': '@entity',
-                        'fields': [
-                          'title',
-                          'candidateStructure',
-                          'survivedFalsification',
-                          'independentChecksAgree',
-                          'reliabilityScore',
-                          'nextTarget',
-                        ],
-                        'title': 'Current claim',
-                        'type': 'detail-panel',
-                      },
-                      {
-                        'entity': {},
-                        'fields': [
-                          'title',
-                          'candidateStructure',
-                        ],
-                        'mode': 'create',
-                        'submitEvent': 'CHANGE_CONDITION',
-                        'type': 'form-section',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
-                  },
-                ],
-              ],
+              'from': 'selecting',
+              'to': 'varying',
               'event': 'INIT',
-              'from': 'selecting',
-              'to': 'varying',
+              'effects': [
+                [
+                  'fetch',
+                  ('KnowledgeClaim' satisfies _StdKnowledgeLoopEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'children': [
+                      '@trait.LoopTitle',
+                      '@trait.LoopDivider',
+                      {
+                        'entity': '@entity',
+                        'title': 'Current claim',
+                        'type': 'detail-panel',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                          'survivedFalsification',
+                          'independentChecksAgree',
+                          'reliabilityScore',
+                          'nextTarget',
+                        ],
+                      },
+                      {
+                        'entity': {},
+                        'type': 'form-section',
+                        'submitEvent': 'CHANGE_CONDITION',
+                        'fields': [
+                          'title',
+                          'candidateStructure',
+                        ],
+                        'mode': 'create',
+                      },
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'selecting',
+              'to': 'varying',
+              'event': 'CHOOSE_NEXT_TARGET',
               'effects': [
                 [
                   'fetch',
@@ -1812,6 +1780,8 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                       '@trait.LoopTitle',
                       '@trait.LoopDivider',
                       {
+                        'type': 'detail-panel',
+                        'title': 'Current claim',
                         'entity': '@entity',
                         'fields': [
                           'title',
@@ -1821,46 +1791,76 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
                           'reliabilityScore',
                           'nextTarget',
                         ],
-                        'title': 'Current claim',
-                        'type': 'detail-panel',
                       },
                       {
-                        'entity': {},
+                        'mode': 'create',
                         'fields': [
                           'title',
                           'candidateStructure',
                         ],
-                        'mode': 'create',
                         'submitEvent': 'CHANGE_CONDITION',
                         'type': 'form-section',
+                        'entity': {},
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'CHOOSE_NEXT_TARGET',
-              'from': 'selecting',
-              'to': 'varying',
             },
           ],
         },
+        'config': {
+          'requireIndependentVerification': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Require independent verification',
+            'description': 'Whether a second, independent check must agree before the claim advances. Off skips straight to generalization once falsification survives.',
+            'synonyms': 'second opinion, independent check, cross-verify',
+            'tier': 'policy',
+          },
+          'reliabilityThreshold': {
+            'type': 'number',
+            'default': 0.8,
+            'label': 'Reliability threshold',
+            'description': 'The measured reliability score a calibrated claim must clear before it is considered good enough to act on. Below it, the loop returns to falsification for more testing.',
+            'synonyms': 'confidence threshold, calibration bar, minimum reliability',
+            'tier': 'policy',
+          },
+          'manualFalsification': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Falsification is judged by a person',
+            'description': 'On: the falsification gate renders Survived / Failed buttons and a person decides. Off: no buttons render; the consumer\'s own sibling trait must answer FalsificationRequested by routing its result into SURVIVED / FAILED through a listens override.',
+            'synonyms': 'manual falsification, human judged, automated check off',
+            'tier': 'policy',
+          },
+          'manualVerification': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Verification is judged by a person',
+            'description': 'On: the verification gate renders Checks-agree / Checks-disagree buttons. Off: the consumer\'s sibling trait answers VerificationRequested by routing its result into CHECKS_AGREE / CHECKS_DISAGREE through a listens override.',
+            'synonyms': 'manual verification, human second opinion, automated cross-check off',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [
       {
-        'isInitial': true,
         'name': 'KnowledgeLoopPage',
         'path': '/knowledge-loop',
+        'viewType': 'detail',
         'primaryEntity': 'KnowledgeClaim',
+        'isInitial': true,
         'traits': [
           {
             'ref': 'KnowledgeLoop',
           },
         ],
-        'viewType': 'detail',
       } satisfies Page,
     ],
   });

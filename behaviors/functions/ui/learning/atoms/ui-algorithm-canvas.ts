@@ -46,68 +46,68 @@ export interface StdUiAlgorithmCanvasShapeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAlgorithmCanvasConfig {
-  /** Default: `false` */
-  animate?: boolean;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   ariaDescribedby?: string;
-  ariaExpanded?: boolean;
   ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `[]` */
-  auxBars?: EntityRow[];
+  title?: string;
   backgroundColor?: string;
   /** Default: `[]` */
-  bars?: EntityRow[];
-  /** Default: `[]` */
-  buckets?: EntityRow[];
-  /** Default: `[]` */
-  cells?: EntityRow[];
-  className?: string;
-  /** Default: `[]` */
-  colLabels?: EntityRow[];
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `[]` */
-  frames?: EntityRow[];
-  /** Default: `400` */
-  height?: number;
-  /** Default: `false` */
-  interactive?: boolean;
-  isLoading?: boolean;
-  /** Default: `{"item":"INIT"}` */
-  keyMap?: Record<string, TraitConfig>;
-  /** Default: `{"item":"INIT"}` */
-  keyUpMap?: Record<string, TraitConfig>;
-  lang?: string;
-  /** Default: `"SHAPE_CLICK"` */
-  onShapeClick?: string;
-  /** Default: `[]` */
-  pointers?: EntityRow[];
-  /** Default: `[]` */
-  ranges?: EntityRow[];
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `[]` */
   rowLabels?: EntityRow[];
+  ariaLive?: 'off' | 'polite' | 'assertive';
   /** Default: `[]` */
   series?: string[];
   /** Default: `[]` */
-  shapes?: EntityRow[];
+  slots?: EntityRow[];
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaLabelledby?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `[]` */
+  cells?: EntityRow[];
+  ariaSelected?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `[]` */
+  colLabels?: EntityRow[];
+  className?: string;
   /** Default: `"horizontal"` */
   slotOrientation?: 'horizontal' | 'vertical';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `{"item":"INIT"}` */
+  keyMap?: Record<string, TraitConfig>;
+  ariaLabel?: string;
   /** Default: `[]` */
-  slots?: EntityRow[];
+  frames?: EntityRow[];
+  /** Default: `{"item":"INIT"}` */
+  keyUpMap?: Record<string, TraitConfig>;
+  ariaBusy?: boolean;
+  /** Default: `[]` */
+  pointers?: EntityRow[];
   tabIndex?: number;
-  title?: string;
+  error?: EntityRow;
+  /** Default: `[]` */
+  shapes?: EntityRow[];
+  enterDelay?: number;
   /** Default: `600` */
   width?: number;
+  /** Default: `[]` */
+  buckets?: EntityRow[];
+  /** Default: `"SHAPE_CLICK"` */
+  onShapeClick?: string;
+  ariaExpanded?: boolean;
+  isLoading?: boolean;
+  lang?: string;
+  /** Default: `[]` */
+  auxBars?: EntityRow[];
+  /** Default: `false` */
+  interactive?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `[]` */
+  bars?: EntityRow[];
+  /** Default: `false` */
+  animate?: boolean;
+  /** Default: `400` */
+  height?: number;
+  /** Default: `[]` */
+  ranges?: EntityRow[];
 }
 
 /**

@@ -47,12 +47,12 @@ export interface StdLearnSlopeProbeSlopeChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnSlopeProbeConfig {
-  /** Default: `[]` */
-  curve?: EntityRow[];
-  /** Default: `true` */
-  running?: boolean;
   /** Default: `1` */
   triRun?: number;
+  /** Default: `true` */
+  running?: boolean;
+  /** Default: `[]` */
+  curve?: EntityRow[];
   /** Default: `1.5` */
   window?: number;
 }

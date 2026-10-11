@@ -46,12 +46,12 @@ export interface StdMarketFlowGameEndPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMarketFlowConfig {
-  /** Default: `3` */
-  maxLost?: number;
-  /** Default: `true` */
-  running?: boolean;
   /** Default: `10` */
   targetServed?: number;
+  /** Default: `true` */
+  running?: boolean;
+  /** Default: `3` */
+  maxLost?: number;
 }
 
 /**

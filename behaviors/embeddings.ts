@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import { resolveStdDataDir } from './data-dir.js';
+import { resolveStdSidecarFile } from './data-dir.js';
 
 export interface BehaviorEmbeddingsManifest {
   /** Std version at bake time. Matches `package.json` `version`. */
@@ -70,13 +70,11 @@ function loadManifest(): Promise<BehaviorEmbeddingsManifest | null> {
   return pending;
 }
 
-async function loadManifestUncached(): Promise<BehaviorEmbeddingsManifest | null> {
+/** Read and decode a `behaviors-embeddings.json` at `path`; `null` when it is missing or invalid. */
+export async function readBehaviorEmbeddingsFile(path: string): Promise<BehaviorEmbeddingsManifest | null> {
   try {
     const { readFileSync } = await import('fs');
-    const { resolve } = await import('path');
-    const dir = await resolveStdDataDir();
-    const raw = readFileSync(resolve(dir, 'behaviors-embeddings.json'), 'utf-8');
-    const parsed = JSON.parse(raw) as StoredBehaviorEmbeddingsFile;
+    const parsed = JSON.parse(readFileSync(path, 'utf-8')) as StoredBehaviorEmbeddingsFile;
     if (
       typeof parsed?.version !== 'string' ||
       typeof parsed?.model !== 'string' ||
@@ -94,6 +92,10 @@ async function loadManifestUncached(): Promise<BehaviorEmbeddingsManifest | null
   } catch {
     return null;
   }
+}
+
+async function loadManifestUncached(): Promise<BehaviorEmbeddingsManifest | null> {
+  return readBehaviorEmbeddingsFile(await resolveStdSidecarFile('dist/behaviors-embeddings.json'));
 }
 
 /**

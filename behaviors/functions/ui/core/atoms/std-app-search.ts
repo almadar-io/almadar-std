@@ -188,22 +188,22 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
+            'type': 'string',
             'required': true,
-            'type': 'string',
           },
           {
-            'description': 'The primary human-readable label matched by search.',
             'name': 'name',
-            'synonyms': 'title, label, productName',
             'type': 'string',
+            'description': 'The primary human-readable label matched by search.',
+            'synonyms': 'title, label, productName',
           },
           {
-            'default': '',
-            'description': 'The current search query the user submitted.',
-            'intrinsic': true,
             'name': 'searchTerm',
-            'synonyms': 'query, term, q',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'The current search query the user submitted.',
+            'synonyms': 'query, term, q',
           },
         ];
         const extras = params.fields ?? [];
@@ -214,256 +214,73 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
+        'name': 'AppSearchIdleHint',
         'effectRow': [
           {
             'kind': 'render-ui',
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
         'linkedEntity': 'AppSearchTarget',
-        'name': 'AppSearchIdleHint',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'align': 'center',
+                    'gap': 'sm',
                     'children': [
                       {
-                        'color': 'muted',
-                        'name': 'search',
-                        'size': 'lg',
                         'type': 'icon',
+                        'name': 'search',
+                        'color': 'muted',
+                        'size': 'lg',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'Start typing to search',
                         'type': 'typography',
+                        'content': 'Start typing to search',
+                        'color': 'muted',
                         'variant': 'caption',
                       },
                     ],
                     'className': 'py-12',
                     'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'interaction',
-        'config': {
-          'idleContent': {
-            'default': '@trait.AppSearchIdleHint',
-            'description': 'The normal content view (e.g. the data ledger/browse trait) shown when no search is active.',
-            'label': 'Idle content',
-            'tier': 'presentation',
-            'type': 'trait',
-          },
-          'resultActions': {
-            'default': [],
-            'description': 'Optional per-row actions on a result, e.g. { label: "View Details", event: "VIEW" }.',
-            'items': {
-              'properties': {
-                'confirm': {
-                  'name': 'confirm',
-                  'required': false,
-                  'type': 'string',
-                },
-                'disabled': {
-                  'name': 'disabled',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'event': {
-                  'name': 'event',
-                  'required': true,
-                  'type': 'event',
-                },
-                'hidden': {
-                  'name': 'hidden',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'href': {
-                  'name': 'href',
-                  'required': false,
-                  'type': 'string',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'payload': {
-                  'name': 'payload',
-                  'required': false,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                    'danger',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Result row actions',
-            'tier': 'presentation',
-            'type': '[AppSearchActionSpec]',
-          },
-          'resultFields': {
-            'default': [
-              {
-                'label': 'Name',
-                'name': 'name',
-                'variant': 'h4',
-              },
-            ],
-            'description': 'Columns shown in the search-results grid; maps entity fields to display cells.',
-            'items': {
-              'properties': {
-                'confirm': {
-                  'name': 'confirm',
-                  'required': false,
-                  'type': 'string',
-                },
-                'disabled': {
-                  'name': 'disabled',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'string',
-                },
-                'format': {
-                  'name': 'format',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'date',
-                    'currency',
-                    'number',
-                    'boolean',
-                    'percent',
-                  ],
-                },
-                'hidden': {
-                  'name': 'hidden',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'href': {
-                  'name': 'href',
-                  'required': false,
-                  'type': 'string',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': true,
-                  'type': 'string',
-                },
-                'payload': {
-                  'name': 'payload',
-                  'required': false,
-                  'type': 'string',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'h3',
-                    'h4',
-                    'body',
-                    'caption',
-                    'badge',
-                    'small',
-                    'progress',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Result columns',
-            'tier': 'presentation',
-            'type': '[AppSearchFieldSpec]',
-          },
-          'resultsTitle': {
-            'default': 'Search results',
-            'description': 'Heading shown above the search-results grid.',
-            'label': 'Results title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'searchField': {
-            'default': 'name',
-            'description': 'Entity field matched against the query (case-insensitive substring).',
-            'label': 'Search field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
+        'name': 'AppSearch',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'searchTerm',
+          ],
         },
         'effectRow': [
           {
@@ -479,19 +296,22 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
             'resource': '@entity.searchTerm',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AppSearchTarget',
         'emits': [
           {
-            'description': 'Filtered search results loaded',
             'event': 'AppSearchLoaded',
+            'description': 'Filtered search results loaded',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AppSearchTarget',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'name',
@@ -502,64 +322,65 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AppSearchTarget',
               },
             ],
-            'scope': 'internal',
           },
           {
-            'description': 'Search fetch failed',
             'event': 'AppSearchFailed',
+            'description': 'Search fetch failed',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'searchTerm',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AppSearchTarget',
-        'name': 'AppSearch',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'searching',
+            },
+            {
+              'name': 'results',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'A search query was submitted (e.g. from the AppLayout top-bar search).',
               'key': 'APP_SEARCH',
               'name': 'App Search',
+              'description': 'A search query was submitted (e.g. from the AppLayout top-bar search).',
+              'synonyms': 'query, find, lookup',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'query, find, lookup',
-              'tier': 'domain',
             },
             {
               'key': 'AppSearchLoaded',
               'name': 'App search loaded',
               'payloadSchema': [
                 {
-                  'entity': 'AppSearchTarget',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'name',
@@ -570,7 +391,7 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AppSearchTarget',
                 },
               ],
             },
@@ -589,20 +410,11 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
               'name': 'Clear Search',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'searching',
-            },
-            {
-              'name': 'results',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -613,20 +425,20 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       '@config.idleContent',
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'searching',
+              'event': 'APP_SEARCH',
               'effects': [
                 [
                   'set',
@@ -664,30 +476,30 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'Searching…',
                         'type': 'typography',
+                        'content': 'Searching…',
+                        'color': 'muted',
                         'variant': 'caption',
                       },
                     ],
                     'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
-              'event': 'APP_SEARCH',
-              'from': 'idle',
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -703,20 +515,20 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       '@config.idleContent',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'searching',
-              'to': 'idle',
             },
             {
+              'from': 'searching',
+              'to': 'searching',
+              'event': 'APP_SEARCH',
               'effects': [
                 [
                   'set',
@@ -727,10 +539,6 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                   'fetch',
                   ('AppSearchTarget' satisfies _StdAppSearchEntityName),
                   {
-                    'emit': {
-                      'failure': 'AppSearchFailed',
-                      'success': 'AppSearchLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -748,6 +556,10 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                         '@payload.value',
                       ],
                     ],
+                    'emit': {
+                      'success': 'AppSearchLoaded',
+                      'failure': 'AppSearchFailed',
+                    },
                   },
                 ],
                 [
@@ -755,29 +567,29 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                   'main',
                   {
                     'align': 'center',
+                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
                         'color': 'muted',
-                        'content': 'Searching…',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'Searching…',
                       },
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'APP_SEARCH',
-              'from': 'searching',
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'results',
+              'event': 'AppSearchLoaded',
               'effects': [
                 [
                   'render-ui',
@@ -785,32 +597,33 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                   {
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
-                            'name': 'search',
-                            'size': 'xl',
                             'type': 'icon',
+                            'size': 'xl',
+                            'name': 'search',
                           },
                           {
-                            'content': '@config.resultsTitle',
                             'type': 'typography',
                             'variant': 'h2',
+                            'content': '@config.resultsTitle',
                           },
                           {
-                            'action': 'CLEAR_SEARCH',
-                            'icon': 'x',
-                            'label': 'Clear search',
                             'type': 'button',
+                            'label': 'Clear search',
+                            'action': 'CLEAR_SEARCH',
                             'variant': 'ghost',
+                            'icon': 'x',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
                         'justify': 'between',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
+                        'variant': 'caption',
                         'color': 'muted',
                         'content': [
                           'str/concat',
@@ -822,14 +635,12 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                           '”',
                         ],
                         'type': 'typography',
-                        'variant': 'caption',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'entity': '@payload.data',
-                        'fields': '@config.resultFields',
+                        'type': 'data-grid',
                         'itemActions': [
                           'array/filter',
                           '@config.resultActions',
@@ -864,45 +675,46 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                             ],
                           ],
                         ],
-                        'type': 'data-grid',
+                        'fields': '@config.resultFields',
+                        'entity': '@payload.data',
                       },
                     ],
-                    'className': 'max-w-6xl mx-auto w-full p-4',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],
-              'event': 'AppSearchLoaded',
-              'from': 'searching',
-              'to': 'results',
             },
             {
+              'from': 'searching',
+              'to': 'idle',
+              'event': 'AppSearchFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'message': '@payload.error',
                         'type': 'alert',
+                        'message': '@payload.error',
                         'variant': 'error',
                       },
                       '@config.idleContent',
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'AppSearchFailed',
-              'from': 'searching',
-              'to': 'idle',
             },
             {
+              'from': 'results',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -918,20 +730,20 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
                     'children': [
                       '@config.idleContent',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'results',
-              'to': 'idle',
             },
             {
+              'from': 'results',
+              'to': 'searching',
+              'event': 'APP_SEARCH',
               'effects': [
                 [
                   'set',
@@ -943,8 +755,8 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                   ('AppSearchTarget' satisfies _StdAppSearchEntityName),
                   {
                     'emit': {
-                      'failure': 'AppSearchFailed',
                       'success': 'AppSearchLoaded',
+                      'failure': 'AppSearchFailed',
                     },
                     'filter': [
                       'or',
@@ -969,30 +781,30 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'className': 'py-12',
                     'align': 'center',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
+                        'variant': 'caption',
+                        'type': 'typography',
                         'color': 'muted',
                         'content': 'Searching…',
-                        'type': 'typography',
-                        'variant': 'caption',
                       },
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'APP_SEARCH',
-              'from': 'results',
-              'to': 'searching',
             },
             {
+              'from': 'results',
+              'to': 'idle',
+              'event': 'CLEAR_SEARCH',
               'effects': [
                 [
                   'set',
@@ -1007,17 +819,205 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                       '@config.idleContent',
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
-              'event': 'CLEAR_SEARCH',
-              'from': 'results',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'resultActions': {
+            'type': '[AppSearchActionSpec]',
+            'default': [],
+            'label': 'Result row actions',
+            'description': 'Optional per-row actions on a result, e.g. { label: "View Details", event: "VIEW" }.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': true,
+                },
+                'confirm': {
+                  'name': 'confirm',
+                  'type': 'string',
+                  'required': false,
+                },
+                'payload': {
+                  'name': 'payload',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'href': {
+                  'name': 'href',
+                  'type': 'string',
+                  'required': false,
+                },
+                'disabled': {
+                  'name': 'disabled',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'hidden': {
+                  'name': 'hidden',
+                  'type': 'boolean',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'idleContent': {
+            'type': 'trait',
+            'default': '@trait.AppSearchIdleHint',
+            'label': 'Idle content',
+            'description': 'The normal content view (e.g. the data ledger/browse trait) shown when no search is active.',
+            'tier': 'presentation',
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'searchField': {
+            'type': 'string',
+            'default': 'name',
+            'label': 'Search field',
+            'description': 'Entity field matched against the query (case-insensitive substring).',
+            'tier': 'presentation',
+          },
+          'resultsTitle': {
+            'type': 'string',
+            'default': 'Search results',
+            'label': 'Results title',
+            'description': 'Heading shown above the search-results grid.',
+            'tier': 'presentation',
+          },
+          'resultFields': {
+            'type': '[AppSearchFieldSpec]',
+            'default': [
+              {
+                'variant': 'h4',
+                'label': 'Name',
+                'name': 'name',
+              },
+            ],
+            'label': 'Result columns',
+            'description': 'Columns shown in the search-results grid; maps entity fields to display cells.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'hidden': {
+                  'name': 'hidden',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+                'format': {
+                  'name': 'format',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
+                'payload': {
+                  'name': 'payload',
+                  'type': 'string',
+                  'required': false,
+                },
+                'disabled': {
+                  'name': 'disabled',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'href': {
+                  'name': 'href',
+                  'type': 'string',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'confirm': {
+                  'name': 'confirm',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

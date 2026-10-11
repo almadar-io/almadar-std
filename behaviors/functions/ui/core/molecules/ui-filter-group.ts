@@ -65,42 +65,42 @@ export interface StdUiFilterGroupClearPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFilterGroupConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
   ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `"CLEAR"` */
-  clearEvent?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  tabIndex?: number;
   enterDelay?: number;
-  /** Default: `"EVENT"` */
-  event?: string;
-  /** Default: `[{"field":"Field","filterType":"text","label":"Label","max":1,"min":1,"options":["Item","Item 2"],"step":1,"type":"text"},{"field":"Field 2","filterType":"select","label":"Label 2","max":2,"min":2,"options":["Item","Item 2"],"step":2,"type":"select"}]` */
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  query?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"default"` */
+  variant?: 'default' | 'compact' | 'pills' | 'vertical';
+  /** Default: `"CLEAR_ALL"` */
+  onClearAll?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `[{"type":"text","max":1,"options":["Item","Item 2"],"min":1,"field":"Field","filterType":"text","step":1,"label":"Label"},{"type":"select","max":2,"min":2,"field":"Field 2","filterType":"select","step":2,"label":"Label 2","options":["Item","Item 2"]}]` */
   filters?: EntityRow[];
-  isLoading?: boolean;
+  /** Default: `true` */
+  showIcon?: boolean;
+  ariaLabelledby?: string;
   lang?: string;
   /** Default: `"toolbar"` */
   look?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
-  /** Default: `"CLEAR_ALL"` */
-  onClearAll?: string;
+  className?: string;
+  ariaSelected?: boolean;
+  ariaExpanded?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `"CLEAR"` */
+  clearEvent?: string;
   /** Default: `"FILTER_CHANGE"` */
   onFilterChange?: string;
-  query?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `true` */
-  showIcon?: boolean;
+  isLoading?: boolean;
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
-  /** Default: `"default"` */
-  variant?: 'default' | 'compact' | 'pills' | 'vertical';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaDescribedby?: string;
+  ariaHidden?: boolean;
+  ariaBusy?: boolean;
+  /** Default: `"EVENT"` */
+  event?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
 }
 
 /**

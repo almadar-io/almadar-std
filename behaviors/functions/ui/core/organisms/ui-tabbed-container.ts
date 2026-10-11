@@ -46,32 +46,32 @@ export interface StdUiTabbedContainerTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTabbedContainerConfig {
-  activeTab?: string;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
   ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
   className?: string;
-  defaultTab?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaLabel?: string;
   enterDelay?: number;
+  ariaExpanded?: boolean;
+  tabIndex?: number;
+  ariaDescribedby?: string;
+  ariaHidden?: boolean;
   lang?: string;
-  /** Default: `"TAB_CHANGE"` */
-  onTabChange?: string;
+  ariaBusy?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `[{"sectionId":"Section Id","content":"Content","badge":"Badge","disabled":false,"id":"Id","label":"Label"},{"content":"Content 2","sectionId":"Section Id 2","disabled":true,"badge":"Badge 2","id":"Id 2","label":"Label 2"}]` */
+  tabs?: EntityRow[];
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"top"` */
   position?: 'top' | 'left';
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
-  /** Default: `[{"badge":"Badge","content":"Content","disabled":false,"id":"Id","label":"Label","sectionId":"Section Id"},{"badge":"Badge 2","content":"Content 2","disabled":true,"id":"Id 2","label":"Label 2","sectionId":"Section Id 2"}]` */
-  tabs?: EntityRow[];
+  defaultTab?: string;
+  /** Default: `"TAB_CHANGE"` */
+  onTabChange?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaSelected?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  activeTab?: string;
 }
 
 type _StdUiTabbedContainerEntityName = 'TabbedContainerItem';
@@ -131,8 +131,8 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -143,131 +143,172 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
     } as Entity,
     traits: [
       {
+        'name': 'TabbedContainerRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
-        'config': {
-          'activeTab': {
-            'description': 'Controlled active tab',
-            'label': 'Active Tab',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
-            'label': 'Aria-current',
-            'synonyms': 'aria-current',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'page',
-              'step',
-              'location',
-              'date',
-              'time',
-              'true',
-              'false',
+        'linkedEntity': 'TabbedContainerItem',
+        'emits': [
+          {
+            'event': '@config.onTabChange',
+            'description': 'Callback when tab changes',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'tabId',
+                'type': 'string',
+              },
             ],
+            'definerKnob': 'onTabChange',
           },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': '@config.onTabChange',
+              'name': '@config.on tab change',
+              'description': 'Callback when tab changes',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'tabId',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'skeleton': '@config.skeleton',
+                    'tabIndex': '@config.tabIndex',
+                    'position': '@config.position',
+                    'tabs': '@config.tabs',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'className': '@config.className',
+                    'lang': '@config.lang',
+                    'defaultTab': '@config.defaultTab',
+                    'enter': '@config.enter',
+                    'onTabChange': '@config.onTabChange',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
+                    'type': 'tabbed-container',
+                    'role': '@config.role',
+                    'dir': '@config.dir',
+                    'aria-live': '@config.ariaLive',
+                    'enterDelay': '@config.enterDelay',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'activeTab': '@config.activeTab',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-label': '@config.ariaLabel',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
           'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
+            'type': 'string',
             'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
             'synonyms': 'aria-labelledby',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
           },
           'className': {
-            'description': 'Additional CSS classes',
+            'type': 'string',
             'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
-            'type': 'string',
           },
-          'defaultTab': {
-            'description': 'Default active tab ID',
-            'label': 'Default Tab',
-            'tier': 'presentation',
+          'ariaLabel': {
             'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
           },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
             'tier': 'presentation',
+          },
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
+          },
+          'ariaDescribedby': {
             'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+          },
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
           },
           'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
             'values': [
               'none',
               'fade',
@@ -276,41 +317,110 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
               'slide',
             ],
           },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
+          'dir': {
             'type': 'string',
-          },
-          'onTabChange': {
-            'default': 'TAB_CHANGE',
-            'description': 'Callback when tab changes',
-            'label': 'On Tab Change',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
             'tier': 'presentation',
-            'type': 'event',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'tabs': {
+            'type': '[TabbedContainerTabsItem]',
+            'default': [
+              {
+                'sectionId': 'Section Id',
+                'content': 'Content',
+                'badge': 'Badge',
+                'disabled': false,
+                'id': 'Id',
+                'label': 'Label',
+              },
+              {
+                'content': 'Content 2',
+                'sectionId': 'Section Id 2',
+                'disabled': true,
+                'badge': 'Badge 2',
+                'id': 'Id 2',
+                'label': 'Label 2',
+              },
+            ],
+            'label': 'Tabs',
+            'description': 'Tab definitions',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'disabled': {
+                  'name': 'disabled',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'sectionId': {
+                  'name': 'sectionId',
+                  'type': 'string',
+                  'required': false,
+                },
+                'content': {
+                  'name': 'content',
+                  'type': 'node',
+                  'required': false,
+                },
+                'badge': {
+                  'name': 'badge',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'skeleton': {
+            'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
           },
           'position': {
-            'default': 'top',
-            'description': 'Tab position',
-            'label': 'Position',
-            'tier': 'presentation',
             'type': 'string',
+            'default': 'top',
+            'label': 'Position',
+            'description': 'Tab position',
+            'tier': 'presentation',
             'values': [
               'top',
               'left',
             ],
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -395,184 +505,74 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
               'treeitem',
             ],
           },
-          'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
+          'defaultTab': {
             'type': 'string',
-            'values': [
-              'header',
-              'table',
-              'list',
-              'grid',
-              'detail',
-              'stats',
-              'form',
-              'card',
-              'text',
-              'none',
-            ],
-          },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
+            'label': 'Default Tab',
+            'description': 'Default active tab ID',
             'tier': 'presentation',
-            'type': 'number',
           },
-          'tabs': {
-            'default': [
-              {
-                'badge': 'Badge',
-                'content': 'Content',
-                'disabled': false,
-                'id': 'Id',
-                'label': 'Label',
-                'sectionId': 'Section Id',
-              },
-              {
-                'badge': 'Badge 2',
-                'content': 'Content 2',
-                'disabled': true,
-                'id': 'Id 2',
-                'label': 'Label 2',
-                'sectionId': 'Section Id 2',
-              },
-            ],
-            'description': 'Tab definitions',
-            'items': {
-              'properties': {
-                'badge': {
-                  'name': 'badge',
-                  'required': false,
-                  'type': 'string',
-                },
-                'content': {
-                  'name': 'content',
-                  'required': false,
-                  'type': 'node',
-                },
-                'disabled': {
-                  'name': 'disabled',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'sectionId': {
-                  'name': 'sectionId',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Tabs',
-            'tier': 'presentation',
-            'type': '[TabbedContainerTabsItem]',
-          },
-        },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'onTabChange',
+          'onTabChange': {
+            'type': 'event',
+            'default': 'TAB_CHANGE',
+            'label': 'On Tab Change',
             'description': 'Callback when tab changes',
-            'event': '@config.onTabChange',
-            'payloadSchema': [
-              {
-                'name': 'tabId',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
+            'tier': 'presentation',
           },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
+          'ariaLive': {
+            'type': 'string',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'ariaCurrent': {
+            'type': 'string',
+            'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'synonyms': 'aria-current',
+            'tier': 'presentation',
+            'values': [
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
+            ],
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'activeTab': {
+            'type': 'string',
+            'label': 'Active Tab',
+            'description': 'Controlled active tab',
+            'tier': 'presentation',
+          },
         },
-        'entityRebindable': true,
-        'linkedEntity': 'TabbedContainerItem',
-        'name': 'TabbedContainerRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Callback when tab changes',
-              'key': '@config.onTabChange',
-              'name': '@config.on tab change',
-              'payloadSchema': [
-                {
-                  'name': 'tabId',
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'activeTab': '@config.activeTab',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'defaultTab': '@config.defaultTab',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'lang': '@config.lang',
-                    'onTabChange': '@config.onTabChange',
-                    'position': '@config.position',
-                    'role': '@config.role',
-                    'skeleton': '@config.skeleton',
-                    'tabIndex': '@config.tabIndex',
-                    'tabs': '@config.tabs',
-                    'type': 'tabbed-container',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

@@ -139,50 +139,50 @@ export interface StdNotifyOnEventNotifyLookupFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdNotifyOnEventConfig {
-  /** Default: `"none"` */
-  coalesce?: 'none' | 'perDispatch' | 'perKey';
-  /** Default: `"id"` */
-  coalesceKey?: string;
-  /** Default: `""` */
-  emailSubject?: string;
-  /** Default: `""` */
-  eventKey?: string;
-  /** Default: `""` */
-  fallbackRecipient?: string;
-  /** Default: `0` */
-  frequencyCapPerWeek?: number;
-  /** Default: `""` */
-  guardField?: string;
-  /** Default: `"eq"` */
-  guardOp?: 'eq' | 'gt' | 'lt' | 'gte' | 'lte';
-  /** Default: `0` */
-  guardValue?: number;
-  /** Default: `"in-app"` */
-  notifyChannel?: 'in-app' | 'email' | 'sms' | 'push' | 'webhook';
-  /** Default: `""` */
-  pushDeepLink?: string;
-  /** Default: `""` */
-  pushIcon?: string;
   /** Default: `""` */
   pushTitle?: string;
-  /** Default: `0` */
-  quietEndHour?: number;
-  /** Default: `0` */
-  quietStartHour?: number;
-  /** Default: `[]` */
-  recipients?: string[];
-  /** Default: `"info"` */
-  severity?: string;
-  /** Default: `[]` */
-  suppressionList?: string[];
+  /** Default: `"eq"` */
+  guardOp?: 'eq' | 'gt' | 'lt' | 'gte' | 'lte';
   /** Default: `"You have a new notification"` */
   template?: string;
   /** Default: `""` */
-  triggerStatus?: string;
+  pushIcon?: string;
   /** Default: `""` */
   webhookSecret?: string;
+  /** Default: `0` */
+  guardValue?: number;
+  /** Default: `""` */
+  emailSubject?: string;
+  /** Default: `[]` */
+  suppressionList?: string[];
+  /** Default: `"id"` */
+  coalesceKey?: string;
+  /** Default: `"in-app"` */
+  notifyChannel?: 'in-app' | 'email' | 'sms' | 'push' | 'webhook';
+  /** Default: `""` */
+  eventKey?: string;
+  /** Default: `[]` */
+  recipients?: string[];
+  /** Default: `0` */
+  quietStartHour?: number;
+  /** Default: `""` */
+  pushDeepLink?: string;
+  /** Default: `0` */
+  frequencyCapPerWeek?: number;
+  /** Default: `""` */
+  fallbackRecipient?: string;
+  /** Default: `""` */
+  triggerStatus?: string;
+  /** Default: `0` */
+  quietEndHour?: number;
+  /** Default: `"none"` */
+  coalesce?: 'none' | 'perDispatch' | 'perKey';
   /** Default: `""` */
   webhookUrl?: string;
+  /** Default: `"info"` */
+  severity?: string;
+  /** Default: `""` */
+  guardField?: string;
 }
 
 /**
@@ -331,99 +331,99 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'recipient',
+            'type': 'string',
             'default': '',
             'description': 'The identifier of the entity receiving the notification.',
-            'name': 'recipient',
             'synonyms': 'user, target, receiver, destination',
-            'type': 'string',
           },
           {
+            'name': 'channel',
+            'type': 'string',
             'default': 'in-app',
             'description': 'The delivery method for the notification (e.g., email, SMS, in-app).',
-            'name': 'channel',
             'synonyms': 'delivery, medium, type',
-            'type': 'string',
           },
           {
+            'name': 'message',
+            'type': 'string',
             'default': '',
             'description': 'The content of the notification message.',
-            'name': 'message',
             'synonyms': 'text, content, body',
-            'type': 'string',
           },
           {
+            'name': 'severity',
+            'type': 'string',
             'default': 'info',
             'description': 'Indicates the importance or urgency level of the notification.',
-            'name': 'severity',
             'synonyms': 'priority, level, importance',
-            'type': 'string',
           },
           {
+            'name': 'dispatched',
+            'type': 'boolean',
             'default': false,
             'description': 'Indicates whether the notification has been successfully sent.',
-            'name': 'dispatched',
             'synonyms': 'sent, delivered, status',
-            'type': 'boolean',
           },
           {
+            'name': 'error',
+            'type': 'string',
             'default': '',
             'description': 'Failure detail from the delivery service when dispatched is false, or the suppression reason (quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription).',
-            'name': 'error',
             'synonyms': 'error message, failure reason, dispatch error',
-            'type': 'string',
           },
           {
+            'name': 'recordedAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when the notification record was created.',
-            'name': 'recordedAt',
             'synonyms': 'creation time, timestamp, date, when',
-            'type': 'number',
           },
           {
+            'name': 'prefMode',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: effective preference mode resolved for the current dispatch (instant/digest/off).',
-            'name': 'prefMode',
             'synonyms': 'resolved mode',
-            'type': 'string',
           },
           {
+            'name': 'prefChannel',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: channel override from the matched preference row; blank = no override.',
-            'name': 'prefChannel',
             'synonyms': 'channel override',
-            'type': 'string',
           },
           {
+            'name': 'prefQuietHours',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: per-user quiet-hours window "HH:MM-HH:MM" from the matched preference row; blank = none.',
-            'name': 'prefQuietHours',
             'synonyms': 'user quiet hours',
-            'type': 'string',
           },
           {
+            'name': 'pushEndpoint',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: push endpoint of the recipient\'s subscription for the current dispatch.',
-            'name': 'pushEndpoint',
             'synonyms': 'subscription endpoint',
-            'type': 'string',
           },
           {
+            'name': 'pushP256dh',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: p256dh key of the recipient\'s push subscription.',
-            'name': 'pushP256dh',
             'synonyms': 'push key',
-            'type': 'string',
           },
           {
+            'name': 'pushAuth',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: auth secret of the recipient\'s push subscription.',
-            'name': 'pushAuth',
             'synonyms': 'push auth',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -434,33 +434,33 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
     } as Entity,
     auxiliaryEntities: [
       {
+        'name': 'NotificationPreference',
         'collection': 'notificationPreferences',
+        'persistence': 'persistent',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Owner of this preference row.',
             'name': 'personId',
-            'required': true,
-            'synonyms': 'user, owner, account',
             'type': 'string',
+            'required': true,
+            'description': 'Owner of this preference row.',
+            'synonyms': 'user, owner, account',
           },
           {
+            'name': 'eventKey',
+            'type': 'string',
             'default': '',
             'description': 'Event key this preference applies to (matches the listener\'s eventKey); blank = all events.',
-            'name': 'eventKey',
             'synonyms': 'event, trigger, subscription',
-            'type': 'string',
           },
           {
-            'default': 'in_app',
-            'description': 'Channel override for this user.',
             'name': 'channel',
-            'synonyms': 'preferred channel, delivery method',
             'type': 'string',
+            'default': 'in_app',
             'values': [
               'in_app',
               'email',
@@ -469,298 +469,95 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
               'sms',
               'webhook',
             ],
+            'description': 'Channel override for this user.',
+            'synonyms': 'preferred channel, delivery method',
           },
           {
-            'default': 'instant',
-            'description': 'Delivery mode: instant, digest, or off.',
             'name': 'mode',
-            'synonyms': 'delivery mode, frequency, cadence',
             'type': 'string',
+            'default': 'instant',
             'values': [
               'instant',
               'digest',
               'off',
             ],
+            'description': 'Delivery mode: instant, digest, or off.',
+            'synonyms': 'delivery mode, frequency, cadence',
           },
           {
+            'name': 'quietHours',
+            'type': 'string',
             'default': '',
             'description': 'Per-user quiet-hours window as "HH:MM-HH:MM" (e.g. 22:00-07:00); blank = disabled.',
-            'name': 'quietHours',
             'synonyms': 'do not disturb, quiet window, night mode',
-            'type': 'string',
           },
           {
+            'name': 'createdAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when this preference row was created.',
-            'name': 'createdAt',
             'synonyms': 'creation time, created',
-            'type': 'number',
           },
           {
+            'name': 'updatedAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when this preference row was last updated.',
-            'name': 'updatedAt',
             'synonyms': 'modified, last updated',
-            'type': 'number',
           },
         ],
-        'name': 'NotificationPreference',
-        'persistence': 'persistent',
       },
       {
+        'name': 'PushSubscription',
         'collection': 'pushSubscriptions',
+        'persistence': 'persistent',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'userId',
+            'type': 'string',
             'default': '',
             'description': 'Owner of this browser push subscription.',
-            'name': 'userId',
             'synonyms': 'user, owner, account',
-            'type': 'string',
           },
           {
+            'name': 'endpoint',
+            'type': 'string',
             'default': '',
             'description': 'Push service endpoint URL for this subscription.',
-            'name': 'endpoint',
             'synonyms': 'push url, subscription endpoint',
-            'type': 'string',
           },
           {
+            'name': 'p256dh',
+            'type': 'string',
             'default': '',
             'description': 'Client public key (p256dh) of the subscription.',
-            'name': 'p256dh',
             'synonyms': 'public key',
-            'type': 'string',
           },
           {
+            'name': 'auth',
+            'type': 'string',
             'default': '',
             'description': 'Auth secret of the subscription.',
-            'name': 'auth',
             'synonyms': 'auth secret',
-            'type': 'string',
           },
           {
+            'name': 'createdAt',
+            'type': 'number',
             'default': 0,
             'description': 'When this subscription was captured.',
-            'name': 'createdAt',
             'synonyms': 'subscribed at, created',
-            'type': 'number',
           },
         ],
-        'name': 'PushSubscription',
-        'persistence': 'persistent',
       },
     ] as EntityRef[],
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'coalesce': {
-            'default': 'none',
-            'description': 'When one action raises the subscribed event several times (a bulk import, a batch save), send one notification for the whole action (`perDispatch`) or one per distinct value of `coalesceKey` (`perKey`) instead of one per event. `none` (default) notifies on every event. Scoped to a single action: the next action notifies again.',
-            'label': 'Collapse repeat notifications from one action?',
-            'synonyms': 'dedupe, deduplicate, collapse, batch notifications, one notification, bulk, coalesce, summarize, avoid spam, notification storm',
-            'tier': 'policy',
-            'type': 'string',
-            'values': [
-              'none',
-              'perDispatch',
-              'perKey',
-            ],
-          },
-          'coalesceKey': {
-            'default': 'id',
-            'description': 'With `coalesce: perKey`, the upstream event\'s payload field compared to tell repeats apart (e.g. `id` = one notification per record). Ignored otherwise.',
-            'label': 'Which field makes two events distinct?',
-            'synonyms': 'dedupe key, distinct by, per record, unique field',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'emailSubject': {
-            'default': '',
-            'description': 'Subject line used for the email channel. Falls back to `template` when blank. Ignored for other channels.',
-            'label': 'Email subject',
-            'synonyms': 'subject, subject line, email title, mail subject',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'eventKey': {
-            'default': '',
-            'description': 'Stable key naming the upstream event this listener is bound to (e.g. \'OrderPlaced\'). NotificationPreference rows (std-notification-center) whose eventKey equals this key — or is blank — apply to this listener\'s dispatches.',
-            'label': 'Event key for preferences',
-            'synonyms': 'preference key, event name, subscription key, notification topic',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'fallbackRecipient': {
-            'default': '',
-            'description': 'Recipient used when `recipients` is empty, instead of the acting user. The acting-user fallback (used when this is blank) is intended for personal notifications only — set this to an ops/team address (e.g. \'ops@example.com\') for system alerts like low-stock or shipping notices, so the acting user isn\'t notified in place of the intended audience.',
-            'label': 'Fallback recipient',
-            'synonyms': 'default recipient, backup recipient, ops address, fallback address, notify default, alert owner',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'frequencyCapPerWeek': {
-            'default': 0,
-            'description': 'Max dispatched sends per (channel, recipient) per rolling 7-day window, counted against dispatched NotificationRecord audit rows. 0 = uncapped. Applies to the persisted channels (email/sms/push/webhook); in-app toasts are not audited and not capped. A capped dispatch persists an audit row (`error: frequency-cap`, dispatched:false).',
-            'label': 'Frequency cap (per week)',
-            'synonyms': 'rate limit, cap, max per week, throttle, send limit',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'guardField': {
-            'default': '',
-            'description': 'Field read from the upstream event\'s `data` payload and compared against `guardValue` when `guardOp` is not `eq` (e.g. \'stockLevel\', \'quantity\'). Ignored when `guardOp` is `eq`.',
-            'label': 'Guard field (numeric)',
-            'synonyms': 'threshold field, numeric field, compare field, watched field, data field',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'guardOp': {
-            'default': 'eq',
-            'description': 'How to gate dispatch. `eq` (default) does string-equality via `triggerStatus` against the upstream event\'s `status` field, exactly as before. `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event\'s `data` payload) against `guardValue` — e.g. fire only when a stock level drops below a threshold.',
-            'label': 'Guard comparison',
-            'synonyms': 'comparison operator, threshold operator, guard mode, trigger comparison, numeric gate, greater than, less than, threshold crossing',
-            'tier': 'policy',
-            'type': 'string',
-            'values': [
-              'eq',
-              'gt',
-              'lt',
-              'gte',
-              'lte',
-            ],
-          },
-          'guardValue': {
-            'default': 0,
-            'description': 'Threshold compared against `guardField` when `guardOp` is not `eq` (e.g. fire when stock drops below 5).',
-            'label': 'Guard value (numeric)',
-            'synonyms': 'threshold, cutoff, limit, watermark, trigger value',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'notifyChannel': {
-            'default': 'in-app',
-            'description': 'Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient\'s PushSubscription row (captured by std-notification-center\'s subscribe flow) and dispatches web-push via push.send — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row\'s `channel` overrides this value for that recipient.',
-            'label': 'Channel',
-            'synonyms': 'delivery method, notification channel, send via, dispatch through, push notification, web push',
-            'tier': 'policy',
-            'type': 'string',
-            'values': [
-              'in-app',
-              'email',
-              'sms',
-              'push',
-              'webhook',
-            ],
-          },
-          'pushDeepLink': {
-            'default': '',
-            'description': 'In-app path opened when the recipient clicks the push notification (e.g. \'/orders\'). Blank = the app root.',
-            'label': 'Push deep link',
-            'synonyms': 'click url, open on click, target path, notification link',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'pushIcon': {
-            'default': '',
-            'description': 'Icon URL shown on the push notification. Blank = the browser default.',
-            'label': 'Push icon',
-            'synonyms': 'notification icon, badge image',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'pushTitle': {
-            'default': '',
-            'description': 'Notification title for the push channel. Falls back to `template` when blank. Ignored for other channels.',
-            'label': 'Push title',
-            'synonyms': 'notification title, push heading, alert title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'quietEndHour': {
-            'default': 0,
-            'description': 'Hour of day (0-23) when the atom-level quiet window closes. Equal to `quietStartHour` = disabled.',
-            'label': 'Quiet hours end',
-            'synonyms': 'do not disturb until, silence end, night mode end',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'quietStartHour': {
-            'default': 0,
-            'description': 'Hour of day (0-23) when the atom-level quiet window opens. Equal to `quietEndHour` = disabled. Dispatches inside the window persist an audit row (`error: quiet-hours`, dispatched:false) which std-notification-center\'s digest cycle drains later. Per-user quiet hours from NotificationPreference rows apply in addition.',
-            'label': 'Quiet hours start',
-            'synonyms': 'quiet hours, do not disturb from, silence start, night mode start',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'recipients': {
-            'default': [],
-            'description': 'Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to `fallbackRecipient` if set, otherwise the authenticated user.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Recipients',
-            'synonyms': 'targets, addressees, notify to',
-            'tier': 'policy',
-            'type': '[string]',
-          },
-          'severity': {
-            'default': 'info',
-            'description': 'info, success, warning, or error — controls styling',
-            'label': 'Severity',
-            'synonyms': 'alert level, priority, urgency',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'suppressionList': {
-            'default': [],
-            'description': 'Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Suppression list',
-            'synonyms': 'block list, unsubscribed, opt-out list',
-            'tier': 'policy',
-            'type': '[string]',
-          },
-          'template': {
-            'default': 'You have a new notification',
-            'description': 'Text shown to the recipient; supports payload interpolation',
-            'label': 'Message template',
-            'synonyms': 'notification text, message body, alert text',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'triggerStatus': {
-            'default': '',
-            'description': 'When `guardOp` is `eq` and this is set, dispatch only when the upstream event\'s `status` field equals this value (e.g. fire only when a record becomes \'approved\'). Empty = fire on every subscribed event. Ignored when `guardOp` is a numeric comparison.',
-            'label': 'Trigger status',
-            'synonyms': 'on status, when status, status filter, only when, fire on, react on status',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'webhookSecret': {
-            'default': '',
-            'description': 'Signing secret forwarded to the webhook service so the receiving endpoint can verify the payload. Ignored when `webhookUrl` is blank.',
-            'label': 'Webhook secret',
-            'synonyms': 'signing secret, hmac secret, webhook signature, shared secret',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'webhookUrl': {
-            'default': '',
-            'description': 'Destination endpoint for the webhook channel. Dispatch only fires when this is non-blank; a blank URL on channel "webhook" records the audit row with dispatched:false instead of crashing (a consumer misconfiguration, not a failure).',
-            'label': 'Webhook URL',
-            'synonyms': 'webhook endpoint, callback url, target url, http endpoint, notify url',
-            'tier': 'policy',
-            'type': 'string',
-          },
-        },
+        'name': 'NotifyOnEventListener',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -855,9 +652,12 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
             'resource': '@entity.severity',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'NotificationRecord',
         'emits': [
           {
             'event': 'NotificationDispatched',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'recipient',
@@ -876,15 +676,15 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                 'type': 'string',
               },
             ],
-            'scope': 'external',
           },
           {
-            'description': 'NotificationPreference rows loaded; the arm resolves the recipient\'s effective mode/channel/quiet-hours',
             'event': 'NOTIFY_PREFS_LOADED',
+            'description': 'NotificationPreference rows loaded; the arm resolves the recipient\'s effective mode/channel/quiet-hours',
+            'tier': 'secondary',
             'payloadSchema': [
               {
-                'entity': 'PrefRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'personId',
@@ -907,18 +707,18 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'PrefRow',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Rolling 7-day NotificationRecord window loaded; the arm enforces frequencyCapPerWeek then dispatches',
             'event': 'NOTIFY_CAP_LOADED',
+            'description': 'Rolling 7-day NotificationRecord window loaded; the arm enforces frequencyCapPerWeek then dispatches',
+            'tier': 'secondary',
             'payloadSchema': [
               {
-                'entity': 'AuditRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'recipient',
@@ -937,18 +737,18 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AuditRow',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'PushSubscription rows loaded; the arm picks the recipient\'s subscription and dispatches push.send',
             'event': 'NOTIFY_PUSH_SUBS',
+            'description': 'PushSubscription rows loaded; the arm picks the recipient\'s subscription and dispatches push.send',
+            'tier': 'secondary',
             'payloadSchema': [
               {
-                'entity': 'SubRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'userId',
@@ -967,154 +767,156 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'SubRow',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'email.send service result, flattened onto the payload by the call-service effect executor',
             'event': 'NOTIFY_EMAIL_SENT',
+            'description': 'email.send service result, flattened onto the payload by the call-service effect executor',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'status',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'email.send service call failed — dispatched lands false and error carries the service detail',
             'event': 'NOTIFY_EMAIL_FAILED',
+            'description': 'email.send service call failed — dispatched lands false and error carries the service detail',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'twilio.sendSMS service result, flattened onto the payload by the call-service effect executor',
             'event': 'NOTIFY_SMS_SENT',
+            'description': 'twilio.sendSMS service result, flattened onto the payload by the call-service effect executor',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'sid',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'status',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'twilio.sendSMS service call failed — dispatched lands false and error carries the service detail',
             'event': 'NOTIFY_SMS_FAILED',
+            'description': 'twilio.sendSMS service call failed — dispatched lands false and error carries the service detail',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'webhook.send service result, flattened onto the payload by the call-service effect executor',
             'event': 'NOTIFY_WEBHOOK_SENT',
+            'description': 'webhook.send service result, flattened onto the payload by the call-service effect executor',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'status',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'ok',
-                'required': true,
                 'type': 'boolean',
+                'required': true,
               },
               {
                 'name': 'durationMs',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'webhook.send service call failed — dispatched lands false and error carries the service detail',
             'event': 'NOTIFY_WEBHOOK_FAILED',
+            'description': 'webhook.send service call failed — dispatched lands false and error carries the service detail',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'push.send service result — expired:true means the subscription is gone and should be pruned',
             'event': 'NOTIFY_PUSH_SENT',
+            'description': 'push.send service result — expired:true means the subscription is gone and should be pruned',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'statusCode',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'ok',
-                'required': true,
                 'type': 'boolean',
+                'required': true,
               },
               {
                 'name': 'expired',
-                'required': true,
                 'type': 'boolean',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'push.send service call failed — dispatched lands false and error carries the service detail',
             'event': 'NOTIFY_PUSH_FAILED',
+            'description': 'push.send service call failed — dispatched lands false and error carries the service detail',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'A preference / cap-window / subscription fetch failed — dispatched lands false with the fetch error',
             'event': 'NOTIFY_LOOKUP_FAILED',
+            'description': 'A preference / cap-window / subscription fetch failed — dispatched lands false with the fetch error',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
         ],
-        'linkedEntity': 'NotificationRecord',
-        'name': 'NotifyOnEventListener',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'EventOccurred',
@@ -1131,12 +933,14 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
               ],
             },
             {
-              'description': 'NotificationPreference rows loaded; the arm resolves the recipient\'s effective mode/channel/quiet-hours',
               'key': 'NOTIFY_PREFS_LOADED',
               'name': 'Notify Prefs Loaded',
+              'description': 'NotificationPreference rows loaded; the arm resolves the recipient\'s effective mode/channel/quiet-hours',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'personId',
@@ -1159,18 +963,18 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Rolling 7-day NotificationRecord window loaded; the arm enforces frequencyCapPerWeek then dispatches',
               'key': 'NOTIFY_CAP_LOADED',
               'name': 'Notify Cap Loaded',
+              'description': 'Rolling 7-day NotificationRecord window loaded; the arm enforces frequencyCapPerWeek then dispatches',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'recipient',
@@ -1189,18 +993,18 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'PushSubscription rows loaded; the arm picks the recipient\'s subscription and dispatches push.send',
               'key': 'NOTIFY_PUSH_SUBS',
               'name': 'Notify Push Subs',
+              'description': 'PushSubscription rows loaded; the arm picks the recipient\'s subscription and dispatches push.send',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'userId',
@@ -1219,157 +1023,155 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'email.send service result, flattened onto the payload by the call-service effect executor',
               'key': 'NOTIFY_EMAIL_SENT',
               'name': 'Notify Email Sent',
+              'description': 'email.send service result, flattened onto the payload by the call-service effect executor',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'status',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'email.send service call failed — dispatched lands false and error carries the service detail',
               'key': 'NOTIFY_EMAIL_FAILED',
               'name': 'Notify Email Failed',
+              'description': 'email.send service call failed — dispatched lands false and error carries the service detail',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'twilio.sendSMS service result, flattened onto the payload by the call-service effect executor',
               'key': 'NOTIFY_SMS_SENT',
               'name': 'Notify Sms Sent',
+              'description': 'twilio.sendSMS service result, flattened onto the payload by the call-service effect executor',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'sid',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'status',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'twilio.sendSMS service call failed — dispatched lands false and error carries the service detail',
               'key': 'NOTIFY_SMS_FAILED',
               'name': 'Notify Sms Failed',
+              'description': 'twilio.sendSMS service call failed — dispatched lands false and error carries the service detail',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'webhook.send service result, flattened onto the payload by the call-service effect executor',
               'key': 'NOTIFY_WEBHOOK_SENT',
               'name': 'Notify Webhook Sent',
+              'description': 'webhook.send service result, flattened onto the payload by the call-service effect executor',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'status',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'ok',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
                 {
                   'name': 'durationMs',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'webhook.send service call failed — dispatched lands false and error carries the service detail',
               'key': 'NOTIFY_WEBHOOK_FAILED',
               'name': 'Notify Webhook Failed',
+              'description': 'webhook.send service call failed — dispatched lands false and error carries the service detail',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'push.send service result — expired:true means the subscription is gone and should be pruned',
               'key': 'NOTIFY_PUSH_SENT',
               'name': 'Notify Push Sent',
+              'description': 'push.send service result — expired:true means the subscription is gone and should be pruned',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'statusCode',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'ok',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
                 {
                   'name': 'expired',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'push.send service call failed — dispatched lands false and error carries the service detail',
               'key': 'NOTIFY_PUSH_FAILED',
               'name': 'Notify Push Failed',
+              'description': 'push.send service call failed — dispatched lands false and error carries the service detail',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'A preference / cap-window / subscription fetch failed — dispatched lands false with the fetch error',
               'key': 'NOTIFY_LOOKUP_FAILED',
               'name': 'Notify Lookup Failed',
+              'description': 'A preference / cap-window / subscription fetch failed — dispatched lands false with the fetch error',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
               'key': 'NotificationDispatched',
@@ -1394,180 +1196,11 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
           'transitions': [
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.recipient',
-                  [
-                    'if',
-                    [
-                      '=',
-                      [
-                        'array/len',
-                        '@config.recipients',
-                      ],
-                      0,
-                    ],
-                    [
-                      'if',
-                      [
-                        'not',
-                        [
-                          '=',
-                          '@config.fallbackRecipient',
-                          '',
-                        ],
-                      ],
-                      '@config.fallbackRecipient',
-                      '@user.id',
-                    ],
-                    [
-                      'array/first',
-                      '@config.recipients',
-                    ],
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.channel',
-                  '@config.notifyChannel',
-                ],
-                [
-                  'set',
-                  '@entity.message',
-                  '@config.template',
-                ],
-                [
-                  'set',
-                  '@entity.severity',
-                  '@config.severity',
-                ],
-                [
-                  'set',
-                  '@entity.dispatched',
-                  false,
-                ],
-                [
-                  'set',
-                  '@entity.recordedAt',
-                  '@now',
-                ],
-                [
-                  'when',
-                  [
-                    'not',
-                    [
-                      'array/includes',
-                      '@config.suppressionList',
-                      '@entity.recipient',
-                    ],
-                  ],
-                  [
-                    'if',
-                    [
-                      'and',
-                      [
-                        'not',
-                        [
-                          '=',
-                          '@config.quietStartHour',
-                          '@config.quietEndHour',
-                        ],
-                      ],
-                      [
-                        'if',
-                        [
-                          '<',
-                          '@config.quietStartHour',
-                          '@config.quietEndHour',
-                        ],
-                        [
-                          'and',
-                          [
-                            '>=',
-                            [
-                              'time/hour',
-                              '@now',
-                            ],
-                            '@config.quietStartHour',
-                          ],
-                          [
-                            '<',
-                            [
-                              'time/hour',
-                              '@now',
-                            ],
-                            '@config.quietEndHour',
-                          ],
-                        ],
-                        [
-                          'or',
-                          [
-                            '>=',
-                            [
-                              'time/hour',
-                              '@now',
-                            ],
-                            '@config.quietStartHour',
-                          ],
-                          [
-                            '<',
-                            [
-                              'time/hour',
-                              '@now',
-                            ],
-                            '@config.quietEndHour',
-                          ],
-                        ],
-                      ],
-                    ],
-                    [
-                      'persist',
-                      'create',
-                      ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
-                      {
-                        'channel': '@entity.channel',
-                        'dispatched': false,
-                        'error': 'quiet-hours',
-                        'message': '@entity.message',
-                        'recipient': '@entity.recipient',
-                        'recordedAt': '@now',
-                        'severity': '@entity.severity',
-                      },
-                    ],
-                    [
-                      'fetch',
-                      ('NotificationPreference' satisfies _StdNotifyOnEventEntityName),
-                      {
-                        'emit': {
-                          'failure': 'NOTIFY_LOOKUP_FAILED',
-                          'success': 'NOTIFY_PREFS_LOADED',
-                        },
-                      },
-                    ],
-                  ],
-                ],
-                [
-                  'emit',
-                  'NotificationDispatched',
-                  {
-                    'channel': '@entity.channel',
-                    'message': '@entity.message',
-                    'recipient': '@entity.recipient',
-                    'severity': '@entity.severity',
-                  },
-                ],
-              ],
-              'event': 'EventOccurred',
               'from': 'idle',
+              'to': 'idle',
+              'event': 'EventOccurred',
               'guard': [
                 'and',
                 [
@@ -1729,9 +1362,175 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   ],
                 ],
               ],
-              'to': 'idle',
+              'effects': [
+                [
+                  'set',
+                  '@entity.recipient',
+                  [
+                    'if',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        '@config.recipients',
+                      ],
+                      0,
+                    ],
+                    [
+                      'if',
+                      [
+                        'not',
+                        [
+                          '=',
+                          '@config.fallbackRecipient',
+                          '',
+                        ],
+                      ],
+                      '@config.fallbackRecipient',
+                      '@user.id',
+                    ],
+                    [
+                      'array/first',
+                      '@config.recipients',
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.channel',
+                  '@config.notifyChannel',
+                ],
+                [
+                  'set',
+                  '@entity.message',
+                  '@config.template',
+                ],
+                [
+                  'set',
+                  '@entity.severity',
+                  '@config.severity',
+                ],
+                [
+                  'set',
+                  '@entity.dispatched',
+                  false,
+                ],
+                [
+                  'set',
+                  '@entity.recordedAt',
+                  '@now',
+                ],
+                [
+                  'when',
+                  [
+                    'not',
+                    [
+                      'array/includes',
+                      '@config.suppressionList',
+                      '@entity.recipient',
+                    ],
+                  ],
+                  [
+                    'if',
+                    [
+                      'and',
+                      [
+                        'not',
+                        [
+                          '=',
+                          '@config.quietStartHour',
+                          '@config.quietEndHour',
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '<',
+                          '@config.quietStartHour',
+                          '@config.quietEndHour',
+                        ],
+                        [
+                          'and',
+                          [
+                            '>=',
+                            [
+                              'time/hour',
+                              '@now',
+                            ],
+                            '@config.quietStartHour',
+                          ],
+                          [
+                            '<',
+                            [
+                              'time/hour',
+                              '@now',
+                            ],
+                            '@config.quietEndHour',
+                          ],
+                        ],
+                        [
+                          'or',
+                          [
+                            '>=',
+                            [
+                              'time/hour',
+                              '@now',
+                            ],
+                            '@config.quietStartHour',
+                          ],
+                          [
+                            '<',
+                            [
+                              'time/hour',
+                              '@now',
+                            ],
+                            '@config.quietEndHour',
+                          ],
+                        ],
+                      ],
+                    ],
+                    [
+                      'persist',
+                      'create',
+                      ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
+                      {
+                        'recipient': '@entity.recipient',
+                        'error': 'quiet-hours',
+                        'dispatched': false,
+                        'recordedAt': '@now',
+                        'severity': '@entity.severity',
+                        'channel': '@entity.channel',
+                        'message': '@entity.message',
+                      },
+                    ],
+                    [
+                      'fetch',
+                      ('NotificationPreference' satisfies _StdNotifyOnEventEntityName),
+                      {
+                        'emit': {
+                          'failure': 'NOTIFY_LOOKUP_FAILED',
+                          'success': 'NOTIFY_PREFS_LOADED',
+                        },
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'emit',
+                  'NotificationDispatched',
+                  {
+                    'recipient': '@entity.recipient',
+                    'message': '@entity.message',
+                    'channel': '@entity.channel',
+                    'severity': '@entity.severity',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_PREFS_LOADED',
               'effects': [
                 [
                   'set',
@@ -2071,11 +1870,11 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                     'create',
                     ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                     {
+                      'error': 'muted-by-preference',
+                      'recipient': '@entity.recipient',
                       'channel': '@entity.channel',
                       'dispatched': false,
-                      'error': 'muted-by-preference',
                       'message': '@entity.message',
-                      'recipient': '@entity.recipient',
                       'recordedAt': '@now',
                       'severity': '@entity.severity',
                     },
@@ -2092,13 +1891,13 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                       'create',
                       ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                       {
-                        'channel': '@entity.channel',
-                        'dispatched': false,
                         'error': 'digest-deferred',
+                        'dispatched': false,
                         'message': '@entity.message',
-                        'recipient': '@entity.recipient',
-                        'recordedAt': '@now',
                         'severity': '@entity.severity',
+                        'recordedAt': '@now',
+                        'channel': '@entity.channel',
+                        'recipient': '@entity.recipient',
                       },
                     ],
                     [
@@ -2303,13 +2102,13 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                         'create',
                         ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                         {
-                          'channel': '@entity.channel',
-                          'dispatched': false,
                           'error': 'quiet-hours',
+                          'channel': '@entity.channel',
                           'message': '@entity.message',
-                          'recipient': '@entity.recipient',
                           'recordedAt': '@now',
                           'severity': '@entity.severity',
+                          'recipient': '@entity.recipient',
+                          'dispatched': false,
                         },
                       ],
                       [
@@ -2339,9 +2138,9 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                             'toast',
                             {
                               'dismissible': true,
-                              'message': '@config.template',
                               'type': 'alert',
                               'variant': '@config.severity',
+                              'message': '@config.template',
                             },
                           ],
                         ],
@@ -2349,10 +2148,6 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                           'fetch',
                           ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                           {
-                            'emit': {
-                              'failure': 'NOTIFY_LOOKUP_FAILED',
-                              'success': 'NOTIFY_CAP_LOADED',
-                            },
                             'filter': [
                               '>',
                               [
@@ -2366,6 +2161,10 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                                 604800000,
                               ],
                             ],
+                            'emit': {
+                              'failure': 'NOTIFY_LOOKUP_FAILED',
+                              'success': 'NOTIFY_CAP_LOADED',
+                            },
                           },
                         ],
                       ],
@@ -2373,11 +2172,11 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   ],
                 ],
               ],
-              'event': 'NOTIFY_PREFS_LOADED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_CAP_LOADED',
               'effects': [
                 [
                   'if',
@@ -2439,13 +2238,13 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                     'create',
                     ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                     {
-                      'channel': '@entity.channel',
-                      'dispatched': false,
                       'error': 'frequency-cap',
-                      'message': '@entity.message',
-                      'recipient': '@entity.recipient',
-                      'recordedAt': '@now',
                       'severity': '@entity.severity',
+                      'recordedAt': '@now',
+                      'dispatched': false,
+                      'message': '@entity.message',
+                      'channel': '@entity.channel',
+                      'recipient': '@entity.recipient',
                     },
                   ],
                   [
@@ -2462,6 +2261,7 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                       {
                         'body': '@entity.message',
                         'from': '',
+                        'to': '@entity.recipient',
                         'subject': [
                           'if',
                           [
@@ -2472,12 +2272,11 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                           '@entity.message',
                           '@config.emailSubject',
                         ],
-                        'to': '@entity.recipient',
                       },
                       {
                         'emit': {
-                          'failure': 'NOTIFY_EMAIL_FAILED',
                           'success': 'NOTIFY_EMAIL_SENT',
+                          'failure': 'NOTIFY_EMAIL_FAILED',
                         },
                       },
                     ],
@@ -2493,13 +2292,13 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                         'twilio',
                         'sendSMS',
                         {
-                          'body': '@entity.message',
                           'to': '@entity.recipient',
+                          'body': '@entity.message',
                         },
                         {
                           'emit': {
-                            'failure': 'NOTIFY_SMS_FAILED',
                             'success': 'NOTIFY_SMS_SENT',
+                            'failure': 'NOTIFY_SMS_FAILED',
                           },
                         },
                       ],
@@ -2515,8 +2314,8 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                           ('PushSubscription' satisfies _StdNotifyOnEventEntityName),
                           {
                             'emit': {
-                              'failure': 'NOTIFY_LOOKUP_FAILED',
                               'success': 'NOTIFY_PUSH_SUBS',
+                              'failure': 'NOTIFY_LOOKUP_FAILED',
                             },
                           },
                         ],
@@ -2538,16 +2337,16 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                               'event': '@entity.message',
                               'payload': {
                                 'message': '@entity.message',
-                                'recipient': '@entity.recipient',
                                 'severity': '@entity.severity',
+                                'recipient': '@entity.recipient',
                               },
-                              'secret': '@config.webhookSecret',
                               'url': '@config.webhookUrl',
+                              'secret': '@config.webhookSecret',
                             },
                             {
                               'emit': {
-                                'failure': 'NOTIFY_WEBHOOK_FAILED',
                                 'success': 'NOTIFY_WEBHOOK_SENT',
+                                'failure': 'NOTIFY_WEBHOOK_FAILED',
                               },
                             },
                           ],
@@ -2556,12 +2355,12 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                             'create',
                             ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                             {
-                              'channel': '@entity.channel',
-                              'dispatched': false,
                               'message': '@entity.message',
                               'recipient': '@entity.recipient',
+                              'channel': '@entity.channel',
                               'recordedAt': '@now',
                               'severity': '@entity.severity',
+                              'dispatched': false,
                             },
                           ],
                         ],
@@ -2570,11 +2369,11 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   ],
                 ],
               ],
-              'event': 'NOTIFY_CAP_LOADED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_PUSH_SUBS',
               'effects': [
                 [
                   'set',
@@ -2756,13 +2555,13 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                     'create',
                     ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                     {
+                      'recipient': '@entity.recipient',
                       'channel': '@entity.channel',
+                      'severity': '@entity.severity',
+                      'message': '@entity.message',
                       'dispatched': false,
                       'error': 'no-push-subscription',
-                      'message': '@entity.message',
-                      'recipient': '@entity.recipient',
                       'recordedAt': '@now',
-                      'severity': '@entity.severity',
                     },
                   ],
                   [
@@ -2770,15 +2569,6 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                     'push',
                     'send',
                     {
-                      'body': '@entity.message',
-                      'icon': '@config.pushIcon',
-                      'subscription': {
-                        'endpoint': '@entity.pushEndpoint',
-                        'keys': {
-                          'auth': '@entity.pushAuth',
-                          'p256dh': '@entity.pushP256dh',
-                        },
-                      },
                       'title': [
                         'if',
                         [
@@ -2789,7 +2579,16 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                         '@entity.message',
                         '@config.pushTitle',
                       ],
+                      'icon': '@config.pushIcon',
                       'url': '@config.pushDeepLink',
+                      'body': '@entity.message',
+                      'subscription': {
+                        'keys': {
+                          'auth': '@entity.pushAuth',
+                          'p256dh': '@entity.pushP256dh',
+                        },
+                        'endpoint': '@entity.pushEndpoint',
+                      },
                     },
                     {
                       'emit': {
@@ -2800,11 +2599,11 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   ],
                 ],
               ],
-              'event': 'NOTIFY_PUSH_SUBS',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_EMAIL_SENT',
               'effects': [
                 [
                   'set',
@@ -2817,19 +2616,19 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                   {
                     'channel': '@entity.channel',
-                    'dispatched': true,
-                    'message': '@entity.message',
-                    'recipient': '@entity.recipient',
-                    'recordedAt': '@now',
                     'severity': '@entity.severity',
+                    'dispatched': true,
+                    'recordedAt': '@now',
+                    'recipient': '@entity.recipient',
+                    'message': '@entity.message',
                   },
                 ],
               ],
-              'event': 'NOTIFY_EMAIL_SENT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_EMAIL_FAILED',
               'effects': [
                 [
                   'set',
@@ -2846,13 +2645,13 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   'create',
                   ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                   {
-                    'channel': '@entity.channel',
+                    'recordedAt': '@now',
                     'dispatched': false,
-                    'error': '@entity.error',
                     'message': '@entity.message',
                     'recipient': '@entity.recipient',
-                    'recordedAt': '@now',
+                    'error': '@entity.error',
                     'severity': '@entity.severity',
+                    'channel': '@entity.channel',
                   },
                 ],
                 [
@@ -2860,21 +2659,21 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   'toast',
                   {
                     'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t send the email notification — ',
                       '@payload.error',
                     ],
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'NOTIFY_EMAIL_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_SMS_SENT',
               'effects': [
                 [
                   'set',
@@ -2886,20 +2685,20 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   'create',
                   ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                   {
-                    'channel': '@entity.channel',
+                    'severity': '@entity.severity',
+                    'recipient': '@entity.recipient',
                     'dispatched': true,
                     'message': '@entity.message',
-                    'recipient': '@entity.recipient',
+                    'channel': '@entity.channel',
                     'recordedAt': '@now',
-                    'severity': '@entity.severity',
                   },
                 ],
               ],
-              'event': 'NOTIFY_SMS_SENT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_SMS_FAILED',
               'effects': [
                 [
                   'set',
@@ -2916,13 +2715,13 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   'create',
                   ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                   {
-                    'channel': '@entity.channel',
-                    'dispatched': false,
-                    'error': '@entity.error',
                     'message': '@entity.message',
-                    'recipient': '@entity.recipient',
-                    'recordedAt': '@now',
+                    'error': '@entity.error',
+                    'channel': '@entity.channel',
                     'severity': '@entity.severity',
+                    'dispatched': false,
+                    'recordedAt': '@now',
+                    'recipient': '@entity.recipient',
                   },
                 ],
                 [
@@ -2930,21 +2729,21 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   'toast',
                   {
                     'dismissible': true,
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Couldn\'t send the text message — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'NOTIFY_SMS_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_WEBHOOK_SENT',
               'effects': [
                 [
                   'set',
@@ -2957,19 +2756,19 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                   {
                     'channel': '@entity.channel',
+                    'severity': '@entity.severity',
                     'dispatched': true,
                     'message': '@entity.message',
                     'recipient': '@entity.recipient',
                     'recordedAt': '@now',
-                    'severity': '@entity.severity',
                   },
                 ],
               ],
-              'event': 'NOTIFY_WEBHOOK_SENT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_WEBHOOK_FAILED',
               'effects': [
                 [
                   'set',
@@ -2986,19 +2785,20 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   'create',
                   ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                   {
-                    'channel': '@entity.channel',
-                    'dispatched': false,
-                    'error': '@entity.error',
                     'message': '@entity.message',
                     'recipient': '@entity.recipient',
-                    'recordedAt': '@now',
                     'severity': '@entity.severity',
+                    'error': '@entity.error',
+                    'channel': '@entity.channel',
+                    'recordedAt': '@now',
+                    'dispatched': false,
                   },
                 ],
                 [
                   'render-ui',
                   'toast',
                   {
+                    'variant': 'error',
                     'dismissible': true,
                     'message': [
                       'str/concat',
@@ -3006,15 +2806,14 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                       '@payload.error',
                     ],
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'NOTIFY_WEBHOOK_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_PUSH_SENT',
               'effects': [
                 [
                   'set',
@@ -3026,20 +2825,20 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   'create',
                   ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                   {
-                    'channel': '@entity.channel',
-                    'dispatched': true,
                     'message': '@entity.message',
+                    'channel': '@entity.channel',
+                    'severity': '@entity.severity',
+                    'dispatched': true,
                     'recipient': '@entity.recipient',
                     'recordedAt': '@now',
-                    'severity': '@entity.severity',
                   },
                 ],
               ],
-              'event': 'NOTIFY_PUSH_SENT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_PUSH_FAILED',
               'effects': [
                 [
                   'set',
@@ -3056,35 +2855,35 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   'create',
                   ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                   {
+                    'recipient': '@entity.recipient',
                     'channel': '@entity.channel',
                     'dispatched': false,
-                    'error': '@entity.error',
-                    'message': '@entity.message',
-                    'recipient': '@entity.recipient',
                     'recordedAt': '@now',
+                    'error': '@entity.error',
                     'severity': '@entity.severity',
+                    'message': '@entity.message',
                   },
                 ],
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t send the push notification — ',
                       '@payload.error',
                     ],
                     'type': 'alert',
-                    'variant': 'error',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'NOTIFY_PUSH_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NOTIFY_LOOKUP_FAILED',
               'effects': [
                 [
                   'set',
@@ -3101,13 +2900,13 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   'create',
                   ('NotificationRecord' satisfies _StdNotifyOnEventEntityName),
                   {
-                    'channel': '@entity.channel',
-                    'dispatched': false,
                     'error': '@entity.error',
-                    'message': '@entity.message',
-                    'recipient': '@entity.recipient',
+                    'dispatched': false,
                     'recordedAt': '@now',
                     'severity': '@entity.severity',
+                    'channel': '@entity.channel',
+                    'recipient': '@entity.recipient',
+                    'message': '@entity.message',
                   },
                 ],
                 [
@@ -3115,22 +2914,223 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   'toast',
                   {
                     'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t look up notification preferences — ',
                       '@payload.error',
                     ],
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'NOTIFY_LOOKUP_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'pushTitle': {
+            'type': 'string',
+            'default': '',
+            'label': 'Push title',
+            'description': 'Notification title for the push channel. Falls back to `template` when blank. Ignored for other channels.',
+            'synonyms': 'notification title, push heading, alert title',
+            'tier': 'presentation',
+          },
+          'guardOp': {
+            'type': 'string',
+            'default': 'eq',
+            'label': 'Guard comparison',
+            'description': 'How to gate dispatch. `eq` (default) does string-equality via `triggerStatus` against the upstream event\'s `status` field, exactly as before. `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event\'s `data` payload) against `guardValue` — e.g. fire only when a stock level drops below a threshold.',
+            'synonyms': 'comparison operator, threshold operator, guard mode, trigger comparison, numeric gate, greater than, less than, threshold crossing',
+            'tier': 'policy',
+            'values': [
+              'eq',
+              'gt',
+              'lt',
+              'gte',
+              'lte',
+            ],
+          },
+          'template': {
+            'type': 'string',
+            'default': 'You have a new notification',
+            'label': 'Message template',
+            'description': 'Text shown to the recipient; supports payload interpolation',
+            'synonyms': 'notification text, message body, alert text',
+            'tier': 'presentation',
+          },
+          'pushIcon': {
+            'type': 'string',
+            'default': '',
+            'label': 'Push icon',
+            'description': 'Icon URL shown on the push notification. Blank = the browser default.',
+            'synonyms': 'notification icon, badge image',
+            'tier': 'presentation',
+          },
+          'webhookSecret': {
+            'type': 'string',
+            'default': '',
+            'label': 'Webhook secret',
+            'description': 'Signing secret forwarded to the webhook service so the receiving endpoint can verify the payload. Ignored when `webhookUrl` is blank.',
+            'synonyms': 'signing secret, hmac secret, webhook signature, shared secret',
+            'tier': 'internal',
+          },
+          'guardValue': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Guard value (numeric)',
+            'description': 'Threshold compared against `guardField` when `guardOp` is not `eq` (e.g. fire when stock drops below 5).',
+            'synonyms': 'threshold, cutoff, limit, watermark, trigger value',
+            'tier': 'policy',
+          },
+          'emailSubject': {
+            'type': 'string',
+            'default': '',
+            'label': 'Email subject',
+            'description': 'Subject line used for the email channel. Falls back to `template` when blank. Ignored for other channels.',
+            'synonyms': 'subject, subject line, email title, mail subject',
+            'tier': 'presentation',
+          },
+          'suppressionList': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Suppression list',
+            'description': 'Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch.',
+            'synonyms': 'block list, unsubscribed, opt-out list',
+            'tier': 'policy',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'coalesceKey': {
+            'type': 'string',
+            'default': 'id',
+            'label': 'Which field makes two events distinct?',
+            'description': 'With `coalesce: perKey`, the upstream event\'s payload field compared to tell repeats apart (e.g. `id` = one notification per record). Ignored otherwise.',
+            'synonyms': 'dedupe key, distinct by, per record, unique field',
+            'tier': 'policy',
+          },
+          'notifyChannel': {
+            'type': 'string',
+            'default': 'in-app',
+            'label': 'Channel',
+            'description': 'Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient\'s PushSubscription row (captured by std-notification-center\'s subscribe flow) and dispatches web-push via push.send — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row\'s `channel` overrides this value for that recipient.',
+            'synonyms': 'delivery method, notification channel, send via, dispatch through, push notification, web push',
+            'tier': 'policy',
+            'values': [
+              'in-app',
+              'email',
+              'sms',
+              'push',
+              'webhook',
+            ],
+          },
+          'eventKey': {
+            'type': 'string',
+            'default': '',
+            'label': 'Event key for preferences',
+            'description': 'Stable key naming the upstream event this listener is bound to (e.g. \'OrderPlaced\'). NotificationPreference rows (std-notification-center) whose eventKey equals this key — or is blank — apply to this listener\'s dispatches.',
+            'synonyms': 'preference key, event name, subscription key, notification topic',
+            'tier': 'policy',
+          },
+          'recipients': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Recipients',
+            'description': 'Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to `fallbackRecipient` if set, otherwise the authenticated user.',
+            'synonyms': 'targets, addressees, notify to',
+            'tier': 'policy',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'quietStartHour': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Quiet hours start',
+            'description': 'Hour of day (0-23) when the atom-level quiet window opens. Equal to `quietEndHour` = disabled. Dispatches inside the window persist an audit row (`error: quiet-hours`, dispatched:false) which std-notification-center\'s digest cycle drains later. Per-user quiet hours from NotificationPreference rows apply in addition.',
+            'synonyms': 'quiet hours, do not disturb from, silence start, night mode start',
+            'tier': 'policy',
+          },
+          'pushDeepLink': {
+            'type': 'string',
+            'default': '',
+            'label': 'Push deep link',
+            'description': 'In-app path opened when the recipient clicks the push notification (e.g. \'/orders\'). Blank = the app root.',
+            'synonyms': 'click url, open on click, target path, notification link',
+            'tier': 'presentation',
+          },
+          'frequencyCapPerWeek': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Frequency cap (per week)',
+            'description': 'Max dispatched sends per (channel, recipient) per rolling 7-day window, counted against dispatched NotificationRecord audit rows. 0 = uncapped. Applies to the persisted channels (email/sms/push/webhook); in-app toasts are not audited and not capped. A capped dispatch persists an audit row (`error: frequency-cap`, dispatched:false).',
+            'synonyms': 'rate limit, cap, max per week, throttle, send limit',
+            'tier': 'policy',
+          },
+          'fallbackRecipient': {
+            'type': 'string',
+            'default': '',
+            'label': 'Fallback recipient',
+            'description': 'Recipient used when `recipients` is empty, instead of the acting user. The acting-user fallback (used when this is blank) is intended for personal notifications only — set this to an ops/team address (e.g. \'ops@example.com\') for system alerts like low-stock or shipping notices, so the acting user isn\'t notified in place of the intended audience.',
+            'synonyms': 'default recipient, backup recipient, ops address, fallback address, notify default, alert owner',
+            'tier': 'policy',
+          },
+          'triggerStatus': {
+            'type': 'string',
+            'default': '',
+            'label': 'Trigger status',
+            'description': 'When `guardOp` is `eq` and this is set, dispatch only when the upstream event\'s `status` field equals this value (e.g. fire only when a record becomes \'approved\'). Empty = fire on every subscribed event. Ignored when `guardOp` is a numeric comparison.',
+            'synonyms': 'on status, when status, status filter, only when, fire on, react on status',
+            'tier': 'policy',
+          },
+          'quietEndHour': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Quiet hours end',
+            'description': 'Hour of day (0-23) when the atom-level quiet window closes. Equal to `quietStartHour` = disabled.',
+            'synonyms': 'do not disturb until, silence end, night mode end',
+            'tier': 'policy',
+          },
+          'coalesce': {
+            'type': 'string',
+            'default': 'none',
+            'label': 'Collapse repeat notifications from one action?',
+            'description': 'When one action raises the subscribed event several times (a bulk import, a batch save), send one notification for the whole action (`perDispatch`) or one per distinct value of `coalesceKey` (`perKey`) instead of one per event. `none` (default) notifies on every event. Scoped to a single action: the next action notifies again.',
+            'synonyms': 'dedupe, deduplicate, collapse, batch notifications, one notification, bulk, coalesce, summarize, avoid spam, notification storm',
+            'tier': 'policy',
+            'values': [
+              'none',
+              'perDispatch',
+              'perKey',
+            ],
+          },
+          'webhookUrl': {
+            'type': 'string',
+            'default': '',
+            'label': 'Webhook URL',
+            'description': 'Destination endpoint for the webhook channel. Dispatch only fires when this is non-blank; a blank URL on channel "webhook" records the audit row with dispatched:false instead of crashing (a consumer misconfiguration, not a failure).',
+            'synonyms': 'webhook endpoint, callback url, target url, http endpoint, notify url',
+            'tier': 'policy',
+          },
+          'severity': {
+            'type': 'string',
+            'default': 'info',
+            'label': 'Severity',
+            'description': 'info, success, warning, or error — controls styling',
+            'synonyms': 'alert level, priority, urgency',
+            'tier': 'policy',
+          },
+          'guardField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Guard field (numeric)',
+            'description': 'Field read from the upstream event\'s `data` payload and compared against `guardValue` when `guardOp` is not `eq` (e.g. \'stockLevel\', \'quantity\'). Ignored when `guardOp` is `eq`.',
+            'synonyms': 'threshold field, numeric field, compare field, watched field, data field',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

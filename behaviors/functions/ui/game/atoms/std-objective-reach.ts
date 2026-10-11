@@ -56,18 +56,18 @@ export interface StdObjectiveReachProgressPayload {
 export interface StdObjectiveReachConfig {
   /** Default: `[]` */
   features?: EntityRow[];
-  /** Default: `1` */
-  pointsPerTarget?: number;
-  /** Default: `0` */
-  reachRadius?: number;
-  /** Default: `true` */
-  removeOnReach?: boolean;
   /** Default: `true` */
   running?: boolean;
-  /** Default: `0` */
-  startScore?: number;
+  /** Default: `true` */
+  removeOnReach?: boolean;
   /** Default: `"gift"` */
   targetType?: string;
+  /** Default: `0` */
+  startScore?: number;
+  /** Default: `0` */
+  reachRadius?: number;
+  /** Default: `1` */
+  pointsPerTarget?: number;
 }
 
 /**

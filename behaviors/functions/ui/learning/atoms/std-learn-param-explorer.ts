@@ -47,54 +47,54 @@ export interface StdLearnParamExplorerParamsChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnParamExplorerConfig {
-  /** Default: `false` */
-  animate?: boolean;
-  /** Default: `"series-2"` */
-  color?: string;
   /** Default: `"power"` */
   curveKind?: string;
-  /** Default: `1` */
-  gridStep?: number;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `false` */
-  interactive?: boolean;
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `1` */
-  paramADefault?: number;
-  /** Default: `"A"` */
-  paramALabel?: string;
-  /** Default: `5` */
-  paramAMax?: number;
+  /** Default: `"Parameter Explorer"` */
+  title?: string;
+  /** Default: `"series-2"` */
+  color?: string;
   /** Default: `-5` */
   paramAMin?: number;
-  /** Default: `0.1` */
-  paramAStep?: number;
-  /** Default: `2` */
-  paramBDefault?: number;
-  /** Default: `"B"` */
-  paramBLabel?: string;
-  /** Default: `5` */
-  paramBMax?: number;
-  /** Default: `-5` */
-  paramBMin?: number;
+  /** Default: `false` */
+  interactive?: boolean;
   /** Default: `0.1` */
   paramBStep?: number;
   /** Default: `true` */
-  showAxes?: boolean;
-  /** Default: `true` */
   showGrid?: boolean;
-  /** Default: `""` */
-  summary?: string;
-  /** Default: `"Parameter Explorer"` */
-  title?: string;
-  /** Default: `600` */
-  width?: number;
-  /** Default: `10` */
-  xMax?: number;
+  /** Default: `"A"` */
+  paramALabel?: string;
+  /** Default: `-5` */
+  paramBMin?: number;
+  /** Default: `true` */
+  showAxes?: boolean;
   /** Default: `0` */
   xMin?: number;
+  /** Default: `5` */
+  paramAMax?: number;
+  /** Default: `""` */
+  matchMode?: string;
+  /** Default: `2` */
+  paramBDefault?: number;
+  /** Default: `1` */
+  gridStep?: number;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `false` */
+  animate?: boolean;
+  /** Default: `5` */
+  paramBMax?: number;
+  /** Default: `400` */
+  height?: number;
+  /** Default: `10` */
+  xMax?: number;
+  /** Default: `0.1` */
+  paramAStep?: number;
+  /** Default: `"B"` */
+  paramBLabel?: string;
+  /** Default: `1` */
+  paramADefault?: number;
+  /** Default: `600` */
+  width?: number;
 }
 
 /**

@@ -54,48 +54,48 @@ export interface StdUiPaginationPageSizeChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPaginationConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `1` */
-  currentPage?: number;
-  dir?: 'ltr' | 'rtl' | 'auto';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaBusy?: boolean;
+  ariaDescribedby?: string;
+  className?: string;
   enterDelay?: number;
-  lang?: string;
-  /** Default: `7` */
-  maxVisiblePages?: number;
-  /** Default: `"PAGE_CHANGE"` */
-  onPageChange?: string;
   /** Default: `"PAGE_SIZE_CHANGE"` */
   onPageSizeChange?: string;
-  /** Default: `"PAGE_CHANGE"` */
-  pageChangeEvent?: string;
-  pageSize?: number;
-  /** Default: `"PAGE_SIZE_CHANGE"` */
-  pageSizeChangeEvent?: string;
+  /** Default: `1` */
+  currentPage?: number;
   /** Default: `[10,20,50,100]` */
   pageSizeOptions?: number[];
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `false` */
-  showJumpToPage?: boolean;
-  /** Default: `false` */
-  showPageSize?: boolean;
-  /** Default: `false` */
-  showTotal?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
-  totalItems?: number;
   /** Default: `1` */
   totalPages?: number;
+  tabIndex?: number;
+  ariaExpanded?: boolean;
+  /** Default: `"PAGE_CHANGE"` */
+  pageChangeEvent?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaLabel?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `7` */
+  maxVisiblePages?: number;
+  lang?: string;
+  /** Default: `"PAGE_SIZE_CHANGE"` */
+  pageSizeChangeEvent?: string;
+  ariaLabelledby?: string;
+  /** Default: `"PAGE_CHANGE"` */
+  onPageChange?: string;
+  totalItems?: number;
+  /** Default: `false` */
+  showPageSize?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  pageSize?: number;
+  /** Default: `false` */
+  showTotal?: boolean;
+  ariaHidden?: boolean;
+  /** Default: `false` */
+  showJumpToPage?: boolean;
+  ariaSelected?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
 }
 
 /**

@@ -77,12 +77,12 @@ export interface StdCascadeOnDeleteCascadeFailedPayload {
 export interface StdCascadeOnDeleteConfig {
   /** Default: `"CascadeLog"` */
   dependentEntity?: unknown;
+  /** Default: `""` */
+  parentEntity?: unknown;
   /** Default: `false` */
   enabled?: boolean;
   /** Default: `"parentId"` */
   foreignKeyField?: string;
-  /** Default: `""` */
-  parentEntity?: unknown;
 }
 
 /**
@@ -226,37 +226,37 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'parentId',
+            'type': 'string',
             'default': '',
             'description': 'Identifier of the deleted parent the cascade is clearing dependents for.',
-            'name': 'parentId',
             'synonyms': 'parent, source, origin',
-            'type': 'string',
           },
           {
+            'name': 'parentEntity',
+            'type': 'string',
             'default': '',
             'description': 'Identifies the parent entity of the cascade.',
-            'name': 'parentEntity',
             'synonyms': 'related entity, source entity, parent',
-            'type': 'string',
           },
           {
+            'name': 'rowCount',
+            'type': 'number',
             'default': 0,
             'description': 'The number of rows deleted by the cascade.',
-            'name': 'rowCount',
             'synonyms': 'count, size, quantity',
-            'type': 'number',
           },
           {
-            'default': '',
-            'description': 'Scratch: id of the dependent row the loop is currently deleting.',
-            'intrinsic': true,
             'name': 'headId',
-            'synonyms': 'current id, cursor',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'Scratch: id of the dependent row the loop is currently deleting.',
+            'synonyms': 'current id, cursor',
           },
         ];
         const extras = params.fields ?? [];
@@ -267,41 +267,7 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
     } as Entity,
     traits: [
       {
-        'capabilities': [
-          'cascade-delete',
-        ],
-        'category': 'lifecycle',
-        'config': {
-          'dependentEntity': {
-            'default': 'CascadeLog',
-            'description': 'Entity holding rows that point at the parent (compose one cascade trait per dependent type). Defaults to the atom\'s own log so the standalone validates; rebind per composition.',
-            'label': 'Dependent entity',
-            'tier': 'internal',
-            'type': 'entity',
-          },
-          'enabled': {
-            'default': false,
-            'description': 'When a record is deleted, also delete the records that belong to it. Off by default.',
-            'label': 'Delete related records too',
-            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, cascade delete, delete children, on delete cascade, cascade on delete, remove related, soft delete cascade, dependent deletes, integrity cascade',
-            'tier': 'infra',
-            'type': 'boolean',
-          },
-          'foreignKeyField': {
-            'default': 'parentId',
-            'description': 'Field on dependent rows that holds the parent\'s id.',
-            'label': 'Foreign-key field',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'parentEntity': {
-            'default': '',
-            'description': 'Entity whose deletion triggers the cascade.',
-            'label': 'Parent entity',
-            'tier': 'internal',
-            'type': 'entity',
-          },
-        },
+        'name': 'CascadeOnDeleteGate',
         'effectRow': [
           {
             'kind': 'emit',
@@ -313,13 +279,13 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
           },
           {
             'kind': 'fetch',
-            'resolved': false,
             'resource': '@config.dependentEntity',
+            'resolved': false,
           },
           {
             'kind': 'persist',
-            'resolved': false,
             'resource': '@config.dependentEntity',
+            'resolved': false,
           },
           {
             'kind': 'persist',
@@ -346,26 +312,31 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
             'resource': '@entity.rowCount',
           },
         ],
+        'category': 'lifecycle',
+        'capabilities': [
+          'cascade-delete',
+        ],
+        'linkedEntity': 'CascadeLog',
         'emits': [
           {
             'event': 'CascadeRowDeleted',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'CascadeCompleted',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'parentId',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'DepsLoaded',
@@ -399,10 +370,16 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
             ],
           },
         ],
-        'linkedEntity': 'CascadeLog',
-        'name': 'CascadeOnDeleteGate',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'scanning',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -473,22 +450,17 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'scanning',
-            },
-          ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
+              'event': 'INIT',
             },
             {
+              'from': 'idle',
+              'to': 'scanning',
+              'event': 'ParentDeleted',
+              'guard': '@config.enabled',
               'effects': [
                 [
                   'set',
@@ -505,18 +477,41 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
                   '@config.dependentEntity',
                   {
                     'emit': {
-                      'failure': 'CascadeFailed',
                       'success': 'DepsLoaded',
+                      'failure': 'CascadeFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ParentDeleted',
-              'from': 'idle',
-              'guard': '@config.enabled',
-              'to': 'scanning',
             },
             {
+              'from': 'scanning',
+              'to': 'scanning',
+              'event': 'DepsLoaded',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  [
+                    'array/filter',
+                    '@payload.data',
+                    [
+                      'fn',
+                      'row',
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@row',
+                          '@config.foreignKeyField',
+                        ],
+                        '@entity.parentId',
+                      ],
+                    ],
+                  ],
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'set',
@@ -566,56 +561,11 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
                   },
                 ],
               ],
-              'event': 'DepsLoaded',
-              'from': 'scanning',
-              'guard': [
-                '>',
-                [
-                  'array/len',
-                  [
-                    'array/filter',
-                    '@payload.data',
-                    [
-                      'fn',
-                      'row',
-                      [
-                        '=',
-                        [
-                          'object/get',
-                          '@row',
-                          '@config.foreignKeyField',
-                        ],
-                        '@entity.parentId',
-                      ],
-                    ],
-                  ],
-                ],
-                0,
-              ],
-              'to': 'scanning',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'CascadeCompleted',
-                  {
-                    'parentId': '@entity.parentId',
-                  },
-                ],
-                [
-                  'persist',
-                  'create',
-                  ('CascadeLog' satisfies _StdCascadeOnDeleteEntityName),
-                  {
-                    'parentEntity': '@entity.parentEntity',
-                    'parentId': '@entity.parentId',
-                    'rowCount': '@entity.rowCount',
-                  },
-                ],
-              ],
-              'event': 'DepsLoaded',
               'from': 'scanning',
+              'to': 'idle',
+              'event': 'DepsLoaded',
               'guard': [
                 '=',
                 [
@@ -640,9 +590,30 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
                 ],
                 0,
               ],
-              'to': 'idle',
+              'effects': [
+                [
+                  'emit',
+                  'CascadeCompleted',
+                  {
+                    'parentId': '@entity.parentId',
+                  },
+                ],
+                [
+                  'persist',
+                  'create',
+                  ('CascadeLog' satisfies _StdCascadeOnDeleteEntityName),
+                  {
+                    'rowCount': '@entity.rowCount',
+                    'parentId': '@entity.parentId',
+                    'parentEntity': '@entity.parentEntity',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'scanning',
+              'to': 'scanning',
+              'event': 'CascadeStepped',
               'effects': [
                 [
                   'set',
@@ -664,33 +635,62 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
                   },
                 ],
               ],
-              'event': 'CascadeStepped',
-              'from': 'scanning',
-              'to': 'scanning',
             },
             {
+              'from': 'scanning',
+              'to': 'idle',
+              'event': 'CascadeFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
+                    'type': 'alert',
                     'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t cascade the delete — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'CascadeFailed',
-              'from': 'scanning',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'dependentEntity': {
+            'type': 'entity',
+            'default': 'CascadeLog',
+            'label': 'Dependent entity',
+            'description': 'Entity holding rows that point at the parent (compose one cascade trait per dependent type). Defaults to the atom\'s own log so the standalone validates; rebind per composition.',
+            'tier': 'internal',
+          },
+          'parentEntity': {
+            'type': 'entity',
+            'default': '',
+            'label': 'Parent entity',
+            'description': 'Entity whose deletion triggers the cascade.',
+            'tier': 'internal',
+          },
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Delete related records too',
+            'description': 'When a record is deleted, also delete the records that belong to it. Off by default.',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, cascade delete, delete children, on delete cascade, cascade on delete, remove related, soft delete cascade, dependent deletes, integrity cascade',
+            'tier': 'infra',
+          },
+          'foreignKeyField': {
+            'type': 'string',
+            'default': 'parentId',
+            'label': 'Foreign-key field',
+            'description': 'Field on dependent rows that holds the parent\'s id.',
+            'tier': 'internal',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

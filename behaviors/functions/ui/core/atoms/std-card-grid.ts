@@ -47,28 +47,28 @@ export interface StdCardGridCardOpenedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCardGridConfig {
-  /** Default: `"center"` */
-  alignment?: 'center' | 'start';
   /** Default: `3` */
   columns?: number;
-  /** Default: `"none"` */
-  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
-  /** Default: `"background"` */
-  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
-  /** Default: `"none"` */
-  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   /** Default: `""` */
   heading?: string;
-  /** Default: `[{"description":"What this card is about.","title":"First card"},{"description":"What this card is about.","title":"Second card"},{"description":"What this card is about.","title":"Third card"}]` */
-  items?: EntityRow[];
-  /** Default: `""` */
-  lede?: string;
+  /** Default: `"center"` */
+  alignment?: 'center' | 'start';
   /** Default: `"plain"` */
   look?: 'media' | 'profile' | 'plain';
-  /** Default: `"plain"` */
-  surface?: 'plain' | 'muted' | 'accent' | 'inverse';
+  /** Default: `"none"` */
+  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `""` */
+  lede?: string;
+  /** Default: `[{"description":"What this card is about.","title":"First card"},{"title":"Second card","description":"What this card is about."},{"title":"Third card","description":"What this card is about."}]` */
+  items?: EntityRow[];
+  /** Default: `"none"` */
+  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   /** Default: `false` */
   texture?: boolean;
+  /** Default: `"plain"` */
+  surface?: 'plain' | 'muted' | 'accent' | 'inverse';
+  /** Default: `"background"` */
+  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
 }
 
 /**

@@ -48,10 +48,10 @@ export interface StdUiAgentActivityRowJumpPayload {
 export interface StdUiAgentActivityRowConfig {
   /** Default: `{}` */
   activity?: EntityRow;
-  /** Default: `{"readyCount":1,"settled":false}` */
-  facts?: EntityRow;
   /** Default: `"JUMP"` */
   onJump?: string;
+  /** Default: `{"settled":false,"readyCount":1}` */
+  facts?: EntityRow;
 }
 
 /**

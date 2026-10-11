@@ -74,67 +74,67 @@ export interface StdUiDockLayoutSecondarySidebarCollapsedChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDockLayoutConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  bottomPanel?: PatternValue;
-  bottomPanelClassName?: string;
-  bottomPanelCollapsed?: boolean;
-  /** Default: `30` */
-  bottomPanelHeight?: number;
-  bottomPanelIcon?: unknown;
   bottomPanelLabel?: string;
-  /** Default: `120` */
-  bottomPanelMinSize?: number;
-  className?: string;
-  compact?: boolean;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  lang?: string;
-  /** Default: `[]` */
-  main?: PatternValue;
-  mainClassName?: string;
-  /** Default: `"BOTTOM_PANEL_COLLAPSED_CHANGE"` */
-  onBottomPanelCollapsedChange?: string;
-  /** Default: `"BOTTOM_PANEL_HEIGHT_CHANGE"` */
-  onBottomPanelHeightChange?: string;
-  /** Default: `"SECONDARY_SIDEBAR_COLLAPSED_CHANGE"` */
-  onSecondarySidebarCollapsedChange?: string;
-  /** Default: `"SIDEBAR_COLLAPSED_CHANGE"` */
-  onSidebarCollapsedChange?: string;
-  /** Default: `"SIDEBAR_WIDTH_CHANGE"` */
-  onSidebarWidthChange?: string;
-  rail?: PatternValue;
-  railClassName?: string;
-  railWidth?: number;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  secondarySidebar?: PatternValue;
-  secondarySidebarClassName?: string;
-  secondarySidebarCollapsed?: boolean;
-  secondarySidebarIcon?: unknown;
-  secondarySidebarLabel?: string;
   /** Default: `280` */
   secondarySidebarWidth?: number;
-  sidebar?: PatternValue;
-  sidebarClassName?: string;
-  sidebarCollapsed?: boolean;
-  /** Default: `160` */
-  sidebarMinSize?: number;
+  ariaSelected?: boolean;
+  railClassName?: string;
+  ariaLabelledby?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaExpanded?: boolean;
   /** Default: `20` */
   sidebarWidth?: number;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  compact?: boolean;
+  bottomPanelCollapsed?: boolean;
+  bottomPanelIcon?: unknown;
+  /** Default: `30` */
+  bottomPanelHeight?: number;
+  sidebarClassName?: string;
+  /** Default: `120` */
+  bottomPanelMinSize?: number;
+  secondarySidebarLabel?: string;
+  sidebar?: PatternValue;
+  ariaDescribedby?: string;
   statusBar?: PatternValue;
+  bottomPanelClassName?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  railWidth?: number;
+  /** Default: `"SIDEBAR_COLLAPSED_CHANGE"` */
+  onSidebarCollapsedChange?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `"SECONDARY_SIDEBAR_COLLAPSED_CHANGE"` */
+  onSecondarySidebarCollapsedChange?: string;
+  /** Default: `160` */
+  sidebarMinSize?: number;
   statusBarClassName?: string;
   tabIndex?: number;
+  sidebarCollapsed?: boolean;
+  className?: string;
+  ariaBusy?: boolean;
+  /** Default: `"SIDEBAR_WIDTH_CHANGE"` */
+  onSidebarWidthChange?: string;
+  /** Default: `"BOTTOM_PANEL_COLLAPSED_CHANGE"` */
+  onBottomPanelCollapsedChange?: string;
   topBarActions?: PatternValue;
+  bottomPanel?: PatternValue;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `[]` */
+  main?: PatternValue;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  secondarySidebarIcon?: unknown;
+  rail?: PatternValue;
+  mainClassName?: string;
+  lang?: string;
+  secondarySidebarClassName?: string;
+  /** Default: `"BOTTOM_PANEL_HEIGHT_CHANGE"` */
+  onBottomPanelHeightChange?: string;
+  secondarySidebarCollapsed?: boolean;
+  ariaLabel?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  secondarySidebar?: PatternValue;
+  ariaHidden?: boolean;
+  enterDelay?: number;
 }
 
 type _StdUiDockLayoutEntityName = 'DockLayoutItem';
@@ -194,8 +194,8 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -206,169 +206,378 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
     } as Entity,
     traits: [
       {
+        'name': 'DockLayoutRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
+        'linkedEntity': 'DockLayoutItem',
+        'emits': [
+          {
+            'event': '@config.onSidebarCollapsedChange',
+            'description': 'onSidebarCollapsedChange prop',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'collapsed',
+                'type': 'boolean',
+              },
+            ],
+            'definerKnob': 'onSidebarCollapsedChange',
+          },
+          {
+            'event': '@config.onSidebarWidthChange',
+            'description': 'onSidebarWidthChange prop',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'width',
+                'type': 'number',
+              },
+            ],
+            'definerKnob': 'onSidebarWidthChange',
+          },
+          {
+            'event': '@config.onBottomPanelCollapsedChange',
+            'description': 'onBottomPanelCollapsedChange prop',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'collapsed',
+                'type': 'boolean',
+              },
+            ],
+            'definerKnob': 'onBottomPanelCollapsedChange',
+          },
+          {
+            'event': '@config.onBottomPanelHeightChange',
+            'description': 'onBottomPanelHeightChange prop',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'height',
+                'type': 'number',
+              },
+            ],
+            'definerKnob': 'onBottomPanelHeightChange',
+          },
+          {
+            'event': '@config.onSecondarySidebarCollapsedChange',
+            'description': 'onSecondarySidebarCollapsedChange prop',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'collapsed',
+                'type': 'boolean',
+              },
+            ],
+            'definerKnob': 'onSecondarySidebarCollapsedChange',
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': '@config.onSidebarCollapsedChange',
+              'name': '@config.on sidebar collapsed change',
+              'description': 'onSidebarCollapsedChange prop',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'collapsed',
+                  'type': 'boolean',
+                },
+              ],
+            },
+            {
+              'key': '@config.onSidebarWidthChange',
+              'name': '@config.on sidebar width change',
+              'description': 'onSidebarWidthChange prop',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'width',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': '@config.onBottomPanelCollapsedChange',
+              'name': '@config.on bottom panel collapsed change',
+              'description': 'onBottomPanelCollapsedChange prop',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'collapsed',
+                  'type': 'boolean',
+                },
+              ],
+            },
+            {
+              'key': '@config.onBottomPanelHeightChange',
+              'name': '@config.on bottom panel height change',
+              'description': 'onBottomPanelHeightChange prop',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'height',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': '@config.onSecondarySidebarCollapsedChange',
+              'name': '@config.on secondary sidebar collapsed change',
+              'description': 'onSecondarySidebarCollapsedChange prop',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'collapsed',
+                  'type': 'boolean',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'skeleton': '@config.skeleton',
+                    'className': '@config.className',
+                    'mainClassName': '@config.mainClassName',
+                    'statusBar': '@config.statusBar',
+                    'bottomPanelIcon': '@config.bottomPanelIcon',
+                    'onSidebarCollapsedChange': '@config.onSidebarCollapsedChange',
+                    'onBottomPanelHeightChange': '@config.onBottomPanelHeightChange',
+                    'onBottomPanelCollapsedChange': '@config.onBottomPanelCollapsedChange',
+                    'secondarySidebarWidth': '@config.secondarySidebarWidth',
+                    'secondarySidebarIcon': '@config.secondarySidebarIcon',
+                    'statusBarClassName': '@config.statusBarClassName',
+                    'sidebarCollapsed': '@config.sidebarCollapsed',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-label': '@config.ariaLabel',
+                    'tabIndex': '@config.tabIndex',
+                    'sidebar': '@config.sidebar',
+                    'main': '@config.main',
+                    'bottomPanelLabel': '@config.bottomPanelLabel',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'secondarySidebarLabel': '@config.secondarySidebarLabel',
+                    'bottomPanelHeight': '@config.bottomPanelHeight',
+                    'secondarySidebarCollapsed': '@config.secondarySidebarCollapsed',
+                    'bottomPanel': '@config.bottomPanel',
+                    'type': 'dock-layout',
+                    'topBarActions': '@config.topBarActions',
+                    'role': '@config.role',
+                    'bottomPanelClassName': '@config.bottomPanelClassName',
+                    'enter': '@config.enter',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'sidebarMinSize': '@config.sidebarMinSize',
+                    'railClassName': '@config.railClassName',
+                    'aria-current': '@config.ariaCurrent',
+                    'onSidebarWidthChange': '@config.onSidebarWidthChange',
+                    'secondarySidebarClassName': '@config.secondarySidebarClassName',
+                    'sidebarClassName': '@config.sidebarClassName',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-selected': '@config.ariaSelected',
+                    'onSecondarySidebarCollapsedChange': '@config.onSecondarySidebarCollapsedChange',
+                    'railWidth': '@config.railWidth',
+                    'lang': '@config.lang',
+                    'bottomPanelCollapsed': '@config.bottomPanelCollapsed',
+                    'rail': '@config.rail',
+                    'aria-live': '@config.ariaLive',
+                    'bottomPanelMinSize': '@config.bottomPanelMinSize',
+                    'secondarySidebar': '@config.secondarySidebar',
+                    'compact': '@config.compact',
+                    'dir': '@config.dir',
+                    'sidebarWidth': '@config.sidebarWidth',
+                    'enterDelay': '@config.enterDelay',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
         'config': {
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
-            'label': 'Aria-current',
-            'synonyms': 'aria-current',
-            'tier': 'presentation',
+          'bottomPanelLabel': {
             'type': 'string',
-            'values': [
-              'page',
-              'step',
-              'location',
-              'date',
-              'time',
-              'true',
-              'false',
-            ],
-          },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
+            'label': 'Bottom Panel Label',
+            'description': 'Compact: the top-bar button that opens `bottomPanel`.',
             'tier': 'presentation',
-            'type': 'string',
           },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
+          'secondarySidebarWidth': {
+            'type': 'number',
+            'default': 280,
+            'label': 'Secondary Sidebar Width',
+            'description': 'Width of `secondarySidebar` in pixels (fixed — not resizable). @default 280',
             'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
           },
           'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'type': 'boolean',
             'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
             'synonyms': 'aria-selected',
             'tier': 'presentation',
-            'type': 'boolean',
           },
-          'bottomPanel': {
-            'description': 'Collapsible, resizable-height bottom panel.',
-            'label': 'Bottom Panel',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'bottomPanelClassName': {
-            'description': 'bottomPanelClassName prop',
-            'label': 'Bottom Panel Class Name',
-            'tier': 'presentation',
+          'railClassName': {
             'type': 'string',
-          },
-          'bottomPanelCollapsed': {
-            'description': 'Whether `bottomPanel` is collapsed (controlled; the layout keeps its own state when omitted).',
-            'label': 'Bottom Panel Collapsed',
+            'label': 'Rail Class Name',
+            'description': 'railClassName prop',
             'tier': 'presentation',
-            'type': 'boolean',
           },
-          'bottomPanelHeight': {
-            'default': 30,
-            'description': 'Bottom panel size as a SplitPane ratio (0-100, percentage given to the panel). @default 30',
-            'label': 'Bottom Panel Height',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'bottomPanelIcon': {
-            'description': 'bottomPanelIcon prop',
-            'label': 'Bottom Panel Icon',
-            'tier': 'presentation',
-            'type': 'icon',
-          },
-          'bottomPanelLabel': {
-            'description': 'Compact: the top-bar button that opens `bottomPanel`.',
-            'label': 'Bottom Panel Label',
-            'tier': 'presentation',
+          'ariaLabelledby': {
             'type': 'string',
-          },
-          'bottomPanelMinSize': {
-            'default': 120,
-            'description': 'Minimum bottom panel size in pixels, forwarded to SplitPane\'s `minSize`. @default 120',
-            'label': 'Bottom Panel Min Size',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
             'tier': 'presentation',
-            'type': 'number',
-          },
-          'className': {
-            'description': 'Additional CSS classes on the root frame.',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'compact': {
-            'description': 'The mobile variant; decided by the viewport (narrower than 1024px) when omitted.',
-            'label': 'Compact',
-            'tier': 'presentation',
-            'type': 'boolean',
           },
           'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
             'values': [
               'ltr',
               'rtl',
               'auto',
             ],
           },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
+          'skeleton': {
             'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
+          'sidebarWidth': {
+            'type': 'number',
+            'default': 20,
+            'label': 'Sidebar Width',
+            'description': 'Sidebar size as a SplitPane ratio (0-100, percentage of the sidebar/main split). @default 20',
+            'tier': 'presentation',
+          },
+          'compact': {
+            'type': 'boolean',
+            'label': 'Compact',
+            'description': 'The mobile variant; decided by the viewport (narrower than 1024px) when omitted.',
+            'tier': 'presentation',
+          },
+          'bottomPanelCollapsed': {
+            'type': 'boolean',
+            'label': 'Bottom Panel Collapsed',
+            'description': 'Whether `bottomPanel` is collapsed (controlled; the layout keeps its own state when omitted).',
+            'tier': 'presentation',
+          },
+          'bottomPanelIcon': {
+            'type': 'icon',
+            'label': 'Bottom Panel Icon',
+            'description': 'bottomPanelIcon prop',
+            'tier': 'presentation',
+          },
+          'bottomPanelHeight': {
+            'type': 'number',
+            'default': 30,
+            'label': 'Bottom Panel Height',
+            'description': 'Bottom panel size as a SplitPane ratio (0-100, percentage given to the panel). @default 30',
+            'tier': 'presentation',
+          },
+          'sidebarClassName': {
+            'type': 'string',
+            'label': 'Sidebar Class Name',
+            'description': 'sidebarClassName prop',
+            'tier': 'presentation',
+          },
+          'bottomPanelMinSize': {
+            'type': 'number',
+            'default': 120,
+            'label': 'Bottom Panel Min Size',
+            'description': 'Minimum bottom panel size in pixels, forwarded to SplitPane\'s `minSize`. @default 120',
+            'tier': 'presentation',
+          },
+          'secondarySidebarLabel': {
+            'type': 'string',
+            'label': 'Secondary Sidebar Label',
+            'description': 'Compact: the top-bar button that opens `secondarySidebar` (e.g. \'Inspector\', \'Chat\').',
+            'tier': 'presentation',
+          },
+          'sidebar': {
+            'type': 'node',
+            'label': 'Sidebar',
+            'description': 'Collapsible, resizable left sidebar.',
+            'tier': 'presentation',
+          },
+          'ariaDescribedby': {
+            'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+          },
+          'statusBar': {
+            'type': 'node',
+            'label': 'Status Bar',
+            'description': 'Slim strip pinned to the bottom of the frame, below the bottom panel.',
+            'tier': 'presentation',
+          },
+          'bottomPanelClassName': {
+            'type': 'string',
+            'label': 'Bottom Panel Class Name',
+            'description': 'bottomPanelClassName prop',
+            'tier': 'presentation',
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
             'values': [
               'none',
               'fade',
@@ -377,89 +586,126 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
               'slide',
             ],
           },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
+          'railWidth': {
             'type': 'number',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
+            'label': 'Rail Width',
+            'description': 'Width of `rail` in pixels; the rail sizes the column itself when omitted.',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'main': {
-            'default': [],
-            'description': 'Required center region.',
-            'label': 'Main',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'mainClassName': {
-            'description': 'mainClassName prop',
-            'label': 'Main Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'onBottomPanelCollapsedChange': {
-            'default': 'BOTTOM_PANEL_COLLAPSED_CHANGE',
-            'description': 'onBottomPanelCollapsedChange prop',
-            'label': 'On Bottom Panel Collapsed Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onBottomPanelHeightChange': {
-            'default': 'BOTTOM_PANEL_HEIGHT_CHANGE',
-            'description': 'onBottomPanelHeightChange prop',
-            'label': 'On Bottom Panel Height Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onSecondarySidebarCollapsedChange': {
-            'default': 'SECONDARY_SIDEBAR_COLLAPSED_CHANGE',
-            'description': 'onSecondarySidebarCollapsedChange prop',
-            'label': 'On Secondary Sidebar Collapsed Change',
-            'tier': 'presentation',
-            'type': 'event',
           },
           'onSidebarCollapsedChange': {
-            'default': 'SIDEBAR_COLLAPSED_CHANGE',
-            'description': 'onSidebarCollapsedChange prop',
-            'label': 'On Sidebar Collapsed Change',
-            'tier': 'presentation',
             'type': 'event',
+            'default': 'SIDEBAR_COLLAPSED_CHANGE',
+            'label': 'On Sidebar Collapsed Change',
+            'description': 'onSidebarCollapsedChange prop',
+            'tier': 'presentation',
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'onSecondarySidebarCollapsedChange': {
+            'type': 'event',
+            'default': 'SECONDARY_SIDEBAR_COLLAPSED_CHANGE',
+            'label': 'On Secondary Sidebar Collapsed Change',
+            'description': 'onSecondarySidebarCollapsedChange prop',
+            'tier': 'presentation',
+          },
+          'sidebarMinSize': {
+            'type': 'number',
+            'default': 160,
+            'label': 'Sidebar Min Size',
+            'description': 'Minimum sidebar size in pixels, forwarded to SplitPane\'s `minSize`. @default 160',
+            'tier': 'presentation',
+          },
+          'statusBarClassName': {
+            'type': 'string',
+            'label': 'Status Bar Class Name',
+            'description': 'statusBarClassName prop',
+            'tier': 'presentation',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
+          },
+          'sidebarCollapsed': {
+            'type': 'boolean',
+            'label': 'Sidebar Collapsed',
+            'description': 'Whether `sidebar` is collapsed (controlled; the layout keeps its own state when omitted).',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes on the root frame.',
+            'tier': 'presentation',
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
           },
           'onSidebarWidthChange': {
-            'default': 'SIDEBAR_WIDTH_CHANGE',
-            'description': 'onSidebarWidthChange prop',
-            'label': 'On Sidebar Width Change',
-            'tier': 'presentation',
             'type': 'event',
-          },
-          'rail': {
-            'description': 'Fixed-width far-left vertical strip (e.g. an icon nav rail).',
-            'label': 'Rail',
+            'default': 'SIDEBAR_WIDTH_CHANGE',
+            'label': 'On Sidebar Width Change',
+            'description': 'onSidebarWidthChange prop',
             'tier': 'presentation',
+          },
+          'onBottomPanelCollapsedChange': {
+            'type': 'event',
+            'default': 'BOTTOM_PANEL_COLLAPSED_CHANGE',
+            'label': 'On Bottom Panel Collapsed Change',
+            'description': 'onBottomPanelCollapsedChange prop',
+            'tier': 'presentation',
+          },
+          'topBarActions': {
             'type': 'node',
-          },
-          'railClassName': {
-            'description': 'railClassName prop',
-            'label': 'Rail Class Name',
+            'label': 'Top Bar Actions',
+            'description': 'Compact: the host\'s own actions at the end of the top bar (e.g. Run).',
             'tier': 'presentation',
+          },
+          'bottomPanel': {
+            'type': 'node',
+            'label': 'Bottom Panel',
+            'description': 'Collapsible, resizable-height bottom panel.',
+            'tier': 'presentation',
+          },
+          'ariaLive': {
             'type': 'string',
-          },
-          'railWidth': {
-            'description': 'Width of `rail` in pixels; the rail sizes the column itself when omitted.',
-            'label': 'Rail Width',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
             'tier': 'presentation',
-            'type': 'number',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'main': {
+            'type': 'node',
+            'default': [],
+            'label': 'Main',
+            'description': 'Required center region.',
+            'tier': 'presentation',
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -544,339 +790,93 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
               'treeitem',
             ],
           },
-          'secondarySidebar': {
-            'description': 'Collapsible right sidebar.',
-            'label': 'Secondary Sidebar',
+          'secondarySidebarIcon': {
+            'type': 'icon',
+            'label': 'Secondary Sidebar Icon',
+            'description': 'secondarySidebarIcon prop',
             'tier': 'presentation',
+          },
+          'rail': {
             'type': 'node',
+            'label': 'Rail',
+            'description': 'Fixed-width far-left vertical strip (e.g. an icon nav rail).',
+            'tier': 'presentation',
+          },
+          'mainClassName': {
+            'type': 'string',
+            'label': 'Main Class Name',
+            'description': 'mainClassName prop',
+            'tier': 'presentation',
+          },
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
           },
           'secondarySidebarClassName': {
-            'description': 'secondarySidebarClassName prop',
-            'label': 'Secondary Sidebar Class Name',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Secondary Sidebar Class Name',
+            'description': 'secondarySidebarClassName prop',
+            'tier': 'presentation',
+          },
+          'onBottomPanelHeightChange': {
+            'type': 'event',
+            'default': 'BOTTOM_PANEL_HEIGHT_CHANGE',
+            'label': 'On Bottom Panel Height Change',
+            'description': 'onBottomPanelHeightChange prop',
+            'tier': 'presentation',
           },
           'secondarySidebarCollapsed': {
-            'description': 'Whether `secondarySidebar` is collapsed (controlled; the layout keeps its own state when omitted).',
+            'type': 'boolean',
             'label': 'Secondary Sidebar Collapsed',
+            'description': 'Whether `secondarySidebar` is collapsed (controlled; the layout keeps its own state when omitted).',
             'tier': 'presentation',
-            'type': 'boolean',
           },
-          'secondarySidebarIcon': {
-            'description': 'secondarySidebarIcon prop',
-            'label': 'Secondary Sidebar Icon',
-            'tier': 'presentation',
-            'type': 'icon',
-          },
-          'secondarySidebarLabel': {
-            'description': 'Compact: the top-bar button that opens `secondarySidebar` (e.g. \'Inspector\', \'Chat\').',
-            'label': 'Secondary Sidebar Label',
-            'tier': 'presentation',
+          'ariaLabel': {
             'type': 'string',
-          },
-          'secondarySidebarWidth': {
-            'default': 280,
-            'description': 'Width of `secondarySidebar` in pixels (fixed — not resizable). @default 280',
-            'label': 'Secondary Sidebar Width',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
             'tier': 'presentation',
-            'type': 'number',
           },
-          'sidebar': {
-            'description': 'Collapsible, resizable left sidebar.',
-            'label': 'Sidebar',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'sidebarClassName': {
-            'description': 'sidebarClassName prop',
-            'label': 'Sidebar Class Name',
-            'tier': 'presentation',
+          'ariaCurrent': {
             'type': 'string',
-          },
-          'sidebarCollapsed': {
-            'description': 'Whether `sidebar` is collapsed (controlled; the layout keeps its own state when omitted).',
-            'label': 'Sidebar Collapsed',
+            'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'synonyms': 'aria-current',
             'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'sidebarMinSize': {
-            'default': 160,
-            'description': 'Minimum sidebar size in pixels, forwarded to SplitPane\'s `minSize`. @default 160',
-            'label': 'Sidebar Min Size',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'sidebarWidth': {
-            'default': 20,
-            'description': 'Sidebar size as a SplitPane ratio (0-100, percentage of the sidebar/main split). @default 20',
-            'label': 'Sidebar Width',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
-            'type': 'string',
             'values': [
-              'header',
-              'table',
-              'list',
-              'grid',
-              'detail',
-              'stats',
-              'form',
-              'card',
-              'text',
-              'none',
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
             ],
           },
-          'statusBar': {
-            'description': 'Slim strip pinned to the bottom of the frame, below the bottom panel.',
-            'label': 'Status Bar',
-            'tier': 'presentation',
+          'secondarySidebar': {
             'type': 'node',
-          },
-          'statusBarClassName': {
-            'description': 'statusBarClassName prop',
-            'label': 'Status Bar Class Name',
+            'label': 'Secondary Sidebar',
+            'description': 'Collapsible right sidebar.',
             'tier': 'presentation',
-            'type': 'string',
           },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
             'tier': 'presentation',
+          },
+          'enterDelay': {
             'type': 'number',
-          },
-          'topBarActions': {
-            'description': 'Compact: the host\'s own actions at the end of the top bar (e.g. Run).',
-            'label': 'Top Bar Actions',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
             'tier': 'presentation',
-            'type': 'node',
           },
         },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'onSidebarCollapsedChange',
-            'description': 'onSidebarCollapsedChange prop',
-            'event': '@config.onSidebarCollapsedChange',
-            'payloadSchema': [
-              {
-                'name': 'collapsed',
-                'type': 'boolean',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'definerKnob': 'onSidebarWidthChange',
-            'description': 'onSidebarWidthChange prop',
-            'event': '@config.onSidebarWidthChange',
-            'payloadSchema': [
-              {
-                'name': 'width',
-                'type': 'number',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'definerKnob': 'onBottomPanelCollapsedChange',
-            'description': 'onBottomPanelCollapsedChange prop',
-            'event': '@config.onBottomPanelCollapsedChange',
-            'payloadSchema': [
-              {
-                'name': 'collapsed',
-                'type': 'boolean',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'definerKnob': 'onBottomPanelHeightChange',
-            'description': 'onBottomPanelHeightChange prop',
-            'event': '@config.onBottomPanelHeightChange',
-            'payloadSchema': [
-              {
-                'name': 'height',
-                'type': 'number',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'definerKnob': 'onSecondarySidebarCollapsedChange',
-            'description': 'onSecondarySidebarCollapsedChange prop',
-            'event': '@config.onSecondarySidebarCollapsedChange',
-            'payloadSchema': [
-              {
-                'name': 'collapsed',
-                'type': 'boolean',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'DockLayoutItem',
-        'name': 'DockLayoutRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'onSidebarCollapsedChange prop',
-              'key': '@config.onSidebarCollapsedChange',
-              'name': '@config.on sidebar collapsed change',
-              'payloadSchema': [
-                {
-                  'name': 'collapsed',
-                  'type': 'boolean',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'onSidebarWidthChange prop',
-              'key': '@config.onSidebarWidthChange',
-              'name': '@config.on sidebar width change',
-              'payloadSchema': [
-                {
-                  'name': 'width',
-                  'type': 'number',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'onBottomPanelCollapsedChange prop',
-              'key': '@config.onBottomPanelCollapsedChange',
-              'name': '@config.on bottom panel collapsed change',
-              'payloadSchema': [
-                {
-                  'name': 'collapsed',
-                  'type': 'boolean',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'onBottomPanelHeightChange prop',
-              'key': '@config.onBottomPanelHeightChange',
-              'name': '@config.on bottom panel height change',
-              'payloadSchema': [
-                {
-                  'name': 'height',
-                  'type': 'number',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'onSecondarySidebarCollapsedChange prop',
-              'key': '@config.onSecondarySidebarCollapsedChange',
-              'name': '@config.on secondary sidebar collapsed change',
-              'payloadSchema': [
-                {
-                  'name': 'collapsed',
-                  'type': 'boolean',
-                },
-              ],
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'bottomPanel': '@config.bottomPanel',
-                    'bottomPanelClassName': '@config.bottomPanelClassName',
-                    'bottomPanelCollapsed': '@config.bottomPanelCollapsed',
-                    'bottomPanelHeight': '@config.bottomPanelHeight',
-                    'bottomPanelIcon': '@config.bottomPanelIcon',
-                    'bottomPanelLabel': '@config.bottomPanelLabel',
-                    'bottomPanelMinSize': '@config.bottomPanelMinSize',
-                    'className': '@config.className',
-                    'compact': '@config.compact',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'lang': '@config.lang',
-                    'main': '@config.main',
-                    'mainClassName': '@config.mainClassName',
-                    'onBottomPanelCollapsedChange': '@config.onBottomPanelCollapsedChange',
-                    'onBottomPanelHeightChange': '@config.onBottomPanelHeightChange',
-                    'onSecondarySidebarCollapsedChange': '@config.onSecondarySidebarCollapsedChange',
-                    'onSidebarCollapsedChange': '@config.onSidebarCollapsedChange',
-                    'onSidebarWidthChange': '@config.onSidebarWidthChange',
-                    'rail': '@config.rail',
-                    'railClassName': '@config.railClassName',
-                    'railWidth': '@config.railWidth',
-                    'role': '@config.role',
-                    'secondarySidebar': '@config.secondarySidebar',
-                    'secondarySidebarClassName': '@config.secondarySidebarClassName',
-                    'secondarySidebarCollapsed': '@config.secondarySidebarCollapsed',
-                    'secondarySidebarIcon': '@config.secondarySidebarIcon',
-                    'secondarySidebarLabel': '@config.secondarySidebarLabel',
-                    'secondarySidebarWidth': '@config.secondarySidebarWidth',
-                    'sidebar': '@config.sidebar',
-                    'sidebarClassName': '@config.sidebarClassName',
-                    'sidebarCollapsed': '@config.sidebarCollapsed',
-                    'sidebarMinSize': '@config.sidebarMinSize',
-                    'sidebarWidth': '@config.sidebarWidth',
-                    'skeleton': '@config.skeleton',
-                    'statusBar': '@config.statusBar',
-                    'statusBarClassName': '@config.statusBarClassName',
-                    'tabIndex': '@config.tabIndex',
-                    'topBarActions': '@config.topBarActions',
-                    'type': 'dock-layout',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

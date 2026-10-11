@@ -46,18 +46,18 @@ export interface StdNotificationPanelClosePayload {
  * without modifying its state-machine topology.
  */
 export interface StdNotificationPanelConfig {
+  /** Default: `"Notifications"` */
+  title?: string;
+  /** Default: `"bell"` */
+  icon?: string;
   /** Default: `"Close"` */
   closeLabel?: string;
   /** Default: `"You're all caught up."` */
   emptyMessage?: string;
-  /** Default: `"bell"` */
-  icon?: string;
   /** Default: `[]` */
   notifications?: EntityRow[];
   /** Default: `"modal"` */
   panelSlot?: unknown;
-  /** Default: `"Notifications"` */
-  title?: string;
 }
 
 /**

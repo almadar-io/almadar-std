@@ -39,56 +39,56 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
-  className?: string;
-  /** Default: `[]` */
-  data?: EntityRow[];
-  dir?: 'ltr' | 'rtl' | 'auto';
-  drillEvent?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `200` */
-  height?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
-  lang?: string;
-  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
-  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `[]` */
-  scatterData?: EntityRow[];
-  /** Default: `[]` */
-  series?: EntityRow[];
-  /** Default: `true` */
-  showLegend?: boolean;
   /** Default: `false` */
   showValues?: boolean;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaDescribedby?: string;
+  /** Default: `200` */
+  height?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaExpanded?: boolean;
+  lang?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  error?: EntityRow;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `[]` */
+  data?: EntityRow[];
+  subtitle?: string;
+  /** Default: `[]` */
+  scatterData?: EntityRow[];
+  className?: string;
   /** Default: `"card"` */
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
-  subtitle?: string;
-  /** Default: `"auto"` */
-  surface?: 'auto' | 'none';
-  tabIndex?: number;
-  /** Default: `false` */
-  timeAxis?: boolean;
-  title?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
   /** Default: `""` */
   viewerRole?: string;
+  ariaHidden?: boolean;
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
+  enterDelay?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  tabIndex?: number;
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
+  ariaBusy?: boolean;
+  ariaLabel?: string;
+  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `true` */
+  showLegend?: boolean;
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  ariaLabelledby?: string;
+  /** Default: `[]` */
+  series?: EntityRow[];
+  drillEvent?: string;
+  title?: string;
+  ariaSelected?: boolean;
 }
 
 /**

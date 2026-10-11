@@ -77,22 +77,22 @@ export interface StdPageSearchSearchFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPageSearchConfig {
-  /** Default: `{}` */
-  fields?: Record<string, TraitConfig>;
-  /** Default: `10` */
-  maxResults?: number;
   /** Default: `"q"` */
   queryParam?: string;
-  /** Default: `".result"` */
-  resultSelector?: string;
-  /** Default: `"https://example.com/search*"` */
-  resultsMatch?: string;
-  /** Default: `"https://example.com/search"` */
-  searchUrl?: string;
+  /** Default: `10` */
+  maxResults?: number;
   /** Default: `"main"` */
   statusSlot?: unknown;
+  /** Default: `"https://example.com/search*"` */
+  resultsMatch?: string;
+  /** Default: `{}` */
+  fields?: Record<string, TraitConfig>;
   /** Default: `8000` */
   waitMs?: number;
+  /** Default: `".result"` */
+  resultSelector?: string;
+  /** Default: `"https://example.com/search"` */
+  searchUrl?: string;
 }
 
 /**
@@ -223,36 +223,36 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
+            'name': 'query',
+            'type': 'string',
             'default': '',
             'description': 'The search being run',
-            'name': 'query',
             'synonyms': 'search term, terms, topic',
-            'type': 'string',
           },
           {
+            'name': 'tab',
+            'type': 'number',
             'default': 0,
             'description': 'The background tab running the search; 0 = none',
-            'name': 'tab',
             'synonyms': 'tab id',
-            'type': 'number',
           },
           {
+            'name': 'errorMessage',
+            'type': 'string',
             'default': '',
             'description': 'Why the last search failed; blank = none',
-            'name': 'errorMessage',
             'synonyms': 'error, failure reason',
-            'type': 'string',
           },
           {
-            'default': 'idle',
-            'description': 'Whether a search is running',
             'name': 'status',
-            'synonyms': 'state, busy',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'searching',
             ],
+            'description': 'Whether a search is running',
+            'synonyms': 'state, busy',
           },
         ];
         const extras = params.fields ?? [];
@@ -263,103 +263,7 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'fields': {
-            'default': {},
-            'description': 'Field name to how to read it from each result: `selector` (a descendant; absent reads the result itself), `attr` (an attribute; absent reads the text) , `resolve` (the value is a URL: return it absolute), `template` (compose the value from other fields, `{name}` per field; empty when any is empty) and `required` (leave the result out until this field reads non-empty)',
-            'items': {
-              'properties': {
-                'attr': {
-                  'name': 'attr',
-                  'required': false,
-                  'type': 'string',
-                },
-                'required': {
-                  'name': 'required',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'resolve': {
-                  'name': 'resolve',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'selector': {
-                  'name': 'selector',
-                  'required': false,
-                  'type': 'string',
-                },
-                'template': {
-                  'name': 'template',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Fields',
-            'synonyms': 'columns, properties, extract',
-            'tier': 'domain',
-            'type': 'Map<string,PageField>',
-          },
-          'maxResults': {
-            'default': 10,
-            'description': 'Most results read from one search',
-            'label': 'Results per search',
-            'synonyms': 'limit, count, how many',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'queryParam': {
-            'default': 'q',
-            'description': 'Name of the URL parameter that carries the search terms',
-            'label': 'Query parameter',
-            'synonyms': 'query key, search parameter',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'resultSelector': {
-            'default': '.result',
-            'description': 'CSS selector of one result on the results page',
-            'label': 'Result selector',
-            'synonyms': 'result, item, card, tile',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'resultsMatch': {
-            'default': 'https://example.com/search*',
-            'description': 'URL match pattern the results page lies in (Chrome match-pattern syntax); the search page must match it, and the extension asks for access to exactly these pages',
-            'label': 'Results pages',
-            'synonyms': 'site, url pattern, results url',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'searchUrl': {
-            'default': 'https://example.com/search',
-            'description': 'URL of the site\'s search results page, without the query',
-            'label': 'Search page',
-            'synonyms': 'search url, results page, endpoint',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'statusSlot': {
-            'default': 'main',
-            'description': 'Where the atom shows its one-line status; an organism running it in the background sends it to `system`',
-            'label': 'Status slot',
-            'synonyms': 'status area, slot',
-            'tier': 'presentation',
-            'type': 'slot',
-          },
-          'waitMs': {
-            'default': 8000,
-            'description': 'How long to wait for the results page to load and its first result to appear',
-            'label': 'Wait for results (ms)',
-            'synonyms': 'timeout, wait, patience',
-            'tier': 'infra',
-            'type': 'number',
-          },
-        },
+        'name': 'PageSearch',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -383,8 +287,8 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.statusSlot',
+            'resolved': false,
           },
           {
             'kind': 'set',
@@ -403,266 +307,268 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
             'resource': '@entity.tab',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'PageSearchRecord',
         'emits': [
           {
-            'description': 'The background tab for the search is open',
             'event': 'TAB_OPENED',
+            'description': 'The background tab for the search is open',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'tab',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The results were read from the search page',
             'event': 'RESULTS_READ',
+            'description': 'The results were read from the search page',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'tab',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
-                'entity': 'PageResult',
                 'name': 'elements',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'elementId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'fields',
                     'type': 'Map<string,string>',
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'PageResult',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Opening the search page or reading it failed',
             'event': 'SEARCH_CALL_FAILED',
+            'description': 'Opening the search page or reading it failed',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'What one search found: each result\'s element id and the fields read from it',
             'event': 'RESULTS',
-            'payloadSchema': [
-              {
-                'name': 'query',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'entity': 'PageResult',
-                'name': 'results',
-                'properties': [
-                  {
-                    'name': 'elementId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'fields',
-                    'type': 'Map<string,string>',
-                  },
-                ],
-                'required': true,
-                'type': '[object]',
-              },
-            ],
-            'scope': 'external',
+            'description': 'What one search found: each result\'s element id and the fields read from it',
             'synonyms': 'search results, found, hits',
             'tier': 'primary',
-          },
-          {
-            'description': 'The search could not be run or read',
-            'event': 'SEARCH_FAILED',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'query',
-                'required': true,
                 'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'results',
+                'type': '[object]',
+                'required': true,
+                'properties': [
+                  {
+                    'name': 'elementId',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'fields',
+                    'type': 'Map<string,string>',
+                  },
+                ],
+                'entity': 'PageResult',
+              },
+            ],
+          },
+          {
+            'event': 'SEARCH_FAILED',
+            'description': 'The search could not be run or read',
+            'tier': 'primary',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'query',
+                'type': 'string',
+                'required': true,
               },
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'PageSearchRecord',
-        'name': 'PageSearch',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'searching',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Search the site for `query`',
-              'external': true,
               'key': 'SEARCH',
               'name': 'Search',
+              'description': 'Search the site for `query`',
               'payloadSchema': [
                 {
                   'name': 'query',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
+              'external': true,
             },
             {
-              'description': 'The background tab for the search is open',
               'key': 'TAB_OPENED',
               'name': 'Tab Opened',
+              'description': 'The background tab for the search is open',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'tab',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'The results were read from the search page',
               'key': 'RESULTS_READ',
               'name': 'Results Read',
+              'description': 'The results were read from the search page',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'tab',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
-                  'entity': 'PageResult',
                   'name': 'elements',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'elementId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'fields',
                       'type': 'Map<string,string>',
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'PageResult',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Opening the search page or reading it failed',
               'key': 'SEARCH_CALL_FAILED',
               'name': 'Search Call Failed',
+              'description': 'Opening the search page or reading it failed',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'What one search found: each result\'s element id and the fields read from it',
               'key': 'RESULTS',
               'name': 'Results',
+              'description': 'What one search found: each result\'s element id and the fields read from it',
+              'synonyms': 'search results, found, hits',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'query',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
-                  'entity': 'PageResult',
                   'name': 'results',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'elementId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'fields',
                       'type': 'Map<string,string>',
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'PageResult',
                 },
               ],
-              'synonyms': 'search results, found, hits',
-              'tier': 'primary',
             },
             {
-              'description': 'The search could not be run or read',
               'key': 'SEARCH_FAILED',
               'name': 'Search Failed',
+              'description': 'The search could not be run or read',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'query',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'searching',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   '@config.statusSlot',
                   {
-                    'content': 'Ready to search',
                     'role': 'status',
-                    'type': 'typography',
                     'variant': 'body',
+                    'content': 'Ready to search',
+                    'type': 'typography',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'searching',
+              'event': 'SEARCH',
               'effects': [
                 [
                   'set',
@@ -684,20 +590,20 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
                   'page',
                   'openTab',
                   {
-                    'active': false,
-                    'match': '@config.resultsMatch',
                     'params': [
                       'object/set',
                       {},
                       '@config.queryParam',
                       '@payload.query',
                     ],
+                    'active': false,
+                    'match': '@config.resultsMatch',
                     'url': '@config.searchUrl',
                   },
                   {
                     'emit': {
-                      'failure': 'SEARCH_CALL_FAILED',
                       'success': 'TAB_OPENED',
+                      'failure': 'SEARCH_CALL_FAILED',
                     },
                   },
                 ],
@@ -705,43 +611,43 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
                   'render-ui',
                   '@config.statusSlot',
                   {
+                    'role': 'status',
+                    'variant': 'body',
                     'content': [
                       'str/concat',
                       'Searching for ',
                       '@payload.query',
                     ],
-                    'role': 'status',
                     'type': 'typography',
-                    'variant': 'body',
                   },
                 ],
               ],
-              'event': 'SEARCH',
-              'from': 'idle',
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'searching',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   '@config.statusSlot',
                   {
+                    'variant': 'body',
+                    'type': 'typography',
                     'content': [
                       'str/concat',
                       'Searching for ',
                       '@entity.query',
                     ],
                     'role': 'status',
-                    'type': 'typography',
-                    'variant': 'body',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'searching',
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'searching',
+              'event': 'TAB_OPENED',
               'effects': [
                 [
                   'set',
@@ -753,11 +659,11 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
                   'page',
                   'query',
                   {
-                    'fields': '@config.fields',
+                    'tab': '@payload.tab',
                     'limit': '@config.maxResults',
                     'selector': '@config.resultSelector',
-                    'tab': '@payload.tab',
                     'waitMs': '@config.waitMs',
+                    'fields': '@config.fields',
                   },
                   {
                     'emit': {
@@ -767,11 +673,11 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
                   },
                 ],
               ],
-              'event': 'TAB_OPENED',
-              'from': 'searching',
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'idle',
+              'event': 'RESULTS_READ',
               'effects': [
                 [
                   'call-service',
@@ -795,8 +701,8 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
                   'emit',
                   'RESULTS',
                   {
-                    'query': '@entity.query',
                     'results': '@payload.elements',
+                    'query': '@entity.query',
                   },
                 ],
                 [
@@ -808,17 +714,22 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
                       'Searched for ',
                       '@entity.query',
                     ],
-                    'role': 'status',
-                    'type': 'typography',
                     'variant': 'body',
+                    'type': 'typography',
+                    'role': 'status',
                   },
                 ],
               ],
-              'event': 'RESULTS_READ',
-              'from': 'searching',
-              'to': 'idle',
             },
             {
+              'from': 'searching',
+              'to': 'idle',
+              'event': 'SEARCH_CALL_FAILED',
+              'guard': [
+                '>',
+                '@entity.tab',
+                0,
+              ],
               'effects': [
                 [
                   'call-service',
@@ -855,27 +766,27 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
                   'render-ui',
                   '@config.statusSlot',
                   {
+                    'role': 'status',
+                    'variant': 'body',
+                    'type': 'typography',
                     'content': [
                       'str/concat',
                       'Couldn\'t search: ',
                       '@payload.error',
                     ],
-                    'role': 'status',
-                    'type': 'typography',
-                    'variant': 'body',
                   },
                 ],
               ],
-              'event': 'SEARCH_CALL_FAILED',
+            },
+            {
               'from': 'searching',
+              'to': 'idle',
+              'event': 'SEARCH_CALL_FAILED',
               'guard': [
-                '>',
+                '==',
                 '@entity.tab',
                 0,
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -891,36 +802,125 @@ export function stdPageSearchPageSearchOrbital(params: StdPageSearchPageSearchOr
                   'emit',
                   'SEARCH_FAILED',
                   {
-                    'error': '@payload.error',
                     'query': '@entity.query',
+                    'error': '@payload.error',
                   },
                 ],
                 [
                   'render-ui',
                   '@config.statusSlot',
                   {
+                    'variant': 'body',
+                    'type': 'typography',
                     'content': [
                       'str/concat',
                       'Couldn\'t search: ',
                       '@payload.error',
                     ],
                     'role': 'status',
-                    'type': 'typography',
-                    'variant': 'body',
                   },
                 ],
               ],
-              'event': 'SEARCH_CALL_FAILED',
-              'from': 'searching',
-              'guard': [
-                '==',
-                '@entity.tab',
-                0,
-              ],
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'queryParam': {
+            'type': 'string',
+            'default': 'q',
+            'label': 'Query parameter',
+            'description': 'Name of the URL parameter that carries the search terms',
+            'synonyms': 'query key, search parameter',
+            'tier': 'domain',
+          },
+          'maxResults': {
+            'type': 'number',
+            'default': 10,
+            'label': 'Results per search',
+            'description': 'Most results read from one search',
+            'synonyms': 'limit, count, how many',
+            'tier': 'policy',
+          },
+          'statusSlot': {
+            'type': 'slot',
+            'default': 'main',
+            'label': 'Status slot',
+            'description': 'Where the atom shows its one-line status; an organism running it in the background sends it to `system`',
+            'synonyms': 'status area, slot',
+            'tier': 'presentation',
+          },
+          'resultsMatch': {
+            'type': 'string',
+            'default': 'https://example.com/search*',
+            'label': 'Results pages',
+            'description': 'URL match pattern the results page lies in (Chrome match-pattern syntax); the search page must match it, and the extension asks for access to exactly these pages',
+            'synonyms': 'site, url pattern, results url',
+            'tier': 'domain',
+          },
+          'fields': {
+            'type': 'Map<string,PageField>',
+            'default': {},
+            'label': 'Fields',
+            'description': 'Field name to how to read it from each result: `selector` (a descendant; absent reads the result itself), `attr` (an attribute; absent reads the text) , `resolve` (the value is a URL: return it absolute), `template` (compose the value from other fields, `{name}` per field; empty when any is empty) and `required` (leave the result out until this field reads non-empty)',
+            'synonyms': 'columns, properties, extract',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'template': {
+                  'name': 'template',
+                  'type': 'string',
+                  'required': false,
+                },
+                'required': {
+                  'name': 'required',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'selector': {
+                  'name': 'selector',
+                  'type': 'string',
+                  'required': false,
+                },
+                'attr': {
+                  'name': 'attr',
+                  'type': 'string',
+                  'required': false,
+                },
+                'resolve': {
+                  'name': 'resolve',
+                  'type': 'boolean',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'waitMs': {
+            'type': 'number',
+            'default': 8000,
+            'label': 'Wait for results (ms)',
+            'description': 'How long to wait for the results page to load and its first result to appear',
+            'synonyms': 'timeout, wait, patience',
+            'tier': 'infra',
+          },
+          'resultSelector': {
+            'type': 'string',
+            'default': '.result',
+            'label': 'Result selector',
+            'description': 'CSS selector of one result on the results page',
+            'synonyms': 'result, item, card, tile',
+            'tier': 'domain',
+          },
+          'searchUrl': {
+            'type': 'string',
+            'default': 'https://example.com/search',
+            'label': 'Search page',
+            'description': 'URL of the site\'s search results page, without the query',
+            'synonyms': 'search url, results page, endpoint',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

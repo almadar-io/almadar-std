@@ -47,12 +47,12 @@ export interface StdRowAccessControlRowsFilteredPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRowAccessControlConfig {
+  /** Default: `[]` */
+  visibleRoles?: string[];
   /** Default: `false` */
   enabled?: boolean;
   /** Default: `""` */
   ownerField?: string;
-  /** Default: `[]` */
-  visibleRoles?: string[];
 }
 
 /**
@@ -189,61 +189,61 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'filteredData',
+            'type': 'array',
             'default': [],
-            'description': 'The data returned after applying access control filters.',
             'items': {
+              'type': 'object',
               'properties': {
                 'icon': {
                   'name': 'icon',
-                  'required': false,
                   'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
                   'required': false,
-                  'type': 'string',
                 },
                 'label': {
                   'name': 'label',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'value': {
                   'name': 'value',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'filteredData',
+            'description': 'The data returned after applying access control filters.',
             'synonyms': 'filtered items, processed data, results, output',
-            'type': 'array',
           },
           {
+            'name': 'inputCount',
+            'type': 'number',
             'default': 0,
             'description': 'The number of records processed by the access control.',
-            'name': 'inputCount',
             'synonyms': 'record count, item count, total records',
-            'type': 'number',
           },
           {
+            'name': 'outputCount',
+            'type': 'number',
             'default': 0,
             'description': 'The number of records that passed the access control filter.',
-            'name': 'outputCount',
             'synonyms': 'count, size, length',
-            'type': 'number',
           },
           {
+            'name': 'accessDenied',
+            'type': 'boolean',
             'default': false,
             'description': 'Indicates whether access is denied based on configured rules.',
-            'name': 'accessDenied',
             'synonyms': 'denied, restricted, unauthorized, access-denied',
-            'type': 'boolean',
           },
         ];
         const extras = params.fields ?? [];
@@ -254,37 +254,16 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
     } as Entity,
     traits: [
       {
-        'capabilities': [
-          'access',
-          'privacy',
-        ],
-        'category': 'lifecycle',
-        'config': {
-          'enabled': {
-            'default': false,
-            'description': 'Only let people see records they own, or that match an allowed role. Off by default.',
-            'label': 'Restrict who sees records',
-            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'ownerField': {
-            'default': '',
-            'description': 'Row field holding the owning user id (blank disables owner filter)',
-            'label': 'Owner field',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'visibleRoles': {
-            'default': [],
-            'description': 'Roles permitted to see any row (empty = no role gate)',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Allowed roles',
-            'tier': 'policy',
-            'type': '[string]',
-          },
+        'name': 'RowAccessGate',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'accessDenied',
+            'filteredData',
+            'inputCount',
+            'outputCount',
+          ],
         },
         'effectRow': [
           {
@@ -308,13 +287,20 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
             'resource': '@entity.outputCount',
           },
         ],
+        'category': 'lifecycle',
+        'capabilities': [
+          'access',
+          'privacy',
+        ],
+        'linkedEntity': 'RowAccessGateView',
         'emits': [
           {
             'event': 'RowsFiltered',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'ObjectSpec',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -329,30 +315,22 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ObjectSpec',
               },
               {
                 'name': 'filteredCount',
                 'type': 'number',
               },
             ],
-            'scope': 'external',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'accessDenied',
-            'filteredData',
-            'inputCount',
-            'outputCount',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'RowAccessGateView',
-        'name': 'RowAccessGate',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'RowsLoaded',
@@ -360,6 +338,7 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -374,7 +353,6 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
             },
@@ -384,6 +362,7 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -398,7 +377,6 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
                 {
                   'name': 'filteredCount',
@@ -407,14 +385,12 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'RowsLoaded',
+              'guard': '@config.enabled',
               'effects': [
                 [
                   'set',
@@ -505,13 +481,37 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
                   },
                 ],
               ],
-              'event': 'RowsLoaded',
-              'from': 'idle',
-              'guard': '@config.enabled',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'visibleRoles': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Allowed roles',
+            'description': 'Roles permitted to see any row (empty = no role gate)',
+            'tier': 'policy',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Restrict who sees records',
+            'description': 'Only let people see records they own, or that match an allowed role. Off by default.',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping',
+            'tier': 'policy',
+          },
+          'ownerField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Owner field',
+            'description': 'Row field holding the owning user id (blank disables owner filter)',
+            'tier': 'internal',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

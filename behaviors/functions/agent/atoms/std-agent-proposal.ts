@@ -59,42 +59,42 @@ export interface StdAgentProposalProposalRunRequestedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAgentProposalConfig {
-  /** Default: `"@config.approveLabel"` */
-  approveButton?: string;
   /** Default: `"@config.cancelLabel"` */
   cancelButton?: string;
+  /** Default: `"@config.panelSlot"` */
+  slot?: unknown;
+  /** Default: `"@config.itemsHeading"` */
+  itemsTitle?: string;
+  /** Default: `"@config.retryLabel"` */
+  retryButton?: string;
+  /** Default: `"@config.workingLabel"` */
+  workingText?: string;
   /** Default: `"@config.discardLabel"` */
   discardButton?: string;
+  /** Default: `"@config.prompt"` */
+  framing?: string;
+  /** Default: `"@config.itemPattern"` */
+  patternForItems?: unknown;
+  /** Default: `"@config.inputLabel"` */
+  inputText?: string;
+  /** Default: `"@config.icon"` */
+  headingIcon?: string;
   /** Default: `"@config.feedbackLabel"` */
   feedbackText?: string;
   /** Default: `"@config.itemFields"` */
   fieldsForItems?: EntityRow[];
-  /** Default: `"@config.prompt"` */
-  framing?: string;
-  /** Default: `"@config.title"` */
-  heading?: string;
-  /** Default: `"@config.icon"` */
-  headingIcon?: string;
-  /** Default: `"@config.inputLabel"` */
-  inputText?: string;
-  /** Default: `"@config.itemsHeading"` */
-  itemsTitle?: string;
-  /** Default: `"@config.itemPattern"` */
-  patternForItems?: unknown;
-  /** Default: `"@config.retryLabel"` */
-  retryButton?: string;
-  /** Default: `"@config.reviseLabel"` */
-  reviseButton?: string;
-  /** Default: `"@config.panelSlot"` */
-  slot?: unknown;
-  /** Default: `"@config.startLabel"` */
-  startButton?: string;
   /** Default: `"@config.summaryHeading"` */
   summaryTitle?: string;
+  /** Default: `"@config.approveLabel"` */
+  approveButton?: string;
+  /** Default: `"@config.reviseLabel"` */
+  reviseButton?: string;
   /** Default: `"@config.showInputForm"` */
   withInputForm?: boolean;
-  /** Default: `"@config.workingLabel"` */
-  workingText?: string;
+  /** Default: `"@config.startLabel"` */
+  startButton?: string;
+  /** Default: `"@config.title"` */
+  heading?: string;
 }
 
 /**
@@ -235,8 +235,8 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
     name: 'AgentProposalOrbital',
     uses: [
       {
-        'as': 'Loop',
         'from': 'std/behaviors/std-agent-tool-loop',
+        'as': 'Loop',
       },
     ],
     entity: {
@@ -246,56 +246,56 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'default': '',
-            'description': 'What the person handed over.',
             'name': 'input',
             'type': 'string',
+            'default': '',
+            'description': 'What the person handed over.',
           },
           {
-            'default': '',
-            'description': 'Extra background the app handed over.',
             'name': 'context',
             'type': 'string',
+            'default': '',
+            'description': 'Extra background the app handed over.',
           },
           {
-            'default': '',
-            'description': 'The request the agent is answering, with any revision feedback.',
             'name': 'request',
             'type': 'string',
+            'default': '',
+            'description': 'The request the agent is answering, with any revision feedback.',
           },
           {
-            'default': '',
-            'description': 'What the person asked to change.',
             'name': 'feedback',
             'type': 'string',
+            'default': '',
+            'description': 'What the person asked to change.',
           },
           {
-            'default': '',
-            'description': 'The proposal in a few lines.',
             'name': 'summary',
             'type': 'string',
+            'default': '',
+            'description': 'The proposal in a few lines.',
           },
           {
+            'name': 'items',
+            'type': 'array',
             'default': [],
-            'description': 'The proposed items.',
             'items': {
+              'type': 'object',
               'items': {
                 'type': 'scalar',
               },
-              'type': 'object',
             },
-            'name': 'items',
-            'type': 'array',
+            'description': 'The proposed items.',
           },
           {
-            'default': '',
-            'description': 'Why the last run failed.',
             'name': 'error',
             'type': 'string',
+            'default': '',
+            'description': 'Why the last run failed.',
           },
         ];
         const extras = params.fields ?? [];
@@ -305,351 +305,219 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
       })(),
     } as Entity,
     config: {
-      'approveLabel': {
-        'default': 'Approve',
-        'label': 'Approve button',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'cancelLabel': {
-        'default': 'Cancel',
-        'label': 'Cancel button',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'discardLabel': {
-        'default': 'Discard',
-        'label': 'Discard button',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'feedbackLabel': {
-        'default': 'What should change?',
-        'label': 'Revision feedback label',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'icon': {
-        'default': 'sparkles',
-        'label': 'Panel icon',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'inputLabel': {
-        'default': 'What should the agent work from?',
-        'label': 'Start form label',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'instructions': {
-        'default': 'You turn what the person hands over into one structured proposal. Look things up with the tools if you need to, then call the proposal tool exactly once with a short summary and the list of items. Do not call it again unless asked to revise.',
-        'description': 'Standing instructions sent with every run.',
-        'label': 'How should the agent behave?',
-        'synonyms': 'system prompt, persona, guidance',
-        'tier': 'domain',
-        'type': 'string',
-      },
-      'itemFields': {
-        'default': [],
-        'description': 'The item keys to show, each `{ name, label, variant }`.',
-        'items': {
-          'properties': {
-            'label': {
-              'name': 'label',
-              'required': false,
-              'type': 'string',
-            },
-            'name': {
-              'name': 'name',
-              'required': true,
-              'type': 'string',
-            },
-            'variant': {
-              'name': 'variant',
-              'required': false,
-              'type': 'string',
-            },
-          },
-          'type': 'object',
-        },
-        'label': 'Which item values are shown?',
-        'synonyms': 'columns, fields, attributes',
-        'tier': 'domain',
-        'type': '[ProposalField]',
-      },
       'itemPattern': {
+        'type': 'pattern',
         'default': 'data-list',
-        'description': 'The pattern the review renders the items with; it receives `entity` (the items) and `fields`.',
         'label': 'How are the proposed items drawn?',
+        'description': 'The pattern the review renders the items with; it receives `entity` (the items) and `fields`.',
         'synonyms': 'item layout, list pattern, table',
         'tier': 'presentation',
-        'type': 'pattern',
-      },
-      'itemsHeading': {
-        'default': 'Items',
-        'label': 'Items heading',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'maxSteps': {
-        'default': 8,
-        'label': 'Model round-trips per run',
-        'tier': 'policy',
-        'type': 'number',
-      },
-      'panelSlot': {
-        'default': 'main',
-        'description': '`main` for the content of a page or launcher; `modal` or `drawer` for an overlay.',
-        'label': 'Where the panel renders',
-        'tier': 'presentation',
-        'type': 'slot',
-      },
-      'prompt': {
-        'default': 'Work out a proposal from the following.',
-        'description': 'The request that precedes the person\'s input in every run.',
-        'label': 'What is the agent asked to do?',
-        'synonyms': 'task, goal, brief, question',
-        'tier': 'domain',
-        'type': 'string',
-      },
-      'retryLabel': {
-        'default': 'Retry',
-        'label': 'Retry button',
-        'tier': 'presentation',
-        'type': 'string',
       },
       'reviseLabel': {
+        'type': 'string',
         'default': 'Revise',
         'label': 'Revise button',
         'tier': 'presentation',
-        'type': 'string',
       },
       'showInputForm': {
+        'type': 'boolean',
         'default': true,
-        'description': 'On, the idle panel lets the person type what the agent works from. Off, the panel renders nothing until the app starts it with PROPOSAL_REQUESTED.',
         'label': 'Show a start form?',
+        'description': 'On, the idle panel lets the person type what the agent works from. Off, the panel renders nothing until the app starts it with PROPOSAL_REQUESTED.',
         'synonyms': 'start form, input box, manual start',
         'tier': 'presentation',
-        'type': 'boolean',
       },
-      'startLabel': {
-        'default': 'Propose',
-        'label': 'Start button',
-        'tier': 'presentation',
+      'cancelLabel': {
         'type': 'string',
+        'default': 'Cancel',
+        'label': 'Cancel button',
+        'tier': 'presentation',
+      },
+      'itemFields': {
+        'type': '[ProposalField]',
+        'default': [],
+        'label': 'Which item values are shown?',
+        'description': 'The item keys to show, each `{ name, label, variant }`.',
+        'synonyms': 'columns, fields, attributes',
+        'tier': 'domain',
+        'items': {
+          'type': 'object',
+          'properties': {
+            'variant': {
+              'name': 'variant',
+              'type': 'string',
+              'required': false,
+            },
+            'label': {
+              'name': 'label',
+              'type': 'string',
+              'required': false,
+            },
+            'name': {
+              'name': 'name',
+              'type': 'string',
+              'required': true,
+            },
+          },
+        },
+      },
+      'discardLabel': {
+        'type': 'string',
+        'default': 'Discard',
+        'label': 'Discard button',
+        'tier': 'presentation',
       },
       'summaryHeading': {
+        'type': 'string',
         'default': 'Summary',
         'label': 'Summary heading',
         'tier': 'presentation',
-        'type': 'string',
       },
-      'title': {
-        'default': 'Proposal',
-        'label': 'Panel heading',
-        'tier': 'presentation',
+      'itemsHeading': {
         'type': 'string',
+        'default': 'Items',
+        'label': 'Items heading',
+        'tier': 'presentation',
+      },
+      'instructions': {
+        'type': 'string',
+        'default': 'You turn what the person hands over into one structured proposal. Look things up with the tools if you need to, then call the proposal tool exactly once with a short summary and the list of items. Do not call it again unless asked to revise.',
+        'label': 'How should the agent behave?',
+        'description': 'Standing instructions sent with every run.',
+        'synonyms': 'system prompt, persona, guidance',
+        'tier': 'domain',
+      },
+      'inputLabel': {
+        'type': 'string',
+        'default': 'What should the agent work from?',
+        'label': 'Start form label',
+        'tier': 'presentation',
+      },
+      'startLabel': {
+        'type': 'string',
+        'default': 'Propose',
+        'label': 'Start button',
+        'tier': 'presentation',
+      },
+      'prompt': {
+        'type': 'string',
+        'default': 'Work out a proposal from the following.',
+        'label': 'What is the agent asked to do?',
+        'description': 'The request that precedes the person\'s input in every run.',
+        'synonyms': 'task, goal, brief, question',
+        'tier': 'domain',
+      },
+      'retryLabel': {
+        'type': 'string',
+        'default': 'Retry',
+        'label': 'Retry button',
+        'tier': 'presentation',
+      },
+      'maxSteps': {
+        'type': 'number',
+        'default': 8,
+        'label': 'Model round-trips per run',
+        'tier': 'policy',
+      },
+      'panelSlot': {
+        'type': 'slot',
+        'default': 'main',
+        'label': 'Where the panel renders',
+        'description': '`main` for the content of a page or launcher; `modal` or `drawer` for an overlay.',
+        'tier': 'presentation',
       },
       'tools': {
+        'type': '[AgentTool]',
         'default': [
           {
             'event': 'AgentProposalWorkflow.PROPOSE',
           },
         ],
+        'label': 'What may the agent do?',
         'description': 'The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with PROPOSE addressed by its local orbital name, which the agent can never propose without.',
+        'synonyms': 'allowlist, abilities, permissions',
+        'tier': 'domain',
         'items': {
-          'properties': {
-            'AgentToolInput': {
-              'name': 'AgentToolInput',
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': true,
-                  'type': 'EventAddress',
-                },
-              },
-              'type': 'object',
-            },
-            'AgentToolRead': {
-              'name': 'AgentToolRead',
-              'properties': {
-                'read': {
-                  'name': 'read',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'AgentToolScope': {
-              'name': 'AgentToolScope',
-              'properties': {
-                'scope': {
-                  'name': 'scope',
-                  'required': true,
-                  'type': 'string',
-                  'values': [
-                    'declared',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-          },
           'type': 'union',
           'values': [
             'AgentToolScope',
             'AgentToolInput',
             'AgentToolRead',
           ],
+          'properties': {
+            'AgentToolRead': {
+              'name': 'AgentToolRead',
+              'type': 'object',
+              'properties': {
+                'read': {
+                  'name': 'read',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+            'AgentToolScope': {
+              'name': 'AgentToolScope',
+              'type': 'object',
+              'properties': {
+                'scope': {
+                  'name': 'scope',
+                  'type': 'string',
+                  'required': true,
+                  'values': [
+                    'declared',
+                  ],
+                },
+              },
+            },
+            'AgentToolInput': {
+              'name': 'AgentToolInput',
+              'type': 'object',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'type': 'EventAddress',
+                  'required': true,
+                },
+              },
+            },
+          },
         },
-        'label': 'What may the agent do?',
-        'synonyms': 'allowlist, abilities, permissions',
-        'tier': 'domain',
-        'type': '[AgentTool]',
       },
       'workingLabel': {
+        'type': 'string',
         'default': 'Working out a proposal…',
         'label': 'While the agent works',
         'tier': 'presentation',
+      },
+      'icon': {
         'type': 'string',
+        'default': 'sparkles',
+        'label': 'Panel icon',
+        'tier': 'presentation',
+      },
+      'feedbackLabel': {
+        'type': 'string',
+        'default': 'What should change?',
+        'label': 'Revision feedback label',
+        'tier': 'presentation',
+      },
+      'title': {
+        'type': 'string',
+        'default': 'Proposal',
+        'label': 'Panel heading',
+        'tier': 'presentation',
+      },
+      'approveLabel': {
+        'type': 'string',
+        'default': 'Approve',
+        'label': 'Approve button',
+        'tier': 'presentation',
       },
     },
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'approveButton': {
-            'default': '@config.approveLabel',
-            'label': 'Approve button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cancelButton': {
-            'default': '@config.cancelLabel',
-            'label': 'Cancel button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'discardButton': {
-            'default': '@config.discardLabel',
-            'label': 'Discard button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'feedbackText': {
-            'default': '@config.feedbackLabel',
-            'label': 'Revision feedback label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'fieldsForItems': {
-            'default': '@config.itemFields',
-            'items': {
-              'properties': {
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': true,
-                  'type': 'string',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Which item values are shown?',
-            'tier': 'domain',
-            'type': '[ProposalField]',
-          },
-          'framing': {
-            'default': '@config.prompt',
-            'description': 'The request that precedes the person\'s input.',
-            'label': 'What is the agent asked to do?',
-            'synonyms': 'task, goal, brief',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'heading': {
-            'default': '@config.title',
-            'label': 'Panel heading',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'headingIcon': {
-            'default': '@config.icon',
-            'label': 'Panel icon',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'inputText': {
-            'default': '@config.inputLabel',
-            'label': 'Start form label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'itemsTitle': {
-            'default': '@config.itemsHeading',
-            'label': 'Items heading',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'patternForItems': {
-            'default': '@config.itemPattern',
-            'label': 'How are the proposed items drawn?',
-            'tier': 'presentation',
-            'type': 'pattern',
-          },
-          'retryButton': {
-            'default': '@config.retryLabel',
-            'label': 'Retry button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'reviseButton': {
-            'default': '@config.reviseLabel',
-            'label': 'Revise button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'slot': {
-            'default': '@config.panelSlot',
-            'label': 'Where the panel renders',
-            'tier': 'internal',
-            'type': 'slot',
-          },
-          'startButton': {
-            'default': '@config.startLabel',
-            'label': 'Start button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'summaryTitle': {
-            'default': '@config.summaryHeading',
-            'label': 'Summary heading',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'withInputForm': {
-            'default': '@config.showInputForm',
-            'label': 'Show a start form?',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'workingText': {
-            'default': '@config.workingLabel',
-            'label': 'While the agent works',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-        },
+        'name': 'AgentProposalWorkflow',
         'effectRow': [
           {
             'kind': 'emit',
@@ -669,8 +537,8 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.slot',
+            'resolved': false,
           },
           {
             'kind': 'render-ui',
@@ -705,13 +573,20 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
             'resource': '@entity.summary',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AgentProposalRun',
         'emits': [
           {
-            'description': 'The person approved the proposal as it stands. The app commits it; nothing has been written.',
             'event': 'PROPOSAL_APPROVED',
+            'description': 'The person approved the proposal as it stands. The app commits it; nothing has been written.',
+            'synonyms': 'approved, accepted, confirmed, go ahead, commit',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'proposal',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'summary',
@@ -722,35 +597,34 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                     'type': '[Map<string,scalar>]',
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'approved, accepted, confirmed, go ahead, commit',
-            'tier': 'domain',
           },
           {
-            'description': 'The person discarded the proposal (or a failed run); nothing was committed.',
             'event': 'PROPOSAL_DISCARDED',
-            'scope': 'external',
+            'description': 'The person discarded the proposal (or a failed run); nothing was committed.',
             'synonyms': 'rejected, dismissed, thrown away',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
-            'description': 'The person cancelled while the agent was still working; its model call was aborted.',
             'event': 'PROPOSAL_CANCELLED',
-            'scope': 'external',
+            'description': 'The person cancelled while the agent was still working; its model call was aborted.',
             'synonyms': 'stopped, aborted',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
-            'description': 'The agent was asked to work out (or revise) a proposal.',
             'event': 'PROPOSAL_RUN_REQUESTED',
+            'description': 'The agent was asked to work out (or revise) a proposal.',
+            'synonyms': 'run started, working',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'AgentChatMessage',
                 'name': 'messages',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'role',
@@ -762,233 +636,38 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'AgentChatMessage',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'run started, working',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'AgentProposalRun',
         'listens': [
           {
             'event': 'PROPOSAL_LOOP_REPLIED',
+            'triggers': 'PROPOSAL_LOOP_REPLIED',
             'source': {
               'kind': 'trait',
               'trait': ('AgentProposalLoop' satisfies _StdAgentProposalListenTraitName),
             },
-            'triggers': 'PROPOSAL_LOOP_REPLIED',
           },
           {
             'event': 'PROPOSAL_LOOP_FAILED',
+            'triggers': 'PROPOSAL_LOOP_FAILED',
             'source': {
               'kind': 'trait',
               'trait': ('AgentProposalLoop' satisfies _StdAgentProposalListenTraitName),
             },
-            'triggers': 'PROPOSAL_LOOP_FAILED',
           },
         ],
-        'name': 'AgentProposalWorkflow',
-        'scope': 'instance',
         'stateMachine': {
-          'events': [
-            {
-              'description': 'Submit the proposal for the person to review: a short summary and the list of proposed items, each a flat map of values. Call it once with everything; the person approves, asks for a revision, or discards it.',
-              'external': true,
-              'key': 'PROPOSE',
-              'name': 'Propose',
-              'payloadSchema': [
-                {
-                  'name': 'summary',
-                  'type': 'string',
-                },
-                {
-                  'name': 'items',
-                  'required': true,
-                  'type': '[Map<string,scalar>]',
-                },
-              ],
-              'synonyms': 'propose, submit proposal, draft',
-            },
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'The start form\'s text changed.',
-              'key': 'INPUT_CHANGED',
-              'name': 'Input Changed',
-              'payloadSchema': [
-                {
-                  'name': 'value',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'description': 'The overlay\'s own close control was used: cancels the agent\'s work while it runs, discards the proposal otherwise.',
-              'key': 'CLOSE',
-              'name': 'Close',
-            },
-            {
-              'description': 'Start from the text typed into the start form.',
-              'key': 'START_TYPED',
-              'name': 'Start Typed',
-            },
-            {
-              'description': 'Work out a proposal from this: the documents or text the person handed over, and optional background.',
-              'key': 'PROPOSAL_REQUESTED',
-              'name': 'Proposal Requested',
-              'payloadSchema': [
-                {
-                  'name': 'input',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'context',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'start, propose, analyze, extract, begin',
-            },
-            {
-              'description': 'The agent\'s run ended.',
-              'key': 'PROPOSAL_LOOP_REPLIED',
-              'name': 'Proposal Loop Replied',
-              'payloadSchema': [
-                {
-                  'name': 'reply',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'description': 'The agent\'s run failed.',
-              'key': 'PROPOSAL_LOOP_FAILED',
-              'name': 'Proposal Loop Failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'description': 'Cancel the agent\'s work.',
-              'key': 'CANCEL',
-              'name': 'Cancel',
-            },
-            {
-              'description': 'The revision feedback changed.',
-              'key': 'FEEDBACK_CHANGED',
-              'name': 'Feedback Changed',
-              'payloadSchema': [
-                {
-                  'name': 'value',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'description': 'Approve the proposal.',
-              'key': 'APPROVE',
-              'name': 'Approve',
-            },
-            {
-              'description': 'Ask for a revision with the written feedback.',
-              'key': 'REVISE',
-              'name': 'Revise',
-            },
-            {
-              'description': 'Discard the proposal.',
-              'key': 'DISCARD',
-              'name': 'Discard',
-            },
-            {
-              'description': 'Run the agent again.',
-              'key': 'RETRY',
-              'name': 'Retry',
-            },
-            {
-              'description': 'The person approved the proposal as it stands. The app commits it; nothing has been written.',
-              'key': 'PROPOSAL_APPROVED',
-              'name': 'Proposal Approved',
-              'payloadSchema': [
-                {
-                  'name': 'proposal',
-                  'properties': [
-                    {
-                      'name': 'summary',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'items',
-                      'type': '[Map<string,scalar>]',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'approved, accepted, confirmed, go ahead, commit',
-              'tier': 'domain',
-            },
-            {
-              'description': 'The person discarded the proposal (or a failed run); nothing was committed.',
-              'key': 'PROPOSAL_DISCARDED',
-              'name': 'Proposal Discarded',
-              'synonyms': 'rejected, dismissed, thrown away',
-              'tier': 'domain',
-            },
-            {
-              'description': 'The person cancelled while the agent was still working; its model call was aborted.',
-              'key': 'PROPOSAL_CANCELLED',
-              'name': 'Proposal Cancelled',
-              'synonyms': 'stopped, aborted',
-              'tier': 'domain',
-            },
-            {
-              'description': 'The agent was asked to work out (or revise) a proposal.',
-              'key': 'PROPOSAL_RUN_REQUESTED',
-              'name': 'Proposal Run Requested',
-              'payloadSchema': [
-                {
-                  'entity': 'AgentChatMessage',
-                  'name': 'messages',
-                  'properties': [
-                    {
-                      'name': 'role',
-                      'type': 'string',
-                      'values': [
-                        'user',
-                        'assistant',
-                      ],
-                    },
-                    {
-                      'name': 'content',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'required': true,
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'run started, working',
-              'tier': 'domain',
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'idle',
+              'isInitial': true,
             },
             {
               'name': 'working',
@@ -1000,34 +679,229 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
               'name': 'failed',
             },
           ],
-          'transitions': [
+          'events': [
             {
-              'event': 'PROPOSE',
-              'from': 'idle',
-              'to': 'idle',
+              'key': 'PROPOSE',
+              'name': 'Propose',
+              'description': 'Submit the proposal for the person to review: a short summary and the list of proposed items, each a flat map of values. Call it once with everything; the person approves, asks for a revision, or discards it.',
+              'synonyms': 'propose, submit proposal, draft',
+              'payloadSchema': [
+                {
+                  'name': 'summary',
+                  'type': 'string',
+                },
+                {
+                  'name': 'items',
+                  'type': '[Map<string,scalar>]',
+                  'required': true,
+                },
+              ],
+              'external': true,
             },
             {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'INPUT_CHANGED',
+              'name': 'Input Changed',
+              'description': 'The start form\'s text changed.',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+              'description': 'The overlay\'s own close control was used: cancels the agent\'s work while it runs, discards the proposal otherwise.',
+            },
+            {
+              'key': 'START_TYPED',
+              'name': 'Start Typed',
+              'description': 'Start from the text typed into the start form.',
+            },
+            {
+              'key': 'PROPOSAL_REQUESTED',
+              'name': 'Proposal Requested',
+              'description': 'Work out a proposal from this: the documents or text the person handed over, and optional background.',
+              'synonyms': 'start, propose, analyze, extract, begin',
+              'payloadSchema': [
+                {
+                  'name': 'input',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'context',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PROPOSAL_LOOP_REPLIED',
+              'name': 'Proposal Loop Replied',
+              'description': 'The agent\'s run ended.',
+              'payloadSchema': [
+                {
+                  'name': 'reply',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PROPOSAL_LOOP_FAILED',
+              'name': 'Proposal Loop Failed',
+              'description': 'The agent\'s run failed.',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+              'description': 'Cancel the agent\'s work.',
+            },
+            {
+              'key': 'FEEDBACK_CHANGED',
+              'name': 'Feedback Changed',
+              'description': 'The revision feedback changed.',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'APPROVE',
+              'name': 'Approve',
+              'description': 'Approve the proposal.',
+            },
+            {
+              'key': 'REVISE',
+              'name': 'Revise',
+              'description': 'Ask for a revision with the written feedback.',
+            },
+            {
+              'key': 'DISCARD',
+              'name': 'Discard',
+              'description': 'Discard the proposal.',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+              'description': 'Run the agent again.',
+            },
+            {
+              'key': 'PROPOSAL_APPROVED',
+              'name': 'Proposal Approved',
+              'description': 'The person approved the proposal as it stands. The app commits it; nothing has been written.',
+              'synonyms': 'approved, accepted, confirmed, go ahead, commit',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'proposal',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'summary',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'items',
+                      'type': '[Map<string,scalar>]',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              'key': 'PROPOSAL_DISCARDED',
+              'name': 'Proposal Discarded',
+              'description': 'The person discarded the proposal (or a failed run); nothing was committed.',
+              'synonyms': 'rejected, dismissed, thrown away',
+              'tier': 'domain',
+            },
+            {
+              'key': 'PROPOSAL_CANCELLED',
+              'name': 'Proposal Cancelled',
+              'description': 'The person cancelled while the agent was still working; its model call was aborted.',
+              'synonyms': 'stopped, aborted',
+              'tier': 'domain',
+            },
+            {
+              'key': 'PROPOSAL_RUN_REQUESTED',
+              'name': 'Proposal Run Requested',
+              'description': 'The agent was asked to work out (or revise) a proposal.',
+              'synonyms': 'run started, working',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'messages',
+                  'type': '[object]',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'role',
+                      'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'AgentChatMessage',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PROPOSE',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': '@config.withInputForm',
               'effects': [
                 [
                   'render-ui',
                   '@config.slot',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
                         'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
+                            'type': 'icon',
                             'name': '@config.headingIcon',
                             'size': 'lg',
-                            'type': 'icon',
                           },
                           {
-                            'content': '@config.heading',
                             'type': 'typography',
+                            'content': '@config.heading',
                             'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
                         'type': 'stack',
                       },
@@ -1035,40 +909,36 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                         'type': 'divider',
                       },
                       {
+                        'rows': 6,
                         'label': '@config.inputText',
                         'onChange': 'INPUT_CHANGED',
-                        'rows': 6,
                         'type': 'textarea',
                       },
                       {
-                        'action': 'START_TYPED',
-                        'icon': 'sparkles',
                         'label': '@config.startButton',
                         'type': 'button',
+                        'icon': 'sparkles',
+                        'action': 'START_TYPED',
                         'variant': 'primary',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'guard': '@config.withInputForm',
-              'to': 'idle',
             },
             {
-              'event': 'INIT',
               'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'guard': [
                 'not',
                 '@config.withInputForm',
               ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INPUT_CHANGED',
               'effects': [
                 [
                   'set',
@@ -1076,11 +946,11 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   '@payload.value',
                 ],
               ],
-              'event': 'INPUT_CHANGED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CLOSE',
               'effects': [
                 [
                   'render-ui',
@@ -1088,11 +958,20 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   null,
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'working',
+              'event': 'START_TYPED',
+              'guard': [
+                '!=',
+                [
+                  'str/default',
+                  '@entity.input',
+                  '',
+                ],
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -1120,8 +999,8 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   {
                     'messages': [
                       {
-                        'content': '@entity.request',
                         'role': 'user',
+                        'content': '@entity.request',
                       },
                     ],
                   },
@@ -1132,52 +1011,43 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   {
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
-                            'size': 'sm',
                             'type': 'spinner',
+                            'size': 'sm',
                           },
                           {
                             'color': 'muted',
-                            'content': '@config.workingText',
                             'type': 'typography',
                             'variant': 'caption',
+                            'content': '@config.workingText',
                           },
                         ],
-                        'direction': 'horizontal',
+                        'align': 'center',
                         'gap': 'sm',
-                        'role': 'status',
+                        'direction': 'horizontal',
                         'type': 'stack',
+                        'role': 'status',
                       },
                       {
                         'action': 'CANCEL',
                         'icon': 'x',
-                        'label': '@config.cancelButton',
                         'type': 'button',
+                        'label': '@config.cancelButton',
                         'variant': 'ghost',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'START_TYPED',
-              'from': 'idle',
-              'guard': [
-                '!=',
-                [
-                  'str/default',
-                  '@entity.input',
-                  '',
-                ],
-                '',
-              ],
-              'to': 'working',
             },
             {
+              'from': 'idle',
+              'to': 'working',
+              'event': 'PROPOSAL_REQUESTED',
               'effects': [
                 [
                   'set',
@@ -1244,45 +1114,46 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   'render-ui',
                   '@config.slot',
                   {
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
+                        'gap': 'sm',
+                        'role': 'status',
                         'children': [
                           {
-                            'size': 'sm',
                             'type': 'spinner',
+                            'size': 'sm',
                           },
                           {
-                            'color': 'muted',
                             'content': '@config.workingText',
+                            'color': 'muted',
                             'type': 'typography',
                             'variant': 'caption',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
-                        'role': 'status',
+                        'align': 'center',
                         'type': 'stack',
                       },
                       {
+                        'variant': 'ghost',
                         'action': 'CANCEL',
                         'icon': 'x',
-                        'label': '@config.cancelButton',
                         'type': 'button',
-                        'variant': 'ghost',
+                        'label': '@config.cancelButton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'PROPOSAL_REQUESTED',
-              'from': 'idle',
-              'to': 'working',
             },
             {
+              'from': 'working',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': '@config.withInputForm',
               'effects': [
                 [
                   'render-ui',
@@ -1293,54 +1164,57 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   'render-ui',
                   '@config.slot',
                   {
+                    'gap': 'md',
                     'children': [
                       {
+                        'type': 'stack',
                         'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'name': '@config.headingIcon',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
+                            'variant': 'h3',
                             'content': '@config.heading',
                             'type': 'typography',
-                            'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'textarea',
                         'label': '@config.inputText',
                         'onChange': 'INPUT_CHANGED',
                         'rows': 6,
-                        'type': 'textarea',
                       },
                       {
+                        'label': '@config.startButton',
+                        'variant': 'primary',
                         'action': 'START_TYPED',
                         'icon': 'sparkles',
-                        'label': '@config.startButton',
                         'type': 'button',
-                        'variant': 'primary',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'working',
-              'guard': '@config.withInputForm',
-              'to': 'idle',
             },
             {
+              'from': 'working',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                '@config.withInputForm',
+              ],
               'effects': [
                 [
                   'render-ui',
@@ -1348,15 +1222,11 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   null,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'working',
-              'guard': [
-                'not',
-                '@config.withInputForm',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'working',
+              'to': 'review',
+              'event': 'PROPOSE',
               'effects': [
                 [
                   'set',
@@ -1378,20 +1248,20 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   {
                     'children': [
                       {
+                        'direction': 'horizontal',
                         'align': 'center',
                         'children': [
                           {
-                            'name': '@config.headingIcon',
                             'size': 'lg',
+                            'name': '@config.headingIcon',
                             'type': 'icon',
                           },
                           {
-                            'content': '@config.heading',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
+                            'content': '@config.heading',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
                         'type': 'stack',
                       },
@@ -1399,18 +1269,18 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                         'type': 'divider',
                       },
                       {
-                        'content': '@config.summaryTitle',
                         'type': 'typography',
+                        'content': '@config.summaryTitle',
                         'variant': 'h4',
                       },
                       {
-                        'content': '@entity.summary',
                         'type': 'typography',
+                        'content': '@entity.summary',
                         'variant': 'body',
                       },
                       {
-                        'content': '@config.itemsTitle',
                         'type': 'typography',
+                        'content': '@config.itemsTitle',
                         'variant': 'h4',
                       },
                       {
@@ -1423,40 +1293,40 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                         'type': 'divider',
                       },
                       {
-                        'label': '@config.feedbackText',
-                        'onChange': 'FEEDBACK_CHANGED',
-                        'rows': 3,
                         'type': 'textarea',
+                        'onChange': 'FEEDBACK_CHANGED',
+                        'label': '@config.feedbackText',
+                        'rows': 3,
                       },
                       {
-                        'align': 'center',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'action': 'APPROVE',
-                            'icon': 'check',
-                            'label': '@config.approveButton',
-                            'type': 'button',
                             'variant': 'primary',
+                            'action': 'APPROVE',
+                            'label': '@config.approveButton',
+                            'icon': 'check',
+                            'type': 'button',
                           },
                           {
-                            'action': 'REVISE',
-                            'icon': 'refresh-cw',
-                            'label': '@config.reviseButton',
-                            'type': 'button',
                             'variant': 'secondary',
+                            'action': 'REVISE',
+                            'label': '@config.reviseButton',
+                            'icon': 'refresh-cw',
+                            'type': 'button',
                           },
                           {
                             'action': 'DISCARD',
                             'icon': 'x',
-                            'label': '@config.discardButton',
                             'type': 'button',
                             'variant': 'ghost',
+                            'label': '@config.discardButton',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                         'wrap': true,
+                        'align': 'center',
+                        'type': 'stack',
                       },
                     ],
                     'direction': 'vertical',
@@ -1465,11 +1335,11 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   },
                 ],
               ],
-              'event': 'PROPOSE',
-              'from': 'working',
-              'to': 'review',
             },
             {
+              'from': 'working',
+              'to': 'failed',
+              'event': 'PROPOSAL_LOOP_REPLIED',
               'effects': [
                 [
                   'set',
@@ -1480,46 +1350,46 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   'render-ui',
                   '@config.slot',
                   {
+                    'gap': 'md',
                     'children': [
                       {
-                        'message': '@entity.error',
-                        'type': 'alert',
                         'variant': 'error',
+                        'type': 'alert',
+                        'message': '@entity.error',
                       },
                       {
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'action': 'RETRY',
-                            'icon': 'refresh-cw',
                             'label': '@config.retryButton',
                             'type': 'button',
+                            'action': 'RETRY',
+                            'icon': 'refresh-cw',
                             'variant': 'primary',
                           },
                           {
-                            'action': 'DISCARD',
-                            'icon': 'x',
-                            'label': '@config.discardButton',
-                            'type': 'button',
                             'variant': 'ghost',
+                            'action': 'DISCARD',
+                            'label': '@config.discardButton',
+                            'icon': 'x',
+                            'type': 'button',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'PROPOSAL_LOOP_REPLIED',
-              'from': 'working',
-              'to': 'failed',
             },
             {
+              'from': 'working',
+              'to': 'failed',
+              'event': 'PROPOSAL_LOOP_FAILED',
               'effects': [
                 [
                   'set',
@@ -1532,83 +1402,66 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   {
                     'children': [
                       {
-                        'message': '@entity.error',
-                        'type': 'alert',
                         'variant': 'error',
+                        'type': 'alert',
+                        'message': '@entity.error',
                       },
                       {
-                        'align': 'center',
                         'children': [
                           {
                             'action': 'RETRY',
                             'icon': 'refresh-cw',
-                            'label': '@config.retryButton',
-                            'type': 'button',
                             'variant': 'primary',
+                            'type': 'button',
+                            'label': '@config.retryButton',
                           },
                           {
+                            'variant': 'ghost',
                             'action': 'DISCARD',
                             'icon': 'x',
                             'label': '@config.discardButton',
                             'type': 'button',
-                            'variant': 'ghost',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'gap': 'sm',
+                        'align': 'center',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'PROPOSAL_LOOP_FAILED',
-              'from': 'working',
-              'to': 'failed',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'PROPOSAL_CANCELLED',
-                  {},
-                ],
-              ],
-              'event': 'CANCEL',
               'from': 'working',
+              'to': 'idle',
+              'event': 'CANCEL',
               'guard': [
                 '==',
                 '@config.slot',
                 'main',
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'emit',
                   'PROPOSAL_CANCELLED',
                   {},
                 ],
-                [
-                  'render-ui',
-                  '@config.slot',
-                  null,
-                ],
               ],
-              'event': 'CANCEL',
+            },
+            {
               'from': 'working',
+              'to': 'idle',
+              'event': 'CANCEL',
               'guard': [
                 '!=',
                 '@config.slot',
                 'main',
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'emit',
@@ -1621,11 +1474,29 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   null,
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'working',
-              'to': 'idle',
             },
             {
+              'from': 'working',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'emit',
+                  'PROPOSAL_CANCELLED',
+                  {},
+                ],
+                [
+                  'render-ui',
+                  '@config.slot',
+                  null,
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': '@config.withInputForm',
               'effects': [
                 [
                   'render-ui',
@@ -1641,35 +1512,35 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                         'align': 'center',
                         'children': [
                           {
-                            'name': '@config.headingIcon',
                             'size': 'lg',
+                            'name': '@config.headingIcon',
                             'type': 'icon',
                           },
                           {
-                            'content': '@config.heading',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': '@config.heading',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
                         'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'label': '@config.inputText',
+                        'type': 'textarea',
                         'onChange': 'INPUT_CHANGED',
                         'rows': 6,
-                        'type': 'textarea',
+                        'label': '@config.inputText',
                       },
                       {
-                        'action': 'START_TYPED',
                         'icon': 'sparkles',
                         'label': '@config.startButton',
-                        'type': 'button',
                         'variant': 'primary',
+                        'action': 'START_TYPED',
+                        'type': 'button',
                       },
                     ],
                     'direction': 'vertical',
@@ -1678,12 +1549,15 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'review',
-              'guard': '@config.withInputForm',
-              'to': 'idle',
             },
             {
+              'from': 'review',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                '@config.withInputForm',
+              ],
               'effects': [
                 [
                   'render-ui',
@@ -1691,15 +1565,11 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   null,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'review',
-              'guard': [
-                'not',
-                '@config.withInputForm',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'review',
+              'to': 'review',
+              'event': 'FEEDBACK_CHANGED',
               'effects': [
                 [
                   'set',
@@ -1707,11 +1577,11 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   '@payload.value',
                 ],
               ],
-              'event': 'FEEDBACK_CHANGED',
-              'from': 'review',
-              'to': 'review',
             },
             {
+              'from': 'review',
+              'to': 'review',
+              'event': 'PROPOSE',
               'effects': [
                 [
                   'set',
@@ -1728,41 +1598,46 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   '@payload.items',
                 ],
               ],
-              'event': 'PROPOSE',
-              'from': 'review',
-              'to': 'review',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'PROPOSAL_APPROVED',
-                  {
-                    'proposal': {
-                      'items': '@entity.items',
-                      'summary': '@entity.summary',
-                    },
-                  },
-                ],
-              ],
-              'event': 'APPROVE',
               'from': 'review',
+              'to': 'idle',
+              'event': 'APPROVE',
               'guard': [
                 '==',
                 '@config.slot',
                 'main',
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'emit',
                   'PROPOSAL_APPROVED',
                   {
                     'proposal': {
-                      'items': '@entity.items',
                       'summary': '@entity.summary',
+                      'items': '@entity.items',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'idle',
+              'event': 'APPROVE',
+              'guard': [
+                '!=',
+                '@config.slot',
+                'main',
+              ],
+              'effects': [
+                [
+                  'emit',
+                  'PROPOSAL_APPROVED',
+                  {
+                    'proposal': {
+                      'summary': '@entity.summary',
+                      'items': '@entity.items',
                     },
                   },
                 ],
@@ -1772,16 +1647,20 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   null,
                 ],
               ],
-              'event': 'APPROVE',
-              'from': 'review',
-              'guard': [
-                '!=',
-                '@config.slot',
-                'main',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'review',
+              'to': 'working',
+              'event': 'REVISE',
+              'guard': [
+                '!=',
+                [
+                  'str/default',
+                  '@entity.feedback',
+                  '',
+                ],
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -1793,8 +1672,8 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                     [
                       'json/stringify',
                       {
-                        'items': '@entity.items',
                         'summary': '@entity.summary',
+                        'items': '@entity.items',
                       },
                     ],
                     '\n\nRevise it: ',
@@ -1819,34 +1698,11 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   '',
                 ],
               ],
-              'event': 'REVISE',
-              'from': 'review',
-              'guard': [
-                '!=',
-                [
-                  'str/default',
-                  '@entity.feedback',
-                  '',
-                ],
-                '',
-              ],
-              'to': 'working',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'toast',
-                  {
-                    'dismissible': true,
-                    'message': 'Say what should change before asking for a revision.',
-                    'type': 'alert',
-                    'variant': 'warning',
-                  },
-                ],
-              ],
-              'event': 'REVISE',
               'from': 'review',
+              'to': 'review',
+              'event': 'REVISE',
               'guard': [
                 '=',
                 [
@@ -1856,48 +1712,45 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                 ],
                 '',
               ],
-              'to': 'review',
-            },
-            {
               'effects': [
                 [
-                  'emit',
-                  'PROPOSAL_DISCARDED',
-                  {},
+                  'render-ui',
+                  'toast',
+                  {
+                    'type': 'alert',
+                    'message': 'Say what should change before asking for a revision.',
+                    'dismissible': true,
+                    'variant': 'warning',
+                  },
                 ],
               ],
-              'event': 'DISCARD',
+            },
+            {
               'from': 'review',
+              'to': 'idle',
+              'event': 'DISCARD',
               'guard': [
                 '==',
                 '@config.slot',
                 'main',
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'emit',
                   'PROPOSAL_DISCARDED',
                   {},
                 ],
-                [
-                  'render-ui',
-                  '@config.slot',
-                  null,
-                ],
               ],
-              'event': 'DISCARD',
+            },
+            {
               'from': 'review',
+              'to': 'idle',
+              'event': 'DISCARD',
               'guard': [
                 '!=',
                 '@config.slot',
                 'main',
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'emit',
@@ -1910,11 +1763,29 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   null,
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'review',
-              'to': 'idle',
             },
             {
+              'from': 'review',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'emit',
+                  'PROPOSAL_DISCARDED',
+                  {},
+                ],
+                [
+                  'render-ui',
+                  '@config.slot',
+                  null,
+                ],
+              ],
+            },
+            {
+              'from': 'failed',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': '@config.withInputForm',
               'effects': [
                 [
                   'render-ui',
@@ -1925,13 +1796,14 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   'render-ui',
                   '@config.slot',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
-                            'name': '@config.headingIcon',
                             'size': 'lg',
+                            'name': '@config.headingIcon',
                             'type': 'icon',
                           },
                           {
@@ -1941,38 +1813,40 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'align': 'center',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'label': '@config.inputText',
                         'onChange': 'INPUT_CHANGED',
-                        'rows': 6,
                         'type': 'textarea',
+                        'label': '@config.inputText',
+                        'rows': 6,
                       },
                       {
-                        'action': 'START_TYPED',
                         'icon': 'sparkles',
+                        'action': 'START_TYPED',
                         'label': '@config.startButton',
-                        'type': 'button',
                         'variant': 'primary',
+                        'type': 'button',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'failed',
-              'guard': '@config.withInputForm',
-              'to': 'idle',
             },
             {
+              'from': 'failed',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                '@config.withInputForm',
+              ],
               'effects': [
                 [
                   'render-ui',
@@ -1980,15 +1854,11 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   null,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'failed',
-              'guard': [
-                'not',
-                '@config.withInputForm',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'failed',
+              'to': 'working',
+              'event': 'RETRY',
               'effects': [
                 [
                   'emit',
@@ -2003,50 +1873,33 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   },
                 ],
               ],
-              'event': 'RETRY',
-              'from': 'failed',
-              'to': 'working',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'PROPOSAL_DISCARDED',
-                  {},
-                ],
-              ],
-              'event': 'DISCARD',
               'from': 'failed',
+              'to': 'idle',
+              'event': 'DISCARD',
               'guard': [
                 '==',
                 '@config.slot',
                 'main',
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'emit',
                   'PROPOSAL_DISCARDED',
                   {},
                 ],
-                [
-                  'render-ui',
-                  '@config.slot',
-                  null,
-                ],
               ],
-              'event': 'DISCARD',
+            },
+            {
               'from': 'failed',
+              'to': 'idle',
+              'event': 'DISCARD',
               'guard': [
                 '!=',
                 '@config.slot',
                 'main',
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'emit',
@@ -2059,34 +1912,183 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
                   null,
                 ],
               ],
-              'event': 'CLOSE',
+            },
+            {
               'from': 'failed',
               'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'emit',
+                  'PROPOSAL_DISCARDED',
+                  {},
+                ],
+                [
+                  'render-ui',
+                  '@config.slot',
+                  null,
+                ],
+              ],
             },
           ],
         },
+        'config': {
+          'cancelButton': {
+            'type': 'string',
+            'default': '@config.cancelLabel',
+            'label': 'Cancel button',
+            'tier': 'presentation',
+          },
+          'slot': {
+            'type': 'slot',
+            'default': '@config.panelSlot',
+            'label': 'Where the panel renders',
+            'tier': 'internal',
+          },
+          'itemsTitle': {
+            'type': 'string',
+            'default': '@config.itemsHeading',
+            'label': 'Items heading',
+            'tier': 'presentation',
+          },
+          'retryButton': {
+            'type': 'string',
+            'default': '@config.retryLabel',
+            'label': 'Retry button',
+            'tier': 'presentation',
+          },
+          'workingText': {
+            'type': 'string',
+            'default': '@config.workingLabel',
+            'label': 'While the agent works',
+            'tier': 'presentation',
+          },
+          'discardButton': {
+            'type': 'string',
+            'default': '@config.discardLabel',
+            'label': 'Discard button',
+            'tier': 'presentation',
+          },
+          'framing': {
+            'type': 'string',
+            'default': '@config.prompt',
+            'label': 'What is the agent asked to do?',
+            'description': 'The request that precedes the person\'s input.',
+            'synonyms': 'task, goal, brief',
+            'tier': 'domain',
+          },
+          'patternForItems': {
+            'type': 'pattern',
+            'default': '@config.itemPattern',
+            'label': 'How are the proposed items drawn?',
+            'tier': 'presentation',
+          },
+          'inputText': {
+            'type': 'string',
+            'default': '@config.inputLabel',
+            'label': 'Start form label',
+            'tier': 'presentation',
+          },
+          'headingIcon': {
+            'type': 'string',
+            'default': '@config.icon',
+            'label': 'Panel icon',
+            'tier': 'presentation',
+          },
+          'feedbackText': {
+            'type': 'string',
+            'default': '@config.feedbackLabel',
+            'label': 'Revision feedback label',
+            'tier': 'presentation',
+          },
+          'fieldsForItems': {
+            'type': '[ProposalField]',
+            'default': '@config.itemFields',
+            'label': 'Which item values are shown?',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'summaryTitle': {
+            'type': 'string',
+            'default': '@config.summaryHeading',
+            'label': 'Summary heading',
+            'tier': 'presentation',
+          },
+          'approveButton': {
+            'type': 'string',
+            'default': '@config.approveLabel',
+            'label': 'Approve button',
+            'tier': 'presentation',
+          },
+          'reviseButton': {
+            'type': 'string',
+            'default': '@config.reviseLabel',
+            'label': 'Revise button',
+            'tier': 'presentation',
+          },
+          'withInputForm': {
+            'type': 'boolean',
+            'default': '@config.showInputForm',
+            'label': 'Show a start form?',
+            'tier': 'presentation',
+          },
+          'startButton': {
+            'type': 'string',
+            'default': '@config.startLabel',
+            'label': 'Start button',
+            'tier': 'presentation',
+          },
+          'heading': {
+            'type': 'string',
+            'default': '@config.title',
+            'label': 'Panel heading',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
       makeTraitRef({
+        'ref': ('Loop.traits.AgentToolLoop' satisfies _StdAgentProposalAgentProposalOrbitalUsesRef),
+        'name': 'AgentProposalLoop',
         'config': {
-          'cancelKey': {
-            'default': 'agent-proposal',
+          'tools': {
             'type': 'unknown',
+            'default': '@config.tools',
           },
           'instructions': {
-            'default': '@config.instructions',
             'type': 'unknown',
+            'default': '@config.instructions',
+          },
+          'cancelKey': {
+            'type': 'unknown',
+            'default': 'agent-proposal',
           },
           'maxSteps': {
-            'default': '@config.maxSteps',
             'type': 'unknown',
+            'default': '@config.maxSteps',
           },
           'quiet': {
+            'type': 'unknown',
             'default': true,
-            'type': 'unknown',
-          },
-          'tools': {
-            'default': '@config.tools',
-            'type': 'unknown',
           },
         },
         'events': {
@@ -2096,23 +2098,21 @@ export function stdAgentProposalAgentProposalOrbital(params: StdAgentProposalAge
         'listens': [
           {
             'event': 'PROPOSAL_RUN_REQUESTED',
+            'triggers': 'CONVERSE',
             'source': {
               'kind': 'trait',
               'trait': 'AgentProposalWorkflow',
             },
-            'triggers': 'CONVERSE',
           },
           {
             'event': 'PROPOSAL_CANCELLED',
+            'triggers': 'CANCEL',
             'source': {
               'kind': 'trait',
               'trait': 'AgentProposalWorkflow',
             },
-            'triggers': 'CANCEL',
           },
         ],
-        'name': 'AgentProposalLoop',
-        'ref': ('Loop.traits.AgentToolLoop' satisfies _StdAgentProposalAgentProposalOrbitalUsesRef),
       }),
     ],
     pages: [

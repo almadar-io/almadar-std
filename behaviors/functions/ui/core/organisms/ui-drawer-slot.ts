@@ -39,19 +39,19 @@ export type StdUiDrawerSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerSlotConfig {
-  children?: PatternValue;
-  className?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  isLoading?: boolean;
-  /** Default: `"right"` */
-  position?: 'left' | 'right';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  sourceTrait?: string;
+  children?: PatternValue;
+  enterDelay?: number;
   title?: string;
+  sourceTrait?: string;
+  /** Default: `"right"` */
+  position?: 'left' | 'right';
+  className?: string;
+  isLoading?: boolean;
+  error?: EntityRow;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
 }
 
 type _StdUiDrawerSlotEntityName = 'DrawerSlotItem';
@@ -118,8 +118,8 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -130,103 +130,77 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
     } as Entity,
     traits: [
       {
+        'name': 'DrawerSlotRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'DrawerSlotItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
-        'config': {
-          'children': {
-            'description': 'Content to display in the drawer',
-            'label': 'Children',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'className': {
-            'description': 'Custom class name',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'error': {
-            'description': 'Error state',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
+        'linkedEntity': 'DrawerSlotItem',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
             },
-            'tier': 'presentation',
-            'type': 'DrawerSlotError',
-          },
-          'isLoading': {
-            'description': 'Loading state',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'position': {
-            'default': 'right',
-            'description': 'Drawer position',
-            'label': 'Position',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'left',
-              'right',
-            ],
-          },
-          'size': {
-            'default': 'md',
-            'description': 'Drawer size',
-            'label': 'Size',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-              'xl',
-              'full',
-            ],
-          },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  ('DrawerSlotItem' satisfies _StdUiDrawerSlotEntityName),
+                  {},
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'position': '@config.position',
+                    'title': '@config.title',
+                    'type': 'drawer-slot',
+                    'error': '@config.error',
+                    'sourceTrait': '@config.sourceTrait',
+                    'isLoading': '@config.isLoading',
+                    'className': '@config.className',
+                    'skeleton': '@config.skeleton',
+                    'size': '@config.size',
+                    'children': '@config.children',
+                    'enter': '@config.enter',
+                    'enterDelay': '@config.enterDelay',
+                    'entity': 'DrawerSlotItem',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
           'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
             'values': [
               'header',
               'table',
@@ -240,84 +214,110 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
               'none',
             ],
           },
-          'sourceTrait': {
-            'description': 'Source trait name for qualified event emission',
-            'label': 'Source Trait',
-            'tier': 'presentation',
+          'size': {
             'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Drawer size',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+              'xl',
+              'full',
+            ],
+          },
+          'children': {
+            'type': 'node',
+            'label': 'Children',
+            'description': 'Content to display in the drawer',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
           },
           'title': {
-            'description': 'Override drawer title (extracted from children if not provided)',
-            'label': 'Title',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Title',
+            'description': 'Override drawer title (extracted from children if not provided)',
+            'tier': 'presentation',
+          },
+          'sourceTrait': {
+            'type': 'string',
+            'label': 'Source Trait',
+            'description': 'Source trait name for qualified event emission',
+            'tier': 'presentation',
+          },
+          'position': {
+            'type': 'string',
+            'default': 'right',
+            'label': 'Position',
+            'description': 'Drawer position',
+            'tier': 'presentation',
+            'values': [
+              'left',
+              'right',
+            ],
+          },
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Custom class name',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'label': 'Is Loading',
+            'description': 'Loading state',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'DrawerSlotError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
           },
         },
-        'effectRow': [
-          {
-            'kind': 'fetch',
-            'resource': 'DrawerSlotItem',
-          },
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'DrawerSlotItem',
-        'name': 'DrawerSlotRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('DrawerSlotItem' satisfies _StdUiDrawerSlotEntityName),
-                  {},
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': '@config.children',
-                    'className': '@config.className',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': 'DrawerSlotItem',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'position': '@config.position',
-                    'size': '@config.size',
-                    'skeleton': '@config.skeleton',
-                    'sourceTrait': '@config.sourceTrait',
-                    'title': '@config.title',
-                    'type': 'drawer-slot',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

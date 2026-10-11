@@ -205,38 +205,38 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'issues',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
                 'code': {
                   'name': 'code',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'message': {
                   'name': 'message',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'issues',
-            'type': 'array',
           },
           {
-            'default': '',
             'name': 'fix',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'validating',
@@ -255,7 +255,7 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'FixLoopExecution',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -289,61 +289,63 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'FixLoop',
         'emits': [
           {
             'event': 'PROGRAM_VALID',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'behavior',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'FIX_PROPOSED',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'FixIssue',
                 'name': 'issues',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'code',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'message',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'FixIssue',
               },
               {
                 'name': 'fix',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'PROGRAM_EVALUATED',
             'payloadSchema': [
               {
                 'name': 'result',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'behavior',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
             ],
           },
@@ -352,26 +354,26 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'FixIssue',
                 'name': 'errors',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'code',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'message',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'FixIssue',
               },
             ],
           },
@@ -380,8 +382,8 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
             'payloadSchema': [
               {
                 'name': 'content',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
           },
@@ -390,151 +392,17 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
           },
         ],
-        'linkedEntity': 'FixLoop',
-        'name': 'FixLoopExecution',
-        'scope': 'instance',
         'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'external': true,
-              'key': 'VALIDATE_PROGRAM',
-              'name': 'Validate Program',
-              'payloadSchema': [
-                {
-                  'name': 'program',
-                  'required': true,
-                  'type': 'SExpr',
-                },
-              ],
-            },
-            {
-              'key': 'PROGRAM_EVALUATED',
-              'name': 'Program Evaluated',
-              'payloadSchema': [
-                {
-                  'name': 'result',
-                  'properties': [
-                    {
-                      'name': 'behavior',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-              ],
-            },
-            {
-              'key': 'PROGRAM_INVALID',
-              'name': 'Program Invalid',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'FixIssue',
-                  'name': 'errors',
-                  'properties': [
-                    {
-                      'name': 'code',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'message',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'required': true,
-                  'type': '[object]',
-                },
-              ],
-            },
-            {
-              'key': 'FIX_GENERATED',
-              'name': 'Fix Generated',
-              'payloadSchema': [
-                {
-                  'name': 'content',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'key': 'FIX_FAILED',
-              'name': 'Fix Failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'key': 'RESET',
-              'name': 'Reset',
-            },
-            {
-              'key': 'PROGRAM_VALID',
-              'name': 'Program Valid',
-              'payloadSchema': [
-                {
-                  'name': 'behavior',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'key': 'FIX_PROPOSED',
-              'name': 'Fix Proposed',
-              'payloadSchema': [
-                {
-                  'entity': 'FixIssue',
-                  'name': 'issues',
-                  'properties': [
-                    {
-                      'name': 'code',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'message',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'required': true,
-                  'type': '[object]',
-                },
-                {
-                  'name': 'fix',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'idle',
+              'isInitial': true,
             },
             {
               'name': 'validating',
@@ -552,8 +420,142 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
               'name': 'failed',
             },
           ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VALIDATE_PROGRAM',
+              'name': 'Validate Program',
+              'payloadSchema': [
+                {
+                  'name': 'program',
+                  'type': 'SExpr',
+                  'required': true,
+                },
+              ],
+              'external': true,
+            },
+            {
+              'key': 'PROGRAM_EVALUATED',
+              'name': 'Program Evaluated',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'behavior',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              'key': 'PROGRAM_INVALID',
+              'name': 'Program Invalid',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'errors',
+                  'type': '[object]',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'code',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'message',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'FixIssue',
+                },
+              ],
+            },
+            {
+              'key': 'FIX_GENERATED',
+              'name': 'Fix Generated',
+              'payloadSchema': [
+                {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'FIX_FAILED',
+              'name': 'Fix Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'PROGRAM_VALID',
+              'name': 'Program Valid',
+              'payloadSchema': [
+                {
+                  'name': 'behavior',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'FIX_PROPOSED',
+              'name': 'Fix Proposed',
+              'payloadSchema': [
+                {
+                  'name': 'issues',
+                  'type': '[object]',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'code',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'message',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'FixIssue',
+                },
+                {
+                  'name': 'fix',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -564,17 +566,17 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   'render-ui',
                   'main',
                   {
-                    'content': 'Waiting for a program.',
                     'type': 'typography',
+                    'content': 'Waiting for a program.',
                     'variant': 'caption',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'validating',
+              'event': 'VALIDATE_PROGRAM',
               'effects': [
                 [
                   'set',
@@ -586,17 +588,17 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   '@payload.program',
                   {
                     'emit': {
-                      'failure': 'PROGRAM_INVALID',
                       'success': 'PROGRAM_EVALUATED',
+                      'failure': 'PROGRAM_INVALID',
                     },
                   },
                 ],
               ],
-              'event': 'VALIDATE_PROGRAM',
-              'from': 'idle',
-              'to': 'validating',
             },
             {
+              'from': 'validating',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -608,16 +610,16 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   'main',
                   {
                     'content': 'Waiting for a program.',
-                    'type': 'typography',
                     'variant': 'caption',
+                    'type': 'typography',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'validating',
-              'to': 'idle',
             },
             {
+              'from': 'validating',
+              'to': 'valid',
+              'event': 'PROGRAM_EVALUATED',
               'effects': [
                 [
                   'set',
@@ -637,8 +639,8 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                         'behavior',
                       ],
                     ],
-                    'type': 'typography',
                     'variant': 'caption',
+                    'type': 'typography',
                   },
                 ],
                 [
@@ -653,11 +655,11 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   },
                 ],
               ],
-              'event': 'PROGRAM_EVALUATED',
-              'from': 'validating',
-              'to': 'valid',
             },
             {
+              'from': 'validating',
+              'to': 'fixing',
+              'event': 'PROGRAM_INVALID',
               'effects': [
                 [
                   'set',
@@ -720,17 +722,17 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   },
                   {
                     'emit': {
-                      'failure': 'FIX_FAILED',
                       'success': 'FIX_GENERATED',
+                      'failure': 'FIX_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'PROGRAM_INVALID',
-              'from': 'validating',
-              'to': 'fixing',
             },
             {
+              'from': 'fixing',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -741,17 +743,17 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   'render-ui',
                   'main',
                   {
-                    'content': 'Waiting for a program.',
                     'type': 'typography',
+                    'content': 'Waiting for a program.',
                     'variant': 'caption',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'fixing',
-              'to': 'idle',
             },
             {
+              'from': 'fixing',
+              'to': 'fixed',
+              'event': 'FIX_GENERATED',
               'effects': [
                 [
                   'set',
@@ -776,16 +778,16 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   'emit',
                   'FIX_PROPOSED',
                   {
-                    'fix': '@payload.content',
                     'issues': '@entity.issues',
+                    'fix': '@payload.content',
                   },
                 ],
               ],
-              'event': 'FIX_GENERATED',
-              'from': 'fixing',
-              'to': 'fixed',
             },
             {
+              'from': 'fixing',
+              'to': 'failed',
+              'event': 'FIX_FAILED',
               'effects': [
                 [
                   'set',
@@ -801,16 +803,16 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                       'No repair: ',
                       '@payload.error',
                     ],
-                    'type': 'typography',
                     'variant': 'caption',
+                    'type': 'typography',
                   },
                 ],
               ],
-              'event': 'FIX_FAILED',
-              'from': 'fixing',
-              'to': 'failed',
             },
             {
+              'from': 'valid',
+              'to': 'valid',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -818,11 +820,11 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   'valid',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'valid',
-              'to': 'valid',
             },
             {
+              'from': 'valid',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -833,17 +835,17 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   'render-ui',
                   'main',
                   {
-                    'content': 'Waiting for a program.',
                     'type': 'typography',
+                    'content': 'Waiting for a program.',
                     'variant': 'caption',
                   },
                 ],
               ],
-              'event': 'RESET',
-              'from': 'valid',
-              'to': 'idle',
             },
             {
+              'from': 'fixed',
+              'to': 'fixed',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -851,11 +853,11 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   'fixed',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'fixed',
-              'to': 'fixed',
             },
             {
+              'from': 'fixed',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -866,17 +868,17 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   'render-ui',
                   'main',
                   {
-                    'content': 'Waiting for a program.',
                     'type': 'typography',
                     'variant': 'caption',
+                    'content': 'Waiting for a program.',
                   },
                 ],
               ],
-              'event': 'RESET',
-              'from': 'fixed',
-              'to': 'idle',
             },
             {
+              'from': 'failed',
+              'to': 'failed',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -884,11 +886,11 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   'failed',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'failed',
-              'to': 'failed',
             },
             {
+              'from': 'failed',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -899,18 +901,16 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
                   'render-ui',
                   'main',
                   {
-                    'content': 'Waiting for a program.',
                     'type': 'typography',
+                    'content': 'Waiting for a program.',
                     'variant': 'caption',
                   },
                 ],
               ],
-              'event': 'RESET',
-              'from': 'failed',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

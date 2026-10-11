@@ -83,18 +83,18 @@ export interface StdVersionHistoryRevisionRolledBackPayload {
  * without modifying its state-machine topology.
  */
 export interface StdVersionHistoryConfig {
-  /** Default: `[{"event":"OPEN_REVISION","icon":"arrow-right","label":"Open","variant":"ghost"},{"event":"ROLLBACK","icon":"rotate-ccw","label":"Rollback","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"OPEN_REVISION"` */
-  itemClickEvent?: string;
-  /** Default: `""` */
-  scopeField?: string;
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Version History"` */
   title?: string;
+  /** Default: `""` */
+  scopeField?: string;
+  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"ghost","event":"OPEN_REVISION"},{"event":"ROLLBACK","variant":"danger","label":"Rollback","icon":"rotate-ccw"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"OPEN_REVISION"` */
+  itemClickEvent?: string;
   /** Default: `""` */
   viewerRole?: string;
 }
@@ -240,85 +240,85 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Unique identifier for the associated document.',
             'name': 'documentId',
+            'type': 'string',
             'required': true,
+            'description': 'Unique identifier for the associated document.',
             'synonyms': 'reference, identifier, source',
-            'type': 'string',
           },
           {
-            'description': 'Specifies the kind of document this revision belongs to.',
             'name': 'documentType',
+            'type': 'string',
             'required': true,
+            'description': 'Specifies the kind of document this revision belongs to.',
             'synonyms': 'type, kind, category',
-            'type': 'string',
           },
           {
-            'description': 'A sequential identifier representing the revision\'s order.',
             'name': 'versionNumber',
-            'required': true,
-            'synonyms': 'sequence, order, iteration',
             'type': 'number',
+            'required': true,
+            'description': 'A sequential identifier representing the revision\'s order.',
+            'synonyms': 'sequence, order, iteration',
           },
           {
-            'description': 'Unique identifier for the user who made the change.',
             'name': 'authorId',
+            'type': 'string',
+            'description': 'Unique identifier for the user who made the change.',
             'synonyms': 'user identifier, creator, contributor',
-            'type': 'string',
           },
           {
-            'description': 'The name of the user who made the change.',
             'name': 'authorName',
+            'type': 'string',
+            'description': 'The name of the user who made the change.',
             'synonyms': 'user, contributor, owner',
-            'type': 'string',
           },
           {
-            'description': 'The snapshotted body of the revision — plain text or the rich-text HTML a document-look record carries. Rollback emits RevisionRolledBack { row }; the consumer restores row.content onto its source document.',
             'name': 'content',
+            'type': 'string',
+            'description': 'The snapshotted body of the revision — plain text or the rich-text HTML a document-look record carries. Rollback emits RevisionRolledBack { row }; the consumer restores row.content onto its source document.',
             'synonyms': 'text, body, data, value',
-            'type': 'string',
           },
           {
-            'description': 'A brief explanation of the revision\'s changes.',
             'name': 'summary',
-            'synonyms': 'description, note, comment, explanation',
             'type': 'string',
+            'description': 'A brief explanation of the revision\'s changes.',
+            'synonyms': 'description, note, comment, explanation',
           },
           {
-            'default': '',
-            'description': 'The current search query the user submitted.',
-            'intrinsic': true,
             'name': 'searchTerm',
-            'synonyms': 'query, term, q',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'The current search query the user submitted.',
+            'synonyms': 'query, term, q',
           },
           {
             'name': 'createdAt',
             'type': 'string',
           },
           {
-            'default': '',
-            'description': 'The parent document id the feed is currently scoped to, set by SHOW_HISTORY. Empty when browsing the unfiltered global feed.',
-            'intrinsic': true,
             'name': 'scopeKey',
-            'synonyms': 'scope, filter key, document scope',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'The parent document id the feed is currently scoped to, set by SHOW_HISTORY. Empty when browsing the unfiltered global feed.',
+            'synonyms': 'scope, filter key, document scope',
           },
           {
-            'default': [],
-            'description': 'The loaded revisions, newest first — what Compare diffs against.',
-            'intrinsic': true,
             'name': 'revisions',
-            'relation': {
-              'cardinality': 'many',
-              'entity': 'Revision',
-            },
-            'synonyms': 'versions, history',
             'type': 'relation',
+            'default': [],
+            'relation': {
+              'entity': 'Revision',
+              'cardinality': 'many',
+            },
+            'intrinsic': true,
+            'description': 'The loaded revisions, newest first — what Compare diffs against.',
+            'synonyms': 'versions, history',
           },
         ];
         const extras = params.fields ?? [];
@@ -329,122 +329,21 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'itemActions': {
-            'default': [
-              {
-                'event': 'OPEN_REVISION',
-                'icon': 'arrow-right',
-                'label': 'Open',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'ROLLBACK',
-                'icon': 'rotate-ccw',
-                'label': 'Rollback',
-                'variant': 'danger',
-              },
-            ],
-            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-                'when': {
-                  'name': 'when',
-                  'required': false,
-                  'type': 'SExpr',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Row actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'itemClickEvent': {
-            'default': 'OPEN_REVISION',
-            'description': 'Event emitted when a row is clicked; opens the revision. Empty disables the row click.',
-            'label': 'Row click',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'scopeField': {
-            'default': '',
-            'description': 'Revision entity field holding the parent document\'s id. When set, a page-mounted {id} route param scopes INIT\'s fetch, and a SHOW_HISTORY { key } event rescopes the feed, to rows whose scopeField equals the id/key; rollback and retry refetches stay scoped too. Empty (default) or no id = unfiltered global feed, unchanged from prior behavior.',
-            'label': 'Scope field',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'statLook': {
-            'default': 'elevated',
-            'description': 'Layer 2 visual treatment for stat / KPI cards.',
-            'label': 'Stat display look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'elevated',
-              'flat',
-              'progress-backed',
-              'gauge',
-              'sparkline',
-            ],
-          },
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
-            'label': 'Table look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'title': {
-            'default': 'Version History',
-            'description': 'Heading shown above the revision list',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
+        'name': 'RevisionManage',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'authorId',
+            'authorName',
+            'content',
+            'documentId',
+            'documentType',
+            'revisions',
+            'scopeKey',
+            'summary',
+            'versionNumber',
+          ],
         },
         'effectRow': [
           {
@@ -504,39 +403,43 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
             'resource': '@entity.versionNumber',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'Revision',
         'emits': [
           {
-            'description': 'Signals a revision has been selected for viewing.',
             'event': 'OPEN_REVISION',
+            'description': 'Signals a revision has been selected for viewing.',
+            'synonyms': 'select, choose, display',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'Revision',
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentType',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'versionNumber',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'authorId',
@@ -571,126 +474,59 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                     'type': '[Revision]',
                   },
                 ],
-                'type': 'object',
+                'entity': 'Revision',
               },
             ],
-            'synonyms': 'select, choose, display',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates the view has been closed or dismissed.',
             'event': 'CLOSE_VIEW',
+            'description': 'Indicates the view has been closed or dismissed.',
             'synonyms': 'dismiss, hide, close',
             'tier': 'domain',
           },
           {
-            'description': 'Signals a request to compare the opened revision with the newest one.',
             'event': 'COMPARE',
+            'description': 'Signals a request to compare the opened revision with the newest one.',
+            'synonyms': 'compare, diff, contrast',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'synonyms': 'compare, diff, contrast',
-            'tier': 'presentation',
           },
           {
-            'description': 'Requests a rollback to this revision.',
             'event': 'ROLLBACK',
-            'payloadSchema': [
-              {
-                'entity': 'Revision',
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'documentId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'documentType',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'versionNumber',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'authorId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'authorName',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'content',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'summary',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'searchTerm',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'createdAt',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'scopeKey',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'revisions',
-                    'type': '[Revision]',
-                  },
-                ],
-                'required': true,
-                'type': 'object',
-              },
-            ],
+            'description': 'Requests a rollback to this revision.',
             'synonyms': 'reverted, undone, restored',
             'tier': 'domain',
-          },
-          {
-            'description': 'Signals a revision has been successfully retrieved and is ready.',
-            'event': 'RevisionLoaded',
             'payloadSchema': [
               {
-                'entity': 'Revision',
-                'name': 'data',
+                'name': 'row',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentType',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'versionNumber',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'authorId',
@@ -725,15 +561,82 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                     'type': '[Revision]',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'Revision',
               },
             ],
-            'synonyms': 'loaded, fetched, retrieved, available',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to load revision data.',
+            'event': 'RevisionLoaded',
+            'description': 'Signals a revision has been successfully retrieved and is ready.',
+            'synonyms': 'loaded, fetched, retrieved, available',
+            'tier': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[object]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'documentId',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'documentType',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'versionNumber',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  {
+                    'name': 'authorId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'summary',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'searchTerm',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'scopeKey',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'revisions',
+                    'type': '[Revision]',
+                  },
+                ],
+                'entity': 'Revision',
+              },
+            ],
+          },
+          {
             'event': 'RevisionLoadFailed',
+            'description': 'Indicates a failure to load revision data.',
+            'synonyms': 'error, fail, problem, unsuccessful',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -744,36 +647,38 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, fail, problem, unsuccessful',
-            'tier': 'internal',
           },
           {
-            'description': 'The revision to roll back to; the consumer restores row.content onto its source document.',
             'event': 'RevisionRolledBack',
+            'description': 'The revision to roll back to; the consumer restores row.content onto its source document.',
+            'synonyms': 'restored, reverted, undone',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'Revision',
                 'name': 'row',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentType',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'versionNumber',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'authorId',
@@ -808,384 +713,16 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                     'type': '[Revision]',
                   },
                 ],
-                'required': true,
-                'type': 'object',
+                'entity': 'Revision',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'restored, reverted, undone',
-            'tier': 'domain',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'authorId',
-            'authorName',
-            'content',
-            'documentId',
-            'documentType',
-            'revisions',
-            'scopeKey',
-            'summary',
-            'versionNumber',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'Revision',
-        'name': 'RevisionManage',
-        'scope': 'collection',
         'stateMachine': {
-          'events': [
-            {
-              'description': 'Optional route param delivered on mount (e.g. an :id page segment); scopes INIT\'s own fetch to rows whose scopeField equals id. Absent id or empty scopeField config keeps the unfiltered global feed.',
-              'key': 'INIT',
-              'name': 'Initialize',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'route id, deep link, initial scope',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Signals a revision has been successfully retrieved and is ready.',
-              'key': 'RevisionLoaded',
-              'name': 'Revision loaded',
-              'payloadSchema': [
-                {
-                  'entity': 'Revision',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentType',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'versionNumber',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'authorId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'authorName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'content',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'summary',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'searchTerm',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'scopeKey',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'revisions',
-                      'type': '[Revision]',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'loaded, fetched, retrieved, available',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates a failure to load revision data.',
-              'key': 'RevisionLoadFailed',
-              'name': 'Revision load failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'error, fail, problem, unsuccessful',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Requests the revision feed scoped to one parent document; stores the key and refetches filtered by config.scopeField.',
-              'key': 'SHOW_HISTORY',
-              'name': 'Show History',
-              'payloadSchema': [
-                {
-                  'name': 'key',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'view history, doc history, filter revisions',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Signals a revision has been selected for viewing.',
-              'key': 'OPEN_REVISION',
-              'name': 'Open Revision',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'Revision',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentType',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'versionNumber',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'authorId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'authorName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'content',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'summary',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'searchTerm',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'scopeKey',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'revisions',
-                      'type': '[Revision]',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'select, choose, display',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Requests a rollback to this revision.',
-              'key': 'ROLLBACK',
-              'name': 'Rollback',
-              'payloadSchema': [
-                {
-                  'entity': 'Revision',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentType',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'versionNumber',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'authorId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'authorName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'content',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'summary',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'searchTerm',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'scopeKey',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'revisions',
-                      'type': '[Revision]',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'reverted, undone, restored',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates the view has been closed or dismissed.',
-              'key': 'CLOSE_VIEW',
-              'name': 'Close View',
-              'synonyms': 'dismiss, hide, close',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Signals a request to compare the opened revision with the newest one.',
-              'key': 'COMPARE',
-              'name': 'Compare',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'compare, diff, contrast',
-              'tier': 'presentation',
-            },
-            {
-              'description': 'The revision to roll back to; the consumer restores row.content onto its source document.',
-              'key': 'RevisionRolledBack',
-              'name': 'Revision rolled back',
-              'payloadSchema': [
-                {
-                  'entity': 'Revision',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentType',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'versionNumber',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'authorId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'authorName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'content',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'summary',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'searchTerm',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'scopeKey',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'revisions',
-                      'type': '[Revision]',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'restored, reverted, undone',
-              'tier': 'domain',
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'loading',
+              'isInitial': true,
             },
             {
               'name': 'browsing',
@@ -1200,8 +737,357 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
               'name': 'error',
             },
           ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+              'description': 'Optional route param delivered on mount (e.g. an :id page segment); scopes INIT\'s own fetch to rows whose scopeField equals id. Absent id or empty scopeField config keeps the unfiltered global feed.',
+              'synonyms': 'route id, deep link, initial scope',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RevisionLoaded',
+              'name': 'Revision loaded',
+              'description': 'Signals a revision has been successfully retrieved and is ready.',
+              'synonyms': 'loaded, fetched, retrieved, available',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentType',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'versionNumber',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    {
+                      'name': 'authorId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'summary',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'searchTerm',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scopeKey',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'revisions',
+                      'type': '[Revision]',
+                    },
+                  ],
+                  'entity': 'Revision',
+                },
+              ],
+            },
+            {
+              'key': 'RevisionLoadFailed',
+              'name': 'Revision load failed',
+              'description': 'Indicates a failure to load revision data.',
+              'synonyms': 'error, fail, problem, unsuccessful',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'SHOW_HISTORY',
+              'name': 'Show History',
+              'description': 'Requests the revision feed scoped to one parent document; stores the key and refetches filtered by config.scopeField.',
+              'synonyms': 'view history, doc history, filter revisions',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'OPEN_REVISION',
+              'name': 'Open Revision',
+              'description': 'Signals a revision has been selected for viewing.',
+              'synonyms': 'select, choose, display',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentType',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'versionNumber',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    {
+                      'name': 'authorId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'summary',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'searchTerm',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scopeKey',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'revisions',
+                      'type': '[Revision]',
+                    },
+                  ],
+                  'entity': 'Revision',
+                },
+              ],
+            },
+            {
+              'key': 'ROLLBACK',
+              'name': 'Rollback',
+              'description': 'Requests a rollback to this revision.',
+              'synonyms': 'reverted, undone, restored',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentType',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'versionNumber',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    {
+                      'name': 'authorId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'summary',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'searchTerm',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scopeKey',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'revisions',
+                      'type': '[Revision]',
+                    },
+                  ],
+                  'entity': 'Revision',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE_VIEW',
+              'name': 'Close View',
+              'description': 'Indicates the view has been closed or dismissed.',
+              'synonyms': 'dismiss, hide, close',
+              'tier': 'domain',
+            },
+            {
+              'key': 'COMPARE',
+              'name': 'Compare',
+              'description': 'Signals a request to compare the opened revision with the newest one.',
+              'synonyms': 'compare, diff, contrast',
+              'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'RevisionRolledBack',
+              'name': 'Revision rolled back',
+              'description': 'The revision to roll back to; the consumer restores row.content onto its source document.',
+              'synonyms': 'restored, reverted, undone',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentType',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'versionNumber',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    {
+                      'name': 'authorId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'summary',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'searchTerm',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scopeKey',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'revisions',
+                      'type': '[Revision]',
+                    },
+                  ],
+                  'entity': 'Revision',
+                },
+              ],
+            },
+          ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1216,10 +1102,6 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'fetch',
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
-                    'emit': {
-                      'failure': 'RevisionLoadFailed',
-                      'success': 'RevisionLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -1246,34 +1128,38 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         '@payload.id',
                       ],
                     ],
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
-                        'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
+                        'rows': 6,
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'RevisionLoaded',
               'effects': [
                 [
                   'set',
@@ -1289,9 +1175,13 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
+                        'gap': 'sm',
+                        'type': 'stack',
                         'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'name': 'history',
@@ -1299,42 +1189,37 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                             'type': 'icon',
                           },
                           {
-                            'content': '@config.title',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': '@config.title',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
-                        'cols': 1,
                         'entity': '@payload.data',
                         'fields': [
                           {
-                            'label': 'Version',
-                            'name': 'versionNumber',
                             'variant': 'badge',
+                            'name': 'versionNumber',
+                            'label': 'Version',
                           },
                           {
-                            'label': 'Author',
                             'name': 'authorName',
+                            'label': 'Author',
                             'variant': 'caption',
                           },
                           {
-                            'label': 'Summary',
-                            'name': 'summary',
                             'variant': 'h4',
+                            'name': 'summary',
+                            'label': 'Summary',
                           },
                           {
-                            'format': 'date',
                             'label': 'Saved',
+                            'format': 'date',
                             'name': 'createdAt',
                             'variant': 'caption',
                           },
                         ],
-                        'gap': 'sm',
                         'itemActions': [
                           'array/filter',
                           '@config.itemActions',
@@ -1369,38 +1254,39 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                             ],
                           ],
                         ],
-                        'itemClickEvent': '@config.itemClickEvent',
+                        'cols': 1,
+                        'gap': 'sm',
                         'look': '@config.tableLook',
                         'type': 'data-grid',
+                        'itemClickEvent': '@config.itemClickEvent',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'RevisionLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'RevisionLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
+                    'message': '@payload.error',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'RevisionLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'SHOW_HISTORY',
               'effects': [
                 [
                   'set',
@@ -1412,8 +1298,8 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
                     'emit': {
-                      'failure': 'RevisionLoadFailed',
                       'success': 'RevisionLoaded',
+                      'failure': 'RevisionLoadFailed',
                     },
                     'filter': [
                       '=',
@@ -1430,28 +1316,28 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
+                        'variant': 'grid',
                         'rows': 6,
                         'type': 'skeleton',
-                        'variant': 'grid',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SHOW_HISTORY',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1466,10 +1352,6 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'fetch',
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
-                    'emit': {
-                      'failure': 'RevisionLoadFailed',
-                      'success': 'RevisionLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -1496,34 +1378,38 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         '@payload.id',
                       ],
                     ],
+                    'emit': {
+                      'success': 'RevisionLoaded',
+                      'failure': 'RevisionLoadFailed',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
+                        'variant': 'grid',
                         'rows': 6,
                         'type': 'skeleton',
-                        'variant': 'grid',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'viewing_single',
+              'event': 'OPEN_REVISION',
               'effects': [
                 [
                   'let',
@@ -1642,48 +1528,53 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
-                        'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'action': 'CLOSE_VIEW',
                             'label': 'Back',
-                            'type': 'button',
                             'variant': 'ghost',
+                            'action': 'CLOSE_VIEW',
+                            'type': 'button',
                           },
                           {
-                            'name': 'file-text',
                             'size': 'lg',
                             'type': 'icon',
+                            'name': 'file-text',
                           },
                           {
-                            'content': '@entity.summary',
                             'type': 'typography',
+                            'content': '@entity.summary',
                             'variant': 'h3',
                           },
                           {
-                            'label': '@entity.versionNumber',
-                            'type': 'badge',
                             'variant': 'default',
+                            'type': 'badge',
+                            'label': '@entity.versionNumber',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
+                        'align': 'center',
                         'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'gap': 'sm',
                         'children': [
                           {
+                            'gap': 'md',
                             'children': [
                               {
-                                'color': 'muted',
+                                'variant': 'caption',
                                 'content': 'Author',
                                 'type': 'typography',
-                                'variant': 'caption',
+                                'color': 'muted',
                               },
                               {
                                 'content': '@entity.authorName',
@@ -1692,18 +1583,21 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                               },
                             ],
                             'direction': 'horizontal',
-                            'gap': 'md',
                             'type': 'stack',
                           },
                           {
+                            'gap': 'md',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'color': 'muted',
-                                'content': 'Saved',
                                 'type': 'typography',
+                                'content': 'Saved',
+                                'color': 'muted',
                                 'variant': 'caption',
                               },
                               {
+                                'variant': 'body',
+                                'type': 'typography',
                                 'content': [
                                   'time/format',
                                   [
@@ -1712,15 +1606,13 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                                   ],
                                   'MMM D, YYYY',
                                 ],
-                                'type': 'typography',
-                                'variant': 'body',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'type': 'stack',
                           },
                           {
+                            'gap': 'md',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'color': 'muted',
@@ -1729,92 +1621,86 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                                 'variant': 'caption',
                               },
                               {
-                                'content': '@entity.content',
                                 'type': 'typography',
                                 'variant': 'body',
+                                'content': '@entity.content',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'type': 'stack',
                           },
                         ],
                         'direction': 'vertical',
-                        'gap': 'sm',
                         'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'cols': 3,
                         'children': [
                           {
                             'icon': 'tag',
-                            'label': 'Version',
-                            'look': '@config.statLook',
                             'type': 'stat-display',
+                            'label': 'Version',
                             'value': '@entity.versionNumber',
+                            'look': '@config.statLook',
                           },
                           {
-                            'icon': 'file',
                             'label': 'Document',
-                            'look': '@config.statLook',
-                            'type': 'stat-display',
                             'value': [
                               'str/default',
                               '@entity.summary',
                               '',
                             ],
+                            'type': 'stat-display',
+                            'icon': 'file',
+                            'look': '@config.statLook',
                           },
                           {
-                            'icon': 'layers',
-                            'label': 'Type',
                             'look': '@config.statLook',
+                            'label': 'Type',
                             'type': 'stat-display',
                             'value': '@entity.documentType',
+                            'icon': 'layers',
                           },
                         ],
-                        'cols': 3,
                         'type': 'simple-grid',
                       },
                       {
-                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'action': 'COMPARE',
                             'actionPayload': {
                               'id': '@entity.id',
                             },
-                            'label': 'Compare',
-                            'type': 'button',
                             'variant': 'secondary',
+                            'action': 'COMPARE',
+                            'type': 'button',
+                            'label': 'Compare',
                           },
                           {
-                            'action': 'ROLLBACK',
+                            'type': 'button',
                             'actionPayload': {
                               'row': '@entity',
                             },
-                            'label': 'Rollback',
-                            'type': 'button',
                             'variant': 'danger',
+                            'action': 'ROLLBACK',
+                            'label': 'Rollback',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
+                        'align': 'center',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'OPEN_REVISION',
-              'from': 'browsing',
-              'to': 'viewing_single',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'ROLLBACK',
               'effects': [
                 [
                   'emit',
@@ -1837,10 +1723,6 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'fetch',
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
-                    'emit': {
-                      'failure': 'RevisionLoadFailed',
-                      'success': 'RevisionLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -1873,36 +1755,40 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         ],
                       ],
                     ],
+                    'emit': {
+                      'success': 'RevisionLoaded',
+                      'failure': 'RevisionLoadFailed',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'Rolling back…',
                         'type': 'typography',
+                        'color': 'muted',
                         'variant': 'caption',
+                        'content': 'Rolling back…',
                       },
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
+                    'align': 'center',
                     'gap': 'md',
+                    'direction': 'vertical',
                     'type': 'stack',
+                    'className': 'py-12',
                   },
                 ],
               ],
-              'event': 'ROLLBACK',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'SHOW_HISTORY',
               'effects': [
                 [
                   'set',
@@ -1939,8 +1825,8 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
                       },
                     ],
                     'direction': 'vertical',
@@ -1949,11 +1835,11 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   },
                 ],
               ],
-              'event': 'SHOW_HISTORY',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'viewing_single',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -2004,37 +1890,33 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'viewing_single',
-              'to': 'loading',
             },
             {
+              'from': 'viewing_single',
+              'to': 'loading',
+              'event': 'CLOSE_VIEW',
               'effects': [
                 [
                   'fetch',
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
-                    'emit': {
-                      'failure': 'RevisionLoadFailed',
-                      'success': 'RevisionLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -2057,34 +1939,38 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         '@entity.scopeKey',
                       ],
                     ],
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'CLOSE_VIEW',
-              'from': 'viewing_single',
-              'to': 'loading',
             },
             {
+              'from': 'viewing_single',
+              'to': 'comparing',
+              'event': 'COMPARE',
               'effects': [
                 [
                   'set',
@@ -2095,35 +1981,40 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
                         'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
+                            'type': 'button',
                             'action': 'CLOSE_VIEW',
                             'label': 'Back',
-                            'type': 'button',
                             'variant': 'ghost',
                           },
                           {
                             'name': 'git-compare',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
-                            'content': 'Compare versions',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': 'Compare versions',
                           },
                         ],
                         'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'view': 'side-by-side',
+                        'beforeId': '@entity.id',
+                        'type': 'version-diff',
                         'afterId': [
                           'object/get',
                           [
@@ -2133,7 +2024,6 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                           'id',
                           '',
                         ],
-                        'beforeId': '@entity.id',
                         'revisions': [
                           'array/map',
                           '@entity.revisions',
@@ -2141,9 +2031,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                             'fn',
                             'r',
                             {
-                              'author': '@r.authorName',
                               'content': '@r.content',
-                              'id': '@r.id',
                               'label': [
                                 'str/concat',
                                 'v',
@@ -2153,42 +2041,40 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                                   '',
                                 ],
                               ],
+                              'id': '@r.id',
                               'timestamp': '@r.createdAt',
+                              'author': '@r.authorName',
                             },
                           ],
                         ],
-                        'type': 'version-diff',
-                        'view': 'side-by-side',
                       },
                       {
+                        'type': 'stack',
                         'align': 'center',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'action': 'ROLLBACK',
                             'actionPayload': {
                               'row': '@entity',
                             },
+                            'variant': 'danger',
                             'label': 'Rollback',
                             'type': 'button',
-                            'variant': 'danger',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'COMPARE',
-              'from': 'viewing_single',
-              'to': 'comparing',
             },
             {
+              'from': 'viewing_single',
+              'to': 'loading',
+              'event': 'ROLLBACK',
               'effects': [
                 [
                   'emit',
@@ -2212,8 +2098,8 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
                     'emit': {
-                      'failure': 'RevisionLoadFailed',
                       'success': 'RevisionLoaded',
+                      'failure': 'RevisionLoadFailed',
                     },
                     'filter': [
                       'or',
@@ -2259,24 +2145,24 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
                         'content': 'Rolling back…',
+                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
                       },
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'className': 'py-12',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'ROLLBACK',
-              'from': 'viewing_single',
-              'to': 'loading',
             },
             {
+              'from': 'viewing_single',
+              'to': 'loading',
+              'event': 'SHOW_HISTORY',
               'effects': [
                 [
                   'set',
@@ -2288,8 +2174,8 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
                     'emit': {
-                      'failure': 'RevisionLoadFailed',
                       'success': 'RevisionLoaded',
+                      'failure': 'RevisionLoadFailed',
                     },
                     'filter': [
                       '=',
@@ -2306,28 +2192,28 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SHOW_HISTORY',
-              'from': 'viewing_single',
-              'to': 'loading',
             },
             {
+              'from': 'comparing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -2378,6 +2264,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
@@ -2385,80 +2272,79 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'comparing',
-              'to': 'loading',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('Revision' satisfies _StdVersionHistoryEntityName),
-                  {
-                    'emit': {
-                      'failure': 'RevisionLoadFailed',
-                      'success': 'RevisionLoaded',
-                    },
-                    'filter': [
-                      'or',
-                      [
-                        '=',
-                        '@config.scopeField',
-                        '',
-                      ],
-                      [
-                        '=',
-                        '@entity.scopeKey',
-                        '',
-                      ],
-                      [
-                        '=',
-                        [
-                          'object/get',
-                          '@entity',
-                          '@config.scopeField',
-                        ],
-                        '@entity.scopeKey',
-                      ],
-                    ],
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'grid',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
+              'from': 'comparing',
+              'to': 'loading',
               'event': 'CLOSE_VIEW',
-              'from': 'comparing',
-              'to': 'loading',
+              'effects': [
+                [
+                  'fetch',
+                  ('Revision' satisfies _StdVersionHistoryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.scopeField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        '@entity.scopeKey',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.scopeField',
+                        ],
+                        '@entity.scopeKey',
+                      ],
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'variant': 'grid',
+                        'rows': 6,
+                        'type': 'skeleton',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'comparing',
+              'to': 'loading',
+              'event': 'ROLLBACK',
               'effects': [
                 [
                   'emit',
@@ -2481,10 +2367,6 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'fetch',
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
-                    'emit': {
-                      'failure': 'RevisionLoadFailed',
-                      'success': 'RevisionLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -2517,36 +2399,40 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         ],
                       ],
                     ],
+                    'emit': {
+                      'failure': 'RevisionLoadFailed',
+                      'success': 'RevisionLoaded',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
                         'color': 'muted',
-                        'content': 'Rolling back…',
                         'type': 'typography',
                         'variant': 'caption',
+                        'content': 'Rolling back…',
                       },
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
-              'event': 'ROLLBACK',
-              'from': 'comparing',
-              'to': 'loading',
             },
             {
+              'from': 'comparing',
+              'to': 'loading',
+              'event': 'SHOW_HISTORY',
               'effects': [
                 [
                   'set',
@@ -2557,10 +2443,6 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'fetch',
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
-                    'emit': {
-                      'failure': 'RevisionLoadFailed',
-                      'success': 'RevisionLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -2570,6 +2452,10 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                       ],
                       '@payload.key',
                     ],
+                    'emit': {
+                      'success': 'RevisionLoaded',
+                      'failure': 'RevisionLoadFailed',
+                    },
                   },
                 ],
                 [
@@ -2578,26 +2464,26 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   {
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'SHOW_HISTORY',
-              'from': 'comparing',
-              'to': 'loading',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -2613,8 +2499,8 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
                     'emit': {
-                      'failure': 'RevisionLoadFailed',
                       'success': 'RevisionLoaded',
+                      'failure': 'RevisionLoadFailed',
                     },
                     'filter': [
                       'or',
@@ -2648,28 +2534,28 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
-                        'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
+                        'rows': 6,
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'SHOW_HISTORY',
               'effects': [
                 [
                   'set',
@@ -2680,10 +2566,6 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'fetch',
                   ('Revision' satisfies _StdVersionHistoryEntityName),
                   {
-                    'emit': {
-                      'failure': 'RevisionLoadFailed',
-                      'success': 'RevisionLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -2693,16 +2575,23 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                       ],
                       '@payload.key',
                     ],
+                    'emit': {
+                      'success': 'RevisionLoaded',
+                      'failure': 'RevisionLoadFailed',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
@@ -2710,18 +2599,129 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         'variant': 'grid',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SHOW_HISTORY',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'statLook': {
+            'type': 'string',
+            'default': 'elevated',
+            'label': 'Stat display look',
+            'description': 'Layer 2 visual treatment for stat / KPI cards.',
+            'tier': 'presentation',
+            'values': [
+              'elevated',
+              'flat',
+              'progress-backed',
+              'gauge',
+              'sparkline',
+            ],
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Version History',
+            'label': 'Section title',
+            'description': 'Heading shown above the revision list',
+            'tier': 'presentation',
+          },
+          'scopeField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Scope field',
+            'description': 'Revision entity field holding the parent document\'s id. When set, a page-mounted {id} route param scopes INIT\'s fetch, and a SHOW_HISTORY { key } event rescopes the feed, to rows whose scopeField equals the id/key; rollback and retry refetches stay scoped too. Empty (default) or no id = unfiltered global feed, unchanged from prior behavior.',
+            'tier': 'domain',
+          },
+          'itemActions': {
+            'type': '[ItemAction]',
+            'default': [
+              {
+                'icon': 'arrow-right',
+                'label': 'Open',
+                'variant': 'ghost',
+                'event': 'OPEN_REVISION',
+              },
+              {
+                'event': 'ROLLBACK',
+                'variant': 'danger',
+                'label': 'Rollback',
+                'icon': 'rotate-ccw',
+              },
+            ],
+            'label': 'Row actions',
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'when': {
+                  'name': 'when',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Table look',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'itemClickEvent': {
+            'type': 'event',
+            'default': 'OPEN_REVISION',
+            'label': 'Row click',
+            'description': 'Event emitted when a row is clicked; opens the revision. Empty disables the row click.',
+            'tier': 'presentation',
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

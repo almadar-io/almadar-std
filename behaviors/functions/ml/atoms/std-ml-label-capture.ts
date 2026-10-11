@@ -194,50 +194,50 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'primaryKey': true,
-            'required': true,
             'type': 'string',
+            'required': true,
+            'primaryKey': true,
           },
           {
-            'description': 'The input that was judged.',
-            'items': {
-              'type': 'scalar',
-            },
             'name': 'input',
             'type': 'object',
-          },
-          {
-            'description': 'The verdict/output produced by the rung.',
             'items': {
               'type': 'scalar',
             },
+            'description': 'The input that was judged.',
+          },
+          {
             'name': 'verdict',
             'type': 'object',
-          },
-          {
-            'default': '',
-            'description': 'Which rung produced the verdict.',
-            'name': 'source',
-            'type': 'string',
-          },
-          {
-            'description': 'The observed ground-truth outcome, once known.',
             'items': {
               'type': 'scalar',
             },
+            'description': 'The verdict/output produced by the rung.',
+          },
+          {
+            'name': 'source',
+            'type': 'string',
+            'default': '',
+            'description': 'Which rung produced the verdict.',
+          },
+          {
             'name': 'outcome',
             'type': 'object',
+            'items': {
+              'type': 'scalar',
+            },
+            'description': 'The observed ground-truth outcome, once known.',
           },
           {
-            'default': '',
-            'description': 'Named destination this example is attributed to.',
             'name': 'sink',
             'type': 'string',
+            'default': '',
+            'description': 'Named destination this example is attributed to.',
           },
           {
-            'default': 0,
             'name': 'recordedAt',
             'type': 'number',
+            'default': 0,
           },
         ];
         const extras = params.fields ?? [];
@@ -248,22 +248,18 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'sampleRate': {
-            'default': 1,
-            'description': 'Fraction of examples to keep (1 = capture all). A prob/flip trial per observation.',
-            'label': 'Sample rate',
-            'tier': 'policy',
-            'type': 'float',
-          },
-          'sink': {
-            'default': '',
-            'description': 'Named destination this batch of examples is attributed to; interpreted downstream (the physical label store is not yet decided).',
-            'label': 'Label sink',
-            'tier': 'infra',
-            'type': 'string',
-          },
+        'name': 'LabelCaptureListener',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'input',
+            'outcome',
+            'recordedAt',
+            'sink',
+            'source',
+            'verdict',
+          ],
         },
         'effectRow': [
           {
@@ -299,42 +295,35 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
             'resource': '@entity.verdict',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'LabeledExample',
         'emits': [
           {
-            'description': 'Fired after a labeled example is persisted.',
             'event': 'LABEL_CAPTURED',
+            'description': 'Fired after a labeled example is persisted.',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'source',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'sink',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'input',
-            'outcome',
-            'recordedAt',
-            'sink',
-            'source',
-            'verdict',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'LabeledExample',
-        'name': 'LabelCaptureListener',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -346,18 +335,18 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
               'payloadSchema': [
                 {
                   'name': 'input',
-                  'required': true,
                   'type': 'Map<string,scalar>',
+                  'required': true,
                 },
                 {
                   'name': 'verdict',
-                  'required': true,
                   'type': 'Map<string,scalar>',
+                  'required': true,
                 },
                 {
                   'name': 'source',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'outcome',
@@ -366,32 +355,29 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
               ],
             },
             {
-              'description': 'Fired after a labeled example is persisted.',
               'key': 'LABEL_CAPTURED',
               'name': 'Label Captured',
+              'description': 'Fired after a labeled example is persisted.',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'source',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'sink',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -424,11 +410,11 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
                   0,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CAPTURE',
               'effects': [
                 [
                   'set',
@@ -473,32 +459,46 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
                       'create',
                       ('LabeledExample' satisfies _StdMlLabelCaptureEntityName),
                       {
-                        'input': '@entity.input',
-                        'outcome': '@entity.outcome',
-                        'recordedAt': '@entity.recordedAt',
                         'sink': '@entity.sink',
-                        'source': '@entity.source',
+                        'recordedAt': '@entity.recordedAt',
+                        'outcome': '@entity.outcome',
                         'verdict': '@entity.verdict',
+                        'source': '@entity.source',
+                        'input': '@entity.input',
                       },
                     ],
                     [
                       'emit',
                       'LABEL_CAPTURED',
                       {
-                        'sink': '@entity.sink',
                         'source': '@entity.source',
+                        'sink': '@entity.sink',
                       },
                     ],
                   ],
                   null,
                 ],
               ],
-              'event': 'CAPTURE',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'sampleRate': {
+            'type': 'float',
+            'default': 1,
+            'label': 'Sample rate',
+            'description': 'Fraction of examples to keep (1 = capture all). A prob/flip trial per observation.',
+            'tier': 'policy',
+          },
+          'sink': {
+            'type': 'string',
+            'default': '',
+            'label': 'Label sink',
+            'description': 'Named destination this batch of examples is attributed to; interpreted downstream (the physical label store is not yet decided).',
+            'tier': 'infra',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

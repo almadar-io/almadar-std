@@ -128,18 +128,18 @@ export interface StdSavedSearchSavedSearchDeletedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSavedSearchConfig {
-  /** Default: `"Saved search"` */
-  defaultSearchName?: string;
-  /** Default: `[{"event":"TOGGLE_ALERT","icon":"bell","label":"Toggle alert","variant":"secondary"},{"event":"EDIT","icon":"pencil","label":"Edit","variant":"secondary"},{"event":"DELETE","icon":"trash-2","label":"Delete","variant":"danger"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"EDIT"` */
   itemClickEvent?: string;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `[{"icon":"bell","label":"Toggle alert","event":"TOGGLE_ALERT","variant":"secondary"},{"event":"EDIT","icon":"pencil","label":"Edit","variant":"secondary"},{"variant":"danger","label":"Delete","icon":"trash-2","event":"DELETE"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Saved Searches"` */
   title?: string;
+  /** Default: `"Saved search"` */
+  defaultSearchName?: string;
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**
@@ -288,61 +288,61 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'A user-defined label for the saved search.',
             'name': 'name',
+            'type': 'string',
             'required': true,
+            'description': 'A user-defined label for the saved search.',
             'synonyms': 'title, label, search name',
-            'type': 'string',
           },
           {
-            'description': 'The text of the search query.',
             'name': 'query',
-            'synonyms': 'search, expression, criteria',
             'type': 'string',
+            'description': 'The text of the search query.',
+            'synonyms': 'search, expression, criteria',
           },
           {
-            'description': 'Criteria used to define the search.',
+            'name': 'filters',
+            'type': 'object',
             'items': {
               'type': 'scalar',
             },
-            'name': 'filters',
+            'description': 'Criteria used to define the search.',
             'synonyms': 'criteria, conditions, constraints',
-            'type': 'object',
           },
           {
+            'name': 'alertEnabled',
+            'type': 'boolean',
             'default': false,
             'description': 'Indicates whether alerts are enabled for this saved search.',
-            'name': 'alertEnabled',
             'synonyms': 'enabled, active, notification status',
-            'type': 'boolean',
           },
           {
-            'default': 'daily',
-            'description': 'How often alerts are triggered.',
             'name': 'alertFrequency',
-            'synonyms': 'frequency, interval, recurrence',
             'type': 'string',
+            'default': 'daily',
             'values': [
               'instant',
               'daily',
               'weekly',
             ],
+            'description': 'How often alerts are triggered.',
+            'synonyms': 'frequency, interval, recurrence',
           },
           {
-            'description': 'Identifier of the user who created the saved search.',
             'name': 'userId',
-            'synonyms': 'creator, owner, user_id',
             'type': 'string',
+            'description': 'Identifier of the user who created the saved search.',
+            'synonyms': 'creator, owner, user_id',
           },
           {
-            'description': 'Timestamp of the last notification sent.',
             'name': 'lastNotifiedAt',
-            'synonyms': 'last_notification, notified_at, last_alert',
             'type': 'datetime',
+            'description': 'Timestamp of the last notification sent.',
+            'synonyms': 'last_notification, notified_at, last_alert',
           },
           {
             'name': 'createdAt',
@@ -357,115 +357,7 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'defaultSearchName': {
-            'default': 'Saved search',
-            'description': 'Name given to a saved search when the current search has no query text (filters only). Renamable afterwards.',
-            'label': 'Default saved-search name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'itemActions': {
-            'default': [
-              {
-                'event': 'TOGGLE_ALERT',
-                'icon': 'bell',
-                'label': 'Toggle alert',
-                'variant': 'secondary',
-              },
-              {
-                'event': 'EDIT',
-                'icon': 'pencil',
-                'label': 'Edit',
-                'variant': 'secondary',
-              },
-              {
-                'event': 'DELETE',
-                'icon': 'trash-2',
-                'label': 'Delete',
-                'variant': 'danger',
-              },
-            ],
-            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-                'when': {
-                  'name': 'when',
-                  'required': false,
-                  'type': 'SExpr',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Row actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'itemClickEvent': {
-            'default': 'EDIT',
-            'description': 'Event emitted when a row is clicked; opens the saved search for editing. Empty disables the row click.',
-            'label': 'Row click',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
-            'label': 'Table look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'title': {
-            'default': 'Saved Searches',
-            'description': 'Heading shown above the saved-search list',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
-        },
+        'name': 'SavedSearchManage',
         'effectRow': [
           {
             'kind': 'fetch',
@@ -504,60 +396,64 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
             'resource': '@entity.query',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'SavedSearch',
         'emits': [
           {
-            'description': 'Indicates the alert subscription status has been changed.',
             'event': 'TOGGLE_ALERT',
+            'description': 'Indicates the alert subscription status has been changed.',
+            'synonyms': 'subscribe, unsubscribe, notify, alert-state',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'enabled',
-                'required': true,
                 'type': 'boolean',
+                'required': true,
               },
             ],
-            'synonyms': 'subscribe, unsubscribe, notify, alert-state',
-            'tier': 'domain',
           },
           {
-            'description': 'Signals a saved search has been removed.',
             'event': 'DELETE',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-            ],
+            'description': 'Signals a saved search has been removed.',
             'synonyms': 'remove, discard, clear',
             'tier': 'presentation',
-          },
-          {
-            'description': 'Indicates a saved search is being modified.',
-            'event': 'EDIT',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'EDIT',
+            'description': 'Indicates a saved search is being modified.',
+            'synonyms': 'modify, update, change',
+            'tier': 'presentation',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'SavedSearch',
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'name',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'query',
@@ -593,67 +489,67 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                     'type': 'string',
                   },
                 ],
-                'type': 'object',
+                'entity': 'SavedSearch',
               },
             ],
-            'synonyms': 'modify, update, change',
-            'tier': 'presentation',
           },
           {
-            'description': 'Indicates a saved search has been renamed.',
             'event': 'RENAME',
-            'payloadSchema': [
-              {
-                'name': 'value',
-                'required': true,
-                'type': 'string',
-              },
-            ],
+            'description': 'Indicates a saved search has been renamed.',
             'synonyms': 'update, modify, change name',
             'tier': 'presentation',
-          },
-          {
-            'description': 'Indicates a change in the alert frequency setting.',
-            'event': 'CHANGE_FREQUENCY',
             'payloadSchema': [
               {
                 'name': 'value',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'synonyms': 'update, modify, adjust, refresh',
-            'tier': 'presentation',
           },
           {
-            'description': 'Indicates a saved search has been persisted.',
+            'event': 'CHANGE_FREQUENCY',
+            'description': 'Indicates a change in the alert frequency setting.',
+            'synonyms': 'update, modify, adjust, refresh',
+            'tier': 'presentation',
+            'payloadSchema': [
+              {
+                'name': 'value',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
             'event': 'SAVE',
+            'description': 'Indicates a saved search has been persisted.',
             'synonyms': 'persist, store, update',
             'tier': 'domain',
           },
           {
-            'description': 'Aborts the current operation.',
             'event': 'CANCEL',
+            'description': 'Aborts the current operation.',
             'synonyms': 'abort, dismiss, undo',
             'tier': 'domain',
           },
           {
-            'description': 'Signals that a saved search has been successfully retrieved.',
             'event': 'SavedSearchLoaded',
+            'description': 'Signals that a saved search has been successfully retrieved.',
+            'synonyms': 'loaded, retrieved, fetched',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'SavedSearch',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'name',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'query',
@@ -689,15 +585,15 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'SavedSearch',
               },
             ],
-            'synonyms': 'loaded, retrieved, fetched',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to load saved search data.',
             'event': 'SavedSearchLoadFailed',
+            'description': 'Indicates a failure to load saved search data.',
+            'synonyms': 'error, failure, load error',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -708,76 +604,23 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure, load error',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates the current search has been saved as a new row.',
             'event': 'SavedSearchCreated',
-            'payloadEntity': 'SavedSearch',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'name',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'query',
-                'type': 'string',
-              },
-              {
-                'name': 'filters',
-                'type': 'Map<string,scalar>',
-              },
-              {
-                'name': 'alertEnabled',
-                'type': 'boolean',
-              },
-              {
-                'name': 'alertFrequency',
-                'type': 'string',
-                'values': [
-                  'instant',
-                  'daily',
-                  'weekly',
-                ],
-              },
-              {
-                'name': 'userId',
-                'type': 'string',
-              },
-              {
-                'name': 'lastNotifiedAt',
-                'type': 'datetime',
-              },
-              {
-                'name': 'createdAt',
-                'type': 'string',
-              },
-            ],
-            'scope': 'internal',
+            'description': 'Indicates the current search has been saved as a new row.',
             'synonyms': 'saved, created, bookmarked',
             'tier': 'presentation',
-          },
-          {
-            'description': 'Indicates a saved search has been modified and persisted.',
-            'event': 'SavedSearchUpdated',
-            'payloadEntity': 'SavedSearch',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'name',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'query',
@@ -813,51 +656,116 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'modified, changed, updated, persisted',
-            'tier': 'presentation',
+            'payloadEntity': 'SavedSearch',
           },
           {
-            'description': 'Indicates a saved search has been removed.',
-            'event': 'SavedSearchDeleted',
+            'event': 'SavedSearchUpdated',
+            'description': 'Indicates a saved search has been modified and persisted.',
+            'synonyms': 'modified, changed, updated, persisted',
+            'tier': 'presentation',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
+                'type': 'string',
                 'required': true,
+              },
+              {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'query',
+                'type': 'string',
+              },
+              {
+                'name': 'filters',
+                'type': 'Map<string,scalar>',
+              },
+              {
+                'name': 'alertEnabled',
+                'type': 'boolean',
+              },
+              {
+                'name': 'alertFrequency',
+                'type': 'string',
+                'values': [
+                  'instant',
+                  'daily',
+                  'weekly',
+                ],
+              },
+              {
+                'name': 'userId',
+                'type': 'string',
+              },
+              {
+                'name': 'lastNotifiedAt',
+                'type': 'datetime',
+              },
+              {
+                'name': 'createdAt',
                 'type': 'string',
               },
             ],
+            'payloadEntity': 'SavedSearch',
+          },
+          {
+            'event': 'SavedSearchDeleted',
+            'description': 'Indicates a saved search has been removed.',
             'synonyms': 'removed, purged, discarded',
             'tier': 'presentation',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
           },
         ],
-        'linkedEntity': 'SavedSearch',
-        'name': 'SavedSearchManage',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'editing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals that a saved search has been successfully retrieved.',
               'key': 'SavedSearchLoaded',
               'name': 'SavedSearch loaded',
+              'description': 'Signals that a saved search has been successfully retrieved.',
+              'synonyms': 'loaded, retrieved, fetched',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'SavedSearch',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'name',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'query',
@@ -893,16 +801,16 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'SavedSearch',
                 },
               ],
-              'synonyms': 'loaded, retrieved, fetched',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a failure to load saved search data.',
               'key': 'SavedSearchLoadFailed',
               'name': 'SavedSearch load failed',
+              'description': 'Indicates a failure to load saved search data.',
+              'synonyms': 'error, failure, load error',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -913,177 +821,109 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, load error',
-              'tier': 'internal',
             },
             {
-              'description': 'Indicates the alert subscription status has been changed.',
               'key': 'TOGGLE_ALERT',
               'name': 'Toggle Alert',
+              'description': 'Indicates the alert subscription status has been changed.',
+              'synonyms': 'subscribe, unsubscribe, notify, alert-state',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'enabled',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
               ],
-              'synonyms': 'subscribe, unsubscribe, notify, alert-state',
-              'tier': 'domain',
             },
             {
-              'description': 'Signals a saved search has been removed.',
               'key': 'DELETE',
               'name': 'Delete',
+              'description': 'Signals a saved search has been removed.',
+              'synonyms': 'remove, discard, clear',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'remove, discard, clear',
-              'tier': 'presentation',
             },
             {
-              'description': 'The page\'s current search text changed.',
               'key': 'TRACK_QUERY',
               'name': 'Track Query',
+              'description': 'The page\'s current search text changed.',
+              'synonyms': 'search changed, query changed, typed search',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'query',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'search changed, query changed, typed search',
-              'tier': 'domain',
             },
             {
-              'description': 'The page\'s current filters changed.',
               'key': 'TRACK_FILTERS',
               'name': 'Track Filters',
+              'description': 'The page\'s current filters changed.',
+              'synonyms': 'filters changed, criteria changed',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'field',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'value',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'filters changed, criteria changed',
-              'tier': 'domain',
             },
             {
-              'description': 'Save the page\'s current search and filters as a new saved search.',
               'key': 'SAVE_CURRENT',
               'name': 'Save Current',
+              'description': 'Save the page\'s current search and filters as a new saved search.',
               'synonyms': 'save search, bookmark search, remember search',
               'tier': 'domain',
             },
             {
-              'description': 'Indicates a saved search is being modified.',
               'key': 'EDIT',
               'name': 'Edit',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
+              'description': 'Indicates a saved search is being modified.',
               'synonyms': 'modify, update, change',
               'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
             },
             {
-              'description': 'Indicates a saved search has been modified and persisted.',
               'key': 'SavedSearchUpdated',
               'name': 'SavedSearch updated',
-              'payloadEntity': 'SavedSearch',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'name',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'query',
-                  'type': 'string',
-                },
-                {
-                  'name': 'filters',
-                  'type': 'Map<string,scalar>',
-                },
-                {
-                  'name': 'alertEnabled',
-                  'type': 'boolean',
-                },
-                {
-                  'name': 'alertFrequency',
-                  'type': 'string',
-                  'values': [
-                    'instant',
-                    'daily',
-                    'weekly',
-                  ],
-                },
-                {
-                  'name': 'userId',
-                  'type': 'string',
-                },
-                {
-                  'name': 'lastNotifiedAt',
-                  'type': 'datetime',
-                },
-                {
-                  'name': 'createdAt',
-                  'type': 'string',
-                },
-              ],
+              'description': 'Indicates a saved search has been modified and persisted.',
               'synonyms': 'modified, changed, updated, persisted',
               'tier': 'presentation',
-            },
-            {
-              'description': 'Indicates a saved search has been removed.',
-              'key': 'SavedSearchDeleted',
-              'name': 'SavedSearch deleted',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
-                },
-              ],
-              'synonyms': 'removed, purged, discarded',
-              'tier': 'presentation',
-            },
-            {
-              'description': 'Indicates the current search has been saved as a new row.',
-              'key': 'SavedSearchCreated',
-              'name': 'SavedSearch created',
-              'payloadEntity': 'SavedSearch',
-              'payloadSchema': [
-                {
-                  'name': 'id',
                   'required': true,
-                  'type': 'string',
                 },
                 {
                   'name': 'name',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'query',
@@ -1119,69 +959,123 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   'type': 'string',
                 },
               ],
+              'payloadEntity': 'SavedSearch',
+            },
+            {
+              'key': 'SavedSearchDeleted',
+              'name': 'SavedSearch deleted',
+              'description': 'Indicates a saved search has been removed.',
+              'synonyms': 'removed, purged, discarded',
+              'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'SavedSearchCreated',
+              'name': 'SavedSearch created',
+              'description': 'Indicates the current search has been saved as a new row.',
               'synonyms': 'saved, created, bookmarked',
               'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'query',
+                  'type': 'string',
+                },
+                {
+                  'name': 'filters',
+                  'type': 'Map<string,scalar>',
+                },
+                {
+                  'name': 'alertEnabled',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'alertFrequency',
+                  'type': 'string',
+                  'values': [
+                    'instant',
+                    'daily',
+                    'weekly',
+                  ],
+                },
+                {
+                  'name': 'userId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'lastNotifiedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'createdAt',
+                  'type': 'string',
+                },
+              ],
+              'payloadEntity': 'SavedSearch',
             },
             {
-              'description': 'Indicates a saved search has been renamed.',
               'key': 'RENAME',
               'name': 'Rename',
-              'payloadSchema': [
-                {
-                  'name': 'value',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
+              'description': 'Indicates a saved search has been renamed.',
               'synonyms': 'update, modify, change name',
               'tier': 'presentation',
-            },
-            {
-              'description': 'Indicates a change in the alert frequency setting.',
-              'key': 'CHANGE_FREQUENCY',
-              'name': 'Change Frequency',
               'payloadSchema': [
                 {
                   'name': 'value',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'update, modify, adjust, refresh',
-              'tier': 'presentation',
             },
             {
-              'description': 'Indicates a saved search has been persisted.',
+              'key': 'CHANGE_FREQUENCY',
+              'name': 'Change Frequency',
+              'description': 'Indicates a change in the alert frequency setting.',
+              'synonyms': 'update, modify, adjust, refresh',
+              'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
               'key': 'SAVE',
               'name': 'Save',
+              'description': 'Indicates a saved search has been persisted.',
               'synonyms': 'persist, store, update',
               'tier': 'domain',
             },
             {
-              'description': 'Aborts the current operation.',
               'key': 'CANCEL',
               'name': 'Cancel',
+              'description': 'Aborts the current operation.',
               'synonyms': 'abort, dismiss, undo',
               'tier': 'domain',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'browsing',
-            },
-            {
-              'name': 'editing',
-            },
-            {
-              'name': 'error',
-            },
-          ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1197,35 +1091,38 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
-                        'rows': 6,
                         'type': 'skeleton',
                         'variant': 'grid',
+                        'rows': 6,
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'SavedSearchLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'name': 'bookmark',
@@ -1234,30 +1131,30 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                           },
                           {
                             'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'cols': 1,
-                        'entity': '@payload.data',
+                        'itemClickEvent': '@config.itemClickEvent',
+                        'look': '@config.tableLook',
+                        'gap': 'sm',
                         'fields': [
                           {
-                            'label': 'Name',
                             'name': 'name',
                             'variant': 'h4',
+                            'label': 'Name',
                           },
                           {
                             'label': 'Query',
-                            'name': 'query',
                             'variant': 'caption',
+                            'name': 'query',
                           },
                           {
                             'label': 'Frequency',
@@ -1265,12 +1162,12 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                             'variant': 'badge',
                           },
                           {
+                            'variant': 'badge',
                             'label': 'Alerts',
                             'name': 'alertEnabled',
-                            'variant': 'badge',
                           },
                         ],
-                        'gap': 'sm',
+                        'entity': '@payload.data',
                         'itemActions': [
                           'array/filter',
                           '@config.itemActions',
@@ -1305,38 +1202,35 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                             ],
                           ],
                         ],
-                        'itemClickEvent': '@config.itemClickEvent',
-                        'look': '@config.tableLook',
                         'type': 'data-grid',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SavedSearchLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'SavedSearchLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
                     'variant': 'error',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'SavedSearchLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1352,28 +1246,28 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
-                        'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
+                        'rows': 6,
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'TOGGLE_ALERT',
               'effects': [
                 [
                   'set',
@@ -1392,17 +1286,17 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   '@entity',
                   {
                     'emit': {
-                      'failure': 'SavedSearchLoadFailed',
                       'success': 'SavedSearchUpdated',
+                      'failure': 'SavedSearchLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'TOGGLE_ALERT',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'DELETE',
               'effects': [
                 [
                   'set',
@@ -1416,17 +1310,17 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   '@payload.id',
                   {
                     'emit': {
-                      'failure': 'SavedSearchLoadFailed',
                       'success': 'SavedSearchDeleted',
+                      'failure': 'SavedSearchLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'DELETE',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'TRACK_QUERY',
               'effects': [
                 [
                   'set',
@@ -1434,11 +1328,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   '@payload.query',
                 ],
               ],
-              'event': 'TRACK_QUERY',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'TRACK_FILTERS',
               'effects': [
                 [
                   'set',
@@ -1466,18 +1360,20 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   ],
                 ],
               ],
-              'event': 'TRACK_FILTERS',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'SAVE_CURRENT',
               'effects': [
                 [
                   'persist',
                   'create',
                   ('SavedSearch' satisfies _StdSavedSearchEntityName),
                   {
+                    'query': '@entity.query',
                     'createdAt': '@now',
+                    'userId': '@user.id',
                     'filters': '@entity.filters',
                     'name': [
                       'if',
@@ -1485,8 +1381,6 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                       '@entity.query',
                       '@config.defaultSearchName',
                     ],
-                    'query': '@entity.query',
-                    'userId': '@user.id',
                   },
                   {
                     'emit': {
@@ -1496,11 +1390,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   },
                 ],
               ],
-              'event': 'SAVE_CURRENT',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'editing',
+              'event': 'EDIT',
               'effects': [
                 [
                   'set',
@@ -1511,13 +1405,17 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'name': 'pencil',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
+                            'name': 'pencil',
                           },
                           {
                             'content': 'Edit saved search',
@@ -1525,146 +1423,142 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                             'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'action': 'RENAME',
-                        'label': 'Saved search name',
                         'placeholder': 'Name',
                         'type': 'input',
                         'value': '@entity.name',
+                        'action': 'RENAME',
+                        'label': 'Saved search name',
                       },
                       {
-                        'action': 'CHANGE_FREQUENCY',
                         'aria-label': 'Alert frequency',
+                        'type': 'select',
+                        'action': 'CHANGE_FREQUENCY',
+                        'value': '@entity.alertFrequency',
+                        'placeholder': 'Alert frequency',
                         'options': [
                           {
-                            'label': 'Instant',
                             'value': 'instant',
+                            'label': 'Instant',
                           },
                           {
-                            'label': 'Daily',
                             'value': 'daily',
+                            'label': 'Daily',
                           },
                           {
                             'label': 'Weekly',
                             'value': 'weekly',
                           },
                         ],
-                        'placeholder': 'Alert frequency',
-                        'type': 'select',
-                        'value': '@entity.alertFrequency',
                       },
                       {
-                        'checked': '@entity.alertEnabled',
                         'label': 'Alerts enabled',
                         'type': 'switch',
+                        'checked': '@entity.alertEnabled',
                       },
                       {
+                        'gap': 'sm',
                         'children': [
                           {
-                            'action': 'SAVE',
                             'icon': 'check',
+                            'variant': 'primary',
+                            'action': 'SAVE',
                             'label': 'Save',
                             'type': 'button',
-                            'variant': 'primary',
                           },
                           {
-                            'action': 'CANCEL',
                             'icon': 'x',
-                            'label': 'Cancel',
                             'type': 'button',
+                            'label': 'Cancel',
                             'variant': 'secondary',
+                            'action': 'CANCEL',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'EDIT',
-              'from': 'browsing',
-              'to': 'editing',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
-                  {
-                    'emit': {
-                      'failure': 'SavedSearchLoadFailed',
-                      'success': 'SavedSearchLoaded',
-                    },
-                  },
-                ],
-              ],
+              'from': 'browsing',
+              'to': 'loading',
               'event': 'SavedSearchUpdated',
-              'from': 'browsing',
-              'to': 'loading',
-            },
-            {
               'effects': [
                 [
                   'fetch',
                   ('SavedSearch' satisfies _StdSavedSearchEntityName),
                   {
                     'emit': {
-                      'failure': 'SavedSearchLoadFailed',
                       'success': 'SavedSearchLoaded',
+                      'failure': 'SavedSearchLoadFailed',
                     },
                   },
                 ],
               ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'loading',
               'event': 'SavedSearchDeleted',
-              'from': 'browsing',
-              'to': 'loading',
-            },
-            {
               'effects': [
                 [
                   'fetch',
                   ('SavedSearch' satisfies _StdSavedSearchEntityName),
                   {
                     'emit': {
-                      'failure': 'SavedSearchLoadFailed',
                       'success': 'SavedSearchLoaded',
+                      'failure': 'SavedSearchLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'SavedSearchCreated',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'SavedSearchCreated',
               'effects': [
                 [
-                  'render-ui',
-                  'main',
+                  'fetch',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
                   {
-                    'message': '@payload.error',
-                    'type': 'alert',
-                    'variant': 'error',
+                    'emit': {
+                      'success': 'SavedSearchLoaded',
+                      'failure': 'SavedSearchLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'SavedSearchLoadFailed',
+            },
+            {
               'from': 'browsing',
               'to': 'error',
+              'event': 'SavedSearchLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'variant': 'error',
+                    'message': '@payload.error',
+                    'type': 'alert',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'editing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1680,28 +1574,28 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
+                        'variant': 'grid',
                         'rows': 6,
                         'type': 'skeleton',
-                        'variant': 'grid',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'editing',
-              'to': 'loading',
             },
             {
+              'from': 'editing',
+              'to': 'editing',
+              'event': 'RENAME',
               'effects': [
                 [
                   'set',
@@ -1709,11 +1603,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   '@payload.value',
                 ],
               ],
-              'event': 'RENAME',
-              'from': 'editing',
-              'to': 'editing',
             },
             {
+              'from': 'editing',
+              'to': 'editing',
+              'event': 'CHANGE_FREQUENCY',
               'effects': [
                 [
                   'set',
@@ -1721,11 +1615,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   '@payload.value',
                 ],
               ],
-              'event': 'CHANGE_FREQUENCY',
-              'from': 'editing',
-              'to': 'editing',
             },
             {
+              'from': 'editing',
+              'to': 'browsing',
+              'event': 'SAVE',
               'effects': [
                 [
                   'persist',
@@ -1740,28 +1634,28 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   },
                 ],
               ],
-              'event': 'SAVE',
-              'from': 'editing',
-              'to': 'browsing',
             },
             {
+              'from': 'editing',
+              'to': 'loading',
+              'event': 'CANCEL',
               'effects': [
                 [
                   'fetch',
                   ('SavedSearch' satisfies _StdSavedSearchEntityName),
                   {
                     'emit': {
-                      'failure': 'SavedSearchLoadFailed',
                       'success': 'SavedSearchLoaded',
+                      'failure': 'SavedSearchLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'CANCEL',
-              'from': 'editing',
-              'to': 'loading',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1777,29 +1671,135 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'itemClickEvent': {
+            'type': 'event',
+            'default': 'EDIT',
+            'label': 'Row click',
+            'description': 'Event emitted when a row is clicked; opens the saved search for editing. Empty disables the row click.',
+            'tier': 'presentation',
+          },
+          'itemActions': {
+            'type': '[ItemAction]',
+            'default': [
+              {
+                'icon': 'bell',
+                'label': 'Toggle alert',
+                'event': 'TOGGLE_ALERT',
+                'variant': 'secondary',
+              },
+              {
+                'event': 'EDIT',
+                'icon': 'pencil',
+                'label': 'Edit',
+                'variant': 'secondary',
+              },
+              {
+                'variant': 'danger',
+                'label': 'Delete',
+                'icon': 'trash-2',
+                'event': 'DELETE',
+              },
+            ],
+            'label': 'Row actions',
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'when': {
+                  'name': 'when',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Saved Searches',
+            'label': 'Section title',
+            'description': 'Heading shown above the saved-search list',
+            'tier': 'presentation',
+          },
+          'defaultSearchName': {
+            'type': 'string',
+            'default': 'Saved search',
+            'label': 'Default saved-search name',
+            'description': 'Name given to a saved search when the current search has no query text (filters only). Renamable afterwards.',
+            'tier': 'presentation',
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Table look',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

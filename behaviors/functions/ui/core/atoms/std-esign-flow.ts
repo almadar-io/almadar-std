@@ -92,7 +92,7 @@ export interface StdEsignFlowSignatureSessionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEsignFlowConfig {
-  /** Default: `[{"event":"SEND_FOR_SIGNATURE","label":"Send for signature","variant":"primary"},{"event":"RESEND_REQUEST","label":"Resend","variant":"primary"},{"event":"REQUEST_DELETE","label":"Cancel","variant":"danger"},{"event":"CHECK_ENVELOPE_STATUS","label":"Refresh status","variant":"secondary"}]` */
+  /** Default: `[{"variant":"primary","event":"SEND_FOR_SIGNATURE","label":"Send for signature"},{"event":"RESEND_REQUEST","variant":"primary","label":"Resend"},{"event":"REQUEST_DELETE","label":"Cancel","variant":"danger"},{"label":"Refresh status","variant":"secondary","event":"CHECK_ENVELOPE_STATUS"}]` */
   itemActions?: EntityRow[];
   /** Default: `""` */
   viewerRole?: string;
@@ -312,20 +312,20 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
     name: 'SignatureSessionOrbital',
     uses: [
       {
-        'as': 'StoredFile',
         'from': 'std/behaviors/std-file-store',
+        'as': 'StoredFile',
       },
       {
-        'as': 'ESignRequest',
         'from': 'std/behaviors/std-esign-request',
+        'as': 'ESignRequest',
       },
       {
-        'as': 'Modal',
         'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
       },
       {
-        'as': 'Confirmation',
         'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
       },
     ],
     entity: {
@@ -336,50 +336,48 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Unique identifier for the associated document.',
             'name': 'documentId',
-            'required': true,
-            'synonyms': 'fileID, docID, documentReference',
             'type': 'string',
+            'required': true,
+            'description': 'Unique identifier for the associated document.',
+            'synonyms': 'fileID, docID, documentReference',
           },
           {
+            'name': 'documentName',
+            'type': 'string',
             'default': '',
             'description': 'The name of the document associated with the signature request.',
-            'name': 'documentName',
             'synonyms': 'filename, document, file',
-            'type': 'string',
           },
           {
-            'description': 'The name of the recipient for the signature request.',
             'name': 'recipientName',
-            'required': true,
-            'synonyms': 'recipient, name, user',
             'type': 'string',
-          },
-          {
-            'description': 'The email address of the recipient.',
-            'name': 'recipientEmail',
             'required': true,
-            'synonyms': 'email, address, contact',
-            'type': 'email',
+            'description': 'The name of the recipient for the signature request.',
+            'synonyms': 'recipient, name, user',
           },
           {
+            'name': 'recipientEmail',
+            'type': 'email',
+            'required': true,
+            'description': 'The email address of the recipient.',
+            'synonyms': 'email, address, contact',
+          },
+          {
+            'name': 'requesterName',
+            'type': 'string',
             'default': '',
             'description': 'The name of the user initiating the signature request.',
-            'name': 'requesterName',
             'synonyms': 'initiator, sender, originator',
-            'type': 'string',
           },
           {
-            'default': 'draft',
-            'description': 'Current state of the signature request.',
             'name': 'status',
-            'synonyms': 'state, condition, stage',
             'type': 'string',
+            'default': 'draft',
             'values': [
               'draft',
               'sent',
@@ -387,32 +385,34 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
               'signed',
               'declined',
             ],
+            'description': 'Current state of the signature request.',
+            'synonyms': 'state, condition, stage',
           },
           {
-            'description': 'Timestamp indicating when the request was sent.',
             'name': 'sentAt',
+            'type': 'datetime',
+            'description': 'Timestamp indicating when the request was sent.',
             'synonyms': 'sent date, submission time, dispatched',
-            'type': 'datetime',
           },
           {
-            'description': 'The date and time the signature was applied.',
             'name': 'signedAt',
-            'synonyms': 'signed date, completion date, signature time',
             'type': 'datetime',
+            'description': 'The date and time the signature was applied.',
+            'synonyms': 'signed date, completion date, signature time',
           },
           {
+            'name': 'envelopeId',
+            'type': 'string',
             'default': '',
             'description': 'Provider envelope id stamped when the real e-sign dispatch succeeds; blank = never dispatched. Written by EnvelopeDispatcher, not user-facing.',
-            'name': 'envelopeId',
             'synonyms': 'docusign id, provider reference',
-            'type': 'string',
           },
           {
+            'name': 'pendingId',
+            'type': 'string',
             'default': '',
             'description': 'Unique identifier for a pending action or task.',
-            'name': 'pendingId',
             'synonyms': 'taskId, pendingKey, referenceId',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -423,77 +423,7 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'itemActions': {
-            'default': [
-              {
-                'event': 'SEND_FOR_SIGNATURE',
-                'label': 'Send for signature',
-                'variant': 'primary',
-              },
-              {
-                'event': 'RESEND_REQUEST',
-                'label': 'Resend',
-                'variant': 'primary',
-              },
-              {
-                'event': 'REQUEST_DELETE',
-                'label': 'Cancel',
-                'variant': 'danger',
-              },
-              {
-                'event': 'CHECK_ENVELOPE_STATUS',
-                'label': 'Refresh status',
-                'variant': 'secondary',
-              },
-            ],
-            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-                'when': {
-                  'name': 'when',
-                  'required': false,
-                  'type': 'SExpr',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Row actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
-        },
+        'name': 'SignatureSessionBrowse',
         'effectRow': [
           {
             'kind': 'fetch',
@@ -504,110 +434,39 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'SignatureSession',
         'emits': [
           {
-            'description': 'Indicates a new signature request has been initiated.',
             'event': 'CREATE',
+            'description': 'Indicates a new signature request has been initiated.',
             'synonyms': 'new, initiate, start, begin',
             'tier': 'domain',
           },
           {
-            'description': 'Indicates a signature request has been resent.',
             'event': 'RESEND_REQUEST',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'entity': 'SignatureSession',
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'documentId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'documentName',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'recipientName',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'recipientEmail',
-                    'required': true,
-                    'type': 'email',
-                  },
-                  {
-                    'name': 'requesterName',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'status',
-                    'type': 'string',
-                    'values': [
-                      'draft',
-                      'sent',
-                      'viewed',
-                      'signed',
-                      'declined',
-                    ],
-                  },
-                  {
-                    'name': 'sentAt',
-                    'type': 'datetime',
-                  },
-                  {
-                    'name': 'signedAt',
-                    'type': 'datetime',
-                  },
-                  {
-                    'name': 'envelopeId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'pendingId',
-                    'type': 'string',
-                  },
-                ],
-                'type': 'object',
-              },
-            ],
+            'description': 'Indicates a signature request has been resent.',
             'synonyms': 'resend, retransmit, repeat',
             'tier': 'presentation',
-          },
-          {
-            'description': 'Pull the provider\'s current envelope status for this request.',
-            'event': 'CHECK_ENVELOPE_STATUS',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'SignatureSession',
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentName',
@@ -615,13 +474,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                   {
                     'name': 'recipientName',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'recipientEmail',
-                    'required': true,
                     'type': 'email',
+                    'required': true,
                   },
                   {
                     'name': 'requesterName',
@@ -655,34 +514,34 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     'type': 'string',
                   },
                 ],
-                'type': 'object',
+                'entity': 'SignatureSession',
               },
             ],
+          },
+          {
+            'event': 'CHECK_ENVELOPE_STATUS',
+            'description': 'Pull the provider\'s current envelope status for this request.',
             'synonyms': 'refresh status, check signature, poll envelope',
             'tier': 'domain',
-          },
-          {
-            'description': 'Open the send step for this request: attach the document and dispatch it for signature.',
-            'event': 'SEND_FOR_SIGNATURE',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'SignatureSession',
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentName',
@@ -690,13 +549,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                   {
                     'name': 'recipientName',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'recipientEmail',
-                    'required': true,
                     'type': 'email',
+                    'required': true,
                   },
                   {
                     'name': 'requesterName',
@@ -730,34 +589,34 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     'type': 'string',
                   },
                 ],
-                'type': 'object',
+                'entity': 'SignatureSession',
               },
             ],
+          },
+          {
+            'event': 'SEND_FOR_SIGNATURE',
+            'description': 'Open the send step for this request: attach the document and dispatch it for signature.',
             'synonyms': 'send for signature, dispatch, send envelope',
             'tier': 'domain',
-          },
-          {
-            'description': 'Signals a signature request has been removed.',
-            'event': 'REQUEST_DELETE',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'SignatureSession',
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentName',
@@ -765,13 +624,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                   {
                     'name': 'recipientName',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'recipientEmail',
-                    'required': true,
                     'type': 'email',
+                    'required': true,
                   },
                   {
                     'name': 'requesterName',
@@ -805,29 +664,34 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     'type': 'string',
                   },
                 ],
-                'type': 'object',
+                'entity': 'SignatureSession',
               },
             ],
+          },
+          {
+            'event': 'REQUEST_DELETE',
+            'description': 'Signals a signature request has been removed.',
             'synonyms': 'remove, purge, discard',
             'tier': 'presentation',
-          },
-          {
-            'description': 'Signals that a signature session has been successfully loaded.',
-            'event': 'SignatureSessionLoaded',
             'payloadSchema': [
               {
-                'entity': 'SignatureSession',
-                'name': 'data',
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'documentName',
@@ -835,13 +699,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                   {
                     'name': 'recipientName',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'recipientEmail',
-                    'required': true,
                     'type': 'email',
+                    'required': true,
                   },
                   {
                     'name': 'requesterName',
@@ -875,16 +739,87 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'SignatureSession',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'loaded, initialized, ready',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates failure to load a signature session.',
+            'event': 'SignatureSessionLoaded',
+            'description': 'Signals that a signature session has been successfully loaded.',
+            'synonyms': 'loaded, initialized, ready',
+            'tier': 'internal',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[object]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'documentId',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'documentName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'recipientName',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'recipientEmail',
+                    'type': 'email',
+                    'required': true,
+                  },
+                  {
+                    'name': 'requesterName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                    'values': [
+                      'draft',
+                      'sent',
+                      'viewed',
+                      'signed',
+                      'declined',
+                    ],
+                  },
+                  {
+                    'name': 'sentAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'signedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'envelopeId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'pendingId',
+                    'type': 'string',
+                  },
+                ],
+                'entity': 'SignatureSession',
+              },
+            ],
+          },
+          {
             'event': 'SignatureSessionLoadFailed',
+            'description': 'Indicates failure to load a signature session.',
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -895,64 +830,72 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'error, failure, problem, unsuccessful',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'SignatureSession',
         'listens': [
           {
             'event': 'SESSION_CREATED',
+            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': ('SignatureSessionPersistor' satisfies _StdEsignFlowListenTraitName),
             },
-            'triggers': 'INIT',
           },
           {
             'event': 'SESSION_RESENT',
+            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': ('SignatureSessionPersistor' satisfies _StdEsignFlowListenTraitName),
             },
-            'triggers': 'INIT',
           },
           {
             'event': 'SESSION_DELETED',
+            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': ('SignatureSessionPersistor' satisfies _StdEsignFlowListenTraitName),
             },
-            'triggers': 'INIT',
           },
         ],
-        'name': 'SignatureSessionBrowse',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals that a signature session has been successfully loaded.',
               'key': 'SignatureSessionLoaded',
               'name': 'SignatureSession loaded',
+              'description': 'Signals that a signature session has been successfully loaded.',
+              'synonyms': 'loaded, initialized, ready',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'SignatureSession',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentName',
@@ -960,13 +903,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     },
                     {
                       'name': 'recipientName',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'recipientEmail',
-                      'required': true,
                       'type': 'email',
+                      'required': true,
                     },
                     {
                       'name': 'requesterName',
@@ -1000,16 +943,16 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'SignatureSession',
                 },
               ],
-              'synonyms': 'loaded, initialized, ready',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates failure to load a signature session.',
               'key': 'SignatureSessionLoadFailed',
               'name': 'SignatureSession load failed',
+              'description': 'Indicates failure to load a signature session.',
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1020,271 +963,196 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, problem, unsuccessful',
-              'tier': 'internal',
+              'listened': true,
             },
             {
               'key': 'RETRY',
               'name': 'Retry',
             },
             {
-              'description': 'Indicates a new signature request has been initiated.',
               'key': 'CREATE',
               'name': 'Create',
+              'description': 'Indicates a new signature request has been initiated.',
               'synonyms': 'new, initiate, start, begin',
               'tier': 'domain',
             },
             {
-              'description': 'Indicates a signature request has been resent.',
               'key': 'RESEND_REQUEST',
               'name': 'Resend Request',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'SignatureSession',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'recipientName',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'recipientEmail',
-                      'required': true,
-                      'type': 'email',
-                    },
-                    {
-                      'name': 'requesterName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'status',
-                      'type': 'string',
-                      'values': [
-                        'draft',
-                        'sent',
-                        'viewed',
-                        'signed',
-                        'declined',
-                      ],
-                    },
-                    {
-                      'name': 'sentAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'signedAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'envelopeId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'pendingId',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
+              'description': 'Indicates a signature request has been resent.',
               'synonyms': 'resend, retransmit, repeat',
               'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'type': 'email',
+                      'required': true,
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'envelopeId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'entity': 'SignatureSession',
+                },
+              ],
             },
             {
-              'description': 'Pull the provider\'s current envelope status for this request.',
               'key': 'CHECK_ENVELOPE_STATUS',
               'name': 'Check Envelope Status',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'SignatureSession',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'recipientName',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'recipientEmail',
-                      'required': true,
-                      'type': 'email',
-                    },
-                    {
-                      'name': 'requesterName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'status',
-                      'type': 'string',
-                      'values': [
-                        'draft',
-                        'sent',
-                        'viewed',
-                        'signed',
-                        'declined',
-                      ],
-                    },
-                    {
-                      'name': 'sentAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'signedAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'envelopeId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'pendingId',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
+              'description': 'Pull the provider\'s current envelope status for this request.',
               'synonyms': 'refresh status, check signature, poll envelope',
               'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'type': 'email',
+                      'required': true,
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'envelopeId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'entity': 'SignatureSession',
+                },
+              ],
             },
             {
-              'description': 'Open the send step for this request: attach the document and dispatch it for signature.',
               'key': 'SEND_FOR_SIGNATURE',
               'name': 'Send For Signature',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'SignatureSession',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'recipientName',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'recipientEmail',
-                      'required': true,
-                      'type': 'email',
-                    },
-                    {
-                      'name': 'requesterName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'status',
-                      'type': 'string',
-                      'values': [
-                        'draft',
-                        'sent',
-                        'viewed',
-                        'signed',
-                        'declined',
-                      ],
-                    },
-                    {
-                      'name': 'sentAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'signedAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'envelopeId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'pendingId',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
+              'description': 'Open the send step for this request: attach the document and dispatch it for signature.',
               'synonyms': 'send for signature, dispatch, send envelope',
               'tier': 'domain',
-            },
-            {
-              'description': 'Signals a signature request has been removed.',
-              'key': 'REQUEST_DELETE',
-              'name': 'Request Delete',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
-                  'entity': 'SignatureSession',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentName',
@@ -1292,13 +1160,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     },
                     {
                       'name': 'recipientName',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'recipientEmail',
-                      'required': true,
                       'type': 'email',
+                      'required': true,
                     },
                     {
                       'name': 'requesterName',
@@ -1332,27 +1200,92 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
+                  'entity': 'SignatureSession',
                 },
               ],
+            },
+            {
+              'key': 'REQUEST_DELETE',
+              'name': 'Request Delete',
+              'description': 'Signals a signature request has been removed.',
               'synonyms': 'remove, purge, discard',
               'tier': 'presentation',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'browsing',
-            },
-            {
-              'name': 'error',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'type': 'email',
+                      'required': true,
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'envelopeId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'entity': 'SignatureSession',
+                },
+              ],
             },
           ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1368,6 +1301,7 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
@@ -1381,24 +1315,29 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'SignatureSessionLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
+                        'justify': 'between',
+                        'type': 'stack',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'gap': 'md',
                             'children': [
                               {
                                 'name': 'file-signature',
@@ -1406,61 +1345,30 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                                 'type': 'icon',
                               },
                               {
-                                'content': 'Signature Requests',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Signature Requests',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'type': 'stack',
                           },
                           {
                             'action': 'CREATE',
-                            'icon': 'plus',
                             'label': 'New Signature Request',
-                            'type': 'button',
                             'variant': 'primary',
+                            'type': 'button',
+                            'icon': 'plus',
                           },
                         ],
                         'direction': 'horizontal',
                         'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'entity': '@payload.data',
-                        'fields': [
-                          {
-                            'icon': 'file-text',
-                            'label': 'Document',
-                            'name': 'documentName',
-                            'variant': 'h4',
-                          },
-                          {
-                            'label': 'Recipient',
-                            'name': 'recipientName',
-                            'variant': 'body',
-                          },
-                          {
-                            'label': 'Email',
-                            'name': 'recipientEmail',
-                            'variant': 'caption',
-                          },
-                          {
-                            'label': 'Status',
-                            'name': 'status',
-                            'variant': 'badge',
-                          },
-                          {
-                            'label': 'Sent',
-                            'name': 'sentAt',
-                            'variant': 'caption',
-                          },
-                        ],
+                        'type': 'data-grid',
                         'itemActions': [
                           'array/filter',
                           '@config.itemActions',
@@ -1495,138 +1403,163 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                             ],
                           ],
                         ],
-                        'type': 'data-grid',
+                        'fields': [
+                          {
+                            'label': 'Document',
+                            'name': 'documentName',
+                            'icon': 'file-text',
+                            'variant': 'h4',
+                          },
+                          {
+                            'name': 'recipientName',
+                            'variant': 'body',
+                            'label': 'Recipient',
+                          },
+                          {
+                            'name': 'recipientEmail',
+                            'label': 'Email',
+                            'variant': 'caption',
+                          },
+                          {
+                            'label': 'Status',
+                            'variant': 'badge',
+                            'name': 'status',
+                          },
+                          {
+                            'label': 'Sent',
+                            'name': 'sentAt',
+                            'variant': 'caption',
+                          },
+                        ],
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SignatureSessionLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'SignatureSessionLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'children': [
-                      {
-                        'color': 'error',
-                        'name': 'alert-triangle',
-                        'size': 'lg',
-                        'type': 'icon',
-                      },
-                      {
-                        'content': 'Failed to load signature requests',
-                        'type': 'typography',
-                        'variant': 'h3',
-                      },
-                      {
-                        'color': 'muted',
-                        'content': '@payload.error',
-                        'type': 'typography',
-                        'variant': 'body',
-                      },
-                      {
-                        'action': 'RETRY',
-                        'icon': 'rotate-ccw',
-                        'label': 'Retry',
-                        'type': 'button',
-                        'variant': 'primary',
-                      },
-                    ],
-                    'className': 'py-12',
                     'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'SignatureSessionLoadFailed',
-              'from': 'loading',
-              'to': 'error',
-            },
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
-                  {
-                    'emit': {
-                      'failure': 'SignatureSessionLoadFailed',
-                      'success': 'SignatureSessionLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
+                    'align': 'center',
+                    'className': 'py-12',
                     'children': [
                       {
-                        'type': 'skeleton',
-                        'variant': 'header',
+                        'type': 'icon',
+                        'size': 'lg',
+                        'name': 'alert-triangle',
+                        'color': 'error',
                       },
                       {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'grid',
+                        'content': 'Failed to load signature requests',
+                        'variant': 'h3',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'body',
+                        'color': 'muted',
+                        'content': '@payload.error',
+                      },
+                      {
+                        'type': 'button',
+                        'label': 'Retry',
+                        'icon': 'rotate-ccw',
+                        'variant': 'primary',
+                        'action': 'RETRY',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
+            },
+            {
               'from': 'browsing',
               'to': 'loading',
-            },
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
-                  {
-                    'emit': {
-                      'failure': 'SignatureSessionLoadFailed',
-                      'success': 'SignatureSessionLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'grid',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
               'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
+              'effects': [
+                [
+                  'fetch',
+                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SignatureSessionLoadFailed',
+                      'success': 'SignatureSessionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'variant': 'grid',
+                        'type': 'skeleton',
+                        'rows': 6,
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
+                  {
+                    'emit': {
+                      'success': 'SignatureSessionLoaded',
+                      'failure': 'SignatureSessionLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'variant': 'header',
+                        'type': 'skeleton',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'rows': 6,
+                        'variant': 'grid',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'RETRY',
               'effects': [
                 [
                   'fetch',
@@ -1644,8 +1577,8 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   {
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
@@ -1653,274 +1586,347 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                         'variant': 'grid',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'RETRY',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'itemActions': {
+            'type': '[ItemAction]',
+            'default': [
+              {
+                'variant': 'primary',
+                'event': 'SEND_FOR_SIGNATURE',
+                'label': 'Send for signature',
+              },
+              {
+                'event': 'RESEND_REQUEST',
+                'variant': 'primary',
+                'label': 'Resend',
+              },
+              {
+                'event': 'REQUEST_DELETE',
+                'label': 'Cancel',
+                'variant': 'danger',
+              },
+              {
+                'label': 'Refresh status',
+                'variant': 'secondary',
+                'event': 'CHECK_ENVELOPE_STATUS',
+              },
+            ],
+            'label': 'Row actions',
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'when': {
+                  'name': 'when',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
       makeTraitRef({
+        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdEsignFlowSignatureSessionOrbitalUsesRef),
+        'name': 'SignatureSessionCreate',
+        'linkedEntity': 'SignatureSession',
         'config': {
+          'icon': {
+            'type': 'unknown',
+            'default': 'file-signature',
+          },
           'fields': {
+            'type': 'unknown',
             'default': [
               'documentId',
               'recipientName',
               'recipientEmail',
               'requesterName',
             ],
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'file-signature',
-            'type': 'unknown',
-          },
-          'mode': {
-            'default': 'create',
-            'type': 'unknown',
           },
           'title': {
-            'default': 'New Signature Request',
             'type': 'unknown',
+            'default': 'New Signature Request',
+          },
+          'mode': {
+            'type': 'unknown',
+            'default': 'create',
           },
         },
         'events': {
           'OPEN': 'CREATE',
         },
-        'linkedEntity': 'SignatureSession',
         'listens': [
           {
             'event': 'CREATE',
+            'triggers': 'CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'SignatureSessionBrowse',
             },
-            'triggers': 'CREATE',
           },
         ],
-        'name': 'SignatureSessionCreate',
-        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdEsignFlowSignatureSessionOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Confirmation.traits.ConfirmActionConfirmation' satisfies _StdEsignFlowSignatureSessionOrbitalUsesRef),
+        'name': 'SignatureSessionDelete',
+        'linkedEntity': 'SignatureSession',
         'config': {
-          'alertMessage': {
-            'default': 'Are you sure you want to cancel this signature request?',
-            'type': 'unknown',
-          },
-          'confirmLabel': {
-            'default': 'Cancel Request',
-            'type': 'unknown',
-          },
           'icon': {
-            'default': 'alert-triangle',
             'type': 'unknown',
+            'default': 'alert-triangle',
           },
           'title': {
-            'default': 'Cancel Signature Request',
             'type': 'unknown',
+            'default': 'Cancel Signature Request',
+          },
+          'confirmLabel': {
+            'type': 'unknown',
+            'default': 'Cancel Request',
+          },
+          'alertMessage': {
+            'type': 'unknown',
+            'default': 'Are you sure you want to cancel this signature request?',
           },
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
         },
-        'linkedEntity': 'SignatureSession',
         'listens': [
           {
             'event': 'REQUEST_DELETE',
+            'triggers': 'DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'SignatureSessionBrowse',
             },
-            'triggers': 'DELETE',
           },
         ],
-        'name': 'SignatureSessionDelete',
-        'ref': ('Confirmation.traits.ConfirmActionConfirmation' satisfies _StdEsignFlowSignatureSessionOrbitalUsesRef),
       }),
       {
-        'category': 'lifecycle',
+        'name': 'SignatureSessionPersistor',
         'effectRow': [
           {
             'kind': 'persist',
             'resource': 'SignatureSession',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'SignatureSession',
         'emits': [
           {
-            'description': 'A new signature session has been initialized.',
             'event': 'SESSION_CREATED',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
+            'description': 'A new signature session has been initialized.',
             'synonyms': 'start, begin, initialize',
             'tier': 'domain',
-          },
-          {
-            'description': 'Indicates a signature request has been resent.',
-            'event': 'SESSION_RESENT',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
+          },
+          {
+            'event': 'SESSION_RESENT',
+            'description': 'Indicates a signature request has been resent.',
             'synonyms': 'resend, retransmit, send again',
             'tier': 'presentation',
-          },
-          {
-            'description': 'Indicates a signature session has been removed or invalidated.',
-            'event': 'SESSION_DELETED',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
+          },
+          {
+            'event': 'SESSION_DELETED',
+            'description': 'Indicates a signature session has been removed or invalidated.',
             'synonyms': 'removed, cleared, expired, terminated',
             'tier': 'internal',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
         ],
-        'linkedEntity': 'SignatureSession',
         'listens': [
           {
             'event': 'SAVE',
+            'triggers': 'DO_CREATE',
             'source': {
               'kind': 'trait',
               'trait': ('SignatureSessionCreate' satisfies _StdEsignFlowListenTraitName),
             },
-            'triggers': 'DO_CREATE',
           },
           {
             'event': 'RESEND_REQUEST',
+            'triggers': 'DO_RESEND',
             'source': {
               'kind': 'trait',
               'trait': ('SignatureSessionBrowse' satisfies _StdEsignFlowListenTraitName),
             },
-            'triggers': 'DO_RESEND',
           },
           {
             'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
             'source': {
               'kind': 'trait',
               'trait': ('SignatureSessionDelete' satisfies _StdEsignFlowListenTraitName),
             },
-            'triggers': 'DO_DELETE',
           },
         ],
-        'name': 'SignatureSessionPersistor',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Initiates the creation of a new signature request.',
               'key': 'DO_CREATE',
               'name': 'Do Create',
+              'description': 'Initiates the creation of a new signature request.',
+              'synonyms': 'new, add, generate, start',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'required': true,
                   'type': '@entity',
+                  'required': true,
                 },
               ],
-              'synonyms': 'new, add, generate, start',
-              'tier': 'domain',
+              'listened': true,
             },
             {
-              'description': 'A request to resend a signature request.',
               'key': 'DO_RESEND',
               'name': 'Do Resend',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'description': 'A request to resend a signature request.',
               'synonyms': 'retry, repeat, send again',
               'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'listened': true,
             },
             {
-              'description': 'A request to remove an item from the current view.',
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'description': 'A request to remove an item from the current view.',
               'synonyms': 'remove, discard, clear, erase',
               'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'listened': true,
             },
             {
-              'description': 'A new signature session has been initialized.',
               'key': 'SESSION_CREATED',
               'name': 'Session Created',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'description': 'A new signature session has been initialized.',
               'synonyms': 'start, begin, initialize',
               'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
-              'description': 'Indicates a signature request has been resent.',
               'key': 'SESSION_RESENT',
               'name': 'Session Resent',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'description': 'Indicates a signature request has been resent.',
               'synonyms': 'resend, retransmit, send again',
               'tier': 'presentation',
-            },
-            {
-              'description': 'Indicates a signature session has been removed or invalidated.',
-              'key': 'SESSION_DELETED',
-              'name': 'Session Deleted',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+            },
+            {
+              'key': 'SESSION_DELETED',
+              'name': 'Session Deleted',
+              'description': 'Indicates a signature session has been removed or invalidated.',
               'synonyms': 'removed, cleared, expired, terminated',
               'tier': 'internal',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
           ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
+              'event': 'INIT',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
               'effects': [
                 [
                   'persist',
@@ -1934,11 +1940,11 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                 ],
               ],
-              'event': 'DO_CREATE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_RESEND',
               'effects': [
                 [
                   'persist',
@@ -1952,11 +1958,11 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                 ],
               ],
-              'event': 'DO_RESEND',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
               'effects': [
                 [
                   'persist',
@@ -1970,139 +1976,152 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                 ],
               ],
-              'event': 'DO_DELETE',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'interaction',
+        'name': 'EnvelopeSendDialog',
         'effectRow': [
           {
             'kind': 'render-ui',
             'resource': 'modal',
           },
         ],
+        'category': 'interaction',
         'linkedEntity': 'SignatureSession',
+        'emits': [
+          {
+            'event': 'SEND_ENVELOPE',
+            'description': 'The document was dropped; EnvelopeDispatcher sends it.',
+            'tier': 'domain',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row',
+                'type': 'object',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'documentId',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'documentName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'recipientName',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'recipientEmail',
+                    'type': 'email',
+                    'required': true,
+                  },
+                  {
+                    'name': 'requesterName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                    'values': [
+                      'draft',
+                      'sent',
+                      'viewed',
+                      'signed',
+                      'declined',
+                    ],
+                  },
+                  {
+                    'name': 'sentAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'signedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'envelopeId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'pendingId',
+                    'type': 'string',
+                  },
+                ],
+                'entity': 'SignatureSession',
+              },
+              {
+                'name': 'files',
+                'type': '[object]',
+              },
+            ],
+          },
+        ],
         'listens': [
           {
             'event': 'SEND_FOR_SIGNATURE',
+            'triggers': 'REQUEST_SEND',
             'source': {
               'kind': 'trait',
               'trait': ('SignatureSessionBrowse' satisfies _StdEsignFlowListenTraitName),
             },
-            'triggers': 'REQUEST_SEND',
           },
         ],
-        'name': 'EnvelopeSendDialog',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'A request\'s send step was opened.',
               'key': 'REQUEST_SEND',
               'name': 'Request Send',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'SignatureSession',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'documentName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'recipientName',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'recipientEmail',
-                      'required': true,
-                      'type': 'email',
-                    },
-                    {
-                      'name': 'requesterName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'status',
-                      'type': 'string',
-                      'values': [
-                        'draft',
-                        'sent',
-                        'viewed',
-                        'signed',
-                        'declined',
-                      ],
-                    },
-                    {
-                      'name': 'sentAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'signedAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'envelopeId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'pendingId',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
+              'description': 'A request\'s send step was opened.',
               'synonyms': 'open send, start send',
               'tier': 'presentation',
-            },
-            {
-              'description': 'The document was dropped; the request is being dispatched.',
-              'key': 'SEND_ENVELOPE',
-              'name': 'Send Envelope',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
-                  'entity': 'SignatureSession',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentName',
@@ -2110,13 +2129,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     },
                     {
                       'name': 'recipientName',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'recipientEmail',
-                      'required': true,
                       'type': 'email',
+                      'required': true,
                     },
                     {
                       'name': 'requesterName',
@@ -2150,10 +2169,87 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                       'type': 'string',
                     },
                   ],
+                  'entity': 'SignatureSession',
+                },
+              ],
+              'listened': true,
+            },
+            {
+              'key': 'SEND_ENVELOPE',
+              'name': 'Send Envelope',
+              'description': 'The document was dropped; EnvelopeDispatcher sends it.',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
                   'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'type': 'email',
+                      'required': true,
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'draft',
+                        'sent',
+                        'viewed',
+                        'signed',
+                        'declined',
+                      ],
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'envelopeId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'entity': 'SignatureSession',
                 },
                 {
                   'name': 'files',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'name',
@@ -2172,41 +2268,37 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'synonyms': 'send, dispatch',
-              'tier': 'presentation',
+              'listened': true,
             },
             {
               'key': 'CLOSE',
               'name': 'Close',
               'tier': 'presentation',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'closed',
-            },
-            {
-              'name': 'open',
+              'listened': true,
             },
           ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'closed',
               'to': 'closed',
+              'event': 'INIT',
             },
             {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'REQUEST_SEND',
               'effects': [
                 [
                   'render-ui',
                   'modal',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
+                        'variant': 'h3',
                         'content': [
                           'str/concat',
                           'Send ',
@@ -2218,9 +2310,9 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                           ' for signature',
                         ],
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
+                        'variant': 'body',
                         'color': 'muted',
                         'content': [
                           'str/concat',
@@ -2233,51 +2325,36 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                           ' receives it by email.',
                         ],
                         'type': 'typography',
-                        'variant': 'body',
                       },
                       {
-                        'accept': '.pdf',
-                        'action': 'SEND_ENVELOPE',
+                        'type': 'upload-drop-zone',
                         'actionPayload': {
                           'id': '@payload.id',
                           'row': '@payload.row',
                         },
-                        'description': 'PDF, one file',
-                        'icon': 'file-up',
                         'label': 'Drop the document to send',
+                        'icon': 'file-up',
+                        'accept': '.pdf',
                         'maxFiles': 1,
-                        'type': 'upload-drop-zone',
+                        'description': 'PDF, one file',
+                        'action': 'SEND_ENVELOPE',
                       },
                       {
-                        'action': 'CLOSE',
-                        'label': 'Cancel',
                         'type': 'button',
+                        'action': 'CLOSE',
                         'variant': 'ghost',
+                        'label': 'Cancel',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'REQUEST_SEND',
-              'from': 'closed',
-              'to': 'open',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'modal',
-                  null,
-                ],
-              ],
+              'from': 'open',
+              'to': 'closed',
               'event': 'INIT',
-              'from': 'open',
-              'to': 'closed',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
@@ -2285,11 +2362,11 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   null,
                 ],
               ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
               'event': 'SEND_ENVELOPE',
-              'from': 'open',
-              'to': 'closed',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
@@ -2297,15 +2374,25 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   null,
                 ],
               ],
-              'event': 'CLOSE',
+            },
+            {
               'from': 'open',
               'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+              ],
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'lifecycle',
+        'name': 'EnvelopeDispatcher',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -2328,10 +2415,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
             'resource': '@entity.id',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'SignatureSession',
         'emits': [
           {
-            'description': 'The provider accepted the envelope; carries its id.',
             'event': 'ENVELOPE_SENT',
+            'description': 'The provider accepted the envelope; carries its id.',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'envelopeId',
@@ -2342,11 +2432,11 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                 'type': 'string',
               },
             ],
-            'tier': 'internal',
           },
           {
-            'description': 'The e-sign provider rejected or failed the dispatch.',
             'event': 'ENVELOPE_SEND_FAILED',
+            'description': 'The e-sign provider rejected or failed the dispatch.',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -2357,11 +2447,11 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                 'type': 'string',
               },
             ],
-            'tier': 'internal',
           },
           {
-            'description': 'The provider returned the envelope\'s current status.',
             'event': 'ENVELOPE_STATUS_LOADED',
+            'description': 'The provider returned the envelope\'s current status.',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'status',
@@ -2372,11 +2462,11 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                 'type': 'string',
               },
             ],
-            'tier': 'internal',
           },
           {
-            'description': 'Reading the envelope status failed.',
             'event': 'ENVELOPE_STATUS_FAILED',
+            'description': 'Reading the envelope status failed.',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -2387,23 +2477,23 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                 'type': 'string',
               },
             ],
-            'tier': 'internal',
           },
           {
-            'description': 'The session row now carries the latest provider state (envelopeId / status / timestamps).',
             'event': 'ENVELOPE_STAMPED',
+            'description': 'The session row now carries the latest provider state (envelopeId / status / timestamps).',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Writing the provider state back onto the session row failed.',
             'event': 'ENVELOPE_STAMP_FAILED',
+            'description': 'Writing the provider state back onto the session row failed.',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -2414,47 +2504,65 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                 'type': 'string',
               },
             ],
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'SignatureSession',
         'listens': [
           {
+            'event': 'SEND_ENVELOPE',
+            'triggers': 'SEND_ENVELOPE',
+            'source': {
+              'kind': 'trait',
+              'trait': ('EnvelopeSendDialog' satisfies _StdEsignFlowListenTraitName),
+            },
+          },
+          {
             'event': 'CHECK_ENVELOPE_STATUS',
+            'triggers': 'CHECK_ENVELOPE_STATUS',
             'source': {
               'kind': 'trait',
               'trait': ('SignatureSessionBrowse' satisfies _StdEsignFlowListenTraitName),
             },
-            'triggers': 'CHECK_ENVELOPE_STATUS',
           },
         ],
-        'name': 'EnvelopeDispatcher',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'dispatching',
+            },
+            {
+              'name': 'polling',
+            },
+          ],
           'events': [
             {
-              'description': 'Dispatch this session as a real e-sign envelope; the first of `files` is the document, its `content` a base64 data URL (UploadDropZone shape).',
               'key': 'SEND_ENVELOPE',
               'name': 'Send Envelope',
+              'description': 'Dispatch this session as a real e-sign envelope; the first of `files` is the document, its `content` a base64 data URL (UploadDropZone shape).',
+              'synonyms': 'send envelope, dispatch signature, send for signing',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
-                  'entity': 'SignatureSession',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentName',
@@ -2462,13 +2570,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     },
                     {
                       'name': 'recipientName',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'recipientEmail',
-                      'required': true,
                       'type': 'email',
+                      'required': true,
                     },
                     {
                       'name': 'requesterName',
@@ -2502,10 +2610,11 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
+                  'entity': 'SignatureSession',
                 },
                 {
                   'name': 'files',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'name',
@@ -2524,35 +2633,35 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'synonyms': 'send envelope, dispatch signature, send for signing',
-              'tier': 'domain',
+              'listened': true,
             },
             {
-              'description': 'Pull the provider\'s current envelope status and stamp it onto the session row.',
               'key': 'CHECK_ENVELOPE_STATUS',
               'name': 'Check Envelope Status',
+              'description': 'Pull the provider\'s current envelope status and stamp it onto the session row.',
+              'synonyms': 'refresh status, check signature, poll envelope',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
-                  'entity': 'SignatureSession',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'documentName',
@@ -2560,13 +2669,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                     },
                     {
                       'name': 'recipientName',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'recipientEmail',
-                      'required': true,
                       'type': 'email',
+                      'required': true,
                     },
                     {
                       'name': 'requesterName',
@@ -2600,28 +2709,29 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
+                  'entity': 'SignatureSession',
                 },
               ],
-              'synonyms': 'refresh status, check signature, poll envelope',
-              'tier': 'domain',
+              'listened': true,
             },
             {
-              'description': 'The session row now carries the latest provider state (envelopeId / status / timestamps).',
               'key': 'ENVELOPE_STAMPED',
               'name': 'Envelope Stamped',
+              'description': 'The session row now carries the latest provider state (envelopeId / status / timestamps).',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
+              'listened': true,
             },
             {
-              'description': 'Writing the provider state back onto the session row failed.',
               'key': 'ENVELOPE_STAMP_FAILED',
               'name': 'Envelope Stamp Failed',
+              'description': 'Writing the provider state back onto the session row failed.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2632,12 +2742,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
+              'listened': true,
             },
             {
-              'description': 'The provider accepted the envelope; carries its id.',
               'key': 'ENVELOPE_SENT',
               'name': 'Envelope Sent',
+              'description': 'The provider accepted the envelope; carries its id.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'envelopeId',
@@ -2648,12 +2759,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
+              'listened': true,
             },
             {
-              'description': 'The e-sign provider rejected or failed the dispatch.',
               'key': 'ENVELOPE_SEND_FAILED',
               'name': 'Envelope Send Failed',
+              'description': 'The e-sign provider rejected or failed the dispatch.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2664,12 +2776,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
+              'listened': true,
             },
             {
-              'description': 'The provider returned the envelope\'s current status.',
               'key': 'ENVELOPE_STATUS_LOADED',
               'name': 'Envelope Status Loaded',
+              'description': 'The provider returned the envelope\'s current status.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'status',
@@ -2680,12 +2793,13 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
+              'listened': true,
             },
             {
-              'description': 'Reading the envelope status failed.',
               'key': 'ENVELOPE_STATUS_FAILED',
               'name': 'Envelope Status Failed',
+              'description': 'Reading the envelope status failed.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2696,23 +2810,14 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'dispatching',
-            },
-            {
-              'name': 'polling',
+              'listened': true,
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'dispatching',
+              'event': 'SEND_ENVELOPE',
               'effects': [
                 [
                   'set',
@@ -2724,18 +2829,10 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   'esign',
                   'sendEnvelope',
                   {
-                    'documentContent': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.files',
-                      ],
-                      'content',
-                    ],
-                    'documentName': [
+                    'recipientEmail': [
                       'object/get',
                       '@payload.row',
-                      'documentName',
+                      'recipientEmail',
                     ],
                     'emailSubject': [
                       'str/concat',
@@ -2746,30 +2843,47 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                         'documentName',
                       ],
                     ],
-                    'recipientEmail': [
+                    'documentContent': [
                       'object/get',
-                      '@payload.row',
-                      'recipientEmail',
+                      [
+                        'array/first',
+                        '@payload.files',
+                      ],
+                      'content',
                     ],
                     'recipientName': [
                       'object/get',
                       '@payload.row',
                       'recipientName',
                     ],
+                    'documentName': [
+                      'object/get',
+                      '@payload.row',
+                      'documentName',
+                    ],
                   },
                   {
                     'emit': {
-                      'failure': 'ENVELOPE_SEND_FAILED',
                       'success': 'ENVELOPE_SENT',
+                      'failure': 'ENVELOPE_SEND_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'SEND_ENVELOPE',
-              'from': 'idle',
-              'to': 'dispatching',
             },
             {
+              'from': 'idle',
+              'to': 'polling',
+              'event': 'CHECK_ENVELOPE_STATUS',
+              'guard': [
+                '!=',
+                [
+                  'object/get',
+                  '@payload.row',
+                  'envelopeId',
+                ],
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -2795,69 +2909,60 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                 ],
               ],
-              'event': 'CHECK_ENVELOPE_STATUS',
-              'from': 'idle',
-              'guard': [
-                '!=',
-                [
-                  'object/get',
-                  '@payload.row',
-                  'envelopeId',
-                ],
-                '',
-              ],
-              'to': 'polling',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CHECK_ENVELOPE_STATUS',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
                     'dismissible': true,
+                    'variant': 'info',
                     'message': 'This request was never dispatched to the e-sign provider — send it first',
                     'type': 'alert',
-                    'variant': 'info',
                   },
                 ],
               ],
-              'event': 'CHECK_ENVELOPE_STATUS',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
               'event': 'ENVELOPE_STAMPED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ENVELOPE_STAMP_FAILED',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
+                    'type': 'alert',
+                    'variant': 'warning',
                     'dismissible': true,
                     'message': 'Could not record the envelope state on the request',
-                    'type': 'alert',
-                    'variant': 'warning',
                   },
                 ],
               ],
-              'event': 'ENVELOPE_STAMP_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'dispatching',
+              'to': 'idle',
+              'event': 'ENVELOPE_SENT',
               'effects': [
                 [
                   'persist',
                   'update',
                   ('SignatureSession' satisfies _StdEsignFlowEntityName),
                   {
-                    'envelopeId': '@payload.envelopeId',
                     'id': '@entity.id',
-                    'sentAt': '@now',
+                    'envelopeId': '@payload.envelopeId',
                     'status': 'sent',
+                    'sentAt': '@now',
                   },
                   {
                     'emit': {
@@ -2870,63 +2975,68 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
-                    'message': 'Signature request sent',
                     'type': 'alert',
+                    'dismissible': true,
                     'variant': 'success',
+                    'message': 'Signature request sent',
                   },
                 ],
               ],
-              'event': 'ENVELOPE_SENT',
-              'from': 'dispatching',
-              'to': 'idle',
             },
             {
+              'from': 'dispatching',
+              'to': 'idle',
+              'event': 'ENVELOPE_SEND_FAILED',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': 'Could not send the signature request',
                     'type': 'alert',
+                    'dismissible': true,
                     'variant': 'warning',
                   },
                 ],
               ],
-              'event': 'ENVELOPE_SEND_FAILED',
-              'from': 'dispatching',
-              'to': 'idle',
             },
             {
-              'effects': [
-                [
-                  'persist',
-                  'update',
-                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
-                  {
-                    'id': '@entity.id',
-                    'signedAt': '@now',
-                    'status': 'signed',
-                  },
-                  {
-                    'emit': {
-                      'failure': 'ENVELOPE_STAMP_FAILED',
-                      'success': 'ENVELOPE_STAMPED',
-                    },
-                  },
-                ],
-              ],
-              'event': 'ENVELOPE_STATUS_LOADED',
               'from': 'polling',
+              'to': 'idle',
+              'event': 'ENVELOPE_STATUS_LOADED',
               'guard': [
                 '=',
                 '@payload.status',
                 'completed',
               ],
-              'to': 'idle',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  ('SignatureSession' satisfies _StdEsignFlowEntityName),
+                  {
+                    'status': 'signed',
+                    'id': '@entity.id',
+                    'signedAt': '@now',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ENVELOPE_STAMP_FAILED',
+                      'success': 'ENVELOPE_STAMPED',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'polling',
+              'to': 'idle',
+              'event': 'ENVELOPE_STATUS_LOADED',
+              'guard': [
+                '=',
+                '@payload.status',
+                'delivered',
+              ],
               'effects': [
                 [
                   'persist',
@@ -2938,22 +3048,22 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                   {
                     'emit': {
-                      'failure': 'ENVELOPE_STAMP_FAILED',
                       'success': 'ENVELOPE_STAMPED',
+                      'failure': 'ENVELOPE_STAMP_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'ENVELOPE_STATUS_LOADED',
+            },
+            {
               'from': 'polling',
+              'to': 'idle',
+              'event': 'ENVELOPE_STATUS_LOADED',
               'guard': [
                 '=',
                 '@payload.status',
-                'delivered',
+                'declined',
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'persist',
@@ -2971,16 +3081,11 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                 ],
               ],
-              'event': 'ENVELOPE_STATUS_LOADED',
-              'from': 'polling',
-              'guard': [
-                '=',
-                '@payload.status',
-                'declined',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'polling',
+              'to': 'idle',
+              'event': 'ENVELOPE_STATUS_LOADED',
               'effects': [
                 [
                   'persist',
@@ -2998,29 +3103,27 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                 ],
               ],
-              'event': 'ENVELOPE_STATUS_LOADED',
-              'from': 'polling',
-              'to': 'idle',
             },
             {
+              'from': 'polling',
+              'to': 'idle',
+              'event': 'ENVELOPE_STATUS_FAILED',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
-                    'message': 'Could not read the envelope status',
                     'type': 'alert',
+                    'message': 'Could not read the envelope status',
                     'variant': 'warning',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'ENVELOPE_STATUS_FAILED',
-              'from': 'polling',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

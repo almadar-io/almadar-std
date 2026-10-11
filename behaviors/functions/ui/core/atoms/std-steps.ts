@@ -39,26 +39,26 @@ export type StdStepsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdStepsConfig {
-  /** Default: `"center"` */
-  alignment?: 'center' | 'start';
-  /** Default: `"none"` */
-  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   /** Default: `"background"` */
   edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
   /** Default: `"none"` */
   edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
-  /** Default: `""` */
-  heading?: string;
-  /** Default: `"row"` */
-  layout?: 'row' | 'vertical';
+  /** Default: `"center"` */
+  alignment?: 'center' | 'start';
+  /** Default: `[{"title":"Describe it","description":"Say what you want in plain words."},{"description":"Check the plan before anything is built.","title":"Review it"},{"description":"Publish when it looks right.","title":"Ship it"}]` */
+  steps?: EntityRow[];
   /** Default: `""` */
   lede?: string;
-  /** Default: `[{"description":"Say what you want in plain words.","title":"Describe it"},{"description":"Check the plan before anything is built.","title":"Review it"},{"description":"Publish when it looks right.","title":"Ship it"}]` */
-  steps?: EntityRow[];
-  /** Default: `"plain"` */
-  surface?: 'plain' | 'muted' | 'accent' | 'inverse';
   /** Default: `false` */
   texture?: boolean;
+  /** Default: `""` */
+  heading?: string;
+  /** Default: `"plain"` */
+  surface?: 'plain' | 'muted' | 'accent' | 'inverse';
+  /** Default: `"none"` */
+  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `"row"` */
+  layout?: 'row' | 'vertical';
 }
 
 /**

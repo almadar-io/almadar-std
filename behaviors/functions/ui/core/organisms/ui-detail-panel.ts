@@ -47,95 +47,95 @@ export interface StdUiDetailPanelDetailPanelLoadedPayload {
  */
 export interface StdUiDetailPanelConfig {
   /** Default: `[]` */
-  actions?: EntityRow[];
-  /** Default: `{}` */
-  activeFilters?: Record<string, TraitConfig>;
-  /** Default: `[]` */
-  activity?: EntityRow[];
-  activityContent?: PatternValue;
-  ariaBusy?: boolean;
+  stages?: EntityRow[];
+  pageSize?: number;
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
+  /** Default: `""` */
+  viewerRole?: string;
+  status?: EntityRow;
+  /** Default: `{}` */
+  relationsData?: Record<string, TraitConfig>;
   ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  avatar?: PatternValue;
-  avatarField?: string;
-  backAction?: EntityRow;
-  className?: string;
-  /** Default: `"CLOSE"` */
-  closeEvent?: string;
-  coverField?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `[]` */
-  displayFields?: string[];
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  lineItemColumns?: EntityRow[];
+  title?: string;
+  /** Default: `[{"icon":"circle","name":"Name","label":"Label","relation":{"entity":"Entity","cardinality":"one"},"values":["Item","Item 2"],"type":"Type","format":"date","variant":"h3"},{"type":"Type 2","icon":"circle","relation":{"cardinality":"many","entity":"Entity 2"},"variant":"h4","format":"time","name":"Name 2","label":"Label 2","values":["Item","Item 2"]}]` */
+  fields?: EntityRow[];
+  ariaDescribedby?: string;
+  className?: string;
+  /** Default: `"panel"` */
+  look?: 'panel' | 'profile' | 'showcase' | 'workflow' | 'map' | 'ledger' | 'conversation' | 'workspace';
+  footer?: PatternValue;
+  position?: 'left' | 'right';
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  avatar?: PatternValue;
+  activityContent?: PatternValue;
+  mediaField?: string;
   enterDelay?: number;
+  ariaHidden?: boolean;
+  /** Default: `2` */
+  maxInlineActions?: number;
+  stageField?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaLabel?: string;
+  longitudeField?: string;
+  /** Default: `true` */
+  showActions?: boolean;
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `[]` */
+  tabs?: EntityRow[];
+  subtitle?: string;
+  totalCount?: number;
+  lineItemsContent?: PatternValue;
+  /** Default: `false` */
+  isLoading?: boolean;
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","relation":{"cardinality":"one","entity":"Entity"},"type":"Type","values":["Item","Item 2"],"variant":"h3"},{"format":"time","icon":"circle","label":"Label 2","name":"Name 2","relation":{"cardinality":"many","entity":"Entity 2"},"type":"Type 2","values":["Item","Item 2"],"variant":"h4"}]` */
-  fields?: EntityRow[];
-  footer?: PatternValue;
-  /** Default: `false` */
-  isLoading?: boolean;
-  lang?: string;
-  latitudeField?: string;
-  /** Default: `[]` */
-  lineItemColumns?: EntityRow[];
-  lineItemsContent?: PatternValue;
-  longitudeField?: string;
-  /** Default: `"panel"` */
-  look?: 'panel' | 'profile' | 'showcase' | 'workflow' | 'map' | 'ledger' | 'conversation' | 'workspace';
-  /** Default: `2` */
-  maxInlineActions?: number;
-  mediaField?: string;
-  mode?: string;
-  /** Default: `""` */
-  onTitleCommit?: string;
-  pageProp?: number;
-  pageSize?: number;
-  position?: 'left' | 'right';
-  /** Default: `{}` */
-  relationsData?: Record<string, TraitConfig>;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  searchValue?: string;
-  /** Default: `[]` */
-  sections?: EntityRow[];
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `true` */
-  selfFetch?: boolean;
-  /** Default: `true` */
-  showActions?: boolean;
+  tabIndex?: number;
   /** Default: `"detail"` */
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `""` */
+  onTitleCommit?: string;
+  searchValue?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  ariaLabelledby?: string;
+  ariaBusy?: boolean;
+  coverField?: string;
+  /** Default: `true` */
+  selfFetch?: boolean;
   /** Default: `false` */
   slideOver?: boolean;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  stageField?: string;
-  /** Default: `[]` */
-  stages?: EntityRow[];
-  status?: EntityRow;
-  subtitle?: string;
   /** Default: `"auto"` */
   surface?: 'auto' | 'none';
-  tabIndex?: number;
-  /** Default: `[]` */
-  tabs?: EntityRow[];
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `{}` */
+  activeFilters?: Record<string, TraitConfig>;
+  sortBy?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
   threadContent?: PatternValue;
-  title?: string;
-  totalCount?: number;
+  lang?: string;
   /** Default: `[]` */
   totals?: EntityRow[];
-  /** Default: `""` */
-  viewerRole?: string;
+  /** Default: `"CLOSE"` */
+  closeEvent?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
+  avatarField?: string;
+  /** Default: `[]` */
+  activity?: EntityRow[];
+  pageProp?: number;
+  backAction?: EntityRow;
+  latitudeField?: string;
+  /** Default: `[]` */
+  sections?: EntityRow[];
   width?: string;
+  /** Default: `[]` */
+  displayFields?: string[];
+  mode?: string;
 }
 
 type _StdUiDetailPanelEntityName = 'DetailPanelItem';
@@ -202,38 +202,38 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'default': 'Author Name',
             'name': 'authorName',
             'type': 'string',
+            'default': 'Author Name',
           },
           {
-            'default': 'Content',
             'name': 'content',
             'type': 'string',
+            'default': 'Content',
           },
           {
-            'default': 'Author Avatar Url',
             'name': 'authorAvatarUrl',
             'type': 'string',
+            'default': 'Author Avatar Url',
           },
           {
-            'default': 'Posted At',
             'name': 'postedAt',
             'type': 'string',
+            'default': 'Posted At',
           },
           {
-            'default': 1,
             'name': 'voteCount',
             'type': 'number',
+            'default': 1,
           },
           {
-            'default': 'up',
             'name': 'userVote',
             'type': 'string',
+            'default': 'up',
             'values': [
               'up',
               'down',
@@ -241,70 +241,70 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             ],
           },
           {
-            'default': false,
             'name': 'collapsed',
             'type': 'boolean',
+            'default': false,
           },
           {
+            'name': 'replies',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
-                'authorAvatarUrl': {
-                  'name': 'authorAvatarUrl',
-                  'required': false,
-                  'type': 'string',
-                },
-                'authorName': {
-                  'name': 'authorName',
-                  'required': false,
-                  'type': 'string',
-                },
                 'collapsed': {
                   'name': 'collapsed',
-                  'required': false,
                   'type': 'boolean',
-                },
-                'content': {
-                  'name': 'content',
                   'required': false,
-                  'type': 'string',
-                },
-                'postedAt': {
-                  'name': 'postedAt',
-                  'required': false,
-                  'type': 'string',
-                },
-                'replies': {
-                  'items': {
-                    'type': 'union',
-                    'values': [
-                      'ReplyNodeRow',
-                    ],
-                  },
-                  'name': 'replies',
-                  'required': false,
-                  'type': 'array',
                 },
                 'userVote': {
                   'name': 'userVote',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'up',
                     'down',
                     'none',
                   ],
                 },
+                'authorName': {
+                  'name': 'authorName',
+                  'type': 'string',
+                  'required': false,
+                },
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': false,
+                },
+                'postedAt': {
+                  'name': 'postedAt',
+                  'type': 'string',
+                  'required': false,
+                },
                 'voteCount': {
                   'name': 'voteCount',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
+                },
+                'replies': {
+                  'name': 'replies',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'union',
+                    'values': [
+                      'ReplyNodeRow',
+                    ],
+                  },
+                },
+                'authorAvatarUrl': {
+                  'name': 'authorAvatarUrl',
+                  'type': 'string',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'replies',
-            'type': 'array',
           },
         ];
         const extras = params.fields ?? [];
@@ -315,154 +315,726 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
     } as Entity,
     traits: [
       {
+        'name': 'DetailPanelRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'DetailPanelItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
-        'config': {
-          'actions': {
-            'default': [],
-            'description': 'Unified actions array - first action with variant=\'primary\' is the main action',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
+        'linkedEntity': 'DetailPanelItem',
+        'emits': [
+          {
+            'event': '@config.closeEvent',
+            'description': 'The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.',
+            'tier': 'essential',
+            'scope': 'external',
+            'definerKnob': 'closeEvent',
+          },
+          {
+            'event': 'DetailPanelLoaded',
+            'description': 'DetailPanel row finished loading; payload.data holds the single row.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorAvatarUrl',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'postedAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'voteCount',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'userVote',
+                    'type': 'string',
+                    'values': [
+                      'up',
+                      'down',
+                      'none',
+                    ],
+                  },
+                  {
+                    'name': 'collapsed',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'replies',
+                    'type': '[ReplyNodeRow]',
+                  },
+                ],
+                'entity': 'DetailPanelItem',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'resolving',
+              'isInitial': true,
+            },
+            {
+              'name': 'idle',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+              'description': 'Mount payload; a host that routes to this panel by id (a :id page param) passes it here.',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
                   'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'DetailPanelLoaded',
+              'name': 'Detail panel loaded',
+              'description': 'DetailPanel row finished loading; payload.data holds the single row.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorAvatarUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'postedAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'voteCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'userVote',
+                      'type': 'string',
+                      'values': [
+                        'up',
+                        'down',
+                        'none',
+                      ],
+                    },
+                    {
+                      'name': 'collapsed',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'replies',
+                      'type': '[ReplyNodeRow]',
+                    },
+                  ],
+                  'entity': 'DetailPanelItem',
+                },
+              ],
+            },
+            {
+              'key': '@config.closeEvent',
+              'name': '@config.close event',
+              'description': 'The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.',
+              'tier': 'essential',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'resolving',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': [
+                'and',
+                '@config.selfFetch',
+                [
+                  '!=',
+                  [
+                    'str/default',
+                    '@payload.id',
+                    '',
+                  ],
+                  '',
+                ],
+                [
+                  '!=',
+                  '@config.mode',
+                  'create',
+                ],
+              ],
+              'effects': [
+                [
+                  'fetch',
+                  ('DetailPanelItem' satisfies _StdUiDetailPanelEntityName),
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'success': 'DetailPanelLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'aria-current': '@config.ariaCurrent',
+                    'lineItemColumns': '@config.lineItemColumns',
+                    'mode': '@config.mode',
+                    'stages': '@config.stages',
+                    'lang': '@config.lang',
+                    'stageField': '@config.stageField',
+                    'page': '@config.pageProp',
+                    'surface': '@config.surface',
+                    'totalCount': '@config.totalCount',
+                    'aria-live': '@config.ariaLive',
+                    'look': '@config.look',
+                    'mediaField': '@config.mediaField',
+                    'aria-busy': '@config.ariaBusy',
+                    'enterDelay': '@config.enterDelay',
+                    'width': '@config.width',
+                    'tabIndex': '@config.tabIndex',
+                    'sortDirection': '@config.sortDirection',
+                    'subtitle': '@config.subtitle',
+                    'lineItemsContent': '@config.lineItemsContent',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'showActions': '@config.showActions',
+                    'coverField': '@config.coverField',
+                    'thread': '@entity',
+                    'status': '@config.status',
+                    'avatarField': '@config.avatarField',
+                    'displayFields': '@config.displayFields',
+                    'enter': '@config.enter',
+                    'sections': '@config.sections',
+                    'activityContent': '@config.activityContent',
+                    'aria-hidden': '@config.ariaHidden',
+                    'entity': '@entity',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'skeleton': '@config.skeleton',
+                    'aria-selected': '@config.ariaSelected',
+                    'sortBy': '@config.sortBy',
+                    'className': '@config.className',
+                    'lineItems': '@entity',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'error': '@config.error',
+                    'initialData': '@entity',
+                    'tabs': '@config.tabs',
+                    'longitudeField': '@config.longitudeField',
+                    'activity': '@config.activity',
+                    'closeEvent': '@config.closeEvent',
+                    'maxInlineActions': '@config.maxInlineActions',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'isLoading': '@config.isLoading',
+                    'slideOver': '@config.slideOver',
+                    'activeFilters': '@config.activeFilters',
+                    'fields': '@config.fields',
+                    'footer': '@config.footer',
+                    'type': 'detail-panel',
+                    'fieldNames': '@config.fieldNames',
+                    'dir': '@config.dir',
+                    'pageSize': '@config.pageSize',
+                    'avatar': '@config.avatar',
+                    'totals': '@config.totals',
+                    'relationsData': '@config.relationsData',
+                    'onTitleCommit': '@config.onTitleCommit',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'backAction': '@config.backAction',
+                    'role': '@config.role',
+                    'title': '@config.title',
+                    'position': '@config.position',
+                    'threadContent': '@config.threadContent',
+                    'latitudeField': '@config.latitudeField',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'resolving',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                [
+                  'and',
+                  '@config.selfFetch',
+                  [
+                    '!=',
+                    [
+                      'str/default',
+                      '@payload.id',
+                      '',
+                    ],
+                    '',
+                  ],
+                  [
+                    '!=',
+                    '@config.mode',
+                    'create',
+                  ],
+                ],
+              ],
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'lineItems': '@entity',
+                    'status': '@config.status',
+                    'longitudeField': '@config.longitudeField',
+                    'width': '@config.width',
+                    'fieldNames': '@config.fieldNames',
+                    'avatar': '@config.avatar',
+                    'type': 'detail-panel',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'footer': '@config.footer',
+                    'enter': '@config.enter',
+                    'mediaField': '@config.mediaField',
+                    'activityContent': '@config.activityContent',
+                    'title': '@config.title',
+                    'role': '@config.role',
+                    'activity': '@config.activity',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'totals': '@config.totals',
+                    'closeEvent': '@config.closeEvent',
+                    'lang': '@config.lang',
+                    'subtitle': '@config.subtitle',
+                    'look': '@config.look',
+                    'aria-pressed': '@config.ariaPressed',
+                    'activeFilters': '@config.activeFilters',
+                    'entity': '@entity',
+                    'mode': '@config.mode',
+                    'skeleton': '@config.skeleton',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-label': '@config.ariaLabel',
+                    'dir': '@config.dir',
+                    'sections': '@config.sections',
+                    'tabs': '@config.tabs',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'enterDelay': '@config.enterDelay',
+                    'sortBy': '@config.sortBy',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'tabIndex': '@config.tabIndex',
+                    'className': '@config.className',
+                    'stageField': '@config.stageField',
+                    'selectedIds': '@config.selectedIds',
+                    'searchValue': '@config.searchValue',
+                    'displayFields': '@config.displayFields',
+                    'lineItemsContent': '@config.lineItemsContent',
+                    'lineItemColumns': '@config.lineItemColumns',
+                    'thread': '@entity',
+                    'fields': '@config.fields',
+                    'error': '@config.error',
+                    'surface': '@config.surface',
+                    'aria-live': '@config.ariaLive',
+                    'aria-hidden': '@config.ariaHidden',
+                    'slideOver': '@config.slideOver',
+                    'page': '@config.pageProp',
+                    'backAction': '@config.backAction',
+                    'initialData': '@entity',
+                    'maxInlineActions': '@config.maxInlineActions',
+                    'position': '@config.position',
+                    'coverField': '@config.coverField',
+                    'sortDirection': '@config.sortDirection',
+                    'onTitleCommit': '@config.onTitleCommit',
+                    'pageSize': '@config.pageSize',
+                    'stages': '@config.stages',
+                    'aria-selected': '@config.ariaSelected',
+                    'avatarField': '@config.avatarField',
+                    'totalCount': '@config.totalCount',
+                    'latitudeField': '@config.latitudeField',
+                    'threadContent': '@config.threadContent',
+                    'relationsData': '@config.relationsData',
+                    'isLoading': '@config.isLoading',
+                    'showActions': '@config.showActions',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'look': '@config.look',
+                    'closeEvent': '@config.closeEvent',
+                    'stageField': '@config.stageField',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-current': '@config.ariaCurrent',
+                    'displayFields': '@config.displayFields',
+                    'selectedIds': '@config.selectedIds',
+                    'role': '@config.role',
+                    'showActions': '@config.showActions',
+                    'onTitleCommit': '@config.onTitleCommit',
+                    'latitudeField': '@config.latitudeField',
+                    'threadContent': '@config.threadContent',
+                    'aria-live': '@config.ariaLive',
+                    'totals': '@config.totals',
+                    'className': '@config.className',
+                    'longitudeField': '@config.longitudeField',
+                    'totalCount': '@config.totalCount',
+                    'status': '@config.status',
+                    'sortBy': '@config.sortBy',
+                    'lineItems': '@entity',
+                    'sortDirection': '@config.sortDirection',
+                    'maxInlineActions': '@config.maxInlineActions',
+                    'page': '@config.pageProp',
+                    'avatar': '@config.avatar',
+                    'enterDelay': '@config.enterDelay',
+                    'dir': '@config.dir',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'position': '@config.position',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-selected': '@config.ariaSelected',
+                    'type': 'detail-panel',
+                    'isLoading': '@config.isLoading',
+                    'lineItemsContent': '@config.lineItemsContent',
+                    'surface': '@config.surface',
+                    'tabs': '@config.tabs',
+                    'initialData': '@entity',
+                    'relationsData': '@config.relationsData',
+                    'activity': '@config.activity',
+                    'avatarField': '@config.avatarField',
+                    'fields': '@config.fields',
+                    'aria-label': '@config.ariaLabel',
+                    'backAction': '@config.backAction',
+                    'tabIndex': '@config.tabIndex',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'lineItemColumns': '@config.lineItemColumns',
+                    'width': '@config.width',
+                    'fieldNames': '@config.fieldNames',
+                    'lang': '@config.lang',
+                    'coverField': '@config.coverField',
+                    'mediaField': '@config.mediaField',
+                    'error': '@config.error',
+                    'title': '@config.title',
+                    'skeleton': '@config.skeleton',
+                    'entity': '@entity',
+                    'subtitle': '@config.subtitle',
+                    'slideOver': '@config.slideOver',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'aria-pressed': '@config.ariaPressed',
+                    'stages': '@config.stages',
+                    'mode': '@config.mode',
+                    'sections': '@config.sections',
+                    'activeFilters': '@config.activeFilters',
+                    'enter': '@config.enter',
+                    'thread': '@entity',
+                    'footer': '@config.footer',
+                    'activityContent': '@config.activityContent',
+                    'aria-busy': '@config.ariaBusy',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DetailPanelLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'totalCount': '@config.totalCount',
+                    'entity': '@payload.data',
+                    'stages': '@config.stages',
+                    'avatarField': '@config.avatarField',
+                    'aria-label': '@config.ariaLabel',
+                    'initialData': '@payload.data',
+                    'tabs': '@config.tabs',
+                    'aria-live': '@config.ariaLive',
+                    'className': '@config.className',
+                    'sortBy': '@config.sortBy',
+                    'onTitleCommit': '@config.onTitleCommit',
+                    'fieldNames': '@config.fieldNames',
+                    'enterDelay': '@config.enterDelay',
+                    'stageField': '@config.stageField',
+                    'role': '@config.role',
+                    'aria-selected': '@config.ariaSelected',
+                    'sortDirection': '@config.sortDirection',
+                    'activeFilters': '@config.activeFilters',
+                    'closeEvent': '@config.closeEvent',
+                    'lang': '@config.lang',
+                    'fields': '@config.fields',
+                    'totals': '@config.totals',
+                    'subtitle': '@config.subtitle',
+                    'position': '@config.position',
+                    'title': '@config.title',
+                    'lineItemsContent': '@config.lineItemsContent',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'width': '@config.width',
+                    'lineItemColumns': '@config.lineItemColumns',
+                    'thread': '@entity',
+                    'status': '@config.status',
+                    'mode': '@config.mode',
+                    'activityContent': '@config.activityContent',
+                    'slideOver': '@config.slideOver',
+                    'dir': '@config.dir',
+                    'enter': '@config.enter',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'avatar': '@config.avatar',
+                    'displayFields': '@config.displayFields',
+                    'longitudeField': '@config.longitudeField',
+                    'activity': '@config.activity',
+                    'error': '@config.error',
+                    'aria-current': '@config.ariaCurrent',
+                    'relationsData': '@config.relationsData',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-hidden': '@config.ariaHidden',
+                    'maxInlineActions': '@config.maxInlineActions',
+                    'threadContent': '@config.threadContent',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'sections': '@config.sections',
+                    'isLoading': '@config.isLoading',
+                    'latitudeField': '@config.latitudeField',
+                    'searchValue': '@config.searchValue',
+                    'footer': '@config.footer',
+                    'coverField': '@config.coverField',
+                    'pageSize': '@config.pageSize',
+                    'aria-busy': '@config.ariaBusy',
+                    'page': '@config.pageProp',
+                    'selectedIds': '@config.selectedIds',
+                    'lineItems': '@entity',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'surface': '@config.surface',
+                    'showActions': '@config.showActions',
+                    'mediaField': '@config.mediaField',
+                    'tabIndex': '@config.tabIndex',
+                    'look': '@config.look',
+                    'skeleton': '@config.skeleton',
+                    'backAction': '@config.backAction',
+                    'type': 'detail-panel',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
+          'stages': {
+            'type': '[DetailPanelStagesItem]',
+            'default': [],
+            'label': 'Stages',
+            'description': 'The lifecycle in order, `{ value, label }` per stage (workflow).',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'value': {
+                  'name': 'value',
+                  'type': 'string',
+                  'required': true,
                 },
                 'label': {
                   'name': 'label',
+                  'type': 'string',
                   'required': true,
-                  'type': 'string',
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'required': false,
-                  'type': 'string',
-                },
-                'payload': {
-                  'name': 'payload',
-                  'required': false,
-                  'type': 'SExpr',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                    'danger',
-                  ],
-                },
-                'when': {
-                  'name': 'when',
-                  'required': false,
-                  'type': 'SExpr',
                 },
               },
-              'type': 'object',
             },
-            'label': 'Actions',
-            'tier': 'presentation',
-            'type': '[DetailPanelActionsItem]',
           },
-          'activeFilters': {
-            'default': {},
-            'description': 'Active filters',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Active Filters',
+          'pageSize': {
+            'type': 'number',
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
-            'type': 'Map<string,string>',
-          },
-          'activity': {
-            'default': [],
-            'description': 'Activity entries shown under the record (workflow).',
-            'items': {
-              'properties': {
-                'date': {
-                  'name': 'date',
-                  'required': false,
-                  'type': 'string',
-                },
-                'description': {
-                  'name': 'description',
-                  'required': false,
-                  'type': 'string',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'status': {
-                  'name': 'status',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'complete',
-                    'active',
-                    'pending',
-                    'error',
-                  ],
-                },
-                'tags': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'tags',
-                  'required': false,
-                  'type': 'array',
-                },
-                'title': {
-                  'name': 'title',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Activity',
-            'tier': 'presentation',
-            'type': '[DetailPanelActivityItem]',
-          },
-          'activityContent': {
-            'description': 'Activity composed in instead of `activity` — e.g. the record\'s own history trait (workflow).',
-            'label': 'Activity Content',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
-            'type': 'boolean',
           },
           'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'type': 'string',
             'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
             'synonyms': 'aria-current',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
               'page',
               'step',
@@ -473,269 +1045,183 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               'false',
             ],
           },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
+          'viewerRole': {
             'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
+            'tier': 'policy',
           },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
+          'status': {
+            'type': 'DetailPanelStatus',
+            'label': 'Status',
+            'description': 'status prop',
             'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'avatar': {
-            'description': 'avatar prop',
-            'label': 'Avatar',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'avatarField': {
-            'description': 'Record field holding the avatar image. The profile look always shows an avatar, with the title\'s initials when this is unset or empty.',
-            'label': 'Avatar Field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'backAction': {
-            'description': 'Navigation-back affordance. Renders top-LEFT before the title (OS/back convention — Almadar_UX §8.4), spatially separated from the right-aligned action buttons + close X. Never inferred from actions[] labels.',
-            'label': 'Back Action',
             'properties': {
-              'event': {
-                'name': 'event',
-                'required': false,
-                'type': 'event',
-              },
-              'icon': {
-                'name': 'icon',
-                'required': false,
+              'variant': {
+                'name': 'variant',
                 'type': 'string',
+                'required': false,
+                'values': [
+                  'default',
+                  'success',
+                  'warning',
+                  'danger',
+                  'info',
+                ],
               },
               'label': {
                 'name': 'label',
+                'type': 'string',
                 'required': true,
-                'type': 'string',
-              },
-              'navigatesTo': {
-                'name': 'navigatesTo',
-                'required': false,
-                'type': 'string',
-              },
-              'payload': {
-                'name': 'payload',
-                'required': false,
-                'type': 'SExpr',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'primary',
-                  'secondary',
-                  'ghost',
-                  'danger',
-                ],
-              },
-              'when': {
-                'name': 'when',
-                'required': false,
-                'type': 'SExpr',
               },
             },
-            'tier': 'presentation',
-            'type': 'DetailPanelBackAction',
           },
-          'className': {
-            'description': 'Additional CSS classes',
-            'label': 'Class Name',
+          'relationsData': {
+            'type': 'Map<string,[DetailPanelRelationsDataValueItem]>',
+            'default': {},
+            'label': 'Relations Data',
+            'description': 'Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names.',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'closeEvent': {
-            'default': 'CLOSE',
-            'description': 'The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.',
-            'label': 'Close Event',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'coverField': {
-            'description': 'Record field holding the cover image (profile).',
-            'label': 'Cover Field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
-          },
-          'displayFields': {
-            'default': [],
-            'description': 'Display fields (alias for fields)',
             'items': {
-              'type': 'string',
-            },
-            'label': 'Display Fields',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'error': {
-            'description': 'Error state (UiError)',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'DetailPanelError',
-          },
-          'fieldNames': {
-            'default': [],
-            'description': 'Alias for fields - backwards compatibility',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Field Names',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'fields': {
-            'default': [
-              {
-                'format': 'date',
-                'icon': 'circle',
-                'label': 'Label',
-                'name': 'Name',
-                'relation': {
-                  'cardinality': 'one',
-                  'entity': 'Entity',
+              'type': 'array',
+              'items': {
+                'type': 'object',
+                'properties': {
+                  'label': {
+                    'name': 'label',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'description': {
+                    'name': 'description',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'disabled': {
+                    'name': 'disabled',
+                    'type': 'boolean',
+                    'required': false,
+                  },
+                  'value': {
+                    'name': 'value',
+                    'type': 'string',
+                    'required': true,
+                  },
                 },
-                'type': 'Type',
-                'values': [
-                  'Item',
-                  'Item 2',
-                ],
-                'variant': 'h3',
               },
-              {
-                'format': 'time',
-                'icon': 'circle',
-                'label': 'Label 2',
-                'name': 'Name 2',
-                'relation': {
-                  'cardinality': 'many',
-                  'entity': 'Entity 2',
-                },
-                'type': 'Type 2',
-                'values': [
-                  'Item',
-                  'Item 2',
-                ],
-                'variant': 'h4',
-              },
-            ],
-            'description': 'Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })',
+            },
+          },
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
+          'lineItemColumns': {
+            'type': '[DetailPanelLineItemColumnsItem]',
+            'default': [],
+            'label': 'Line Item Columns',
+            'description': 'Columns of the line-items table (ledger).',
+            'tier': 'presentation',
             'items': {
+              'type': 'object',
               'properties': {
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'h3',
+                    'h4',
+                  ],
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'weight': {
+                  'name': 'weight',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'normal',
+                    'medium',
+                    'semibold',
+                  ],
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': false,
+                },
+                'className': {
+                  'name': 'className',
+                  'type': 'string',
+                  'required': false,
+                },
+                'align': {
+                  'name': 'align',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'left',
+                    'center',
+                    'right',
+                  ],
+                },
+                'format': {
+                  'name': 'format',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'badge',
+                    'date',
+                    'currency',
+                    'number',
+                    'percent',
+                    'boolean',
+                  ],
+                },
+                'key': {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': true,
+                },
+                'labels': {
+                  'name': 'labels',
+                  'type': 'object',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'sortable': {
+                  'name': 'sortable',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'width': {
+                  'name': 'width',
+                  'type': 'string',
+                  'required': false,
+                },
+                'header': {
+                  'name': 'header',
+                  'type': 'string',
+                  'required': false,
+                },
                 'colorMap': {
+                  'name': 'colorMap',
+                  'type': 'object',
+                  'required': false,
                   'items': {
                     'type': 'string',
                     'values': [
@@ -751,54 +1237,72 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                       'destructive',
                     ],
                   },
-                  'name': 'colorMap',
-                  'required': false,
-                  'type': 'object',
                 },
-                'format': {
-                  'name': 'format',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'date',
-                    'time',
-                    'datetime',
-                    'currency',
-                    'number',
-                    'boolean',
-                    'percent',
-                  ],
+              },
+            },
+          },
+          'title': {
+            'type': 'string',
+            'label': 'Title',
+            'description': 'title prop',
+            'tier': 'presentation',
+          },
+          'fields': {
+            'type': '[DetailPanelFieldsItem]',
+            'default': [
+              {
+                'icon': 'circle',
+                'name': 'Name',
+                'label': 'Label',
+                'relation': {
+                  'entity': 'Entity',
+                  'cardinality': 'one',
                 },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
+                'values': [
+                  'Item',
+                  'Item 2',
+                ],
+                'type': 'Type',
+                'format': 'date',
+                'variant': 'h3',
+              },
+              {
+                'type': 'Type 2',
+                'icon': 'circle',
+                'relation': {
+                  'cardinality': 'many',
+                  'entity': 'Entity 2',
                 },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'labels': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'labels',
-                  'required': false,
-                  'type': 'object',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': true,
-                  'type': 'string',
-                },
+                'variant': 'h4',
+                'format': 'time',
+                'name': 'Name 2',
+                'label': 'Label 2',
+                'values': [
+                  'Item',
+                  'Item 2',
+                ],
+              },
+            ],
+            'label': 'Fields',
+            'description': 'Fields to display: field names, or declared fields ({ name, label, variant, format, colorMap, labels })',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
                 'relation': {
                   'name': 'relation',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
+                    'entity': {
+                      'name': 'entity',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'cardinality': {
                       'name': 'cardinality',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                       'values': [
                         'one',
                         'many',
@@ -807,32 +1311,63 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                         'many-to-many',
                       ],
                     },
-                    'entity': {
-                      'name': 'entity',
-                      'required': true,
-                      'type': 'string',
-                    },
                   },
-                  'required': false,
+                },
+                'labels': {
+                  'name': 'labels',
                   'type': 'object',
-                },
-                'type': {
-                  'name': 'type',
                   'required': false,
-                  'type': 'string',
-                },
-                'values': {
                   'items': {
                     'type': 'string',
                   },
+                },
+                'values': {
                   'name': 'values',
-                  'required': false,
                   'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': false,
+                },
+                'colorMap': {
+                  'name': 'colorMap',
+                  'type': 'object',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                    'values': [
+                      'default',
+                      'primary',
+                      'secondary',
+                      'success',
+                      'warning',
+                      'danger',
+                      'error',
+                      'info',
+                      'neutral',
+                      'destructive',
+                    ],
+                  },
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
                 },
                 'variant': {
                   'name': 'variant',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'h3',
                     'h4',
@@ -845,178 +1380,47 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'progress',
                   ],
                 },
-              },
-              'type': 'object',
-            },
-            'label': 'Fields',
-            'tier': 'presentation',
-            'type': '[DetailPanelFieldsItem]',
-          },
-          'footer': {
-            'description': 'footer prop',
-            'label': 'Footer',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'isLoading': {
-            'default': false,
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'latitudeField': {
-            'description': 'Record fields holding the location (map).',
-            'label': 'Latitude Field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'lineItemColumns': {
-            'default': [],
-            'description': 'Columns of the line-items table (ledger).',
-            'items': {
-              'properties': {
-                'align': {
-                  'name': 'align',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'left',
-                    'center',
-                    'right',
-                  ],
-                },
-                'className': {
-                  'name': 'className',
-                  'required': false,
-                  'type': 'string',
-                },
-                'colorMap': {
-                  'items': {
-                    'type': 'string',
-                    'values': [
-                      'default',
-                      'primary',
-                      'secondary',
-                      'success',
-                      'warning',
-                      'danger',
-                      'error',
-                      'info',
-                      'neutral',
-                      'destructive',
-                    ],
-                  },
-                  'name': 'colorMap',
-                  'required': false,
-                  'type': 'object',
-                },
-                'field': {
-                  'name': 'field',
-                  'required': false,
-                  'type': 'string',
-                },
                 'format': {
                   'name': 'format',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
-                    'badge',
                     'date',
+                    'time',
+                    'datetime',
                     'currency',
                     'number',
-                    'percent',
                     'boolean',
+                    'percent',
                   ],
-                },
-                'header': {
-                  'name': 'header',
-                  'required': false,
-                  'type': 'string',
                 },
                 'icon': {
                   'name': 'icon',
-                  'required': false,
                   'type': 'string',
-                },
-                'key': {
-                  'name': 'key',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
                   'required': false,
-                  'type': 'string',
-                },
-                'labels': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'labels',
-                  'required': false,
-                  'type': 'object',
-                },
-                'sortable': {
-                  'name': 'sortable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'h3',
-                    'h4',
-                  ],
-                },
-                'weight': {
-                  'name': 'weight',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'normal',
-                    'medium',
-                    'semibold',
-                  ],
-                },
-                'width': {
-                  'name': 'width',
-                  'required': false,
-                  'type': 'string',
                 },
               },
-              'type': 'object',
             },
-            'label': 'Line Item Columns',
-            'tier': 'presentation',
-            'type': '[DetailPanelLineItemColumnsItem]',
           },
-          'lineItemsContent': {
-            'description': 'Line items composed in instead of `lineItems` — e.g. the child rows\' own trait (ledger).',
-            'label': 'Line Items Content',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'longitudeField': {
-            'description': 'longitudeField prop',
-            'label': 'Longitude Field',
-            'tier': 'presentation',
+          'ariaDescribedby': {
             'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
           'look': {
-            'default': 'panel',
-            'description': 'Page variant: panel (labelled fields, default), profile (person/member hero), showcase (image-first product/listing), workflow (lifecycle stepper + activity), map (location hero), ledger (document with line items + totals), conversation (thread beside the record), workspace (tabbed record).',
-            'label': 'Look',
-            'tier': 'presentation',
             'type': 'string',
+            'default': 'panel',
+            'label': 'Look',
+            'description': 'Page variant: panel (labelled fields, default), profile (person/member hero), showcase (image-first product/listing), workflow (lifecycle stepper + activity), map (location hero), ledger (document with line items + totals), conversation (thread beside the record), workspace (tabbed record).',
+            'tier': 'presentation',
             'values': [
               'panel',
               'profile',
@@ -1028,95 +1432,366 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               'workspace',
             ],
           },
-          'maxInlineActions': {
-            'default': 2,
-            'description': 'Max inline action buttons before the rest collapse into a \'⋯\' overflow menu (mirrors DataGrid\'s maxInlineActions). Defaults to 2 — primary + secondary visible, the rest under the menu — so every detail panel carries the same action pattern.',
-            'label': 'Max Inline Actions',
+          'footer': {
+            'type': 'node',
+            'label': 'Footer',
+            'description': 'footer prop',
             'tier': 'presentation',
-            'type': 'number',
-          },
-          'mediaField': {
-            'description': 'Record field holding the image, or list of images, the showcase look leads with.',
-            'label': 'Media Field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'mode': {
-            'description': 'Display mode (passed by compiler)',
-            'label': 'Mode',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'onTitleCommit': {
-            'default': '',
-            'description': 'When bound, the title becomes editable in place: clicking it swaps the heading for an input, Enter or blur commits, Escape reverts. Receives the committed title and the record\'s id so the host can persist a partial update. Unbound, the title stays a plain heading.',
-            'label': 'On Title Commit',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'pageProp': {
-            'description': 'Current page number',
-            'label': 'Page',
-            'synonyms': 'page',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'pageSize': {
-            'description': 'Number of items per page',
-            'label': 'Page Size',
-            'tier': 'presentation',
-            'type': 'number',
           },
           'position': {
-            'description': 'Panel position (for drawer/sidebar placement)',
-            'label': 'Position',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Position',
+            'description': 'Panel position (for drawer/sidebar placement)',
+            'tier': 'presentation',
             'values': [
               'left',
               'right',
             ],
           },
-          'relationsData': {
-            'default': {},
-            'description': 'Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names.',
+          'actions': {
+            'type': '[DetailPanelActionsItem]',
+            'default': [],
+            'label': 'Actions',
+            'description': 'Unified actions array - first action with variant=\'primary\' is the main action',
+            'tier': 'presentation',
             'items': {
-              'items': {
-                'properties': {
-                  'description': {
-                    'name': 'description',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'disabled': {
-                    'name': 'disabled',
-                    'required': false,
-                    'type': 'boolean',
-                  },
-                  'label': {
-                    'name': 'label',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  'value': {
-                    'name': 'value',
-                    'required': true,
+              'type': 'object',
+              'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+                'when': {
+                  'name': 'when',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+                'payload': {
+                  'name': 'payload',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
                     'type': 'string',
                   },
                 },
-                'type': 'object',
               },
-              'type': 'array',
             },
-            'label': 'Relations Data',
+          },
+          'avatar': {
+            'type': 'node',
+            'label': 'Avatar',
+            'description': 'avatar prop',
             'tier': 'presentation',
-            'type': 'Map<string,[DetailPanelRelationsDataValueItem]>',
+          },
+          'activityContent': {
+            'type': 'node',
+            'label': 'Activity Content',
+            'description': 'Activity composed in instead of `activity` — e.g. the record\'s own history trait (workflow).',
+            'tier': 'presentation',
+          },
+          'mediaField': {
+            'type': 'string',
+            'label': 'Media Field',
+            'description': 'Record field holding the image, or list of images, the showcase look leads with.',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+          },
+          'maxInlineActions': {
+            'type': 'number',
+            'default': 2,
+            'label': 'Max Inline Actions',
+            'description': 'Max inline action buttons before the rest collapse into a \'⋯\' overflow menu (mirrors DataGrid\'s maxInlineActions). Defaults to 2 — primary + secondary visible, the rest under the menu — so every detail panel carries the same action pattern.',
+            'tier': 'presentation',
+          },
+          'stageField': {
+            'type': 'string',
+            'label': 'Stage Field',
+            'description': 'Record field holding the current lifecycle stage (workflow).',
+            'tier': 'presentation',
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'ariaLabel': {
+            'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+          },
+          'longitudeField': {
+            'type': 'string',
+            'label': 'Longitude Field',
+            'description': 'longitudeField prop',
+            'tier': 'presentation',
+          },
+          'showActions': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Actions',
+            'description': 'When false, hides the action buttons + overflow menu (and the close ×). Defaults to true.',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'tabs': {
+            'type': '[DetailPanelTabsItem]',
+            'default': [],
+            'label': 'Tabs',
+            'description': 'Tabs after the overview tab, each listing declared field names (workspace).',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'fields': {
+                  'name': 'fields',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'content': {
+                  'name': 'content',
+                  'type': 'node',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'subtitle': {
+            'type': 'string',
+            'label': 'Subtitle',
+            'description': 'subtitle prop',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'lineItemsContent': {
+            'type': 'node',
+            'label': 'Line Items Content',
+            'description': 'Line items composed in instead of `lineItems` — e.g. the child rows\' own trait (ledger).',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'DetailPanelError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'fieldNames': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Field Names',
+            'description': 'Alias for fields - backwards compatibility',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
+          },
+          'skeleton': {
+            'type': 'string',
+            'default': 'detail',
+            'label': 'Skeleton',
+            'description': 'Skeleton drawn while loading, and the shape an empty slot shows while this element\'s server render is in flight (`none` opts out).',
+            'tier': 'presentation',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
+          'onTitleCommit': {
+            'type': 'event',
+            'default': '',
+            'label': 'On Title Commit',
+            'description': 'When bound, the title becomes editable in place: clicking it swaps the heading for an input, Enter or blur commits, Escape reverts. Receives the committed title and the record\'s id so the host can persist a partial update. Unbound, the title stays a plain heading.',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'ariaLabelledby': {
+            'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+          },
+          'coverField': {
+            'type': 'string',
+            'label': 'Cover Field',
+            'description': 'Record field holding the cover image (profile).',
+            'tier': 'presentation',
+          },
+          'selfFetch': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Fetch its own row on mount?',
+            'description': 'true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load.',
+            'tier': 'internal',
+          },
+          'slideOver': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Slide Over',
+            'description': 'slideOver prop',
+            'tier': 'presentation',
+          },
+          'surface': {
+            'type': 'string',
+            'default': 'auto',
+            'label': 'Surface',
+            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out. Inline mode only; the slide-over is itself a surface.',
+            'tier': 'presentation',
+            'values': [
+              'auto',
+              'none',
+            ],
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -1201,260 +1876,106 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               'treeitem',
             ],
           },
-          'searchValue': {
-            'description': 'Current search query value',
-            'label': 'Search Value',
+          'activeFilters': {
+            'type': 'Map<string,string>',
+            'default': {},
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'sections': {
-            'default': [],
-            'description': 'sections prop',
-            'items': {
-              'properties': {
-                'fields': {
-                  'items': {
-                    'properties': {
-                      'copyable': {
-                        'name': 'copyable',
-                        'required': false,
-                        'type': 'boolean',
-                      },
-                      'icon': {
-                        'name': 'icon',
-                        'required': false,
-                        'type': 'string',
-                      },
-                      'label': {
-                        'name': 'label',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      'value': {
-                        'name': 'value',
-                        'required': true,
-                        'type': 'node',
-                      },
-                    },
-                    'type': 'object',
-                  },
-                  'name': 'fields',
-                  'required': true,
-                  'type': 'array',
-                },
-                'title': {
-                  'name': 'title',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Sections',
-            'tier': 'presentation',
-            'type': '[DetailPanelSectionsItem]',
-          },
-          'selectedIds': {
-            'default': [],
-            'description': 'Currently selected item IDs',
             'items': {
               'type': 'string',
             },
-            'label': 'Selected Ids',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'selfFetch': {
-            'default': true,
-            'description': 'true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load.',
-            'label': 'Fetch its own row on mount?',
-            'tier': 'internal',
-            'type': 'boolean',
-          },
-          'showActions': {
-            'default': true,
-            'description': 'When false, hides the action buttons + overflow menu (and the close ×). Defaults to true.',
-            'label': 'Show Actions',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'skeleton': {
-            'default': 'detail',
-            'description': 'Skeleton drawn while loading, and the shape an empty slot shows while this element\'s server render is in flight (`none` opts out).',
-            'label': 'Skeleton',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'header',
-              'table',
-              'list',
-              'grid',
-              'detail',
-              'stats',
-              'form',
-              'card',
-              'text',
-              'none',
-            ],
-          },
-          'slideOver': {
-            'default': false,
-            'description': 'slideOver prop',
-            'label': 'Slide Over',
-            'tier': 'presentation',
-            'type': 'boolean',
           },
           'sortBy': {
-            'description': 'Current sort field',
+            'type': 'string',
             'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
-            'type': 'string',
           },
-          'sortDirection': {
-            'description': 'Current sort direction',
-            'label': 'Sort Direction',
-            'tier': 'presentation',
+          'dir': {
             'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
             'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'stageField': {
-            'description': 'Record field holding the current lifecycle stage (workflow).',
-            'label': 'Stage Field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'stages': {
-            'default': [],
-            'description': 'The lifecycle in order, `{ value, label }` per stage (workflow).',
-            'items': {
-              'properties': {
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'value': {
-                  'name': 'value',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Stages',
-            'tier': 'presentation',
-            'type': '[DetailPanelStagesItem]',
-          },
-          'status': {
-            'description': 'status prop',
-            'label': 'Status',
-            'properties': {
-              'label': {
-                'name': 'label',
-                'required': true,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'default',
-                  'success',
-                  'warning',
-                  'danger',
-                  'info',
-                ],
-              },
-            },
-            'tier': 'presentation',
-            'type': 'DetailPanelStatus',
-          },
-          'subtitle': {
-            'description': 'subtitle prop',
-            'label': 'Subtitle',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'surface': {
-            'default': 'auto',
-            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out. Inline mode only; the slide-over is itself a surface.',
-            'label': 'Surface',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
+              'ltr',
+              'rtl',
               'auto',
-              'none',
             ],
           },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
+          'threadContent': {
+            'type': 'node',
+            'label': 'Thread Content',
+            'description': 'The thread composed in instead of `thread` — e.g. the replies\' own trait with its composer (conversation).',
             'tier': 'presentation',
-            'type': 'number',
           },
-          'tabs': {
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
+          },
+          'totals': {
+            'type': '[DetailPanelTotalsItem]',
             'default': [],
-            'description': 'Tabs after the overview tab, each listing declared field names (workspace).',
+            'label': 'Totals',
+            'description': 'Record fields shown as the document\'s totals, in order (ledger).',
+            'tier': 'presentation',
             'items': {
+              'type': 'object',
               'properties': {
-                'content': {
-                  'name': 'content',
+                'format': {
+                  'name': 'format',
+                  'type': 'string',
                   'required': false,
-                  'type': 'node',
+                  'values': [
+                    'date',
+                    'time',
+                    'datetime',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
                 },
-                'fields': {
+                'values': {
+                  'name': 'values',
+                  'type': 'array',
+                  'required': false,
                   'items': {
                     'type': 'string',
                   },
-                  'name': 'fields',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
                   'required': false,
-                  'type': 'array',
                 },
-                'id': {
-                  'name': 'id',
-                  'required': true,
+                'variant': {
+                  'name': 'variant',
                   'type': 'string',
+                  'required': false,
+                  'values': [
+                    'h3',
+                    'h4',
+                    'overline',
+                    'avatar',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
                 },
-                'label': {
-                  'name': 'label',
-                  'required': true,
+                'type': {
+                  'name': 'type',
                   'type': 'string',
+                  'required': false,
                 },
-              },
-              'type': 'object',
-            },
-            'label': 'Tabs',
-            'tier': 'presentation',
-            'type': '[DetailPanelTabsItem]',
-          },
-          'threadContent': {
-            'description': 'The thread composed in instead of `thread` — e.g. the replies\' own trait with its composer (conversation).',
-            'label': 'Thread Content',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'title': {
-            'description': 'title prop',
-            'label': 'Title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'totalCount': {
-            'description': 'Total number of items',
-            'label': 'Total Count',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'totals': {
-            'default': [],
-            'description': 'Record fields shown as the document\'s totals, in order (ledger).',
-            'items': {
-              'properties': {
                 'colorMap': {
+                  'name': 'colorMap',
+                  'type': 'object',
+                  'required': false,
                   'items': {
                     'type': 'string',
                     'values': [
@@ -1470,54 +1991,21 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                       'destructive',
                     ],
                   },
-                  'name': 'colorMap',
-                  'required': false,
-                  'type': 'object',
-                },
-                'format': {
-                  'name': 'format',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'date',
-                    'time',
-                    'datetime',
-                    'currency',
-                    'number',
-                    'boolean',
-                    'percent',
-                  ],
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'labels': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'labels',
-                  'required': false,
-                  'type': 'object',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': true,
-                  'type': 'string',
                 },
                 'relation': {
                   'name': 'relation',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
+                    'entity': {
+                      'name': 'entity',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'cardinality': {
                       'name': 'cardinality',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                       'values': [
                         'one',
                         'many',
@@ -1526,750 +2014,262 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                         'many-to-many',
                       ],
                     },
-                    'entity': {
-                      'name': 'entity',
-                      'required': true,
-                      'type': 'string',
-                    },
                   },
-                  'required': false,
+                },
+                'labels': {
+                  'name': 'labels',
                   'type': 'object',
-                },
-                'type': {
-                  'name': 'type',
                   'required': false,
-                  'type': 'string',
-                },
-                'values': {
                   'items': {
                     'type': 'string',
                   },
-                  'name': 'values',
-                  'required': false,
-                  'type': 'array',
                 },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
+                'label': {
+                  'name': 'label',
                   'type': 'string',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'closeEvent': {
+            'type': 'event',
+            'default': 'CLOSE',
+            'label': 'Close Event',
+            'description': 'The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.',
+            'tier': 'presentation',
+          },
+          'ariaLive': {
+            'type': 'string',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'avatarField': {
+            'type': 'string',
+            'label': 'Avatar Field',
+            'description': 'Record field holding the avatar image. The profile look always shows an avatar, with the title\'s initials when this is unset or empty.',
+            'tier': 'presentation',
+          },
+          'activity': {
+            'type': '[DetailPanelActivityItem]',
+            'default': [],
+            'label': 'Activity',
+            'description': 'Activity entries shown under the record (workflow).',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'tags': {
+                  'name': 'tags',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                'status': {
+                  'name': 'status',
+                  'type': 'string',
+                  'required': false,
                   'values': [
-                    'h3',
-                    'h4',
-                    'overline',
-                    'avatar',
-                    'body',
-                    'caption',
-                    'badge',
-                    'small',
-                    'progress',
+                    'complete',
+                    'active',
+                    'pending',
+                    'error',
                   ],
                 },
-              },
-              'type': 'object',
-            },
-            'label': 'Totals',
-            'tier': 'presentation',
-            'type': '[DetailPanelTotalsItem]',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'width': {
-            'description': 'Panel width (CSS value, e.g., \'400px\', \'50%\')',
-            'label': 'Width',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-        },
-        'effectRow': [
-          {
-            'kind': 'fetch',
-            'resource': 'DetailPanelItem',
-          },
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'closeEvent',
-            'description': 'The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.',
-            'event': '@config.closeEvent',
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'description': 'DetailPanel row finished loading; payload.data holds the single row.',
-            'event': 'DetailPanelLoaded',
-            'payloadSchema': [
-              {
-                'entity': 'DetailPanelItem',
-                'name': 'data',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'authorName',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'content',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'authorAvatarUrl',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'postedAt',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'voteCount',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'userVote',
-                    'type': 'string',
-                    'values': [
-                      'up',
-                      'down',
-                      'none',
-                    ],
-                  },
-                  {
-                    'name': 'collapsed',
-                    'type': 'boolean',
-                  },
-                  {
-                    'name': 'replies',
-                    'type': '[ReplyNodeRow]',
-                  },
-                ],
-                'type': 'object',
-              },
-            ],
-            'scope': 'internal',
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'essential',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'DetailPanelItem',
-        'name': 'DetailPanelRender',
-        'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'description': 'Mount payload; a host that routes to this panel by id (a :id page param) passes it here.',
-              'key': 'INIT',
-              'name': 'Initialize',
-              'payloadSchema': [
-                {
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
+                'date': {
+                  'name': 'date',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
                   'name': 'id',
                   'type': 'string',
+                  'required': true,
                 },
-              ],
-              'tier': 'internal',
-            },
-            {
-              'description': 'DetailPanel row finished loading; payload.data holds the single row.',
-              'key': 'DetailPanelLoaded',
-              'name': 'Detail panel loaded',
-              'payloadSchema': [
-                {
-                  'entity': 'DetailPanelItem',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'authorName',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'content',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'authorAvatarUrl',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'postedAt',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'voteCount',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'userVote',
-                      'type': 'string',
-                      'values': [
-                        'up',
-                        'down',
-                        'none',
-                      ],
-                    },
-                    {
-                      'name': 'collapsed',
-                      'type': 'boolean',
-                    },
-                    {
-                      'name': 'replies',
-                      'type': '[ReplyNodeRow]',
-                    },
-                  ],
-                  'type': 'object',
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
                 },
-              ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'essential',
+              },
             },
-            {
-              'description': 'The event of the declared action that dismisses the panel. The matching action renders as the header close ×; omitted, no × is drawn.',
-              'key': '@config.closeEvent',
-              'name': '@config.close event',
-              'tier': 'essential',
+          },
+          'pageProp': {
+            'type': 'number',
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'backAction': {
+            'type': 'DetailPanelBackAction',
+            'label': 'Back Action',
+            'description': 'Navigation-back affordance. Renders top-LEFT before the title (OS/back convention — Almadar_UX §8.4), spatially separated from the right-aligned action buttons + close X. Never inferred from actions[] labels.',
+            'tier': 'presentation',
+            'properties': {
+              'icon': {
+                'name': 'icon',
+                'type': 'string',
+                'required': false,
+              },
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'primary',
+                  'secondary',
+                  'ghost',
+                  'danger',
+                ],
+              },
+              'label': {
+                'name': 'label',
+                'type': 'string',
+                'required': true,
+              },
+              'payload': {
+                'name': 'payload',
+                'type': 'SExpr',
+                'required': false,
+              },
+              'event': {
+                'name': 'event',
+                'type': 'event',
+                'required': false,
+              },
+              'when': {
+                'name': 'when',
+                'type': 'SExpr',
+                'required': false,
+              },
+              'navigatesTo': {
+                'name': 'navigatesTo',
+                'type': 'string',
+                'required': false,
+              },
             },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'resolving',
-            },
-            {
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('DetailPanelItem' satisfies _StdUiDetailPanelEntityName),
-                  {
-                    'emit': {
-                      'success': 'DetailPanelLoaded',
+          },
+          'latitudeField': {
+            'type': 'string',
+            'label': 'Latitude Field',
+            'description': 'Record fields holding the location (map).',
+            'tier': 'presentation',
+          },
+          'sections': {
+            'type': '[DetailPanelSectionsItem]',
+            'default': [],
+            'label': 'Sections',
+            'description': 'sections prop',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                'fields': {
+                  'name': 'fields',
+                  'type': 'array',
+                  'required': true,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'copyable': {
+                        'name': 'copyable',
+                        'type': 'boolean',
+                        'required': false,
+                      },
+                      'value': {
+                        'name': 'value',
+                        'type': 'node',
+                        'required': true,
+                      },
+                      'label': {
+                        'name': 'label',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'icon': {
+                        'name': 'icon',
+                        'type': 'string',
+                        'required': false,
+                      },
                     },
-                    'id': '@payload.id',
                   },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'actions': [
-                      'array/filter',
-                      '@config.actions',
-                      [
-                        'fn',
-                        'action',
-                        [
-                          'or',
-                          [
-                            '=',
-                            [
-                              'array/len',
-                              [
-                                'object/get',
-                                '@action',
-                                'roles',
-                                [],
-                              ],
-                            ],
-                            0,
-                          ],
-                          [
-                            'array/includes',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                            '@config.viewerRole',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'activeFilters': '@config.activeFilters',
-                    'activity': '@config.activity',
-                    'activityContent': '@config.activityContent',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'avatar': '@config.avatar',
-                    'avatarField': '@config.avatarField',
-                    'backAction': '@config.backAction',
-                    'className': '@config.className',
-                    'closeEvent': '@config.closeEvent',
-                    'coverField': '@config.coverField',
-                    'dir': '@config.dir',
-                    'displayFields': '@config.displayFields',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'fieldNames': '@config.fieldNames',
-                    'fields': '@config.fields',
-                    'footer': '@config.footer',
-                    'initialData': '@entity',
-                    'isLoading': '@config.isLoading',
-                    'lang': '@config.lang',
-                    'latitudeField': '@config.latitudeField',
-                    'lineItemColumns': '@config.lineItemColumns',
-                    'lineItems': '@entity',
-                    'lineItemsContent': '@config.lineItemsContent',
-                    'longitudeField': '@config.longitudeField',
-                    'look': '@config.look',
-                    'maxInlineActions': '@config.maxInlineActions',
-                    'mediaField': '@config.mediaField',
-                    'mode': '@config.mode',
-                    'onTitleCommit': '@config.onTitleCommit',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'position': '@config.position',
-                    'relationsData': '@config.relationsData',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'sections': '@config.sections',
-                    'selectedIds': '@config.selectedIds',
-                    'showActions': '@config.showActions',
-                    'skeleton': '@config.skeleton',
-                    'slideOver': '@config.slideOver',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'stageField': '@config.stageField',
-                    'stages': '@config.stages',
-                    'status': '@config.status',
-                    'subtitle': '@config.subtitle',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'tabs': '@config.tabs',
-                    'thread': '@entity',
-                    'threadContent': '@config.threadContent',
-                    'title': '@config.title',
-                    'totalCount': '@config.totalCount',
-                    'totals': '@config.totals',
-                    'type': 'detail-panel',
-                    'width': '@config.width',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'resolving',
-              'guard': [
-                'and',
-                '@config.selfFetch',
-                [
-                  '!=',
-                  [
-                    'str/default',
-                    '@payload.id',
-                    '',
-                  ],
-                  '',
-                ],
-                [
-                  '!=',
-                  '@config.mode',
-                  'create',
-                ],
-              ],
-              'to': 'idle',
+                },
+              },
             },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'actions': [
-                      'array/filter',
-                      '@config.actions',
-                      [
-                        'fn',
-                        'action',
-                        [
-                          'or',
-                          [
-                            '=',
-                            [
-                              'array/len',
-                              [
-                                'object/get',
-                                '@action',
-                                'roles',
-                                [],
-                              ],
-                            ],
-                            0,
-                          ],
-                          [
-                            'array/includes',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                            '@config.viewerRole',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'activeFilters': '@config.activeFilters',
-                    'activity': '@config.activity',
-                    'activityContent': '@config.activityContent',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'avatar': '@config.avatar',
-                    'avatarField': '@config.avatarField',
-                    'backAction': '@config.backAction',
-                    'className': '@config.className',
-                    'closeEvent': '@config.closeEvent',
-                    'coverField': '@config.coverField',
-                    'dir': '@config.dir',
-                    'displayFields': '@config.displayFields',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'fieldNames': '@config.fieldNames',
-                    'fields': '@config.fields',
-                    'footer': '@config.footer',
-                    'initialData': '@entity',
-                    'isLoading': '@config.isLoading',
-                    'lang': '@config.lang',
-                    'latitudeField': '@config.latitudeField',
-                    'lineItemColumns': '@config.lineItemColumns',
-                    'lineItems': '@entity',
-                    'lineItemsContent': '@config.lineItemsContent',
-                    'longitudeField': '@config.longitudeField',
-                    'look': '@config.look',
-                    'maxInlineActions': '@config.maxInlineActions',
-                    'mediaField': '@config.mediaField',
-                    'mode': '@config.mode',
-                    'onTitleCommit': '@config.onTitleCommit',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'position': '@config.position',
-                    'relationsData': '@config.relationsData',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'sections': '@config.sections',
-                    'selectedIds': '@config.selectedIds',
-                    'showActions': '@config.showActions',
-                    'skeleton': '@config.skeleton',
-                    'slideOver': '@config.slideOver',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'stageField': '@config.stageField',
-                    'stages': '@config.stages',
-                    'status': '@config.status',
-                    'subtitle': '@config.subtitle',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'tabs': '@config.tabs',
-                    'thread': '@entity',
-                    'threadContent': '@config.threadContent',
-                    'title': '@config.title',
-                    'totalCount': '@config.totalCount',
-                    'totals': '@config.totals',
-                    'type': 'detail-panel',
-                    'width': '@config.width',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'resolving',
-              'guard': [
-                'not',
-                [
-                  'and',
-                  '@config.selfFetch',
-                  [
-                    '!=',
-                    [
-                      'str/default',
-                      '@payload.id',
-                      '',
-                    ],
-                    '',
-                  ],
-                  [
-                    '!=',
-                    '@config.mode',
-                    'create',
-                  ],
-                ],
-              ],
-              'to': 'idle',
+          },
+          'width': {
+            'type': 'string',
+            'label': 'Width',
+            'description': 'Panel width (CSS value, e.g., \'400px\', \'50%\')',
+            'tier': 'presentation',
+          },
+          'displayFields': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Display Fields',
+            'description': 'Display fields (alias for fields)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
             },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'actions': [
-                      'array/filter',
-                      '@config.actions',
-                      [
-                        'fn',
-                        'action',
-                        [
-                          'or',
-                          [
-                            '=',
-                            [
-                              'array/len',
-                              [
-                                'object/get',
-                                '@action',
-                                'roles',
-                                [],
-                              ],
-                            ],
-                            0,
-                          ],
-                          [
-                            'array/includes',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                            '@config.viewerRole',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'activeFilters': '@config.activeFilters',
-                    'activity': '@config.activity',
-                    'activityContent': '@config.activityContent',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'avatar': '@config.avatar',
-                    'avatarField': '@config.avatarField',
-                    'backAction': '@config.backAction',
-                    'className': '@config.className',
-                    'closeEvent': '@config.closeEvent',
-                    'coverField': '@config.coverField',
-                    'dir': '@config.dir',
-                    'displayFields': '@config.displayFields',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'fieldNames': '@config.fieldNames',
-                    'fields': '@config.fields',
-                    'footer': '@config.footer',
-                    'initialData': '@entity',
-                    'isLoading': '@config.isLoading',
-                    'lang': '@config.lang',
-                    'latitudeField': '@config.latitudeField',
-                    'lineItemColumns': '@config.lineItemColumns',
-                    'lineItems': '@entity',
-                    'lineItemsContent': '@config.lineItemsContent',
-                    'longitudeField': '@config.longitudeField',
-                    'look': '@config.look',
-                    'maxInlineActions': '@config.maxInlineActions',
-                    'mediaField': '@config.mediaField',
-                    'mode': '@config.mode',
-                    'onTitleCommit': '@config.onTitleCommit',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'position': '@config.position',
-                    'relationsData': '@config.relationsData',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'sections': '@config.sections',
-                    'selectedIds': '@config.selectedIds',
-                    'showActions': '@config.showActions',
-                    'skeleton': '@config.skeleton',
-                    'slideOver': '@config.slideOver',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'stageField': '@config.stageField',
-                    'stages': '@config.stages',
-                    'status': '@config.status',
-                    'subtitle': '@config.subtitle',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'tabs': '@config.tabs',
-                    'thread': '@entity',
-                    'threadContent': '@config.threadContent',
-                    'title': '@config.title',
-                    'totalCount': '@config.totalCount',
-                    'totals': '@config.totals',
-                    'type': 'detail-panel',
-                    'width': '@config.width',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'actions': [
-                      'array/filter',
-                      '@config.actions',
-                      [
-                        'fn',
-                        'action',
-                        [
-                          'or',
-                          [
-                            '=',
-                            [
-                              'array/len',
-                              [
-                                'object/get',
-                                '@action',
-                                'roles',
-                                [],
-                              ],
-                            ],
-                            0,
-                          ],
-                          [
-                            'array/includes',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                            '@config.viewerRole',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'activeFilters': '@config.activeFilters',
-                    'activity': '@config.activity',
-                    'activityContent': '@config.activityContent',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'avatar': '@config.avatar',
-                    'avatarField': '@config.avatarField',
-                    'backAction': '@config.backAction',
-                    'className': '@config.className',
-                    'closeEvent': '@config.closeEvent',
-                    'coverField': '@config.coverField',
-                    'dir': '@config.dir',
-                    'displayFields': '@config.displayFields',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@payload.data',
-                    'error': '@config.error',
-                    'fieldNames': '@config.fieldNames',
-                    'fields': '@config.fields',
-                    'footer': '@config.footer',
-                    'initialData': '@payload.data',
-                    'isLoading': '@config.isLoading',
-                    'lang': '@config.lang',
-                    'latitudeField': '@config.latitudeField',
-                    'lineItemColumns': '@config.lineItemColumns',
-                    'lineItems': '@entity',
-                    'lineItemsContent': '@config.lineItemsContent',
-                    'longitudeField': '@config.longitudeField',
-                    'look': '@config.look',
-                    'maxInlineActions': '@config.maxInlineActions',
-                    'mediaField': '@config.mediaField',
-                    'mode': '@config.mode',
-                    'onTitleCommit': '@config.onTitleCommit',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'position': '@config.position',
-                    'relationsData': '@config.relationsData',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'sections': '@config.sections',
-                    'selectedIds': '@config.selectedIds',
-                    'showActions': '@config.showActions',
-                    'skeleton': '@config.skeleton',
-                    'slideOver': '@config.slideOver',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'stageField': '@config.stageField',
-                    'stages': '@config.stages',
-                    'status': '@config.status',
-                    'subtitle': '@config.subtitle',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'tabs': '@config.tabs',
-                    'thread': '@entity',
-                    'threadContent': '@config.threadContent',
-                    'title': '@config.title',
-                    'totalCount': '@config.totalCount',
-                    'totals': '@config.totals',
-                    'type': 'detail-panel',
-                    'width': '@config.width',
-                  },
-                ],
-              ],
-              'event': 'DetailPanelLoaded',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
+          },
+          'mode': {
+            'type': 'string',
+            'label': 'Mode',
+            'description': 'Display mode (passed by compiler)',
+            'tier': 'presentation',
+          },
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

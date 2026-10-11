@@ -46,58 +46,58 @@ export interface StdUiHeaderSearchPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiHeaderConfig {
-  actions?: PatternValue;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  brandHref?: string;
-  /** Default: `"KFlow"` */
-  brandName?: string;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
+  searchPlaceholder?: string;
+  userName?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  isLoading?: boolean;
-  /** Default: `false` */
-  isMenuOpen?: boolean;
-  lang?: string;
-  logo?: PatternValue;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
-  logoSrc?: unknown;
-  /** Default: `"compact-bar"` */
-  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
-  /** Default: `[]` */
-  navigationItems?: EntityRow[];
   /** Default: `"LOGO_CLICK"` */
   onLogoClick?: string;
+  tabIndex?: number;
+  enterDelay?: number;
+  /** Default: `"mobile"` */
+  variant?: 'mobile' | 'desktop';
+  userAvatar?: EntityRow;
+  ariaBusy?: boolean;
   /** Default: `"MENU_TOGGLE"` */
   onMenuToggle?: string;
+  className?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `false` */
+  isMenuOpen?: boolean;
+  ariaSelected?: boolean;
+  /** Default: `[]` */
+  navigationItems?: EntityRow[];
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `true` */
+  sticky?: boolean;
+  ariaDescribedby?: string;
+  /** Default: `"KFlow"` */
+  brandName?: string;
+  actions?: PatternValue;
+  error?: EntityRow;
+  ariaLabelledby?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  lang?: string;
+  ariaExpanded?: boolean;
+  /** Default: `"compact-bar"` */
+  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
+  isLoading?: boolean;
   /** Default: `"SEARCH"` */
   onSearch?: string;
-  /** Default: `"USER_CLICK"` */
-  onUserClick?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  searchPlaceholder?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  brandHref?: string;
   /** Default: `true` */
   showMenuToggle?: boolean;
   /** Default: `false` */
   showSearch?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `true` */
-  sticky?: boolean;
-  tabIndex?: number;
-  userAvatar?: EntityRow;
-  userName?: string;
-  /** Default: `"mobile"` */
-  variant?: 'mobile' | 'desktop';
+  ariaHidden?: boolean;
+  logo?: PatternValue;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
+  logoSrc?: unknown;
+  ariaLabel?: string;
+  /** Default: `"USER_CLICK"` */
+  onUserClick?: string;
 }
 
 /**

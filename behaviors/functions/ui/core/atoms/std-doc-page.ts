@@ -39,26 +39,26 @@ export type StdDocPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdDocPageConfig {
-  /** Default: `{"children":[],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `"Documentation"` */
+  sidebarLabel?: string;
+  /** Default: `{"children":[],"direction":"vertical","type":"stack","gap":"lg"}` */
   content?: unknown;
   /** Default: `[]` */
   crumbs?: EntityRow[];
-  /** Default: `"ltr"` */
-  direction?: 'ltr' | 'rtl';
   /** Default: `""` */
   lede?: string;
-  /** Default: `[]` */
-  navItems?: EntityRow[];
+  /** Default: `"ltr"` */
+  direction?: 'ltr' | 'rtl';
   /** Default: `{"href":"","label":""}` */
   next?: EntityRow;
+  /** Default: `[]` */
+  toc?: EntityRow[];
   /** Default: `{"href":"","label":""}` */
   prev?: EntityRow;
-  /** Default: `"Documentation"` */
-  sidebarLabel?: string;
   /** Default: `"Untitled page"` */
   title?: string;
   /** Default: `[]` */
-  toc?: EntityRow[];
+  navItems?: EntityRow[];
   /** Default: `"On this page"` */
   tocLabel?: string;
 }

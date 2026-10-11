@@ -53,64 +53,64 @@ export interface StdUiMediaGalleryMediaGalleryLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiMediaGalleryConfig {
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  /** Default: `{}` */
-  activeFilters?: Record<string, TraitConfig>;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `"square"` */
-  aspectRatio?: 'square' | 'landscape' | 'portrait';
-  /** Default: `"caption"` */
-  captionField?: string;
-  className?: string;
-  /** Default: `3` */
-  columns?: number;
-  dir?: 'ltr' | 'rtl' | 'auto';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  items?: EntityRow[];
-  lang?: string;
-  pageProp?: number;
-  pageSize?: number;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  searchValue?: string;
+  ariaLabelledby?: string;
+  /** Default: `""` */
+  viewerRole?: string;
   /** Default: `false` */
   selectable?: boolean;
+  ariaSelected?: boolean;
+  /** Default: `[]` */
+  selectedItems?: string[];
+  ariaBusy?: boolean;
+  error?: EntityRow;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"square"` */
+  aspectRatio?: 'square' | 'landscape' | 'portrait';
+  totalCount?: number;
+  lang?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  title?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  ariaLabel?: string;
+  /** Default: `true` */
+  selfFetch?: boolean;
+  /** Default: `3` */
+  columns?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaHidden?: boolean;
+  /** Default: `{}` */
+  activeFilters?: Record<string, TraitConfig>;
+  searchValue?: string;
+  tabIndex?: number;
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"caption"` */
+  captionField?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  pageSize?: number;
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `[]` */
-  selectedItems?: string[];
-  /** Default: `"SELECTION"` */
-  selectionEvent?: string;
-  /** Default: `true` */
-  selfFetch?: boolean;
-  /** Default: `false` */
-  showUpload?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `"src"` */
-  srcField?: string;
+  items?: EntityRow[];
+  ariaLive?: 'off' | 'polite' | 'assertive';
   /** Default: `"auto"` */
   surface?: 'auto' | 'none';
-  tabIndex?: number;
-  title?: string;
-  totalCount?: number;
-  /** Default: `""` */
-  viewerRole?: string;
+  /** Default: `false` */
+  showUpload?: boolean;
+  pageProp?: number;
+  sortBy?: string;
+  enterDelay?: number;
+  ariaExpanded?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"SELECTION"` */
+  selectionEvent?: string;
+  /** Default: `"src"` */
+  srcField?: string;
+  className?: string;
 }
 
 type _StdUiMediaGalleryEntityName = 'MediaGalleryItem';
@@ -177,8 +177,8 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -189,76 +189,524 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'actions': {
-            'default': [],
-            'description': 'Actions',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'required': false,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Actions',
-            'tier': 'presentation',
-            'type': '[MediaGalleryActionsItem]',
+        'name': 'MediaGalleryRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'MediaGalleryItem',
           },
-          'activeFilters': {
-            'default': {},
-            'description': 'Active filters',
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
+        'category': 'interaction',
+        'linkedEntity': 'MediaGalleryItem',
+        'emits': [
+          {
+            'event': '@config.selectionEvent',
+            'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'selection',
+                'type': '[string]',
+                'required': true,
+              },
+            ],
+            'definerKnob': 'selectionEvent',
+          },
+          {
+            'event': 'MediaGalleryLoaded',
+            'description': 'MediaGallery rows finished loading; payload.data holds the collection.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[object]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+                'entity': 'MediaGalleryItem',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'MediaGalleryLoaded',
+              'name': 'Media gallery loaded',
+              'description': 'MediaGallery rows finished loading; payload.data holds the collection.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'MediaGalleryItem',
+                },
+              ],
+            },
+            {
+              'key': '@config.selectionEvent',
+              'name': '@config.selection event',
+              'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'selection',
+                  'type': '[string]',
+                  'required': true,
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': '@config.selfFetch',
+              'effects': [
+                [
+                  'fetch',
+                  ('MediaGalleryItem' satisfies _StdUiMediaGalleryEntityName),
+                  {
+                    'emit': {
+                      'success': 'MediaGalleryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'srcField': '@config.srcField',
+                    'skeleton': '@config.skeleton',
+                    'activeFilters': '@config.activeFilters',
+                    'columns': '@config.columns',
+                    'selectable': '@config.selectable',
+                    'aspectRatio': '@config.aspectRatio',
+                    'isLoading': '@config.isLoading',
+                    'aria-busy': '@config.ariaBusy',
+                    'title': '@config.title',
+                    'totalCount': '@config.totalCount',
+                    'aria-selected': '@config.ariaSelected',
+                    'sortBy': '@config.sortBy',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'enterDelay': '@config.enterDelay',
+                    'aria-label': '@config.ariaLabel',
+                    'className': '@config.className',
+                    'tabIndex': '@config.tabIndex',
+                    'selectionEvent': '@config.selectionEvent',
+                    'error': '@config.error',
+                    'lang': '@config.lang',
+                    'role': '@config.role',
+                    'showUpload': '@config.showUpload',
+                    'page': '@config.pageProp',
+                    'selectedIds': '@config.selectedIds',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'entity': '@entity',
+                    'aria-live': '@config.ariaLive',
+                    'items': '@config.items',
+                    'type': 'media-gallery',
+                    'surface': '@config.surface',
+                    'selectedItems': '@config.selectedItems',
+                    'dir': '@config.dir',
+                    'pageSize': '@config.pageSize',
+                    'enter': '@config.enter',
+                    'captionField': '@config.captionField',
+                    'sortDirection': '@config.sortDirection',
+                    'searchValue': '@config.searchValue',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-hidden': '@config.ariaHidden',
+                    'aria-pressed': '@config.ariaPressed',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'page': '@config.pageProp',
+                    'captionField': '@config.captionField',
+                    'enter': '@config.enter',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'title': '@config.title',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'tabIndex': '@config.tabIndex',
+                    'enterDelay': '@config.enterDelay',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'aria-pressed': '@config.ariaPressed',
+                    'selectionEvent': '@config.selectionEvent',
+                    'items': '@config.items',
+                    'activeFilters': '@config.activeFilters',
+                    'dir': '@config.dir',
+                    'aspectRatio': '@config.aspectRatio',
+                    'selectable': '@config.selectable',
+                    'selectedIds': '@config.selectedIds',
+                    'aria-busy': '@config.ariaBusy',
+                    'lang': '@config.lang',
+                    'error': '@config.error',
+                    'selectedItems': '@config.selectedItems',
+                    'sortDirection': '@config.sortDirection',
+                    'srcField': '@config.srcField',
+                    'type': 'media-gallery',
+                    'role': '@config.role',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'searchValue': '@config.searchValue',
+                    'entity': '@entity',
+                    'showUpload': '@config.showUpload',
+                    'surface': '@config.surface',
+                    'aria-live': '@config.ariaLive',
+                    'aria-selected': '@config.ariaSelected',
+                    'aria-hidden': '@config.ariaHidden',
+                    'pageSize': '@config.pageSize',
+                    'aria-label': '@config.ariaLabel',
+                    'skeleton': '@config.skeleton',
+                    'aria-current': '@config.ariaCurrent',
+                    'columns': '@config.columns',
+                    'totalCount': '@config.totalCount',
+                    'isLoading': '@config.isLoading',
+                    'sortBy': '@config.sortBy',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'MediaGalleryLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'dir': '@config.dir',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'totalCount': '@config.totalCount',
+                    'aria-pressed': '@config.ariaPressed',
+                    'searchValue': '@config.searchValue',
+                    'captionField': '@config.captionField',
+                    'entity': '@payload.data',
+                    'tabIndex': '@config.tabIndex',
+                    'enter': '@config.enter',
+                    'sortBy': '@config.sortBy',
+                    'activeFilters': '@config.activeFilters',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-current': '@config.ariaCurrent',
+                    'lang': '@config.lang',
+                    'srcField': '@config.srcField',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'sortDirection': '@config.sortDirection',
+                    'surface': '@config.surface',
+                    'page': '@config.pageProp',
+                    'title': '@config.title',
+                    'items': '@config.items',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aspectRatio': '@config.aspectRatio',
+                    'skeleton': '@config.skeleton',
+                    'aria-hidden': '@config.ariaHidden',
+                    'className': '@config.className',
+                    'pageSize': '@config.pageSize',
+                    'selectable': '@config.selectable',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'type': 'media-gallery',
+                    'enterDelay': '@config.enterDelay',
+                    'selectedIds': '@config.selectedIds',
+                    'aria-selected': '@config.ariaSelected',
+                    'selectionEvent': '@config.selectionEvent',
+                    'error': '@config.error',
+                    'columns': '@config.columns',
+                    'aria-busy': '@config.ariaBusy',
+                    'selectedItems': '@config.selectedItems',
+                    'role': '@config.role',
+                    'aria-live': '@config.ariaLive',
+                    'isLoading': '@config.isLoading',
+                    'showUpload': '@config.showUpload',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
+          'ariaDescribedby': {
+            'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'ariaLabelledby': {
+            'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'selectable': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Selectable',
+            'description': 'Enable item selection',
+            'tier': 'presentation',
+          },
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'selectedItems': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Items',
+            'description': 'Selected item IDs',
+            'tier': 'presentation',
             'items': {
               'type': 'string',
             },
-            'label': 'Active Filters',
-            'tier': 'presentation',
-            'type': 'Map<string,string>',
           },
           'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'type': 'boolean',
             'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
             'synonyms': 'aria-busy',
             'tier': 'presentation',
-            'type': 'boolean',
+          },
+          'error': {
+            'type': 'MediaGalleryError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'dir': {
+            'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'aspectRatio': {
+            'type': 'string',
+            'default': 'square',
+            'label': 'Aspect Ratio',
+            'description': 'Aspect ratio for thumbnails',
+            'tier': 'presentation',
+            'values': [
+              'square',
+              'landscape',
+              'portrait',
+            ],
+          },
+          'totalCount': {
+            'type': 'number',
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
           },
           'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'type': 'string',
             'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
             'synonyms': 'aria-current',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
               'page',
               'step',
@@ -269,244 +717,147 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
               'false',
             ],
           },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
+          'title': {
             'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
+            'label': 'Title',
+            'description': 'Gallery title',
             'tier': 'presentation',
-            'type': 'boolean',
           },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
+          'actions': {
+            'type': '[MediaGalleryActionsItem]',
+            'default': [],
+            'label': 'Actions',
+            'description': 'Actions',
             'tier': 'presentation',
-            'type': 'boolean',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                  ],
+                },
+              },
+            },
           },
           'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'type': 'string',
             'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
             'synonyms': 'aria-label',
             'tier': 'presentation',
-            'type': 'string',
           },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
+          'selfFetch': {
             'type': 'boolean',
+            'default': true,
+            'label': 'Fetch its own rows on mount?',
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'tier': 'internal',
           },
-          'aspectRatio': {
-            'default': 'square',
-            'description': 'Aspect ratio for thumbnails',
-            'label': 'Aspect Ratio',
+          'columns': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Columns',
+            'description': 'Column count',
             'tier': 'presentation',
+          },
+          'skeleton': {
             'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
             'values': [
-              'square',
-              'landscape',
-              'portrait',
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'Map<string,string>',
+            'default': {},
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'searchValue': {
+            'type': 'string',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
             ],
           },
           'captionField': {
+            'type': 'string',
             'default': 'caption',
-            'description': 'Record field holding each image\'s caption (entity mode). Default `caption`.',
             'label': 'Caption Field',
+            'description': 'Record field holding each image\'s caption (entity mode). Default `caption`.',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'className': {
-            'description': 'Additional CSS classes',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'columns': {
-            'default': 3,
-            'description': 'Column count',
-            'label': 'Columns',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'error': {
-            'description': 'Error state (UiError)',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'MediaGalleryError',
-          },
-          'isLoading': {
-            'default': false,
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'items': {
-            'default': [],
-            'description': 'Media items',
-            'items': {
-              'properties': {
-                'alt': {
-                  'name': 'alt',
-                  'required': false,
-                  'type': 'string',
-                },
-                'caption': {
-                  'name': 'caption',
-                  'required': false,
-                  'type': 'string',
-                },
-                'fileSize': {
-                  'name': 'fileSize',
-                  'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'mediaType': {
-                  'name': 'mediaType',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'image',
-                    'video',
-                  ],
-                },
-                'src': {
-                  'name': 'src',
-                  'required': false,
-                  'type': 'string',
-                },
-                'thumbnail': {
-                  'name': 'thumbnail',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Items',
-            'tier': 'presentation',
-            'type': '[MediaGalleryItemsItem]',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'pageProp': {
-            'description': 'Current page number',
-            'label': 'Page',
-            'synonyms': 'page',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'pageSize': {
-            'description': 'Number of items per page',
-            'label': 'Page Size',
-            'tier': 'presentation',
-            'type': 'number',
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -591,521 +942,170 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
               'treeitem',
             ],
           },
-          'searchValue': {
-            'description': 'Current search query value',
-            'label': 'Search Value',
-            'tier': 'presentation',
+          'ariaPressed': {
             'type': 'string',
-          },
-          'selectable': {
-            'default': false,
-            'description': 'Enable item selection',
-            'label': 'Selectable',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
             'tier': 'presentation',
-            'type': 'boolean',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'pageSize': {
+            'type': 'number',
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
           },
           'selectedIds': {
+            'type': '[string]',
             'default': [],
-            'description': 'Currently selected item IDs',
-            'items': {
-              'type': 'string',
-            },
             'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
-            'type': '[string]',
-          },
-          'selectedItems': {
-            'default': [],
-            'description': 'Selected item IDs',
             'items': {
               'type': 'string',
             },
-            'label': 'Selected Items',
-            'tier': 'presentation',
-            'type': '[string]',
           },
-          'selectionEvent': {
-            'default': 'SELECTION',
-            'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
-            'label': 'Selection Event',
+          'items': {
+            'type': '[MediaGalleryItemsItem]',
+            'default': [],
+            'label': 'Items',
+            'description': 'Media items',
             'tier': 'presentation',
-            'type': 'event',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'fileSize': {
+                  'name': 'fileSize',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'mediaType': {
+                  'name': 'mediaType',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'image',
+                    'video',
+                  ],
+                },
+                'thumbnail': {
+                  'name': 'thumbnail',
+                  'type': 'string',
+                  'required': false,
+                },
+                'src': {
+                  'name': 'src',
+                  'type': 'string',
+                  'required': false,
+                },
+                'caption': {
+                  'name': 'caption',
+                  'type': 'string',
+                  'required': false,
+                },
+                'alt': {
+                  'name': 'alt',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
           },
-          'selfFetch': {
-            'default': true,
-            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
-            'label': 'Fetch its own rows on mount?',
-            'tier': 'internal',
-            'type': 'boolean',
-          },
-          'showUpload': {
-            'default': false,
-            'description': 'Show upload button',
-            'label': 'Show Upload',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
+          'ariaLive': {
             'type': 'string',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
             'values': [
-              'header',
-              'table',
-              'list',
-              'grid',
-              'detail',
-              'stats',
-              'form',
-              'card',
-              'text',
-              'none',
+              'off',
+              'polite',
+              'assertive',
             ],
-          },
-          'sortBy': {
-            'description': 'Current sort field',
-            'label': 'Sort By',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'sortDirection': {
-            'description': 'Current sort direction',
-            'label': 'Sort Direction',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'srcField': {
-            'default': 'src',
-            'description': 'Record field holding each image\'s URL (entity mode). Default `src`.',
-            'label': 'Src Field',
-            'tier': 'presentation',
-            'type': 'string',
           },
           'surface': {
-            'default': 'auto',
-            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out.',
-            'label': 'Surface',
-            'tier': 'presentation',
             'type': 'string',
+            'default': 'auto',
+            'label': 'Surface',
+            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out.',
+            'tier': 'presentation',
             'values': [
               'auto',
               'none',
             ],
           },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
+          'showUpload': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Upload',
+            'description': 'Show upload button',
             'tier': 'presentation',
+          },
+          'pageProp': {
             'type': 'number',
-          },
-          'title': {
-            'description': 'Gallery title',
-            'label': 'Title',
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
             'tier': 'presentation',
+          },
+          'sortBy': {
             'type': 'string',
-          },
-          'totalCount': {
-            'description': 'Total number of items',
-            'label': 'Total Count',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
+          },
+          'enterDelay': {
             'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
           },
-          'viewerRole': {
-            'default': '',
-            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
           },
-        },
-        'effectRow': [
-          {
-            'kind': 'fetch',
-            'resource': 'MediaGalleryItem',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
           },
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'selectionEvent',
+          'selectionEvent': {
+            'type': 'event',
+            'default': 'SELECTION',
+            'label': 'Selection Event',
             'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
-            'event': '@config.selectionEvent',
-            'payloadSchema': [
-              {
-                'name': 'selection',
-                'required': true,
-                'type': '[string]',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
+            'tier': 'presentation',
           },
-          {
-            'description': 'MediaGallery rows finished loading; payload.data holds the collection.',
-            'event': 'MediaGalleryLoaded',
-            'payloadSchema': [
-              {
-                'entity': 'MediaGalleryItem',
-                'name': 'data',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                ],
-                'type': '[object]',
-              },
-            ],
-            'scope': 'internal',
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'essential',
+          'srcField': {
+            'type': 'string',
+            'default': 'src',
+            'label': 'Src Field',
+            'description': 'Record field holding each image\'s URL (entity mode). Default `src`.',
+            'tier': 'presentation',
           },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
         },
-        'entityRebindable': true,
-        'linkedEntity': 'MediaGalleryItem',
-        'name': 'MediaGalleryRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'MediaGallery rows finished loading; payload.data holds the collection.',
-              'key': 'MediaGalleryLoaded',
-              'name': 'Media gallery loaded',
-              'payloadSchema': [
-                {
-                  'entity': 'MediaGalleryItem',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'essential',
-            },
-            {
-              'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
-              'key': '@config.selectionEvent',
-              'name': '@config.selection event',
-              'payloadSchema': [
-                {
-                  'name': 'selection',
-                  'required': true,
-                  'type': '[string]',
-                },
-              ],
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('MediaGalleryItem' satisfies _StdUiMediaGalleryEntityName),
-                  {
-                    'emit': {
-                      'success': 'MediaGalleryLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'actions': [
-                      'array/filter',
-                      '@config.actions',
-                      [
-                        'fn',
-                        'action',
-                        [
-                          'or',
-                          [
-                            '=',
-                            [
-                              'array/len',
-                              [
-                                'object/get',
-                                '@action',
-                                'roles',
-                                [],
-                              ],
-                            ],
-                            0,
-                          ],
-                          [
-                            'array/includes',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                            '@config.viewerRole',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'activeFilters': '@config.activeFilters',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'aspectRatio': '@config.aspectRatio',
-                    'captionField': '@config.captionField',
-                    'className': '@config.className',
-                    'columns': '@config.columns',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'items': '@config.items',
-                    'lang': '@config.lang',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'selectable': '@config.selectable',
-                    'selectedIds': '@config.selectedIds',
-                    'selectedItems': '@config.selectedItems',
-                    'selectionEvent': '@config.selectionEvent',
-                    'showUpload': '@config.showUpload',
-                    'skeleton': '@config.skeleton',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'srcField': '@config.srcField',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'title': '@config.title',
-                    'totalCount': '@config.totalCount',
-                    'type': 'media-gallery',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'guard': '@config.selfFetch',
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'actions': [
-                      'array/filter',
-                      '@config.actions',
-                      [
-                        'fn',
-                        'action',
-                        [
-                          'or',
-                          [
-                            '=',
-                            [
-                              'array/len',
-                              [
-                                'object/get',
-                                '@action',
-                                'roles',
-                                [],
-                              ],
-                            ],
-                            0,
-                          ],
-                          [
-                            'array/includes',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                            '@config.viewerRole',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'activeFilters': '@config.activeFilters',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'aspectRatio': '@config.aspectRatio',
-                    'captionField': '@config.captionField',
-                    'className': '@config.className',
-                    'columns': '@config.columns',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'items': '@config.items',
-                    'lang': '@config.lang',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'selectable': '@config.selectable',
-                    'selectedIds': '@config.selectedIds',
-                    'selectedItems': '@config.selectedItems',
-                    'selectionEvent': '@config.selectionEvent',
-                    'showUpload': '@config.showUpload',
-                    'skeleton': '@config.skeleton',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'srcField': '@config.srcField',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'title': '@config.title',
-                    'totalCount': '@config.totalCount',
-                    'type': 'media-gallery',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'guard': [
-                'not',
-                '@config.selfFetch',
-              ],
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'actions': [
-                      'array/filter',
-                      '@config.actions',
-                      [
-                        'fn',
-                        'action',
-                        [
-                          'or',
-                          [
-                            '=',
-                            [
-                              'array/len',
-                              [
-                                'object/get',
-                                '@action',
-                                'roles',
-                                [],
-                              ],
-                            ],
-                            0,
-                          ],
-                          [
-                            'array/includes',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                            '@config.viewerRole',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'activeFilters': '@config.activeFilters',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'aspectRatio': '@config.aspectRatio',
-                    'captionField': '@config.captionField',
-                    'className': '@config.className',
-                    'columns': '@config.columns',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@payload.data',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'items': '@config.items',
-                    'lang': '@config.lang',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'selectable': '@config.selectable',
-                    'selectedIds': '@config.selectedIds',
-                    'selectedItems': '@config.selectedItems',
-                    'selectionEvent': '@config.selectionEvent',
-                    'showUpload': '@config.showUpload',
-                    'skeleton': '@config.skeleton',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'srcField': '@config.srcField',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'title': '@config.title',
-                    'totalCount': '@config.totalCount',
-                    'type': 'media-gallery',
-                  },
-                ],
-              ],
-              'event': 'MediaGalleryLoaded',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

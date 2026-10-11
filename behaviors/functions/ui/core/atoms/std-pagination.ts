@@ -53,10 +53,10 @@ export interface StdPaginationPagedItemLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPaginationConfig {
-  /** Default: `"PAGE"` */
-  event?: string;
   /** Default: `10` */
   pageSize?: number;
+  /** Default: `"PAGE"` */
+  event?: string;
 }
 
 /**
@@ -199,22 +199,22 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'currentPage',
+            'type': 'number',
             'default': 1,
             'description': 'The current page number being displayed.',
-            'name': 'currentPage',
             'synonyms': 'page, current, index',
-            'type': 'number',
           },
           {
+            'name': 'totalPages',
+            'type': 'number',
             'default': 1,
             'description': 'The total number of pages available.',
-            'name': 'totalPages',
             'synonyms': 'page count, total pages, number of pages',
-            'type': 'number',
           },
         ];
         const extras = params.fields ?? [];
@@ -225,23 +225,7 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'event': {
-            'default': 'PAGE',
-            'description': 'Event emitted when the user picks a new page',
-            'label': 'Page-change event',
-            'tier': 'internal',
-            'type': 'event',
-          },
-          'pageSize': {
-            'default': 10,
-            'description': 'Rows per page used to derive total page count',
-            'label': 'Page size',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-        },
+        'name': 'PagedItemPagination',
         'effectRow': [
           {
             'kind': 'fetch',
@@ -260,32 +244,36 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
             'resource': '@entity.totalPages',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'PagedItem',
         'emits': [
           {
-            'description': 'Indicates a change in the currently displayed page.',
             'event': 'PAGE',
+            'description': 'Indicates a change in the currently displayed page.',
+            'synonyms': 'page-change, navigate, go-to',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'page',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'synonyms': 'page-change, navigate, go-to',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a single item has been loaded within a paginated view.',
             'event': 'PagedItemLoaded',
+            'description': 'Indicates a single item has been loaded within a paginated view.',
+            'synonyms': 'item-loaded, data-received, entry-loaded',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'PagedItem',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'currentPage',
@@ -296,35 +284,38 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'PagedItem',
               },
             ],
-            'synonyms': 'item-loaded, data-received, entry-loaded',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'PagedItem',
-        'name': 'PagedItemPagination',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates a single item has been loaded within a paginated view.',
               'key': 'PagedItemLoaded',
               'name': 'PagedItem loaded',
+              'description': 'Indicates a single item has been loaded within a paginated view.',
+              'synonyms': 'item-loaded, data-received, entry-loaded',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'PagedItem',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'currentPage',
@@ -335,33 +326,34 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'PagedItem',
                 },
               ],
-              'synonyms': 'item-loaded, data-received, entry-loaded',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a change in the currently displayed page.',
               'key': 'PAGE',
               'name': 'Page',
+              'description': 'Indicates a change in the currently displayed page.',
+              'synonyms': 'page-change, navigate, go-to',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'page',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'synonyms': 'page-change, navigate, go-to',
-              'tier': 'domain',
             },
             {
-              'description': 'Data has been loaded and pagination limits updated.',
               'key': 'ITEMS_LOADED',
               'name': 'Items Loaded',
+              'description': 'Data has been loaded and pagination limits updated.',
+              'synonyms': 'data-ready, content-loaded, refresh',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -376,25 +368,19 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
                 {
                   'name': 'totalCount',
                   'type': 'number',
                 },
               ],
-              'synonyms': 'data-ready, content-loaded, refresh',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -419,37 +405,37 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
                   'render-ui',
                   'main',
                   {
+                    'showPageSize': false,
+                    'type': 'pagination',
                     'currentPage': '@entity.currentPage',
                     'pageChangeEvent': '@config.event',
-                    'showPageSize': false,
                     'totalPages': '@entity.totalPages',
-                    'type': 'pagination',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PagedItemLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'currentPage': '@entity.currentPage',
                     'pageChangeEvent': '@config.event',
-                    'showPageSize': false,
                     'totalPages': '@entity.totalPages',
+                    'showPageSize': false,
                     'type': 'pagination',
+                    'currentPage': '@entity.currentPage',
                   },
                 ],
               ],
-              'event': 'PagedItemLoaded',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PAGE',
               'effects': [
                 [
                   'set',
@@ -460,19 +446,19 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
                   'render-ui',
                   'main',
                   {
-                    'currentPage': '@entity.currentPage',
                     'pageChangeEvent': '@config.event',
-                    'showPageSize': false,
-                    'totalPages': '@entity.totalPages',
                     'type': 'pagination',
+                    'totalPages': '@entity.totalPages',
+                    'showPageSize': false,
+                    'currentPage': '@entity.currentPage',
                   },
                 ],
               ],
-              'event': 'PAGE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ITEMS_LOADED',
               'effects': [
                 [
                   'set',
@@ -490,20 +476,34 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
                   'render-ui',
                   'main',
                   {
-                    'currentPage': '@entity.currentPage',
-                    'pageChangeEvent': '@config.event',
                     'showPageSize': false,
-                    'totalPages': '@entity.totalPages',
                     'type': 'pagination',
+                    'currentPage': '@entity.currentPage',
+                    'totalPages': '@entity.totalPages',
+                    'pageChangeEvent': '@config.event',
                   },
                 ],
               ],
-              'event': 'ITEMS_LOADED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'pageSize': {
+            'type': 'number',
+            'default': 10,
+            'label': 'Page size',
+            'description': 'Rows per page used to derive total page count',
+            'tier': 'presentation',
+          },
+          'event': {
+            'type': 'event',
+            'default': 'PAGE',
+            'label': 'Page-change event',
+            'description': 'Event emitted when the user picks a new page',
+            'tier': 'internal',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

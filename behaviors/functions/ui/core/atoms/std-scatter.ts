@@ -39,24 +39,24 @@ export type StdScatterEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdScatterConfig {
-  /** Default: `""` */
-  colorField?: string;
+  /** Default: `"Correlation"` */
+  title?: string;
   /** Default: `""` */
   drillEvent?: string;
+  /** Default: `"x vs y"` */
+  subtitle?: string;
+  /** Default: `"x"` */
+  xField?: string;
   /** Default: `280` */
   height?: number;
   /** Default: `""` */
-  labelField?: string;
-  /** Default: `""` */
   sizeField?: string;
-  /** Default: `"x vs y"` */
-  subtitle?: string;
-  /** Default: `"Correlation"` */
-  title?: string;
-  /** Default: `"x"` */
-  xField?: string;
+  /** Default: `""` */
+  labelField?: string;
   /** Default: `"y"` */
   yField?: string;
+  /** Default: `""` */
+  colorField?: string;
 }
 
 /**
@@ -188,45 +188,45 @@ export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'points',
+            'type': 'array',
             'default': [],
-            'description': 'An array of data points for the scatter chart.',
             'items': {
+              'type': 'object',
               'properties': {
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
                 },
                 'label': {
                   'name': 'label',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                 },
                 'size': {
                   'name': 'size',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
                 },
                 'x': {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'points',
+            'description': 'An array of data points for the scatter chart.',
             'synonyms': 'data, values, records',
-            'type': 'array',
           },
         ];
         const extras = params.fields ?? [];
@@ -237,72 +237,7 @@ export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbita
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'colorField': {
-            'default': '',
-            'description': 'Field used to color-code points (blank = single color)',
-            'label': 'Color field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'drillEvent': {
-            'default': '',
-            'description': 'Event emitted when the user clicks a data point',
-            'label': 'Drill event',
-            'tier': 'internal',
-            'type': 'event',
-          },
-          'height': {
-            'default': 280,
-            'description': 'Pixel height of the rendered scatter plot',
-            'label': 'Chart height',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'labelField': {
-            'default': '',
-            'description': 'Field used as the point label tooltip (blank = none)',
-            'label': 'Label field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'sizeField': {
-            'default': '',
-            'description': 'Numeric field that scales bubble size (blank = uniform)',
-            'label': 'Size field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'subtitle': {
-            'default': 'x vs y',
-            'description': 'Secondary line below the title',
-            'label': 'Subtitle',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'title': {
-            'default': 'Correlation',
-            'description': 'Heading shown above the chart',
-            'label': 'Title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'xField': {
-            'default': 'x',
-            'description': 'Entity field mapped to the horizontal axis',
-            'label': 'X-axis field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'yField': {
-            'default': 'y',
-            'description': 'Entity field mapped to the vertical axis',
-            'label': 'Y-axis field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-        },
+        'name': 'ScatterItemPlot',
         'effectRow': [
           {
             'kind': 'render-ui',
@@ -313,22 +248,30 @@ export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbita
             'resource': '@entity.points',
           },
         ],
+        'category': 'interaction',
         'linkedEntity': 'ScatterItem',
-        'name': 'ScatterItemPlot',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Data has been received and is ready for visualization.',
               'key': 'ITEMS_LOADED',
               'name': 'Items Loaded',
+              'description': 'Data has been received and is ready for visualization.',
+              'synonyms': 'data-ready, data-available, loaded',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -343,63 +286,57 @@ export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbita
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
                 {
                   'name': 'totalCount',
                   'type': 'number',
                 },
               ],
-              'synonyms': 'data-ready, data-available, loaded',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
                   '@entity.points',
                   [
                     {
-                      'color': '',
+                      'y': 24,
                       'label': 'A',
                       'size': 8,
+                      'color': '',
                       'x': 12,
-                      'y': 24,
                     },
                     {
+                      'y': 42,
+                      'x': 28,
                       'color': '',
                       'label': 'B',
                       'size': 6,
-                      'x': 28,
-                      'y': 42,
                     },
                     {
-                      'color': '',
-                      'label': 'C',
-                      'size': 10,
                       'x': 45,
+                      'label': 'C',
                       'y': 18,
+                      'color': '',
+                      'size': 10,
                     },
                     {
                       'color': '',
                       'label': 'D',
-                      'size': 7,
                       'x': 60,
+                      'size': 7,
                       'y': 55,
                     },
                     {
-                      'color': '',
+                      'x': 78,
                       'label': 'E',
                       'size': 9,
-                      'x': 78,
+                      'color': '',
                       'y': 38,
                     },
                   ],
@@ -408,21 +345,21 @@ export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbita
                   'render-ui',
                   'main',
                   {
-                    'chartType': 'scatter',
-                    'drillEvent': '@config.drillEvent',
-                    'height': '@config.height',
-                    'scatterData': '@entity.points',
                     'subtitle': '@config.subtitle',
+                    'scatterData': '@entity.points',
                     'title': '@config.title',
+                    'height': '@config.height',
                     'type': 'chart',
+                    'drillEvent': '@config.drillEvent',
+                    'chartType': 'scatter',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ITEMS_LOADED',
               'effects': [
                 [
                   'set',
@@ -434,6 +371,12 @@ export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbita
                       'fn',
                       'row',
                       {
+                        'x': [
+                          'object/get',
+                          '@row',
+                          '@config.xField',
+                          0,
+                        ],
                         'color': [
                           'object/get',
                           '@row',
@@ -446,23 +389,17 @@ export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbita
                           '@config.labelField',
                           '',
                         ],
-                        'size': [
-                          'object/get',
-                          '@row',
-                          '@config.sizeField',
-                          5,
-                        ],
-                        'x': [
-                          'object/get',
-                          '@row',
-                          '@config.xField',
-                          0,
-                        ],
                         'y': [
                           'object/get',
                           '@row',
                           '@config.yField',
                           0,
+                        ],
+                        'size': [
+                          'object/get',
+                          '@row',
+                          '@config.sizeField',
+                          5,
                         ],
                       },
                     ],
@@ -473,21 +410,84 @@ export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbita
                   'main',
                   {
                     'chartType': 'scatter',
-                    'drillEvent': '@config.drillEvent',
-                    'height': '@config.height',
                     'scatterData': '@entity.points',
                     'subtitle': '@config.subtitle',
                     'title': '@config.title',
                     'type': 'chart',
+                    'height': '@config.height',
+                    'drillEvent': '@config.drillEvent',
                   },
                 ],
               ],
-              'event': 'ITEMS_LOADED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'title': {
+            'type': 'string',
+            'default': 'Correlation',
+            'label': 'Title',
+            'description': 'Heading shown above the chart',
+            'tier': 'presentation',
+          },
+          'drillEvent': {
+            'type': 'event',
+            'default': '',
+            'label': 'Drill event',
+            'description': 'Event emitted when the user clicks a data point',
+            'tier': 'internal',
+          },
+          'subtitle': {
+            'type': 'string',
+            'default': 'x vs y',
+            'label': 'Subtitle',
+            'description': 'Secondary line below the title',
+            'tier': 'presentation',
+          },
+          'xField': {
+            'type': 'string',
+            'default': 'x',
+            'label': 'X-axis field',
+            'description': 'Entity field mapped to the horizontal axis',
+            'tier': 'presentation',
+          },
+          'height': {
+            'type': 'number',
+            'default': 280,
+            'label': 'Chart height',
+            'description': 'Pixel height of the rendered scatter plot',
+            'tier': 'presentation',
+          },
+          'sizeField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Size field',
+            'description': 'Numeric field that scales bubble size (blank = uniform)',
+            'tier': 'presentation',
+          },
+          'labelField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Label field',
+            'description': 'Field used as the point label tooltip (blank = none)',
+            'tier': 'presentation',
+          },
+          'yField': {
+            'type': 'string',
+            'default': 'y',
+            'label': 'Y-axis field',
+            'description': 'Entity field mapped to the vertical axis',
+            'tier': 'presentation',
+          },
+          'colorField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Color field',
+            'description': 'Field used to color-code points (blank = single color)',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -231,29 +231,29 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'round',
+            'type': 'number',
             'default': 0,
             'description': 'Review round the record is on; 1 for the first review, incremented on each resubmission.',
-            'name': 'round',
             'synonyms': 'iteration, revision round, review count',
-            'type': 'number',
           },
           {
+            'name': 'lastNote',
+            'type': 'string',
             'default': '',
             'description': 'Note left with the most recent move.',
-            'name': 'lastNote',
             'synonyms': 'comment, reason, feedback',
-            'type': 'string',
           },
           {
+            'name': 'lastLogId',
+            'type': 'string',
             'default': '',
             'description': 'Id of the most recent ReviewEvent history row.',
-            'name': 'lastLogId',
             'synonyms': 'history id, log entry',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -264,87 +264,78 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
     } as Entity,
     auxiliaryEntities: [
       {
+        'name': 'ReviewEvent',
         'collection': 'review_events',
+        'persistence': 'persistent',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'itemId',
+            'type': 'string',
             'default': '',
             'description': 'The record this history entry belongs to.',
-            'name': 'itemId',
             'synonyms': 'record id, document id, item',
-            'type': 'string',
           },
           {
+            'name': 'fromState',
+            'type': 'string',
             'default': '',
             'description': 'The review state the record left.',
-            'name': 'fromState',
             'synonyms': 'previous state, was',
-            'type': 'string',
           },
           {
+            'name': 'toState',
+            'type': 'string',
             'default': '',
             'description': 'The review state the record entered.',
-            'name': 'toState',
             'synonyms': 'new state, became',
-            'type': 'string',
           },
           {
+            'name': 'round',
+            'type': 'number',
             'default': 0,
             'description': 'Review round at the time of the move.',
-            'name': 'round',
             'synonyms': 'iteration',
-            'type': 'number',
           },
           {
+            'name': 'actor',
+            'type': 'string',
             'default': '',
             'description': 'Who made the move.',
-            'name': 'actor',
             'synonyms': 'user, reviewer, author',
-            'type': 'string',
           },
           {
+            'name': 'note',
+            'type': 'string',
             'default': '',
             'description': 'Note left with the move.',
-            'name': 'note',
             'synonyms': 'comment, feedback, reason',
-            'type': 'string',
           },
           {
+            'name': 'at',
+            'type': 'number',
             'default': 0,
             'description': 'When the move happened.',
-            'name': 'at',
             'synonyms': 'timestamp, date, time',
-            'type': 'number',
           },
         ],
-        'name': 'ReviewEvent',
-        'persistence': 'persistent',
       },
     ] as EntityRef[],
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'enabled': {
-            'default': true,
-            'description': 'Accept submissions into review. Off = submissions are ignored.',
-            'label': 'Run the review workflow?',
-            'synonyms': 'enable, turn on, review, require review, review workflow',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'requireSeparateApproval': {
-            'default': true,
-            'description': 'Four-eyes review: reject an approval raised by the same action that submitted the record, such as an automatic rule or bot that approves instantly. Approvals made as their own action are unaffected.',
-            'label': 'Require approval to be a separate action?',
-            'synonyms': 'four eyes, two person rule, no self approval, separate reviewer, independent approval, no auto approve',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
+        'name': 'ReviewCycle',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'lastLogId',
+            'lastNote',
+            'round',
+          ],
         },
         'effectRow': [
           {
@@ -376,16 +367,18 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
             'resource': '@entity.round',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'ReviewItem',
         'emits': [
           {
-            'description': 'Internal: a history row landed.',
             'event': 'ReviewLogged',
-            'payloadEntity': 'ReviewEvent',
+            'description': 'Internal: a history row landed.',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'itemId',
@@ -416,11 +409,12 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                 'type': 'number',
               },
             ],
-            'scope': 'internal',
+            'payloadEntity': 'ReviewEvent',
           },
           {
-            'description': 'Internal: writing a history row failed.',
             'event': 'ReviewLogFailed',
+            'description': 'Internal: writing a history row failed.',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -431,10 +425,10 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
           },
           {
             'event': 'ReviewRequested',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'itemId',
@@ -449,10 +443,10 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                 'type': 'boolean',
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'ReviewDecided',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'itemId',
@@ -467,22 +461,24 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                 'type': 'number',
               },
             ],
-            'scope': 'external',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'lastLogId',
-            'lastNote',
-            'round',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'ReviewItem',
-        'name': 'ReviewCycle',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'draft',
+              'isInitial': true,
+            },
+            {
+              'name': 'in_review',
+            },
+            {
+              'name': 'changes_requested',
+            },
+            {
+              'name': 'approved',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -505,12 +501,11 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
             {
               'key': 'ReviewLogged',
               'name': 'Review logged',
-              'payloadEntity': 'ReviewEvent',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'itemId',
@@ -541,6 +536,7 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   'type': 'number',
                 },
               ],
+              'payloadEntity': 'ReviewEvent',
             },
             {
               'key': 'ReviewLogFailed',
@@ -621,28 +617,17 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'draft',
-            },
-            {
-              'name': 'in_review',
-            },
-            {
-              'name': 'changes_requested',
-            },
-            {
-              'name': 'approved',
-            },
-          ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'draft',
               'to': 'draft',
+              'event': 'INIT',
             },
             {
+              'from': 'draft',
+              'to': 'in_review',
+              'event': 'ReviewSubmitted',
+              'guard': '@config.enabled',
               'effects': [
                 [
                   'set',
@@ -662,13 +647,13 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   'emit',
                   'ReviewRequested',
                   {
+                    'resubmission': false,
+                    'round': 1,
                     'itemId': [
                       'str/default',
                       '@payload.id',
                       '',
                     ],
-                    'resubmission': false,
-                    'round': 1,
                   },
                 ],
                 [
@@ -676,13 +661,15 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   'create',
                   ('ReviewEvent' satisfies _StdReviewCycleEntityName),
                   {
+                    'fromState': '@fromState',
                     'actor': [
                       'str/default',
                       '@user.id',
                       '',
                     ],
                     'at': '@now',
-                    'fromState': '@fromState',
+                    'round': 1,
+                    'toState': '@toState',
                     'itemId': [
                       'str/default',
                       '@payload.id',
@@ -693,8 +680,6 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                       '@payload.note',
                       '',
                     ],
-                    'round': 1,
-                    'toState': '@toState',
                   },
                   {
                     'emit': {
@@ -704,17 +689,16 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   },
                 ],
               ],
-              'event': 'ReviewSubmitted',
-              'from': 'draft',
-              'guard': '@config.enabled',
-              'to': 'in_review',
             },
             {
-              'event': 'INIT',
               'from': 'in_review',
               'to': 'in_review',
+              'event': 'INIT',
             },
             {
+              'from': 'in_review',
+              'to': 'in_review',
+              'event': 'ReviewLogged',
               'effects': [
                 [
                   'set',
@@ -726,93 +710,32 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   ],
                 ],
               ],
-              'event': 'ReviewLogged',
-              'from': 'in_review',
-              'to': 'in_review',
             },
             {
+              'from': 'in_review',
+              'to': 'in_review',
+              'event': 'ReviewLogFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
+                    'type': 'alert',
                     'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t record the review history — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'ReviewLogFailed',
-              'from': 'in_review',
-              'to': 'in_review',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.lastNote',
-                  [
-                    'str/default',
-                    '@payload.note',
-                    '',
-                  ],
-                ],
-                [
-                  'emit',
-                  'ReviewDecided',
-                  {
-                    'decision': '@toState',
-                    'itemId': [
-                      'str/default',
-                      '@payload.id',
-                      '',
-                    ],
-                    'round': '@entity.round',
-                  },
-                ],
-                [
-                  'persist',
-                  'create',
-                  ('ReviewEvent' satisfies _StdReviewCycleEntityName),
-                  {
-                    'actor': [
-                      'str/default',
-                      '@user.id',
-                      '',
-                    ],
-                    'at': '@now',
-                    'fromState': '@fromState',
-                    'itemId': [
-                      'str/default',
-                      '@payload.id',
-                      '',
-                    ],
-                    'note': [
-                      'str/default',
-                      '@payload.note',
-                      '',
-                    ],
-                    'round': '@entity.round',
-                    'toState': '@toState',
-                  },
-                  {
-                    'emit': {
-                      'failure': 'ReviewLogFailed',
-                      'success': 'ReviewLogged',
-                    },
-                  },
-                ],
-              ],
-              'event': 'ReviewChangesRequested',
               'from': 'in_review',
               'to': 'changes_requested',
-            },
-            {
+              'event': 'ReviewChangesRequested',
               'effects': [
                 [
                   'set',
@@ -827,13 +750,13 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   'emit',
                   'ReviewDecided',
                   {
-                    'decision': '@toState',
                     'itemId': [
                       'str/default',
                       '@payload.id',
                       '',
                     ],
                     'round': '@entity.round',
+                    'decision': '@toState',
                   },
                 ],
                 [
@@ -841,13 +764,6 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   'create',
                   ('ReviewEvent' satisfies _StdReviewCycleEntityName),
                   {
-                    'actor': [
-                      'str/default',
-                      '@user.id',
-                      '',
-                    ],
-                    'at': '@now',
-                    'fromState': '@fromState',
                     'itemId': [
                       'str/default',
                       '@payload.id',
@@ -858,19 +774,29 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                       '@payload.note',
                       '',
                     ],
+                    'at': '@now',
+                    'actor': [
+                      'str/default',
+                      '@user.id',
+                      '',
+                    ],
+                    'fromState': '@fromState',
                     'round': '@entity.round',
                     'toState': '@toState',
                   },
                   {
                     'emit': {
-                      'failure': 'ReviewLogFailed',
                       'success': 'ReviewLogged',
+                      'failure': 'ReviewLogFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ReviewApproved',
+            },
+            {
               'from': 'in_review',
+              'to': 'approved',
+              'event': 'ReviewApproved',
               'guard': [
                 'or',
                 [
@@ -902,14 +828,72 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   ],
                 ],
               ],
-              'to': 'approved',
+              'effects': [
+                [
+                  'set',
+                  '@entity.lastNote',
+                  [
+                    'str/default',
+                    '@payload.note',
+                    '',
+                  ],
+                ],
+                [
+                  'emit',
+                  'ReviewDecided',
+                  {
+                    'decision': '@toState',
+                    'round': '@entity.round',
+                    'itemId': [
+                      'str/default',
+                      '@payload.id',
+                      '',
+                    ],
+                  },
+                ],
+                [
+                  'persist',
+                  'create',
+                  ('ReviewEvent' satisfies _StdReviewCycleEntityName),
+                  {
+                    'at': '@now',
+                    'itemId': [
+                      'str/default',
+                      '@payload.id',
+                      '',
+                    ],
+                    'note': [
+                      'str/default',
+                      '@payload.note',
+                      '',
+                    ],
+                    'actor': [
+                      'str/default',
+                      '@user.id',
+                      '',
+                    ],
+                    'round': '@entity.round',
+                    'fromState': '@fromState',
+                    'toState': '@toState',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ReviewLogged',
+                      'failure': 'ReviewLogFailed',
+                    },
+                  },
+                ],
+              ],
             },
             {
-              'event': 'INIT',
               'from': 'changes_requested',
               'to': 'changes_requested',
+              'event': 'INIT',
             },
             {
+              'from': 'changes_requested',
+              'to': 'changes_requested',
+              'event': 'ReviewLogged',
               'effects': [
                 [
                   'set',
@@ -921,32 +905,32 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   ],
                 ],
               ],
-              'event': 'ReviewLogged',
-              'from': 'changes_requested',
-              'to': 'changes_requested',
             },
             {
+              'from': 'changes_requested',
+              'to': 'changes_requested',
+              'event': 'ReviewLogFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
+                    'type': 'alert',
+                    'variant': 'error',
                     'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t record the review history — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'ReviewLogFailed',
-              'from': 'changes_requested',
-              'to': 'changes_requested',
             },
             {
+              'from': 'changes_requested',
+              'to': 'in_review',
+              'event': 'ReviewSubmitted',
               'effects': [
                 [
                   'set',
@@ -975,8 +959,8 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                       '@payload.id',
                       '',
                     ],
-                    'resubmission': true,
                     'round': '@entity.round',
+                    'resubmission': true,
                   },
                 ],
                 [
@@ -984,44 +968,44 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   'create',
                   ('ReviewEvent' satisfies _StdReviewCycleEntityName),
                   {
-                    'actor': [
-                      'str/default',
-                      '@user.id',
-                      '',
-                    ],
-                    'at': '@now',
+                    'toState': '@toState',
+                    'round': '@entity.round',
                     'fromState': '@fromState',
                     'itemId': [
                       'str/default',
                       '@payload.id',
                       '',
                     ],
+                    'actor': [
+                      'str/default',
+                      '@user.id',
+                      '',
+                    ],
+                    'at': '@now',
                     'note': [
                       'str/default',
                       '@payload.note',
                       '',
                     ],
-                    'round': '@entity.round',
-                    'toState': '@toState',
                   },
                   {
                     'emit': {
-                      'failure': 'ReviewLogFailed',
                       'success': 'ReviewLogged',
+                      'failure': 'ReviewLogFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ReviewSubmitted',
-              'from': 'changes_requested',
-              'to': 'in_review',
             },
             {
-              'event': 'INIT',
               'from': 'approved',
               'to': 'approved',
+              'event': 'INIT',
             },
             {
+              'from': 'approved',
+              'to': 'approved',
+              'event': 'ReviewLogged',
               'effects': [
                 [
                   'set',
@@ -1033,33 +1017,49 @@ export function stdReviewCycleReviewCycleOrbital(params: StdReviewCycleReviewCyc
                   ],
                 ],
               ],
-              'event': 'ReviewLogged',
-              'from': 'approved',
-              'to': 'approved',
             },
             {
+              'from': 'approved',
+              'to': 'approved',
+              'event': 'ReviewLogFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
                     'dismissible': true,
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Couldn\'t record the review history — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'ReviewLogFailed',
-              'from': 'approved',
-              'to': 'approved',
             },
           ],
         },
+        'config': {
+          'enabled': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Run the review workflow?',
+            'description': 'Accept submissions into review. Off = submissions are ignored.',
+            'synonyms': 'enable, turn on, review, require review, review workflow',
+            'tier': 'policy',
+          },
+          'requireSeparateApproval': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Require approval to be a separate action?',
+            'description': 'Four-eyes review: reject an approval raised by the same action that submitted the record, such as an automatic rule or bot that approves instantly. Approvals made as their own action are unaffected.',
+            'synonyms': 'four eyes, two person rule, no self approval, separate reviewer, independent approval, no auto approve',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

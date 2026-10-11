@@ -37,17 +37,17 @@ export type StdTacticsBoard2dListenKey = 'ATTACK' | 'MOVE' | 'AI_TURN';
  * without modifying its state-machine topology.
  */
 export interface StdTacticsBoard2dConfig {
-  /** Default: `3` */
-  attackDamage?: unknown;
+  /** Default: `[{"id":"t-0-0","passable":true,"y":0,"z":0,"x":0,"terrainSprite":{"name":"grass","aspect":"1:1","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","role":"tile","category":"terrain","dimension":"2d","style":"vector","animations":["static"],"thumbnailUrl":""},"terrain":"grass"},{"terrainSprite":{"thumbnailUrl":"","animations":["static"],"style":"vector","category":"terrain","name":"grass","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","dimension":"2d","role":"tile","aspect":"1:1"},"x":0,"passable":true,"z":0,"y":1,"id":"t-0-1","terrain":"grass"},{"terrainSprite":{"dimension":"2d","category":"terrain","style":"vector","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","name":"grass","animations":["static"],"aspect":"1:1","role":"tile","thumbnailUrl":""},"z":0,"id":"t-1-0","terrain":"grass","passable":true,"x":1,"y":0},{"z":0,"x":1,"y":1,"terrain":"grass","passable":true,"terrainSprite":{"dimension":"2d","name":"grass","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","style":"vector","role":"tile","aspect":"1:1","animations":["static"],"category":"terrain","thumbnailUrl":""},"id":"t-1-1"}]` */
+  tiles?: unknown;
   /** Default: `2` */
   gridHeight?: unknown;
-  /** Default: `2` */
-  gridWidth?: unknown;
   /** Default: `true` */
   running?: unknown;
-  /** Default: `[{"id":"t-0-0","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"x":0,"y":0,"z":0},{"id":"t-0-1","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"x":0,"y":1,"z":0},{"id":"t-1-0","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"x":1,"y":0,"z":0},{"id":"t-1-1","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"x":1,"y":1,"z":0}]` */
-  tiles?: unknown;
-  /** Default: `[{"health":3,"id":"p1","maxHealth":3,"modelUrl":{"animations":["idle"],"aspect":"1:1","category":"unit","dimension":"2d","name":"player-unit","role":"player","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png"},"name":"Player","position":{"x":0,"y":0},"team":"player","unitType":"unit","x":0,"y":0,"z":0},{"health":2,"id":"e1","maxHealth":2,"modelUrl":{"animations":["idle"],"aspect":"1:1","category":"unit","dimension":"2d","name":"enemy-unit","role":"enemy","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png"},"name":"Enemy","position":{"x":1,"y":1},"team":"enemy","unitType":"unit","x":1,"y":1,"z":0}]` */
+  /** Default: `2` */
+  gridWidth?: unknown;
+  /** Default: `3` */
+  attackDamage?: unknown;
+  /** Default: `[{"x":0,"team":"player","position":{"x":0,"y":0},"modelUrl":{"url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","dimension":"2d","animations":["idle"],"thumbnailUrl":"","name":"player-unit","category":"unit","aspect":"1:1","role":"player","style":"vector"},"maxHealth":3,"y":0,"health":3,"z":0,"id":"p1","name":"Player","unitType":"unit"},{"team":"enemy","unitType":"unit","modelUrl":{"style":"vector","aspect":"1:1","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","dimension":"2d","animations":["idle"],"name":"enemy-unit","category":"unit","role":"enemy","thumbnailUrl":""},"z":0,"id":"e1","position":{"x":1,"y":1},"y":1,"name":"Enemy","x":1,"maxHealth":2,"health":2}]` */
   units?: unknown;
 }
 
@@ -102,28 +102,28 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
     name: 'TacticsBoard2DOrbital',
     uses: [
       {
-        'as': 'Tactics',
         'from': 'std/behaviors/std-grid-tactics',
+        'as': 'Tactics',
       },
       {
-        'as': 'Particles',
         'from': 'std/behaviors/std-fx-particles',
+        'as': 'Particles',
       },
       {
-        'as': 'Round',
         'from': 'std/behaviors/std-round-flow',
+        'as': 'Round',
       },
       {
-        'as': 'Score',
         'from': 'std/behaviors/std-score',
+        'as': 'Score',
       },
       {
-        'as': 'AnimTick',
         'from': 'std/behaviors/std-anim-tick',
+        'as': 'AnimTick',
       },
       {
-        'as': 'SvgArt',
         'from': 'std/behaviors/std-svg-asset-art',
+        'as': 'SvgArt',
       },
     ],
     entity: {
@@ -134,622 +134,622 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'units',
+            'type': 'array',
             'default': [
               {
                 'health': 3,
+                'name': 'Player',
                 'id': 'p1',
-                'maxHealth': 3,
+                'team': 'player',
                 'modelUrl': {
+                  'role': 'player',
+                  'aspect': '1:1',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
                   'category': 'unit',
-                  'dimension': '2d',
                   'name': 'player-unit',
-                  'role': 'player',
+                  'dimension': '2d',
                   'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
                 },
-                'name': 'Player',
                 'position': {
                   'x': 0,
                   'y': 0,
                 },
-                'team': 'player',
+                'maxHealth': 3,
                 'unitType': 'unit',
-                'x': 0,
                 'y': 0,
+                'x': 0,
                 'z': 0,
               },
               {
+                'y': 1,
                 'health': 2,
-                'id': 'e1',
-                'maxHealth': 2,
+                'x': 1,
+                'unitType': 'unit',
                 'modelUrl': {
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'enemy-unit',
                   'role': 'enemy',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'category': 'unit',
+                  'style': 'vector',
+                  'aspect': '1:1',
+                  'name': 'enemy-unit',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
                 },
-                'name': 'Enemy',
+                'team': 'enemy',
+                'id': 'e1',
+                'z': 0,
+                'maxHealth': 2,
                 'position': {
                   'x': 1,
                   'y': 1,
                 },
-                'team': 'enemy',
-                'unitType': 'unit',
-                'x': 1,
-                'y': 1,
-                'z': 0,
+                'name': 'Enemy',
               },
             ],
             'items': {
+              'type': 'object',
               'properties': {
-                'health': {
-                  'name': 'health',
-                  'required': false,
+                'y': {
+                  'name': 'y',
                   'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'maxHealth': {
-                  'name': 'maxHealth',
                   'required': false,
-                  'type': 'number',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': true,
-                  'type': 'object',
                 },
                 'name': {
                   'name': 'name',
-                  'required': false,
                   'type': 'string',
-                },
-                'position': {
-                  'name': 'position',
-                  'properties': {
-                    'x': {
-                      'name': 'x',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'y': {
-                      'name': 'y',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
                   'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
                   'type': 'object',
-                },
-                'team': {
-                  'name': 'team',
-                  'required': false,
-                  'type': 'string',
-                },
-                'unitType': {
-                  'name': 'unitType',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': false,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': false,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'units',
-            'type': 'array',
-          },
-          {
-            'default': [],
-            'items': {
-              'properties': {
-                'bornAt': {
-                  'name': 'bornAt',
-                  'required': false,
-                  'type': 'number',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
                   'required': true,
-                  'type': 'string',
-                },
-                'maxTtl': {
-                  'name': 'maxTtl',
-                  'required': false,
-                  'type': 'number',
-                },
-                'message': {
-                  'name': 'message',
-                  'required': false,
-                  'type': 'string',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'ttl': {
-                  'name': 'ttl',
-                  'required': true,
-                  'type': 'number',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': false,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'fx',
-            'type': 'array',
-          },
-          {
-            'default': [
-              {
-                'id': 't-0-0',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 0,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-0-1',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 0,
-                'y': 1,
-                'z': 0,
-              },
-              {
-                'id': 't-1-0',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 1,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-1-1',
-                'passable': true,
-                'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 1,
-                'y': 1,
-                'z': 0,
-              },
-            ],
-            'items': {
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'passable': {
-                  'name': 'passable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'required': false,
-                  'type': 'string',
-                },
-                'terrainSprite': {
-                  'name': 'terrainSprite',
                   'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
                     'dimension': {
                       'name': 'dimension',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                     },
                     'name': {
                       'name': 'name',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
                       'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
                     },
                     'style': {
                       'name': 'style',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
                       'required': false,
-                      'type': 'string',
                     },
                     'url': {
                       'name': 'url',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
                     },
                   },
-                  'required': true,
-                  'type': 'object',
                 },
                 'x': {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': false,
+                },
+                'team': {
+                  'name': 'team',
+                  'type': 'string',
+                  'required': false,
+                },
+                'unitType': {
+                  'name': 'unitType',
+                  'type': 'string',
+                  'required': false,
+                },
+                'maxHealth': {
+                  'name': 'maxHealth',
+                  'type': 'number',
+                  'required': false,
+                },
+                'position': {
+                  'name': 'position',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'health': {
+                  'name': 'health',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          {
+            'name': 'fx',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'maxTtl': {
+                  'name': 'maxTtl',
+                  'type': 'number',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
                 },
                 'y': {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
                   'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'vx': {
+                  'name': 'vx',
                   'type': 'number',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'bornAt': {
+                  'name': 'bornAt',
+                  'type': 'number',
+                  'required': false,
+                },
+                'ttl': {
+                  'name': 'ttl',
+                  'type': 'number',
+                  'required': true,
+                },
+                'vz': {
+                  'name': 'vz',
+                  'type': 'number',
+                  'required': false,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'message': {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': false,
+                },
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
+          },
+          {
             'name': 'tiles',
             'type': 'array',
+            'default': [
+              {
+                'z': 0,
+                'x': 0,
+                'terrain': 'grass',
+                'id': 't-0-0',
+                'y': 0,
+                'passable': true,
+                'terrainSprite': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
+                  'aspect': '1:1',
+                  'thumbnailUrl': '',
+                  'animations': [
+                    'static',
+                  ],
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'dimension': '2d',
+                  'role': 'tile',
+                },
+              },
+              {
+                'terrain': 'grass',
+                'z': 0,
+                'y': 1,
+                'terrainSprite': {
+                  'style': 'vector',
+                  'animations': [
+                    'static',
+                  ],
+                  'category': 'terrain',
+                  'role': 'tile',
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'thumbnailUrl': '',
+                  'aspect': '1:1',
+                  'dimension': '2d',
+                },
+                'passable': true,
+                'id': 't-0-1',
+                'x': 0,
+              },
+              {
+                'x': 1,
+                'terrainSprite': {
+                  'style': 'vector',
+                  'role': 'tile',
+                  'aspect': '1:1',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
+                  'thumbnailUrl': '',
+                  'animations': [
+                    'static',
+                  ],
+                  'dimension': '2d',
+                  'category': 'terrain',
+                },
+                'id': 't-1-0',
+                'y': 0,
+                'z': 0,
+                'terrain': 'grass',
+                'passable': true,
+              },
+              {
+                'terrain': 'grass',
+                'z': 0,
+                'passable': true,
+                'y': 1,
+                'id': 't-1-1',
+                'terrainSprite': {
+                  'dimension': '2d',
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'role': 'tile',
+                  'style': 'vector',
+                  'thumbnailUrl': '',
+                  'aspect': '1:1',
+                  'category': 'terrain',
+                  'animations': [
+                    'static',
+                  ],
+                },
+                'x': 1,
+              },
+            ],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'terrain': {
+                  'name': 'terrain',
+                  'type': 'string',
+                  'required': false,
+                },
+                'terrainSprite': {
+                  'name': 'terrainSprite',
+                  'type': 'object',
+                  'required': true,
+                  'properties': {
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'passable': {
+                  'name': 'passable',
+                  'type': 'boolean',
+                  'required': false,
+                },
+              },
+            },
           },
           {
-            'default': 'none',
             'name': 'result',
             'type': 'string',
+            'default': 'none',
           },
           {
-            'default': '',
             'name': 'selectedUnitId',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': [],
-            'items': {
-              'properties': {
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
             'name': 'validMoves',
             'type': 'array',
-          },
-          {
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
                 'x': {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 'z': {
                   'name': 'z',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
+          },
+          {
             'name': 'attackTargets',
             'type': 'array',
-          },
-          {
             'default': [],
             'items': {
-              'type': 'string',
+              'type': 'object',
+              'properties': {
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
             },
+          },
+          {
             'name': 'movedIds',
             'type': 'array',
-          },
-          {
             'default': [],
             'items': {
               'type': 'string',
             },
+          },
+          {
             'name': 'actedIds',
             'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
           },
           {
-            'default': 'observation',
             'name': 'uiPhase',
             'type': 'string',
+            'default': 'observation',
           },
           {
-            'default': 0,
             'name': 'turn',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'score',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'scoreBaseline',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'animCounter',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '0',
             'name': 'frameName',
             'type': 'string',
+            'default': '0',
           },
           {
-            'default': '',
             'name': 'animUnitId',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 'idle',
             'name': 'animState',
             'type': 'string',
+            'default': 'idle',
           },
           {
-            'default': 0,
             'name': 'animTicksLeft',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
             'name': 'animAttackerId',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 0,
             'name': 'animAtkTicksLeft',
             'type': 'number',
+            'default': 0,
           },
           {
+            'name': 'svgAssetArt',
+            'type': 'object',
             'default': {},
             'items': {
+              'type': 'object',
               'items': {
+                'type': 'array',
                 'items': {
                   'type': 'node',
                 },
-                'type': 'array',
               },
-              'type': 'object',
             },
-            'name': 'svgAssetArt',
-            'type': 'object',
           },
         ];
         const extras = params.fields ?? [];
@@ -760,1104 +760,297 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Tactics.traits.GridTactics' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
+        'name': 'TacticsAuthority',
+        'linkedEntity': 'GameState',
         'config': {
-          'attackDamage': {
-            'default': 3,
-            'type': 'unknown',
-          },
-          'gridHeight': {
-            'default': 2,
-            'type': 'unknown',
-          },
-          'gridWidth': {
-            'default': 2,
-            'type': 'unknown',
-          },
-          'running': {
-            'default': true,
-            'type': 'unknown',
-          },
           'tiles': {
+            'type': 'unknown',
             'default': [
               {
                 'id': 't-0-0',
                 'passable': true,
-                'terrain': 'grass',
+                'y': 0,
+                'z': 0,
+                'x': 0,
                 'terrainSprite': {
+                  'name': 'grass',
+                  'aspect': '1:1',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'role': 'tile',
+                  'category': 'terrain',
+                  'dimension': '2d',
+                  'style': 'vector',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
-                'x': 0,
-                'y': 0,
-                'z': 0,
+                'terrain': 'grass',
               },
               {
+                'terrainSprite': {
+                  'thumbnailUrl': '',
+                  'animations': [
+                    'static',
+                  ],
+                  'style': 'vector',
+                  'category': 'terrain',
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
+                  'role': 'tile',
+                  'aspect': '1:1',
+                },
+                'x': 0,
+                'passable': true,
+                'z': 0,
+                'y': 1,
                 'id': 't-0-1',
-                'passable': true,
                 'terrain': 'grass',
-                'terrainSprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                },
-                'x': 0,
-                'y': 1,
-                'z': 0,
               },
               {
-                'id': 't-1-0',
-                'passable': true,
-                'terrain': 'grass',
                 'terrainSprite': {
+                  'dimension': '2d',
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
                   'animations': [
                     'static',
                   ],
                   'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
                   'role': 'tile',
-                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
+                'z': 0,
+                'id': 't-1-0',
+                'terrain': 'grass',
+                'passable': true,
                 'x': 1,
                 'y': 0,
-                'z': 0,
               },
               {
-                'id': 't-1-1',
-                'passable': true,
+                'z': 0,
+                'x': 1,
+                'y': 1,
                 'terrain': 'grass',
+                'passable': true,
                 'terrainSprite': {
+                  'dimension': '2d',
+                  'name': 'grass',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'style': 'vector',
+                  'role': 'tile',
+                  'aspect': '1:1',
                   'animations': [
                     'static',
                   ],
-                  'aspect': '1:1',
                   'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
                 },
-                'x': 1,
-                'y': 1,
-                'z': 0,
+                'id': 't-1-1',
               },
             ],
+          },
+          'gridHeight': {
             'type': 'unknown',
+            'default': 2,
+          },
+          'running': {
+            'type': 'unknown',
+            'default': true,
+          },
+          'gridWidth': {
+            'type': 'unknown',
+            'default': 2,
+          },
+          'attackDamage': {
+            'type': 'unknown',
+            'default': 3,
           },
           'units': {
+            'type': 'unknown',
             'default': [
               {
-                'health': 3,
-                'id': 'p1',
-                'maxHealth': 3,
-                'modelUrl': {
-                  'animations': [
-                    'idle',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'player-unit',
-                  'role': 'player',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
-                },
-                'name': 'Player',
+                'x': 0,
+                'team': 'player',
                 'position': {
                   'x': 0,
                   'y': 0,
                 },
-                'team': 'player',
-                'unitType': 'unit',
-                'x': 0,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'health': 2,
-                'id': 'e1',
-                'maxHealth': 2,
                 'modelUrl': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'dimension': '2d',
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'enemy-unit',
-                  'role': 'enemy',
-                  'style': 'vector',
                   'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'name': 'player-unit',
+                  'category': 'unit',
+                  'aspect': '1:1',
+                  'role': 'player',
+                  'style': 'vector',
                 },
-                'name': 'Enemy',
+                'maxHealth': 3,
+                'y': 0,
+                'health': 3,
+                'z': 0,
+                'id': 'p1',
+                'name': 'Player',
+                'unitType': 'unit',
+              },
+              {
+                'team': 'enemy',
+                'unitType': 'unit',
+                'modelUrl': {
+                  'style': 'vector',
+                  'aspect': '1:1',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'dimension': '2d',
+                  'animations': [
+                    'idle',
+                  ],
+                  'name': 'enemy-unit',
+                  'category': 'unit',
+                  'role': 'enemy',
+                  'thumbnailUrl': '',
+                },
+                'z': 0,
+                'id': 'e1',
                 'position': {
                   'x': 1,
                   'y': 1,
                 },
-                'team': 'enemy',
-                'unitType': 'unit',
-                'x': 1,
                 'y': 1,
-                'z': 0,
+                'name': 'Enemy',
+                'x': 1,
+                'maxHealth': 2,
+                'health': 2,
               },
             ],
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'ATTACK',
+            'triggers': 'ATTACK',
             'source': {
               'kind': 'trait',
               'trait': 'PlayerIntent',
             },
-            'triggers': 'ATTACK',
           },
           {
             'event': 'MOVE',
+            'triggers': 'MOVE',
             'source': {
               'kind': 'trait',
               'trait': 'PlayerIntent',
             },
-            'triggers': 'MOVE',
           },
           {
             'event': 'AI_TURN',
+            'triggers': 'AI_TURN',
             'source': {
               'kind': 'trait',
               'trait': 'PlayerIntent',
             },
-            'triggers': 'AI_TURN',
           },
         ],
-        'name': 'TacticsAuthority',
-        'ref': ('Tactics.traits.GridTactics' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Particles.traits.FxParticles' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
+        'name': 'FxDecay',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'BURST',
+            'triggers': 'BURST',
             'source': {
               'kind': 'trait',
               'trait': 'TacticsAuthority',
             },
-            'triggers': 'BURST',
           },
         ],
-        'name': 'FxDecay',
-        'ref': ('Particles.traits.FxParticles' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Round.traits.RoundFlow' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
+        'name': 'RoundLogic',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'UNITS_CHANGED',
+            'triggers': 'UNITS_CHANGED',
             'source': {
               'kind': 'trait',
               'trait': 'TacticsAuthority',
             },
-            'triggers': 'UNITS_CHANGED',
           },
         ],
-        'name': 'RoundLogic',
-        'ref': ('Round.traits.RoundFlow' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Score.traits.ScoreKeeper' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
+        'name': 'ScoreKeeper',
+        'linkedEntity': 'GameState',
         'config': {
           'initialEnemies': {
+            'type': 'unknown',
             'default': 0,
-            'type': 'unknown',
-          },
-          'pointsPerKill': {
-            'default': 10,
-            'type': 'unknown',
           },
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
+          },
+          'pointsPerKill': {
+            'type': 'unknown',
+            'default': 10,
           },
           'startScore': {
-            'default': 0,
             'type': 'unknown',
+            'default': 0,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'UNITS_CHANGED',
+            'triggers': 'UNITS_CHANGED',
             'source': {
               'kind': 'trait',
               'trait': 'TacticsAuthority',
             },
-            'triggers': 'UNITS_CHANGED',
           },
         ],
-        'name': 'ScoreKeeper',
-        'ref': ('Score.traits.ScoreKeeper' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('AnimTick.traits.AnimTick' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
+        'name': 'AnimClock',
+        'linkedEntity': 'GameState',
         'config': {
           'frames': {
-            'default': [],
             'type': 'unknown',
+            'default': [],
           },
         },
-        'linkedEntity': 'GameState',
-        'name': 'AnimClock',
-        'ref': ('AnimTick.traits.AnimTick' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
       }),
       makeTraitRef({
-        'linkedEntity': 'GameState',
-        'name': 'VectorArt',
         'ref': ('SvgArt.traits.SvgAssetArtCollector' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
+        'name': 'VectorArt',
+        'linkedEntity': 'GameState',
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'assetManifest': {
-            'default': {
-              'effects': {},
-              'features': {},
-              'terrains': {},
-              'units': {},
-            },
-            'description': 'Terrain/unit/feature/effect sprite manifest.',
-            'label': 'Asset Manifest',
-            'properties': {
-              'effects': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'effects',
-                'required': false,
-                'type': 'object',
-              },
-              'features': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'features',
-                'required': false,
-                'type': 'object',
-              },
-              'terrains': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'terrains',
-                'required': false,
-                'type': 'object',
-              },
-              'units': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'units',
-                'required': false,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'AssetManifest',
-          },
-          'attackRange': {
-            'default': 1,
-            'description': 'Max manhattan distance a selected unit may strike an enemy.',
-            'label': 'Attack Range',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'backgroundAsset': {
-            'default': {},
-            'description': 'Game-shell background panel sprite (theme chrome).',
-            'label': 'Background Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'extraAddonEvent': {
-            'default': '',
-            'description': 'Event name used by an `extraAddons` button\'s `action` literal (e.g. "PRODUCE"). Set this to the same value so the trait\'s own event set declares it.',
-            'label': 'Extra Addon Event',
-            'tier': 'domain',
-            'type': 'event',
-          },
-          'extraAddons': {
-            'default': [],
-            'description': 'Board-specific action buttons appended after End Turn/Cancel (e.g. Produce). The action names events listened by composed mechanic atoms.',
-            'items': {
-              'properties': {
-                'action': {
-                  'name': 'action',
-                  'required': false,
-                  'type': 'string',
-                },
-                'iconAsset': {
-                  'name': 'iconAsset',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': false,
-                  'type': 'string',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Extra Addon Buttons',
-            'tier': 'presentation',
-            'type': '[HudButton]',
-          },
-          'extraStats': {
-            'default': [],
-            'description': 'Board-specific HUD stats appended after Result/Phase/Turn/Score (e.g. production, resources). Values may bind @entity fields owned by composed mechanic atoms.',
-            'items': {
-              'properties': {
-                'format': {
-                  'name': 'format',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'value': {
-                  'name': 'value',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Extra HUD Stats',
-            'tier': 'presentation',
-            'type': '[HudStat]',
-          },
-          'features': {
-            'default': [],
-            'description': 'Decorative environment features drawn on the board.',
-            'items': {
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': true,
-                  'type': 'object',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Features',
-            'tier': 'presentation',
-            'type': '[Feature]',
-          },
-          'fxPresets': {
-            'default': [
-              {
-                'color': '#ff6b6b',
-                'color2': '#ffb347',
-                'count': 6,
-                'glow': 0.12,
-                'shape': 'spark',
-                'size': 0.45,
-                'type': 'hit',
-                'vy': -0.3,
-              },
-            ],
-            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
-            'items': {
-              'properties': {
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'color2': {
-                  'name': 'color2',
-                  'required': false,
-                  'type': 'string',
-                },
-                'count': {
-                  'name': 'count',
-                  'required': false,
-                  'type': 'number',
-                },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'glow': {
-                  'name': 'glow',
-                  'required': false,
-                  'type': 'number',
-                },
-                'gravity': {
-                  'name': 'gravity',
-                  'required': false,
-                  'type': 'number',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'shape': {
-                  'name': 'shape',
-                  'required': false,
-                  'type': 'string',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Fx Presets',
-            'tier': 'presentation',
-            'type': '[FxPreset]',
-          },
-          'gridHeight': {
-            'default': 2,
-            'description': 'Grid row count (matches TacticsAuthority.gridHeight).',
-            'label': 'Grid Height',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'gridWidth': {
-            'default': 2,
-            'description': 'Grid column count (matches TacticsAuthority.gridWidth).',
-            'label': 'Grid Width',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'hudBackgroundAsset': {
-            'default': {},
-            'description': 'HUD panel background sprite (theme chrome).',
-            'label': 'HUD Background Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'movementRange': {
-            'default': 4,
-            'description': 'Max manhattan distance a selected unit may move.',
-            'label': 'Movement Range',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'projection': {
-            'default': 'flat',
-            'description': 'canvas-2d projection: flat or isometric.',
-            'label': 'Projection',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'showMinimap': {
-            'default': false,
-            'description': 'Whether the canvas draws a minimap.',
-            'label': 'Show Minimap',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'vectorUnitScale': {
-            'default': 1,
-            'description': 'Uniform scale applied to vector (svgAssetArt draw-group) units.',
-            'label': 'Vector Unit Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-        },
+        'name': 'PlayerIntent',
         'effectRow': [
           {
             'kind': 'emit',
@@ -1958,239 +1151,241 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
             'site': 'tick',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'GameState',
         'emits': [
           {
-            'description': 'Player move intent applied by the grid-tactics authority',
             'event': 'MOVE',
+            'description': 'Player move intent applied by the grid-tactics authority',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Player attack intent applied by the grid-tactics authority',
             'event': 'ATTACK',
+            'description': 'Player attack intent applied by the grid-tactics authority',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'targetId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Ends the player turn; the grid-tactics authority runs the enemy AI pipeline',
             'event': 'AI_TURN',
+            'description': 'Ends the player turn; the grid-tactics authority runs the enemy AI pipeline',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'turn',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'tileClickEvent prop',
             'event': 'TILE_CLICK',
+            'description': 'tileClickEvent prop',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'unitClickEvent prop',
             'event': 'UNIT_CLICK',
+            'description': 'unitClickEvent prop',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
+                'type': 'string',
                 'required': true,
-                'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Clears the current selection',
             'event': 'CANCEL',
+            'description': 'Clears the current selection',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'definerKnob': 'extraAddonEvent',
-            'description': 'Board-declared event name for the `extraAddons` action (e.g. Produce). Registers the call-site literal used inside `extraAddons` button descriptors in this trait\'s own event set.',
             'event': '@config.extraAddonEvent',
+            'description': 'Board-declared event name for the `extraAddons` action (e.g. Produce). Registers the call-site literal used inside `extraAddons` button descriptors in this trait\'s own event set.',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
+            'definerKnob': 'extraAddonEvent',
           },
         ],
-        'linkedEntity': 'GameState',
-        'name': 'PlayerIntent',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'playing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'unitClickEvent prop',
               'key': 'UNIT_CLICK',
               'name': 'Unit Click',
+              'description': 'unitClickEvent prop',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'tileClickEvent prop',
               'key': 'TILE_CLICK',
               'name': 'Tile Click',
+              'description': 'tileClickEvent prop',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Clears the current selection',
               'key': 'CANCEL',
               'name': 'Cancel',
+              'description': 'Clears the current selection',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
               'key': 'END_TURN',
               'name': 'End Turn',
             },
             {
-              'description': 'Player move intent applied by the grid-tactics authority',
               'key': 'MOVE',
               'name': 'Move',
+              'description': 'Player move intent applied by the grid-tactics authority',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Player attack intent applied by the grid-tactics authority',
               'key': 'ATTACK',
               'name': 'Attack',
+              'description': 'Player attack intent applied by the grid-tactics authority',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'targetId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Ends the player turn; the grid-tactics authority runs the enemy AI pipeline',
               'key': 'AI_TURN',
               'name': 'Ai Turn',
+              'description': 'Ends the player turn; the grid-tactics authority runs the enemy AI pipeline',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'turn',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Board-declared event name for the `extraAddons` action (e.g. Produce). Registers the call-site literal used inside `extraAddons` button descriptors in this trait\'s own event set.',
               'key': '@config.extraAddonEvent',
               'name': '@config.extra addon event',
+              'description': 'Board-declared event name for the `extraAddons` action (e.g. Produce). Registers the call-site literal used inside `extraAddons` button descriptors in this trait\'s own event set.',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'playing',
             },
           ],
           'transitions': [
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -2221,70 +1416,8 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   'render-ui',
                   'main',
                   {
-                    'addons': {
-                      'children': [
-                        'array/concat',
-                        [
-                          {
-                            'action': 'END_TURN',
-                            'label': 'End Turn',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
-                          {
-                            'action': 'CANCEL',
-                            'label': 'Cancel',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                        ],
-                        '@config.extraAddons',
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'sm',
-                      'type': 'stack',
-                    },
-                    'backgroundAsset': '@config.backgroundAsset',
                     'children': [
                       {
-                        'camera': {
-                          'pos': {
-                            'x': [
-                              '/',
-                              [
-                                '+',
-                                [
-                                  'array/min',
-                                  '@entity.tiles',
-                                  'x',
-                                ],
-                                [
-                                  'array/max',
-                                  '@entity.tiles',
-                                  'x',
-                                ],
-                              ],
-                              2,
-                            ],
-                            'y': [
-                              '/',
-                              [
-                                '+',
-                                [
-                                  'array/min',
-                                  '@entity.tiles',
-                                  'y',
-                                ],
-                                [
-                                  'array/max',
-                                  '@entity.tiles',
-                                  'y',
-                                ],
-                              ],
-                              2,
-                            ],
-                          },
-                        },
                         'drawables': [
                           'array/concat',
                           [
@@ -2296,7 +1429,10 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                   'fn',
                                   't',
                                   {
+                                    'type': 'draw-shape',
                                     'fill': '#5c94fc',
+                                    'shape': 'cell',
+                                    'strokeWidth': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -2309,10 +1445,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                         'y',
                                       ],
                                     },
-                                    'shape': 'cell',
                                     'stroke': 'rgba(255,255,255,0.35)',
-                                    'strokeWidth': 1,
-                                    'type': 'draw-shape',
                                   },
                                 ],
                               ],
@@ -2347,7 +1480,22 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                     'fn',
                                     't',
                                     {
+                                      'width': 1,
+                                      'height': 1,
+                                      'position': {
+                                        'x': [
+                                          'object/get',
+                                          '@t',
+                                          'x',
+                                        ],
+                                        'y': [
+                                          'object/get',
+                                          '@t',
+                                          'y',
+                                        ],
+                                      },
                                       'anchor': 'center',
+                                      'type': 'draw-sprite',
                                       'asset': [
                                         'if',
                                         [
@@ -2378,21 +1526,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                           ],
                                         ],
                                       ],
-                                      'height': 1,
-                                      'position': {
-                                        'x': [
-                                          'object/get',
-                                          '@t',
-                                          'x',
-                                        ],
-                                        'y': [
-                                          'object/get',
-                                          '@t',
-                                          'y',
-                                        ],
-                                      },
-                                      'type': 'draw-sprite',
-                                      'width': 1,
                                     },
                                   ],
                                 ],
@@ -2438,19 +1571,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                 'fn',
                                 't',
                                 {
-                                  'items': [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@entity.svgAssetArt',
-                                      [
-                                        'object/get',
-                                        '@t',
-                                        'terrain',
-                                      ],
-                                    ],
-                                    'idle',
-                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2464,6 +1584,19 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                     ],
                                   },
                                   'type': 'draw-group',
+                                  'items': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@entity.svgAssetArt',
+                                      [
+                                        'object/get',
+                                        '@t',
+                                        'terrain',
+                                      ],
+                                    ],
+                                    'idle',
+                                  ],
                                 },
                               ],
                             ],
@@ -2471,6 +1604,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                               'array/concat',
                               [
                                 {
+                                  'type': 'draw-sprite-layer',
                                   'items': [
                                     'array/filter',
                                     [
@@ -2499,13 +1633,15 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                         'fn',
                                         'f',
                                         {
-                                          'anchor': 'ground',
+                                          'width': 1,
+                                          'height': 1,
+                                          'type': 'draw-sprite',
                                           'asset': [
                                             'object/get',
                                             '@f',
                                             'assetUrl',
                                           ],
-                                          'height': 1,
+                                          'anchor': 'ground',
                                           'position': {
                                             'x': [
                                               'object/get',
@@ -2518,8 +1654,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                               'y',
                                             ],
                                           },
-                                          'type': 'draw-sprite',
-                                          'width': 1,
                                         },
                                       ],
                                     ],
@@ -2537,7 +1671,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                       ],
                                     ],
                                   ],
-                                  'type': 'draw-sprite-layer',
                                 },
                               ],
                               [
@@ -2578,19 +1711,19 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                         ],
                                         'idle',
                                       ],
+                                      'type': 'draw-group',
                                       'position': {
-                                        'x': [
-                                          'object/get',
-                                          '@f',
-                                          'x',
-                                        ],
                                         'y': [
                                           'object/get',
                                           '@f',
                                           'y',
                                         ],
+                                        'x': [
+                                          'object/get',
+                                          '@f',
+                                          'x',
+                                        ],
                                       },
-                                      'type': 'draw-group',
                                     },
                                   ],
                                 ],
@@ -2605,19 +1738,19 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                           'fn',
                                           'm',
                                           {
-                                            'fill': 'rgba(74,222,128,0.4)',
                                             'position': {
-                                              'x': [
-                                                'object/get',
-                                                '@m',
-                                                'x',
-                                              ],
                                               'y': [
                                                 'object/get',
                                                 '@m',
                                                 'z',
                                               ],
+                                              'x': [
+                                                'object/get',
+                                                '@m',
+                                                'x',
+                                              ],
                                             },
+                                            'fill': 'rgba(74,222,128,0.4)',
                                             'shape': 'cell',
                                             'type': 'draw-shape',
                                           },
@@ -2626,6 +1759,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                       'type': 'draw-shape-layer',
                                     },
                                     {
+                                      'type': 'draw-shape-layer',
                                       'items': [
                                         'array/map',
                                         '@entity.attackTargets',
@@ -2633,27 +1767,27 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                           'fn',
                                           'a',
                                           {
+                                            'type': 'draw-shape',
+                                            'shape': 'cell',
                                             'fill': 'rgba(239,68,68,0.4)',
                                             'position': {
-                                              'x': [
-                                                'object/get',
-                                                '@a',
-                                                'x',
-                                              ],
                                               'y': [
                                                 'object/get',
                                                 '@a',
                                                 'z',
                                               ],
+                                              'x': [
+                                                'object/get',
+                                                '@a',
+                                                'x',
+                                              ],
                                             },
-                                            'shape': 'cell',
-                                            'type': 'draw-shape',
                                           },
                                         ],
                                       ],
-                                      'type': 'draw-shape-layer',
                                     },
                                     {
+                                      'type': 'draw-shape-layer',
                                       'items': [
                                         'array/map',
                                         [
@@ -2677,21 +1811,20 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                           'fn',
                                           'u',
                                           {
+                                            'stroke': 'rgba(0,200,255,0.8)',
+                                            'radiusX': 0.5,
                                             'position': [
                                               'object/get',
                                               '@u',
                                               'position',
                                             ],
-                                            'radiusX': 0.5,
-                                            'radiusY': 0.2,
                                             'shape': 'ellipse',
-                                            'stroke': 'rgba(0,200,255,0.8)',
-                                            'strokeWidth': 3,
                                             'type': 'draw-shape',
+                                            'radiusY': 0.2,
+                                            'strokeWidth': 3,
                                           },
                                         ],
                                       ],
-                                      'type': 'draw-shape-layer',
                                     },
                                   ],
                                   [
@@ -2786,29 +1919,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                             ],
                                           ],
                                           {
-                                            'id': [
-                                              'object/get',
-                                              '@u',
-                                              'id',
-                                            ],
-                                            'items': [
-                                              'if',
-                                              [
-                                                'object/get',
-                                                '@unitStates',
-                                                '@unitAnim',
-                                              ],
-                                              [
-                                                'object/get',
-                                                '@unitStates',
-                                                '@unitAnim',
-                                              ],
-                                              [
-                                                'object/get',
-                                                '@unitStates',
-                                                'idle',
-                                              ],
-                                            ],
+                                            'type': 'draw-group',
                                             'opacity': [
                                               'if',
                                               [
@@ -2838,7 +1949,29 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                               0.45,
                                               1,
                                             ],
+                                            'id': [
+                                              'object/get',
+                                              '@u',
+                                              'id',
+                                            ],
                                             'position': {
+                                              'y': [
+                                                '+',
+                                                [
+                                                  'object/get',
+                                                  [
+                                                    'object/get',
+                                                    '@u',
+                                                    'position',
+                                                  ],
+                                                  'y',
+                                                ],
+                                                [
+                                                  '-',
+                                                  1,
+                                                  '@config.vectorUnitScale',
+                                                ],
+                                              ],
                                               'x': [
                                                 '+',
                                                 [
@@ -2860,26 +1993,26 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                                   2,
                                                 ],
                                               ],
-                                              'y': [
-                                                '+',
-                                                [
-                                                  'object/get',
-                                                  [
-                                                    'object/get',
-                                                    '@u',
-                                                    'position',
-                                                  ],
-                                                  'y',
-                                                ],
-                                                [
-                                                  '-',
-                                                  1,
-                                                  '@config.vectorUnitScale',
-                                                ],
-                                              ],
                                             },
+                                            'items': [
+                                              'if',
+                                              [
+                                                'object/get',
+                                                '@unitStates',
+                                                '@unitAnim',
+                                              ],
+                                              [
+                                                'object/get',
+                                                '@unitStates',
+                                                '@unitAnim',
+                                              ],
+                                              [
+                                                'object/get',
+                                                '@unitStates',
+                                                'idle',
+                                              ],
+                                            ],
                                             'scale': '@config.vectorUnitScale',
-                                            'type': 'draw-group',
                                           },
                                         ],
                                       ],
@@ -2888,6 +2021,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                       'array/concat',
                                       [
                                         {
+                                          'type': 'draw-sprite-layer',
                                           'items': [
                                             'array/filter',
                                             [
@@ -3012,7 +2146,49 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                                     ],
                                                   ],
                                                   {
+                                                    'position': [
+                                                      'object/get',
+                                                      '@u',
+                                                      'position',
+                                                    ],
+                                                    'opacity': [
+                                                      'if',
+                                                      [
+                                                        '>',
+                                                        [
+                                                          'array/len',
+                                                          [
+                                                            'array/filter',
+                                                            '@entity.actedIds',
+                                                            [
+                                                              'fn',
+                                                              'aid',
+                                                              [
+                                                                '==',
+                                                                '@aid',
+                                                                [
+                                                                  'object/get',
+                                                                  '@u',
+                                                                  'id',
+                                                                ],
+                                                              ],
+                                                            ],
+                                                          ],
+                                                        ],
+                                                        0,
+                                                      ],
+                                                      0.45,
+                                                      1,
+                                                    ],
                                                     'anchor': 'ground',
+                                                    'width': 0.5,
+                                                    'height': 0.5,
+                                                    'id': [
+                                                      'object/get',
+                                                      '@u',
+                                                      'id',
+                                                    ],
+                                                    'type': 'draw-sprite',
                                                     'asset': [
                                                       'if',
                                                       [
@@ -3094,48 +2270,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                                       ],
                                                       '@unitAsset',
                                                     ],
-                                                    'height': 0.5,
-                                                    'id': [
-                                                      'object/get',
-                                                      '@u',
-                                                      'id',
-                                                    ],
-                                                    'opacity': [
-                                                      'if',
-                                                      [
-                                                        '>',
-                                                        [
-                                                          'array/len',
-                                                          [
-                                                            'array/filter',
-                                                            '@entity.actedIds',
-                                                            [
-                                                              'fn',
-                                                              'aid',
-                                                              [
-                                                                '==',
-                                                                '@aid',
-                                                                [
-                                                                  'object/get',
-                                                                  '@u',
-                                                                  'id',
-                                                                ],
-                                                              ],
-                                                            ],
-                                                          ],
-                                                        ],
-                                                        0,
-                                                      ],
-                                                      0.45,
-                                                      1,
-                                                    ],
-                                                    'position': [
-                                                      'object/get',
-                                                      '@u',
-                                                      'position',
-                                                    ],
-                                                    'type': 'draw-sprite',
-                                                    'width': 0.5,
                                                   },
                                                 ],
                                               ],
@@ -3154,9 +2288,9 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                               ],
                                             ],
                                           ],
-                                          'type': 'draw-sprite-layer',
                                         },
                                         {
+                                          'type': 'draw-shape-layer',
                                           'items': [
                                             'array/map',
                                             [
@@ -3180,23 +2314,22 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                               'fn',
                                               'u',
                                               {
-                                                'anchor': 'ground',
                                                 'fill': 'rgba(0,0,0,0.6)',
+                                                'width': 0.5,
                                                 'height': 0.12,
-                                                'offsetX': -0.25,
                                                 'offsetY': -0.6,
+                                                'offsetX': -0.25,
+                                                'type': 'draw-shape',
+                                                'anchor': 'ground',
                                                 'position': [
                                                   'object/get',
                                                   '@u',
                                                   'position',
                                                 ],
                                                 'shape': 'rect',
-                                                'type': 'draw-shape',
-                                                'width': 0.5,
                                               },
                                             ],
                                           ],
-                                          'type': 'draw-shape-layer',
                                         },
                                         {
                                           'items': [
@@ -3222,18 +2355,17 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                               'fn',
                                               'u',
                                               {
-                                                'anchor': 'ground',
-                                                'fill': '#22c55e',
                                                 'height': 0.12,
+                                                'fill': '#22c55e',
+                                                'type': 'draw-shape',
+                                                'shape': 'rect',
                                                 'offsetX': -0.25,
-                                                'offsetY': -0.6,
                                                 'position': [
                                                   'object/get',
                                                   '@u',
                                                   'position',
                                                 ],
-                                                'shape': 'rect',
-                                                'type': 'draw-shape',
+                                                'anchor': 'ground',
                                                 'width': [
                                                   '*',
                                                   0.5,
@@ -3251,12 +2383,14 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                                     ],
                                                   ],
                                                 ],
+                                                'offsetY': -0.6,
                                               },
                                             ],
                                           ],
                                           'type': 'draw-shape-layer',
                                         },
                                         {
+                                          'type': 'draw-text-layer',
                                           'items': [
                                             'array/map',
                                             [
@@ -3296,19 +2430,18 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                               },
                                             ],
                                           ],
-                                          'type': 'draw-text-layer',
                                         },
                                         {
-                                          'art': '@entity.svgAssetArt',
+                                          'type': 'draw-fx-layer',
                                           'items': '@entity.fx',
                                           'presets': '@config.fxPresets',
+                                          'tickMs': 500,
                                           'sprites': [
                                             'object/get',
                                             '@config.assetManifest',
                                             'effects',
                                           ],
-                                          'tickMs': 500,
-                                          'type': 'draw-fx-layer',
+                                          'art': '@entity.svgAssetArt',
                                         },
                                       ],
                                       [
@@ -3463,17 +2596,17 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                                 'fn',
                                                 'warmUrl',
                                                 {
+                                                  'type': 'draw-sprite',
+                                                  'width': 0.5,
+                                                  'opacity': 0,
+                                                  'position': {
+                                                    'y': 0,
+                                                    'x': 0,
+                                                  },
                                                   'asset': {
                                                     'url': '@warmUrl',
                                                   },
                                                   'height': 0.5,
-                                                  'opacity': 0,
-                                                  'position': {
-                                                    'x': 0,
-                                                    'y': 0,
-                                                  },
-                                                  'type': 'draw-sprite',
-                                                  'width': 0.5,
                                                 },
                                               ],
                                             ],
@@ -3488,12 +2621,50 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                             ],
                           ],
                         ],
-                        'fit': true,
+                        'unitClickEvent': 'UNIT_CLICK',
                         'projection': '@config.projection',
+                        'camera': {
+                          'pos': {
+                            'y': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@entity.tiles',
+                                  'y',
+                                ],
+                                [
+                                  'array/max',
+                                  '@entity.tiles',
+                                  'y',
+                                ],
+                              ],
+                              2,
+                            ],
+                            'x': [
+                              '/',
+                              [
+                                '+',
+                                [
+                                  'array/min',
+                                  '@entity.tiles',
+                                  'x',
+                                ],
+                                [
+                                  'array/max',
+                                  '@entity.tiles',
+                                  'x',
+                                ],
+                              ],
+                              2,
+                            ],
+                          },
+                        },
                         'showMinimap': '@config.showMinimap',
                         'tileClickEvent': 'TILE_CLICK',
+                        'fit': true,
                         'type': 'canvas',
-                        'unitClickEvent': 'UNIT_CLICK',
                       },
                     ],
                     'hud': {
@@ -3501,18 +2672,18 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                         'array/concat',
                         [
                           {
-                            'format': 'text',
-                            'label': 'Result',
                             'value': '@entity.result',
-                          },
-                          {
+                            'label': 'Result',
                             'format': 'text',
-                            'label': 'Phase',
-                            'value': '@entity.uiPhase',
                           },
                           {
-                            'label': 'Turn',
+                            'value': '@entity.uiPhase',
+                            'label': 'Phase',
+                            'format': 'text',
+                          },
+                          {
                             'value': '@entity.turn',
+                            'label': 'Turn',
                           },
                           {
                             'label': 'Score',
@@ -3524,65 +2695,39 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                       'type': 'game-hud',
                     },
                     'hudBackgroundAsset': '@config.hudBackgroundAsset',
+                    'addons': {
+                      'gap': 'sm',
+                      'type': 'stack',
+                      'children': [
+                        'array/concat',
+                        [
+                          {
+                            'type': 'button',
+                            'label': 'End Turn',
+                            'variant': 'primary',
+                            'action': 'END_TURN',
+                          },
+                          {
+                            'variant': 'secondary',
+                            'type': 'button',
+                            'label': 'Cancel',
+                            'action': 'CANCEL',
+                          },
+                        ],
+                        '@config.extraAddons',
+                      ],
+                      'direction': 'vertical',
+                    },
+                    'backgroundAsset': '@config.backgroundAsset',
                     'type': 'game-shell',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'playing',
-              'to': 'playing',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'ATTACK',
-                  {
-                    'targetId': '@payload.unitId',
-                  },
-                ],
-                [
-                  'set',
-                  '@entity.actedIds',
-                  [
-                    'array/append',
-                    '@entity.actedIds',
-                    '@entity.selectedUnitId',
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.animAttackerId',
-                  '@entity.selectedUnitId',
-                ],
-                [
-                  'set',
-                  '@entity.animAtkTicksLeft',
-                  4,
-                ],
-                [
-                  'set',
-                  '@entity.selectedUnitId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.attackTargets',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.uiPhase',
-                  'observation',
-                ],
-              ],
-              'event': 'UNIT_CLICK',
               'from': 'playing',
+              'to': 'playing',
+              'event': 'UNIT_CLICK',
               'guard': [
                 'and',
                 [
@@ -3711,9 +2856,72 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   ],
                 ],
               ],
-              'to': 'playing',
+              'effects': [
+                [
+                  'emit',
+                  'ATTACK',
+                  {
+                    'targetId': '@payload.unitId',
+                  },
+                ],
+                [
+                  'set',
+                  '@entity.actedIds',
+                  [
+                    'array/append',
+                    '@entity.actedIds',
+                    '@entity.selectedUnitId',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.animAttackerId',
+                  '@entity.selectedUnitId',
+                ],
+                [
+                  'set',
+                  '@entity.animAtkTicksLeft',
+                  4,
+                ],
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.attackTargets',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.uiPhase',
+                  'observation',
+                ],
+              ],
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'UNIT_CLICK',
+              'guard': [
+                'and',
+                [
+                  '==',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  '==',
+                  '@entity.selectedUnitId',
+                  '@payload.unitId',
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -3810,8 +3018,11 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   ],
                 ],
               ],
-              'event': 'UNIT_CLICK',
+            },
+            {
               'from': 'playing',
+              'to': 'playing',
+              'event': 'UNIT_CLICK',
               'guard': [
                 'and',
                 [
@@ -3820,14 +3031,74 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   'none',
                 ],
                 [
-                  '==',
-                  '@entity.selectedUnitId',
-                  '@payload.unitId',
+                  'and',
+                  [
+                    '>',
+                    [
+                      'object/get',
+                      [
+                        'array/find',
+                        '@entity.units',
+                        [
+                          'fn',
+                          'u',
+                          [
+                            '==',
+                            '@u.id',
+                            '@payload.unitId',
+                          ],
+                        ],
+                      ],
+                      'health',
+                    ],
+                    0,
+                  ],
+                  [
+                    'and',
+                    [
+                      '==',
+                      [
+                        'object/get',
+                        [
+                          'array/find',
+                          '@entity.units',
+                          [
+                            'fn',
+                            'u',
+                            [
+                              '==',
+                              '@u.id',
+                              '@payload.unitId',
+                            ],
+                          ],
+                        ],
+                        'team',
+                      ],
+                      'player',
+                    ],
+                    [
+                      '==',
+                      [
+                        'array/len',
+                        [
+                          'array/filter',
+                          '@entity.actedIds',
+                          [
+                            'fn',
+                            'aid',
+                            [
+                              '==',
+                              '@aid',
+                              '@payload.unitId',
+                            ],
+                          ],
+                        ],
+                      ],
+                      0,
+                    ],
+                  ],
                 ],
               ],
-              'to': 'playing',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -3999,15 +3270,15 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                         'fn',
                         't',
                         {
-                          'x': [
-                            'object/get',
-                            '@t',
-                            'x',
-                          ],
                           'z': [
                             'object/get',
                             '@t',
                             'y',
+                          ],
+                          'x': [
+                            'object/get',
+                            '@t',
+                            'x',
                           ],
                         },
                       ],
@@ -4015,190 +3286,11 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   ],
                 ],
               ],
-              'event': 'UNIT_CLICK',
-              'from': 'playing',
-              'guard': [
-                'and',
-                [
-                  '==',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  'and',
-                  [
-                    '>',
-                    [
-                      'object/get',
-                      [
-                        'array/find',
-                        '@entity.units',
-                        [
-                          'fn',
-                          'u',
-                          [
-                            '==',
-                            '@u.id',
-                            '@payload.unitId',
-                          ],
-                        ],
-                      ],
-                      'health',
-                    ],
-                    0,
-                  ],
-                  [
-                    'and',
-                    [
-                      '==',
-                      [
-                        'object/get',
-                        [
-                          'array/find',
-                          '@entity.units',
-                          [
-                            'fn',
-                            'u',
-                            [
-                              '==',
-                              '@u.id',
-                              '@payload.unitId',
-                            ],
-                          ],
-                        ],
-                        'team',
-                      ],
-                      'player',
-                    ],
-                    [
-                      '==',
-                      [
-                        'array/len',
-                        [
-                          'array/filter',
-                          '@entity.actedIds',
-                          [
-                            'fn',
-                            'aid',
-                            [
-                              '==',
-                              '@aid',
-                              '@payload.unitId',
-                            ],
-                          ],
-                        ],
-                      ],
-                      0,
-                    ],
-                  ],
-                ],
-              ],
-              'to': 'playing',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'MOVE',
-                  {
-                    'unitId': '@entity.selectedUnitId',
-                    'x': '@payload.x',
-                    'y': '@payload.y',
-                  },
-                ],
-                [
-                  'set',
-                  '@entity.movedIds',
-                  [
-                    'array/append',
-                    '@entity.movedIds',
-                    '@entity.selectedUnitId',
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.uiPhase',
-                  'action',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.attackTargets',
-                  [
-                    'array/map',
-                    [
-                      'array/filter',
-                      '@entity.units',
-                      [
-                        'fn',
-                        'u',
-                        [
-                          'and',
-                          [
-                            '==',
-                            '@u.team',
-                            'enemy',
-                          ],
-                          [
-                            'and',
-                            [
-                              '>',
-                              '@u.health',
-                              0,
-                            ],
-                            [
-                              '<=',
-                              [
-                                'grid/manhattan-distance',
-                                {
-                                  'x': '@payload.x',
-                                  'y': '@payload.y',
-                                },
-                                [
-                                  'object/get',
-                                  '@u',
-                                  'position',
-                                ],
-                              ],
-                              '@config.attackRange',
-                            ],
-                          ],
-                        ],
-                      ],
-                    ],
-                    [
-                      'fn',
-                      'u',
-                      {
-                        'x': [
-                          'object/get',
-                          [
-                            'object/get',
-                            '@u',
-                            'position',
-                          ],
-                          'x',
-                        ],
-                        'z': [
-                          'object/get',
-                          [
-                            'object/get',
-                            '@u',
-                            'position',
-                          ],
-                          'y',
-                        ],
-                      },
-                    ],
-                  ],
-                ],
-              ],
-              'event': 'TILE_CLICK',
               'from': 'playing',
+              'to': 'playing',
+              'event': 'TILE_CLICK',
               'guard': [
                 'and',
                 [
@@ -4263,8 +3355,8 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                         [
                           'grid/in-bounds',
                           {
-                            'x': '@payload.x',
                             'y': '@payload.y',
+                            'x': '@payload.x',
                           },
                           '@config.gridWidth',
                           '@config.gridHeight',
@@ -4293,8 +3385,8 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                 'position',
                               ],
                               {
-                                'x': '@payload.x',
                                 'y': '@payload.y',
+                                'x': '@payload.x',
                               },
                             ],
                             '@config.movementRange',
@@ -4401,9 +3493,117 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   ],
                 ],
               ],
-              'to': 'playing',
+              'effects': [
+                [
+                  'emit',
+                  'MOVE',
+                  {
+                    'y': '@payload.y',
+                    'unitId': '@entity.selectedUnitId',
+                    'x': '@payload.x',
+                  },
+                ],
+                [
+                  'set',
+                  '@entity.movedIds',
+                  [
+                    'array/append',
+                    '@entity.movedIds',
+                    '@entity.selectedUnitId',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.uiPhase',
+                  'action',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.attackTargets',
+                  [
+                    'array/map',
+                    [
+                      'array/filter',
+                      '@entity.units',
+                      [
+                        'fn',
+                        'u',
+                        [
+                          'and',
+                          [
+                            '==',
+                            '@u.team',
+                            'enemy',
+                          ],
+                          [
+                            'and',
+                            [
+                              '>',
+                              '@u.health',
+                              0,
+                            ],
+                            [
+                              '<=',
+                              [
+                                'grid/manhattan-distance',
+                                {
+                                  'y': '@payload.y',
+                                  'x': '@payload.x',
+                                },
+                                [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                              ],
+                              '@config.attackRange',
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                    [
+                      'fn',
+                      'u',
+                      {
+                        'z': [
+                          'object/get',
+                          [
+                            'object/get',
+                            '@u',
+                            'position',
+                          ],
+                          'y',
+                        ],
+                        'x': [
+                          'object/get',
+                          [
+                            'object/get',
+                            '@u',
+                            'position',
+                          ],
+                          'x',
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+              ],
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'CANCEL',
+              'guard': [
+                '!=',
+                '@entity.selectedUnitId',
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -4426,16 +3626,16 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   'observation',
                 ],
               ],
-              'event': 'CANCEL',
-              'from': 'playing',
-              'guard': [
-                '!=',
-                '@entity.selectedUnitId',
-                '',
-              ],
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'END_TURN',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
               'effects': [
                 [
                   'set',
@@ -4484,16 +3684,11 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   },
                 ],
               ],
-              'event': 'END_TURN',
-              'from': 'playing',
-              'guard': [
-                '==',
-                '@entity.result',
-                'none',
-              ],
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'MOVE',
               'effects': [
                 [
                   'set',
@@ -4511,11 +3706,11 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   6,
                 ],
               ],
-              'event': 'MOVE',
-              'from': 'playing',
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'ATTACK',
               'effects': [
                 [
                   'set',
@@ -4533,14 +3728,13 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   4,
                 ],
               ],
-              'event': 'ATTACK',
-              'from': 'playing',
-              'to': 'playing',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'renderTick',
+            'interval': 100,
             'effects': [
               [
                 'set',
@@ -4631,25 +3825,28 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                         {
                           'action': 'END_TURN',
                           'label': 'End Turn',
-                          'type': 'button',
                           'variant': 'primary',
+                          'type': 'button',
                         },
                         {
                           'action': 'CANCEL',
+                          'variant': 'secondary',
                           'label': 'Cancel',
                           'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       '@config.extraAddons',
                     ],
-                    'direction': 'vertical',
                     'gap': 'sm',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
-                  'backgroundAsset': '@config.backgroundAsset',
                   'children': [
                     {
+                      'projection': '@config.projection',
+                      'tileClickEvent': 'TILE_CLICK',
+                      'type': 'canvas',
+                      'fit': true,
                       'camera': {
                         'pos': {
                           'x': [
@@ -4688,10 +3885,12 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                           ],
                         },
                       },
+                      'showMinimap': '@config.showMinimap',
                       'drawables': [
                         'array/concat',
                         [
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               '@entity.tiles',
@@ -4699,7 +3898,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                 'fn',
                                 't',
                                 {
-                                  'fill': '#5c94fc',
+                                  'type': 'draw-shape',
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4714,14 +3913,14 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                   },
                                   'shape': 'cell',
                                   'stroke': 'rgba(255,255,255,0.35)',
+                                  'fill': '#5c94fc',
                                   'strokeWidth': 1,
-                                  'type': 'draw-shape',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               'array/filter',
                               [
@@ -4750,7 +3949,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                   'fn',
                                   't',
                                   {
-                                    'anchor': 'center',
                                     'asset': [
                                       'if',
                                       [
@@ -4781,7 +3979,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                         ],
                                       ],
                                     ],
-                                    'height': 1,
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -4794,8 +3991,10 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                         'y',
                                       ],
                                     },
-                                    'type': 'draw-sprite',
                                     'width': 1,
+                                    'anchor': 'center',
+                                    'height': 1,
+                                    'type': 'draw-sprite',
                                   },
                                 ],
                               ],
@@ -4813,7 +4012,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                 ],
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                         ],
                         [
@@ -4841,6 +4039,19 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                               'fn',
                               't',
                               {
+                                'position': {
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                },
+                                'type': 'draw-group',
                                 'items': [
                                   'object/get',
                                   [
@@ -4854,19 +4065,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                   ],
                                   'idle',
                                 ],
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@t',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@t',
-                                    'y',
-                                  ],
-                                },
-                                'type': 'draw-group',
                               },
                             ],
                           ],
@@ -4874,6 +4072,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                             'array/concat',
                             [
                               {
+                                'type': 'draw-sprite-layer',
                                 'items': [
                                   'array/filter',
                                   [
@@ -4908,21 +4107,21 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                           '@f',
                                           'assetUrl',
                                         ],
+                                        'type': 'draw-sprite',
+                                        'width': 1,
                                         'height': 1,
                                         'position': {
-                                          'x': [
-                                            'object/get',
-                                            '@f',
-                                            'x',
-                                          ],
                                           'y': [
                                             'object/get',
                                             '@f',
                                             'y',
                                           ],
+                                          'x': [
+                                            'object/get',
+                                            '@f',
+                                            'x',
+                                          ],
                                         },
-                                        'type': 'draw-sprite',
-                                        'width': 1,
                                       },
                                     ],
                                   ],
@@ -4940,7 +4139,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                     ],
                                   ],
                                 ],
-                                'type': 'draw-sprite-layer',
                               },
                             ],
                             [
@@ -4968,6 +4166,19 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                   'fn',
                                   'f',
                                   {
+                                    'type': 'draw-group',
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@f',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@f',
+                                        'y',
+                                      ],
+                                    },
                                     'items': [
                                       'object/get',
                                       [
@@ -4981,19 +4192,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                       ],
                                       'idle',
                                     ],
-                                    'position': {
-                                      'x': [
-                                        'object/get',
-                                        '@f',
-                                        'x',
-                                      ],
-                                      'y': [
-                                        'object/get',
-                                        '@f',
-                                        'y',
-                                      ],
-                                    },
-                                    'type': 'draw-group',
                                   },
                                 ],
                               ],
@@ -5008,7 +4206,8 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                         'fn',
                                         'm',
                                         {
-                                          'fill': 'rgba(74,222,128,0.4)',
+                                          'type': 'draw-shape',
+                                          'shape': 'cell',
                                           'position': {
                                             'x': [
                                               'object/get',
@@ -5021,14 +4220,14 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                               'z',
                                             ],
                                           },
-                                          'shape': 'cell',
-                                          'type': 'draw-shape',
+                                          'fill': 'rgba(74,222,128,0.4)',
                                         },
                                       ],
                                     ],
                                     'type': 'draw-shape-layer',
                                   },
                                   {
+                                    'type': 'draw-shape-layer',
                                     'items': [
                                       'array/map',
                                       '@entity.attackTargets',
@@ -5037,6 +4236,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                         'a',
                                         {
                                           'fill': 'rgba(239,68,68,0.4)',
+                                          'shape': 'cell',
                                           'position': {
                                             'x': [
                                               'object/get',
@@ -5049,14 +4249,13 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                               'z',
                                             ],
                                           },
-                                          'shape': 'cell',
                                           'type': 'draw-shape',
                                         },
                                       ],
                                     ],
-                                    'type': 'draw-shape-layer',
                                   },
                                   {
+                                    'type': 'draw-shape-layer',
                                     'items': [
                                       'array/map',
                                       [
@@ -5080,21 +4279,20 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                         'fn',
                                         'u',
                                         {
+                                          'radiusX': 0.5,
+                                          'radiusY': 0.2,
+                                          'stroke': 'rgba(0,200,255,0.8)',
+                                          'strokeWidth': 3,
+                                          'type': 'draw-shape',
                                           'position': [
                                             'object/get',
                                             '@u',
                                             'position',
                                           ],
-                                          'radiusX': 0.5,
-                                          'radiusY': 0.2,
                                           'shape': 'ellipse',
-                                          'stroke': 'rgba(0,200,255,0.8)',
-                                          'strokeWidth': 3,
-                                          'type': 'draw-shape',
                                         },
                                       ],
                                     ],
-                                    'type': 'draw-shape-layer',
                                   },
                                 ],
                                 [
@@ -5189,58 +4387,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                           ],
                                         ],
                                         {
-                                          'id': [
-                                            'object/get',
-                                            '@u',
-                                            'id',
-                                          ],
-                                          'items': [
-                                            'if',
-                                            [
-                                              'object/get',
-                                              '@unitStates',
-                                              '@unitAnim',
-                                            ],
-                                            [
-                                              'object/get',
-                                              '@unitStates',
-                                              '@unitAnim',
-                                            ],
-                                            [
-                                              'object/get',
-                                              '@unitStates',
-                                              'idle',
-                                            ],
-                                          ],
-                                          'opacity': [
-                                            'if',
-                                            [
-                                              '>',
-                                              [
-                                                'array/len',
-                                                [
-                                                  'array/filter',
-                                                  '@entity.actedIds',
-                                                  [
-                                                    'fn',
-                                                    'aid',
-                                                    [
-                                                      '==',
-                                                      '@aid',
-                                                      [
-                                                        'object/get',
-                                                        '@u',
-                                                        'id',
-                                                      ],
-                                                    ],
-                                                  ],
-                                                ],
-                                              ],
-                                              0,
-                                            ],
-                                            0.45,
-                                            1,
-                                          ],
+                                          'type': 'draw-group',
                                           'position': {
                                             'x': [
                                               '+',
@@ -5281,8 +4428,59 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                               ],
                                             ],
                                           },
+                                          'opacity': [
+                                            'if',
+                                            [
+                                              '>',
+                                              [
+                                                'array/len',
+                                                [
+                                                  'array/filter',
+                                                  '@entity.actedIds',
+                                                  [
+                                                    'fn',
+                                                    'aid',
+                                                    [
+                                                      '==',
+                                                      '@aid',
+                                                      [
+                                                        'object/get',
+                                                        '@u',
+                                                        'id',
+                                                      ],
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                              0,
+                                            ],
+                                            0.45,
+                                            1,
+                                          ],
                                           'scale': '@config.vectorUnitScale',
-                                          'type': 'draw-group',
+                                          'items': [
+                                            'if',
+                                            [
+                                              'object/get',
+                                              '@unitStates',
+                                              '@unitAnim',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@unitStates',
+                                              '@unitAnim',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@unitStates',
+                                              'idle',
+                                            ],
+                                          ],
+                                          'id': [
+                                            'object/get',
+                                            '@u',
+                                            'id',
+                                          ],
                                         },
                                       ],
                                     ],
@@ -5291,6 +4489,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                     'array/concat',
                                     [
                                       {
+                                        'type': 'draw-sprite-layer',
                                         'items': [
                                           'array/filter',
                                           [
@@ -5415,7 +4614,11 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                                   ],
                                                 ],
                                                 {
-                                                  'anchor': 'ground',
+                                                  'position': [
+                                                    'object/get',
+                                                    '@u',
+                                                    'position',
+                                                  ],
                                                   'asset': [
                                                     'if',
                                                     [
@@ -5497,6 +4700,8 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                                     ],
                                                     '@unitAsset',
                                                   ],
+                                                  'type': 'draw-sprite',
+                                                  'anchor': 'ground',
                                                   'height': 0.5,
                                                   'id': [
                                                     'object/get',
@@ -5532,12 +4737,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                                     0.45,
                                                     1,
                                                   ],
-                                                  'position': [
-                                                    'object/get',
-                                                    '@u',
-                                                    'position',
-                                                  ],
-                                                  'type': 'draw-sprite',
                                                   'width': 0.5,
                                                 },
                                               ],
@@ -5557,9 +4756,9 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                             ],
                                           ],
                                         ],
-                                        'type': 'draw-sprite-layer',
                                       },
                                       {
+                                        'type': 'draw-shape-layer',
                                         'items': [
                                           'array/map',
                                           [
@@ -5583,25 +4782,25 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                             'fn',
                                             'u',
                                             {
-                                              'anchor': 'ground',
-                                              'fill': 'rgba(0,0,0,0.6)',
-                                              'height': 0.12,
-                                              'offsetX': -0.25,
                                               'offsetY': -0.6,
+                                              'width': 0.5,
+                                              'anchor': 'ground',
+                                              'type': 'draw-shape',
+                                              'offsetX': -0.25,
+                                              'shape': 'rect',
                                               'position': [
                                                 'object/get',
                                                 '@u',
                                                 'position',
                                               ],
-                                              'shape': 'rect',
-                                              'type': 'draw-shape',
-                                              'width': 0.5,
+                                              'height': 0.12,
+                                              'fill': 'rgba(0,0,0,0.6)',
                                             },
                                           ],
                                         ],
-                                        'type': 'draw-shape-layer',
                                       },
                                       {
+                                        'type': 'draw-shape-layer',
                                         'items': [
                                           'array/map',
                                           [
@@ -5625,18 +4824,11 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                             'fn',
                                             'u',
                                             {
-                                              'anchor': 'ground',
-                                              'fill': '#22c55e',
                                               'height': 0.12,
                                               'offsetX': -0.25,
-                                              'offsetY': -0.6,
-                                              'position': [
-                                                'object/get',
-                                                '@u',
-                                                'position',
-                                              ],
-                                              'shape': 'rect',
+                                              'anchor': 'ground',
                                               'type': 'draw-shape',
+                                              'fill': '#22c55e',
                                               'width': [
                                                 '*',
                                                 0.5,
@@ -5654,12 +4846,19 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                                   ],
                                                 ],
                                               ],
+                                              'position': [
+                                                'object/get',
+                                                '@u',
+                                                'position',
+                                              ],
+                                              'offsetY': -0.6,
+                                              'shape': 'rect',
                                             },
                                           ],
                                         ],
-                                        'type': 'draw-shape-layer',
                                       },
                                       {
+                                        'type': 'draw-text-layer',
                                         'items': [
                                           'array/map',
                                           [
@@ -5683,35 +4882,34 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                             'fn',
                                             'u',
                                             {
-                                              'color': '#ffffff',
-                                              'offsetY': -0.85,
                                               'position': [
                                                 'object/get',
                                                 '@u',
                                                 'position',
                                               ],
+                                              'color': '#ffffff',
                                               'text': [
                                                 'object/get',
                                                 '@u',
                                                 'name',
                                               ],
+                                              'offsetY': -0.85,
                                               'type': 'draw-text',
                                             },
                                           ],
                                         ],
-                                        'type': 'draw-text-layer',
                                       },
                                       {
                                         'art': '@entity.svgAssetArt',
-                                        'items': '@entity.fx',
-                                        'presets': '@config.fxPresets',
+                                        'tickMs': 500,
                                         'sprites': [
                                           'object/get',
                                           '@config.assetManifest',
                                           'effects',
                                         ],
-                                        'tickMs': 500,
                                         'type': 'draw-fx-layer',
+                                        'items': '@entity.fx',
+                                        'presets': '@config.fxPresets',
                                       },
                                     ],
                                     [],
@@ -5722,50 +4920,852 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                           ],
                         ],
                       ],
-                      'fit': true,
-                      'projection': '@config.projection',
-                      'showMinimap': '@config.showMinimap',
-                      'tileClickEvent': 'TILE_CLICK',
-                      'type': 'canvas',
                       'unitClickEvent': 'UNIT_CLICK',
                     },
                   ],
+                  'type': 'game-shell',
                   'hud': {
+                    'type': 'game-hud',
                     'stats': [
                       'array/concat',
                       [
                         {
-                          'format': 'text',
                           'label': 'Result',
+                          'format': 'text',
                           'value': '@entity.result',
                         },
                         {
                           'format': 'text',
-                          'label': 'Phase',
                           'value': '@entity.uiPhase',
+                          'label': 'Phase',
                         },
                         {
                           'label': 'Turn',
                           'value': '@entity.turn',
                         },
                         {
-                          'label': 'Score',
                           'value': '@entity.score',
+                          'label': 'Score',
                         },
                       ],
                       '@config.extraStats',
                     ],
-                    'type': 'game-hud',
                   },
+                  'backgroundAsset': '@config.backgroundAsset',
                   'hudBackgroundAsset': '@config.hudBackgroundAsset',
-                  'type': 'game-shell',
                 },
               ],
             ],
-            'interval': 100,
-            'name': 'renderTick',
           },
         ],
+        'config': {
+          'gridHeight': {
+            'type': 'number',
+            'default': 2,
+            'label': 'Grid Height',
+            'description': 'Grid row count (matches TacticsAuthority.gridHeight).',
+            'tier': 'presentation',
+          },
+          'showMinimap': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show Minimap',
+            'description': 'Whether the canvas draws a minimap.',
+            'tier': 'presentation',
+          },
+          'gridWidth': {
+            'type': 'number',
+            'default': 2,
+            'label': 'Grid Width',
+            'description': 'Grid column count (matches TacticsAuthority.gridWidth).',
+            'tier': 'presentation',
+          },
+          'backgroundAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'Background Asset',
+            'description': 'Game-shell background panel sprite (theme chrome).',
+            'tier': 'presentation',
+            'properties': {
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'projection': {
+            'type': 'string',
+            'default': 'flat',
+            'label': 'Projection',
+            'description': 'canvas-2d projection: flat or isometric.',
+            'tier': 'presentation',
+          },
+          'vectorUnitScale': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Vector Unit Scale',
+            'description': 'Uniform scale applied to vector (svgAssetArt draw-group) units.',
+            'tier': 'presentation',
+          },
+          'extraAddons': {
+            'type': '[HudButton]',
+            'default': [],
+            'label': 'Extra Addon Buttons',
+            'description': 'Board-specific action buttons appended after End Turn/Cancel (e.g. Produce). The action names events listened by composed mechanic atoms.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'iconAsset': {
+                  'name': 'iconAsset',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'action': {
+                  'name': 'action',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'extraStats': {
+            'type': '[HudStat]',
+            'default': [],
+            'label': 'Extra HUD Stats',
+            'description': 'Board-specific HUD stats appended after Result/Phase/Turn/Score (e.g. production, resources). Values may bind @entity fields owned by composed mechanic atoms.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'value': {
+                  'name': 'value',
+                  'type': 'number',
+                  'required': false,
+                },
+                'format': {
+                  'name': 'format',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'fxPresets': {
+            'type': '[FxPreset]',
+            'default': [
+              {
+                'glow': 0.12,
+                'color2': '#ffb347',
+                'count': 6,
+                'size': 0.45,
+                'color': '#ff6b6b',
+                'type': 'hit',
+                'shape': 'spark',
+                'vy': -0.3,
+              },
+            ],
+            'label': 'Fx Presets',
+            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'count': {
+                  'name': 'count',
+                  'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'shape': {
+                  'name': 'shape',
+                  'type': 'string',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color2': {
+                  'name': 'color2',
+                  'type': 'string',
+                  'required': false,
+                },
+                'vz': {
+                  'name': 'vz',
+                  'type': 'number',
+                  'required': false,
+                },
+                'gravity': {
+                  'name': 'gravity',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'glow': {
+                  'name': 'glow',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'features': {
+            'type': '[Feature]',
+            'default': [],
+            'label': 'Features',
+            'description': 'Decorative environment features drawn on the board.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'object',
+                  'required': true,
+                  'properties': {
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'attackRange': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Attack Range',
+            'description': 'Max manhattan distance a selected unit may strike an enemy.',
+            'tier': 'domain',
+          },
+          'assetManifest': {
+            'type': 'AssetManifest',
+            'default': {
+              'units': {},
+              'features': {},
+              'effects': {},
+              'terrains': {},
+            },
+            'label': 'Asset Manifest',
+            'description': 'Terrain/unit/feature/effect sprite manifest.',
+            'tier': 'presentation',
+            'properties': {
+              'terrains': {
+                'name': 'terrains',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'units': {
+                'name': 'units',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'features': {
+                'name': 'features',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'effects': {
+                'name': 'effects',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'movementRange': {
+            'type': 'number',
+            'default': 4,
+            'label': 'Movement Range',
+            'description': 'Max manhattan distance a selected unit may move.',
+            'tier': 'domain',
+          },
+          'extraAddonEvent': {
+            'type': 'event',
+            'default': '',
+            'label': 'Extra Addon Event',
+            'description': 'Event name used by an `extraAddons` button\'s `action` literal (e.g. "PRODUCE"). Set this to the same value so the trait\'s own event set declares it.',
+            'tier': 'domain',
+          },
+          'hudBackgroundAsset': {
+            'type': 'Asset',
+            'default': {},
+            'label': 'HUD Background Asset',
+            'description': 'HUD panel background sprite (theme chrome).',
+            'tier': 'presentation',
+            'properties': {
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': false,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': false,
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

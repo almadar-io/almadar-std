@@ -63,53 +63,53 @@ export interface StdUiWizardNavigationCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardNavigationConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  backLabel?: string;
-  className?: string;
-  /** Default: `false` */
-  compact?: boolean;
-  completeLabel?: string;
-  /** Default: `1` */
-  currentStep?: number;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `true` */
-  isValid?: boolean;
-  lang?: string;
-  nextLabel?: string;
-  /** Default: `"BACK"` */
-  onBack?: string;
-  /** Default: `"BACK_CLICK"` */
-  onBackClick?: string;
-  /** Default: `"COMPLETE"` */
-  onComplete?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"COMPLETE_CLICK"` */
   onCompleteClick?: string;
-  /** Default: `"NEXT"` */
-  onNext?: string;
-  /** Default: `"NEXT_CLICK"` */
-  onNextClick?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  backLabel?: string;
+  completeLabel?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
+  /** Default: `"BACK"` */
+  onBack?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaLabelledby?: string;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `true` */
-  showBack?: boolean;
+  /** Default: `false` */
+  compact?: boolean;
   /** Default: `true` */
   showComplete?: boolean;
+  nextLabel?: string;
+  enterDelay?: number;
+  /** Default: `"NEXT_CLICK"` */
+  onNextClick?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaBusy?: boolean;
+  className?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `1` */
+  currentStep?: number;
   /** Default: `true` */
   showNext?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaLabel?: string;
+  /** Default: `"COMPLETE"` */
+  onComplete?: string;
+  lang?: string;
   tabIndex?: number;
+  ariaHidden?: boolean;
+  /** Default: `"BACK_CLICK"` */
+  onBackClick?: string;
+  /** Default: `"NEXT"` */
+  onNext?: string;
+  ariaExpanded?: boolean;
+  /** Default: `true` */
+  isValid?: boolean;
+  ariaDescribedby?: string;
   /** Default: `1` */
   totalSteps?: number;
+  /** Default: `true` */
+  showBack?: boolean;
 }
 
 /**

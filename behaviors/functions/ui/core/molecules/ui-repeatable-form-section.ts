@@ -55,52 +55,52 @@ export interface StdUiRepeatableFormSectionReorderPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRepeatableFormSectionConfig {
-  addLabel?: string;
-  /** Default: `false` */
-  allowReorder?: boolean;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  currentState?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  emptyMessage?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
-  /** Default: `"id"` */
-  itemLabelField?: string;
-  /** Default: `[{"addedAt":"Added At","addedInState":"Added In State","id":"Id"},{"addedAt":"Added At 2","addedInState":"Added In State 2","id":"Id 2"}]` */
-  items?: EntityRow[];
-  lang?: string;
-  maxItems?: number;
-  /** Default: `0` */
-  minItems?: number;
-  /** Default: `"ADD"` */
-  onAdd?: string;
-  /** Default: `"REMOVE"` */
-  onRemove?: string;
-  /** Default: `"REORDER"` */
-  onReorder?: string;
-  /** Default: `false` */
-  readOnly?: boolean;
+  ariaExpanded?: boolean;
+  ariaSelected?: boolean;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `""` */
+  title?: string;
+  currentState?: string;
+  /** Default: `false` */
+  readOnly?: boolean;
+  /** Default: `0` */
+  minItems?: number;
+  /** Default: `""` */
   sectionType?: string;
+  /** Default: `"REMOVE"` */
+  onRemove?: string;
+  lang?: string;
+  /** Default: `"ADD"` */
+  onAdd?: string;
   /** Default: `false` */
   showAuditInfo?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  maxItems?: number;
+  ariaHidden?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaPressed?: 'true' | 'false' | 'mixed';
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
-  /** Default: `""` */
-  title?: string;
+  ariaLabel?: string;
   /** Default: `false` */
   trackAddedInState?: boolean;
+  ariaLabelledby?: string;
+  /** Default: `false` */
+  allowReorder?: boolean;
+  /** Default: `"REORDER"` */
+  onReorder?: string;
+  /** Default: `[{"addedAt":"Added At","id":"Id","addedInState":"Added In State"},{"addedInState":"Added In State 2","addedAt":"Added At 2","id":"Id 2"}]` */
+  items?: EntityRow[];
+  tabIndex?: number;
+  emptyMessage?: string;
+  ariaBusy?: boolean;
+  className?: string;
+  addLabel?: string;
+  ariaDescribedby?: string;
+  /** Default: `"id"` */
+  itemLabelField?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  dir?: 'ltr' | 'rtl' | 'auto';
 }
 
 /**

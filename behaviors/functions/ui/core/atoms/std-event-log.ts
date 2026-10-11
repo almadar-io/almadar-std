@@ -83,42 +83,42 @@ export interface StdEventLogEventLogSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventLogConfig {
-  /** Default: `"All"` */
-  allLabel?: string;
-  /** Default: `false` */
-  bodySearch?: boolean;
-  /** Default: `"elevated"` */
-  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `"date"` */
-  dateField?: string;
-  /** Default: `"description"` */
-  descriptionField?: string;
-  /** Default: `"toolbar"` */
-  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
-  /** Default: `[]` */
-  filters?: EntityRow[];
   /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
   formFields?: string[];
-  /** Default: `"kind"` */
-  kindField?: string;
-  /** Default: `[]` */
-  kindLabels?: string[];
-  /** Default: `[{"icon":"plus-circle","key":"created","label":"Created","status":"active"},{"icon":"edit-3","key":"updated","label":"Updated","status":"pending"},{"icon":"check-circle","key":"approved","label":"Approved","status":"complete"},{"icon":"x-circle","key":"rejected","label":"Rejected","status":"error"}]` */
-  kindOptions?: EntityRow[];
-  /** Default: `20` */
-  pageSize?: number;
-  /** Default: `"title"` */
-  searchField?: string;
   /** Default: `"Search activity…"` */
   searchPlaceholder?: string;
-  /** Default: `"status"` */
-  statusField?: string;
-  /** Default: `"vertical-spacious"` */
-  timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
-  /** Default: `"Activity"` */
-  title?: string;
+  /** Default: `"title"` */
+  searchField?: string;
+  /** Default: `20` */
+  pageSize?: number;
+  /** Default: `"All"` */
+  allLabel?: string;
+  /** Default: `"elevated"` */
+  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
   /** Default: `"title"` */
   titleField?: string;
+  /** Default: `"status"` */
+  statusField?: string;
+  /** Default: `"kind"` */
+  kindField?: string;
+  /** Default: `"vertical-spacious"` */
+  timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
+  /** Default: `"date"` */
+  dateField?: string;
+  /** Default: `[]` */
+  kindLabels?: string[];
+  /** Default: `[{"icon":"plus-circle","status":"active","key":"created","label":"Created"},{"key":"updated","icon":"edit-3","status":"pending","label":"Updated"},{"icon":"check-circle","status":"complete","key":"approved","label":"Approved"},{"icon":"x-circle","label":"Rejected","key":"rejected","status":"error"}]` */
+  kindOptions?: EntityRow[];
+  /** Default: `"description"` */
+  descriptionField?: string;
+  /** Default: `[]` */
+  filters?: EntityRow[];
+  /** Default: `false` */
+  bodySearch?: boolean;
+  /** Default: `"toolbar"` */
+  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
+  /** Default: `"Activity"` */
+  title?: string;
 }
 
 /**
@@ -261,120 +261,107 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'title',
+            'type': 'string',
             'default': '',
             'description': 'The descriptive name or heading for the event log.',
-            'name': 'title',
             'synonyms': 'heading, label, name',
-            'type': 'string',
           },
           {
+            'name': 'description',
+            'type': 'string',
             'default': '',
             'description': 'A human-readable explanation of the event.',
-            'name': 'description',
             'synonyms': 'text, details, explanation, summary',
-            'type': 'string',
           },
           {
-            'default': 'created',
-            'description': 'The type of event being logged.',
             'name': 'kind',
-            'synonyms': 'event type, event category, kind, status',
             'type': 'string',
+            'default': 'created',
             'values': [
               'created',
               'updated',
               'approved',
               'rejected',
             ],
+            'description': 'The type of event being logged.',
+            'synonyms': 'event type, event category, kind, status',
           },
           {
-            'description': 'The timestamp associated with the event.',
             'name': 'date',
-            'synonyms': 'timestamp, time, occurred',
             'type': 'date',
+            'description': 'The timestamp associated with the event.',
+            'synonyms': 'timestamp, time, occurred',
           },
           {
-            'default': [],
-            'description': 'An array of log entry objects.',
-            'items': {
-              'properties': {
-                'date': {
-                  'name': 'date',
-                  'required': false,
-                  'type': 'string',
-                },
-                'description': {
-                  'name': 'description',
-                  'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'kind': {
-                  'name': 'kind',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'created',
-                    'updated',
-                    'approved',
-                    'rejected',
-                  ],
-                },
-                'status': {
-                  'name': 'status',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'complete',
-                    'active',
-                    'pending',
-                    'error',
-                  ],
-                },
-                'title': {
-                  'name': 'title',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
             'name': 'allEntries',
-            'synonyms': 'entries, records, items, data',
             'type': 'array',
-          },
-          {
             'default': [],
-            'description': 'A list of log entries, each with associated data.',
             'items': {
+              'type': 'object',
               'properties': {
-                'date': {
-                  'name': 'date',
-                  'required': false,
+                'kind': {
+                  'name': 'kind',
                   'type': 'string',
+                  'required': false,
+                  'values': [
+                    'created',
+                    'updated',
+                    'approved',
+                    'rejected',
+                  ],
                 },
                 'description': {
                   'name': 'description',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
+                },
+                'status': {
+                  'name': 'status',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'complete',
+                    'active',
+                    'pending',
+                    'error',
+                  ],
+                },
+                'date': {
+                  'name': 'date',
+                  'type': 'string',
+                  'required': false,
+                },
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
                 },
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
+              },
+            },
+            'description': 'An array of log entry objects.',
+            'synonyms': 'entries, records, items, data',
+          },
+          {
+            'name': 'entries',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
                 'kind': {
                   'name': 'kind',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'created',
                     'updated',
@@ -384,8 +371,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                 },
                 'status': {
                   'name': 'status',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'complete',
                     'active',
@@ -393,85 +380,98 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                     'error',
                   ],
                 },
-                'title': {
-                  'name': 'title',
-                  'required': true,
+                'date': {
+                  'name': 'date',
                   'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'entries',
-            'synonyms': 'records, items, data, events',
-            'type': 'array',
-          },
-          {
-            'default': [],
-            'description': 'Represents selectable filter options for event categories.',
-            'items': {
-              'properties': {
-                'icon': {
-                  'name': 'icon',
                   'required': false,
+                },
+                'description': {
+                  'name': 'description',
                   'type': 'string',
+                  'required': false,
                 },
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
+                },
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+            'description': 'A list of log entries, each with associated data.',
+            'synonyms': 'records, items, data, events',
+          },
+          {
+            'name': 'filterChips',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
                 },
                 'label': {
                   'name': 'label',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'filterChips',
+            'description': 'Represents selectable filter options for event categories.',
             'synonyms': 'filters, categories, types, selections',
-            'type': 'array',
           },
           {
+            'name': 'filterKind',
+            'type': 'string',
             'default': '',
             'description': 'The type of filter currently applied to the event log.',
-            'name': 'filterKind',
             'synonyms': 'filter, category, type',
-            'type': 'string',
           },
           {
+            'name': 'backfillTitle',
+            'type': 'string',
             'default': '',
             'description': 'A descriptive title for a manually added event.',
-            'name': 'backfillTitle',
             'synonyms': 'manual title, user-provided title, custom title',
-            'type': 'string',
           },
           {
+            'name': 'backfillDescription',
+            'type': 'string',
             'default': '',
             'description': 'A textual explanation for the event backfill process.',
-            'name': 'backfillDescription',
             'synonyms': 'explanation, details, notes, information',
-            'type': 'string',
           },
           {
-            'description': 'The date and time when the event was manually added.',
             'name': 'backfillDate',
-            'synonyms': 'timestamp, entered date, manual date',
             'type': 'date',
+            'description': 'The date and time when the event was manually added.',
+            'synonyms': 'timestamp, entered date, manual date',
           },
           {
+            'name': 'backfillKind',
+            'type': 'string',
             'default': '',
             'description': 'Specifies the category or type of the manually added event.',
-            'name': 'backfillKind',
             'synonyms': 'event type, category, kind',
-            'type': 'string',
           },
           {
+            'name': 'errorMessage',
+            'type': 'string',
             'default': '',
             'description': 'A human-readable message indicating an error condition.',
-            'name': 'errorMessage',
             'synonyms': 'error, error message, problem, issue',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -482,253 +482,21 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'allLabel': {
-            'default': 'All',
-            'description': 'Label of the chip that shows every kind',
-            'label': 'All label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'bodySearch': {
-            'default': false,
-            'description': 'Embeds a search box above the activity feed. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — no consumer of this atom has ever had a search box.',
-            'label': 'Show the log\'s own search box?',
-            'synonyms': 'inline search, log search, built-in search, show search',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'cardLook': {
-            'default': 'elevated',
-            'description': 'Layer 2 visual treatment for cards rendered by this atom.',
-            'label': 'Card look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'elevated',
-              'flat-bordered',
-              'borderless-divider',
-              'ticket',
-              'invoice',
-              'chip',
-              'tile-image-first',
-            ],
-          },
-          'dateField': {
-            'default': 'date',
-            'description': 'Entity field holding each event\'s date.',
-            'label': 'Date field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'descriptionField': {
-            'default': 'description',
-            'description': 'Entity field holding each event\'s description.',
-            'label': 'Description field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'filterBarLook': {
-            'default': 'toolbar',
-            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
-            'label': 'Filter bar look',
-            'synonyms': 'filter bar style, facet style, chips, pills',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'toolbar',
-              'chips',
-              'pills',
-              'popover-trigger',
-              'inline-column-header',
-            ],
-          },
-          'filters': {
-            'default': [],
-            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the timeline; each selection fires REFETCH_FILTER on this trait, ANDed with the current kind tab. Empty (the default) = no filter bar — the right setting whenever the page already composes std-filter beside this atom and routes XFilter.FILTER -> REFETCH_FILTER, or relies solely on the built-in kind-filter chips (driven by kindOptions, which this knob does not duplicate or replace). Use this knob only for an extra facet beyond kind (e.g. actor, priority).',
-            'items': {
-              'properties': {
-                'field': {
-                  'name': 'field',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'options': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'options',
-                  'required': false,
-                  'type': 'array',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Which filters should appear above the feed?',
-            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
-            'tier': 'presentation',
-            'type': '[FilterSpec]',
-          },
-          'formFields': {
-            'default': [
-              'backfillTitle',
-              'backfillDescription',
-              'backfillKind',
-              'backfillDate',
-            ],
-            'description': 'Inputs shown in the form for manually logging missed events',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Backfill fields',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'kindField': {
-            'default': 'kind',
-            'description': 'Name the field on this entity the kind filter compares against (the values of kindOptions). An entity whose kind lives under another column (e.g. status) sets it here, or the kind filter can never match an entry.',
-            'label': 'Which column holds each entry\'s kind?',
-            'synonyms': 'kind column, type field, category column, filter by kind',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'kindLabels': {
-            'default': [],
-            'description': 'In kindOptions order: the label shown on each kind\'s filter chip, in place of its kindOptions label (render-only, so it may be translated)',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Kind labels',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'kindOptions': {
-            'default': [
-              {
-                'icon': 'plus-circle',
-                'key': 'created',
-                'label': 'Created',
-                'status': 'active',
-              },
-              {
-                'icon': 'edit-3',
-                'key': 'updated',
-                'label': 'Updated',
-                'status': 'pending',
-              },
-              {
-                'icon': 'check-circle',
-                'key': 'approved',
-                'label': 'Approved',
-                'status': 'complete',
-              },
-              {
-                'icon': 'x-circle',
-                'key': 'rejected',
-                'label': 'Rejected',
-                'status': 'error',
-              },
-            ],
-            'description': 'Maps each event kind to its label, icon, and status color',
-            'items': {
-              'properties': {
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'key': {
-                  'name': 'key',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'status': {
-                  'name': 'status',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'complete',
-                    'active',
-                    'pending',
-                    'error',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Event kinds',
-            'tier': 'presentation',
-            'type': '[KindOption]',
-          },
-          'pageSize': {
-            'default': 20,
-            'description': 'Records fetched from the server per REFETCH_PAGE request. The initial load and every search/kind/filter refetch stay unpaginated (load everything that matches) so the default unlimited activity feed is unchanged; only an explicit REFETCH_PAGE from a composed std-pagination control applies this limit.',
-            'label': 'How many entries per page when paging?',
-            'synonyms': 'fetch limit, records per page, page limit',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'searchField': {
-            'default': 'title',
-            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field or the search box can never match an entry.',
-            'label': 'Which column does the search box match against?',
-            'synonyms': 'search column, search on field, match field, search key',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'searchPlaceholder': {
-            'default': 'Search activity…',
-            'description': 'Hint text inside the log\'s search box.',
-            'label': 'Search box placeholder text',
-            'synonyms': 'search hint, placeholder, search box text',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'statusField': {
-            'default': 'status',
-            'description': 'Entity field holding each event\'s status (complete | active | pending | error).',
-            'label': 'Status field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'timelineLook': {
-            'default': 'vertical-spacious',
-            'description': 'Layer 2 visual treatment for the timeline.',
-            'label': 'Timeline look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'vertical-compact',
-              'vertical-spacious',
-              'horizontal',
-              'swimlane',
-            ],
-          },
-          'title': {
-            'default': 'Activity',
-            'description': 'Heading shown above the activity timeline',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'titleField': {
-            'default': 'title',
-            'description': 'Entity field holding each event\'s title.',
-            'label': 'Title field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'EventLogTimeline',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'allEntries',
+            'backfillDate',
+            'backfillDescription',
+            'backfillKind',
+            'backfillTitle',
+            'entries',
+            'errorMessage',
+            'filterChips',
+            'filterKind',
+          ],
         },
         'effectRow': [
           {
@@ -784,51 +552,55 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'resource': '@entity.filterKind',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'EventLogView',
         'emits': [
           {
-            'description': 'Signals a filter has been applied to the event log.',
             'event': 'APPLY_FILTER',
+            'description': 'Signals a filter has been applied to the event log.',
+            'synonyms': 'filter, refine, narrow, update',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'tabId',
                 'type': 'string',
               },
             ],
-            'synonyms': 'filter, refine, narrow, update',
-            'tier': 'presentation',
           },
           {
-            'description': 'Initiates a backfill operation to retrieve historical events.',
             'event': 'OPEN_BACKFILL',
+            'description': 'Initiates a backfill operation to retrieve historical events.',
             'synonyms': 'refresh, retrieve, load history',
             'tier': 'internal',
           },
           {
-            'description': 'Indicates successful completion of backfill data saving.',
             'event': 'SAVE_BACKFILL',
+            'description': 'Indicates successful completion of backfill data saving.',
+            'synonyms': 'saved, persisted, committed',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'data',
-                'required': true,
                 'type': '@entity',
+                'required': true,
               },
             ],
-            'synonyms': 'saved, persisted, committed',
-            'tier': 'presentation',
           },
           {
-            'description': 'Aborts the backfill process.',
             'event': 'CANCEL_BACKFILL',
+            'description': 'Aborts the backfill process.',
             'synonyms': 'abort, stop, dismiss, undo',
             'tier': 'presentation',
           },
           {
-            'description': 'Signals the event log has finished loading.',
             'event': 'EventLogLoaded',
+            'description': 'Signals the event log has finished loading.',
+            'synonyms': 'loaded, ready, initialized',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ObjectSpec',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -843,15 +615,15 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ObjectSpec',
               },
             ],
-            'synonyms': 'loaded, ready, initialized',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates that loading the event log failed.',
             'event': 'EventLogLoadFailed',
+            'description': 'Indicates that loading the event log failed.',
+            'synonyms': 'error, failure, failed, problem',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -862,25 +634,25 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure, failed, problem',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates a new event has been successfully logged.',
             'event': 'EventLogSaved',
+            'description': 'Indicates a new event has been successfully logged.',
+            'synonyms': 'saved, added, created, recorded',
+            'tier': 'domain',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'value',
                 'type': '@entity',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'saved, added, created, recorded',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates that saving an event failed.',
             'event': 'EventLogSaveFailed',
+            'description': 'Indicates that saving an event failed.',
+            'synonyms': 'error, failure, failed, problem',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -891,41 +663,39 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure, failed, problem',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'allEntries',
-            'backfillDate',
-            'backfillDescription',
-            'backfillKind',
-            'backfillTitle',
-            'entries',
-            'errorMessage',
-            'filterChips',
-            'filterKind',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'EventLogView',
-        'name': 'EventLogTimeline',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'viewing',
+            },
+            {
+              'name': 'backfilling',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals the event log has finished loading.',
               'key': 'EventLogLoaded',
               'name': 'Event log loaded',
+              'description': 'Signals the event log has finished loading.',
+              'synonyms': 'loaded, ready, initialized',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -940,16 +710,15 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'synonyms': 'loaded, ready, initialized',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates that loading the event log failed.',
               'key': 'EventLogLoadFailed',
               'name': 'Event log load failed',
+              'description': 'Indicates that loading the event log failed.',
+              'synonyms': 'error, failure, failed, problem',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -960,26 +729,26 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, failed, problem',
-              'tier': 'internal',
             },
             {
-              'description': 'Indicates a new event has been successfully logged.',
               'key': 'EventLogSaved',
               'name': 'Event log saved',
+              'description': 'Indicates a new event has been successfully logged.',
+              'synonyms': 'saved, added, created, recorded',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': '@entity',
                 },
               ],
-              'synonyms': 'saved, added, created, recorded',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates that saving an event failed.',
               'key': 'EventLogSaveFailed',
               'name': 'Event log save failed',
+              'description': 'Indicates that saving an event failed.',
+              'synonyms': 'error, failure, failed, problem',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -990,132 +759,118 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, failed, problem',
-              'tier': 'internal',
             },
             {
-              'description': 'Signals a filter has been applied to the event log.',
               'key': 'APPLY_FILTER',
               'name': 'Apply Filter',
+              'description': 'Signals a filter has been applied to the event log.',
+              'synonyms': 'filter, refine, narrow, update',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'tabId',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'filter, refine, narrow, update',
-              'tier': 'presentation',
             },
             {
-              'description': 'Triggers an activity feed refresh based on the current search term.',
               'key': 'REFETCH_QUERY',
               'name': 'Refetch Query',
+              'description': 'Triggers an activity feed refresh based on the current search term.',
+              'synonyms': 'refresh, reload, update, re-query, search',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'searchTerm',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'refresh, reload, update, re-query, search',
-              'tier': 'domain',
             },
             {
-              'description': 'Triggers an activity feed refresh based on a field/value filter, in addition to the built-in kind tabs.',
               'key': 'REFETCH_FILTER',
               'name': 'Refetch Filter',
+              'description': 'Triggers an activity feed refresh based on a field/value filter, in addition to the built-in kind tabs.',
+              'synonyms': 'refresh, filter, update, reload',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'entity',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'field',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'value',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'query',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'refresh, filter, update, reload',
-              'tier': 'domain',
             },
             {
-              'description': 'Triggers an activity feed page refresh.',
               'key': 'REFETCH_PAGE',
               'name': 'Refetch Page',
+              'description': 'Triggers an activity feed page refresh.',
+              'synonyms': 'reload, refresh, update, paginate',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'page',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'synonyms': 'reload, refresh, update, paginate',
-              'tier': 'domain',
             },
             {
-              'description': 'Initiates a backfill operation to retrieve historical events.',
               'key': 'OPEN_BACKFILL',
               'name': 'Open Backfill',
+              'description': 'Initiates a backfill operation to retrieve historical events.',
               'synonyms': 'refresh, retrieve, load history',
               'tier': 'internal',
             },
             {
-              'description': 'Indicates successful completion of backfill data saving.',
               'key': 'SAVE_BACKFILL',
               'name': 'Save Backfill',
+              'description': 'Indicates successful completion of backfill data saving.',
+              'synonyms': 'saved, persisted, committed',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'required': true,
                   'type': '@entity',
+                  'required': true,
                 },
               ],
-              'synonyms': 'saved, persisted, committed',
-              'tier': 'presentation',
             },
             {
-              'description': 'Aborts the backfill process.',
               'key': 'CANCEL_BACKFILL',
               'name': 'Cancel Backfill',
+              'description': 'Aborts the backfill process.',
               'synonyms': 'abort, stop, dismiss, undo',
               'tier': 'presentation',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'viewing',
-            },
-            {
-              'name': 'backfilling',
-            },
-            {
-              'name': 'error',
-            },
-          ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('EventLogView' satisfies _StdEventLogEntityName),
                   {
                     'emit': {
-                      'failure': 'EventLogLoadFailed',
                       'success': 'EventLogLoaded',
+                      'failure': 'EventLogLoadFailed',
                     },
                   },
                 ],
@@ -1125,26 +880,26 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   {
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'viewing',
+              'event': 'EventLogLoaded',
               'effects': [
                 [
                   'set',
@@ -1158,16 +913,16 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'fn',
                         'k',
                         {
+                          'id': [
+                            'object/get',
+                            '@k',
+                            'key',
+                          ],
                           'icon': [
                             'object/get',
                             '@k',
                             'icon',
                             'circle',
-                          ],
-                          'id': [
-                            'object/get',
-                            '@k',
-                            'key',
                           ],
                           'label': [
                             'object/get',
@@ -1178,9 +933,9 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                       ],
                     ],
                     {
-                      'icon': 'list',
                       'id': '',
                       'label': 'All',
+                      'icon': 'list',
                     },
                   ],
                 ],
@@ -1206,24 +961,6 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                               'date',
                               '',
                             ],
-                          ],
-                          'description': [
-                            'object/get',
-                            '@row',
-                            'description',
-                            '',
-                          ],
-                          'id': [
-                            'object/get',
-                            '@row',
-                            'id',
-                            '',
-                          ],
-                          'kind': [
-                            'object/get',
-                            '@row',
-                            'kind',
-                            '',
                           ],
                           'status': [
                             'object/get',
@@ -1256,6 +993,24 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                             'status',
                             'pending',
                           ],
+                          'kind': [
+                            'object/get',
+                            '@row',
+                            'kind',
+                            '',
+                          ],
+                          'id': [
+                            'object/get',
+                            '@row',
+                            'id',
+                            '',
+                          ],
+                          'description': [
+                            'object/get',
+                            '@row',
+                            'description',
+                            '',
+                          ],
                           'title': [
                             'object/get',
                             '@row',
@@ -1281,6 +1036,18 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'fn',
                         'row',
                         {
+                          'id': [
+                            'object/get',
+                            '@row',
+                            'id',
+                            '',
+                          ],
+                          'kind': [
+                            'object/get',
+                            '@row',
+                            'kind',
+                            '',
+                          ],
                           'date': [
                             'object/get',
                             '@row',
@@ -1296,18 +1063,6 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                             'object/get',
                             '@row',
                             'description',
-                            '',
-                          ],
-                          'id': [
-                            'object/get',
-                            '@row',
-                            'id',
-                            '',
-                          ],
-                          'kind': [
-                            'object/get',
-                            '@row',
-                            'kind',
                             '',
                           ],
                           'status': [
@@ -1361,50 +1116,50 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                     'children': [
                       {
                         'align': 'center',
-                        'children': [
-                          {
-                            'name': 'history',
-                            'size': 'lg',
-                            'type': 'icon',
-                          },
-                          {
-                            'content': '@config.title',
-                            'type': 'typography',
-                            'variant': 'h3',
-                          },
-                          {
-                            'action': 'OPEN_BACKFILL',
-                            'icon': 'plus',
-                            'label': 'Log event',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
-                        ],
                         'direction': 'horizontal',
                         'gap': 'sm',
                         'type': 'stack',
+                        'children': [
+                          {
+                            'size': 'lg',
+                            'type': 'icon',
+                            'name': 'history',
+                          },
+                          {
+                            'variant': 'h3',
+                            'content': '@config.title',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'button',
+                            'variant': 'primary',
+                            'label': 'Log event',
+                            'action': 'OPEN_BACKFILL',
+                            'icon': 'plus',
+                          },
+                        ],
                       },
                       [
                         'if',
                         '@config.bodySearch',
                         {
+                          'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
-                              'className': 'w-full max-w-md',
-                              'clearable': true,
-                              'event': 'REFETCH_QUERY',
                               'placeholder': '@config.searchPlaceholder',
+                              'event': 'REFETCH_QUERY',
                               'type': 'search-input',
+                              'clearable': true,
+                              'className': 'w-full max-w-md',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
-                          'children': [],
-                          'gap': 'none',
                           'type': 'stack',
+                          'gap': 'none',
+                          'children': [],
                         },
                       ],
                       [
@@ -1418,28 +1173,29 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           0,
                         ],
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'entity': 'EventLogView',
-                              'event': 'REFETCH_FILTER',
                               'filters': '@config.filters',
                               'look': '@config.filterBarLook',
                               'type': 'filter-group',
+                              'event': 'REFETCH_FILTER',
+                              'entity': 'EventLogView',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
-                          'children': [],
-                          'gap': 'none',
                           'type': 'stack',
+                          'gap': 'none',
+                          'children': [],
                         },
                       ],
                       {
                         'activeTab': '@entity.filterKind',
                         'tabChangeEvent': 'APPLY_FILTER',
+                        'type': 'tabs',
                         'tabs': [
                           'array/map',
                           '@entity.filterChips',
@@ -1497,35 +1253,34 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                             },
                           ],
                         ],
-                        'type': 'tabs',
                       },
                       {
-                        'dateField': '@config.dateField',
-                        'descriptionField': '@config.descriptionField',
+                        'statusField': '@config.statusField',
+                        'look': '@config.timelineLook',
+                        'type': 'timeline',
                         'entity': '@entity.entries',
+                        'dateField': '@config.dateField',
                         'fields': [
                           'title',
                           'description',
                           'date',
                           'status',
                         ],
-                        'look': '@config.timelineLook',
-                        'statusField': '@config.statusField',
                         'titleField': '@config.titleField',
-                        'type': 'timeline',
+                        'descriptionField': '@config.descriptionField',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'EventLogLoaded',
-              'from': 'loading',
-              'to': 'viewing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'EventLogLoadFailed',
               'effects': [
                 [
                   'set',
@@ -1536,25 +1291,25 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'message': '@entity.errorMessage',
                     'title': 'Failed to load',
+                    'message': '@entity.errorMessage',
                     'type': 'error-state',
                   },
                 ],
               ],
-              'event': 'EventLogLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'EventLogSaved',
               'effects': [
                 [
                   'fetch',
                   ('EventLogView' satisfies _StdEventLogEntityName),
                   {
                     'emit': {
-                      'failure': 'EventLogLoadFailed',
                       'success': 'EventLogLoaded',
+                      'failure': 'EventLogLoadFailed',
                     },
                   },
                 ],
@@ -1562,28 +1317,28 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
+                        'variant': 'list',
                         'rows': 6,
                         'type': 'skeleton',
-                        'variant': 'list',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'EventLogSaved',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'EventLogSaveFailed',
               'effects': [
                 [
                   'set',
@@ -1595,16 +1350,16 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'main',
                   {
                     'message': '@entity.errorMessage',
-                    'title': 'Save failed',
                     'type': 'error-state',
+                    'title': 'Save failed',
                   },
                 ],
               ],
-              'event': 'EventLogSaveFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'viewing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1617,11 +1372,11 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'viewing',
-              'to': 'loading',
             },
             {
+              'from': 'viewing',
+              'to': 'viewing',
+              'event': 'APPLY_FILTER',
               'effects': [
                 [
                   'set',
@@ -1661,53 +1416,54 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'name': 'history',
                             'size': 'lg',
+                            'name': 'history',
                             'type': 'icon',
                           },
                           {
                             'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                           {
-                            'action': 'OPEN_BACKFILL',
-                            'icon': 'plus',
-                            'label': 'Log event',
-                            'type': 'button',
                             'variant': 'primary',
+                            'action': 'OPEN_BACKFILL',
+                            'type': 'button',
+                            'label': 'Log event',
+                            'icon': 'plus',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                       [
                         'if',
                         '@config.bodySearch',
                         {
+                          'gap': 'sm',
                           'children': [
                             {
-                              'className': 'w-full max-w-md',
-                              'clearable': true,
-                              'event': 'REFETCH_QUERY',
-                              'placeholder': '@config.searchPlaceholder',
                               'type': 'search-input',
+                              'clearable': true,
+                              'placeholder': '@config.searchPlaceholder',
+                              'event': 'REFETCH_QUERY',
+                              'className': 'w-full max-w-md',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
-                          'children': [],
                           'gap': 'none',
                           'type': 'stack',
+                          'children': [],
                         },
                       ],
                       [
@@ -1721,17 +1477,17 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           0,
                         ],
                         {
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                           'children': [
                             {
                               'entity': 'EventLogView',
                               'event': 'REFETCH_FILTER',
-                              'filters': '@config.filters',
-                              'look': '@config.filterBarLook',
                               'type': 'filter-group',
+                              'look': '@config.filterBarLook',
+                              'filters': '@config.filters',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
                         },
                         {
@@ -1741,8 +1497,6 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         },
                       ],
                       {
-                        'activeTab': '@entity.filterKind',
-                        'tabChangeEvent': 'APPLY_FILTER',
                         'tabs': [
                           'array/map',
                           '@entity.filterChips',
@@ -1801,9 +1555,13 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           ],
                         ],
                         'type': 'tabs',
+                        'activeTab': '@entity.filterKind',
+                        'tabChangeEvent': 'APPLY_FILTER',
                       },
                       {
+                        'statusField': '@config.statusField',
                         'dateField': '@config.dateField',
+                        'type': 'timeline',
                         'descriptionField': '@config.descriptionField',
                         'entity': '@entity.entries',
                         'fields': [
@@ -1813,22 +1571,19 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           'status',
                         ],
                         'look': '@config.timelineLook',
-                        'statusField': '@config.statusField',
                         'titleField': '@config.titleField',
-                        'type': 'timeline',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
-              'event': 'APPLY_FILTER',
-              'from': 'viewing',
-              'to': 'viewing',
             },
             {
+              'from': 'viewing',
+              'to': 'viewing',
+              'event': 'REFETCH_QUERY',
               'effects': [
                 [
                   'fetch',
@@ -1878,20 +1633,16 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   },
                 ],
               ],
-              'event': 'REFETCH_QUERY',
-              'from': 'viewing',
-              'to': 'viewing',
             },
             {
+              'from': 'viewing',
+              'to': 'viewing',
+              'event': 'REFETCH_FILTER',
               'effects': [
                 [
                   'fetch',
                   ('EventLogView' satisfies _StdEventLogEntityName),
                   {
-                    'emit': {
-                      'failure': 'EventLogLoadFailed',
-                      'success': 'EventLogLoaded',
-                    },
                     'filter': [
                       'and',
                       [
@@ -1929,24 +1680,23 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         ],
                       ],
                     ],
+                    'emit': {
+                      'success': 'EventLogLoaded',
+                      'failure': 'EventLogLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'REFETCH_FILTER',
-              'from': 'viewing',
-              'to': 'viewing',
             },
             {
+              'from': 'viewing',
+              'to': 'viewing',
+              'event': 'REFETCH_PAGE',
               'effects': [
                 [
                   'fetch',
                   ('EventLogView' satisfies _StdEventLogEntityName),
                   {
-                    'emit': {
-                      'failure': 'EventLogLoadFailed',
-                      'success': 'EventLogLoaded',
-                    },
-                    'limit': '@config.pageSize',
                     'offset': [
                       '*',
                       [
@@ -1956,35 +1706,40 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                       ],
                       '@config.pageSize',
                     ],
+                    'limit': '@config.pageSize',
+                    'emit': {
+                      'failure': 'EventLogLoadFailed',
+                      'success': 'EventLogLoaded',
+                    },
                   },
                 ],
               ],
-              'event': 'REFETCH_PAGE',
-              'from': 'viewing',
-              'to': 'viewing',
             },
             {
+              'from': 'viewing',
+              'to': 'viewing',
+              'event': 'EventLogLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
+                    'variant': 'error',
                     'dismissible': true,
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Couldn\'t refresh the event log — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'EventLogLoadFailed',
-              'from': 'viewing',
-              'to': 'viewing',
             },
             {
+              'from': 'viewing',
+              'to': 'viewing',
+              'event': 'EventLogLoaded',
               'effects': [
                 [
                   'set',
@@ -1998,6 +1753,11 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'fn',
                         'k',
                         {
+                          'label': [
+                            'object/get',
+                            '@k',
+                            'label',
+                          ],
                           'icon': [
                             'object/get',
                             '@k',
@@ -2009,18 +1769,13 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                             '@k',
                             'key',
                           ],
-                          'label': [
-                            'object/get',
-                            '@k',
-                            'label',
-                          ],
                         },
                       ],
                     ],
                     {
+                      'label': 'All',
                       'icon': 'list',
                       'id': '',
-                      'label': 'All',
                     },
                   ],
                 ],
@@ -2047,22 +1802,10 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                               '',
                             ],
                           ],
-                          'description': [
+                          'title': [
                             'object/get',
                             '@row',
-                            'description',
-                            '',
-                          ],
-                          'id': [
-                            'object/get',
-                            '@row',
-                            'id',
-                            '',
-                          ],
-                          'kind': [
-                            'object/get',
-                            '@row',
-                            'kind',
+                            'title',
                             '',
                           ],
                           'status': [
@@ -2096,10 +1839,22 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                             'status',
                             'pending',
                           ],
-                          'title': [
+                          'description': [
                             'object/get',
                             '@row',
-                            'title',
+                            'description',
+                            '',
+                          ],
+                          'kind': [
+                            'object/get',
+                            '@row',
+                            'kind',
+                            '',
+                          ],
+                          'id': [
+                            'object/get',
+                            '@row',
+                            'id',
                             '',
                           ],
                         },
@@ -2138,18 +1893,6 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                             'description',
                             '',
                           ],
-                          'id': [
-                            'object/get',
-                            '@row',
-                            'id',
-                            '',
-                          ],
-                          'kind': [
-                            'object/get',
-                            '@row',
-                            'kind',
-                            '',
-                          ],
                           'status': [
                             'object/get',
                             [
@@ -2181,10 +1924,22 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                             'status',
                             'pending',
                           ],
+                          'kind': [
+                            'object/get',
+                            '@row',
+                            'kind',
+                            '',
+                          ],
                           'title': [
                             'object/get',
                             '@row',
                             'title',
+                            '',
+                          ],
+                          'id': [
+                            'object/get',
+                            '@row',
+                            'id',
                             '',
                           ],
                         },
@@ -2198,9 +1953,14 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'history',
@@ -2209,42 +1969,39 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           },
                           {
                             'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                           {
-                            'action': 'OPEN_BACKFILL',
-                            'icon': 'plus',
                             'label': 'Log event',
                             'type': 'button',
+                            'action': 'OPEN_BACKFILL',
+                            'icon': 'plus',
                             'variant': 'primary',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                       [
                         'if',
                         '@config.bodySearch',
                         {
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'className': 'w-full max-w-md',
-                              'clearable': true,
                               'event': 'REFETCH_QUERY',
                               'placeholder': '@config.searchPlaceholder',
+                              'className': 'w-full max-w-md',
+                              'clearable': true,
                               'type': 'search-input',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'gap': 'sm',
                         },
                         {
-                          'children': [],
                           'gap': 'none',
                           'type': 'stack',
+                          'children': [],
                         },
                       ],
                       [
@@ -2258,28 +2015,26 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           0,
                         ],
                         {
+                          'gap': 'sm',
+                          'type': 'stack',
                           'children': [
                             {
                               'entity': 'EventLogView',
                               'event': 'REFETCH_FILTER',
-                              'filters': '@config.filters',
                               'look': '@config.filterBarLook',
                               'type': 'filter-group',
+                              'filters': '@config.filters',
                             },
                           ],
                           'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
+                          'type': 'stack',
                           'children': [],
                           'gap': 'none',
-                          'type': 'stack',
                         },
                       ],
                       {
-                        'activeTab': '@entity.filterKind',
-                        'tabChangeEvent': 'APPLY_FILTER',
                         'tabs': [
                           'array/map',
                           '@entity.filterChips',
@@ -2287,17 +2042,17 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                             'fn',
                             'chip',
                             {
-                              'icon': [
-                                'object/get',
-                                '@chip',
-                                'icon',
-                                'list',
-                              ],
                               'id': [
                                 'object/get',
                                 '@chip',
                                 'id',
                                 '',
+                              ],
+                              'icon': [
+                                'object/get',
+                                '@chip',
+                                'icon',
+                                'list',
                               ],
                               'label': [
                                 'if',
@@ -2337,35 +2092,35 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                             },
                           ],
                         ],
+                        'tabChangeEvent': 'APPLY_FILTER',
+                        'activeTab': '@entity.filterKind',
                         'type': 'tabs',
                       },
                       {
-                        'dateField': '@config.dateField',
-                        'descriptionField': '@config.descriptionField',
-                        'entity': '@entity.entries',
+                        'statusField': '@config.statusField',
                         'fields': [
                           'title',
                           'description',
                           'date',
                           'status',
                         ],
-                        'look': '@config.timelineLook',
-                        'statusField': '@config.statusField',
                         'titleField': '@config.titleField',
                         'type': 'timeline',
+                        'dateField': '@config.dateField',
+                        'entity': '@entity.entries',
+                        'descriptionField': '@config.descriptionField',
+                        'look': '@config.timelineLook',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'EventLogLoaded',
-              'from': 'viewing',
-              'to': 'viewing',
             },
             {
+              'from': 'viewing',
+              'to': 'backfilling',
+              'event': 'OPEN_BACKFILL',
               'effects': [
                 [
                   'set',
@@ -2391,69 +2146,69 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
-                            'action': 'CANCEL_BACKFILL',
                             'icon': 'arrow-left',
                             'label': 'Back',
                             'type': 'button',
                             'variant': 'ghost',
+                            'action': 'CANCEL_BACKFILL',
                           },
                           {
                             'name': 'plus-circle',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
+                            'variant': 'h3',
                             'content': 'Log event',
                             'type': 'typography',
-                            'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
+                        'align': 'center',
                         'gap': 'sm',
-                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'children': [
-                          {
-                            'cancelEvent': 'CANCEL_BACKFILL',
-                            'entity': '@entity',
-                            'fields': '@config.formFields',
-                            'mode': 'create',
-                            'submitEvent': 'SAVE_BACKFILL',
-                            'type': 'form-section',
-                          },
-                        ],
                         'look': '@config.cardLook',
                         'type': 'card',
+                        'children': [
+                          {
+                            'submitEvent': 'SAVE_BACKFILL',
+                            'mode': 'create',
+                            'fields': '@config.formFields',
+                            'cancelEvent': 'CANCEL_BACKFILL',
+                            'type': 'form-section',
+                            'entity': '@entity',
+                          },
+                        ],
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'OPEN_BACKFILL',
-              'from': 'viewing',
-              'to': 'backfilling',
             },
             {
+              'from': 'backfilling',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('EventLogView' satisfies _StdEventLogEntityName),
                   {
                     'emit': {
-                      'failure': 'EventLogLoadFailed',
                       'success': 'EventLogLoaded',
+                      'failure': 'EventLogLoadFailed',
                     },
                   },
                 ],
@@ -2461,28 +2216,28 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
-                        'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
+                        'rows': 6,
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'backfilling',
-              'to': 'loading',
             },
             {
+              'from': 'backfilling',
+              'to': 'loading',
+              'event': 'SAVE_BACKFILL',
               'effects': [
                 [
                   'persist',
@@ -2491,17 +2246,17 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'EventLogSaveFailed',
                       'success': 'EventLogSaved',
+                      'failure': 'EventLogSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'SAVE_BACKFILL',
-              'from': 'backfilling',
-              'to': 'loading',
             },
             {
+              'from': 'backfilling',
+              'to': 'viewing',
+              'event': 'CANCEL_BACKFILL',
               'effects': [
                 [
                   'render-ui',
@@ -2509,28 +2264,28 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                   {
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
+                            'type': 'icon',
                             'name': 'history',
                             'size': 'lg',
-                            'type': 'icon',
                           },
                           {
                             'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                           {
                             'action': 'OPEN_BACKFILL',
-                            'icon': 'plus',
-                            'label': 'Log event',
-                            'type': 'button',
                             'variant': 'primary',
+                            'icon': 'plus',
+                            'type': 'button',
+                            'label': 'Log event',
                           },
                         ],
                         'direction': 'horizontal',
                         'gap': 'sm',
+                        'align': 'center',
                         'type': 'stack',
                       },
                       [
@@ -2540,20 +2295,20 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           'children': [
                             {
                               'className': 'w-full max-w-md',
-                              'clearable': true,
                               'event': 'REFETCH_QUERY',
-                              'placeholder': '@config.searchPlaceholder',
                               'type': 'search-input',
+                              'placeholder': '@config.searchPlaceholder',
+                              'clearable': true,
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
                         },
                         {
+                          'type': 'stack',
                           'children': [],
                           'gap': 'none',
-                          'type': 'stack',
                         },
                       ],
                       [
@@ -2567,28 +2322,26 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           0,
                         ],
                         {
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'entity': 'EventLogView',
-                              'event': 'REFETCH_FILTER',
-                              'filters': '@config.filters',
                               'look': '@config.filterBarLook',
                               'type': 'filter-group',
+                              'filters': '@config.filters',
+                              'event': 'REFETCH_FILTER',
+                              'entity': 'EventLogView',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'gap': 'sm',
                         },
                         {
                           'children': [],
-                          'gap': 'none',
                           'type': 'stack',
+                          'gap': 'none',
                         },
                       ],
                       {
-                        'activeTab': '@entity.filterKind',
-                        'tabChangeEvent': 'APPLY_FILTER',
                         'tabs': [
                           'array/map',
                           '@entity.filterChips',
@@ -2646,40 +2399,44 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                             },
                           ],
                         ],
+                        'activeTab': '@entity.filterKind',
                         'type': 'tabs',
+                        'tabChangeEvent': 'APPLY_FILTER',
                       },
                       {
-                        'dateField': '@config.dateField',
-                        'descriptionField': '@config.descriptionField',
-                        'entity': '@entity.entries',
+                        'look': '@config.timelineLook',
+                        'type': 'timeline',
                         'fields': [
                           'title',
                           'description',
                           'date',
                           'status',
                         ],
-                        'look': '@config.timelineLook',
                         'statusField': '@config.statusField',
+                        'descriptionField': '@config.descriptionField',
+                        'dateField': '@config.dateField',
                         'titleField': '@config.titleField',
-                        'type': 'timeline',
+                        'entity': '@entity.entries',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
-              'event': 'CANCEL_BACKFILL',
-              'from': 'backfilling',
-              'to': 'viewing',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'skeleton',
@@ -2691,18 +2448,261 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'variant': 'list',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'formFields': {
+            'type': '[string]',
+            'default': [
+              'backfillTitle',
+              'backfillDescription',
+              'backfillKind',
+              'backfillDate',
+            ],
+            'label': 'Backfill fields',
+            'description': 'Inputs shown in the form for manually logging missed events',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'searchPlaceholder': {
+            'type': 'string',
+            'default': 'Search activity…',
+            'label': 'Search box placeholder text',
+            'description': 'Hint text inside the log\'s search box.',
+            'synonyms': 'search hint, placeholder, search box text',
+            'tier': 'presentation',
+          },
+          'searchField': {
+            'type': 'string',
+            'default': 'title',
+            'label': 'Which column does the search box match against?',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field or the search box can never match an entry.',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 20,
+            'label': 'How many entries per page when paging?',
+            'description': 'Records fetched from the server per REFETCH_PAGE request. The initial load and every search/kind/filter refetch stay unpaginated (load everything that matches) so the default unlimited activity feed is unchanged; only an explicit REFETCH_PAGE from a composed std-pagination control applies this limit.',
+            'synonyms': 'fetch limit, records per page, page limit',
+            'tier': 'presentation',
+          },
+          'allLabel': {
+            'type': 'string',
+            'default': 'All',
+            'label': 'All label',
+            'description': 'Label of the chip that shows every kind',
+            'tier': 'presentation',
+          },
+          'cardLook': {
+            'type': 'string',
+            'default': 'elevated',
+            'label': 'Card look',
+            'description': 'Layer 2 visual treatment for cards rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'elevated',
+              'flat-bordered',
+              'borderless-divider',
+              'ticket',
+              'invoice',
+              'chip',
+              'tile-image-first',
+            ],
+          },
+          'titleField': {
+            'type': 'string',
+            'default': 'title',
+            'label': 'Title field',
+            'description': 'Entity field holding each event\'s title.',
+            'tier': 'presentation',
+          },
+          'statusField': {
+            'type': 'string',
+            'default': 'status',
+            'label': 'Status field',
+            'description': 'Entity field holding each event\'s status (complete | active | pending | error).',
+            'tier': 'presentation',
+          },
+          'kindField': {
+            'type': 'string',
+            'default': 'kind',
+            'label': 'Which column holds each entry\'s kind?',
+            'description': 'Name the field on this entity the kind filter compares against (the values of kindOptions). An entity whose kind lives under another column (e.g. status) sets it here, or the kind filter can never match an entry.',
+            'synonyms': 'kind column, type field, category column, filter by kind',
+            'tier': 'policy',
+          },
+          'timelineLook': {
+            'type': 'string',
+            'default': 'vertical-spacious',
+            'label': 'Timeline look',
+            'description': 'Layer 2 visual treatment for the timeline.',
+            'tier': 'presentation',
+            'values': [
+              'vertical-compact',
+              'vertical-spacious',
+              'horizontal',
+              'swimlane',
+            ],
+          },
+          'dateField': {
+            'type': 'string',
+            'default': 'date',
+            'label': 'Date field',
+            'description': 'Entity field holding each event\'s date.',
+            'tier': 'presentation',
+          },
+          'kindLabels': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Kind labels',
+            'description': 'In kindOptions order: the label shown on each kind\'s filter chip, in place of its kindOptions label (render-only, so it may be translated)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'kindOptions': {
+            'type': '[KindOption]',
+            'default': [
+              {
+                'icon': 'plus-circle',
+                'status': 'active',
+                'key': 'created',
+                'label': 'Created',
+              },
+              {
+                'key': 'updated',
+                'icon': 'edit-3',
+                'status': 'pending',
+                'label': 'Updated',
+              },
+              {
+                'icon': 'check-circle',
+                'status': 'complete',
+                'key': 'approved',
+                'label': 'Approved',
+              },
+              {
+                'icon': 'x-circle',
+                'label': 'Rejected',
+                'key': 'rejected',
+                'status': 'error',
+              },
+            ],
+            'label': 'Event kinds',
+            'description': 'Maps each event kind to its label, icon, and status color',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'status': {
+                  'name': 'status',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'complete',
+                    'active',
+                    'pending',
+                    'error',
+                  ],
+                },
+                'key': {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'descriptionField': {
+            'type': 'string',
+            'default': 'description',
+            'label': 'Description field',
+            'description': 'Entity field holding each event\'s description.',
+            'tier': 'presentation',
+          },
+          'filters': {
+            'type': '[FilterSpec]',
+            'default': [],
+            'label': 'Which filters should appear above the feed?',
+            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the timeline; each selection fires REFETCH_FILTER on this trait, ANDed with the current kind tab. Empty (the default) = no filter bar — the right setting whenever the page already composes std-filter beside this atom and routes XFilter.FILTER -> REFETCH_FILTER, or relies solely on the built-in kind-filter chips (driven by kindOptions, which this knob does not duplicate or replace). Use this knob only for an extra facet beyond kind (e.g. actor, priority).',
+            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'options': {
+                  'name': 'options',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'bodySearch': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show the log\'s own search box?',
+            'description': 'Embeds a search box above the activity feed. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — no consumer of this atom has ever had a search box.',
+            'synonyms': 'inline search, log search, built-in search, show search',
+            'tier': 'presentation',
+          },
+          'filterBarLook': {
+            'type': 'string',
+            'default': 'toolbar',
+            'label': 'Filter bar look',
+            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
+            'synonyms': 'filter bar style, facet style, chips, pills',
+            'tier': 'presentation',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Activity',
+            'label': 'Section title',
+            'description': 'Heading shown above the activity timeline',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -39,11 +39,11 @@ export type StdLanguagePickerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdLanguagePickerConfig {
+  /** Default: `[{"code":"en","label":"English","href":"/"},{"code":"ar","href":"/ar/","label":"العربية"},{"label":"Slovenščina","href":"/sl/","code":"sl"}]` */
+  languages?: EntityRow[];
   /** Default: `"en"` */
   currentLanguage?: string;
-  /** Default: `[{"code":"en","href":"/","label":"English"},{"code":"ar","href":"/ar/","label":"العربية"},{"code":"sl","href":"/sl/","label":"Slovenščina"}]` */
-  languages?: EntityRow[];
-  /** Default: `{"className":["if",["==",["array/len","@config.languages"],0],"hidden",""],"items":["array/map","@config.languages",["fn","entry",{"href":["object/get","@entry","href",""],"icon":["if",["==",["object/get","@entry","code",""],"@config.currentLanguage"],"check",""],"id":["object/get","@entry","code",""],"label":["object/get","@entry","label",""]}]],"position":"bottom-end","trigger":{"icon":"globe","label":["str/upper","@config.currentLanguage"],"size":"sm","type":"button","variant":"ghost"},"type":"menu"}` */
+  /** Default: `{"className":["if",["==",["array/len","@config.languages"],0],"hidden",""],"trigger":{"label":["str/upper","@config.currentLanguage"],"type":"button","variant":"ghost","size":"sm","icon":"globe"},"type":"menu","items":["array/map","@config.languages",["fn","entry",{"href":["object/get","@entry","href",""],"icon":["if",["==",["object/get","@entry","code",""],"@config.currentLanguage"],"check",""],"id":["object/get","@entry","code",""],"label":["object/get","@entry","label",""]}]],"position":"bottom-end"}` */
   pickerContent?: unknown;
 }
 

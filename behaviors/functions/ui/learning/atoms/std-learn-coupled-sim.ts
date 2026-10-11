@@ -71,74 +71,74 @@ export interface StdLearnCoupledSimShockAppliedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnCoupledSimConfig {
-  /** Default: `true` */
-  autoRun?: boolean;
-  /** Default: `0.6` */
-  coefADefault?: number;
-  /** Default: `"Prey growth rate"` */
-  coefALabel?: string;
-  /** Default: `2` */
-  coefAMax?: number;
-  /** Default: `0` */
-  coefAMin?: number;
-  /** Default: `0.01` */
-  coefAStep?: number;
-  /** Default: `0.9` */
-  coefBDefault?: number;
-  /** Default: `"Predation rate"` */
-  coefBLabel?: string;
-  /** Default: `2` */
-  coefBMax?: number;
-  /** Default: `0` */
-  coefBMin?: number;
-  /** Default: `0.01` */
-  coefBStep?: number;
-  /** Default: `0.5` */
-  coefC?: number;
-  /** Default: `0.4` */
-  coefD?: number;
-  /** Default: `30` */
-  duration?: number;
-  /** Default: `50` */
-  gridStep?: number;
-  /** Default: `360` */
-  height?: number;
-  /** Default: `"predator-prey"` */
-  kind?: string;
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `"series-1"` */
-  pColor?: string;
-  /** Default: `"Prey"` */
-  pLabel?: string;
-  /** Default: `120` */
-  pStart?: number;
-  /** Default: `"series-2"` */
-  qColor?: string;
-  /** Default: `"Predators"` */
-  qLabel?: string;
-  /** Default: `40` */
-  qStart?: number;
+  /** Default: `"Coupled System"` */
+  title?: string;
   /** Default: `"config"` */
   rosterSource?: 'config' | 'event';
-  /** Default: `"− Prey cull"` */
-  shockDownLabel?: string;
-  /** Default: `40` */
-  shockSize?: number;
+  /** Default: `true` */
+  autoRun?: boolean;
+  /** Default: `"Predators"` */
+  qLabel?: string;
+  /** Default: `"Prey"` */
+  pLabel?: string;
   /** Default: `"+ Prey burst"` */
   shockUpLabel?: string;
   /** Default: `""` */
   summary?: string;
+  /** Default: `"series-2"` */
+  qColor?: string;
+  /** Default: `0.9` */
+  coefBDefault?: number;
+  /** Default: `120` */
+  pStart?: number;
+  /** Default: `40` */
+  qStart?: number;
+  /** Default: `"Prey growth rate"` */
+  coefALabel?: string;
+  /** Default: `2` */
+  coefBMax?: number;
+  /** Default: `50` */
+  gridStep?: number;
+  /** Default: `360` */
+  height?: number;
   /** Default: `"Run the system, retune the rates, and shock it — watch how the two quantities push and pull each other."` */
   taskText?: string;
+  /** Default: `2` */
+  coefAMax?: number;
+  /** Default: `""` */
+  matchMode?: string;
+  /** Default: `0.4` */
+  coefD?: number;
+  /** Default: `0.6` */
+  coefADefault?: number;
+  /** Default: `0.01` */
+  coefAStep?: number;
+  /** Default: `40` */
+  shockSize?: number;
+  /** Default: `"predator-prey"` */
+  kind?: string;
+  /** Default: `0` */
+  coefBMin?: number;
+  /** Default: `"− Prey cull"` */
+  shockDownLabel?: string;
+  /** Default: `0.5` */
+  coefC?: number;
+  /** Default: `"Predation rate"` */
+  coefBLabel?: string;
+  /** Default: `30` */
+  duration?: number;
+  /** Default: `"series-1"` */
+  pColor?: string;
   /** Default: `1` */
   timeScale?: number;
-  /** Default: `"Coupled System"` */
-  title?: string;
-  /** Default: `300` */
-  valueMax?: number;
   /** Default: `600` */
   width?: number;
+  /** Default: `0.01` */
+  coefBStep?: number;
+  /** Default: `0` */
+  coefAMin?: number;
+  /** Default: `300` */
+  valueMax?: number;
 }
 
 /**

@@ -112,38 +112,38 @@ export interface StdPlatformerBodyBodyFellPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPlatformerBodyConfig {
-  /** Default: `false` */
-  curveModsEnabled?: boolean;
-  /** Default: `[]` */
-  driftRegions?: EntityRow[];
+  /** Default: `0` */
+  skateMaxGap?: number;
   /** Default: `24` */
   gravity?: number;
   /** Default: `11` */
   jumpStrength?: number;
-  /** Default: `1000000` */
-  killY?: number;
   /** Default: `14` */
   maxFallSpeed?: number;
-  /** Default: `5` */
-  moveSpeed?: number;
+  /** Default: `-1000000` */
+  xMin?: number;
+  /** Default: `false` */
+  skate?: boolean;
+  /** Default: `{"vx":0,"facingRight":true,"vy":0,"y":8,"x":2,"height":0.6,"grounded":false,"width":0.6}` */
+  spawn?: EntityRow;
+  /** Default: `[]` */
+  driftRegions?: EntityRow[];
+  /** Default: `1000000` */
+  killY?: number;
+  /** Default: `1000000` */
+  xMax?: number;
+  /** Default: `[]` */
+  skateCurve?: EntityRow[];
+  /** Default: `0.75` */
+  skateSnap?: number;
+  /** Default: `false` */
+  curveModsEnabled?: boolean;
   /** Default: `[]` */
   platforms?: EntityRow[];
   /** Default: `true` */
   running?: boolean;
-  /** Default: `false` */
-  skate?: boolean;
-  /** Default: `[]` */
-  skateCurve?: EntityRow[];
-  /** Default: `0` */
-  skateMaxGap?: number;
-  /** Default: `0.75` */
-  skateSnap?: number;
-  /** Default: `{"facingRight":true,"grounded":false,"height":0.6,"vx":0,"vy":0,"width":0.6,"x":2,"y":8}` */
-  spawn?: EntityRow;
-  /** Default: `1000000` */
-  xMax?: number;
-  /** Default: `-1000000` */
-  xMin?: number;
+  /** Default: `5` */
+  moveSpeed?: number;
 }
 
 /**

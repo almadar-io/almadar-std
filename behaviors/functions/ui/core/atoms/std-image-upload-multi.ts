@@ -108,16 +108,16 @@ export interface StdImageUploadMultiUploadedImageDeleteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdImageUploadMultiConfig {
-  /** Default: `"image/*"` */
-  accept?: string;
-  /** Default: `"images"` */
-  bucket?: string;
   /** Default: `10485760` */
   maxBytesPerImage?: number;
+  /** Default: `"images"` */
+  bucket?: string;
   /** Default: `10` */
   maxImages?: number;
   /** Default: `"Upload Images"` */
   title?: string;
+  /** Default: `"image/*"` */
+  accept?: string;
 }
 
 /**
@@ -261,63 +261,63 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'The accessible address for retrieving the image data.',
             'name': 'url',
-            'required': true,
-            'synonyms': 'link, path, address',
             'type': 'url',
+            'required': true,
+            'description': 'The accessible address for retrieving the image data.',
+            'synonyms': 'link, path, address',
           },
           {
-            'description': 'The filename or identifier for the uploaded image.',
             'name': 'name',
+            'type': 'string',
+            'description': 'The filename or identifier for the uploaded image.',
             'synonyms': 'filename, originalName, identifier',
-            'type': 'string',
           },
           {
-            'description': 'The file size in bytes.',
             'name': 'sizeBytes',
+            'type': 'number',
+            'description': 'The file size in bytes.',
             'synonyms': 'length, filesize, bytes',
-            'type': 'number',
           },
           {
-            'description': 'The file\'s internet media type.',
             'name': 'mimeType',
+            'type': 'string',
+            'description': 'The file\'s internet media type.',
             'synonyms': 'type, format, media type',
-            'type': 'string',
           },
           {
-            'description': 'The image\'s width in pixels.',
             'name': 'width',
+            'type': 'number',
+            'description': 'The image\'s width in pixels.',
             'synonyms': 'imageWidth, pixelWidth',
-            'type': 'number',
           },
           {
-            'description': 'The vertical dimension of the image, in pixels.',
             'name': 'height',
-            'synonyms': 'vertical, y, dimension',
             'type': 'number',
+            'description': 'The vertical dimension of the image, in pixels.',
+            'synonyms': 'vertical, y, dimension',
           },
           {
-            'description': 'Identifier of the parent resource this image belongs to.',
             'name': 'parentId',
+            'type': 'string',
+            'description': 'Identifier of the parent resource this image belongs to.',
             'synonyms': 'parent, reference, source',
-            'type': 'string',
           },
           {
-            'description': 'Identifies the type of the parent entity.',
             'name': 'parentType',
-            'synonyms': 'parent, type, category',
             'type': 'string',
+            'description': 'Identifies the type of the parent entity.',
+            'synonyms': 'parent, type, category',
           },
           {
-            'description': 'Timestamp indicating when the image was uploaded.',
             'name': 'uploadedAt',
-            'synonyms': 'date, timestamp, upload time',
             'type': 'datetime',
+            'description': 'Timestamp indicating when the image was uploaded.',
+            'synonyms': 'date, timestamp, upload time',
           },
         ];
         const extras = params.fields ?? [];
@@ -328,44 +328,7 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'accept': {
-            'default': 'image/*',
-            'description': 'Browser accept filter for the file picker',
-            'label': 'MIME filter',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'bucket': {
-            'default': 'images',
-            'description': 'Object-storage bucket the batch uploads into',
-            'label': 'Storage bucket',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'maxBytesPerImage': {
-            'default': 10485760,
-            'description': 'Per-image upload size cap',
-            'label': 'Size limit (bytes)',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'maxImages': {
-            'default': 10,
-            'description': 'Maximum number of images accepted per upload batch',
-            'label': 'Max images',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'title': {
-            'default': 'Upload Images',
-            'description': 'Heading shown above the upload zone',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-        },
+        'name': 'UploadedImageUpload',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -384,19 +347,24 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'UploadedImage',
         'emits': [
           {
-            'description': 'Signals that an image upload process has begun.',
             'event': 'UPLOAD',
+            'description': 'Signals that an image upload process has begun.',
+            'synonyms': 'start, initiate, begin',
+            'tier': 'domain',
             'payloadSchema': [
               {
-                'entity': 'UploadBatchFile',
                 'name': 'files',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'name',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'size',
@@ -411,30 +379,29 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                     'type': 'string',
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'UploadBatchFile',
               },
             ],
-            'synonyms': 'start, initiate, begin',
-            'tier': 'domain',
           },
           {
-            'description': 'Signals a single image has finished loading.',
             'event': 'UploadedImageLoaded',
+            'description': 'Signals a single image has finished loading.',
+            'synonyms': 'loaded, received, parsed',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'UploadedImage',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'url',
-                    'required': true,
                     'type': 'url',
+                    'required': true,
                   },
                   {
                     'name': 'name',
@@ -469,15 +436,15 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                     'type': 'datetime',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'UploadedImage',
               },
             ],
-            'synonyms': 'loaded, received, parsed',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates an image failed to load during the upload process.',
             'event': 'UploadedImageLoadFailed',
+            'description': 'Indicates an image failed to load during the upload process.',
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -488,23 +455,23 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure, problem, unsuccessful',
-            'tier': 'internal',
           },
           {
-            'description': 'A new image has been successfully uploaded.',
             'event': 'UploadedImageCreated',
-            'payloadEntity': 'UploadedImage',
+            'description': 'A new image has been successfully uploaded.',
+            'synonyms': 'added, new, received',
+            'tier': 'domain',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'url',
-                'required': true,
                 'type': 'url',
+                'required': true,
               },
               {
                 'name': 'name',
@@ -539,22 +506,22 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                 'type': 'datetime',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'added, new, received',
-            'tier': 'domain',
+            'payloadEntity': 'UploadedImage',
           },
           {
-            'description': 'The storage service accepted the whole batch; items carry each file\'s stored address and metadata, ready to persist.',
             'event': 'UploadedImageStored',
+            'description': 'The storage service accepted the whole batch; items carry each file\'s stored address and metadata, ready to persist.',
+            'synonyms': 'uploaded, stored, saved to storage',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'StoredImageItem',
                 'name': 'items',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'key',
@@ -577,19 +544,19 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'StoredImageItem',
               },
               {
                 'name': 'count',
                 'type': 'number',
               },
             ],
-            'synonyms': 'uploaded, stored, saved to storage',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates a single image upload encountered an error.',
             'event': 'UploadedImageUploadFailed',
+            'description': 'Indicates a single image upload encountered an error.',
+            'synonyms': 'error, failure, problem, rejected',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -600,25 +567,25 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure, problem, rejected',
-            'tier': 'internal',
           },
           {
-            'description': 'Signals an image has been removed from the upload queue.',
             'event': 'UploadedImageDeleted',
+            'description': 'Signals an image has been removed from the upload queue.',
+            'synonyms': 'removed, discarded, taken out',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'synonyms': 'removed, discarded, taken out',
-            'tier': 'presentation',
           },
           {
-            'description': 'Indicates an image deletion operation failed.',
             'event': 'UploadedImageDeleteFailed',
+            'description': 'Indicates an image deletion operation failed.',
+            'synonyms': 'failed delete, deletion error',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -629,37 +596,49 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                 'type': 'string',
               },
             ],
-            'synonyms': 'failed delete, deletion error',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'UploadedImage',
-        'name': 'UploadedImageUpload',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'uploading',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals a single image has finished loading.',
               'key': 'UploadedImageLoaded',
               'name': 'UploadedImage loaded',
+              'description': 'Signals a single image has finished loading.',
+              'synonyms': 'loaded, received, parsed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'UploadedImage',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'url',
-                      'required': true,
                       'type': 'url',
+                      'required': true,
                     },
                     {
                       'name': 'name',
@@ -694,16 +673,16 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                       'type': 'datetime',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'UploadedImage',
                 },
               ],
-              'synonyms': 'loaded, received, parsed',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates an image failed to load during the upload process.',
               'key': 'UploadedImageLoadFailed',
               'name': 'UploadedImage load failed',
+              'description': 'Indicates an image failed to load during the upload process.',
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -714,21 +693,23 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, problem, unsuccessful',
-              'tier': 'internal',
             },
             {
-              'description': 'Signals that an image upload process has begun.',
               'key': 'UPLOAD',
               'name': 'Upload',
+              'description': 'Signals that an image upload process has begun.',
+              'synonyms': 'start, initiate, begin',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'files',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'name',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'size',
@@ -743,45 +724,43 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                       'type': 'string',
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
                 },
               ],
-              'synonyms': 'start, initiate, begin',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a selected image has been removed.',
               'key': 'DELETE',
               'name': 'Delete',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
+              'description': 'Indicates a selected image has been removed.',
               'synonyms': 'remove, discard, clear',
               'tier': 'presentation',
-            },
-            {
-              'description': 'Signals an image has been removed from the upload queue.',
-              'key': 'UploadedImageDeleted',
-              'name': 'UploadedImage deleted',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'removed, discarded, taken out',
-              'tier': 'presentation',
             },
             {
-              'description': 'Indicates an image deletion operation failed.',
+              'key': 'UploadedImageDeleted',
+              'name': 'UploadedImage deleted',
+              'description': 'Signals an image has been removed from the upload queue.',
+              'synonyms': 'removed, discarded, taken out',
+              'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
               'key': 'UploadedImageDeleteFailed',
               'name': 'UploadedImage delete failed',
+              'description': 'Indicates an image deletion operation failed.',
+              'synonyms': 'failed delete, deletion error',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -792,21 +771,22 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   'type': 'string',
                 },
               ],
-              'synonyms': 'failed delete, deletion error',
-              'tier': 'internal',
             },
             {
-              'description': 'The storage service accepted the whole batch; items carry each file\'s stored address and metadata, ready to persist.',
               'key': 'UploadedImageStored',
               'name': 'UploadedImage stored',
+              'description': 'The storage service accepted the whole batch; items carry each file\'s stored address and metadata, ready to persist.',
+              'synonyms': 'uploaded, stored, saved to storage',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'items',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'key',
@@ -829,31 +809,29 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
                 {
                   'name': 'count',
                   'type': 'number',
                 },
               ],
-              'synonyms': 'uploaded, stored, saved to storage',
-              'tier': 'internal',
             },
             {
-              'description': 'A new image has been successfully uploaded.',
               'key': 'UploadedImageCreated',
               'name': 'UploadedImage created',
-              'payloadEntity': 'UploadedImage',
+              'description': 'A new image has been successfully uploaded.',
+              'synonyms': 'added, new, received',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'url',
-                  'required': true,
                   'type': 'url',
+                  'required': true,
                 },
                 {
                   'name': 'name',
@@ -888,13 +866,14 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   'type': 'datetime',
                 },
               ],
-              'synonyms': 'added, new, received',
-              'tier': 'domain',
+              'payloadEntity': 'UploadedImage',
             },
             {
-              'description': 'Indicates a single image upload encountered an error.',
               'key': 'UploadedImageUploadFailed',
               'name': 'UploadedImage upload failed',
+              'description': 'Indicates a single image upload encountered an error.',
+              'synonyms': 'error, failure, problem, rejected',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -905,35 +884,21 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, problem, rejected',
-              'tier': 'internal',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'browsing',
-            },
-            {
-              'name': 'uploading',
-            },
-            {
-              'name': 'error',
             },
           ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
                   {
                     'emit': {
-                      'failure': 'UploadedImageLoadFailed',
                       'success': 'UploadedImageLoaded',
+                      'failure': 'UploadedImageLoadFailed',
                     },
                   },
                 ],
@@ -941,10 +906,12 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
@@ -953,16 +920,14 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'UploadedImageLoaded',
               'effects': [
                 [
                   'render-ui',
@@ -970,70 +935,70 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   {
                     'children': [
                       {
-                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'image-plus',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
                             'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'accept': '@config.accept',
-                        'action': 'UPLOAD',
+                        'maxFiles': '@config.maxImages',
                         'description': 'or click to browse',
+                        'accept': '@config.accept',
+                        'type': 'upload-drop-zone',
                         'icon': 'image-plus',
                         'label': 'Drop images here',
-                        'maxFiles': '@config.maxImages',
                         'maxSize': '@config.maxBytesPerImage',
-                        'type': 'upload-drop-zone',
+                        'action': 'UPLOAD',
                       },
                       {
-                        'captionField': 'name',
-                        'entity': '@payload.data',
                         'srcField': 'url',
+                        'entity': '@payload.data',
                         'type': 'media-gallery',
+                        'captionField': 'name',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
-              'event': 'UploadedImageLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'UploadedImageLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
+                    'message': '@payload.error',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'UploadedImageLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1049,43 +1014,43 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
-                        'rows': 6,
                         'type': 'skeleton',
                         'variant': 'grid',
+                        'rows': 6,
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'uploading',
+              'event': 'UPLOAD',
               'effects': [
                 [
                   'call-service',
                   'storage',
                   'uploadMany',
                   {
-                    'acl': 'public',
-                    'bucket': '@config.bucket',
-                    'files': '@payload.files',
                     'maxSize': '@config.maxBytesPerImage',
+                    'files': '@payload.files',
+                    'bucket': '@config.bucket',
+                    'acl': 'public',
                   },
                   {
                     'emit': {
-                      'failure': 'UploadedImageUploadFailed',
                       'success': 'UploadedImageStored',
+                      'failure': 'UploadedImageUploadFailed',
                     },
                   },
                 ],
@@ -1093,32 +1058,32 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   'render-ui',
                   'main',
                   {
+                    'className': 'py-12',
                     'align': 'center',
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'variant': 'h3',
                         'content': 'Uploading images…',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
-                        'max': 100,
                         'progressType': 'linear',
                         'type': 'progress-bar',
+                        'max': 100,
                         'value': 0,
                       },
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'UPLOAD',
-              'from': 'browsing',
-              'to': 'uploading',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'DELETE',
               'effects': [
                 [
                   'persist',
@@ -1133,44 +1098,44 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   },
                 ],
               ],
-              'event': 'DELETE',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'UploadedImageDeleted',
               'effects': [
                 [
                   'fetch',
                   ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
                   {
                     'emit': {
-                      'failure': 'UploadedImageLoadFailed',
                       'success': 'UploadedImageLoaded',
+                      'failure': 'UploadedImageLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'UploadedImageDeleted',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'error',
+              'event': 'UploadedImageDeleteFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'variant': 'error',
                     'message': '@payload.error',
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'UploadedImageDeleteFailed',
-              'from': 'browsing',
-              'to': 'error',
             },
             {
+              'from': 'uploading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1192,22 +1157,22 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                         'variant': 'header',
                       },
                       {
+                        'variant': 'grid',
                         'rows': 6,
                         'type': 'skeleton',
-                        'variant': 'grid',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'uploading',
-              'to': 'loading',
             },
             {
+              'from': 'uploading',
+              'to': 'uploading',
+              'event': 'UploadedImageStored',
               'effects': [
                 [
                   'persist',
@@ -1216,17 +1181,17 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   '@payload.items',
                   {
                     'emit': {
-                      'failure': 'UploadedImageUploadFailed',
                       'success': 'UploadedImageCreated',
+                      'failure': 'UploadedImageUploadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'UploadedImageStored',
-              'from': 'uploading',
-              'to': 'uploading',
             },
             {
+              'from': 'uploading',
+              'to': 'loading',
+              'event': 'UploadedImageCreated',
               'effects': [
                 [
                   'fetch',
@@ -1242,13 +1207,12 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'children': [
                       {
-                        'color': 'success',
-                        'name': 'check-circle',
                         'size': 'lg',
                         'type': 'icon',
+                        'color': 'success',
+                        'name': 'check-circle',
                       },
                       {
                         'content': 'Upload complete',
@@ -1256,34 +1220,35 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                         'variant': 'h3',
                       },
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
+                    'align': 'center',
                     'gap': 'md',
+                    'direction': 'vertical',
                     'type': 'stack',
+                    'className': 'py-12',
                   },
                 ],
               ],
-              'event': 'UploadedImageCreated',
-              'from': 'uploading',
-              'to': 'loading',
             },
             {
+              'from': 'uploading',
+              'to': 'error',
+              'event': 'UploadedImageUploadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
+                    'message': '@payload.error',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'UploadedImageUploadFailed',
-              'from': 'uploading',
-              'to': 'error',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1299,84 +1264,119 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'grid',
-                      },
-                    ],
                     'direction': 'vertical',
                     'gap': 'lg',
+                    'children': [
+                      {
+                        'variant': 'header',
+                        'type': 'skeleton',
+                      },
+                      {
+                        'variant': 'grid',
+                        'rows': 6,
+                        'type': 'skeleton',
+                      },
+                    ],
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
             {
+              'from': 'error',
+              'to': 'browsing',
+              'event': 'UploadedImageLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'align': 'center',
+                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'image-plus',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
+                            'variant': 'h3',
                             'content': '@config.title',
                             'type': 'typography',
-                            'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'accept': '@config.accept',
-                        'action': 'UPLOAD',
-                        'description': 'or click to browse',
-                        'icon': 'image-plus',
-                        'label': 'Drop images here',
                         'maxFiles': '@config.maxImages',
                         'maxSize': '@config.maxBytesPerImage',
+                        'icon': 'image-plus',
+                        'action': 'UPLOAD',
+                        'label': 'Drop images here',
+                        'description': 'or click to browse',
+                        'accept': '@config.accept',
                         'type': 'upload-drop-zone',
                       },
                       {
                         'captionField': 'name',
+                        'type': 'media-gallery',
                         'entity': '@payload.data',
                         'srcField': 'url',
-                        'type': 'media-gallery',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'UploadedImageLoaded',
-              'from': 'error',
-              'to': 'browsing',
             },
           ],
         },
+        'config': {
+          'maxBytesPerImage': {
+            'type': 'number',
+            'default': 10485760,
+            'label': 'Size limit (bytes)',
+            'description': 'Per-image upload size cap',
+            'tier': 'domain',
+          },
+          'bucket': {
+            'type': 'string',
+            'default': 'images',
+            'label': 'Storage bucket',
+            'description': 'Object-storage bucket the batch uploads into',
+            'tier': 'domain',
+          },
+          'maxImages': {
+            'type': 'number',
+            'default': 10,
+            'label': 'Max images',
+            'description': 'Maximum number of images accepted per upload batch',
+            'tier': 'domain',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Upload Images',
+            'label': 'Section title',
+            'description': 'Heading shown above the upload zone',
+            'tier': 'presentation',
+          },
+          'accept': {
+            'type': 'string',
+            'default': 'image/*',
+            'label': 'MIME filter',
+            'description': 'Browser accept filter for the file picker',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

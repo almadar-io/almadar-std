@@ -53,41 +53,41 @@ export interface StdUiCommitRowRestorePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCommitRowConfig {
-  additions?: number;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  author?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   className?: string;
+  ariaBusy?: boolean;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enterDelay?: number;
+  ariaExpanded?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `false` */
   current?: boolean;
-  deletions?: number;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  kind?: 'user' | 'agent' | 'restore' | 'undo' | 'redo' | 'snapshot' | 'merge';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `"RESTORE"` */
+  restoreEvent?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `"SELECT"` */
+  selectEvent?: string;
+  tabIndex?: number;
+  ariaLabel?: string;
+  /** Default: `""` */
+  sha?: string;
+  /** Default: `false` */
+  selected?: boolean;
   lang?: string;
   /** Default: `""` */
   message?: string;
-  /** Default: `"RESTORE"` */
-  restoreEvent?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `"SELECT"` */
-  selectEvent?: string;
-  /** Default: `false` */
-  selected?: boolean;
-  /** Default: `""` */
-  sha?: string;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
+  kind?: 'user' | 'agent' | 'restore' | 'undo' | 'redo' | 'snapshot' | 'merge';
+  deletions?: number;
+  author?: string;
   timestamp?: string;
+  ariaLabelledby?: string;
+  ariaDescribedby?: string;
+  additions?: number;
+  ariaHidden?: boolean;
+  ariaSelected?: boolean;
 }
 
 /**

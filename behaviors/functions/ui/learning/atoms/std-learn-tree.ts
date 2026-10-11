@@ -49,30 +49,30 @@ export interface StdLearnTreeTreeUpdatedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnTreeConfig {
-  /** Default: `false` */
-  autoRun?: boolean;
-  /** Default: `""` */
-  backgroundColor?: string;
-  /** Default: `false` */
-  balanced?: boolean;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `""` */
-  matchMode?: string;
   /** Default: `"config"` */
   rosterSource?: 'config' | 'event';
   /** Default: `true` */
   showComparisons?: boolean;
-  /** Default: `""` */
-  summary?: string;
+  /** Default: `400` */
+  height?: number;
   /** Default: `"Ordered Tree"` */
   title?: string;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `false` */
+  autoRun?: boolean;
   /** Default: `"inorder"` */
   traversalKind?: string;
-  /** Default: `[50,30,70,20,40,60,80]` */
-  values?: number[];
   /** Default: `600` */
   width?: number;
+  /** Default: `[50,30,70,20,40,60,80]` */
+  values?: number[];
+  /** Default: `""` */
+  matchMode?: string;
+  /** Default: `false` */
+  balanced?: boolean;
+  /** Default: `""` */
+  backgroundColor?: string;
 }
 
 /**

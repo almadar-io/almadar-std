@@ -17,9 +17,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it, expect } from 'vitest';
+import { STD_REGISTRY } from './std-registry.js';
 
 const REGISTRY_PATH = path.resolve(__dirname, '..', 'behaviors', 'behaviors-registry.json');
-const REGISTRY_DIR = path.resolve(__dirname, '..', 'behaviors', 'registry');
+const REGISTRY_DIR = STD_REGISTRY;
 
 const TIER_DIRS = ['atoms', 'molecules', 'organisms', 'templates'] as const;
 
@@ -68,7 +69,6 @@ interface RegistryEntry {
 }
 
 interface RegistryFile {
-    $generated: string;
     $source: string;
     totalBehaviors: number;
     atoms: number;
@@ -116,13 +116,10 @@ describe('behaviors-registry.json — metadata coverage (Eval F)', () => {
             const orbPath = findOrbPath(entry.name);
             // If the .orb is missing on disk we skip — covered by other tests.
             if (!orbPath) return;
-            // Path shape: .../registry/<topic...>/<tier>/<name>.orb — the topic
-            // can span several segments ("ui/core"), so take everything between
-            // `registry` and the tier directory rather than one segment.
-            const segments = orbPath.split(path.sep);
-            const registryIdx = segments.indexOf('registry');
-            const tierIdx = segments.length - 2;
-            const onDiskTopic = segments.slice(registryIdx + 1, tierIdx).join('/');
+            // Path shape under the registry: <topic...>/<tier>/<name>.orb — the
+            // topic can span several segments ("ui/core").
+            const segments = path.relative(REGISTRY_DIR, orbPath).split(path.sep);
+            const onDiskTopic = segments.slice(0, -2).join('/');
             expect(entry.topic).toBe(onDiskTopic);
         });
 

@@ -181,20 +181,20 @@ export function stdGeosearchGeoSearchResultOrbital(params: StdGeosearchGeoSearch
     name: 'GeoSearchResultOrbital',
     uses: [
       {
-        'as': 'UiSearchInput',
         'from': 'std/behaviors/ui-search-input',
+        'as': 'UiSearchInput',
       },
       {
-        'as': 'UiMapView',
         'from': 'std/behaviors/ui-map-view',
+        'as': 'UiMapView',
       },
       {
-        'as': 'UiRangeSlider',
         'from': 'std/behaviors/ui-range-slider',
+        'as': 'UiRangeSlider',
       },
       {
-        'as': 'UiStack',
         'from': 'std/behaviors/ui-stack',
+        'as': 'UiStack',
       },
     ],
     entity: {
@@ -204,57 +204,57 @@ export function stdGeosearchGeoSearchResultOrbital(params: StdGeosearchGeoSearch
         const canonical: EntityField[] = [
           {
             'name': 'id',
+            'type': 'string',
             'required': true,
-            'type': 'string',
           },
           {
-            'description': 'The user\'s search query string.',
             'name': 'searchTerm',
-            'synonyms': 'query, text, input',
             'type': 'string',
+            'description': 'The user\'s search query string.',
+            'synonyms': 'query, text, input',
           },
           {
-            'description': 'Latitude coordinate of the search center.',
             'name': 'centerLat',
+            'type': 'number',
+            'description': 'Latitude coordinate of the search center.',
             'synonyms': 'lat, y, north',
-            'type': 'number',
           },
           {
-            'description': 'The longitude coordinate of the search center.',
             'name': 'centerLng',
-            'synonyms': 'longitude, lng',
             'type': 'number',
+            'description': 'The longitude coordinate of the search center.',
+            'synonyms': 'longitude, lng',
           },
           {
+            'name': 'radiusKm',
+            'type': 'number',
             'default': 10,
             'description': 'The search radius in kilometers.',
-            'name': 'radiusKm',
             'synonyms': 'range, distance, extent',
-            'type': 'number',
           },
           {
-            'description': 'Northern boundary coordinate of the search area.',
             'name': 'boundsNorth',
+            'type': 'number',
+            'description': 'Northern boundary coordinate of the search area.',
             'synonyms': 'north, upper, top',
-            'type': 'number',
           },
           {
-            'description': 'Southern boundary coordinate of the search area.',
             'name': 'boundsSouth',
+            'type': 'number',
+            'description': 'Southern boundary coordinate of the search area.',
             'synonyms': 'south, bottom, lowerBoundary',
-            'type': 'number',
           },
           {
-            'description': 'The eastern boundary coordinate of the search area.',
             'name': 'boundsEast',
-            'synonyms': 'east, right, longitude',
             'type': 'number',
+            'description': 'The eastern boundary coordinate of the search area.',
+            'synonyms': 'east, right, longitude',
           },
           {
-            'description': 'Western boundary coordinate of the search area.',
             'name': 'boundsWest',
-            'synonyms': 'west, longitude, x',
             'type': 'number',
+            'description': 'Western boundary coordinate of the search area.',
+            'synonyms': 'west, longitude, x',
           },
         ];
         const extras = params.fields ?? [];
@@ -265,30 +265,7 @@ export function stdGeosearchGeoSearchResultOrbital(params: StdGeosearchGeoSearch
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'defaultRadiusKm': {
-            'default': 10,
-            'description': 'Initial search radius around the chosen center',
-            'label': 'Default radius (km)',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'event': {
-            'default': 'GEO_SEARCH',
-            'description': 'Event emitted when the user runs a geo search',
-            'label': 'Search event',
-            'tier': 'internal',
-            'type': 'event',
-          },
-          'placeholder': {
-            'default': 'Search nearby…',
-            'description': 'Hint text in the location search input',
-            'label': 'Search placeholder',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-        },
+        'name': 'GeoSearchResultSearch',
         'effectRow': [
           {
             'kind': 'render-ui',
@@ -311,91 +288,93 @@ export function stdGeosearchGeoSearchResultOrbital(params: StdGeosearchGeoSearch
             'resource': '@entity.searchTerm',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'GeoSearchResult',
         'emits': [
           {
-            'description': 'Indicates a search request with location parameters.',
             'event': 'GEO_SEARCH',
+            'description': 'Indicates a search request with location parameters.',
+            'synonyms': 'search, locate, find, query',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'searchTerm',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'lat',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'lng',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'radiusKm',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'value',
                 'type': 'number',
               },
             ],
-            'synonyms': 'search, locate, find, query',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'GeoSearchResult',
-        'name': 'GeoSearchResultSearch',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates a search request with location parameters.',
               'key': 'GEO_SEARCH',
               'name': 'Geo Search',
+              'description': 'Indicates a search request with location parameters.',
+              'synonyms': 'search, locate, find, query',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'searchTerm',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'lat',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'lng',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'radiusKm',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'value',
                   'type': 'number',
                 },
               ],
-              'synonyms': 'search, locate, find, query',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -406,41 +385,41 @@ export function stdGeosearchGeoSearchResultOrbital(params: StdGeosearchGeoSearch
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'event': '@config.event',
                         'placeholder': '@config.placeholder',
                         'type': 'search-input',
+                        'event': '@config.event',
                       },
                       {
                         'centerLat': '@entity.centerLat',
-                        'centerLng': '@entity.centerLng',
+                        'type': 'map-view',
                         'height': '240px',
                         'markers': [],
-                        'type': 'map-view',
                         'zoom': 12,
+                        'centerLng': '@entity.centerLng',
                       },
                       {
-                        'action': 'GEO_SEARCH',
                         'max': 100,
-                        'min': 1,
-                        'showTooltip': true,
-                        'step': 1,
-                        'type': 'range-slider',
+                        'action': 'GEO_SEARCH',
                         'value': '@entity.radiusKm',
+                        'showTooltip': true,
+                        'min': 1,
+                        'type': 'range-slider',
+                        'step': 1,
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'GEO_SEARCH',
               'effects': [
                 [
                   'set',
@@ -468,40 +447,61 @@ export function stdGeosearchGeoSearchResultOrbital(params: StdGeosearchGeoSearch
                   {
                     'children': [
                       {
-                        'event': '@config.event',
-                        'placeholder': '@config.placeholder',
                         'type': 'search-input',
+                        'placeholder': '@config.placeholder',
+                        'event': '@config.event',
                       },
                       {
                         'centerLat': '@entity.centerLat',
-                        'centerLng': '@entity.centerLng',
                         'height': '240px',
-                        'markers': [],
                         'type': 'map-view',
+                        'markers': [],
+                        'centerLng': '@entity.centerLng',
                         'zoom': 12,
                       },
                       {
-                        'action': 'GEO_SEARCH',
-                        'max': 100,
                         'min': 1,
-                        'showTooltip': true,
                         'step': 1,
-                        'type': 'range-slider',
+                        'showTooltip': true,
                         'value': '@entity.radiusKm',
+                        'action': 'GEO_SEARCH',
+                        'type': 'range-slider',
+                        'max': 100,
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'GEO_SEARCH',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'defaultRadiusKm': {
+            'type': 'number',
+            'default': 10,
+            'label': 'Default radius (km)',
+            'description': 'Initial search radius around the chosen center',
+            'tier': 'presentation',
+          },
+          'event': {
+            'type': 'event',
+            'default': 'GEO_SEARCH',
+            'label': 'Search event',
+            'description': 'Event emitted when the user runs a geo search',
+            'tier': 'internal',
+          },
+          'placeholder': {
+            'type': 'string',
+            'default': 'Search nearby…',
+            'label': 'Search placeholder',
+            'description': 'Hint text in the location search input',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

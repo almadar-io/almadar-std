@@ -106,12 +106,12 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
     name: 'KnowledgeTracingOrbital',
     uses: [
       {
-        'as': 'Posterior',
         'from': 'std/behaviors/std-ml-posterior',
+        'as': 'Posterior',
       },
       {
-        'as': 'LabelCap',
         'from': 'std/behaviors/std-ml-label-capture',
+        'as': 'LabelCap',
       },
     ],
     entity: {
@@ -121,49 +121,49 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': '',
             'name': 'skillId',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': false,
             'name': 'lastOutcome',
             'type': 'boolean',
+            'default': false,
           },
           {
-            'default': 1,
             'name': 'alpha',
             'type': 'number',
+            'default': 1,
           },
           {
-            'default': 1,
             'name': 'beta',
             'type': 'number',
+            'default': 1,
           },
           {
-            'default': 0,
             'name': 'mean',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'intervalLow',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'intervalHigh',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'observations',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'insufficient',
@@ -172,66 +172,66 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
             ],
           },
           {
-            'default': {},
             'name': 'input',
+            'type': 'object',
+            'default': {},
             'properties': {
               'skillId': {
                 'name': 'skillId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             },
-            'type': 'object',
           },
           {
-            'default': {},
             'name': 'verdict',
+            'type': 'object',
+            'default': {},
             'properties': {
               'intervalHigh': {
                 'name': 'intervalHigh',
-                'required': true,
                 'type': 'number',
-              },
-              'intervalLow': {
-                'name': 'intervalLow',
                 'required': true,
-                'type': 'number',
               },
               'mean': {
                 'name': 'mean',
-                'required': true,
                 'type': 'number',
+                'required': true,
+              },
+              'intervalLow': {
+                'name': 'intervalLow',
+                'type': 'number',
+                'required': true,
               },
               'status': {
                 'name': 'status',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             },
-            'type': 'object',
           },
           {
-            'default': '',
             'name': 'source',
             'type': 'string',
+            'default': '',
           },
           {
+            'name': 'outcome',
+            'type': 'object',
             'default': {},
             'items': {
               'type': 'scalar',
             },
-            'name': 'outcome',
-            'type': 'object',
           },
           {
-            'default': '',
             'name': 'sink',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 0,
             'name': 'recordedAt',
             'type': 'number',
+            'default': 0,
           },
         ];
         const extras = params.fields ?? [];
@@ -242,7 +242,7 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'ObservationRelay',
         'effectRow': [
           {
             'kind': 'emit',
@@ -261,252 +261,254 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
             'resource': '@entity.skillId',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'KnowledgeState',
         'emits': [
           {
-            'description': 'Forwards the raw outcome to PosteriorTracker once skillId is recorded on the shared entity.',
             'event': 'OBSERVATION_MADE',
+            'description': 'Forwards the raw outcome to PosteriorTracker once skillId is recorded on the shared entity.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'outcome',
-                'required': true,
                 'type': 'boolean',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The posterior\'s verdict reshaped into a labeled example for LabelCaptureListener.',
             'event': 'CAPTURE_LABEL',
+            'description': 'The posterior\'s verdict reshaped into a labeled example for LabelCaptureListener.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'input',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'skillId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
               {
                 'name': 'verdict',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'status',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'mean',
-                    'required': true,
                     'type': 'float',
+                    'required': true,
                   },
                   {
                     'name': 'intervalLow',
-                    'required': true,
                     'type': 'float',
+                    'required': true,
                   },
                   {
                     'name': 'intervalHigh',
-                    'required': true,
                     'type': 'float',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
               {
                 'name': 'source',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'outcome',
                 'type': 'boolean',
               },
             ],
-            'tier': 'secondary',
           },
         ],
-        'linkedEntity': 'KnowledgeState',
         'listens': [
           {
             'event': 'MASTERY_REACHED',
+            'triggers': 'VERDICT_REACHED',
             'payloadMapping': {
-              'intervalHigh': '@payload.intervalHigh',
               'intervalLow': '@payload.intervalLow',
               'mean': '@payload.mean',
               'status': 'mastered',
+              'intervalHigh': '@payload.intervalHigh',
             },
             'source': {
               'kind': 'trait',
               'trait': ('PosteriorTracker' satisfies _StdKnowledgeTracingListenTraitName),
             },
-            'triggers': 'VERDICT_REACHED',
           },
           {
             'event': 'REMEDIATION_NEEDED',
+            'triggers': 'VERDICT_REACHED',
             'payloadMapping': {
-              'intervalHigh': '@payload.intervalHigh',
-              'intervalLow': '@payload.intervalLow',
               'mean': '@payload.mean',
+              'intervalLow': '@payload.intervalLow',
               'status': 'remediate',
+              'intervalHigh': '@payload.intervalHigh',
             },
             'source': {
               'kind': 'trait',
               'trait': ('PosteriorTracker' satisfies _StdKnowledgeTracingListenTraitName),
             },
-            'triggers': 'VERDICT_REACHED',
           },
           {
             'event': 'EVIDENCE_INSUFFICIENT',
+            'triggers': 'VERDICT_REACHED',
             'payloadMapping': {
-              'intervalHigh': '@payload.intervalHigh',
+              'status': 'insufficient',
               'intervalLow': '@payload.intervalLow',
               'mean': '@payload.mean',
-              'status': 'insufficient',
+              'intervalHigh': '@payload.intervalHigh',
             },
             'source': {
               'kind': 'trait',
               'trait': ('PosteriorTracker' satisfies _StdKnowledgeTracingListenTraitName),
             },
-            'triggers': 'VERDICT_REACHED',
           },
         ],
-        'name': 'ObservationRelay',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Public entry point — one true/false observation of a learner against one skill.',
               'key': 'OBSERVE_SKILL',
               'name': 'Observe Skill',
+              'description': 'Public entry point — one true/false observation of a learner against one skill.',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'skillId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'outcome',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'Any posterior verdict, tagged with which one it was.',
               'key': 'VERDICT_REACHED',
               'name': 'Verdict Reached',
+              'description': 'Any posterior verdict, tagged with which one it was.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'status',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'mean',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
                 {
                   'name': 'intervalLow',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
                 {
                   'name': 'intervalHigh',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Forwards the raw outcome to PosteriorTracker once skillId is recorded on the shared entity.',
               'key': 'OBSERVATION_MADE',
               'name': 'Observation Made',
+              'description': 'Forwards the raw outcome to PosteriorTracker once skillId is recorded on the shared entity.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'outcome',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'The posterior\'s verdict reshaped into a labeled example for LabelCaptureListener.',
               'key': 'CAPTURE_LABEL',
               'name': 'Capture Label',
+              'description': 'The posterior\'s verdict reshaped into a labeled example for LabelCaptureListener.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'input',
+                  'type': 'object',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'skillId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': 'object',
                 },
                 {
                   'name': 'verdict',
+                  'type': 'object',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'status',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'mean',
-                      'required': true,
                       'type': 'float',
+                      'required': true,
                     },
                     {
                       'name': 'intervalLow',
-                      'required': true,
                       'type': 'float',
+                      'required': true,
                     },
                     {
                       'name': 'intervalHigh',
-                      'required': true,
                       'type': 'float',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': 'object',
                 },
                 {
                   'name': 'source',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'outcome',
                   'type': 'boolean',
                 },
               ],
-              'tier': 'secondary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -519,11 +521,11 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
                   false,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'OBSERVE_SKILL',
               'effects': [
                 [
                   'set',
@@ -543,102 +545,100 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
                   },
                 ],
               ],
-              'event': 'OBSERVE_SKILL',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'VERDICT_REACHED',
               'effects': [
                 [
                   'emit',
                   'CAPTURE_LABEL',
                   {
-                    'input': {
-                      'skillId': '@entity.skillId',
-                    },
                     'outcome': '@entity.lastOutcome',
-                    'source': 'posterior',
                     'verdict': {
                       'intervalHigh': '@payload.intervalHigh',
                       'intervalLow': '@payload.intervalLow',
-                      'mean': '@payload.mean',
                       'status': '@payload.status',
+                      'mean': '@payload.mean',
                     },
+                    'input': {
+                      'skillId': '@entity.skillId',
+                    },
+                    'source': 'posterior',
                   },
                 ],
               ],
-              'event': 'VERDICT_REACHED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       makeTraitRef({
+        'ref': ('Posterior.traits.PosteriorBelief' satisfies _StdKnowledgeTracingKnowledgeTracingOrbitalUsesRef),
+        'name': 'PosteriorTracker',
+        'linkedEntity': 'KnowledgeState',
         'config': {
-          'intervalWidthMax': {
-            'default': 0.25,
-            'type': 'unknown',
-          },
           'masteryFloor': {
+            'type': 'unknown',
             'default': 0.85,
-            'type': 'unknown',
-          },
-          'priorAlpha': {
-            'default': 1,
-            'type': 'unknown',
-          },
-          'priorBeta': {
-            'default': 1,
-            'type': 'unknown',
-          },
-          'remediationCeiling': {
-            'default': 0.35,
-            'type': 'unknown',
           },
           'sampleCount': {
-            'default': 200,
             'type': 'unknown',
+            'default': 200,
+          },
+          'remediationCeiling': {
+            'type': 'unknown',
+            'default': 0.35,
+          },
+          'priorAlpha': {
+            'type': 'unknown',
+            'default': 1,
+          },
+          'intervalWidthMax': {
+            'type': 'unknown',
+            'default': 0.25,
+          },
+          'priorBeta': {
+            'type': 'unknown',
+            'default': 1,
           },
         },
-        'linkedEntity': 'KnowledgeState',
         'listens': [
           {
             'event': 'OBSERVATION_MADE',
+            'triggers': 'OBSERVE',
             'source': {
               'kind': 'trait',
               'trait': 'ObservationRelay',
             },
-            'triggers': 'OBSERVE',
           },
         ],
-        'name': 'PosteriorTracker',
-        'ref': ('Posterior.traits.PosteriorBelief' satisfies _StdKnowledgeTracingKnowledgeTracingOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('LabelCap.traits.LabelCaptureListener' satisfies _StdKnowledgeTracingKnowledgeTracingOrbitalUsesRef),
+        'name': 'Labels',
+        'linkedEntity': 'KnowledgeState',
         'config': {
-          'sampleRate': {
-            'default': 1,
-            'type': 'unknown',
-          },
           'sink': {
-            'default': 'knowledge-tracing',
             'type': 'unknown',
+            'default': 'knowledge-tracing',
+          },
+          'sampleRate': {
+            'type': 'unknown',
+            'default': 1,
           },
         },
-        'linkedEntity': 'KnowledgeState',
         'listens': [
           {
             'event': 'CAPTURE_LABEL',
+            'triggers': 'CAPTURE',
             'source': {
               'kind': 'trait',
               'trait': 'ObservationRelay',
             },
-            'triggers': 'CAPTURE',
           },
         ],
-        'name': 'Labels',
-        'ref': ('LabelCap.traits.LabelCaptureListener' satisfies _StdKnowledgeTracingKnowledgeTracingOrbitalUsesRef),
       }),
     ],
     pages: [

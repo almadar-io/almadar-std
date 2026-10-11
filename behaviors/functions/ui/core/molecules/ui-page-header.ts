@@ -46,47 +46,47 @@ export interface StdUiPageHeaderTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPageHeaderConfig {
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  activeTab?: string;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
   ariaSelected?: boolean;
-  /** Default: `"BACK"` */
-  backEvent?: string;
-  /** Default: `[]` */
-  breadcrumbs?: EntityRow[];
-  children?: PatternValue;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  icon?: unknown;
   isLoading?: boolean;
-  lang?: string;
-  /** Default: `"TAB_CHANGE"` */
-  onTabChange?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `false` */
-  showBack?: boolean;
   /** Default: `"header"` */
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `"BACK"` */
+  backEvent?: string;
+  ariaExpanded?: boolean;
+  ariaBusy?: boolean;
+  /** Default: `"TAB_CHANGE"` */
+  onTabChange?: string;
+  ariaDescribedby?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  activeTab?: string;
   status?: EntityRow;
-  subtitle?: unknown;
+  error?: EntityRow;
   tabIndex?: number;
   /** Default: `[]` */
   tabs?: EntityRow[];
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   title?: unknown;
+  icon?: unknown;
+  /** Default: `[]` */
+  breadcrumbs?: EntityRow[];
+  ariaHidden?: boolean;
+  subtitle?: unknown;
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  enterDelay?: number;
+  ariaLabel?: string;
+  /** Default: `false` */
+  showBack?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  className?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  children?: PatternValue;
+  lang?: string;
+  ariaLabelledby?: string;
 }
 
 /**

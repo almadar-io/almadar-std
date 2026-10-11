@@ -54,28 +54,28 @@ export interface StdSelectionSelectableItemLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSelectionConfig {
-  /** Default: `false` */
-  bodySearch?: boolean;
+  /** Default: `[{"icon":"check","label":"Select","event":"SELECT"}]` */
+  itemActions?: EntityRow[];
   /** Default: `20` */
   displayPageSize?: number;
-  /** Default: `"toolbar"` */
-  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
-  /** Default: `[]` */
-  filters?: EntityRow[];
-  /** Default: `[{"event":"SELECT","icon":"check","label":"Select"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"SELECT"` */
-  itemClickEvent?: string;
-  /** Default: `20` */
-  pageSize?: number;
   /** Default: `"name"` */
   searchField?: string;
   /** Default: `"Search…"` */
   searchPlaceholder?: string;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `20` */
+  pageSize?: number;
+  /** Default: `"toolbar"` */
+  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"SELECT"` */
+  itemClickEvent?: string;
+  /** Default: `false` */
+  bodySearch?: boolean;
+  /** Default: `[]` */
+  filters?: EntityRow[];
 }
 
 /**
@@ -218,33 +218,33 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'The item\'s display text or identifier.',
             'name': 'name',
+            'type': 'string',
             'required': true,
+            'description': 'The item\'s display text or identifier.',
             'synonyms': 'label, title, identifier',
-            'type': 'string',
           },
           {
-            'description': 'A textual explanation of the item.',
             'name': 'description',
-            'synonyms': 'details, explanation, notes',
             'type': 'string',
+            'description': 'A textual explanation of the item.',
+            'synonyms': 'details, explanation, notes',
           },
           {
-            'default': 'active',
-            'description': 'Indicates the current operational state of the item.',
             'name': 'status',
-            'synonyms': 'state, condition, flag',
             'type': 'string',
+            'default': 'active',
             'values': [
               'active',
               'inactive',
               'pending',
             ],
+            'description': 'Indicates the current operational state of the item.',
+            'synonyms': 'state, condition, flag',
           },
           {
             'name': 'createdAt',
@@ -259,168 +259,11 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'bodySearch': {
-            'default': false,
-            'description': 'Embeds a search box above the pick-list. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — this atom has never had a search box (0 consumers today).',
-            'label': 'Show the pick-list\'s own search box?',
-            'synonyms': 'inline search, list search, built-in search, show search',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'displayPageSize': {
-            'default': 20,
-            'description': 'Rows visible per page before the data-grid\'s own pagination control appears — 20 matches the pick-list density sweet spot (Miller\'s law, 10-25 rows).',
-            'label': 'How many candidates to show at once?',
-            'synonyms': 'visible rows, items per page, display limit, show per page',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'filterBarLook': {
-            'default': 'toolbar',
-            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
-            'label': 'Filter bar look',
-            'synonyms': 'filter bar style, facet style, chips, pills',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'toolbar',
-              'chips',
-              'pills',
-              'popover-trigger',
-              'inline-column-header',
-            ],
-          },
-          'filters': {
-            'default': [],
-            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the rows; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, the right setting whenever the page already composes std-filter beside this list and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone pick-list with no page-level filter affordance.',
-            'items': {
-              'properties': {
-                'field': {
-                  'name': 'field',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'options': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'options',
-                  'required': false,
-                  'type': 'array',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Which filters should appear above the pick-list?',
-            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
-            'tier': 'presentation',
-            'type': '[FilterSpec]',
-          },
-          'itemActions': {
-            'default': [
-              {
-                'event': 'SELECT',
-                'icon': 'check',
-                'label': 'Select',
-              },
-            ],
-            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'when': {
-                  'name': 'when',
-                  'required': false,
-                  'type': 'SExpr',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Row actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'itemClickEvent': {
-            'default': 'SELECT',
-            'description': 'Event emitted when a row is clicked; clicking a row selects it. Empty disables the row click.',
-            'label': 'Row click',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'pageSize': {
-            'default': 20,
-            'description': 'Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load every candidate) unless a consumer wires REFETCH_PAGE, so the default pick-list surface is unchanged. Safe to page: this atom\'s selection is a single transient id (never an accumulated array), so no already-picked item can be stranded on another page.',
-            'label': 'How many candidates per page when paging?',
-            'synonyms': 'fetch limit, records per page, page limit',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'searchField': {
-            'default': 'name',
-            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, label) or the search box can never match a row.',
-            'label': 'Which column does the search box match against?',
-            'synonyms': 'search column, search on field, match field, search key',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'searchPlaceholder': {
-            'default': 'Search…',
-            'description': 'Hint text inside the pick-list search box.',
-            'label': 'Search box placeholder text',
-            'synonyms': 'search hint, placeholder, search box text',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
-            'label': 'Table look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
+        'name': 'SelectableItemSelection',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -436,24 +279,29 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
             'resource': 'toast',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'SelectableItem',
         'emits': [
           {
-            'description': 'Indicates a selectable item has been successfully loaded.',
             'event': 'SelectableItemLoaded',
+            'description': 'Indicates a selectable item has been successfully loaded.',
+            'synonyms': 'loaded, initialized, ready',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'SelectableItem',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'name',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'description',
@@ -473,16 +321,16 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'SelectableItem',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'loaded, initialized, ready',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a selectable item failed to load.',
             'event': 'SelectableItemLoadFailed',
+            'description': 'Indicates a selectable item failed to load.',
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -493,216 +341,13 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'error, failure, problem, unsuccessful',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'SelectableItem',
-        'name': 'SelectableItemSelection',
-        'scope': 'collection',
         'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Indicates a selectable item has been successfully loaded.',
-              'key': 'SelectableItemLoaded',
-              'name': 'SelectableItem loaded',
-              'payloadSchema': [
-                {
-                  'entity': 'SelectableItem',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'name',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'description',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'status',
-                      'type': 'string',
-                      'values': [
-                        'active',
-                        'inactive',
-                        'pending',
-                      ],
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'loaded, initialized, ready',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates a selectable item failed to load.',
-              'key': 'SelectableItemLoadFailed',
-              'name': 'SelectableItem load failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'error, failure, problem, unsuccessful',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Triggers a pick-list refresh based on the current search term.',
-              'key': 'REFETCH_QUERY',
-              'name': 'Refetch Query',
-              'payloadSchema': [
-                {
-                  'name': 'searchTerm',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'refresh, reload, update, re-query, search',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Triggers a pick-list refresh based on current filter criteria.',
-              'key': 'REFETCH_FILTER',
-              'name': 'Refetch Filter',
-              'payloadSchema': [
-                {
-                  'name': 'entity',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'field',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'value',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'query',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'refresh, filter, update, reload',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Triggers a pick-list page refresh.',
-              'key': 'REFETCH_PAGE',
-              'name': 'Refetch Page',
-              'payloadSchema': [
-                {
-                  'name': 'page',
-                  'required': true,
-                  'type': 'number',
-                },
-              ],
-              'synonyms': 'reload, refresh, update, paginate',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates an item has been chosen.',
-              'key': 'SELECT',
-              'name': 'Select',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'SelectableItem',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'name',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'description',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'status',
-                      'type': 'string',
-                      'values': [
-                        'active',
-                        'inactive',
-                        'pending',
-                      ],
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'chosen, picked, highlighted',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates a selection has been finalized.',
-              'key': 'CONFIRM_SELECTION',
-              'name': 'Confirm Selection',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'accept, finalize, submit, choose',
-              'tier': 'domain',
-            },
-            {
-              'key': 'CLEAR',
-              'name': 'Clear',
-            },
-            {
-              'key': 'RETRY',
-              'name': 'Retry',
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'loading',
+              'isInitial': true,
             },
             {
               'name': 'idle',
@@ -717,8 +362,203 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
               'name': 'error',
             },
           ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SelectableItemLoaded',
+              'name': 'SelectableItem loaded',
+              'description': 'Indicates a selectable item has been successfully loaded.',
+              'synonyms': 'loaded, initialized, ready',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'entity': 'SelectableItem',
+                },
+              ],
+            },
+            {
+              'key': 'SelectableItemLoadFailed',
+              'name': 'SelectableItem load failed',
+              'description': 'Indicates a selectable item failed to load.',
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'REFETCH_QUERY',
+              'name': 'Refetch Query',
+              'description': 'Triggers a pick-list refresh based on the current search term.',
+              'synonyms': 'refresh, reload, update, re-query, search',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'searchTerm',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'REFETCH_FILTER',
+              'name': 'Refetch Filter',
+              'description': 'Triggers a pick-list refresh based on current filter criteria.',
+              'synonyms': 'refresh, filter, update, reload',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'entity',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'value',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'query',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'REFETCH_PAGE',
+              'name': 'Refetch Page',
+              'description': 'Triggers a pick-list page refresh.',
+              'synonyms': 'reload, refresh, update, paginate',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'page',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'SELECT',
+              'name': 'Select',
+              'description': 'Indicates an item has been chosen.',
+              'synonyms': 'chosen, picked, highlighted',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'entity': 'SelectableItem',
+                },
+              ],
+            },
+            {
+              'key': 'CONFIRM_SELECTION',
+              'name': 'Confirm Selection',
+              'description': 'Indicates a selection has been finalized.',
+              'synonyms': 'accept, finalize, submit, choose',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CLEAR',
+              'name': 'Clear',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+          ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -734,41 +574,44 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
-                        'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
+                        'rows': 6,
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'idle',
+              'event': 'SelectableItemLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'name': 'check-square',
-                            'size': 'xl',
                             'type': 'icon',
+                            'size': 'xl',
+                            'name': 'check-square',
                           },
                           {
                             'content': 'SelectableItems',
@@ -776,8 +619,7 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                             'variant': 'h2',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
+                        'align': 'center',
                         'type': 'stack',
                       },
                       [
@@ -786,21 +628,21 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         {
                           'children': [
                             {
-                              'className': 'w-full max-w-md',
-                              'clearable': true,
-                              'event': 'REFETCH_QUERY',
                               'placeholder': '@config.searchPlaceholder',
+                              'event': 'REFETCH_QUERY',
                               'type': 'search-input',
+                              'clearable': true,
+                              'className': 'w-full max-w-md',
                             },
                           ],
                           'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'gap': 'sm',
                         },
                         {
-                          'children': [],
-                          'gap': 'none',
                           'type': 'stack',
+                          'gap': 'none',
+                          'children': [],
                         },
                       ],
                       [
@@ -816,11 +658,11 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         {
                           'children': [
                             {
-                              'entity': 'SelectableItem',
-                              'event': 'REFETCH_FILTER',
-                              'filters': '@config.filters',
                               'look': '@config.filterBarLook',
                               'type': 'filter-group',
+                              'filters': '@config.filters',
+                              'entity': 'SelectableItem',
+                              'event': 'REFETCH_FILTER',
                             },
                           ],
                           'direction': 'horizontal',
@@ -828,24 +670,21 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                           'type': 'stack',
                         },
                         {
-                          'children': [],
                           'gap': 'none',
                           'type': 'stack',
+                          'children': [],
                         },
                       ],
                       {
                         'type': 'divider',
                       },
                       {
-                        'color': 'muted',
                         'content': 'Choose a selectableitem to continue.',
+                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
                       },
                       {
-                        'className': 'transition-shadow hover:shadow-md cursor-pointer',
-                        'entity': '@payload.data',
-                        'fields': [],
                         'itemActions': [
                           'array/filter',
                           '@config.itemActions',
@@ -880,91 +719,92 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                             ],
                           ],
                         ],
-                        'itemClickEvent': '@config.itemClickEvent',
-                        'look': '@config.tableLook',
-                        'pageSize': '@config.displayPageSize',
                         'renderItem': [
                           'fn',
                           'item',
                           {
-                            'align': 'center',
                             'children': [
                               {
                                 'label': '@item.name',
                                 'type': 'checkbox',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
                         'type': 'data-grid',
+                        'entity': '@payload.data',
+                        'className': 'transition-shadow hover:shadow-md cursor-pointer',
+                        'look': '@config.tableLook',
+                        'pageSize': '@config.displayPageSize',
+                        'fields': [],
+                        'itemClickEvent': '@config.itemClickEvent',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SelectableItemLoaded',
-              'from': 'loading',
-              'to': 'idle',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'SelectableItemLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'children': [
                       {
-                        'color': 'error',
-                        'name': 'alert-triangle',
                         'size': 'lg',
+                        'name': 'alert-triangle',
+                        'color': 'error',
                         'type': 'icon',
                       },
                       {
-                        'content': 'Failed to load',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': 'Failed to load',
                       },
                       {
                         'color': 'muted',
-                        'content': '@payload.error',
                         'type': 'typography',
                         'variant': 'body',
+                        'content': '@payload.error',
                       },
                       {
-                        'action': 'RETRY',
-                        'icon': 'rotate-ccw',
-                        'label': 'Retry',
                         'type': 'button',
                         'variant': 'primary',
+                        'label': 'Retry',
+                        'action': 'RETRY',
+                        'icon': 'rotate-ccw',
                       },
                     ],
+                    'align': 'center',
+                    'type': 'stack',
+                    'gap': 'md',
                     'className': 'py-12',
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SelectableItemLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'idle',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('SelectableItem' satisfies _StdSelectionEntityName),
                   {
                     'emit': {
-                      'failure': 'SelectableItemLoadFailed',
                       'success': 'SelectableItemLoaded',
+                      'failure': 'SelectableItemLoadFailed',
                     },
                   },
                 ],
@@ -974,35 +814,31 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                   {
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'loading',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'REFETCH_QUERY',
               'effects': [
                 [
                   'fetch',
                   ('SelectableItem' satisfies _StdSelectionEntityName),
                   {
-                    'emit': {
-                      'failure': 'SelectableItemLoadFailed',
-                      'success': 'SelectableItemLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -1020,23 +856,23 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         '@payload.searchTerm',
                       ],
                     ],
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
                   },
                 ],
               ],
-              'event': 'REFETCH_QUERY',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'REFETCH_FILTER',
               'effects': [
                 [
                   'fetch',
                   ('SelectableItem' satisfies _StdSelectionEntityName),
                   {
-                    'emit': {
-                      'failure': 'SelectableItemLoadFailed',
-                      'success': 'SelectableItemLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -1054,24 +890,28 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         '@payload.value',
                       ],
                     ],
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
                   },
                 ],
               ],
-              'event': 'REFETCH_FILTER',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'REFETCH_PAGE',
               'effects': [
                 [
                   'fetch',
                   ('SelectableItem' satisfies _StdSelectionEntityName),
                   {
+                    'limit': '@config.pageSize',
                     'emit': {
                       'failure': 'SelectableItemLoadFailed',
                       'success': 'SelectableItemLoaded',
                     },
-                    'limit': '@config.pageSize',
                     'offset': [
                       '*',
                       [
@@ -1084,32 +924,32 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                   },
                 ],
               ],
-              'event': 'REFETCH_PAGE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'SelectableItemLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t refresh the list — ',
                       '@payload.error',
                     ],
+                    'dismissible': true,
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'SelectableItemLoadFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'SelectableItemLoaded',
               'effects': [
                 [
                   'render-ui',
@@ -1117,22 +957,22 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                   {
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
                             'name': 'check-square',
-                            'size': 'xl',
                             'type': 'icon',
+                            'size': 'xl',
                           },
                           {
-                            'content': 'SelectableItems',
                             'type': 'typography',
                             'variant': 'h2',
+                            'content': 'SelectableItems',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
+                        'align': 'center',
                         'type': 'stack',
+                        'gap': 'sm',
                       },
                       [
                         'if',
@@ -1140,21 +980,21 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         {
                           'children': [
                             {
-                              'className': 'w-full max-w-md',
+                              'type': 'search-input',
                               'clearable': true,
+                              'className': 'w-full max-w-md',
                               'event': 'REFETCH_QUERY',
                               'placeholder': '@config.searchPlaceholder',
-                              'type': 'search-input',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
                         },
                         {
+                          'type': 'stack',
                           'children': [],
                           'gap': 'none',
-                          'type': 'stack',
                         },
                       ],
                       [
@@ -1168,23 +1008,23 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                           0,
                         ],
                         {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'entity': 'SelectableItem',
                               'event': 'REFETCH_FILTER',
-                              'filters': '@config.filters',
-                              'look': '@config.filterBarLook',
                               'type': 'filter-group',
+                              'look': '@config.filterBarLook',
+                              'filters': '@config.filters',
+                              'entity': 'SelectableItem',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
-                          'children': [],
-                          'gap': 'none',
                           'type': 'stack',
+                          'gap': 'none',
+                          'children': [],
                         },
                       ],
                       {
@@ -1192,14 +1032,12 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                       },
                       {
                         'color': 'muted',
-                        'content': 'Choose a selectableitem to continue.',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'Choose a selectableitem to continue.',
                       },
                       {
-                        'className': 'transition-shadow hover:shadow-md cursor-pointer',
-                        'entity': '@payload.data',
-                        'fields': [],
+                        'itemClickEvent': '@config.itemClickEvent',
                         'itemActions': [
                           'array/filter',
                           '@config.itemActions',
@@ -1234,26 +1072,28 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                             ],
                           ],
                         ],
-                        'itemClickEvent': '@config.itemClickEvent',
-                        'look': '@config.tableLook',
                         'pageSize': '@config.displayPageSize',
+                        'look': '@config.tableLook',
+                        'fields': [],
+                        'entity': '@payload.data',
+                        'type': 'data-grid',
+                        'className': 'transition-shadow hover:shadow-md cursor-pointer',
                         'renderItem': [
                           'fn',
                           'item',
                           {
+                            'gap': 'sm',
+                            'type': 'stack',
                             'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'label': '@item.name',
                                 'type': 'checkbox',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
                           },
                         ],
-                        'type': 'data-grid',
                       },
                     ],
                     'direction': 'vertical',
@@ -1262,108 +1102,108 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                   },
                 ],
               ],
-              'event': 'SelectableItemLoaded',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'selecting',
+              'event': 'SELECT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
                         'align': 'center',
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'children': [
                           {
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'align': 'center',
+                            'gap': 'md',
                             'children': [
                               {
-                                'name': 'check-square',
                                 'size': 'xl',
+                                'name': 'check-square',
                                 'type': 'icon',
                               },
                               {
-                                'content': 'SelectableItems',
                                 'type': 'typography',
                                 'variant': 'h2',
+                                'content': 'SelectableItems',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                           {
-                            'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'label': 'Selecting',
                                 'type': 'badge',
                               },
                               {
-                                'action': 'CLEAR',
                                 'icon': 'x',
+                                'action': 'CLEAR',
                                 'label': 'Clear',
                                 'type': 'button',
                                 'variant': 'ghost',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
+                            'align': 'center',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'message': '@payload.id',
                         'type': 'alert',
+                        'message': '@payload.id',
                         'variant': 'info',
                       },
                       {
+                        'gap': 'sm',
                         'children': [
                           {
+                            'variant': 'primary',
                             'action': 'CONFIRM_SELECTION',
+                            'label': 'Confirm',
+                            'type': 'button',
                             'actionPayload': {
                               'id': '@payload.id',
                             },
                             'icon': 'check',
-                            'label': 'Confirm',
-                            'type': 'button',
-                            'variant': 'primary',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SELECT',
-              'from': 'idle',
-              'to': 'selecting',
             },
             {
+              'from': 'selecting',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('SelectableItem' satisfies _StdSelectionEntityName),
                   {
                     'emit': {
-                      'failure': 'SelectableItemLoadFailed',
                       'success': 'SelectableItemLoaded',
+                      'failure': 'SelectableItemLoadFailed',
                     },
                   },
                 ],
@@ -1377,9 +1217,9 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         'variant': 'header',
                       },
                       {
+                        'variant': 'list',
                         'rows': 6,
                         'type': 'skeleton',
-                        'variant': 'list',
                       },
                     ],
                     'direction': 'vertical',
@@ -1388,204 +1228,130 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'selecting',
-              'to': 'loading',
             },
             {
+              'from': 'selecting',
+              'to': 'selected',
+              'event': 'CONFIRM_SELECTION',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
                         'align': 'center',
                         'children': [
                           {
-                            'align': 'center',
                             'children': [
                               {
-                                'name': 'check-circle',
-                                'size': 'xl',
                                 'type': 'icon',
+                                'size': 'xl',
+                                'name': 'check-circle',
                               },
                               {
-                                'content': 'Selection Confirmed',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Selection Confirmed',
                               },
                             ],
                             'direction': 'horizontal',
-                            'gap': 'md',
                             'type': 'stack',
+                            'gap': 'md',
+                            'align': 'center',
                           },
                           {
-                            'label': 'Confirmed',
                             'type': 'badge',
+                            'label': 'Confirmed',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'message': 'Selection confirmed successfully.',
                         'type': 'alert',
                         'variant': 'success',
+                        'message': 'Selection confirmed successfully.',
                       },
                       {
+                        'gap': 'md',
                         'align': 'center',
                         'children': [
                           {
-                            'content': 'Selected ID:',
-                            'type': 'typography',
                             'variant': 'caption',
+                            'type': 'typography',
+                            'content': 'Selected ID:',
                           },
                           {
+                            'variant': 'body',
                             'content': '@payload.id',
                             'type': 'typography',
-                            'variant': 'body',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'md',
                         'type': 'stack',
                       },
                       {
-                        'action': 'CLEAR',
-                        'icon': 'rotate-ccw',
-                        'label': 'Clear Selection',
                         'type': 'button',
+                        'icon': 'rotate-ccw',
                         'variant': 'ghost',
+                        'action': 'CLEAR',
+                        'label': 'Clear Selection',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'CONFIRM_SELECTION',
-              'from': 'selecting',
-              'to': 'selected',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('SelectableItem' satisfies _StdSelectionEntityName),
-                  {
-                    'emit': {
-                      'failure': 'SelectableItemLoadFailed',
-                      'success': 'SelectableItemLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'list',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'CLEAR',
               'from': 'selecting',
               'to': 'loading',
-            },
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('SelectableItem' satisfies _StdSelectionEntityName),
-                  {
-                    'emit': {
-                      'failure': 'SelectableItemLoadFailed',
-                      'success': 'SelectableItemLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'list',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'selected',
-              'to': 'loading',
-            },
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('SelectableItem' satisfies _StdSelectionEntityName),
-                  {
-                    'emit': {
-                      'failure': 'SelectableItemLoadFailed',
-                      'success': 'SelectableItemLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'list',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
               'event': 'CLEAR',
-              'from': 'selected',
-              'to': 'loading',
+              'effects': [
+                [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'variant': 'header',
+                        'type': 'skeleton',
+                      },
+                      {
+                        'rows': 6,
+                        'type': 'skeleton',
+                        'variant': 'list',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'selected',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1607,22 +1373,59 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         'variant': 'header',
                       },
                       {
+                        'variant': 'list',
+                        'rows': 6,
+                        'type': 'skeleton',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'selected',
+              'to': 'loading',
+              'event': 'CLEAR',
+              'effects': [
+                [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'success': 'SelectableItemLoaded',
+                      'failure': 'SelectableItemLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
                         'rows': 6,
                         'type': 'skeleton',
                         'variant': 'list',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
+            },
+            {
               'from': 'error',
               'to': 'loading',
-            },
-            {
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1638,29 +1441,226 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
+            },
+            {
+              'from': 'error',
+              'to': 'loading',
               'event': 'RETRY',
-              'from': 'error',
-              'to': 'loading',
+              'effects': [
+                [
+                  'fetch',
+                  ('SelectableItem' satisfies _StdSelectionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SelectableItemLoadFailed',
+                      'success': 'SelectableItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'list',
+                        'rows': 6,
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
             },
           ],
         },
+        'config': {
+          'itemActions': {
+            'type': '[ItemAction]',
+            'default': [
+              {
+                'icon': 'check',
+                'label': 'Select',
+                'event': 'SELECT',
+              },
+            ],
+            'label': 'Row actions',
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'when': {
+                  'name': 'when',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'displayPageSize': {
+            'type': 'number',
+            'default': 20,
+            'label': 'How many candidates to show at once?',
+            'description': 'Rows visible per page before the data-grid\'s own pagination control appears — 20 matches the pick-list density sweet spot (Miller\'s law, 10-25 rows).',
+            'synonyms': 'visible rows, items per page, display limit, show per page',
+            'tier': 'presentation',
+          },
+          'searchField': {
+            'type': 'string',
+            'default': 'name',
+            'label': 'Which column does the search box match against?',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, label) or the search box can never match a row.',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+          },
+          'searchPlaceholder': {
+            'type': 'string',
+            'default': 'Search…',
+            'label': 'Search box placeholder text',
+            'description': 'Hint text inside the pick-list search box.',
+            'synonyms': 'search hint, placeholder, search box text',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 20,
+            'label': 'How many candidates per page when paging?',
+            'description': 'Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load every candidate) unless a consumer wires REFETCH_PAGE, so the default pick-list surface is unchanged. Safe to page: this atom\'s selection is a single transient id (never an accumulated array), so no already-picked item can be stranded on another page.',
+            'synonyms': 'fetch limit, records per page, page limit',
+            'tier': 'presentation',
+          },
+          'filterBarLook': {
+            'type': 'string',
+            'default': 'toolbar',
+            'label': 'Filter bar look',
+            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
+            'synonyms': 'filter bar style, facet style, chips, pills',
+            'tier': 'presentation',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Table look',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'itemClickEvent': {
+            'type': 'event',
+            'default': 'SELECT',
+            'label': 'Row click',
+            'description': 'Event emitted when a row is clicked; clicking a row selects it. Empty disables the row click.',
+            'tier': 'presentation',
+          },
+          'bodySearch': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show the pick-list\'s own search box?',
+            'description': 'Embeds a search box above the pick-list. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — this atom has never had a search box (0 consumers today).',
+            'synonyms': 'inline search, list search, built-in search, show search',
+            'tier': 'presentation',
+          },
+          'filters': {
+            'type': '[FilterSpec]',
+            'default': [],
+            'label': 'Which filters should appear above the pick-list?',
+            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the rows; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, the right setting whenever the page already composes std-filter beside this list and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone pick-list with no page-level filter affordance.',
+            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'options': {
+                  'name': 'options',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': true,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

@@ -70,30 +70,30 @@ export interface StdTreeTreeNodeLoadFailedPayload {
 export interface StdTreeConfig {
   /** Default: `false` */
   bodySearch?: boolean;
-  /** Default: `false` */
-  childAction?: boolean;
-  /** Default: `"Add inside"` */
-  childActionLabel?: string;
-  /** Default: `"toolbar"` */
-  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
-  /** Default: `[]` */
-  filters?: EntityRow[];
-  /** Default: `"icon"` */
-  iconField?: string;
-  /** Default: `""` */
-  initialFilterField?: string;
-  /** Default: `""` */
-  initialFilterValue?: string;
-  /** Default: `"name"` */
-  labelField?: string;
-  /** Default: `"full"` */
-  look?: 'full' | 'rail';
   /** Default: `"parentId"` */
   parentField?: string;
   /** Default: `"Search…"` */
   searchPlaceholder?: string;
+  /** Default: `"name"` */
+  labelField?: string;
+  /** Default: `[]` */
+  filters?: EntityRow[];
+  /** Default: `"icon"` */
+  iconField?: string;
+  /** Default: `false` */
+  childAction?: boolean;
+  /** Default: `""` */
+  initialFilterField?: string;
   /** Default: `"Tree"` */
   title?: string;
+  /** Default: `"Add inside"` */
+  childActionLabel?: string;
+  /** Default: `"full"` */
+  look?: 'full' | 'rail';
+  /** Default: `""` */
+  initialFilterValue?: string;
+  /** Default: `"toolbar"` */
+  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
 }
 
 /**
@@ -237,29 +237,29 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'The descriptive label for this node.',
             'name': 'name',
-            'required': true,
-            'synonyms': 'label, title, text',
             'type': 'string',
+            'required': true,
+            'description': 'The descriptive label for this node.',
+            'synonyms': 'label, title, text',
           },
           {
+            'name': 'parentId',
+            'type': 'string',
             'default': '',
             'description': 'Reference to the parent node in the hierarchy; empty marks a root.',
-            'name': 'parentId',
             'synonyms': 'parent, superior, ancestor',
-            'type': 'string',
           },
           {
+            'name': 'icon',
+            'type': 'string',
             'default': '',
             'description': 'Icon name shown beside the node.',
-            'name': 'icon',
             'synonyms': 'glyph, symbol, pictogram',
-            'type': 'string',
           },
           {
             'name': 'createdAt',
@@ -274,143 +274,11 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'bodySearch': {
-            'default': false,
-            'description': 'Embeds a search box above the tree that re-fetches the flat node set server-side. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.',
-            'label': 'Show the tree\'s own search box?',
-            'synonyms': 'inline search, list search, built-in search, show search, duplicate search',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'childAction': {
-            'default': false,
-            'description': 'Render a hover + on every row that emits CHILD_REQUESTED { parentId } — wire it to the host\'s create-draft writer so new records are born inside the node.',
-            'label': 'Row + affordance?',
-            'synonyms': 'add inside, new subpage button, plus on rows',
-            'tier': 'domain',
-            'type': 'boolean',
-          },
-          'childActionLabel': {
-            'default': 'Add inside',
-            'description': 'Accessible label on the row\'s + affordance (e.g. New subpage).',
-            'label': 'Row + tooltip',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'filterBarLook': {
-            'default': 'toolbar',
-            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
-            'label': 'Filter bar look',
-            'synonyms': 'filter bar style, facet style, chips, pills',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'toolbar',
-              'chips',
-              'pills',
-              'popover-trigger',
-              'inline-column-header',
-            ],
-          },
-          'filters': {
-            'default': [],
-            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the tree; each selection fires REFETCH_FILTER on this trait, re-fetching the flat node set. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this tree and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path.',
-            'items': {
-              'properties': {
-                'field': {
-                  'name': 'field',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'options': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'options',
-                  'required': false,
-                  'type': 'array',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Which filters should appear above the tree?',
-            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
-            'tier': 'presentation',
-            'type': '[FilterSpec]',
-          },
-          'iconField': {
-            'default': 'icon',
-            'description': 'Entity field holding each node\'s icon name; point it at a nonexistent field (or empty) to suppress per-node icons.',
-            'label': 'Icon column',
-            'synonyms': 'glyph field, icon column',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'initialFilterField': {
-            'default': '',
-            'description': 'Name the field the initial load filters on, paired with initialFilterValue; blank loads every node. REFETCH_FILTER then supplies later selections.',
-            'label': 'Which field does the first load filter on?',
-            'synonyms': 'initial filter, first load filter, start filtered',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'initialFilterValue': {
-            'default': '',
-            'description': 'The value initialFilterField must equal on the first load',
-            'label': 'What value does the first load filter for?',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'labelField': {
-            'default': 'name',
-            'description': 'Entity field rendered as each node\'s label. Config-driven on purpose: the trait-level `fields {}` remap is compiled-path-only (the JS runtime never applies it), so a rebind names its columns here and both execution paths agree.',
-            'label': 'Label column',
-            'synonyms': 'title field, name column, display field',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'look': {
-            'default': 'full',
-            'description': 'full = standalone section (heading, count, divider); rail = compact sidebar navigation (slim caption, nav-styled rows) for an app layout\'s sidebarTrait slot.',
-            'label': 'Tree look',
-            'synonyms': 'sidebar tree, rail look, nav tree, compact',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'full',
-              'rail',
-            ],
-          },
-          'parentField': {
-            'default': 'parentId',
-            'description': 'Entity field holding the parent reference the hierarchy nests by.',
-            'label': 'Parent column',
-            'synonyms': 'parent id field, hierarchy column',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'searchPlaceholder': {
-            'default': 'Search…',
-            'description': 'Hint text inside the tree search box (e.g. \'Search nodes…\').',
-            'label': 'Search box placeholder text',
-            'synonyms': 'search hint, placeholder, search box text, search label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'title': {
-            'default': 'Tree',
-            'description': 'Heading shown above the tree',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'TreeBrowse',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -430,51 +298,55 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
             'resource': '@entity.id',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'TreeNode',
         'emits': [
           {
-            'description': 'Signals a tree node has been selected for external handoff.',
             'event': 'OPEN_NODE',
+            'description': 'Signals a tree node has been selected for external handoff.',
+            'synonyms': 'select, choose, open, activate',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'synonyms': 'select, choose, open, activate',
-            'tier': 'domain',
           },
           {
-            'description': 'Create a new record under this node — the host routes it into its create-draft writer with parentId stamped.',
             'event': 'CHILD_REQUESTED',
+            'description': 'Create a new record under this node — the host routes it into its create-draft writer with parentId stamped.',
+            'synonyms': 'new subpage, add child page, create under',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'parentId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'new subpage, add child page, create under',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates the tree node collection has been successfully retrieved.',
             'event': 'TreeNodeLoaded',
+            'description': 'Indicates the tree node collection has been successfully retrieved.',
+            'synonyms': 'loaded, fetched, retrieved, ready',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'TreeNode',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'name',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'parentId',
@@ -489,15 +361,15 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'TreeNode',
               },
             ],
-            'synonyms': 'loaded, fetched, retrieved, ready',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to load the tree node collection.',
             'event': 'TreeNodeLoadFailed',
+            'description': 'Indicates a failure to load the tree node collection.',
+            'synonyms': 'error, failed, problem, unsuccessful',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -508,56 +380,60 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failed, problem, unsuccessful',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'TreeNode',
-        'name': 'TreeBrowse',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
-              'description': 'Mark this record as the open one (routed from the host document\'s load events); its row highlights and its ancestors auto-expand.',
               'key': 'SET_CURRENT',
               'name': 'Set Current',
+              'description': 'Mark this record as the open one (routed from the host document\'s load events); its row highlights and its ancestors auto-expand.',
+              'synonyms': 'highlight current, select node, you are here',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'highlight current, select node, you are here',
-              'tier': 'domain',
             },
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates the tree node collection has been successfully retrieved.',
               'key': 'TreeNodeLoaded',
               'name': 'TreeNode loaded',
+              'description': 'Indicates the tree node collection has been successfully retrieved.',
+              'synonyms': 'loaded, fetched, retrieved, ready',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'TreeNode',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'name',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'parentId',
@@ -572,16 +448,16 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'TreeNode',
                 },
               ],
-              'synonyms': 'loaded, fetched, retrieved, ready',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a failure to load the tree node collection.',
               'key': 'TreeNodeLoadFailed',
               'name': 'TreeNode load failed',
+              'description': 'Indicates a failure to load the tree node collection.',
+              'synonyms': 'error, failed, problem, unsuccessful',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -592,112 +468,101 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failed, problem, unsuccessful',
-              'tier': 'internal',
             },
             {
-              'description': 'Triggers a tree refresh based on the current search query.',
               'key': 'REFETCH_QUERY',
               'name': 'Refetch Query',
+              'description': 'Triggers a tree refresh based on the current search query.',
+              'synonyms': 'refresh, reload, update, re-query',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'searchTerm',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'refresh, reload, update, re-query',
-              'tier': 'domain',
             },
             {
-              'description': 'Triggers a tree refresh based on current filter criteria.',
               'key': 'REFETCH_FILTER',
               'name': 'Refetch Filter',
+              'description': 'Triggers a tree refresh based on current filter criteria.',
+              'synonyms': 'refresh, filter, update, reload',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'entity',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'field',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'value',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'query',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'refresh, filter, update, reload',
-              'tier': 'domain',
             },
             {
-              'description': 'Signals a tree node has been selected for external handoff.',
               'key': 'OPEN_NODE',
               'name': 'Open Node',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
+              'description': 'Signals a tree node has been selected for external handoff.',
               'synonyms': 'select, choose, open, activate',
               'tier': 'domain',
-            },
-            {
-              'description': 'The row\'s hover + affordance was clicked.',
-              'key': 'ADD_CHILD',
-              'name': 'Add Child',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
+            },
+            {
+              'key': 'ADD_CHILD',
+              'name': 'Add Child',
+              'description': 'The row\'s hover + affordance was clicked.',
               'synonyms': 'add inside, new child',
               'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
             },
             {
               'key': 'RETRY',
               'name': 'Retry',
             },
             {
-              'description': 'Create a new record under this node — the host routes it into its create-draft writer with parentId stamped.',
               'key': 'CHILD_REQUESTED',
               'name': 'Child Requested',
+              'description': 'Create a new record under this node — the host routes it into its create-draft writer with parentId stamped.',
+              'synonyms': 'new subpage, add child page, create under',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'parentId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'new subpage, add child page, create under',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'browsing',
-            },
-            {
-              'name': 'error',
             },
           ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'SET_CURRENT',
               'effects': [
                 [
                   'set',
@@ -709,17 +574,17 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   ('TreeNode' satisfies _StdTreeEntityName),
                   {
                     'emit': {
-                      'failure': 'TreeNodeLoadFailed',
                       'success': 'TreeNodeLoaded',
+                      'failure': 'TreeNodeLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'SET_CURRENT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -752,33 +617,35 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'TreeNodeLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       [
                         'if',
@@ -788,38 +655,38 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           'rail',
                         ],
                         {
-                          'className': 'px-2 pb-1 uppercase tracking-wide',
-                          'color': 'muted',
                           'content': '@config.title',
                           'type': 'typography',
                           'variant': 'caption',
+                          'className': 'px-2 pb-1 uppercase tracking-wide',
+                          'color': 'muted',
                         },
                         {
+                          'type': 'stack',
+                          'gap': 'sm',
                           'align': 'center',
                           'children': [
                             {
                               'name': 'list-tree',
-                              'size': 'lg',
                               'type': 'icon',
+                              'size': 'lg',
                             },
                             {
+                              'variant': 'h3',
                               'content': '@config.title',
                               'type': 'typography',
-                              'variant': 'h3',
                             },
                             {
+                              'type': 'badge',
+                              'size': 'sm',
+                              'variant': 'neutral',
                               'label': [
                                 'array/len',
                                 '@payload.data',
                               ],
-                              'size': 'sm',
-                              'type': 'badge',
-                              'variant': 'neutral',
                             },
                           ],
                           'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
                         },
                       ],
                       [
@@ -830,9 +697,9 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           'rail',
                         ],
                         {
-                          'children': [],
                           'gap': 'none',
                           'type': 'stack',
+                          'children': [],
                         },
                         {
                           'type': 'divider',
@@ -844,21 +711,21 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                         {
                           'children': [
                             {
-                              'className': 'w-full max-w-md',
-                              'clearable': true,
-                              'event': 'REFETCH_QUERY',
                               'placeholder': '@config.searchPlaceholder',
+                              'event': 'REFETCH_QUERY',
+                              'className': 'w-full max-w-md',
                               'type': 'search-input',
+                              'clearable': true,
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
+                          'direction': 'horizontal',
                           'type': 'stack',
                         },
                         {
-                          'children': [],
-                          'gap': 'none',
                           'type': 'stack',
+                          'gap': 'none',
+                          'children': [],
                         },
                       ],
                       [
@@ -875,23 +742,42 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           'children': [
                             {
                               'entity': 'TreeNode',
+                              'type': 'filter-group',
+                              'look': '@config.filterBarLook',
                               'event': 'REFETCH_FILTER',
                               'filters': '@config.filters',
-                              'look': '@config.filterBarLook',
-                              'type': 'filter-group',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
+                          'direction': 'horizontal',
                           'type': 'stack',
                         },
                         {
+                          'type': 'stack',
                           'children': [],
                           'gap': 'none',
-                          'type': 'stack',
                         },
                       ],
                       {
+                        'onNodeSelect': 'OPEN_NODE',
+                        'onNodeAction': [
+                          'if',
+                          '@config.childAction',
+                          'ADD_CHILD',
+                          null,
+                        ],
+                        'look': [
+                          'if',
+                          [
+                            '=',
+                            '@config.look',
+                            'rail',
+                          ],
+                          'nav',
+                          'files',
+                        ],
+                        'nodeActionLabel': '@config.childActionLabel',
+                        'type': 'file-tree',
                         'items': [
                           'array/map',
                           '@payload.data',
@@ -899,6 +785,15 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                             'fn',
                             'row',
                             {
+                              'parentId': [
+                                'str/default',
+                                [
+                                  'object/get',
+                                  '@row',
+                                  '@config.parentField',
+                                ],
+                                '',
+                              ],
                               'icon': [
                                 'str/default',
                                 [
@@ -918,37 +813,10 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                                 ],
                                 '',
                               ],
-                              'parentId': [
-                                'str/default',
-                                [
-                                  'object/get',
-                                  '@row',
-                                  '@config.parentField',
-                                ],
-                                '',
-                              ],
                             },
                           ],
                         ],
-                        'look': [
-                          'if',
-                          [
-                            '=',
-                            '@config.look',
-                            'rail',
-                          ],
-                          'nav',
-                          'files',
-                        ],
                         'nodeActionIcon': 'plus',
-                        'nodeActionLabel': '@config.childActionLabel',
-                        'onNodeAction': [
-                          'if',
-                          '@config.childAction',
-                          'ADD_CHILD',
-                          null,
-                        ],
-                        'onNodeSelect': 'OPEN_NODE',
                         'selectedId': [
                           'str/default',
                           [
@@ -958,10 +826,8 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           ],
                           '',
                         ],
-                        'type': 'file-tree',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': [
                       'if',
                       [
@@ -972,58 +838,57 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                       'none',
                       'md',
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'TreeNodeLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'TreeNodeLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'py-8',
+                    'gap': 'sm',
                     'align': 'center',
                     'children': [
                       {
-                        'color': 'error',
-                        'name': 'alert-triangle',
                         'type': 'icon',
+                        'name': 'alert-triangle',
+                        'color': 'error',
                       },
                       {
-                        'content': 'Failed to load tree',
-                        'type': 'typography',
                         'variant': 'body',
+                        'type': 'typography',
+                        'content': 'Failed to load tree',
                       },
                       {
-                        'color': 'muted',
-                        'content': '@payload.error',
                         'type': 'typography',
+                        'content': '@payload.error',
+                        'color': 'muted',
                         'variant': 'caption',
                       },
                       {
                         'action': 'RETRY',
                         'icon': 'rotate-ccw',
                         'label': 'Retry',
-                        'type': 'button',
                         'variant': 'ghost',
+                        'type': 'button',
                       },
                     ],
-                    'className': 'py-8',
-                    'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'TreeNodeLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1056,6 +921,7 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'skeleton',
@@ -1067,25 +933,24 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                         'variant': 'list',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'REFETCH_QUERY',
               'effects': [
                 [
                   'fetch',
                   ('TreeNode' satisfies _StdTreeEntityName),
                   {
                     'emit': {
-                      'failure': 'TreeNodeLoadFailed',
                       'success': 'TreeNodeLoaded',
+                      'failure': 'TreeNodeLoadFailed',
                     },
                     'filter': [
                       'or',
@@ -1111,20 +976,16 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   },
                 ],
               ],
-              'event': 'REFETCH_QUERY',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'REFETCH_FILTER',
               'effects': [
                 [
                   'fetch',
                   ('TreeNode' satisfies _StdTreeEntityName),
                   {
-                    'emit': {
-                      'failure': 'TreeNodeLoadFailed',
-                      'success': 'TreeNodeLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -1142,14 +1003,18 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                         '@payload.value',
                       ],
                     ],
+                    'emit': {
+                      'success': 'TreeNodeLoaded',
+                      'failure': 'TreeNodeLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'REFETCH_FILTER',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'OPEN_NODE',
               'effects': [
                 [
                   'set',
@@ -1157,11 +1022,11 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   '@payload.id',
                 ],
               ],
-              'event': 'OPEN_NODE',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'SET_CURRENT',
               'effects': [
                 [
                   'set',
@@ -1179,11 +1044,11 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   },
                 ],
               ],
-              'event': 'SET_CURRENT',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ADD_CHILD',
               'effects': [
                 [
                   'emit',
@@ -1193,16 +1058,27 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   },
                 ],
               ],
-              'event': 'ADD_CHILD',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'TreeNodeLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': [
+                      'if',
+                      [
+                        '=',
+                        '@config.look',
+                        'rail',
+                      ],
+                      'none',
+                      'md',
+                    ],
                     'children': [
                       [
                         'if',
@@ -1212,38 +1088,38 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           'rail',
                         ],
                         {
-                          'className': 'px-2 pb-1 uppercase tracking-wide',
-                          'color': 'muted',
-                          'content': '@config.title',
-                          'type': 'typography',
                           'variant': 'caption',
+                          'type': 'typography',
+                          'color': 'muted',
+                          'className': 'px-2 pb-1 uppercase tracking-wide',
+                          'content': '@config.title',
                         },
                         {
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
                           'align': 'center',
                           'children': [
                             {
                               'name': 'list-tree',
-                              'size': 'lg',
                               'type': 'icon',
+                              'size': 'lg',
                             },
                             {
-                              'content': '@config.title',
                               'type': 'typography',
+                              'content': '@config.title',
                               'variant': 'h3',
                             },
                             {
+                              'type': 'badge',
+                              'size': 'sm',
                               'label': [
                                 'array/len',
                                 '@payload.data',
                               ],
-                              'size': 'sm',
-                              'type': 'badge',
                               'variant': 'neutral',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
                         },
                       ],
                       [
@@ -1254,9 +1130,9 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           'rail',
                         ],
                         {
-                          'children': [],
-                          'gap': 'none',
                           'type': 'stack',
+                          'gap': 'none',
+                          'children': [],
                         },
                         {
                           'type': 'divider',
@@ -1268,16 +1144,16 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                         {
                           'children': [
                             {
-                              'className': 'w-full max-w-md',
-                              'clearable': true,
-                              'event': 'REFETCH_QUERY',
                               'placeholder': '@config.searchPlaceholder',
+                              'className': 'w-full max-w-md',
+                              'event': 'REFETCH_QUERY',
                               'type': 'search-input',
+                              'clearable': true,
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
                         },
                         {
                           'children': [],
@@ -1296,22 +1172,22 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           0,
                         ],
                         {
+                          'gap': 'sm',
+                          'type': 'stack',
                           'children': [
                             {
                               'entity': 'TreeNode',
-                              'event': 'REFETCH_FILTER',
-                              'filters': '@config.filters',
-                              'look': '@config.filterBarLook',
                               'type': 'filter-group',
+                              'filters': '@config.filters',
+                              'event': 'REFETCH_FILTER',
+                              'look': '@config.filterBarLook',
                             },
                           ],
                           'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
-                          'children': [],
                           'gap': 'none',
+                          'children': [],
                           'type': 'stack',
                         },
                       ],
@@ -1332,7 +1208,6 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                                 ],
                                 '',
                               ],
-                              'id': '@row.id',
                               'label': [
                                 'str/default',
                                 [
@@ -1351,9 +1226,19 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                                 ],
                                 '',
                               ],
+                              'id': '@row.id',
                             },
                           ],
                         ],
+                        'nodeActionIcon': 'plus',
+                        'onNodeAction': [
+                          'if',
+                          '@config.childAction',
+                          'ADD_CHILD',
+                          null,
+                        ],
+                        'type': 'file-tree',
+                        'onNodeSelect': 'OPEN_NODE',
                         'look': [
                           'if',
                           [
@@ -1364,15 +1249,7 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           'nav',
                           'files',
                         ],
-                        'nodeActionIcon': 'plus',
                         'nodeActionLabel': '@config.childActionLabel',
-                        'onNodeAction': [
-                          'if',
-                          '@config.childAction',
-                          'ADD_CHILD',
-                          null,
-                        ],
-                        'onNodeSelect': 'OPEN_NODE',
                         'selectedId': [
                           'str/default',
                           [
@@ -1382,35 +1259,22 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           ],
                           '',
                         ],
-                        'type': 'file-tree',
                       },
-                    ],
-                    'direction': 'vertical',
-                    'gap': [
-                      'if',
-                      [
-                        '=',
-                        '@config.look',
-                        'rail',
-                      ],
-                      'none',
-                      'md',
                     ],
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'TreeNodeLoaded',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'error',
+              'event': 'TreeNodeLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'children': [
                       {
                         'color': 'error',
@@ -1419,89 +1283,90 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                       },
                       {
                         'content': 'Failed to load tree',
-                        'type': 'typography',
                         'variant': 'body',
-                      },
-                      {
-                        'color': 'muted',
-                        'content': '@payload.error',
                         'type': 'typography',
-                        'variant': 'caption',
                       },
                       {
-                        'action': 'RETRY',
-                        'icon': 'rotate-ccw',
-                        'label': 'Retry',
-                        'type': 'button',
+                        'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'caption',
+                        'content': '@payload.error',
+                      },
+                      {
                         'variant': 'ghost',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'label': 'Retry',
+                        'action': 'RETRY',
                       },
                     ],
+                    'type': 'stack',
+                    'gap': 'sm',
                     'className': 'py-8',
                     'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
-              'event': 'TreeNodeLoadFailed',
-              'from': 'browsing',
-              'to': 'error',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('TreeNode' satisfies _StdTreeEntityName),
-                  {
-                    'emit': {
-                      'failure': 'TreeNodeLoadFailed',
-                      'success': 'TreeNodeLoaded',
-                    },
-                    'filter': [
-                      'or',
-                      [
-                        '=',
-                        '@config.initialFilterField',
-                        '',
-                      ],
-                      [
-                        '=',
-                        [
-                          'object/get',
-                          '@entity',
-                          '@config.initialFilterField',
-                        ],
-                        '@config.initialFilterValue',
-                      ],
-                    ],
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'list',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
+              'from': 'error',
+              'to': 'loading',
               'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
+              'effects': [
+                [
+                  'fetch',
+                  ('TreeNode' satisfies _StdTreeEntityName),
+                  {
+                    'emit': {
+                      'success': 'TreeNodeLoaded',
+                      'failure': 'TreeNodeLoadFailed',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.initialFilterField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.initialFilterField',
+                        ],
+                        '@config.initialFilterValue',
+                      ],
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'variant': 'header',
+                        'type': 'skeleton',
+                      },
+                      {
+                        'rows': 6,
+                        'variant': 'list',
+                        'type': 'skeleton',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'RETRY',
               'effects': [
                 [
                   'fetch',
@@ -1534,6 +1399,9 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
                         'type': 'skeleton',
@@ -1541,22 +1409,154 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'RETRY',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'bodySearch': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show the tree\'s own search box?',
+            'description': 'Embeds a search box above the tree that re-fetches the flat node set server-side. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.',
+            'synonyms': 'inline search, list search, built-in search, show search, duplicate search',
+            'tier': 'presentation',
+          },
+          'parentField': {
+            'type': 'string',
+            'default': 'parentId',
+            'label': 'Parent column',
+            'description': 'Entity field holding the parent reference the hierarchy nests by.',
+            'synonyms': 'parent id field, hierarchy column',
+            'tier': 'domain',
+          },
+          'searchPlaceholder': {
+            'type': 'string',
+            'default': 'Search…',
+            'label': 'Search box placeholder text',
+            'description': 'Hint text inside the tree search box (e.g. \'Search nodes…\').',
+            'synonyms': 'search hint, placeholder, search box text, search label',
+            'tier': 'presentation',
+          },
+          'labelField': {
+            'type': 'string',
+            'default': 'name',
+            'label': 'Label column',
+            'description': 'Entity field rendered as each node\'s label. Config-driven on purpose: the trait-level `fields {}` remap is compiled-path-only (the JS runtime never applies it), so a rebind names its columns here and both execution paths agree.',
+            'synonyms': 'title field, name column, display field',
+            'tier': 'domain',
+          },
+          'filters': {
+            'type': '[FilterSpec]',
+            'default': [],
+            'label': 'Which filters should appear above the tree?',
+            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the tree; each selection fires REFETCH_FILTER on this trait, re-fetching the flat node set. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this tree and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path.',
+            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'options': {
+                  'name': 'options',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'iconField': {
+            'type': 'string',
+            'default': 'icon',
+            'label': 'Icon column',
+            'description': 'Entity field holding each node\'s icon name; point it at a nonexistent field (or empty) to suppress per-node icons.',
+            'synonyms': 'glyph field, icon column',
+            'tier': 'presentation',
+          },
+          'childAction': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Row + affordance?',
+            'description': 'Render a hover + on every row that emits CHILD_REQUESTED { parentId } — wire it to the host\'s create-draft writer so new records are born inside the node.',
+            'synonyms': 'add inside, new subpage button, plus on rows',
+            'tier': 'domain',
+          },
+          'initialFilterField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Which field does the first load filter on?',
+            'description': 'Name the field the initial load filters on, paired with initialFilterValue; blank loads every node. REFETCH_FILTER then supplies later selections.',
+            'synonyms': 'initial filter, first load filter, start filtered',
+            'tier': 'domain',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Tree',
+            'label': 'Section title',
+            'description': 'Heading shown above the tree',
+            'tier': 'presentation',
+          },
+          'childActionLabel': {
+            'type': 'string',
+            'default': 'Add inside',
+            'label': 'Row + tooltip',
+            'description': 'Accessible label on the row\'s + affordance (e.g. New subpage).',
+            'tier': 'presentation',
+          },
+          'look': {
+            'type': 'string',
+            'default': 'full',
+            'label': 'Tree look',
+            'description': 'full = standalone section (heading, count, divider); rail = compact sidebar navigation (slim caption, nav-styled rows) for an app layout\'s sidebarTrait slot.',
+            'synonyms': 'sidebar tree, rail look, nav tree, compact',
+            'tier': 'presentation',
+            'values': [
+              'full',
+              'rail',
+            ],
+          },
+          'initialFilterValue': {
+            'type': 'string',
+            'default': '',
+            'label': 'What value does the first load filter for?',
+            'description': 'The value initialFilterField must equal on the first load',
+            'tier': 'domain',
+          },
+          'filterBarLook': {
+            'type': 'string',
+            'default': 'toolbar',
+            'label': 'Filter bar look',
+            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
+            'synonyms': 'filter bar style, facet style, chips, pills',
+            'tier': 'presentation',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

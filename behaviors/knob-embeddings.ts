@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import { resolveStdDataDir } from './data-dir.js';
+import { resolveStdSidecarFile } from './data-dir.js';
 
 /** Each knob's vector as int8, all views over one shared buffer — the on-disk
  *  bytes, never widened to a float per dimension (that was 8× the memory and
@@ -45,7 +45,7 @@ export type StoredKnobVector = ReadonlyArray<number> | QuantizedKnobVector;
  *  - interned: a `table` of unique stored vectors + a `keys` map from knob
  *    key to its table index (many identical-text knobs share one vector). */
 export interface StoredKnobEmbeddingsFile {
-  version: string;
+  version?: string;
   model: string;
   dimensions: number;
   encoding?: 'int8-b64';
@@ -132,8 +132,7 @@ function loadManifest(): Promise<KnobEmbeddingsManifest | null> {
 }
 
 async function loadManifestUncached(): Promise<KnobEmbeddingsManifest | null> {
-  const { resolve } = await import('path');
-  return readKnobEmbeddingsFile(resolve(await resolveStdDataDir(), 'knob-embeddings.json'));
+  return readKnobEmbeddingsFile(await resolveStdSidecarFile('dist/knob-embeddings.json'));
 }
 
 /**

@@ -190,55 +190,55 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': [],
-            'items': {
-              'type': 'number',
-            },
             'name': 'weights',
             'type': 'array',
-          },
-          {
             'default': [],
             'items': {
               'type': 'number',
             },
-            'name': 'baseline',
-            'type': 'array',
           },
           {
+            'name': 'baseline',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'number',
+            },
+          },
+          {
+            'name': 'violations',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
               'properties': {
                 'check': {
                   'name': 'check',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'index': {
                   'name': 'index',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
                 },
                 'value': {
                   'name': 'value',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'violations',
-            'type': 'array',
           },
           {
-            'default': false,
             'name': 'valid',
             'type': 'boolean',
+            'default': false,
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'checked',
@@ -253,45 +253,7 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'forbiddenRegions': {
-            'default': [],
-            'description': 'Value ranges no weight may fall inside, even within the magnitude bound',
-            'items': {
-              'properties': {
-                'max': {
-                  'name': 'max',
-                  'required': true,
-                  'type': 'number',
-                },
-                'min': {
-                  'name': 'min',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Forbidden regions',
-            'tier': 'domain',
-            'type': '[Range]',
-          },
-          'maxMagnitude': {
-            'default': 10,
-            'description': 'Every weight\'s absolute value must not exceed this bound',
-            'label': 'Max weight magnitude',
-            'tier': 'policy',
-            'type': 'float',
-          },
-          'regressionThreshold': {
-            'default': 0,
-            'description': 'Max allowed per-element absolute drift between candidate and baseline weights; 0 disables the regression check',
-            'label': 'Regression threshold',
-            'tier': 'policy',
-            'type': 'float',
-          },
-        },
+        'name': 'WeightValidatorRun',
         'effectRow': [
           {
             'kind': 'emit',
@@ -322,32 +284,37 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
             'resource': '@entity.weights',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'WeightValidation',
         'emits': [
           {
-            'description': 'All constraint checks passed — magnitude bounds, forbidden regions, and regression are all clear',
             'event': 'WEIGHTS_ACCEPTED',
+            'description': 'All constraint checks passed — magnitude bounds, forbidden regions, and regression are all clear',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'weights',
-                'required': true,
                 'type': '[float]',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
           {
-            'description': 'At least one constraint check failed; violations lists every failing check with its detail (magnitude, forbidden-region, or regression). request echoes the originating request untouched so the next rung can project its own inputs out of it',
             'event': 'WEIGHTS_REJECTED',
+            'description': 'At least one constraint check failed; violations lists every failing check with its detail (magnitude, forbidden-region, or regression). request echoes the originating request untouched so the next rung can project its own inputs out of it',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'WeightViolation',
                 'name': 'violations',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'check',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'value',
@@ -358,22 +325,25 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                     'type': 'int',
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'WeightViolation',
               },
               {
                 'name': 'request',
                 'type': '$r',
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'WeightValidation',
-        'name': 'WeightValidatorRun',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'checked',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -385,8 +355,8 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
               'payloadSchema': [
                 {
                   'name': 'weights',
-                  'required': true,
                   'type': '[float]',
+                  'required': true,
                 },
                 {
                   'name': 'baseline',
@@ -403,31 +373,33 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
               'name': 'Reset',
             },
             {
-              'description': 'All constraint checks passed — magnitude bounds, forbidden regions, and regression are all clear',
               'key': 'WEIGHTS_ACCEPTED',
               'name': 'Weights Accepted',
+              'description': 'All constraint checks passed — magnitude bounds, forbidden regions, and regression are all clear',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'weights',
-                  'required': true,
                   'type': '[float]',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'At least one constraint check failed; violations lists every failing check with its detail (magnitude, forbidden-region, or regression). request echoes the originating request untouched so the next rung can project its own inputs out of it',
               'key': 'WEIGHTS_REJECTED',
               'name': 'Weights Rejected',
+              'description': 'At least one constraint check failed; violations lists every failing check with its detail (magnitude, forbidden-region, or regression). request echoes the originating request untouched so the next rung can project its own inputs out of it',
+              'tier': 'primary',
               'payloadSchema': [
                 {
-                  'entity': 'WeightViolation',
                   'name': 'violations',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'check',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'value',
@@ -438,28 +410,20 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                       'type': 'int',
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'WeightViolation',
                 },
                 {
                   'name': 'request',
                   'type': '$r',
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'checked',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -487,11 +451,11 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'checked',
+              'event': 'VALIDATE_WEIGHTS',
               'effects': [
                 [
                   'let',
@@ -625,8 +589,8 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                             'fn',
                             'w',
                             {
-                              'check': 'forbidden-region',
                               'value': '@w',
+                              'check': 'forbidden-region',
                             },
                           ],
                         ],
@@ -637,8 +601,8 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                             'fn',
                             'i',
                             {
-                              'check': 'regression',
                               'index': '@i',
+                              'check': 'regression',
                             },
                           ],
                         ],
@@ -708,8 +672,8 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                           'emit',
                           'WEIGHTS_REJECTED',
                           {
-                            'request': '@payload.request',
                             'violations': '@violations',
+                            'request': '@payload.request',
                           },
                         ],
                       ],
@@ -717,11 +681,11 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                   ],
                 ],
               ],
-              'event': 'VALIDATE_WEIGHTS',
-              'from': 'idle',
-              'to': 'checked',
             },
             {
+              'from': 'checked',
+              'to': 'checked',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -729,11 +693,11 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                   'checked',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'checked',
-              'to': 'checked',
             },
             {
+              'from': 'checked',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -761,16 +725,52 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'checked',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'forbiddenRegions': {
+            'type': '[Range]',
+            'default': [],
+            'label': 'Forbidden regions',
+            'description': 'Value ranges no weight may fall inside, even within the magnitude bound',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'max': {
+                  'name': 'max',
+                  'type': 'number',
+                  'required': true,
+                },
+                'min': {
+                  'name': 'min',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'maxMagnitude': {
+            'type': 'float',
+            'default': 10,
+            'label': 'Max weight magnitude',
+            'description': 'Every weight\'s absolute value must not exceed this bound',
+            'tier': 'policy',
+          },
+          'regressionThreshold': {
+            'type': 'float',
+            'default': 0,
+            'label': 'Regression threshold',
+            'description': 'Max allowed per-element absolute drift between candidate and baseline weights; 0 disables the regression check',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
         'typeParams': [
           {
-            'kind': 'Entity',
             'name': 'r',
+            'kind': 'Entity',
           },
         ],
       } satisfies Trait,

@@ -46,42 +46,42 @@ export interface StdUiRelationSelectChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRelationSelectConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
   ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `true` */
-  clearable?: boolean;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `false` */
-  disabled?: boolean;
-  emptyMessage?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
+  ariaHidden?: boolean;
   error?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  lang?: string;
-  name?: string;
-  /** Default: `"CHANGE"` */
-  onChange?: string;
-  /** Default: `[{"description":"Description","disabled":false,"label":"Label","value":"Value"},{"description":"Description 2","disabled":true,"label":"Label 2","value":"Value 2"}]` */
-  options?: EntityRow[];
-  placeholder?: string;
+  ariaLabel?: string;
+  ariaExpanded?: boolean;
+  searchPlaceholder?: string;
+  emptyMessage?: string;
   /** Default: `false` */
   required?: boolean;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `true` */
+  clearable?: boolean;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  searchPlaceholder?: string;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   value?: string;
+  enterDelay?: number;
+  placeholder?: string;
+  ariaLabelledby?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  className?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  name?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaDescribedby?: string;
+  tabIndex?: number;
+  /** Default: `[{"disabled":false,"label":"Label","value":"Value","description":"Description"},{"label":"Label 2","value":"Value 2","description":"Description 2","disabled":true}]` */
+  options?: EntityRow[];
+  lang?: string;
+  ariaSelected?: boolean;
+  ariaBusy?: boolean;
 }
 
 /**

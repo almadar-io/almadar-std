@@ -48,43 +48,43 @@ export interface StdLearnSandboxSystemChangedPayload {
  */
 export interface StdLearnSandboxConfig {
   /** Default: `false` */
-  animate?: boolean;
-  /** Default: `""` */
-  backgroundColor?: string;
-  /** Default: `"muted"` */
-  disabledColor?: string;
-  /** Default: `"guide"` */
-  disabledEdgeColor?: string;
-  /** Default: `[{"enabled":true,"id":"a","label":"Module A","weight":15,"x":100,"y":80},{"enabled":true,"id":"b","label":"Module B","weight":20,"x":300,"y":60},{"enabled":false,"id":"c","label":"Module C","weight":10,"x":500,"y":80},{"enabled":true,"id":"d","label":"Module D","weight":25,"x":200,"y":220},{"enabled":true,"id":"e","label":"Module E","weight":18,"x":420,"y":220}]` */
-  elements?: EntityRow[];
-  /** Default: `"series-2"` */
-  enabledColor?: string;
+  interactive?: boolean;
   /** Default: `"ink"` */
   enabledEdgeColor?: string;
+  /** Default: `[{"id":"a","weight":15,"label":"Module A","y":80,"enabled":true,"x":100},{"label":"Module B","x":300,"id":"b","y":60,"enabled":true,"weight":20},{"y":80,"label":"Module C","enabled":false,"x":500,"weight":10,"id":"c"},{"enabled":true,"x":200,"label":"Module D","weight":25,"y":220,"id":"d"},{"id":"e","x":420,"label":"Module E","y":220,"weight":18,"enabled":true}]` */
+  elements?: EntityRow[];
+  /** Default: `[{"to":"b","from":"a"},{"to":"c","from":"b"},{"from":"a","to":"d"},{"to":"e","from":"d"}]` */
+  links?: EntityRow[];
   /** Default: `320` */
   height?: number;
-  /** Default: `false` */
-  interactive?: boolean;
-  /** Default: `[{"from":"a","to":"b"},{"from":"b","to":"c"},{"from":"a","to":"d"},{"from":"d","to":"e"}]` */
-  links?: EntityRow[];
-  /** Default: `""` */
-  matchMode?: string;
   /** Default: `34` */
   nodeRadius?: number;
-  /** Default: `"System Status"` */
-  outcomeLabel?: string;
+  /** Default: `"muted"` */
+  disabledColor?: string;
   /** Default: `"Reset"` */
   resetLabel?: string;
   /** Default: `"config"` */
   rosterSource?: 'config' | 'event';
+  /** Default: `"System Status"` */
+  outcomeLabel?: string;
+  /** Default: `false` */
+  animate?: boolean;
   /** Default: `""` */
-  summary?: string;
+  matchMode?: string;
+  /** Default: `"series-2"` */
+  enabledColor?: string;
+  /** Default: `"guide"` */
+  disabledEdgeColor?: string;
+  /** Default: `640` */
+  width?: number;
   /** Default: `60` */
   threshold?: number;
   /** Default: `"System Sandbox"` */
   title?: string;
-  /** Default: `640` */
-  width?: number;
+  /** Default: `""` */
+  backgroundColor?: string;
+  /** Default: `""` */
+  summary?: string;
 }
 
 /**

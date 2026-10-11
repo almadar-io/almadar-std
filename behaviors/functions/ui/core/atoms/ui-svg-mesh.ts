@@ -39,42 +39,42 @@ export type StdUiSvgMeshEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgMeshConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `true` */
-  asRoot?: boolean;
-  className?: string;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `0.5` */
-  connectionDensity?: number;
-  /** Default: `60` */
-  cx?: number;
-  /** Default: `60` */
-  cy?: number;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `120` */
-  height?: number;
   lang?: string;
-  /** Default: `6` */
-  nodes?: number;
-  /** Default: `1` */
-  opacity?: number;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   /** Default: `50` */
   radius?: number;
+  ariaExpanded?: boolean;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  enterDelay?: number;
+  /** Default: `true` */
+  asRoot?: boolean;
+  /** Default: `120` */
+  height?: number;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaLabelledby?: string;
+  /** Default: `1` */
+  opacity?: number;
+  className?: string;
   tabIndex?: number;
+  ariaSelected?: boolean;
+  /** Default: `60` */
+  cy?: number;
+  /** Default: `60` */
+  cx?: number;
+  ariaHidden?: boolean;
+  ariaBusy?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaDescribedby?: string;
+  /** Default: `6` */
+  nodes?: number;
+  ariaLabel?: string;
+  /** Default: `0.5` */
+  connectionDensity?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `120` */
   width?: number;
 }

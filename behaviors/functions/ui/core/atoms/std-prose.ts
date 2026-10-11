@@ -39,20 +39,20 @@ export type StdProseEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdProseConfig {
-  /** Default: `"Write the text here in **markdown**."` */
-  body?: string;
-  /** Default: `"ltr"` */
-  direction?: 'ltr' | 'rtl';
-  /** Default: `""` */
-  eyebrow?: string;
-  /** Default: `""` */
-  heading?: string;
   /** Default: `"h2"` */
   headingLevel?: 'h1' | 'h2';
-  /** Default: `""` */
-  meta?: string;
   /** Default: `"plain"` */
   surface?: 'plain' | 'muted';
+  /** Default: `"ltr"` */
+  direction?: 'ltr' | 'rtl';
+  /** Default: `"Write the text here in **markdown**."` */
+  body?: string;
+  /** Default: `""` */
+  meta?: string;
+  /** Default: `""` */
+  heading?: string;
+  /** Default: `""` */
+  eyebrow?: string;
 }
 
 /**

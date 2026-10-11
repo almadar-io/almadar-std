@@ -39,16 +39,16 @@ export type StdUiDrawFxLayerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawFxLayerConfig {
-  /** Default: `{"item":{}}` */
-  art?: Record<string, TraitConfig>;
-  /** Default: `[{"id":"e1","message":"Unit spawned","ttl":1,"type":"spawn","x":2,"y":2},{"id":"e2","message":"Attack landed","ttl":2,"type":"effect","x":3,"y":1}]` */
+  /** Default: `{"item":{"thumbnailUrl":"","animations":["static"],"name":"item","style":"pixel","category":"item","aspect":"1:1","role":"item","dimension":"2d","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png"}}` */
+  sprites?: Record<string, TraitConfig>;
+  /** Default: `[{"type":"spawn","x":2,"id":"e1","ttl":1,"y":2,"message":"Unit spawned"},{"y":1,"message":"Attack landed","id":"e2","type":"effect","x":3,"ttl":2}]` */
   items?: EntityRow[];
+  tickMs?: number;
   /** Default: `[]` */
   presets?: EntityRow[];
-  /** Default: `{"item":{"animations":["static"],"aspect":"1:1","category":"item","dimension":"2d","name":"item","role":"item","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png"}}` */
-  sprites?: Record<string, TraitConfig>;
+  /** Default: `{"item":{}}` */
+  art?: Record<string, TraitConfig>;
   textColor?: string;
-  tickMs?: number;
 }
 
 /**

@@ -105,26 +105,26 @@ export interface StdCalendarSyncPullNextPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCalendarSyncConfig {
+  /** Default: `"CalendarEvent"` */
+  targetEntity?: unknown;
+  /** Default: `false` */
+  enabled?: boolean;
   /** Default: `""` */
-  calendarId?: string;
+  durationField?: string;
+  /** Default: `"startsAt"` */
+  startField?: string;
+  /** Default: `60` */
+  durationMinutes?: number;
+  /** Default: `"title"` */
+  titleField?: string;
   /** Default: `""` */
   descriptionField?: string;
   /** Default: `""` */
-  durationField?: string;
-  /** Default: `60` */
-  durationMinutes?: number;
-  /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `"endsAt"` */
-  endField?: string;
+  calendarId?: string;
   /** Default: `""` */
   locationField?: string;
-  /** Default: `"startsAt"` */
-  startField?: string;
-  /** Default: `"CalendarEvent"` */
-  targetEntity?: unknown;
-  /** Default: `"title"` */
-  titleField?: string;
+  /** Default: `"endsAt"` */
+  endField?: string;
 }
 
 /**
@@ -268,93 +268,93 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
         const canonical: EntityField[] = [
           {
             'name': 'id',
+            'type': 'string',
             'required': true,
-            'type': 'string',
           },
           {
-            'default': '',
-            'description': 'Scratch: Google incremental-sync token from the last listEvents; in-memory per instance — a restart falls back to a full list.',
-            'intrinsic': true,
             'name': 'syncToken',
-            'synonyms': 'sync cursor, next token',
             'type': 'string',
-          },
-          {
-            'default': 0,
-            'description': 'When the last full push+pull cycle completed; 0 = never.',
-            'intrinsic': true,
-            'name': 'lastSyncedAt',
-            'synonyms': 'last sync time',
-            'type': 'number',
-          },
-          {
             'default': '',
-            'description': 'Scratch: id of the target row the push loop is currently exporting.',
             'intrinsic': true,
-            'name': 'headId',
-            'synonyms': 'cursor, current row',
-            'type': 'string',
+            'description': 'Scratch: Google incremental-sync token from the last listEvents; in-memory per instance — a restart falls back to a full list.',
+            'synonyms': 'sync cursor, next token',
           },
           {
-            'default': [],
-            'description': 'Scratch: remote events remaining in the current pull-upsert loop.',
+            'name': 'lastSyncedAt',
+            'type': 'number',
+            'default': 0,
             'intrinsic': true,
+            'description': 'When the last full push+pull cycle completed; 0 = never.',
+            'synonyms': 'last sync time',
+          },
+          {
+            'name': 'headId',
+            'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'Scratch: id of the target row the push loop is currently exporting.',
+            'synonyms': 'cursor, current row',
+          },
+          {
+            'name': 'pending',
+            'type': 'array',
+            'default': [],
             'items': {
+              'type': 'object',
               'properties': {
-                'description': {
-                  'name': 'description',
-                  'required': false,
+                'status': {
+                  'name': 'status',
                   'type': 'string',
-                },
-                'end': {
-                  'name': 'end',
                   'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'location': {
-                  'name': 'location',
-                  'required': false,
-                  'type': 'string',
                 },
                 'start': {
                   'name': 'start',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                 },
-                'status': {
-                  'name': 'status',
-                  'required': false,
+                'id': {
+                  'name': 'id',
                   'type': 'string',
+                  'required': false,
                 },
-                'summary': {
-                  'name': 'summary',
-                  'required': false,
+                'location': {
+                  'name': 'location',
                   'type': 'string',
+                  'required': false,
                 },
                 'updated': {
                   'name': 'updated',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
+                },
+                'summary': {
+                  'name': 'summary',
+                  'type': 'string',
+                  'required': false,
+                },
+                'end': {
+                  'name': 'end',
+                  'type': 'string',
+                  'required': false,
+                },
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'pending',
+            'intrinsic': true,
+            'description': 'Scratch: remote events remaining in the current pull-upsert loop.',
             'synonyms': 'pull queue, remaining events',
-            'type': 'array',
           },
           {
-            'default': '',
-            'description': 'Last sync failure detail; blank = none.',
-            'intrinsic': true,
             'name': 'lastError',
-            'synonyms': 'sync error, failure',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'Last sync failure detail; blank = none.',
+            'synonyms': 'sync error, failure',
           },
         ];
         const extras = params.fields ?? [];
@@ -365,159 +365,77 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
     } as Entity,
     auxiliaryEntities: [
       {
+        'name': 'CalendarEvent',
         'collection': 'calendarEvents',
+        'persistence': 'persistent',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'title',
+            'type': 'string',
             'default': '',
             'description': 'Event title/summary.',
-            'name': 'title',
             'synonyms': 'summary, name, subject',
-            'type': 'string',
           },
           {
+            'name': 'startsAt',
+            'type': 'string',
             'default': '',
             'description': 'ISO start (dateTime, or YYYY-MM-DD for all-day).',
-            'name': 'startsAt',
             'synonyms': 'start, begins, from',
-            'type': 'string',
           },
           {
+            'name': 'endsAt',
+            'type': 'string',
             'default': '',
             'description': 'ISO end (dateTime, or YYYY-MM-DD for all-day).',
-            'name': 'endsAt',
             'synonyms': 'end, finishes, until',
-            'type': 'string',
           },
           {
+            'name': 'location',
+            'type': 'string',
             'default': '',
             'description': 'Event location.',
-            'name': 'location',
             'synonyms': 'place, where, venue',
-            'type': 'string',
           },
           {
+            'name': 'description',
+            'type': 'string',
             'default': '',
             'description': 'Event description/notes.',
-            'name': 'description',
             'synonyms': 'notes, details, body',
-            'type': 'string',
           },
           {
+            'name': 'status',
+            'type': 'string',
             'default': '',
             'description': 'Remote status (confirmed/tentative/cancelled).',
-            'name': 'status',
             'synonyms': 'state, confirmation',
-            'type': 'string',
           },
           {
+            'name': 'externalEventId',
+            'type': 'string',
             'default': '',
             'description': 'Google Calendar event id this row mirrors; the pull-upsert match key.',
-            'name': 'externalEventId',
             'synonyms': 'remote id, google id, calendar event id',
-            'type': 'string',
           },
           {
+            'name': 'syncedAt',
+            'type': 'number',
             'default': 0,
             'description': 'When this row last synced with the remote calendar; 0 = never.',
-            'name': 'syncedAt',
             'synonyms': 'last sync, synced',
-            'type': 'number',
           },
         ],
-        'name': 'CalendarEvent',
-        'persistence': 'persistent',
       },
     ] as EntityRef[],
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'calendarId': {
-            'default': '',
-            'description': 'Google calendar to sync with; blank = the service\'s default (GOOGLE_CALENDAR_ID env, else primary).',
-            'label': 'Calendar id',
-            'synonyms': 'google calendar id, target calendar',
-            'tier': 'infra',
-            'type': 'string',
-          },
-          'descriptionField': {
-            'default': '',
-            'description': 'Target-entity field holding the description/notes; blank = none.',
-            'label': 'Description field',
-            'synonyms': 'notes field, details field',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'durationField': {
-            'default': '',
-            'description': 'Target-entity field holding the per-row duration in minutes (e.g. ClassSession.durationMinutes). Takes precedence over the fixed `durationMinutes` when set; ignored when `endField` is set. Field precedence: endField > durationField > durationMinutes — the corpus carries all these event shapes.',
-            'label': 'Duration field',
-            'synonyms': 'minutes field, length field, per-row duration',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'durationMinutes': {
-            'default': 60,
-            'description': 'Fixed event length used when both `endField` and `durationField` are blank; the calendar service computes the timezone-correct end.',
-            'label': 'Duration (minutes)',
-            'synonyms': 'length, event duration, minutes',
-            'tier': 'internal',
-            'type': 'number',
-          },
-          'enabled': {
-            'default': false,
-            'description': 'Push local records to Google Calendar and pull remote events into the CalendarEvent store. Off by default; needs the calendar service credentials (GOOGLE_CALENDAR_SA_KEY).',
-            'label': 'Sync with Google Calendar',
-            'synonyms': 'enable, calendar sync, google calendar, two-way sync, sync events, connect calendar',
-            'tier': 'infra',
-            'type': 'boolean',
-          },
-          'endField': {
-            'default': 'endsAt',
-            'description': 'Target-entity field holding the ISO end. Blank = derive the end from `durationMinutes` instead (the corpus carries all four event shapes).',
-            'label': 'End field',
-            'synonyms': 'end date field, finishes field',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'locationField': {
-            'default': '',
-            'description': 'Target-entity field holding the location; blank = none.',
-            'label': 'Location field',
-            'synonyms': 'place field, venue field',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'startField': {
-            'default': 'startsAt',
-            'description': 'Target-entity field holding the ISO start (dateTime, or YYYY-MM-DD for all-day).',
-            'label': 'Start field',
-            'synonyms': 'start date field, begins field, scheduledAt field',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'targetEntity': {
-            'default': 'CalendarEvent',
-            'description': 'Event-shaped entity whose rows export to Google Calendar. MUST declare the marker columns `externalEventId : string = ""` and `syncedAt : number = 0` (stamped by the push loop). Defaults to the atom\'s own CalendarEvent store so the standalone validates; rebind per composition.',
-            'label': 'Entity to push',
-            'synonyms': 'entity to sync, source entity, record type, appointments entity, sessions entity',
-            'tier': 'internal',
-            'type': 'entity',
-          },
-          'titleField': {
-            'default': 'title',
-            'description': 'Target-entity field holding the event title.',
-            'label': 'Title field',
-            'synonyms': 'summary field, name field',
-            'tier': 'internal',
-            'type': 'string',
-          },
-        },
+        'name': 'CalendarSync',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -537,13 +455,13 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
           },
           {
             'kind': 'fetch',
-            'resolved': false,
             'resource': '@config.targetEntity',
+            'resolved': false,
           },
           {
             'kind': 'fetch',
-            'resolved': false,
             'resource': '@config.targetEntity',
+            'resolved': false,
             'site': 'tick',
           },
           {
@@ -552,8 +470,8 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
           },
           {
             'kind': 'persist',
-            'resolved': false,
             'resource': '@config.targetEntity',
+            'resolved': false,
           },
           {
             'kind': 'persist',
@@ -588,37 +506,40 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
             'site': 'tick',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'CalendarSyncRun',
         'emits': [
           {
-            'description': 'A full push+pull cycle completed; wire to std-notify-on-event or a status surface.',
             'event': 'CAL_SYNCED',
+            'description': 'A full push+pull cycle completed; wire to std-notify-on-event or a status surface.',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'syncedAt',
                 'type': 'number',
               },
             ],
-            'scope': 'external',
           },
           {
-            'description': 'A calendar service call / fetch / persist failed — lastError carries the detail and the cycle stops until the next trigger.',
             'event': 'CAL_SYNC_FAILED',
+            'description': 'A calendar service call / fetch / persist failed — lastError carries the detail and the cycle stops until the next trigger.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Target rows with a blank externalEventId marker — the remaining local→remote export queue.',
             'event': 'PUSH_ROWS_LOADED',
+            'description': 'Target rows with a blank externalEventId marker — the remaining local→remote export queue.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
-                'entity': 'TargetRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -629,52 +550,52 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'TargetRow',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'calendar.createEvent result, flattened onto the payload by the call-service effect executor.',
             'event': 'CAL_EVENT_CREATED',
+            'description': 'calendar.createEvent result, flattened onto the payload by the call-service effect executor.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'status',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'htmlLink',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Target row stamped with its new externalEventId; drives the next push pass.',
             'event': 'PUSH_STEPPED',
+            'description': 'Target row stamped with its new externalEventId; drives the next push pass.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'calendar.listEvents result — the remote change set for the pull-upsert loop.',
             'event': 'CAL_REMOTE_LISTED',
+            'description': 'calendar.listEvents result — the remote change set for the pull-upsert loop.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
-                'entity': 'RemoteEvent',
                 'name': 'events',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -709,22 +630,22 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'RemoteEvent',
               },
               {
                 'name': 'nextSyncToken',
                 'type': 'string',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'CalendarEvent rows loaded for externalEventId matching in the pull-upsert.',
             'event': 'PULL_TARGET_LOADED',
+            'description': 'CalendarEvent rows loaded for externalEventId matching in the pull-upsert.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
-                'entity': 'TargetRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -735,39 +656,47 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'TargetRow',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'One remote event upserted into the CalendarEvent store; drives the next pull pass.',
             'event': 'PULL_STEPPED',
+            'description': 'One remote event upserted into the CalendarEvent store; drives the next pull pass.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Pull loop control: how many remote events remain in the queue.',
             'event': 'PULL_NEXT',
+            'description': 'Pull loop control: how many remote events remain in the queue.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'remaining',
                 'type': 'number',
               },
             ],
-            'tier': 'secondary',
           },
         ],
-        'linkedEntity': 'CalendarSyncRun',
-        'name': 'CalendarSync',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'pushing',
+            },
+            {
+              'name': 'pulling',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -796,12 +725,14 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
               ],
             },
             {
-              'description': 'Target rows with a blank externalEventId marker — the remaining local→remote export queue.',
               'key': 'PUSH_ROWS_LOADED',
               'name': 'Push Rows Loaded',
+              'description': 'Target rows with a blank externalEventId marker — the remaining local→remote export queue.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -812,18 +743,18 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'calendar.listEvents result — the remote change set for the pull-upsert loop.',
               'key': 'CAL_REMOTE_LISTED',
               'name': 'Cal Remote Listed',
+              'description': 'calendar.listEvents result — the remote change set for the pull-upsert loop.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'events',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -858,71 +789,71 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
                 {
                   'name': 'nextSyncToken',
                   'type': 'string',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'A calendar service call / fetch / persist failed — lastError carries the detail and the cycle stops until the next trigger.',
               'key': 'CAL_SYNC_FAILED',
               'name': 'Cal Sync Failed',
+              'description': 'A calendar service call / fetch / persist failed — lastError carries the detail and the cycle stops until the next trigger.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'calendar.createEvent result, flattened onto the payload by the call-service effect executor.',
               'key': 'CAL_EVENT_CREATED',
               'name': 'Cal Event Created',
+              'description': 'calendar.createEvent result, flattened onto the payload by the call-service effect executor.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'status',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'htmlLink',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Target row stamped with its new externalEventId; drives the next push pass.',
               'key': 'PUSH_STEPPED',
               'name': 'Push Stepped',
+              'description': 'Target row stamped with its new externalEventId; drives the next push pass.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'CalendarEvent rows loaded for externalEventId matching in the pull-upsert.',
               'key': 'PULL_TARGET_LOADED',
               'name': 'Pull Target Loaded',
+              'description': 'CalendarEvent rows loaded for externalEventId matching in the pull-upsert.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -933,40 +864,38 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'One remote event upserted into the CalendarEvent store; drives the next pull pass.',
               'key': 'PULL_STEPPED',
               'name': 'Pull Stepped',
+              'description': 'One remote event upserted into the CalendarEvent store; drives the next pull pass.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Pull loop control: how many remote events remain in the queue.',
               'key': 'PULL_NEXT',
               'name': 'Pull Next',
+              'description': 'Pull loop control: how many remote events remain in the queue.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'remaining',
                   'type': 'number',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'A full push+pull cycle completed; wire to std-notify-on-event or a status surface.',
               'key': 'CAL_SYNCED',
               'name': 'Cal Synced',
+              'description': 'A full push+pull cycle completed; wire to std-notify-on-event or a status surface.',
               'payloadSchema': [
                 {
                   'name': 'syncedAt',
@@ -975,34 +904,22 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'pushing',
-            },
-            {
-              'name': 'pulling',
-            },
-          ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
+              'event': 'INIT',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'SYNC_NOW',
+              'guard': '@config.enabled',
               'effects': [
                 [
                   'fetch',
                   '@config.targetEntity',
                   {
-                    'emit': {
-                      'failure': 'CAL_SYNC_FAILED',
-                      'success': 'PUSH_ROWS_LOADED',
-                    },
                     'filter': [
                       '=',
                       [
@@ -1012,15 +929,19 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                       ],
                       '',
                     ],
+                    'emit': {
+                      'success': 'PUSH_ROWS_LOADED',
+                      'failure': 'CAL_SYNC_FAILED',
+                    },
                   },
                 ],
               ],
-              'event': 'SYNC_NOW',
-              'from': 'idle',
-              'guard': '@config.enabled',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CAL_REMOTE_CHANGED',
+              'guard': '@config.enabled',
               'effects': [
                 [
                   'call-service',
@@ -1032,18 +953,29 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   },
                   {
                     'emit': {
-                      'failure': 'CAL_SYNC_FAILED',
                       'success': 'CAL_REMOTE_LISTED',
+                      'failure': 'CAL_SYNC_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'CAL_REMOTE_CHANGED',
-              'from': 'idle',
-              'guard': '@config.enabled',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'pushing',
+              'event': 'PUSH_ROWS_LOADED',
+              'guard': [
+                'and',
+                '@config.enabled',
+                [
+                  '>',
+                  [
+                    'array/len',
+                    '@payload.data',
+                  ],
+                  0,
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -1062,7 +994,6 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   'calendar',
                   'createEvent',
                   {
-                    'calendarId': '@config.calendarId',
                     'description': [
                       'if',
                       [
@@ -1078,23 +1009,6 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                           '@payload.data',
                         ],
                         '@config.descriptionField',
-                      ],
-                    ],
-                    'durationMinutes': [
-                      'if',
-                      [
-                        '=',
-                        '@config.durationField',
-                        '',
-                      ],
-                      '@config.durationMinutes',
-                      [
-                        'object/get',
-                        [
-                          'array/first',
-                          '@payload.data',
-                        ],
-                        '@config.durationField',
                       ],
                     ],
                     'end': [
@@ -1131,14 +1045,6 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                         '@config.locationField',
                       ],
                     ],
-                    'start': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      '@config.startField',
-                    ],
                     'summary': [
                       'object/get',
                       [
@@ -1147,32 +1053,54 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                       ],
                       '@config.titleField',
                     ],
+                    'start': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.startField',
+                    ],
+                    'calendarId': '@config.calendarId',
+                    'durationMinutes': [
+                      'if',
+                      [
+                        '=',
+                        '@config.durationField',
+                        '',
+                      ],
+                      '@config.durationMinutes',
+                      [
+                        'object/get',
+                        [
+                          'array/first',
+                          '@payload.data',
+                        ],
+                        '@config.durationField',
+                      ],
+                    ],
                   },
                   {
                     'emit': {
-                      'failure': 'CAL_SYNC_FAILED',
                       'success': 'CAL_EVENT_CREATED',
+                      'failure': 'CAL_SYNC_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'PUSH_ROWS_LOADED',
-              'from': 'idle',
-              'guard': [
-                'and',
-                '@config.enabled',
-                [
-                  '>',
-                  [
-                    'array/len',
-                    '@payload.data',
-                  ],
-                  0,
-                ],
-              ],
-              'to': 'pushing',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PUSH_ROWS_LOADED',
+              'guard': [
+                '=',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'call-service',
@@ -1190,19 +1118,19 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   },
                 ],
               ],
-              'event': 'PUSH_ROWS_LOADED',
+            },
+            {
               'from': 'idle',
+              'to': 'pulling',
+              'event': 'CAL_REMOTE_LISTED',
               'guard': [
-                '=',
+                '>',
                 [
                   'array/len',
-                  '@payload.data',
+                  '@payload.events',
                 ],
                 0,
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -1229,19 +1157,19 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   },
                 ],
               ],
-              'event': 'CAL_REMOTE_LISTED',
+            },
+            {
               'from': 'idle',
+              'to': 'idle',
+              'event': 'CAL_REMOTE_LISTED',
               'guard': [
-                '>',
+                '=',
                 [
                   'array/len',
                   '@payload.events',
                 ],
                 0,
               ],
-              'to': 'pulling',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -1265,19 +1193,11 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   },
                 ],
               ],
-              'event': 'CAL_REMOTE_LISTED',
-              'from': 'idle',
-              'guard': [
-                '=',
-                [
-                  'array/len',
-                  '@payload.events',
-                ],
-                0,
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CAL_SYNC_FAILED',
               'effects': [
                 [
                   'set',
@@ -1288,22 +1208,22 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   'render-ui',
                   'toast',
                   {
+                    'type': 'alert',
                     'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t sync the calendar — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'CAL_SYNC_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'pushing',
+              'to': 'pushing',
+              'event': 'CAL_EVENT_CREATED',
               'effects': [
                 [
                   'persist',
@@ -1311,8 +1231,8 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   '@config.targetEntity',
                   {
                     'externalEventId': '@payload.id',
-                    'id': '@entity.headId',
                     'syncedAt': '@now',
+                    'id': '@entity.headId',
                   },
                   {
                     'emit': {
@@ -1322,19 +1242,19 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   },
                 ],
               ],
-              'event': 'CAL_EVENT_CREATED',
-              'from': 'pushing',
-              'to': 'pushing',
             },
             {
+              'from': 'pushing',
+              'to': 'pushing',
+              'event': 'PUSH_STEPPED',
               'effects': [
                 [
                   'fetch',
                   '@config.targetEntity',
                   {
                     'emit': {
-                      'failure': 'CAL_SYNC_FAILED',
                       'success': 'PUSH_ROWS_LOADED',
+                      'failure': 'CAL_SYNC_FAILED',
                     },
                     'filter': [
                       '=',
@@ -1348,11 +1268,19 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   },
                 ],
               ],
-              'event': 'PUSH_STEPPED',
-              'from': 'pushing',
-              'to': 'pushing',
             },
             {
+              'from': 'pushing',
+              'to': 'pushing',
+              'event': 'PUSH_ROWS_LOADED',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'set',
@@ -1372,23 +1300,6 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   'createEvent',
                   {
                     'calendarId': '@config.calendarId',
-                    'description': [
-                      'if',
-                      [
-                        '=',
-                        '@config.descriptionField',
-                        '',
-                      ],
-                      '',
-                      [
-                        'object/get',
-                        [
-                          'array/first',
-                          '@payload.data',
-                        ],
-                        '@config.descriptionField',
-                      ],
-                    ],
                     'durationMinutes': [
                       'if',
                       [
@@ -1423,6 +1334,22 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                         '@config.endField',
                       ],
                     ],
+                    'start': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.startField',
+                    ],
+                    'summary': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.titleField',
+                    ],
                     'location': [
                       'if',
                       [
@@ -1440,52 +1367,53 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                         '@config.locationField',
                       ],
                     ],
-                    'start': [
-                      'object/get',
+                    'description': [
+                      'if',
                       [
-                        'array/first',
-                        '@payload.data',
+                        '=',
+                        '@config.descriptionField',
+                        '',
                       ],
-                      '@config.startField',
-                    ],
-                    'summary': [
-                      'object/get',
+                      '',
                       [
-                        'array/first',
-                        '@payload.data',
+                        'object/get',
+                        [
+                          'array/first',
+                          '@payload.data',
+                        ],
+                        '@config.descriptionField',
                       ],
-                      '@config.titleField',
                     ],
                   },
                   {
                     'emit': {
-                      'failure': 'CAL_SYNC_FAILED',
                       'success': 'CAL_EVENT_CREATED',
+                      'failure': 'CAL_SYNC_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'PUSH_ROWS_LOADED',
+            },
+            {
               'from': 'pushing',
+              'to': 'idle',
+              'event': 'PUSH_ROWS_LOADED',
               'guard': [
-                '>',
+                '=',
                 [
                   'array/len',
                   '@payload.data',
                 ],
                 0,
               ],
-              'to': 'pushing',
-            },
-            {
               'effects': [
                 [
                   'call-service',
                   'calendar',
                   'listEvents',
                   {
-                    'calendarId': '@config.calendarId',
                     'syncToken': '@entity.syncToken',
+                    'calendarId': '@config.calendarId',
                   },
                   {
                     'emit': {
@@ -1495,19 +1423,11 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   },
                 ],
               ],
-              'event': 'PUSH_ROWS_LOADED',
-              'from': 'pushing',
-              'guard': [
-                '=',
-                [
-                  'array/len',
-                  '@payload.data',
-                ],
-                0,
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'pushing',
+              'to': 'idle',
+              'event': 'CAL_SYNC_FAILED',
               'effects': [
                 [
                   'set',
@@ -1519,26 +1439,26 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   'toast',
                   {
                     'dismissible': true,
+                    'type': 'alert',
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t sync the calendar — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'CAL_SYNC_FAILED',
-              'from': 'pushing',
-              'to': 'idle',
             },
             {
-              'event': 'INIT',
               'from': 'pulling',
               'to': 'idle',
+              'event': 'INIT',
             },
             {
+              'from': 'pulling',
+              'to': 'pulling',
+              'event': 'PULL_TARGET_LOADED',
               'effects': [
                 [
                   'set',
@@ -1583,23 +1503,6 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                     'create',
                     ('CalendarEvent' satisfies _StdCalendarSyncEntityName),
                     {
-                      'description': [
-                        'object/get',
-                        [
-                          'array/first',
-                          '@entity.pending',
-                        ],
-                        'description',
-                      ],
-                      'endsAt': [
-                        'object/get',
-                        [
-                          'array/first',
-                          '@entity.pending',
-                        ],
-                        'end',
-                      ],
-                      'externalEventId': '@entity.headId',
                       'location': [
                         'object/get',
                         [
@@ -1607,6 +1510,14 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                           '@entity.pending',
                         ],
                         'location',
+                      ],
+                      'description': [
+                        'object/get',
+                        [
+                          'array/first',
+                          '@entity.pending',
+                        ],
+                        'description',
                       ],
                       'startsAt': [
                         'object/get',
@@ -1616,6 +1527,14 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                         ],
                         'start',
                       ],
+                      'endsAt': [
+                        'object/get',
+                        [
+                          'array/first',
+                          '@entity.pending',
+                        ],
+                        'end',
+                      ],
                       'status': [
                         'object/get',
                         [
@@ -1624,6 +1543,7 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                         ],
                         'status',
                       ],
+                      'externalEventId': '@entity.headId',
                       'syncedAt': '@now',
                       'title': [
                         'object/get',
@@ -1653,6 +1573,38 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                           '@entity.pending',
                         ],
                         'description',
+                      ],
+                      'title': [
+                        'object/get',
+                        [
+                          'array/first',
+                          '@entity.pending',
+                        ],
+                        'summary',
+                      ],
+                      'location': [
+                        'object/get',
+                        [
+                          'array/first',
+                          '@entity.pending',
+                        ],
+                        'location',
+                      ],
+                      'startsAt': [
+                        'object/get',
+                        [
+                          'array/first',
+                          '@entity.pending',
+                        ],
+                        'start',
+                      ],
+                      'status': [
+                        'object/get',
+                        [
+                          'array/first',
+                          '@entity.pending',
+                        ],
+                        'status',
                       ],
                       'endsAt': [
                         'object/get',
@@ -1686,39 +1638,7 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                         ],
                         'id',
                       ],
-                      'location': [
-                        'object/get',
-                        [
-                          'array/first',
-                          '@entity.pending',
-                        ],
-                        'location',
-                      ],
-                      'startsAt': [
-                        'object/get',
-                        [
-                          'array/first',
-                          '@entity.pending',
-                        ],
-                        'start',
-                      ],
-                      'status': [
-                        'object/get',
-                        [
-                          'array/first',
-                          '@entity.pending',
-                        ],
-                        'status',
-                      ],
                       'syncedAt': '@now',
-                      'title': [
-                        'object/get',
-                        [
-                          'array/first',
-                          '@entity.pending',
-                        ],
-                        'summary',
-                      ],
                     },
                     {
                       'emit': {
@@ -1729,11 +1649,11 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   ],
                 ],
               ],
-              'event': 'PULL_TARGET_LOADED',
-              'from': 'pulling',
-              'to': 'pulling',
             },
             {
+              'from': 'pulling',
+              'to': 'pulling',
+              'event': 'PULL_STEPPED',
               'effects': [
                 [
                   'set',
@@ -1755,11 +1675,16 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   },
                 ],
               ],
-              'event': 'PULL_STEPPED',
-              'from': 'pulling',
-              'to': 'pulling',
             },
             {
+              'from': 'pulling',
+              'to': 'pulling',
+              'event': 'PULL_NEXT',
+              'guard': [
+                '>',
+                '@payload.remaining',
+                0,
+              ],
               'effects': [
                 [
                   'fetch',
@@ -1772,16 +1697,16 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   },
                 ],
               ],
-              'event': 'PULL_NEXT',
+            },
+            {
               'from': 'pulling',
+              'to': 'idle',
+              'event': 'PULL_NEXT',
               'guard': [
-                '>',
+                '=',
                 '@payload.remaining',
                 0,
               ],
-              'to': 'pulling',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -1796,16 +1721,11 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   },
                 ],
               ],
-              'event': 'PULL_NEXT',
-              'from': 'pulling',
-              'guard': [
-                '=',
-                '@payload.remaining',
-                0,
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'pulling',
+              'to': 'idle',
+              'event': 'CAL_SYNC_FAILED',
               'effects': [
                 [
                   'set',
@@ -1816,34 +1736,29 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Couldn\'t sync the calendar — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
+                    'dismissible': true,
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'CAL_SYNC_FAILED',
-              'from': 'pulling',
-              'to': 'idle',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'syncCycle',
+            'interval': '*/15 * * * *',
             'effects': [
               [
                 'fetch',
                 '@config.targetEntity',
                 {
-                  'emit': {
-                    'failure': 'CAL_SYNC_FAILED',
-                    'success': 'PUSH_ROWS_LOADED',
-                  },
                   'filter': [
                     '=',
                     [
@@ -1853,14 +1768,99 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                     ],
                     '',
                   ],
+                  'emit': {
+                    'success': 'PUSH_ROWS_LOADED',
+                    'failure': 'CAL_SYNC_FAILED',
+                  },
                 },
               ],
             ],
-            'interval': '*/15 * * * *',
-            'name': 'syncCycle',
             'runsInBackground': true,
           },
         ],
+        'config': {
+          'targetEntity': {
+            'type': 'entity',
+            'default': 'CalendarEvent',
+            'label': 'Entity to push',
+            'description': 'Event-shaped entity whose rows export to Google Calendar. MUST declare the marker columns `externalEventId : string = ""` and `syncedAt : number = 0` (stamped by the push loop). Defaults to the atom\'s own CalendarEvent store so the standalone validates; rebind per composition.',
+            'synonyms': 'entity to sync, source entity, record type, appointments entity, sessions entity',
+            'tier': 'internal',
+          },
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Sync with Google Calendar',
+            'description': 'Push local records to Google Calendar and pull remote events into the CalendarEvent store. Off by default; needs the calendar service credentials (GOOGLE_CALENDAR_SA_KEY).',
+            'synonyms': 'enable, calendar sync, google calendar, two-way sync, sync events, connect calendar',
+            'tier': 'infra',
+          },
+          'durationField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Duration field',
+            'description': 'Target-entity field holding the per-row duration in minutes (e.g. ClassSession.durationMinutes). Takes precedence over the fixed `durationMinutes` when set; ignored when `endField` is set. Field precedence: endField > durationField > durationMinutes — the corpus carries all these event shapes.',
+            'synonyms': 'minutes field, length field, per-row duration',
+            'tier': 'internal',
+          },
+          'startField': {
+            'type': 'string',
+            'default': 'startsAt',
+            'label': 'Start field',
+            'description': 'Target-entity field holding the ISO start (dateTime, or YYYY-MM-DD for all-day).',
+            'synonyms': 'start date field, begins field, scheduledAt field',
+            'tier': 'internal',
+          },
+          'durationMinutes': {
+            'type': 'number',
+            'default': 60,
+            'label': 'Duration (minutes)',
+            'description': 'Fixed event length used when both `endField` and `durationField` are blank; the calendar service computes the timezone-correct end.',
+            'synonyms': 'length, event duration, minutes',
+            'tier': 'internal',
+          },
+          'titleField': {
+            'type': 'string',
+            'default': 'title',
+            'label': 'Title field',
+            'description': 'Target-entity field holding the event title.',
+            'synonyms': 'summary field, name field',
+            'tier': 'internal',
+          },
+          'descriptionField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Description field',
+            'description': 'Target-entity field holding the description/notes; blank = none.',
+            'synonyms': 'notes field, details field',
+            'tier': 'internal',
+          },
+          'calendarId': {
+            'type': 'string',
+            'default': '',
+            'label': 'Calendar id',
+            'description': 'Google calendar to sync with; blank = the service\'s default (GOOGLE_CALENDAR_ID env, else primary).',
+            'synonyms': 'google calendar id, target calendar',
+            'tier': 'infra',
+          },
+          'locationField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Location field',
+            'description': 'Target-entity field holding the location; blank = none.',
+            'synonyms': 'place field, venue field',
+            'tier': 'internal',
+          },
+          'endField': {
+            'type': 'string',
+            'default': 'endsAt',
+            'label': 'End field',
+            'description': 'Target-entity field holding the ISO end. Blank = derive the end from `durationMinutes` instead (the corpus carries all four event shapes).',
+            'synonyms': 'end date field, finishes field',
+            'tier': 'internal',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

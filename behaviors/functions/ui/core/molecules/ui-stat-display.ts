@@ -39,59 +39,59 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
   ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  clickEvent?: string;
-  /** Default: `false` */
-  compact?: boolean;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
   format?: string;
-  icon?: unknown;
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
-  label?: string;
-  lang?: string;
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  max?: number;
-  prefix?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `[]` */
   sparklineData?: number[];
-  suffix?: string;
-  /** Default: `"auto"` */
-  surface?: 'auto' | 'none';
-  tabIndex?: number;
-  target?: number;
-  trend?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaSelected?: boolean;
   /** Default: `"absolute"` */
   trendFormat?: 'absolute' | 'percent';
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `""` */
-  value?: unknown;
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  enterDelay?: number;
+  /** Default: `""` */
+  label?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  tabIndex?: number;
+  icon?: unknown;
+  prefix?: string;
+  target?: number;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `""` */
+  value?: unknown;
+  clickEvent?: string;
+  lang?: string;
+  max?: number;
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
+  ariaLabelledby?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  error?: EntityRow;
+  /** Default: `false` */
+  compact?: boolean;
+  ariaHidden?: boolean;
+  ariaLabel?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  suffix?: string;
+  trend?: number;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  ariaBusy?: boolean;
+  className?: string;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
+  ariaDescribedby?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
 }
 
 /**

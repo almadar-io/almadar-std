@@ -69,20 +69,20 @@ export interface StdLifecycleLifecycleSteppedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLifecycleConfig {
-  /** Default: `30` */
-  ageDays?: number;
-  /** Default: `"ranAt"` */
-  dateField?: string;
   /** Default: `false` */
   dryRun?: boolean;
-  /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `""` */
-  fromStatus?: string;
   /** Default: `"LifecycleRunLog"` */
   targetEntity?: unknown;
   /** Default: `""` */
   toStatus?: string;
+  /** Default: `"ranAt"` */
+  dateField?: string;
+  /** Default: `30` */
+  ageDays?: number;
+  /** Default: `false` */
+  enabled?: boolean;
+  /** Default: `""` */
+  fromStatus?: string;
 }
 
 /**
@@ -226,57 +226,57 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'targetEntity',
+            'type': 'string',
             'default': '',
             'description': 'The entity to which lifecycle rules apply.',
-            'name': 'targetEntity',
             'synonyms': 'subject, reference, target',
-            'type': 'string',
           },
           {
+            'name': 'recordCount',
+            'type': 'number',
             'default': 0,
             'description': 'The number of records processed.',
-            'name': 'recordCount',
             'synonyms': 'count, size, quantity',
-            'type': 'number',
           },
           {
+            'name': 'ranAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when the lifecycle run occurred.',
-            'name': 'ranAt',
             'synonyms': 'timestamp, execution time, run time',
-            'type': 'number',
           },
           {
+            'name': 'errors',
+            'type': 'string',
             'default': '',
             'description': 'A textual description of any errors encountered.',
-            'name': 'errors',
             'synonyms': 'error message, problem, issue, fault',
-            'type': 'string',
           },
           {
+            'name': 'status',
+            'type': 'string',
             'default': '',
             'description': 'Lifecycle status (also lets the standalone default target validate).',
-            'name': 'status',
             'synonyms': 'state, stage',
-            'type': 'string',
           },
           {
+            'name': 'headId',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: id of the record the scan loop is currently transitioning.',
-            'name': 'headId',
             'synonyms': 'current id, cursor',
-            'type': 'string',
           },
           {
+            'name': 'headStatus',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: the status applied to the current record.',
-            'name': 'headStatus',
             'synonyms': 'new status, to status',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -287,62 +287,14 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'ageDays': {
-            'default': 30,
-            'description': 'Records older than this many days move from the source status to the destination status.',
-            'label': 'How old (in days) before a record is transitioned?',
-            'synonyms': 'age threshold, days until archive, expiry days, max age, retention days',
-            'tier': 'infra',
-            'type': 'number',
-          },
-          'dateField': {
-            'default': 'ranAt',
-            'description': 'Numeric (ms-epoch) entity field compared against the age threshold (e.g. \'createdAt\').',
-            'label': 'Which date field measures the record\'s age?',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'dryRun': {
-            'default': false,
-            'description': 'When true, the scan runs but no status transitions are persisted.',
-            'label': 'Run in dry-run mode (no changes written)?',
-            'synonyms': 'test mode, preview, simulate, dry run, no write',
-            'tier': 'infra',
-            'type': 'boolean',
-          },
-          'enabled': {
-            'default': false,
-            'description': 'Automatically change the status of records once they age past a threshold. Off by default.',
-            'label': 'Auto-archive old records',
-            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive',
-            'tier': 'infra',
-            'type': 'boolean',
-          },
-          'fromStatus': {
-            'default': '',
-            'description': 'Only records currently in this status are candidates for automatic transition.',
-            'label': 'Which status triggers the age-out?',
-            'synonyms': 'source status, current status, eligible status, starting status',
-            'tier': 'infra',
-            'type': 'string',
-          },
-          'targetEntity': {
-            'default': 'LifecycleRunLog',
-            'description': 'Entity name to scan and transition (e.g. \'Task\'). Defaults to the atom\'s own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically.',
-            'label': 'Target entity',
-            'tier': 'internal',
-            'type': 'entity',
-          },
-          'toStatus': {
-            'default': '',
-            'description': 'Status assigned once a record ages past the threshold (e.g. \'archived\', \'expired\').',
-            'label': 'What status should old records move to?',
-            'synonyms': 'target status, end status, destination status, archive status',
-            'tier': 'infra',
-            'type': 'string',
-          },
+        'name': 'LifecycleScheduler',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'headId',
+            'headStatus',
+          ],
         },
         'effectRow': [
           {
@@ -351,19 +303,19 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
           },
           {
             'kind': 'fetch',
-            'resolved': false,
             'resource': '@config.targetEntity',
+            'resolved': false,
           },
           {
             'kind': 'fetch',
-            'resolved': false,
             'resource': '@config.targetEntity',
+            'resolved': false,
             'site': 'tick',
           },
           {
             'kind': 'persist',
-            'resolved': false,
             'resource': '@config.targetEntity',
+            'resolved': false,
           },
           {
             'kind': 'render-ui',
@@ -382,9 +334,12 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
             'site': 'tick',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'LifecycleRunLog',
         'emits': [
           {
             'event': 'LifecycleTransitioned',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'entityId',
@@ -395,7 +350,6 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
                 'type': 'string',
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'ScanRecordsLoaded',
@@ -429,18 +383,16 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
             ],
           },
         ],
-        'entityContract': {
-          'provides': [
-            'headId',
-            'headStatus',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'LifecycleRunLog',
-        'name': 'LifecycleScheduler',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'scanning',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -495,44 +447,16 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'scanning',
-            },
-          ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
+              'event': 'INIT',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'toast',
-                  {
-                    'dismissible': true,
-                    'message': [
-                      'str/concat',
-                      'Dry run — ',
-                      [
-                        'array/len',
-                        '@payload.data',
-                      ],
-                      ' record(s) would transition, nothing was written.',
-                    ],
-                    'type': 'alert',
-                    'variant': 'info',
-                  },
-                ],
-              ],
-              'event': 'ScanRecordsLoaded',
               'from': 'idle',
+              'to': 'idle',
+              'event': 'ScanRecordsLoaded',
               'guard': [
                 'and',
                 '@config.enabled',
@@ -546,9 +470,47 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
                   0,
                 ],
               ],
-              'to': 'idle',
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'type': 'alert',
+                    'variant': 'info',
+                    'message': [
+                      'str/concat',
+                      'Dry run — ',
+                      [
+                        'array/len',
+                        '@payload.data',
+                      ],
+                      ' record(s) would transition, nothing was written.',
+                    ],
+                    'dismissible': true,
+                  },
+                ],
+              ],
             },
             {
+              'from': 'idle',
+              'to': 'scanning',
+              'event': 'ScanRecordsLoaded',
+              'guard': [
+                'and',
+                '@config.enabled',
+                [
+                  'not',
+                  '@config.dryRun',
+                ],
+                [
+                  '>',
+                  [
+                    'array/len',
+                    '@payload.data',
+                  ],
+                  0,
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -579,40 +541,22 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
                   'update',
                   '@config.targetEntity',
                   {
-                    'id': '@entity.headId',
                     'status': '@entity.headStatus',
+                    'id': '@entity.headId',
                   },
                   {
                     'emit': {
-                      'failure': 'ScanFailed',
                       'success': 'LifecycleStepped',
+                      'failure': 'ScanFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ScanRecordsLoaded',
-              'from': 'idle',
-              'guard': [
-                'and',
-                '@config.enabled',
-                [
-                  'not',
-                  '@config.dryRun',
-                ],
-                [
-                  '>',
-                  [
-                    'array/len',
-                    '@payload.data',
-                  ],
-                  0,
-                ],
-              ],
-              'to': 'scanning',
             },
             {
-              'event': 'ScanRecordsLoaded',
               'from': 'idle',
+              'to': 'idle',
+              'event': 'ScanRecordsLoaded',
               'guard': [
                 '=',
                 [
@@ -621,39 +565,37 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
                 ],
                 0,
               ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ScanFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
                     'dismissible': true,
+                    'type': 'alert',
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t scan for lifecycle transitions — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'ScanFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'scanning',
+              'to': 'scanning',
+              'event': 'LifecycleStepped',
               'effects': [
                 [
                   'fetch',
                   '@config.targetEntity',
                   {
-                    'emit': {
-                      'failure': 'ScanFailed',
-                      'success': 'ScanRecordsLoaded',
-                    },
                     'filter': [
                       'and',
                       [
@@ -683,14 +625,26 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
                         ],
                       ],
                     ],
+                    'emit': {
+                      'success': 'ScanRecordsLoaded',
+                      'failure': 'ScanFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'LifecycleStepped',
-              'from': 'scanning',
-              'to': 'scanning',
             },
             {
+              'from': 'scanning',
+              'to': 'scanning',
+              'event': 'ScanRecordsLoaded',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'set',
@@ -721,32 +675,22 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
                   'update',
                   '@config.targetEntity',
                   {
-                    'id': '@entity.headId',
                     'status': '@entity.headStatus',
+                    'id': '@entity.headId',
                   },
                   {
                     'emit': {
-                      'failure': 'ScanFailed',
                       'success': 'LifecycleStepped',
+                      'failure': 'ScanFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ScanRecordsLoaded',
-              'from': 'scanning',
-              'guard': [
-                '>',
-                [
-                  'array/len',
-                  '@payload.data',
-                ],
-                0,
-              ],
-              'to': 'scanning',
             },
             {
-              'event': 'ScanRecordsLoaded',
               'from': 'scanning',
+              'to': 'idle',
+              'event': 'ScanRecordsLoaded',
               'guard': [
                 '=',
                 [
@@ -755,15 +699,16 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
                 ],
                 0,
               ],
-              'to': 'idle',
             },
             {
+              'from': 'scanning',
+              'to': 'idle',
+              'event': 'ScanFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t scan for lifecycle transitions — ',
@@ -771,26 +716,22 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
                     ],
                     'type': 'alert',
                     'variant': 'error',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'ScanFailed',
-              'from': 'scanning',
-              'to': 'idle',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'scanCycle',
+            'interval': '0 * * * *',
             'effects': [
               [
                 'fetch',
                 '@config.targetEntity',
                 {
-                  'emit': {
-                    'failure': 'ScanFailed',
-                    'success': 'ScanRecordsLoaded',
-                  },
                   'filter': [
                     'and',
                     [
@@ -820,14 +761,73 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
                       ],
                     ],
                   ],
+                  'emit': {
+                    'success': 'ScanRecordsLoaded',
+                    'failure': 'ScanFailed',
+                  },
                 },
               ],
             ],
-            'interval': '0 * * * *',
-            'name': 'scanCycle',
             'runsInBackground': true,
           },
         ],
+        'config': {
+          'dryRun': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Run in dry-run mode (no changes written)?',
+            'description': 'When true, the scan runs but no status transitions are persisted.',
+            'synonyms': 'test mode, preview, simulate, dry run, no write',
+            'tier': 'infra',
+          },
+          'targetEntity': {
+            'type': 'entity',
+            'default': 'LifecycleRunLog',
+            'label': 'Target entity',
+            'description': 'Entity name to scan and transition (e.g. \'Task\'). Defaults to the atom\'s own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically.',
+            'tier': 'internal',
+          },
+          'toStatus': {
+            'type': 'string',
+            'default': '',
+            'label': 'What status should old records move to?',
+            'description': 'Status assigned once a record ages past the threshold (e.g. \'archived\', \'expired\').',
+            'synonyms': 'target status, end status, destination status, archive status',
+            'tier': 'infra',
+          },
+          'dateField': {
+            'type': 'string',
+            'default': 'ranAt',
+            'label': 'Which date field measures the record\'s age?',
+            'description': 'Numeric (ms-epoch) entity field compared against the age threshold (e.g. \'createdAt\').',
+            'tier': 'internal',
+          },
+          'ageDays': {
+            'type': 'number',
+            'default': 30,
+            'label': 'How old (in days) before a record is transitioned?',
+            'description': 'Records older than this many days move from the source status to the destination status.',
+            'synonyms': 'age threshold, days until archive, expiry days, max age, retention days',
+            'tier': 'infra',
+          },
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Auto-archive old records',
+            'description': 'Automatically change the status of records once they age past a threshold. Off by default.',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive',
+            'tier': 'infra',
+          },
+          'fromStatus': {
+            'type': 'string',
+            'default': '',
+            'label': 'Which status triggers the age-out?',
+            'description': 'Only records currently in this status are candidates for automatic transition.',
+            'synonyms': 'source status, current status, eligible status, starting status',
+            'tier': 'infra',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

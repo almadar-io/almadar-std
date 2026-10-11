@@ -39,36 +39,36 @@ export type StdUiDrawShapeEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawShapeConfig {
-  anchor?: 'top-left' | 'ground' | 'center';
+  stroke?: string;
   animation?: EntityRow;
-  blendMode?: 'source-over' | 'lighter' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'color' | 'luminosity' | 'source-atop' | 'destination-over' | 'destination-out' | 'xor';
-  blur?: number;
-  d?: string;
-  fill?: string;
-  fillPattern?: EntityRow;
-  gradient?: EntityRow;
   height?: number;
-  offsetX?: number;
-  offsetY?: number;
-  opacity?: number;
-  pivot?: EntityRow;
-  /** Default: `[]` */
-  points?: EntityRow[];
-  /** Default: `{"x":1,"y":1,"z":1}` */
-  position?: EntityRow;
+  strokeWidth?: number;
+  d?: string;
   radiusX?: number;
   radiusY?: number;
-  rotate?: number;
+  strokeGradient?: EntityRow;
+  /** Default: `[]` */
+  points?: EntityRow[];
+  anchor?: 'top-left' | 'ground' | 'center';
+  offsetX?: number;
+  gradient?: EntityRow;
+  fillPattern?: EntityRow;
+  strokeDashOffset?: number;
+  blur?: number;
   shadow?: EntityRow;
+  blendMode?: 'source-over' | 'lighter' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'color' | 'luminosity' | 'source-atop' | 'destination-over' | 'destination-out' | 'xor';
+  /** Default: `{"x":1,"z":1,"y":1}` */
+  position?: EntityRow;
   /** Default: `"cell"` */
   shape?: 'cell' | 'rect' | 'ellipse' | 'poly' | 'path';
-  stroke?: string;
   /** Default: `[]` */
   strokeDash?: number[];
-  strokeDashOffset?: number;
-  strokeGradient?: EntityRow;
-  strokeWidth?: number;
+  pivot?: EntityRow;
+  rotate?: number;
   width?: number;
+  opacity?: number;
+  fill?: string;
+  offsetY?: number;
 }
 
 /**

@@ -59,56 +59,56 @@ export interface StdLearnClassifyLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnClassifyConfig {
-  /** Default: `"Next"` */
-  advanceLabel?: string;
-  /** Default: `900` */
-  advanceMs?: number;
-  /** Default: `false` */
-  animate?: boolean;
-  /** Default: `false` */
-  autoRun?: boolean;
-  /** Default: `""` */
-  backgroundColor?: string;
-  /** Default: `[{"color":"series-1","label":"Category A","value":"a"},{"color":"series-2","label":"Category B","value":"b"}]` */
-  categories?: EntityRow[];
-  /** Default: `"success"` */
-  correctColor?: string;
+  /** Default: `0` */
+  scoreCap?: number;
+  /** Default: `1` */
+  orderStride?: number;
   /** Default: `420` */
   height?: number;
+  /** Default: `"Next"` */
+  advanceLabel?: string;
+  /** Default: `"Retry Round"` */
+  retryLabel?: string;
+  /** Default: `1` */
+  pointsPerCorrect?: number;
+  /** Default: `0` */
+  taper?: number;
+  /** Default: `0` */
+  penaltyPerMiss?: number;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
+  /** Default: `true` */
+  showHint?: boolean;
+  /** Default: `"success"` */
+  correctColor?: string;
   /** Default: `"error"` */
   incorrectColor?: string;
-  /** Default: `false` */
-  interactive?: boolean;
-  /** Default: `[{"category":"a","explanation":"This example was written to satisfy category A's defining trait.","hint":"Consider what makes this belong to category A.","text":"Example item one."},{"category":"b","explanation":"This example was written to satisfy category B's defining trait.","hint":"Consider what makes this belong to category B.","text":"Example item two."}]` */
-  items?: EntityRow[];
+  /** Default: `900` */
+  advanceMs?: number;
   /** Default: `false` */
   loopRound?: boolean;
   /** Default: `""` */
   matchMode?: string;
-  /** Default: `1` */
-  orderStride?: number;
-  /** Default: `0` */
-  passScore?: number;
-  /** Default: `0` */
-  penaltyPerMiss?: number;
-  /** Default: `1` */
-  pointsPerCorrect?: number;
-  /** Default: `"Retry Round"` */
-  retryLabel?: string;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `0` */
-  scoreCap?: number;
-  /** Default: `true` */
-  showHint?: boolean;
+  /** Default: `false` */
+  interactive?: boolean;
+  /** Default: `[{"hint":"Consider what makes this belong to category A.","explanation":"This example was written to satisfy category A's defining trait.","text":"Example item one.","category":"a"},{"explanation":"This example was written to satisfy category B's defining trait.","hint":"Consider what makes this belong to category B.","text":"Example item two.","category":"b"}]` */
+  items?: EntityRow[];
+  /** Default: `640` */
+  width?: number;
+  /** Default: `"Classify"` */
+  title?: string;
+  /** Default: `""` */
+  backgroundColor?: string;
+  /** Default: `false` */
+  animate?: boolean;
   /** Default: `""` */
   summary?: string;
   /** Default: `0` */
-  taper?: number;
-  /** Default: `"Classify"` */
-  title?: string;
-  /** Default: `640` */
-  width?: number;
+  passScore?: number;
+  /** Default: `[{"color":"series-1","value":"a","label":"Category A"},{"color":"series-2","label":"Category B","value":"b"}]` */
+  categories?: EntityRow[];
+  /** Default: `false` */
+  autoRun?: boolean;
 }
 
 /**

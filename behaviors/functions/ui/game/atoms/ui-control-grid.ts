@@ -55,49 +55,49 @@ export interface StdUiControlGridDirectionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiControlGridConfig {
-  /** Default: `"ACTION"` */
-  actionEvent?: string;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `[]` */
-  buttons?: EntityRow[];
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `{"up":{"animations":["static"],"aspect":"1:1","category":"item","dimension":"2d","name":"item","role":"item","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png"}}` */
-  directionAssets?: Record<string, TraitConfig>;
-  /** Default: `"DIRECTION"` */
-  directionEvent?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `{"up":"INIT"}` */
   directionEvents?: Record<string, TraitConfig>;
-  /** Default: `{"up":"INIT"}` */
-  directionReleaseEvents?: Record<string, TraitConfig>;
   disabled?: boolean;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `false` */
-  includeDiagonals?: boolean;
   /** Default: `"dpad"` */
   kind?: 'dpad' | 'actions';
-  lang?: string;
   /** Default: `"horizontal"` */
   layout?: 'horizontal' | 'vertical' | 'diamond';
   /** Default: `"ACTION"` */
-  onAction?: string;
-  /** Default: `"DIRECTION"` */
-  onDirection?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  actionEvent?: string;
+  /** Default: `false` */
+  includeDiagonals?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  enterDelay?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `{"up":{"url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png","name":"item","dimension":"2d","thumbnailUrl":"","aspect":"1:1","animations":["static"],"category":"item","style":"pixel","role":"item"}}` */
+  directionAssets?: Record<string, TraitConfig>;
+  ariaHidden?: boolean;
+  ariaExpanded?: boolean;
+  /** Default: `[]` */
+  buttons?: EntityRow[];
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaDescribedby?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaBusy?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `"DIRECTION"` */
+  directionEvent?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `"ACTION"` */
+  onAction?: string;
+  ariaSelected?: boolean;
+  lang?: string;
+  ariaLabelledby?: string;
+  /** Default: `"DIRECTION"` */
+  onDirection?: string;
+  className?: string;
   tabIndex?: number;
+  /** Default: `{"up":"INIT"}` */
+  directionReleaseEvents?: Record<string, TraitConfig>;
+  ariaLabel?: string;
   /** Default: `"auto"` */
   visibility?: 'auto' | 'always';
 }

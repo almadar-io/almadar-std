@@ -41,18 +41,18 @@ export type StdUiAgentChatFeedEventKey = 'INIT';
 export interface StdUiAgentChatFeedConfig {
   /** Default: `[]` */
   activities?: EntityRow[];
+  /** Default: `false` */
+  working?: boolean;
+  /** Default: `""` */
+  rawLlmPreferenceKey?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `""` */
+  idPrefix?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  enterDelay?: number;
   className?: string;
   /** Default: `""` */
   emptyTitle?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `""` */
-  idPrefix?: string;
-  /** Default: `""` */
-  rawLlmPreferenceKey?: string;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `false` */
-  working?: boolean;
 }
 
 /**

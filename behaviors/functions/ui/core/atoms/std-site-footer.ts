@@ -47,24 +47,24 @@ export interface StdSiteFooterFooterLinkClickedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSiteFooterConfig {
-  /** Default: `"Almadar"` */
-  brandName?: string;
-  /** Default: `[{"links":[{"href":"/features","label":"Features"},{"href":"/pricing","label":"Pricing"}],"title":"Product"},{"links":[{"href":"/about","label":"About"},{"href":"/blog","label":"Blog"}],"title":"Company"}]` */
-  columns?: EntityRow[];
-  /** Default: `"© Almadar"` */
-  copyright?: string;
-  /** Default: `"background"` */
-  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
-  /** Default: `"none"` */
-  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
-  /** Default: `[]` */
-  legalLinks?: EntityRow[];
-  /** Default: `"plain"` */
-  surface?: 'plain' | 'inverse';
-  /** Default: `""` */
-  tagline?: string;
   /** Default: `false` */
   texture?: boolean;
+  /** Default: `"none"` */
+  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `""` */
+  tagline?: string;
+  /** Default: `[]` */
+  legalLinks?: EntityRow[];
+  /** Default: `"Almadar"` */
+  brandName?: string;
+  /** Default: `[{"title":"Product","links":[{"href":"/features","label":"Features"},{"label":"Pricing","href":"/pricing"}]},{"links":[{"href":"/about","label":"About"},{"label":"Blog","href":"/blog"}],"title":"Company"}]` */
+  columns?: EntityRow[];
+  /** Default: `"background"` */
+  edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
+  /** Default: `"© Almadar"` */
+  copyright?: string;
+  /** Default: `"plain"` */
+  surface?: 'plain' | 'inverse';
 }
 
 /**

@@ -68,70 +68,70 @@ export interface StdUiGraphCanvasBadgeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGraphCanvasConfig {
-  /** Default: `[]` */
-  actions?: EntityRow[];
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  description?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `true` */
-  draggable?: boolean;
-  /** Default: `[]` */
-  edges?: EntityRow[];
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `true` */
-  interactive?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  lang?: string;
-  /** Default: `"force"` */
-  layout?: 'force' | 'circular' | 'grid';
-  /** Default: `100` */
-  linkDistance?: number;
-  /** Default: `0.18` */
-  linkOpacity?: number;
-  /** Default: `"NODE_CLICK"` */
-  nodeClickEvent?: string;
-  /** Default: `28` */
-  nodeSpacing?: number;
-  /** Default: `[]` */
-  nodes?: EntityRow[];
-  /** Default: `"BADGE_CLICK"` */
-  onBadgeClick?: string;
-  /** Default: `"MARK_CLICK"` */
-  onMarkClick?: string;
-  /** Default: `"NODE_CLICK"` */
-  onNodeClick?: string;
-  /** Default: `"NODE_DOUBLE_CLICK"` */
-  onNodeDoubleClick?: string;
-  /** Default: `[]` */
-  proposedEdges?: EntityRow[];
-  /** Default: `800` */
-  repulsion?: number;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  selectedNodeId?: string;
   /** Default: `true` */
   showLabels?: boolean;
   /** Default: `[]` */
-  similarity?: EntityRow[];
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  nodes?: EntityRow[];
+  /** Default: `"NODE_CLICK"` */
+  onNodeClick?: string;
+  /** Default: `"force"` */
+  layout?: 'force' | 'circular' | 'grid';
+  ariaSelected?: boolean;
   tabIndex?: number;
+  ariaExpanded?: boolean;
   title?: string;
+  /** Default: `400` */
+  height?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `true` */
+  interactive?: boolean;
+  /** Default: `[]` */
+  proposedEdges?: EntityRow[];
+  /** Default: `"NODE_DOUBLE_CLICK"` */
+  onNodeDoubleClick?: string;
+  /** Default: `800` */
+  repulsion?: number;
+  ariaDescribedby?: string;
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `"NODE_CLICK"` */
+  nodeClickEvent?: string;
+  enterDelay?: number;
+  /** Default: `true` */
+  draggable?: boolean;
+  /** Default: `"MARK_CLICK"` */
+  onMarkClick?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  error?: EntityRow;
+  /** Default: `28` */
+  nodeSpacing?: number;
+  ariaHidden?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  selectedNodeId?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  lang?: string;
+  className?: string;
+  ariaLabelledby?: string;
+  /** Default: `100` */
+  linkDistance?: number;
+  description?: string;
+  /** Default: `[]` */
+  similarity?: EntityRow[];
+  /** Default: `0.18` */
+  linkOpacity?: number;
+  /** Default: `[]` */
+  edges?: EntityRow[];
+  ariaLabel?: string;
+  /** Default: `"BADGE_CLICK"` */
+  onBadgeClick?: string;
+  /** Default: `[]` */
+  actions?: EntityRow[];
+  ariaBusy?: boolean;
 }
 
 /**

@@ -39,32 +39,32 @@ export type StdUiAvlTransitionExplainerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAvlTransitionExplainerConfig {
-  /** Default: `{"effects":{"persist":{"body":"Saves the order."}},"transitions":{"PAY":{"body":"The customer pays the order total.","title":"Paying"}}}` */
-  annotations?: EntityRow;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
   lang?: string;
+  ariaLabel?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `{"effects":{"persist":{"body":"Saves the order."}},"transitions":{"PAY":{"title":"Paying","body":"The customer pays the order total."}}}` */
+  annotations?: EntityRow;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   /** Default: `""` */
   orbitalName?: string;
+  ariaLabelledby?: string;
+  ariaSelected?: boolean;
+  ariaHidden?: boolean;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  dir?: 'ltr' | 'rtl' | 'auto';
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaLive?: 'off' | 'polite' | 'assertive';
   tabIndex?: number;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  className?: string;
   /** Default: `""` */
   traitName?: string;
-  /** Default: `{"effects":[{"args":[],"type":"set"},{"args":[],"type":"persist"}],"event":"PAY","from":"pending","index":0,"to":"paid"}` */
+  /** Default: `{"event":"PAY","effects":[{"args":[],"type":"set"},{"type":"persist","args":[]}],"from":"pending","to":"paid","index":0}` */
   transition?: EntityRow;
+  ariaBusy?: boolean;
 }
 
 /**

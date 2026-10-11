@@ -10,15 +10,15 @@
  * stacks via exact set membership.
  *
  * Loader mirrors `getBehaviorEmbeddings()` / `getBehaviorRegistry()`:
- * resolves the JSON relative to `import.meta.url` (dist-relative at
- * publish time), parses on first call, caches in memory.
+ * resolves the file the package manifest declares (`orb.factorySignatures`),
+ * parses on first call, caches in memory.
  *
  * @packageDocumentation
  */
 
 import type { FactorySignatureCatalog } from '@almadar/core';
 import { rehydrateKnobDefs } from '@almadar/core';
-import { resolveStdDataDir } from './data-dir.js';
+import { resolveStdDeclaredFile } from './data-dir.js';
 
 // Promise-memoized: concurrent first callers share ONE in-flight load; a
 // `null` (missing/invalid sidecar) is never cached so the next call retries —
@@ -37,9 +37,7 @@ function loadCatalog(): Promise<FactorySignatureCatalog | null> {
 async function loadCatalogUncached(): Promise<FactorySignatureCatalog | null> {
   try {
     const { readFileSync } = await import('fs');
-    const { resolve } = await import('path');
-    const dir = await resolveStdDataDir();
-    const raw = readFileSync(resolve(dir, 'registry', 'factory-signatures.json'), 'utf-8');
+    const raw = readFileSync(await resolveStdDeclaredFile('factorySignatures', 'registry/factory-signatures.json'), 'utf-8');
     const parsed = JSON.parse(raw) as FactorySignatureCatalog;
     if (
       typeof parsed?.generatedFromStdVersion !== 'string' ||

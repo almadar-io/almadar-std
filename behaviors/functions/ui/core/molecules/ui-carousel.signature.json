@@ -15,7 +15,8 @@
       {
         "name": "CarouselRender",
         "emittedEvents": [
-          "SLIDE_CHANGE"
+          "SLIDE_CHANGE",
+          "LOAD_MORE"
         ],
         "listenedEvents": [],
         "events": [
@@ -23,6 +24,12 @@
             "name": "SLIDE_CHANGE",
             "direction": "emit",
             "description": "Declarative event name for slide change",
+            "tier": "essential"
+          },
+          {
+            "name": "LOAD_MORE",
+            "direction": "emit",
+            "description": "Emitted when the viewer is `loadMoreAhead` slides from the end and `hasMore` is set.",
             "tier": "essential"
           },
           {
@@ -187,6 +194,30 @@
             "tier": "presentation"
           },
           {
+            "key": "fullHeight",
+            "type": "boolean",
+            "default": false,
+            "label": "Full Height",
+            "description": "Each slide fills the carousel's height (pair with `orientation: vertical` for one card per screen).",
+            "tier": "presentation"
+          },
+          {
+            "key": "hasMore",
+            "type": "boolean",
+            "default": false,
+            "label": "Has More",
+            "description": "More slides can be loaded.",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoadingMore",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading More",
+            "description": "A load is in flight; no further request until it lands.",
+            "tier": "presentation"
+          },
+          {
             "key": "items",
             "type": "[CarouselItemsItem]",
             "default": [
@@ -233,12 +264,40 @@
             "tier": "presentation"
           },
           {
+            "key": "loadMoreAhead",
+            "type": "number",
+            "default": 2,
+            "label": "Load More Ahead",
+            "description": "How many slides before the end to ask for more (default 2).",
+            "tier": "presentation"
+          },
+          {
+            "key": "loadMoreEvent",
+            "type": "event",
+            "default": "LOAD_MORE",
+            "label": "Load More Event",
+            "description": "Emitted when the viewer is `loadMoreAhead` slides from the end and `hasMore` is set.",
+            "tier": "presentation"
+          },
+          {
             "key": "loop",
             "type": "boolean",
             "default": false,
             "label": "Loop",
             "description": "Enable infinite loop",
             "tier": "presentation"
+          },
+          {
+            "key": "orientation",
+            "type": "string",
+            "default": "horizontal",
+            "label": "Orientation",
+            "description": "Scroll direction: a row of slides, or a column (a vertical feed).",
+            "tier": "presentation",
+            "enumValues": [
+              "horizontal",
+              "vertical"
+            ]
           },
           {
             "key": "role",
@@ -394,6 +453,7 @@
           "INIT"
         ],
         "definerKnobs": [
+          "loadMoreEvent",
           "slideChangeEvent"
         ],
         "entityRebindable": true,
@@ -417,6 +477,7 @@
       }
     ],
     "emittedEvents": [
+      "LOAD_MORE",
       "SLIDE_CHANGE"
     ],
     "listenedEvents": [],

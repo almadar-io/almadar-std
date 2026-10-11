@@ -39,45 +39,47 @@ export type StdUiChatBarEventKey = 'INIT' | 'SEND';
  * without modifying its state-machine topology.
  */
 export interface StdUiChatBarConfig {
-  /** Default: `{}` */
-  activeFilters?: Record<string, TraitConfig>;
-  activeGate?: string;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
   className?: string;
-  context?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
-  error?: EntityRow;
-  isLoading?: boolean;
-  jepaValidity?: number;
-  lang?: string;
-  pageProp?: number;
-  pageSize?: number;
-  placeholder?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  runningIndicator?: PatternValue;
-  searchValue?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  context?: string;
   /** Default: `"SEND"` */
   sendEvent?: string;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
+  pageProp?: number;
+  totalCount?: number;
+  ariaDescribedby?: string;
   /** Default: `"idle"` */
   status?: 'idle' | 'running' | 'paused' | 'complete' | 'error';
+  placeholder?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   tabIndex?: number;
-  totalCount?: number;
+  /** Default: `{}` */
+  activeFilters?: Record<string, TraitConfig>;
+  lang?: string;
+  searchValue?: string;
+  ariaSelected?: boolean;
+  ariaLabelledby?: string;
+  ariaLabel?: string;
+  sortBy?: string;
+  editFocus?: EntityRow;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaExpanded?: boolean;
+  jepaValidity?: number;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  focusRequest?: EntityRow;
+  sortDirection?: 'asc' | 'desc';
+  isLoading?: boolean;
+  runningIndicator?: PatternValue;
+  ariaBusy?: boolean;
+  activeGate?: string;
+  pageSize?: number;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  error?: EntityRow;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  ariaHidden?: boolean;
 }
 
 type _StdUiChatBarEntityName = 'ChatBarItem';
@@ -137,8 +139,8 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -149,141 +151,120 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
     } as Entity,
     traits: [
       {
+        'name': 'ChatBarRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
-        'config': {
-          'activeFilters': {
-            'default': {},
-            'description': 'Active filters',
-            'items': {
-              'type': 'string',
+        'linkedEntity': 'ChatBarItem',
+        'emits': [
+          {
+            'event': '@config.sendEvent',
+            'description': 'The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default \'CHAT_SEND\'',
+            'tier': 'essential',
+            'scope': 'external',
+            'definerKnob': 'sendEvent',
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
             },
-            'label': 'Active Filters',
-            'tier': 'presentation',
-            'type': 'Map<string,string>',
-          },
-          'activeGate': {
-            'description': 'Currently active gate label, e.g. \'Gate 2: State machines\'',
-            'label': 'Active Gate',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
-            'label': 'Aria-current',
-            'synonyms': 'aria-current',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'page',
-              'step',
-              'location',
-              'date',
-              'time',
-              'true',
-              'false',
-            ],
-          },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': '@config.sendEvent',
+              'name': '@config.send event',
+              'description': 'The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default \'CHAT_SEND\'',
+              'tier': 'essential',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'context': '@config.context',
+                    'aria-label': '@config.ariaLabel',
+                    'enterDelay': '@config.enterDelay',
+                    'editFocus': '@config.editFocus',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'jepaValidity': '@config.jepaValidity',
+                    'skeleton': '@config.skeleton',
+                    'sortBy': '@config.sortBy',
+                    'aria-current': '@config.ariaCurrent',
+                    'activeGate': '@config.activeGate',
+                    'aria-live': '@config.ariaLive',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'page': '@config.pageProp',
+                    'totalCount': '@config.totalCount',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'className': '@config.className',
+                    'lang': '@config.lang',
+                    'error': '@config.error',
+                    'searchValue': '@config.searchValue',
+                    'type': 'chat-bar',
+                    'dir': '@config.dir',
+                    'aria-pressed': '@config.ariaPressed',
+                    'status': '@config.status',
+                    'isLoading': '@config.isLoading',
+                    'aria-busy': '@config.ariaBusy',
+                    'pageSize': '@config.pageSize',
+                    'enter': '@config.enter',
+                    'sortDirection': '@config.sortDirection',
+                    'aria-selected': '@config.ariaSelected',
+                    'activeFilters': '@config.activeFilters',
+                    'sendEvent': '@config.sendEvent',
+                    'tabIndex': '@config.tabIndex',
+                    'placeholder': '@config.placeholder',
+                    'runningIndicator': '@config.runningIndicator',
+                    'focusRequest': '@config.focusRequest',
+                    'selectedIds': '@config.selectedIds',
+                    'role': '@config.role',
+                    'aria-hidden': '@config.ariaHidden',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
           'className': {
-            'description': 'Additional CSS classes',
+            'type': 'string',
             'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
-            'type': 'string',
           },
-          'context': {
-            'description': 'Agent context description',
-            'label': 'Context',
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
           },
           'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
             'values': [
               'none',
               'fade',
@@ -292,82 +273,11 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
               'slide',
             ],
           },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'error': {
-            'description': 'Error state (UiError)',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'ChatBarError',
-          },
-          'isLoading': {
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'jepaValidity': {
-            'description': 'JEPA validity probability 0-1',
-            'label': 'Jepa Validity',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'pageProp': {
-            'description': 'Current page number',
-            'label': 'Page',
-            'synonyms': 'page',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'pageSize': {
-            'description': 'Number of items per page',
-            'label': 'Page Size',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'placeholder': {
-            'description': 'Input placeholder text',
-            'label': 'Placeholder',
-            'tier': 'presentation',
-            'type': 'string',
-          },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -452,40 +362,76 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
               'treeitem',
             ],
           },
-          'runningIndicator': {
-            'description': 'Shown beside the gate while `status` is running; defaults to a Spinner (a host passes its brand mark).',
-            'label': 'Running Indicator',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'searchValue': {
-            'description': 'Current search query value',
-            'label': 'Search Value',
-            'tier': 'presentation',
+          'ariaLive': {
             'type': 'string',
-          },
-          'selectedIds': {
-            'default': [],
-            'description': 'Currently selected item IDs',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Selected Ids',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
             'tier': 'presentation',
-            'type': '[string]',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'context': {
+            'type': 'string',
+            'label': 'Context',
+            'description': 'Agent context description',
+            'tier': 'presentation',
           },
           'sendEvent': {
-            'default': 'SEND',
-            'description': 'The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default \'CHAT_SEND\'',
-            'label': 'Send Event',
-            'tier': 'presentation',
             'type': 'event',
+            'default': 'SEND',
+            'label': 'Send Event',
+            'description': 'The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default \'CHAT_SEND\'',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'ariaDescribedby': {
+            'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+          },
+          'status': {
+            'type': 'string',
+            'default': 'idle',
+            'label': 'Status',
+            'description': 'Pipeline status',
+            'tier': 'presentation',
+            'values': [
+              'idle',
+              'running',
+              'paused',
+              'complete',
+              'error',
+            ],
+          },
+          'placeholder': {
+            'type': 'string',
+            'label': 'Placeholder',
+            'description': 'Input placeholder text',
+            'tier': 'presentation',
           },
           'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
             'values': [
               'header',
               'table',
@@ -499,143 +445,291 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
               'none',
             ],
           },
-          'sortBy': {
-            'description': 'Current sort field',
-            'label': 'Sort By',
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
             'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'Map<string,string>',
+            'default': {},
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'lang': {
             'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'ariaLabelledby': {
+            'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+          },
+          'ariaLabel': {
+            'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'editFocus': {
+            'type': 'ChatBarEditFocus',
+            'label': 'Edit Focus',
+            'description': 'The picked canvas element a sent message edits; its ✕ emits `UI:ELEMENT_SELECTED` with `{ focus: null }`.',
+            'tier': 'presentation',
+            'properties': {
+              'trait': {
+                'name': 'trait',
+                'type': 'string',
+                'required': false,
+              },
+              'label': {
+                'name': 'label',
+                'type': 'string',
+                'required': true,
+              },
+              'state': {
+                'name': 'state',
+                'type': 'string',
+                'required': false,
+              },
+              'entity': {
+                'name': 'entity',
+                'type': 'string',
+                'required': false,
+              },
+              'level': {
+                'name': 'level',
+                'type': 'string',
+                'required': true,
+                'values': [
+                  'node',
+                  'slot',
+                  'field',
+                  'effect',
+                  'trait',
+                  'page',
+                  'orbital',
+                ],
+              },
+              'path': {
+                'name': 'path',
+                'type': 'string',
+                'required': false,
+              },
+              'orbital': {
+                'name': 'orbital',
+                'type': 'string',
+                'required': true,
+              },
+              'slot': {
+                'name': 'slot',
+                'type': 'string',
+                'required': false,
+              },
+              'patternType': {
+                'name': 'patternType',
+                'type': 'string',
+                'required': false,
+              },
+              'transition': {
+                'name': 'transition',
+                'type': 'string',
+                'required': false,
+              },
+              'source': {
+                'name': 'source',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
+          'jepaValidity': {
+            'type': 'number',
+            'label': 'Jepa Validity',
+            'description': 'JEPA validity probability 0-1',
+            'tier': 'presentation',
+          },
+          'dir': {
+            'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'focusRequest': {
+            'type': 'ChatBarFocusRequest',
+            'label': 'Focus Request',
+            'description': 'Focus the input (with an optional prompt); a new `id` focuses again.',
+            'tier': 'presentation',
+            'properties': {
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'placeholder': {
+                'name': 'placeholder',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'sortDirection': {
-            'description': 'Current sort direction',
-            'label': 'Sort Direction',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
             'values': [
               'asc',
               'desc',
             ],
           },
-          'status': {
-            'default': 'idle',
-            'description': 'Pipeline status',
-            'label': 'Status',
+          'isLoading': {
+            'type': 'boolean',
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
+          },
+          'runningIndicator': {
+            'type': 'node',
+            'label': 'Running Indicator',
+            'description': 'Shown beside the gate while `status` is running; defaults to a Spinner (a host passes its brand mark).',
+            'tier': 'presentation',
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+          },
+          'activeGate': {
             'type': 'string',
+            'label': 'Active Gate',
+            'description': 'Currently active gate label, e.g. \'Gate 2: State machines\'',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'ariaCurrent': {
+            'type': 'string',
+            'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'synonyms': 'aria-current',
+            'tier': 'presentation',
             'values': [
-              'idle',
-              'running',
-              'paused',
-              'complete',
-              'error',
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
             ],
           },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
+          'error': {
+            'type': 'ChatBarError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
-            'type': 'number',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
-          'totalCount': {
-            'description': 'Total number of items',
-            'label': 'Total Count',
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
-            'type': 'number',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
           },
         },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'sendEvent',
-            'description': 'The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default \'CHAT_SEND\'',
-            'event': '@config.sendEvent',
-            'scope': 'external',
-            'tier': 'essential',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'ChatBarItem',
-        'name': 'ChatBarRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default \'CHAT_SEND\'',
-              'key': '@config.sendEvent',
-              'name': '@config.send event',
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'activeFilters': '@config.activeFilters',
-                    'activeGate': '@config.activeGate',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'context': '@config.context',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'jepaValidity': '@config.jepaValidity',
-                    'lang': '@config.lang',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'placeholder': '@config.placeholder',
-                    'role': '@config.role',
-                    'runningIndicator': '@config.runningIndicator',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'sendEvent': '@config.sendEvent',
-                    'skeleton': '@config.skeleton',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'status': '@config.status',
-                    'tabIndex': '@config.tabIndex',
-                    'totalCount': '@config.totalCount',
-                    'type': 'chat-bar',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

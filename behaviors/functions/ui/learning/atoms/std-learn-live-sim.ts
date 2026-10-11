@@ -53,34 +53,34 @@ export interface StdLearnLiveSimSimResetPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnLiveSimConfig {
-  /** Default: `""` */
-  backgroundColor?: string;
-  /** Default: `[{"color":"series-1","id":"ball-a","radius":14,"vx":4,"vy":0,"x":100,"y":60},{"color":"series-2","id":"ball-b","radius":18,"vx":-3,"vy":2,"x":260,"y":90},{"color":"series-3","id":"ball-c","radius":11,"vx":2,"vy":-1,"x":420,"y":40}]` */
-  bodies?: EntityRow[];
-  /** Default: `0.995` */
-  damping?: number;
   /** Default: `0.4` */
   gravity?: number;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `0.78` */
-  restitution?: number;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `false` */
-  running?: boolean;
   /** Default: `true` */
   showVelocity?: boolean;
-  /** Default: `""` */
-  summary?: string;
-  /** Default: `"Live Sim"` */
-  title?: string;
   /** Default: `8` */
   velocityScale?: number;
+  /** Default: `[{"id":"ball-a","x":100,"color":"series-1","y":60,"radius":14,"vy":0,"vx":4},{"x":260,"color":"series-2","y":90,"vx":-3,"vy":2,"id":"ball-b","radius":18},{"vy":-1,"id":"ball-c","color":"series-3","x":420,"y":40,"radius":11,"vx":2}]` */
+  bodies?: EntityRow[];
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
+  /** Default: `"Live Sim"` */
+  title?: string;
+  /** Default: `0.78` */
+  restitution?: number;
+  /** Default: `400` */
+  height?: number;
+  /** Default: `false` */
+  running?: boolean;
+  /** Default: `0.995` */
+  damping?: number;
+  /** Default: `""` */
+  matchMode?: string;
+  /** Default: `""` */
+  backgroundColor?: string;
   /** Default: `600` */
   width?: number;
+  /** Default: `""` */
+  summary?: string;
 }
 
 /**

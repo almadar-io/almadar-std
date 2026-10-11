@@ -47,28 +47,28 @@ export interface StdSiteHeaderNavClickedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSiteHeaderConfig {
-  /** Default: `""` */
-  actionHref?: string;
-  /** Default: `""` */
-  actionLabel?: string;
-  /** Default: `"Almadar"` */
-  brandName?: string;
-  /** Default: `"en"` */
-  currentLanguage?: string;
   /** Default: `"/"` */
   currentPath?: string;
-  /** Default: `{"children":[{"actions":["@trait.SiteHeaderLanguages",{"className":["if","@config.showThemeToggle","","hidden"],"size":"sm","type":"theme-toggle"},{"action":"NAV_LINK","actionPayload":{"href":"@config.actionHref","label":"@config.actionLabel"},"className":["if",["==","@config.actionLabel",""],"hidden",""],"href":"@config.actionHref","label":"@config.actionLabel","size":"sm","type":"button","variant":"primary"}],"brandHref":"@config.homeHref","brandName":"@config.brandName","className":"hidden lg:flex","logoSrc":"@config.logoSrc","navigationItems":["array/map","@config.links",["fn","entry",{"active":["==",["object/get","@entry","href",""],"@config.currentPath"],"children":["array/map",["object/get","@entry","children",[]],["fn","child",{"active":["==",["object/get","@child","href",""],"@config.currentPath"],"href":["object/get","@child","href",""],"label":["object/get","@child","label",""]}]],"href":["object/get","@entry","href",""],"label":["object/get","@entry","label",""]}]],"showMenuToggle":false,"sticky":false,"type":"header","variant":"desktop"},{"actions":["@trait.SiteHeaderLanguages",{"className":["if","@config.showThemeToggle","","hidden"],"size":"sm","type":"theme-toggle"}],"brandHref":"@config.homeHref","brandName":"@config.brandName","className":"lg:hidden","isMenuOpen":"@entity.menuOpen","logoSrc":"@config.logoSrc","onMenuToggle":"MENU_TOGGLE","showMenuToggle":true,"sticky":false,"type":"header","variant":"mobile"},{"align":"stretch","children":[{"align":"stretch","children":["array/map","@config.links",["fn",["entry"],{"align":"stretch","children":[{"action":"NAV_LINK","actionPayload":{"href":["object/get","@entry","href",""],"label":["object/get","@entry","label",""]},"className":"justify-start","href":["object/get","@entry","href",""],"label":["object/get","@entry","label",""],"type":"button","variant":["if",["==",["object/get","@entry","href",""],"@config.currentPath"],"secondary","ghost"]},{"align":"stretch","children":["array/map",["object/get","@entry","children",[]],["fn",["child"],{"action":"NAV_LINK","actionPayload":{"href":["object/get","@child","href",""],"label":["object/get","@child","label",""]},"className":"justify-start","href":["object/get","@child","href",""],"label":["object/get","@child","label",""],"type":"button","variant":["if",["==",["object/get","@child","href",""],"@config.currentPath"],"secondary","ghost"]}]],"className":"ps-6","direction":"vertical","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}]],"direction":"vertical","gap":"xs","type":"stack"},{"action":"NAV_LINK","actionPayload":{"href":"@config.actionHref","label":"@config.actionLabel"},"className":["if",["==","@config.actionLabel",""],"hidden","mt-2 w-full"],"href":"@config.actionHref","label":"@config.actionLabel","size":"md","type":"button","variant":"primary"}],"className":["if","@entity.menuOpen","lg:hidden border-b border-border bg-card px-4 py-3","hidden"],"direction":"vertical","gap":"xs","type":"stack"}],"className":"sticky top-0 z-50","direction":"vertical","gap":"none","type":"stack"}` */
-  headerContent?: unknown;
   /** Default: `""` */
   homeHref?: string;
   /** Default: `[]` */
   languages?: EntityRow[];
-  /** Default: `[{"href":"/features","label":"Features"},{"href":"/pricing","label":"Pricing"},{"href":"/about","label":"About"}]` */
-  links?: EntityRow[];
+  /** Default: `"Almadar"` */
+  brandName?: string;
+  /** Default: `""` */
+  actionHref?: string;
   /** Default: `""` */
   logoSrc?: string;
+  /** Default: `[{"label":"Features","href":"/features"},{"href":"/pricing","label":"Pricing"},{"label":"About","href":"/about"}]` */
+  links?: EntityRow[];
   /** Default: `false` */
   showThemeToggle?: boolean;
+  /** Default: `""` */
+  actionLabel?: string;
+  /** Default: `{"direction":"vertical","children":[{"brandHref":"@config.homeHref","actions":["@trait.SiteHeaderLanguages",{"size":"sm","type":"theme-toggle","className":["if","@config.showThemeToggle","","hidden"]},{"className":["if",["==","@config.actionLabel",""],"hidden",""],"href":"@config.actionHref","actionPayload":{"href":"@config.actionHref","label":"@config.actionLabel"},"label":"@config.actionLabel","action":"NAV_LINK","size":"sm","type":"button","variant":"primary"}],"brandName":"@config.brandName","variant":"desktop","sticky":false,"className":"hidden lg:flex","logoSrc":"@config.logoSrc","navigationItems":["array/map","@config.links",["fn","entry",{"children":["array/map",["object/get","@entry","children",[]],["fn","child",{"active":["==",["object/get","@child","href",""],"@config.currentPath"],"href":["object/get","@child","href",""],"label":["object/get","@child","label",""]}]],"label":["object/get","@entry","label",""],"active":["==",["object/get","@entry","href",""],"@config.currentPath"],"href":["object/get","@entry","href",""]}]],"type":"header","showMenuToggle":false},{"variant":"mobile","type":"header","actions":["@trait.SiteHeaderLanguages",{"className":["if","@config.showThemeToggle","","hidden"],"size":"sm","type":"theme-toggle"}],"className":"lg:hidden","brandName":"@config.brandName","onMenuToggle":"MENU_TOGGLE","showMenuToggle":true,"isMenuOpen":"@entity.menuOpen","brandHref":"@config.homeHref","sticky":false,"logoSrc":"@config.logoSrc"},{"gap":"xs","align":"stretch","direction":"vertical","children":[{"direction":"vertical","type":"stack","gap":"xs","children":["array/map","@config.links",["fn",["entry"],{"type":"stack","align":"stretch","gap":"xs","children":[{"type":"button","action":"NAV_LINK","variant":["if",["==",["object/get","@entry","href",""],"@config.currentPath"],"secondary","ghost"],"className":"justify-start","href":["object/get","@entry","href",""],"label":["object/get","@entry","label",""],"actionPayload":{"href":["object/get","@entry","href",""],"label":["object/get","@entry","label",""]}},{"gap":"xs","className":"ps-6","align":"stretch","children":["array/map",["object/get","@entry","children",[]],["fn",["child"],{"href":["object/get","@child","href",""],"action":"NAV_LINK","className":"justify-start","variant":["if",["==",["object/get","@child","href",""],"@config.currentPath"],"secondary","ghost"],"label":["object/get","@child","label",""],"type":"button","actionPayload":{"href":["object/get","@child","href",""],"label":["object/get","@child","label",""]}}]],"direction":"vertical","type":"stack"}],"direction":"vertical"}]],"align":"stretch"},{"action":"NAV_LINK","variant":"primary","type":"button","className":["if",["==","@config.actionLabel",""],"hidden","mt-2 w-full"],"actionPayload":{"label":"@config.actionLabel","href":"@config.actionHref"},"href":"@config.actionHref","label":"@config.actionLabel","size":"md"}],"type":"stack","className":["if","@entity.menuOpen","lg:hidden border-b border-border bg-card px-4 py-3","hidden"]}],"gap":"none","className":"sticky top-0 z-50","type":"stack"}` */
+  headerContent?: unknown;
+  /** Default: `"en"` */
+  currentLanguage?: string;
 }
 
 /**

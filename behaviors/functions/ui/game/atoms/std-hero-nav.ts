@@ -49,18 +49,18 @@ export interface StdHeroNavHeroSteppedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdHeroNavConfig {
-  /** Default: `12` */
-  gridHeight?: number;
-  /** Default: `12` */
-  gridWidth?: number;
-  /** Default: `45` */
-  moveBudget?: number;
-  /** Default: `true` */
-  running?: boolean;
   /** Default: `[]` */
   tiles?: EntityRow[];
   /** Default: `[]` */
   units?: EntityRow[];
+  /** Default: `45` */
+  moveBudget?: number;
+  /** Default: `true` */
+  running?: boolean;
+  /** Default: `12` */
+  gridHeight?: number;
+  /** Default: `12` */
+  gridWidth?: number;
 }
 
 /**

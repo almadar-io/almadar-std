@@ -39,44 +39,44 @@ export type StdUiSvgPulseEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgPulseConfig {
-  /** Default: `true` */
-  animated?: boolean;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `true` */
-  asRoot?: boolean;
-  className?: string;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `70` */
-  cx?: number;
-  /** Default: `70` */
-  cy?: number;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `140` */
-  height?: number;
-  lang?: string;
-  /** Default: `60` */
-  maxRadius?: number;
-  /** Default: `1` */
-  opacity?: number;
   /** Default: `3` */
   rings?: number;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `140` */
+  height?: number;
+  /** Default: `60` */
+  maxRadius?: number;
+  /** Default: `true` */
+  asRoot?: boolean;
+  /** Default: `70` */
+  cy?: number;
+  ariaExpanded?: boolean;
+  ariaBusy?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `1` */
+  opacity?: number;
+  lang?: string;
   tabIndex?: number;
+  ariaLabel?: string;
+  ariaHidden?: boolean;
+  /** Default: `true` */
+  animated?: boolean;
+  className?: string;
+  ariaLabelledby?: string;
+  /** Default: `70` */
+  cx?: number;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  ariaDescribedby?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaSelected?: boolean;
   /** Default: `140` */
   width?: number;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  enterDelay?: number;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
 }
 
 /**

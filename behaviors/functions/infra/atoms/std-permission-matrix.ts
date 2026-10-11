@@ -334,28 +334,28 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
     name: 'PermissionMatrixOrbital',
     uses: [
       {
-        'as': 'Modal',
         'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
       },
       {
-        'as': 'Spinner',
         'from': 'std/behaviors/ui-spinner',
+        'as': 'Spinner',
       },
       {
-        'as': 'Typography',
         'from': 'std/behaviors/ui-typography',
+        'as': 'Typography',
       },
       {
-        'as': 'Icon',
         'from': 'std/behaviors/ui-icon',
+        'as': 'Icon',
       },
       {
-        'as': 'Divider',
         'from': 'std/behaviors/ui-divider',
+        'as': 'Divider',
       },
       {
-        'as': 'Alert',
         'from': 'std/behaviors/ui-alert',
+        'as': 'Alert',
       },
     ],
     expects: [
@@ -371,57 +371,57 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'workspaceId',
+            'type': 'string',
             'default': '',
             'description': 'Workspace the grant applies to; blank = applies to every workspace.',
-            'name': 'workspaceId',
             'synonyms': 'workspace, tenant, org, organization',
-            'type': 'string',
           },
           {
-            'description': 'The role the grant applies to (e.g. admin, manager, contractor).',
             'name': 'role',
+            'type': 'string',
             'required': true,
+            'description': 'The role the grant applies to (e.g. admin, manager, contractor).',
             'synonyms': 'user role, group, team role',
-            'type': 'string',
           },
           {
-            'description': 'The module or feature area the grant governs.',
             'name': 'module',
-            'required': true,
-            'synonyms': 'feature, area, section, screen',
             'type': 'string',
+            'required': true,
+            'description': 'The module or feature area the grant governs.',
+            'synonyms': 'feature, area, section, screen',
           },
           {
+            'name': 'canReadFinance',
+            'type': 'boolean',
             'default': false,
             'description': 'Whether the role may read finance data in this module.',
-            'name': 'canReadFinance',
             'synonyms': 'see finance, read financials, view finance, finance access',
-            'type': 'boolean',
           },
           {
+            'name': 'canSeeOthersHours',
+            'type': 'boolean',
             'default': false,
             'description': 'Whether the role may see other people\'s logged hours in this module.',
-            'name': 'canSeeOthersHours',
             'synonyms': 'see others hours, view team hours, timesheet visibility, other people\'s time',
-            'type': 'boolean',
           },
           {
+            'name': 'canSeeMargins',
+            'type': 'boolean',
             'default': false,
             'description': 'Whether the role may see margin / profit figures in this module.',
-            'name': 'canSeeMargins',
             'synonyms': 'see margins, view profit, margin visibility, profitability',
-            'type': 'boolean',
           },
           {
+            'name': 'createdAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when the grant was created.',
-            'name': 'createdAt',
             'synonyms': 'creation time, created, date added',
-            'type': 'number',
           },
         ];
         const extras = params.fields ?? [];
@@ -432,164 +432,92 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
     } as Entity,
     traits: [
       makeTraitRef({
-        'linkedEntity': 'PermissionGrant',
-        'name': 'LoadingSpinner',
         'ref': ('Spinner.traits.SpinnerRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
+        'name': 'LoadingSpinner',
+        'linkedEntity': 'PermissionGrant',
       }),
       makeTraitRef({
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
+        'name': 'ErrorSpinner',
+        'linkedEntity': 'PermissionGrant',
         'config': {
           'size': {
-            'default': 'sm',
             'type': 'unknown',
+            'default': 'sm',
           },
         },
-        'linkedEntity': 'PermissionGrant',
-        'name': 'ErrorSpinner',
-        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
+        'name': 'LoadingText',
+        'linkedEntity': 'PermissionGrant',
         'config': {
           'color': {
-            'default': 'muted',
             'type': 'unknown',
+            'default': 'muted',
           },
           'content': {
-            'default': 'Loading permission grants…',
             'type': 'unknown',
+            'default': 'Loading permission grants…',
           },
           'variant': {
-            'default': 'caption',
             'type': 'unknown',
+            'default': 'caption',
           },
         },
-        'linkedEntity': 'PermissionGrant',
-        'name': 'LoadingText',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Icon.traits.IconRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
+        'name': 'ShieldCheckIcon',
+        'linkedEntity': 'PermissionGrant',
         'config': {
           'name': {
+            'type': 'unknown',
             'default': 'shield-check',
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'PermissionGrant',
-        'name': 'ShieldCheckIcon',
-        'ref': ('Icon.traits.IconRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
       }),
       makeTraitRef({
-        'config': {
-          'content': {
-            'default': 'Permission matrix',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'h3',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'PermissionGrant',
-        'name': 'PermissionMatrixTitle',
         'ref': ('Typography.traits.TypographyRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'name': 'PermissionMatrixTitle',
         'linkedEntity': 'PermissionGrant',
-        'name': 'GrantDivider',
-        'ref': ('Divider.traits.DividerRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
-      }),
-      makeTraitRef({
         'config': {
-          'message': {
-            'default': '@payload.error',
-            'type': 'unknown',
-          },
           'variant': {
-            'default': 'error',
             'type': 'unknown',
+            'default': 'h3',
+          },
+          'content': {
+            'type': 'unknown',
+            'default': 'Permission matrix',
           },
         },
+      }),
+      makeTraitRef({
+        'ref': ('Divider.traits.DividerRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
+        'name': 'GrantDivider',
         'linkedEntity': 'PermissionGrant',
-        'name': 'ErrorAlert',
+      }),
+      makeTraitRef({
         'ref': ('Alert.traits.AlertRender' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
+        'name': 'ErrorAlert',
+        'linkedEntity': 'PermissionGrant',
+        'config': {
+          'variant': {
+            'type': 'unknown',
+            'default': 'error',
+          },
+          'message': {
+            'type': 'unknown',
+            'default': '@payload.error',
+          },
+        },
       }),
       {
-        'capabilities': [
-          'access',
-        ],
-        'category': 'interaction',
-        'config': {
-          'itemActions': {
-            'default': [
-              {
-                'event': 'EDIT',
-                'icon': 'pencil',
-                'label': 'Edit',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'DELETE',
-                'icon': 'trash',
-                'label': 'Delete',
-                'variant': 'danger',
-              },
-            ],
-            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-                'when': {
-                  'name': 'when',
-                  'required': false,
-                  'type': 'SExpr',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Row actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'itemClickEvent': {
-            'default': 'EDIT',
-            'description': 'Event emitted when a row is clicked; opens the grant for editing. Empty disables the row click.',
-            'label': 'Row click',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
+        'name': 'PermissionMatrixAdmin',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -601,85 +529,37 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'capabilities': [
+          'access',
+        ],
+        'linkedEntity': 'PermissionGrant',
         'emits': [
           {
-            'description': 'Requests the create-grant form (the create modal listens).',
             'event': 'NEW',
+            'description': 'Requests the create-grant form (the create modal listens).',
             'synonyms': 'add grant, new permission, create grant',
             'tier': 'domain',
           },
           {
-            'description': 'Requests the edit form for a grant row (the edit modal listens).',
             'event': 'EDIT',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'entity': 'PermissionGrant',
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'workspaceId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'role',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'module',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'canReadFinance',
-                    'type': 'boolean',
-                  },
-                  {
-                    'name': 'canSeeOthersHours',
-                    'type': 'boolean',
-                  },
-                  {
-                    'name': 'canSeeMargins',
-                    'type': 'boolean',
-                  },
-                  {
-                    'name': 'createdAt',
-                    'type': 'number',
-                  },
-                ],
-                'type': 'object',
-              },
-            ],
+            'description': 'Requests the edit form for a grant row (the edit modal listens).',
             'synonyms': 'modify grant, change permission, update grant',
             'tier': 'domain',
-          },
-          {
-            'description': 'Requests deletion of a grant row (the persistor listens; adminRoles-guarded there).',
-            'event': 'DELETE',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'PermissionGrant',
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'workspaceId',
@@ -687,13 +567,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   },
                   {
                     'name': 'role',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'module',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'canReadFinance',
@@ -712,24 +592,29 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                     'type': 'number',
                   },
                 ],
-                'type': 'object',
+                'entity': 'PermissionGrant',
               },
             ],
+          },
+          {
+            'event': 'DELETE',
+            'description': 'Requests deletion of a grant row (the persistor listens; adminRoles-guarded there).',
             'synonyms': 'remove grant, revoke permission, delete grant',
             'tier': 'domain',
-          },
-          {
-            'description': 'Indicates the permission-grant collection has been successfully loaded.',
-            'event': 'PermissionGrantLoaded',
             'payloadSchema': [
               {
-                'entity': 'PermissionGrant',
-                'name': 'data',
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'workspaceId',
@@ -737,13 +622,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   },
                   {
                     'name': 'role',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'module',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'canReadFinance',
@@ -762,15 +647,65 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'PermissionGrant',
               },
             ],
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates failure to load the permission-grant collection.',
+            'event': 'PermissionGrantLoaded',
+            'description': 'Indicates the permission-grant collection has been successfully loaded.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[object]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'workspaceId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'role',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'module',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'canReadFinance',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'canSeeOthersHours',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'canSeeMargins',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'number',
+                  },
+                ],
+                'entity': 'PermissionGrant',
+              },
+            ],
+          },
+          {
             'event': 'PermissionGrantLoadFailed',
+            'description': 'Indicates failure to load the permission-grant collection.',
+            'synonyms': 'load error, failed load, request failure',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -781,55 +716,59 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                 'type': 'string',
               },
             ],
-            'synonyms': 'load error, failed load, request failure',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'PermissionGrant',
         'listens': [
           {
             'event': 'PermissionGrantSaved',
+            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': ('PermissionGrantPersistor' satisfies _StdPermissionMatrixListenTraitName),
             },
-            'triggers': 'INIT',
           },
           {
             'event': 'PermissionGrantDeleted',
+            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': ('PermissionGrantPersistor' satisfies _StdPermissionMatrixListenTraitName),
             },
-            'triggers': 'INIT',
           },
         ],
-        'name': 'PermissionMatrixAdmin',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'listing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates the permission-grant collection has been successfully loaded.',
               'key': 'PermissionGrantLoaded',
               'name': 'PermissionGrant loaded',
+              'description': 'Indicates the permission-grant collection has been successfully loaded.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'PermissionGrant',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'workspaceId',
@@ -837,13 +776,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                     },
                     {
                       'name': 'role',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'module',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'canReadFinance',
@@ -862,16 +801,16 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'PermissionGrant',
                 },
               ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'internal',
             },
             {
-              'description': 'Indicates failure to load the permission-grant collection.',
               'key': 'PermissionGrantLoadFailed',
               'name': 'PermissionGrant load failed',
+              'description': 'Indicates failure to load the permission-grant collection.',
+              'synonyms': 'load error, failed load, request failure',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -882,90 +821,34 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   'type': 'string',
                 },
               ],
-              'synonyms': 'load error, failed load, request failure',
-              'tier': 'internal',
             },
             {
-              'description': 'Requests the create-grant form (the create modal listens).',
               'key': 'NEW',
               'name': 'New',
+              'description': 'Requests the create-grant form (the create modal listens).',
               'synonyms': 'add grant, new permission, create grant',
               'tier': 'domain',
             },
             {
-              'description': 'Requests the edit form for a grant row (the edit modal listens).',
               'key': 'EDIT',
               'name': 'Edit',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'PermissionGrant',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'workspaceId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'role',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'module',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'canReadFinance',
-                      'type': 'boolean',
-                    },
-                    {
-                      'name': 'canSeeOthersHours',
-                      'type': 'boolean',
-                    },
-                    {
-                      'name': 'canSeeMargins',
-                      'type': 'boolean',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'number',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
+              'description': 'Requests the edit form for a grant row (the edit modal listens).',
               'synonyms': 'modify grant, change permission, update grant',
               'tier': 'domain',
-            },
-            {
-              'description': 'Requests deletion of a grant row (the persistor listens; adminRoles-guarded there).',
-              'key': 'DELETE',
-              'name': 'Delete',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
-                  'entity': 'PermissionGrant',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'workspaceId',
@@ -973,13 +856,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                     },
                     {
                       'name': 'role',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'module',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'canReadFinance',
@@ -998,35 +881,80 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                       'type': 'number',
                     },
                   ],
-                  'type': 'object',
+                  'entity': 'PermissionGrant',
                 },
               ],
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'description': 'Requests deletion of a grant row (the persistor listens; adminRoles-guarded there).',
               'synonyms': 'remove grant, revoke permission, delete grant',
               'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'listing',
-            },
-            {
-              'name': 'error',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'workspaceId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'module',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'canReadFinance',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'canSeeOthersHours',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'canSeeMargins',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'number',
+                    },
+                  ],
+                  'entity': 'PermissionGrant',
+                },
+              ],
             },
           ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('PermissionGrant' satisfies _StdPermissionMatrixEntityName),
                   {
                     'emit': {
-                      'failure': 'PermissionGrantLoadFailed',
                       'success': 'PermissionGrantLoaded',
+                      'failure': 'PermissionGrantLoadFailed',
                     },
                   },
                 ],
@@ -1035,94 +963,57 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   'main',
                   {
                     'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'type': 'stack',
                     'children': [
                       '@trait.LoadingSpinner',
                       '@trait.LoadingText',
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'listing',
+              'event': 'PermissionGrantLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'gap': 'sm',
+                        'type': 'stack',
                         'align': 'center',
+                        'justify': 'between',
                         'children': [
                           {
                             'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               '@trait.ShieldCheckIcon',
                               '@trait.PermissionMatrixTitle',
                             ],
                             'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
                           },
                           {
-                            'action': 'NEW',
                             'icon': 'plus',
+                            'action': 'NEW',
+                            'variant': 'primary',
                             'label': 'New grant',
                             'type': 'button',
-                            'variant': 'primary',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
                       },
                       '@trait.GrantDivider',
                       {
-                        'cols': 1,
-                        'entity': '@payload.data',
-                        'fields': [
-                          {
-                            'label': 'Role',
-                            'name': 'role',
-                            'variant': 'h4',
-                          },
-                          {
-                            'label': 'Module',
-                            'name': 'module',
-                            'variant': 'badge',
-                          },
-                          {
-                            'label': 'Workspace',
-                            'name': 'workspaceId',
-                            'variant': 'caption',
-                          },
-                          {
-                            'format': 'boolean',
-                            'label': 'Read finance',
-                            'name': 'canReadFinance',
-                            'variant': 'caption',
-                          },
-                          {
-                            'format': 'boolean',
-                            'label': 'Others\' hours',
-                            'name': 'canSeeOthersHours',
-                            'variant': 'caption',
-                          },
-                          {
-                            'format': 'boolean',
-                            'label': 'Margins',
-                            'name': 'canSeeMargins',
-                            'variant': 'caption',
-                          },
-                        ],
-                        'gap': 'sm',
                         'itemActions': [
                           'array/filter',
                           '@config.itemActions',
@@ -1157,21 +1048,58 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                             ],
                           ],
                         ],
-                        'itemClickEvent': '@config.itemClickEvent',
+                        'cols': 1,
+                        'fields': [
+                          {
+                            'variant': 'h4',
+                            'name': 'role',
+                            'label': 'Role',
+                          },
+                          {
+                            'variant': 'badge',
+                            'name': 'module',
+                            'label': 'Module',
+                          },
+                          {
+                            'label': 'Workspace',
+                            'name': 'workspaceId',
+                            'variant': 'caption',
+                          },
+                          {
+                            'variant': 'caption',
+                            'format': 'boolean',
+                            'name': 'canReadFinance',
+                            'label': 'Read finance',
+                          },
+                          {
+                            'name': 'canSeeOthersHours',
+                            'format': 'boolean',
+                            'variant': 'caption',
+                            'label': 'Others\' hours',
+                          },
+                          {
+                            'label': 'Margins',
+                            'name': 'canSeeMargins',
+                            'variant': 'caption',
+                            'format': 'boolean',
+                          },
+                        ],
+                        'entity': '@payload.data',
                         'type': 'data-grid',
+                        'itemClickEvent': '@config.itemClickEvent',
+                        'gap': 'sm',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
-              'event': 'PermissionGrantLoaded',
-              'from': 'loading',
-              'to': 'listing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'PermissionGrantLoadFailed',
               'effects': [
                 [
                   'render-ui',
@@ -1184,11 +1112,11 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   },
                 ],
               ],
-              'event': 'PermissionGrantLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'listing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1201,11 +1129,11 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'listing',
-              'to': 'loading',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1221,24 +1149,112 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'children': [
                       '@trait.ErrorSpinner',
                     ],
+                    'align': 'center',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'itemClickEvent': {
+            'type': 'event',
+            'default': 'EDIT',
+            'label': 'Row click',
+            'description': 'Event emitted when a row is clicked; opens the grant for editing. Empty disables the row click.',
+            'tier': 'presentation',
+          },
+          'itemActions': {
+            'type': '[ItemAction]',
+            'default': [
+              {
+                'label': 'Edit',
+                'icon': 'pencil',
+                'variant': 'ghost',
+                'event': 'EDIT',
+              },
+              {
+                'icon': 'trash',
+                'variant': 'danger',
+                'event': 'DELETE',
+                'label': 'Delete',
+              },
+            ],
+            'label': 'Row actions',
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'when': {
+                  'name': 'when',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
       makeTraitRef({
+        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
+        'name': 'PermissionGrantCreate',
+        'linkedEntity': 'PermissionGrant',
         'config': {
+          'icon': {
+            'type': 'unknown',
+            'default': 'plus-circle',
+          },
+          'title': {
+            'type': 'unknown',
+            'default': 'Create grant',
+          },
+          'mode': {
+            'type': 'unknown',
+            'default': 'create',
+          },
           'fields': {
+            'type': 'unknown',
             'default': [
               'workspaceId',
               'role',
@@ -1247,42 +1263,38 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
               'canSeeOthersHours',
               'canSeeMargins',
             ],
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'plus-circle',
-            'type': 'unknown',
-          },
-          'mode': {
-            'default': 'create',
-            'type': 'unknown',
-          },
-          'title': {
-            'default': 'Create grant',
-            'type': 'unknown',
           },
         },
         'events': {
-          'OPEN': 'NEW',
           'SAVE': 'GRANT_CREATED',
+          'OPEN': 'NEW',
         },
-        'linkedEntity': 'PermissionGrant',
         'listens': [
           {
             'event': 'NEW',
+            'triggers': 'NEW',
             'source': {
               'kind': 'trait',
               'trait': 'PermissionMatrixAdmin',
             },
-            'triggers': 'NEW',
           },
         ],
-        'name': 'PermissionGrantCreate',
-        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
+        'name': 'PermissionGrantEdit',
+        'linkedEntity': 'PermissionGrant',
         'config': {
+          'icon': {
+            'type': 'unknown',
+            'default': 'pencil',
+          },
+          'mode': {
+            'type': 'unknown',
+            'default': 'edit',
+          },
           'fields': {
+            'type': 'unknown',
             'default': [
               'workspaceId',
               'role',
@@ -1291,57 +1303,29 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
               'canSeeOthersHours',
               'canSeeMargins',
             ],
-            'type': 'unknown',
-          },
-          'icon': {
-            'default': 'pencil',
-            'type': 'unknown',
-          },
-          'mode': {
-            'default': 'edit',
-            'type': 'unknown',
           },
           'title': {
-            'default': 'Edit grant',
             'type': 'unknown',
+            'default': 'Edit grant',
           },
         },
         'events': {
           'OPEN': 'EDIT',
           'SAVE': 'GRANT_UPDATED',
         },
-        'linkedEntity': 'PermissionGrant',
         'listens': [
           {
             'event': 'EDIT',
+            'triggers': 'EDIT',
             'source': {
               'kind': 'trait',
               'trait': 'PermissionMatrixAdmin',
             },
-            'triggers': 'EDIT',
           },
         ],
-        'name': 'PermissionGrantEdit',
-        'ref': ('Modal.traits.ModalRecordModal' satisfies _StdPermissionMatrixPermissionMatrixOrbitalUsesRef),
       }),
       {
-        'capabilities': [
-          'access',
-        ],
-        'category': 'lifecycle',
-        'config': {
-          'adminRoles': {
-            'default': [],
-            'description': 'Roles eligible to create, edit, or delete grants. ENFORCED by the DO_CREATE/DO_UPDATE/DO_DELETE transition guards: a viewer whose @user.role is not listed cannot fire a write, from the form submit or from the bus. Empty = every signed-in viewer may manage grants (ungated). Mounting the page is the opt-in — there is deliberately no separate enable flag (a default-off flag made the whole page\'s affordances dead on a fresh mount).',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Who can manage grants?',
-            'synonyms': 'admin roles, permission managers, who edits permissions, grant admins, permission matrix, role permissions, capability matrix, permission grants, access matrix, manage permissions',
-            'tier': 'policy',
-            'type': '[string]',
-          },
-        },
+        'name': 'PermissionGrantPersistor',
         'effectRow': [
           {
             'kind': 'persist',
@@ -1352,24 +1336,32 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
             'resource': 'toast',
           },
         ],
+        'category': 'lifecycle',
+        'capabilities': [
+          'access',
+        ],
+        'linkedEntity': 'PermissionGrant',
         'emits': [
           {
-            'description': 'Signals that a permission grant has been persisted (create / update); carries the persisted row\'s id.',
             'event': 'PermissionGrantSaved',
+            'description': 'Signals that a permission grant has been persisted (create / update); carries the persisted row\'s id.',
+            'synonyms': 'saved, created, updated, persisted',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'saved, created, updated, persisted',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to persist a permission grant.',
             'event': 'PermissionGrantSaveFailed',
+            'description': 'Indicates a failure to persist a permission grant.',
+            'synonyms': 'save error, failed save, persist failure',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1380,13 +1372,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'save error, failed save, persist failure',
-            'tier': 'internal',
           },
           {
-            'description': 'Signals that a permission grant has been deleted.',
             'event': 'PermissionGrantDeleted',
+            'description': 'Signals that a permission grant has been deleted.',
+            'synonyms': 'deleted, removed, revoked',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1397,13 +1389,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                 'type': 'boolean',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'deleted, removed, revoked',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to delete a permission grant.',
             'event': 'PermissionGrantDeleteFailed',
+            'description': 'Indicates a failure to delete a permission grant.',
+            'synonyms': 'delete error, failed delete',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1414,111 +1406,62 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'delete error, failed delete',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'PermissionGrant',
         'listens': [
           {
             'event': 'GRANT_CREATED',
+            'triggers': 'DO_CREATE',
             'source': {
               'kind': 'trait',
               'trait': ('PermissionGrantCreate' satisfies _StdPermissionMatrixListenTraitName),
             },
-            'triggers': 'DO_CREATE',
           },
           {
             'event': 'GRANT_UPDATED',
+            'triggers': 'DO_UPDATE',
             'source': {
               'kind': 'trait',
               'trait': ('PermissionGrantEdit' satisfies _StdPermissionMatrixListenTraitName),
             },
-            'triggers': 'DO_UPDATE',
           },
           {
             'event': 'DELETE',
+            'triggers': 'DO_DELETE',
             'source': {
               'kind': 'trait',
               'trait': ('PermissionMatrixAdmin' satisfies _StdPermissionMatrixListenTraitName),
             },
-            'triggers': 'DO_DELETE',
           },
         ],
-        'name': 'PermissionGrantPersistor',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates a request to create a grant row.',
               'key': 'DO_CREATE',
               'name': 'Do Create',
-              'payloadSchema': [
-                {
-                  'entity': 'PermissionGrant',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'workspaceId',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'role',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'module',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'canReadFinance',
-                      'type': 'boolean',
-                    },
-                    {
-                      'name': 'canSeeOthersHours',
-                      'type': 'boolean',
-                    },
-                    {
-                      'name': 'canSeeMargins',
-                      'type': 'boolean',
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'number',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-              ],
+              'description': 'Indicates a request to create a grant row.',
               'synonyms': 'add, new, insert',
               'tier': 'domain',
-            },
-            {
-              'description': 'Indicates a grant row has been modified.',
-              'key': 'DO_UPDATE',
-              'name': 'Do Update',
               'payloadSchema': [
                 {
-                  'entity': 'PermissionGrant',
                   'name': 'data',
+                  'type': 'object',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'workspaceId',
@@ -1526,13 +1469,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                     },
                     {
                       'name': 'role',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'module',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'canReadFinance',
@@ -1551,79 +1494,130 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                       'type': 'number',
                     },
                   ],
-                  'required': true,
-                  'type': 'object',
+                  'entity': 'PermissionGrant',
                 },
               ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'description': 'Indicates a grant row has been modified.',
               'synonyms': 'modify, update, change',
               'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'workspaceId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'module',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'canReadFinance',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'canSeeOthersHours',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'canSeeMargins',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'number',
+                    },
+                  ],
+                  'entity': 'PermissionGrant',
+                },
+              ],
             },
             {
-              'description': 'Indicates a request to delete a grant row.',
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
+              'description': 'Indicates a request to delete a grant row.',
               'synonyms': 'remove, discard, erase',
               'tier': 'domain',
-            },
-            {
-              'description': 'Indicates a failure to persist a permission grant.',
-              'key': 'PermissionGrantSaveFailed',
-              'name': 'PermissionGrant save failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'save error, failed save, persist failure',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Indicates a failure to delete a permission grant.',
-              'key': 'PermissionGrantDeleteFailed',
-              'name': 'PermissionGrant delete failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'delete error, failed delete',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Signals that a permission grant has been persisted (create / update); carries the persisted row\'s id.',
-              'key': 'PermissionGrantSaved',
-              'name': 'PermissionGrant saved',
               'payloadSchema': [
                 {
                   'name': 'id',
+                  'type': 'string',
                   'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PermissionGrantSaveFailed',
+              'name': 'PermissionGrant save failed',
+              'description': 'Indicates a failure to persist a permission grant.',
+              'synonyms': 'save error, failed save, persist failure',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'saved, created, updated, persisted',
-              'tier': 'domain',
             },
             {
-              'description': 'Signals that a permission grant has been deleted.',
+              'key': 'PermissionGrantDeleteFailed',
+              'name': 'PermissionGrant delete failed',
+              'description': 'Indicates a failure to delete a permission grant.',
+              'synonyms': 'delete error, failed delete',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PermissionGrantSaved',
+              'name': 'PermissionGrant saved',
+              'description': 'Signals that a permission grant has been persisted (create / update); carries the persisted row\'s id.',
+              'synonyms': 'saved, created, updated, persisted',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
               'key': 'PermissionGrantDeleted',
               'name': 'PermissionGrant deleted',
+              'description': 'Signals that a permission grant has been deleted.',
+              'synonyms': 'deleted, removed, revoked',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1634,23 +1628,34 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   'type': 'boolean',
                 },
               ],
-              'synonyms': 'deleted, removed, revoked',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
+              'event': 'INIT',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'guard': [
+                'or',
+                [
+                  '=',
+                  [
+                    'array/len',
+                    '@config.adminRoles',
+                  ],
+                  0,
+                ],
+                [
+                  'array/includes',
+                  '@config.adminRoles',
+                  '@user.role',
+                ],
+              ],
               'effects': [
                 [
                   'persist',
@@ -1665,8 +1670,11 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   },
                 ],
               ],
-              'event': 'DO_CREATE',
+            },
+            {
               'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
               'guard': [
                 'or',
                 [
@@ -1683,9 +1691,6 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   '@user.role',
                 ],
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'persist',
@@ -1694,14 +1699,17 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'PermissionGrantSaveFailed',
                       'success': 'PermissionGrantSaved',
+                      'failure': 'PermissionGrantSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'DO_UPDATE',
+            },
+            {
               'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
               'guard': [
                 'or',
                 [
@@ -1718,9 +1726,6 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   '@user.role',
                 ],
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'persist',
@@ -1735,85 +1740,75 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   },
                 ],
               ],
-              'event': 'DO_DELETE',
-              'from': 'idle',
-              'guard': [
-                'or',
-                [
-                  '=',
-                  [
-                    'array/len',
-                    '@config.adminRoles',
-                  ],
-                  0,
-                ],
-                [
-                  'array/includes',
-                  '@config.adminRoles',
-                  '@user.role',
-                ],
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PermissionGrantSaveFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t save the permission grant — ',
                       '@payload.error',
                     ],
                     'type': 'alert',
+                    'dismissible': true,
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'PermissionGrantSaveFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PermissionGrantDeleteFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
+                    'type': 'alert',
                     'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t delete the permission grant — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'PermissionGrantDeleteFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'adminRoles': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Who can manage grants?',
+            'description': 'Roles eligible to create, edit, or delete grants. ENFORCED by the DO_CREATE/DO_UPDATE/DO_DELETE transition guards: a viewer whose @user.role is not listed cannot fire a write, from the form submit or from the bus. Empty = every signed-in viewer may manage grants (ungated). Mounting the page is the opt-in — there is deliberately no separate enable flag (a default-off flag made the whole page\'s affordances dead on a fresh mount).',
+            'synonyms': 'admin roles, permission managers, who edits permissions, grant admins, permission matrix, role permissions, capability matrix, permission grants, access matrix, manage permissions',
+            'tier': 'policy',
+            'items': {
+              'type': 'string',
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'capabilities': [
-          'access',
-        ],
-        'category': 'lifecycle',
-        'config': {
-          'enabled': {
-            'default': false,
-            'description': 'Answer CHECK_GRANT lookups with GRANT_RESOLVED from the persisted grant table. Off by default.',
-            'label': 'Answer permission lookups',
-            'synonyms': 'enable, turn on, activate, permission lookup, grant query, resolve capabilities',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
+        'name': 'PermissionGrantQuery',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'module',
+            'role',
+          ],
         },
         'effectRow': [
           {
@@ -1837,10 +1832,18 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
             'resource': '@entity.role',
           },
         ],
+        'category': 'lifecycle',
+        'capabilities': [
+          'access',
+        ],
+        'linkedEntity': 'PermissionGrant',
         'emits': [
           {
-            'description': 'Answers a CHECK_GRANT: the capability flags of the first matching grant row, with found=false (and all flags false) when no row matches. Rename to wire the downstream listener; default-deny on found=false is the consumer\'s choice.',
             'event': 'GRANT_RESOLVED',
+            'description': 'Answers a CHECK_GRANT: the capability flags of the first matching grant row, with found=false (and all flags false) when no row matches. Rename to wire the downstream listener; default-deny on found=false is the consumer\'s choice.',
+            'synonyms': 'grant resolved, permission answer, capabilities returned, access decision data',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'role',
@@ -1867,22 +1870,21 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                 'type': 'boolean',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'grant resolved, permission answer, capabilities returned, access decision data',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates the grant lookup for a CHECK_GRANT has been successfully loaded.',
             'event': 'GrantCheckLoaded',
+            'description': 'Indicates the grant lookup for a CHECK_GRANT has been successfully loaded.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'PermissionGrant',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'workspaceId',
@@ -1890,13 +1892,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   },
                   {
                     'name': 'role',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'module',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'canReadFinance',
@@ -1915,15 +1917,15 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'PermissionGrant',
               },
             ],
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates the grant lookup for a CHECK_GRANT failed.',
             'event': 'GrantCheckFailed',
+            'description': 'Indicates the grant lookup for a CHECK_GRANT failed.',
+            'synonyms': 'lookup error, failed lookup, request failure',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1934,55 +1936,50 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                 'type': 'string',
               },
             ],
-            'synonyms': 'lookup error, failed lookup, request failure',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'module',
-            'role',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'PermissionGrant',
-        'name': 'PermissionGrantQuery',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
-              'description': 'Asks which capabilities a role holds in a module; the answer arrives as GRANT_RESOLVED (asynchronous — correlate by the echoed role/module).',
               'key': 'CHECK_GRANT',
               'name': 'Check Grant',
+              'description': 'Asks which capabilities a role holds in a module; the answer arrives as GRANT_RESOLVED (asynchronous — correlate by the echoed role/module).',
+              'synonyms': 'check grant, lookup permission, resolve capabilities, can this role see',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'role',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'module',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'check grant, lookup permission, resolve capabilities, can this role see',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates the grant lookup for a CHECK_GRANT has been successfully loaded.',
               'key': 'GrantCheckLoaded',
               'name': 'Grant check loaded',
+              'description': 'Indicates the grant lookup for a CHECK_GRANT has been successfully loaded.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'PermissionGrant',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'workspaceId',
@@ -1990,13 +1987,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                     },
                     {
                       'name': 'role',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'module',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'canReadFinance',
@@ -2015,16 +2012,16 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'PermissionGrant',
                 },
               ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'internal',
             },
             {
-              'description': 'Indicates the grant lookup for a CHECK_GRANT failed.',
               'key': 'GrantCheckFailed',
               'name': 'Grant check failed',
+              'description': 'Indicates the grant lookup for a CHECK_GRANT failed.',
+              'synonyms': 'lookup error, failed lookup, request failure',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2035,13 +2032,13 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   'type': 'string',
                 },
               ],
-              'synonyms': 'lookup error, failed lookup, request failure',
-              'tier': 'internal',
             },
             {
-              'description': 'Answers a CHECK_GRANT: the capability flags of the first matching grant row, with found=false (and all flags false) when no row matches. Rename to wire the downstream listener; default-deny on found=false is the consumer\'s choice.',
               'key': 'GRANT_RESOLVED',
               'name': 'Grant Resolved',
+              'description': 'Answers a CHECK_GRANT: the capability flags of the first matching grant row, with found=false (and all flags false) when no row matches. Rename to wire the downstream listener; default-deny on found=false is the consumer\'s choice.',
+              'synonyms': 'grant resolved, permission answer, capabilities returned, access decision data',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'role',
@@ -2068,18 +2065,14 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   'type': 'boolean',
                 },
               ],
-              'synonyms': 'grant resolved, permission answer, capabilities returned, access decision data',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CHECK_GRANT',
+              'guard': '@config.enabled',
               'effects': [
                 [
                   'set',
@@ -2095,10 +2088,6 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                   'fetch',
                   ('PermissionGrant' satisfies _StdPermissionMatrixEntityName),
                   {
-                    'emit': {
-                      'failure': 'GrantCheckFailed',
-                      'success': 'GrantCheckLoaded',
-                    },
                     'filter': [
                       'and',
                       [
@@ -2120,20 +2109,45 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                         '@payload.module',
                       ],
                     ],
+                    'emit': {
+                      'success': 'GrantCheckLoaded',
+                      'failure': 'GrantCheckFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'CHECK_GRANT',
-              'from': 'idle',
-              'guard': '@config.enabled',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'GrantCheckLoaded',
               'effects': [
                 [
                   'emit',
                   'GRANT_RESOLVED',
                   {
+                    'canSeeMargins': [
+                      'if',
+                      [
+                        '>',
+                        [
+                          'array/len',
+                          '@payload.data',
+                        ],
+                        0,
+                      ],
+                      [
+                        'object/get',
+                        [
+                          'array/first',
+                          '@payload.data',
+                        ],
+                        'canSeeMargins',
+                        false,
+                      ],
+                      false,
+                    ],
+                    'module': '@entity.module',
                     'canReadFinance': [
                       'if',
                       [
@@ -2155,26 +2169,14 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                       ],
                       false,
                     ],
-                    'canSeeMargins': [
-                      'if',
+                    'role': '@entity.role',
+                    'found': [
+                      '>',
                       [
-                        '>',
-                        [
-                          'array/len',
-                          '@payload.data',
-                        ],
-                        0,
+                        'array/len',
+                        '@payload.data',
                       ],
-                      [
-                        'object/get',
-                        [
-                          'array/first',
-                          '@payload.data',
-                        ],
-                        'canSeeMargins',
-                        false,
-                      ],
-                      false,
+                      0,
                     ],
                     'canSeeOthersHours': [
                       'if',
@@ -2197,46 +2199,44 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                       ],
                       false,
                     ],
-                    'found': [
-                      '>',
-                      [
-                        'array/len',
-                        '@payload.data',
-                      ],
-                      0,
-                    ],
-                    'module': '@entity.module',
-                    'role': '@entity.role',
                   },
                 ],
               ],
-              'event': 'GrantCheckLoaded',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'GrantCheckFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
                     'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t resolve the permission grant — ',
                       '@payload.error',
                     ],
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'GrantCheckFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Answer permission lookups',
+            'description': 'Answer CHECK_GRANT lookups with GRANT_RESOLVED from the persisted grant table. Off by default.',
+            'synonyms': 'enable, turn on, activate, permission lookup, grant query, resolve capabilities',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

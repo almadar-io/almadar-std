@@ -57,50 +57,50 @@ export interface StdUiStateMachineViewTransitionClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
-  activeState?: string;
-  activeTransition?: number;
-  /** Default: `{"effects":{"persist":{"body":"Saves the order."}},"states":{"pending":{"body":"Every order starts here.","title":"Unpaid"}},"transitions":{"PAY":{"body":"Only fires when the amount is positive."}}}` */
-  annotations?: EntityRow;
   ariaBusy?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaLabelledby?: string;
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `"ltr"` */
-  direction?: 'ltr' | 'rtl';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   enterDelay?: number;
-  /** Default: `[]` */
-  entityFields?: string[];
-  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  lang?: string;
-  /** Default: `"pill"` */
-  nodeShape?: 'pill' | 'gear';
-  /** Default: `"TRANSITION_CLICK"` */
-  onTransitionClick?: string;
-  pendingSourceState?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  selectedState?: string;
+  error?: EntityRow;
   /** Default: `true` */
   showHeader?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `"STATE_CLICK"` */
-  stateClickEvent?: string;
-  tabIndex?: number;
-  traitProp?: EntityRow;
+  ariaLabel?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   /** Default: `"TRANSITION_CLICK"` */
   transitionClickEvent?: string;
+  className?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  selectedState?: string;
+  /** Default: `[]` */
+  entityFields?: string[];
+  /** Default: `"pill"` */
+  nodeShape?: 'pill' | 'gear';
   /** Default: `[]` */
   visitedStates?: string[];
+  /** Default: `"ltr"` */
+  direction?: 'ltr' | 'rtl';
+  lang?: string;
+  /** Default: `"TRANSITION_CLICK"` */
+  onTransitionClick?: string;
+  ariaHidden?: boolean;
+  /** Default: `"STATE_CLICK"` */
+  stateClickEvent?: string;
+  /** Default: `{"effects":{"persist":{"body":"Saves the order."}},"transitions":{"PAY":{"body":"Only fires when the amount is positive."}},"states":{"pending":{"title":"Unpaid","body":"Every order starts here."}}}` */
+  annotations?: EntityRow;
+  activeTransition?: number;
+  ariaSelected?: boolean;
+  activeState?: string;
+  tabIndex?: number;
+  ariaExpanded?: boolean;
+  pendingSourceState?: string;
+  traitProp?: EntityRow;
 }
 
 type _StdUiStateMachineViewEntityName = 'StateMachineViewItem';
@@ -160,8 +160,8 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -172,322 +172,235 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
     } as Entity,
     traits: [
       {
+        'name': 'StateMachineViewRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
+        'linkedEntity': 'StateMachineViewItem',
+        'emits': [
+          {
+            'event': '@config.stateClickEvent',
+            'description': 'Emits UI:{stateClickEvent} with { stateId } when a state is clicked.',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'stateId',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+            'definerKnob': 'stateClickEvent',
+          },
+          {
+            'event': '@config.transitionClickEvent',
+            'description': 'Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked.',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'index',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'event',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'from',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'to',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'transition',
+                'type': 'object',
+                'properties': [
+                  {
+                    'name': 'index',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  {
+                    'name': 'event',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'from',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'to',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+            ],
+            'definerKnob': 'transitionClickEvent',
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': '@config.stateClickEvent',
+              'name': '@config.state click event',
+              'description': 'Emits UI:{stateClickEvent} with { stateId } when a state is clicked.',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'stateId',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': '@config.transitionClickEvent',
+              'name': '@config.transition click event',
+              'description': 'Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked.',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'index',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'from',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'to',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'transition',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'index',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    {
+                      'name': 'event',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'from',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'to',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'visitedStates': '@config.visitedStates',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-selected': '@config.ariaSelected',
+                    'aria-pressed': '@config.ariaPressed',
+                    'lang': '@config.lang',
+                    'direction': '@config.direction',
+                    'showHeader': '@config.showHeader',
+                    'onTransitionClick': '@config.onTransitionClick',
+                    'dir': '@config.dir',
+                    'activeTransition': '@config.activeTransition',
+                    'enterDelay': '@config.enterDelay',
+                    'aria-current': '@config.ariaCurrent',
+                    'tabIndex': '@config.tabIndex',
+                    'role': '@config.role',
+                    'aria-busy': '@config.ariaBusy',
+                    'trait': '@config.traitProp',
+                    'enter': '@config.enter',
+                    'isLoading': '@config.isLoading',
+                    'nodeShape': '@config.nodeShape',
+                    'stateClickEvent': '@config.stateClickEvent',
+                    'transitionClickEvent': '@config.transitionClickEvent',
+                    'error': '@config.error',
+                    'pendingSourceState': '@config.pendingSourceState',
+                    'aria-live': '@config.ariaLive',
+                    'annotations': '@config.annotations',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'activeState': '@config.activeState',
+                    'aria-label': '@config.ariaLabel',
+                    'entityFields': '@config.entityFields',
+                    'selectedState': '@config.selectedState',
+                    'aria-hidden': '@config.ariaHidden',
+                    'skeleton': '@config.skeleton',
+                    'className': '@config.className',
+                    'type': 'state-machine-view',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
         'config': {
-          'activeState': {
-            'description': 'State execution is currently in.',
-            'label': 'Active State',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'activeTransition': {
-            'description': '`index` of the transition that just fired.',
-            'label': 'Active Transition',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'annotations': {
-            'default': {
-              'effects': {
-                'persist': {
-                  'body': 'Saves the order.',
-                },
-              },
-              'states': {
-                'pending': {
-                  'body': 'Every order starts here.',
-                  'title': 'Unpaid',
-                },
-              },
-              'transitions': {
-                'PAY': {
-                  'body': 'Only fires when the amount is positive.',
-                },
-              },
-            },
-            'description': 'Author explanations shown in a popover on hover: a note per state name, per transition event and per effect type.',
-            'label': 'Annotations',
-            'properties': {
-              'effects': {
-                'items': {
-                  'properties': {
-                    'body': {
-                      'name': 'body',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'title': {
-                      'name': 'title',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'effects',
-                'required': false,
-                'type': 'object',
-              },
-              'states': {
-                'items': {
-                  'properties': {
-                    'body': {
-                      'name': 'body',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'title': {
-                      'name': 'title',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'states',
-                'required': false,
-                'type': 'object',
-              },
-              'transitions': {
-                'items': {
-                  'properties': {
-                    'body': {
-                      'name': 'body',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'title': {
-                      'name': 'title',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'transitions',
-                'required': false,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'StateMachineViewAnnotations',
-          },
           'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'type': 'boolean',
             'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
             'synonyms': 'aria-busy',
             'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
-            'label': 'Aria-current',
-            'synonyms': 'aria-current',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'page',
-              'step',
-              'location',
-              'date',
-              'time',
-              'true',
-              'false',
-            ],
-          },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'className': {
-            'description': 'className prop',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
-          },
-          'direction': {
-            'default': 'ltr',
-            'description': 'Flow direction. @default \'ltr\'',
-            'label': 'Direction',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-            ],
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'entityFields': {
-            'default': [],
-            'description': 'Entity field names listed in the header.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Entity Fields',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'error': {
-            'description': 'Error state',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'StateMachineViewError',
-          },
-          'isLoading': {
-            'default': false,
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'nodeShape': {
-            'default': 'pill',
-            'description': 'Node silhouette. @default \'pill\'',
-            'label': 'Node Shape',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'pill',
-              'gear',
-            ],
-          },
-          'onTransitionClick': {
-            'default': 'TRANSITION_CLICK',
-            'description': 'Direct transition-click callback, for React hosts (e.g. a canvas node).',
-            'label': 'On Transition Click',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'pendingSourceState': {
-            'description': 'Source of a transition being drawn — the next state click picks its target.',
-            'label': 'Pending Source State',
-            'tier': 'presentation',
-            'type': 'string',
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -572,24 +485,53 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
               'treeitem',
             ],
           },
-          'selectedState': {
-            'description': 'State picked in an editor (first click).',
-            'label': 'Selected State',
-            'tier': 'presentation',
+          'ariaLive': {
             'type': 'string',
-          },
-          'showHeader': {
-            'default': true,
-            'description': 'Show the trait header (name, entity, listens/emits). @default true',
-            'label': 'Show Header',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
             'tier': 'presentation',
-            'type': 'boolean',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'ariaLabelledby': {
+            'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+          },
+          'ariaCurrent': {
+            'type': 'string',
+            'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'synonyms': 'aria-current',
+            'tier': 'presentation',
+            'values': [
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
+            ],
+          },
+          'ariaDescribedby': {
+            'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
           },
           'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
             'values': [
               'header',
               'table',
@@ -603,371 +545,429 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
               'none',
             ],
           },
-          'stateClickEvent': {
-            'default': 'STATE_CLICK',
-            'description': 'Emits UI:{stateClickEvent} with { stateId } when a state is clicked.',
-            'label': 'State Click Event',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
-            'tier': 'presentation',
+          'enterDelay': {
             'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
           },
-          'traitProp': {
-            'description': 'The trait to draw (see `parseTraitLevel` / `traitLevelFromTrait`).',
-            'label': 'Trait',
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'StateMachineViewError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
             'properties': {
-              'emittedEvents': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'emittedEvents',
-                'required': true,
-                'type': 'array',
-              },
-              'linkedEntity': {
-                'name': 'linkedEntity',
-                'required': true,
+              'message': {
+                'name': 'message',
                 'type': 'string',
-              },
-              'listenedEvents': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'listenedEvents',
                 'required': true,
-                'type': 'array',
               },
               'name': {
                 'name': 'name',
-                'required': true,
                 'type': 'string',
+                'required': false,
               },
-              'states': {
-                'items': {
-                  'properties': {
-                    'isInitial': {
-                      'name': 'isInitial',
-                      'required': false,
-                      'type': 'boolean',
-                    },
-                    'isTerminal': {
-                      'name': 'isTerminal',
-                      'required': false,
-                      'type': 'boolean',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'states',
-                'required': true,
-                'type': 'array',
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
               },
-              'transitions': {
-                'items': {
-                  'properties': {
-                    'effects': {
-                      'items': {
-                        'properties': {
-                          'args': {
-                            'items': {
-                              'type': 'SExpr',
-                            },
-                            'name': 'args',
-                            'required': true,
-                            'type': 'array',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'name': 'effects',
-                      'required': true,
-                      'type': 'array',
-                    },
-                    'event': {
-                      'name': 'event',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'from': {
-                      'name': 'from',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'guard': {
-                      'name': 'guard',
-                      'required': false,
-                      'type': 'SExpr',
-                    },
-                    'index': {
-                      'name': 'index',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'to': {
-                      'name': 'to',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'transitions',
-                'required': true,
-                'type': 'array',
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
               },
             },
-            'synonyms': 'trait',
+          },
+          'showHeader': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Header',
+            'description': 'Show the trait header (name, entity, listens/emits). @default true',
             'tier': 'presentation',
-            'type': 'StateMachineViewTrait',
+          },
+          'ariaLabel': {
+            'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
           },
           'transitionClickEvent': {
-            'default': 'TRANSITION_CLICK',
-            'description': 'Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked.',
-            'label': 'Transition Click Event',
-            'tier': 'presentation',
             'type': 'event',
+            'default': 'TRANSITION_CLICK',
+            'label': 'Transition Click Event',
+            'description': 'Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked.',
+            'tier': 'presentation',
           },
-          'visitedStates': {
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'className prop',
+            'tier': 'presentation',
+          },
+          'dir': {
+            'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'selectedState': {
+            'type': 'string',
+            'label': 'Selected State',
+            'description': 'State picked in an editor (first click).',
+            'tier': 'presentation',
+          },
+          'entityFields': {
+            'type': '[string]',
             'default': [],
-            'description': 'States already passed through, in order.',
+            'label': 'Entity Fields',
+            'description': 'Entity field names listed in the header.',
+            'tier': 'presentation',
             'items': {
               'type': 'string',
             },
-            'label': 'Visited States',
+          },
+          'nodeShape': {
+            'type': 'string',
+            'default': 'pill',
+            'label': 'Node Shape',
+            'description': 'Node silhouette. @default \'pill\'',
             'tier': 'presentation',
+            'values': [
+              'pill',
+              'gear',
+            ],
+          },
+          'visitedStates': {
             'type': '[string]',
+            'default': [],
+            'label': 'Visited States',
+            'description': 'States already passed through, in order.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
-        },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
+          'direction': {
+            'type': 'string',
+            'default': 'ltr',
+            'label': 'Direction',
+            'description': 'Flow direction. @default \'ltr\'',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+            ],
           },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'stateClickEvent',
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
+          },
+          'onTransitionClick': {
+            'type': 'event',
+            'default': 'TRANSITION_CLICK',
+            'label': 'On Transition Click',
+            'description': 'Direct transition-click callback, for React hosts (e.g. a canvas node).',
+            'tier': 'presentation',
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+          },
+          'stateClickEvent': {
+            'type': 'event',
+            'default': 'STATE_CLICK',
+            'label': 'State Click Event',
             'description': 'Emits UI:{stateClickEvent} with { stateId } when a state is clicked.',
-            'event': '@config.stateClickEvent',
-            'payloadSchema': [
-              {
-                'name': 'stateId',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
+            'tier': 'presentation',
           },
-          {
-            'definerKnob': 'transitionClickEvent',
-            'description': 'Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked.',
-            'event': '@config.transitionClickEvent',
-            'payloadSchema': [
-              {
-                'name': 'index',
-                'required': true,
-                'type': 'number',
+          'annotations': {
+            'type': 'StateMachineViewAnnotations',
+            'default': {
+              'effects': {
+                'persist': {
+                  'body': 'Saves the order.',
+                },
               },
-              {
-                'name': 'event',
-                'required': true,
-                'type': 'string',
+              'transitions': {
+                'PAY': {
+                  'body': 'Only fires when the amount is positive.',
+                },
               },
-              {
-                'name': 'from',
-                'required': true,
-                'type': 'string',
+              'states': {
+                'pending': {
+                  'title': 'Unpaid',
+                  'body': 'Every order starts here.',
+                },
               },
-              {
-                'name': 'to',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'transition',
-                'properties': [
-                  {
-                    'name': 'index',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'event',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'from',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'to',
-                    'required': true,
-                    'type': 'string',
-                  },
-                ],
+            },
+            'label': 'Annotations',
+            'description': 'Author explanations shown in a popover on hover: a note per state name, per transition event and per effect type.',
+            'tier': 'presentation',
+            'properties': {
+              'effects': {
+                'name': 'effects',
                 'type': 'object',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'StateMachineViewItem',
-        'name': 'StateMachineViewRender',
-        'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Emits UI:{stateClickEvent} with { stateId } when a state is clicked.',
-              'key': '@config.stateClickEvent',
-              'name': '@config.state click event',
-              'payloadSchema': [
-                {
-                  'name': 'stateId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked.',
-              'key': '@config.transitionClickEvent',
-              'name': '@config.transition click event',
-              'payloadSchema': [
-                {
-                  'name': 'index',
-                  'required': true,
-                  'type': 'number',
-                },
-                {
-                  'name': 'event',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'from',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'to',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'transition',
-                  'properties': [
-                    {
-                      'name': 'index',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'event',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'from',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'to',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
+                'required': false,
+                'items': {
                   'type': 'object',
-                },
-              ],
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'activeState': '@config.activeState',
-                    'activeTransition': '@config.activeTransition',
-                    'annotations': '@config.annotations',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'dir': '@config.dir',
-                    'direction': '@config.direction',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entityFields': '@config.entityFields',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'lang': '@config.lang',
-                    'nodeShape': '@config.nodeShape',
-                    'onTransitionClick': '@config.onTransitionClick',
-                    'pendingSourceState': '@config.pendingSourceState',
-                    'role': '@config.role',
-                    'selectedState': '@config.selectedState',
-                    'showHeader': '@config.showHeader',
-                    'skeleton': '@config.skeleton',
-                    'stateClickEvent': '@config.stateClickEvent',
-                    'tabIndex': '@config.tabIndex',
-                    'trait': '@config.traitProp',
-                    'transitionClickEvent': '@config.transitionClickEvent',
-                    'type': 'state-machine-view',
-                    'visitedStates': '@config.visitedStates',
+                  'properties': {
+                    'body': {
+                      'name': 'body',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'title': {
+                      'name': 'title',
+                      'type': 'string',
+                      'required': false,
+                    },
                   },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
+                },
+              },
+              'states': {
+                'name': 'states',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'title': {
+                      'name': 'title',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'body': {
+                      'name': 'body',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'transitions': {
+                'name': 'transitions',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'title': {
+                      'name': 'title',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'body': {
+                      'name': 'body',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
             },
-          ],
+          },
+          'activeTransition': {
+            'type': 'number',
+            'label': 'Active Transition',
+            'description': '`index` of the transition that just fired.',
+            'tier': 'presentation',
+          },
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'activeState': {
+            'type': 'string',
+            'label': 'Active State',
+            'description': 'State execution is currently in.',
+            'tier': 'presentation',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
+          },
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
+          'pendingSourceState': {
+            'type': 'string',
+            'label': 'Pending Source State',
+            'description': 'Source of a transition being drawn — the next state click picks its target.',
+            'tier': 'presentation',
+          },
+          'traitProp': {
+            'type': 'StateMachineViewTrait',
+            'label': 'Trait',
+            'description': 'The trait to draw (see `parseTraitLevel` / `traitLevelFromTrait`).',
+            'synonyms': 'trait',
+            'tier': 'presentation',
+            'properties': {
+              'linkedEntity': {
+                'name': 'linkedEntity',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
+              'transitions': {
+                'name': 'transitions',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'index': {
+                      'name': 'index',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'from': {
+                      'name': 'from',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'event': {
+                      'name': 'event',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'guard': {
+                      'name': 'guard',
+                      'type': 'SExpr',
+                      'required': false,
+                    },
+                    'effects': {
+                      'name': 'effects',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'args': {
+                            'name': 'args',
+                            'type': 'array',
+                            'required': true,
+                            'items': {
+                              'type': 'SExpr',
+                            },
+                          },
+                        },
+                      },
+                    },
+                    'to': {
+                      'name': 'to',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'states': {
+                'name': 'states',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'isTerminal': {
+                      'name': 'isTerminal',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'isInitial': {
+                      'name': 'isInitial',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'emittedEvents': {
+                'name': 'emittedEvents',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'listenedEvents': {
+                'name': 'listenedEvents',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'string',
+                },
+              },
+            },
+          },
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

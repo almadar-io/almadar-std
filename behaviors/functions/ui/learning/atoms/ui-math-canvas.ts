@@ -47,94 +47,94 @@ export interface StdUiMathCanvasShapeClickPayload {
  */
 export interface StdUiMathCanvasConfig {
   /** Default: `[]` */
-  angles?: EntityRow[];
-  /** Default: `false` */
-  animate?: boolean;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `"fit"` */
-  aspect?: 'fit' | 'equal';
-  /** Default: `"axis"` */
-  axisColor?: string;
-  backgroundColor?: string;
-  /** Default: `[]` */
-  bars?: EntityRow[];
-  className?: string;
-  /** Default: `[]` */
-  curves?: EntityRow[];
-  dir?: 'ltr' | 'rtl' | 'auto';
+  series?: string[];
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `[]` */
   drawables?: PatternValue[];
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  fontFamily?: string;
-  /** Default: `"grid"` */
-  gridColor?: string;
-  /** Default: `1` */
-  gridStep?: number;
-  /** Default: `[]` */
-  guides?: EntityRow[];
+  /** Default: `true` */
+  showGrid?: boolean;
   /** Default: `400` */
   height?: number;
-  /** Default: `[]` */
-  hops?: EntityRow[];
-  /** Default: `false` */
-  interactive?: boolean;
-  isLoading?: boolean;
-  /** Default: `{"item":"INIT"}` */
-  keyMap?: Record<string, TraitConfig>;
-  /** Default: `{"item":"INIT"}` */
-  keyUpMap?: Record<string, TraitConfig>;
+  error?: EntityRow;
   labelFontSize?: number;
-  lang?: string;
-  /** Default: `"SHAPE_CLICK"` */
-  onShapeClick?: string;
+  /** Default: `[]` */
+  curves?: EntityRow[];
+  fontFamily?: string;
+  title?: string;
+  /** Default: `[]` */
+  angles?: EntityRow[];
+  /** Default: `[]` */
+  guides?: EntityRow[];
+  enterDelay?: number;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   /** Default: `[]` */
   points?: EntityRow[];
   /** Default: `[]` */
   readouts?: EntityRow[];
   /** Default: `[]` */
-  regions?: EntityRow[];
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  bars?: EntityRow[];
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `[]` */
-  series?: string[];
-  /** Default: `[]` */
-  shapes?: EntityRow[];
-  /** Default: `true` */
-  showAxes?: boolean;
-  /** Default: `false` */
-  showCurveLabels?: boolean;
-  /** Default: `true` */
-  showGrid?: boolean;
-  /** Default: `false` */
-  showTickLabels?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
-  tickLabelFontSize?: number;
-  title?: string;
-  /** Default: `[]` */
-  traces?: EntityRow[];
-  /** Default: `[]` */
-  vectors?: EntityRow[];
-  /** Default: `600` */
-  width?: number;
-  /** Default: `10` */
-  xMax?: number;
+  hops?: EntityRow[];
+  isLoading?: boolean;
   /** Default: `-10` */
   xMin?: number;
+  ariaHidden?: boolean;
+  /** Default: `true` */
+  showAxes?: boolean;
+  ariaExpanded?: boolean;
+  /** Default: `[]` */
+  regions?: EntityRow[];
+  ariaLabel?: string;
+  /** Default: `"SHAPE_CLICK"` */
+  onShapeClick?: string;
+  /** Default: `[]` */
+  shapes?: EntityRow[];
+  /** Default: `false` */
+  animate?: boolean;
+  /** Default: `false` */
+  showTickLabels?: boolean;
+  className?: string;
+  /** Default: `false` */
+  interactive?: boolean;
+  ariaSelected?: boolean;
+  /** Default: `[]` */
+  vectors?: EntityRow[];
+  /** Default: `{"item":"INIT"}` */
+  keyMap?: Record<string, TraitConfig>;
+  /** Default: `[]` */
+  traces?: EntityRow[];
   /** Default: `10` */
   yMax?: number;
+  ariaDescribedby?: string;
+  ariaBusy?: boolean;
+  ariaLabelledby?: string;
+  /** Default: `{"item":"INIT"}` */
+  keyUpMap?: Record<string, TraitConfig>;
+  /** Default: `"grid"` */
+  gridColor?: string;
+  /** Default: `1` */
+  gridStep?: number;
+  backgroundColor?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  tabIndex?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `"fit"` */
+  aspect?: 'fit' | 'equal';
+  /** Default: `false` */
+  showCurveLabels?: boolean;
+  tickLabelFontSize?: number;
+  lang?: string;
   /** Default: `-10` */
   yMin?: number;
+  /** Default: `600` */
+  width?: number;
+  /** Default: `"axis"` */
+  axisColor?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `10` */
+  xMax?: number;
 }
 
 /**

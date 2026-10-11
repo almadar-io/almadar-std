@@ -55,10 +55,10 @@ export interface StdMlLookupKeyMissPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMlLookupConfig {
-  /** Default: `""` */
-  matchField?: string;
   /** Default: `true` */
   normalize?: boolean;
+  /** Default: `""` */
+  matchField?: string;
 }
 
 /**
@@ -189,14 +189,14 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': false,
             'name': 'matched',
             'type': 'boolean',
+            'default': false,
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'checked',
@@ -211,23 +211,7 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'matchField': {
-            'default': '',
-            'description': 'When the accepted list holds objects rather than scalars, the field to compare against the candidate; empty compares each element itself',
-            'label': 'Match field',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'normalize': {
-            'default': true,
-            'description': 'Trim and lowercase both sides before comparing',
-            'label': 'Normalize',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-        },
+        'name': 'LookupRun',
         'effectRow': [
           {
             'kind': 'emit',
@@ -246,47 +230,55 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'KeyLookup',
         'emits': [
           {
-            'description': 'Fired when the candidate matches an entry in the accepted list',
             'event': 'KEY_HIT',
+            'description': 'Fired when the candidate matches an entry in the accepted list',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'candidate',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
               {
                 'name': 'entry',
-                'required': true,
                 'type': '$e',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
           {
-            'description': 'Abstain — candidate matches nothing in the accepted list; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
             'event': 'KEY_MISS',
+            'description': 'Abstain — candidate matches nothing in the accepted list; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'candidate',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
               {
                 'name': 'request',
                 'type': '$r',
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'KeyLookup',
-        'name': 'LookupRun',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'checked',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -298,13 +290,13 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
               'payloadSchema': [
                 {
                   'name': 'candidate',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'accepted',
-                  'required': true,
                   'type': '[$e]',
+                  'required': true,
                 },
                 {
                   'name': 'request',
@@ -317,52 +309,46 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
               'name': 'Reset',
             },
             {
-              'description': 'Fired when the candidate matches an entry in the accepted list',
               'key': 'KEY_HIT',
               'name': 'Key Hit',
+              'description': 'Fired when the candidate matches an entry in the accepted list',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'candidate',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'entry',
-                  'required': true,
                   'type': '$e',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'Abstain — candidate matches nothing in the accepted list; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
               'key': 'KEY_MISS',
               'name': 'Key Miss',
+              'description': 'Abstain — candidate matches nothing in the accepted list; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'candidate',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'request',
                   'type': '$r',
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'checked',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -375,11 +361,11 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'checked',
+              'event': 'LOOKUP',
               'effects': [
                 [
                   'let',
@@ -490,8 +476,8 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
                         'emit',
                         'KEY_HIT',
                         {
-                          'candidate': '@payload.candidate',
                           'entry': '@found',
+                          'candidate': '@payload.candidate',
                         },
                       ],
                     ],
@@ -511,19 +497,19 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
                         'emit',
                         'KEY_MISS',
                         {
-                          'candidate': '@payload.candidate',
                           'request': '@payload.request',
+                          'candidate': '@payload.candidate',
                         },
                       ],
                     ],
                   ],
                 ],
               ],
-              'event': 'LOOKUP',
-              'from': 'idle',
-              'to': 'checked',
             },
             {
+              'from': 'checked',
+              'to': 'checked',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -531,11 +517,11 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
                   'checked',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'checked',
-              'to': 'checked',
             },
             {
+              'from': 'checked',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -548,20 +534,34 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'checked',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'normalize': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Normalize',
+            'description': 'Trim and lowercase both sides before comparing',
+            'tier': 'policy',
+          },
+          'matchField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Match field',
+            'description': 'When the accepted list holds objects rather than scalars, the field to compare against the candidate; empty compares each element itself',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
         'typeParams': [
           {
-            'kind': 'Entity',
             'name': 'e',
+            'kind': 'Entity',
           },
           {
-            'kind': 'Entity',
             'name': 'r',
+            'kind': 'Entity',
           },
         ],
       } satisfies Trait,

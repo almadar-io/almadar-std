@@ -92,12 +92,12 @@ export interface StdLearnGenerateGenerateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnGenerateConfig {
+  /** Default: `[]` */
+  instruments?: string[];
   /** Default: `"LearnGenerate.CHOOSE"` */
   chooseEvent?: EntityRow;
   /** Default: `"LearnGenerate.FILL"` */
   fillEvent?: EntityRow;
-  /** Default: `[]` */
-  instruments?: string[];
   /** Default: `["almadar-std/ui/learning"]` */
   scope?: string[];
   /** Default: `"main"` */

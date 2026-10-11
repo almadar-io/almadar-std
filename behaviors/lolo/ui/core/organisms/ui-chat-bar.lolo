@@ -10,6 +10,23 @@ orbital ChatBarOrbital {
     code : string
     stack : string
   }
+  type ChatBarFocusRequest = {
+    id : string!
+    placeholder : string
+  }
+  type ChatBarEditFocus = {
+    level : "node" | "slot" | "field" | "effect" | "trait" | "page" | "orbital"!
+    orbital : string!
+    trait : string
+    transition : string
+    state : string
+    slot : string
+    path : string
+    patternType : string
+    entity : string
+    source : string
+    label : string!
+  }
 
   entity ChatBarItem [runtime] {
     id : string!
@@ -39,6 +56,8 @@ orbital ChatBarOrbital {
           placeholder: @config.placeholder
           context: @config.context
           sendEvent: @config.sendEvent
+          focusRequest: @config.focusRequest
+          editFocus: @config.editFocus
           enter: @config.enter
           enterDelay: @config.enterDelay
           skeleton: @config.skeleton
@@ -139,6 +158,14 @@ orbital ChatBarOrbital {
       sendEvent : event = "SEND"
         @label "Send Event"
         @description "The event a message is sent as — `UI:{sendEvent}` with `{ message }`, from Enter or the send button. @default 'CHAT_SEND'"
+        @tier "presentation"
+      focusRequest : ChatBarFocusRequest
+        @label "Focus Request"
+        @description "Focus the input (with an optional prompt); a new `id` focuses again."
+        @tier "presentation"
+      editFocus : ChatBarEditFocus
+        @label "Edit Focus"
+        @description "The picked canvas element a sent message edits; its ✕ emits `UI:ELEMENT_SELECTED` with `{ focus: null }`."
         @tier "presentation"
       enter : "none" | "fade" | "rise" | "scale" | "slide"
         @label "Enter"

@@ -39,43 +39,43 @@ export type StdUiControlButtonEventKey = 'INIT' | 'PRESS' | 'RELEASE';
  * without modifying its state-machine topology.
  */
 export interface StdUiControlButtonConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  assetUrl?: EntityRow;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  disabled?: boolean;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  icon?: unknown;
-  label?: string;
-  lang?: string;
-  /** Default: `"PRESS"` */
-  onPress?: string;
-  /** Default: `"RELEASE"` */
-  onRelease?: string;
-  /** Default: `"PRESS"` */
-  pressEvent?: string;
-  pressed?: boolean;
-  /** Default: `"RELEASE"` */
-  releaseEvent?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `"circle"` */
-  shape?: string;
-  /** Default: `"md"` */
-  size?: string;
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
   /** Default: `"secondary"` */
   variant?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaSelected?: boolean;
+  label?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  pressed?: boolean;
+  assetUrl?: EntityRow;
+  tabIndex?: number;
+  icon?: unknown;
+  ariaDescribedby?: string;
+  /** Default: `"PRESS"` */
+  onPress?: string;
+  ariaHidden?: boolean;
+  lang?: string;
+  disabled?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `"RELEASE"` */
+  onRelease?: string;
+  /** Default: `"RELEASE"` */
+  releaseEvent?: string;
+  ariaBusy?: boolean;
+  ariaExpanded?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  className?: string;
+  /** Default: `"PRESS"` */
+  pressEvent?: string;
+  /** Default: `"circle"` */
+  shape?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaLabelledby?: string;
+  /** Default: `"md"` */
+  size?: string;
+  enterDelay?: number;
+  ariaLabel?: string;
 }
 
 /**

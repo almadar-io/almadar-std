@@ -49,12 +49,12 @@ export interface StdFilterFilterPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFilterConfig {
-  /** Default: `"FILTER"` */
-  event?: string;
   /** Default: `"toolbar"` */
   filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
-  /** Default: `[{"field":"status","filterType":"select","label":"Status","options":["active","inactive","pending"]}]` */
+  /** Default: `[{"options":["active","inactive","pending"],"field":"status","filterType":"select","label":"Status"}]` */
   filters?: EntityRow[];
+  /** Default: `"FILTER"` */
+  event?: string;
 }
 
 /**
@@ -197,20 +197,20 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
+            'type': 'string',
             'required': true,
-            'type': 'string',
           },
           {
-            'description': 'The name of the data field being filtered.',
             'name': 'field',
-            'synonyms': 'attribute, property, key',
             'type': 'string',
+            'description': 'The name of the data field being filtered.',
+            'synonyms': 'attribute, property, key',
           },
           {
-            'description': 'The data associated with the filter criterion.',
             'name': 'value',
-            'synonyms': 'data, criterion, content',
             'type': 'string',
+            'description': 'The data associated with the filter criterion.',
+            'synonyms': 'data, criterion, content',
           },
         ];
         const extras = params.fields ?? [];
@@ -221,102 +221,14 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'event': {
-            'default': 'FILTER',
-            'description': 'Event emitted when the user changes a filter selection',
-            'label': 'Filter event',
-            'tier': 'internal',
-            'type': 'event',
-          },
-          'filterBarLook': {
-            'default': 'toolbar',
-            'description': 'Layer 2 visual treatment for the filter bar.',
-            'label': 'Filter bar look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'toolbar',
-              'chips',
-              'pills',
-              'popover-trigger',
-              'inline-column-header',
-            ],
-          },
-          'filters': {
-            'default': [
-              {
-                'field': 'status',
-                'filterType': 'select',
-                'label': 'Status',
-                'options': [
-                  'active',
-                  'inactive',
-                  'pending',
-                ],
-              },
-            ],
-            'description': 'Field, label, control type, and options for each filter input. numberrange renders a min/max slider pair (bounded by min/max/step) and emits one FILTER per side as `<field>_min` / `<field>_max`, mirroring daterange\'s `<field>_from` / `<field>_to` convention.',
-            'items': {
-              'properties': {
-                'field': {
-                  'name': 'field',
-                  'required': true,
-                  'type': 'string',
-                },
-                'filterType': {
-                  'name': 'filterType',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'text',
-                    'select',
-                    'toggle',
-                    'checkbox',
-                    'date',
-                    'daterange',
-                    'date-range',
-                    'numberrange',
-                    'number-range',
-                  ],
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'max': {
-                  'name': 'max',
-                  'required': false,
-                  'type': 'number',
-                },
-                'min': {
-                  'name': 'min',
-                  'required': false,
-                  'type': 'number',
-                },
-                'options': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'options',
-                  'required': false,
-                  'type': 'array',
-                },
-                'step': {
-                  'name': 'step',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Filter controls',
-            'synonyms': 'numeric range, price range, min max, slider filter, range filter, threshold filter',
-            'tier': 'presentation',
-            'type': '[FilterSpec]',
-          },
+        'name': 'FilterTargetFilter',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'field',
+            'value',
+          ],
         },
         'effectRow': [
           {
@@ -340,96 +252,90 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
             'resource': '@entity.value',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'FilterTarget',
         'emits': [
           {
-            'description': 'Signals a filter has been applied or changed.',
             'event': 'FILTER',
+            'description': 'Signals a filter has been applied or changed.',
+            'synonyms': 'apply, update, change, refine',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'entity',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'field',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'value',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'query',
                 'type': 'string',
               },
             ],
-            'synonyms': 'apply, update, change, refine',
-            'tier': 'domain',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'field',
-            'value',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'FilterTarget',
-        'name': 'FilterTargetFilter',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals a filter has been applied or changed.',
               'key': 'FILTER',
               'name': 'Filter',
+              'description': 'Signals a filter has been applied or changed.',
+              'synonyms': 'apply, update, change, refine',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'entity',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'field',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'value',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'query',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'apply, update, change, refine',
-              'tier': 'domain',
             },
             {
-              'description': 'Resets the filter selection to its initial state.',
               'key': 'CLEAR_FILTERS',
               'name': 'Clear Filters',
+              'description': 'Resets the filter selection to its initial state.',
               'synonyms': 'reset, clear, remove, undo',
               'tier': 'domain',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -441,18 +347,18 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
                   'main',
                   {
                     'entity': 'FilterTarget',
+                    'type': 'filter-group',
                     'event': '@config.event',
                     'filters': '@config.filters',
                     'look': '@config.filterBarLook',
-                    'type': 'filter-group',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'FILTER',
               'effects': [
                 [
                   'set',
@@ -468,19 +374,19 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
                   'render-ui',
                   'main',
                   {
-                    'entity': 'FilterTarget',
-                    'event': '@config.event',
                     'filters': '@config.filters',
                     'look': '@config.filterBarLook',
+                    'event': '@config.event',
+                    'entity': 'FilterTarget',
                     'type': 'filter-group',
                   },
                 ],
               ],
-              'event': 'FILTER',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CLEAR_FILTERS',
               'effects': [
                 [
                   'set',
@@ -505,20 +411,114 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
                   'render-ui',
                   'main',
                   {
-                    'entity': 'FilterTarget',
-                    'event': '@config.event',
                     'filters': '@config.filters',
-                    'look': '@config.filterBarLook',
+                    'entity': 'FilterTarget',
                     'type': 'filter-group',
+                    'look': '@config.filterBarLook',
+                    'event': '@config.event',
                   },
                 ],
               ],
-              'event': 'CLEAR_FILTERS',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'filterBarLook': {
+            'type': 'string',
+            'default': 'toolbar',
+            'label': 'Filter bar look',
+            'description': 'Layer 2 visual treatment for the filter bar.',
+            'tier': 'presentation',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
+          'filters': {
+            'type': '[FilterSpec]',
+            'default': [
+              {
+                'options': [
+                  'active',
+                  'inactive',
+                  'pending',
+                ],
+                'field': 'status',
+                'filterType': 'select',
+                'label': 'Status',
+              },
+            ],
+            'label': 'Filter controls',
+            'description': 'Field, label, control type, and options for each filter input. numberrange renders a min/max slider pair (bounded by min/max/step) and emits one FILTER per side as `<field>_min` / `<field>_max`, mirroring daterange\'s `<field>_from` / `<field>_to` convention.',
+            'synonyms': 'numeric range, price range, min max, slider filter, range filter, threshold filter',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'max': {
+                  'name': 'max',
+                  'type': 'number',
+                  'required': false,
+                },
+                'step': {
+                  'name': 'step',
+                  'type': 'number',
+                  'required': false,
+                },
+                'options': {
+                  'name': 'options',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'min': {
+                  'name': 'min',
+                  'type': 'number',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': true,
+                },
+                'filterType': {
+                  'name': 'filterType',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'text',
+                    'select',
+                    'toggle',
+                    'checkbox',
+                    'date',
+                    'daterange',
+                    'date-range',
+                    'numberrange',
+                    'number-range',
+                  ],
+                },
+              },
+            },
+          },
+          'event': {
+            'type': 'event',
+            'default': 'FILTER',
+            'label': 'Filter event',
+            'description': 'Event emitted when the user changes a filter selection',
+            'tier': 'internal',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

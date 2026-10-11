@@ -194,192 +194,137 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Whose request this run answered (the real @user). The binding organism scopes @read to it.',
             'name': 'ownerId',
-            'required': true,
-            'synonyms': 'user, owner, account',
             'type': 'string',
+            'required': true,
+            'description': 'Whose request this run answered (the real @user). The binding organism scopes @read to it.',
+            'synonyms': 'user, owner, account',
           },
           {
-            'default': 'answered',
-            'description': 'Whether the assistant answered.',
             'name': 'outcome',
-            'synonyms': 'result, status',
             'type': 'string',
+            'default': 'answered',
             'values': [
               'answered',
               'failed',
             ],
+            'description': 'Whether the assistant answered.',
+            'synonyms': 'result, status',
           },
           {
+            'name': 'reply',
+            'type': 'string',
             'default': '',
             'description': 'What the assistant said.',
-            'name': 'reply',
             'synonyms': 'answer, response',
-            'type': 'string',
           },
           {
-            'default': '',
-            'description': 'Why the run failed.',
             'name': 'error',
             'type': 'string',
+            'default': '',
+            'description': 'Why the run failed.',
           },
           {
+            'name': 'steps',
+            'type': 'array',
             'default': [],
-            'description': 'Every step, in order: each model call, each tool used and what the app answered.',
             'items': {
+              'type': 'union',
+              'values': [
+                'AgentToolCallActivity',
+                'AgentToolResultActivity',
+                'AgentLlmResponseActivity',
+              ],
               'properties': {
-                'AgentLlmResponseActivity': {
-                  'name': 'AgentLlmResponseActivity',
-                  'properties': {
-                    'content': {
-                      'name': 'content',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'llm': {
-                      'name': 'llm',
-                      'properties': {
-                        'attempt': {
-                          'name': 'attempt',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'cachedPromptTokens': {
-                          'name': 'cachedPromptTokens',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'completionTokens': {
-                          'name': 'completionTokens',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'costUSD': {
-                          'name': 'costUSD',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'durationMs': {
-                          'name': 'durationMs',
-                          'required': true,
-                          'type': 'number',
-                        },
-                        'model': {
-                          'name': 'model',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'promptTokens': {
-                          'name': 'promptTokens',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'provider': {
-                          'name': 'provider',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'service': {
-                          'name': 'service',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'systemPrompt': {
-                          'name': 'systemPrompt',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'toolCallsJson': {
-                          'name': 'toolCallsJson',
-                          'required': false,
-                          'type': 'string',
-                        },
-                        'userPrompt': {
-                          'name': 'userPrompt',
-                          'required': true,
-                          'type': 'string',
-                        },
-                      },
-                      'required': false,
-                      'type': 'object',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'llm_response',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
                 'AgentToolCallActivity': {
                   'name': 'AgentToolCallActivity',
+                  'type': 'object',
                   'properties': {
-                    'argsText': {
-                      'name': 'argsText',
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
                       'required': true,
-                      'type': 'string',
                     },
                     'isExecuting': {
                       'name': 'isExecuting',
-                      'required': false,
                       'type': 'boolean',
+                      'required': false,
+                    },
+                    'tool': {
+                      'name': 'tool',
+                      'type': 'string',
+                      'required': true,
                     },
                     'kind': {
                       'name': 'kind',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                       'values': [
                         'input',
                         'read',
                         'invalid',
                       ],
                     },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'tool': {
-                      'name': 'tool',
-                      'required': true,
-                      'type': 'string',
-                    },
                     'type': {
                       'name': 'type',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                       'values': [
                         'tool_call',
                       ],
                     },
+                    'argsText': {
+                      'name': 'argsText',
+                      'type': 'string',
+                      'required': true,
+                    },
                   },
-                  'type': 'object',
                 },
                 'AgentToolResultActivity': {
                   'name': 'AgentToolResultActivity',
+                  'type': 'object',
                   'properties': {
                     'detail': {
                       'name': 'detail',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'rows': {
+                      'name': 'rows',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'tool_result',
+                      ],
+                    },
+                    'tool': {
+                      'name': 'tool',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'success': {
+                      'name': 'success',
+                      'type': 'boolean',
+                      'required': true,
                     },
                     'kind': {
                       'name': 'kind',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                       'values': [
                         'input',
                         'read',
@@ -388,83 +333,138 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
                     },
                     'resultText': {
                       'name': 'resultText',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
-                    'rows': {
-                      'name': 'rows',
+                  },
+                },
+                'AgentLlmResponseActivity': {
+                  'name': 'AgentLlmResponseActivity',
+                  'type': 'object',
+                  'properties': {
+                    'llm': {
+                      'name': 'llm',
+                      'type': 'object',
                       'required': false,
-                      'type': 'number',
-                    },
-                    'success': {
-                      'name': 'success',
-                      'required': true,
-                      'type': 'boolean',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'tool': {
-                      'name': 'tool',
-                      'required': true,
-                      'type': 'string',
+                      'properties': {
+                        'model': {
+                          'name': 'model',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'costUSD': {
+                          'name': 'costUSD',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'systemPrompt': {
+                          'name': 'systemPrompt',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'promptTokens': {
+                          'name': 'promptTokens',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'provider': {
+                          'name': 'provider',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'durationMs': {
+                          'name': 'durationMs',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'userPrompt': {
+                          'name': 'userPrompt',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'completionTokens': {
+                          'name': 'completionTokens',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'cachedPromptTokens': {
+                          'name': 'cachedPromptTokens',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'toolCallsJson': {
+                          'name': 'toolCallsJson',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'service': {
+                          'name': 'service',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'attempt': {
+                          'name': 'attempt',
+                          'type': 'number',
+                          'required': false,
+                        },
+                      },
                     },
                     'type': {
                       'name': 'type',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                       'values': [
-                        'tool_result',
+                        'llm_response',
                       ],
                     },
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
                   },
-                  'type': 'object',
                 },
               },
-              'type': 'union',
-              'values': [
-                'AgentToolCallActivity',
-                'AgentToolResultActivity',
-                'AgentLlmResponseActivity',
-              ],
             },
-            'name': 'steps',
+            'description': 'Every step, in order: each model call, each tool used and what the app answered.',
             'synonyms': 'actions, tool calls, trace',
-            'type': 'array',
           },
           {
-            'default': 0,
-            'description': 'Tokens sent to the model.',
             'name': 'promptTokens',
             'type': 'number',
+            'default': 0,
+            'description': 'Tokens sent to the model.',
           },
           {
-            'default': 0,
-            'description': 'Tokens the model produced.',
             'name': 'completionTokens',
             'type': 'number',
+            'default': 0,
+            'description': 'Tokens the model produced.',
           },
           {
-            'default': 0,
-            'description': 'All tokens for the run.',
             'name': 'totalTokens',
             'type': 'number',
+            'default': 0,
+            'description': 'All tokens for the run.',
           },
           {
+            'name': 'modelCalls',
+            'type': 'number',
             'default': 0,
             'description': 'Model round-trips.',
-            'name': 'modelCalls',
             'synonyms': 'turns, calls',
-            'type': 'number',
           },
           {
+            'name': 'recordedAt',
+            'type': 'number',
             'default': 0,
             'description': 'When the run finished (ms).',
-            'name': 'recordedAt',
             'synonyms': 'time, timestamp',
-            'type': 'number',
           },
         ];
         const extras = params.fields ?? [];
@@ -475,7 +475,14 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'AgentTraceRecorder',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'outcome',
+          ],
+        },
         'effectRow': [
           {
             'kind': 'persist',
@@ -486,166 +493,100 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
             'resource': '@entity.outcome',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'AgentRun',
         'emits': [
           {
-            'description': 'A run was recorded — payload is the created AgentRun row itself.',
             'event': 'RUN_RECORDED',
-            'scope': 'external',
+            'description': 'A run was recorded — payload is the created AgentRun row itself.',
             'synonyms': 'recorded, logged, traced',
             'tier': 'domain',
+            'scope': 'external',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'outcome',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentRun',
-        'name': 'AgentTraceRecorder',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'recording',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Record an answered run.',
               'key': 'REPLIED',
               'name': 'Replied',
+              'description': 'Record an answered run.',
               'payloadSchema': [
                 {
                   'name': 'reply',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'steps',
-                  'required': true,
                   'type': '[AgentActivity]',
+                  'required': true,
                 },
                 {
                   'name': 'usage',
+                  'type': 'object',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'promptTokens',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'completionTokens',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'totalTokens',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'modelCalls',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': 'object',
                 },
               ],
+              'listened': true,
             },
             {
-              'description': 'Record a failed run.',
               'key': 'REPLY_FAILED',
               'name': 'Reply Failed',
+              'description': 'Record a failed run.',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
+              'listened': true,
             },
             {
-              'description': 'A run was recorded — payload is the created AgentRun row itself.',
               'key': 'RUN_RECORDED',
               'name': 'Run Recorded',
+              'description': 'A run was recorded — payload is the created AgentRun row itself.',
               'synonyms': 'recorded, logged, traced',
               'tier': 'domain',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'recording',
-            },
-          ],
           'transitions': [
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.outcome',
-                  'answered',
-                ],
-              ],
+              'from': 'recording',
+              'to': 'recording',
               'event': 'INIT',
-              'from': 'recording',
-              'to': 'recording',
-            },
-            {
-              'effects': [
-                [
-                  'persist',
-                  'create',
-                  ('AgentRun' satisfies _StdAgentTraceEntityName),
-                  {
-                    'completionTokens': '@payload.usage.completionTokens',
-                    'modelCalls': '@payload.usage.modelCalls',
-                    'outcome': 'answered',
-                    'ownerId': '@user.id',
-                    'promptTokens': '@payload.usage.promptTokens',
-                    'recordedAt': '@now',
-                    'reply': '@payload.reply',
-                    'steps': '@payload.steps',
-                    'totalTokens': '@payload.usage.totalTokens',
-                  },
-                  {
-                    'emit': {
-                      'success': 'RUN_RECORDED',
-                    },
-                  },
-                ],
-              ],
-              'event': 'REPLIED',
-              'from': 'recording',
-              'to': 'recording',
-            },
-            {
-              'effects': [
-                [
-                  'persist',
-                  'create',
-                  ('AgentRun' satisfies _StdAgentTraceEntityName),
-                  {
-                    'error': '@payload.error',
-                    'outcome': 'failed',
-                    'ownerId': '@user.id',
-                    'recordedAt': '@now',
-                  },
-                  {
-                    'emit': {
-                      'success': 'RUN_RECORDED',
-                    },
-                  },
-                ],
-              ],
-              'event': 'REPLY_FAILED',
-              'from': 'recording',
-              'to': 'recording',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -653,15 +594,81 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
                   'answered',
                 ],
               ],
-              'event': 'RUN_RECORDED',
+            },
+            {
               'from': 'recording',
               'to': 'recording',
+              'event': 'REPLIED',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('AgentRun' satisfies _StdAgentTraceEntityName),
+                  {
+                    'ownerId': '@user.id',
+                    'completionTokens': '@payload.usage.completionTokens',
+                    'totalTokens': '@payload.usage.totalTokens',
+                    'modelCalls': '@payload.usage.modelCalls',
+                    'steps': '@payload.steps',
+                    'promptTokens': '@payload.usage.promptTokens',
+                    'reply': '@payload.reply',
+                    'recordedAt': '@now',
+                    'outcome': 'answered',
+                  },
+                  {
+                    'emit': {
+                      'success': 'RUN_RECORDED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'recording',
+              'to': 'recording',
+              'event': 'REPLY_FAILED',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('AgentRun' satisfies _StdAgentTraceEntityName),
+                  {
+                    'outcome': 'failed',
+                    'error': '@payload.error',
+                    'ownerId': '@user.id',
+                    'recordedAt': '@now',
+                  },
+                  {
+                    'emit': {
+                      'success': 'RUN_RECORDED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'recording',
+              'to': 'recording',
+              'event': 'RUN_RECORDED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.outcome',
+                  'answered',
+                ],
+              ],
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'interaction',
+        'name': 'AgentRunBrowse',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
         'effectRow': [
           {
             'kind': 'fetch',
@@ -672,28 +679,35 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AgentRun',
         'emits': [
           {
-            'description': 'The run record finished loading.',
             'event': 'AgentRunsLoaded',
+            'description': 'The run record finished loading.',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AgentRun',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'outcome',
                     'type': 'string',
+                    'values': [
+                      'answered',
+                      'failed',
+                    ],
                   },
                   {
                     'name': 'reply',
@@ -728,13 +742,13 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentRun',
               },
             ],
-            'tier': 'internal',
           },
           {
             'event': 'AgentRunsLoadFailed',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -745,55 +759,57 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
                 'type': 'string',
               },
             ],
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentRun',
         'listens': [
           {
             'event': 'RUN_RECORDED',
+            'triggers': 'RUN_RECORDED',
             'source': {
               'kind': 'trait',
               'trait': ('AgentTraceRecorder' satisfies _StdAgentTraceListenTraitName),
             },
-            'triggers': 'RUN_RECORDED',
           },
         ],
-        'name': 'AgentRunBrowse',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'The run record finished loading.',
               'key': 'AgentRunsLoaded',
               'name': 'AgentRun s loaded',
+              'description': 'The run record finished loading.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentRun',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'outcome',
                       'type': 'string',
+                      'values': [
+                        'answered',
+                        'failed',
+                      ],
                     },
                     {
                       'name': 'reply',
@@ -828,14 +844,14 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentRun',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'AgentRunsLoadFailed',
               'name': 'AgentRun s load failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -846,29 +862,28 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'RUN_RECORDED',
               'name': 'Run Recorded',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'browsing',
+              'description': 'A run was recorded; the history reloads. The importer routes its assistant\'s recorder here.',
+              'tier': 'domain',
+              'listened': true,
             },
           ],
           'transitions': [
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('AgentRun' satisfies _StdAgentTraceEntityName),
                   {
                     'emit': {
-                      'failure': 'AgentRunsLoadFailed',
                       'success': 'AgentRunsLoaded',
+                      'failure': 'AgentRunsLoadFailed',
                     },
                   },
                 ],
@@ -876,45 +891,41 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
                   'render-ui',
                   'main',
                   {
+                    'variant': 'list',
                     'rows': 6,
                     'type': 'skeleton',
-                    'variant': 'list',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'AgentRunsLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
                     'emptyTitle': 'No runs yet',
-                    'entity': [
-                      'array/sort',
-                      '@payload.data',
-                      'recordedAt',
-                      'desc',
-                    ],
+                    'type': 'data-list',
                     'fields': [],
-                    'gap': 'sm',
                     'renderItem': [
                       'fn',
                       'item',
                       {
+                        'type': 'stack',
+                        'gap': 'xs',
                         'children': [
                           {
-                            'label': '@item.outcome',
-                            'size': 'sm',
                             'type': 'badge',
+                            'size': 'sm',
                             'variant': 'neutral',
+                            'label': '@item.outcome',
                           },
                           {
-                            'content': '@item.reply',
                             'type': 'typography',
+                            'content': '@item.reply',
                             'variant': 'body',
                           },
                           {
@@ -929,59 +940,61 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
                             'variant': 'caption',
                           },
                           {
-                            'activities': '@item.steps',
                             'followLatest': false,
+                            'activities': '@item.steps',
                             'type': 'agent-activity-feed',
                           },
                         ],
                         'direction': 'vertical',
-                        'gap': 'xs',
-                        'type': 'stack',
                       },
                     ],
-                    'type': 'data-list',
+                    'gap': 'sm',
+                    'entity': [
+                      'array/sort',
+                      '@payload.data',
+                      'recordedAt',
+                      'desc',
+                    ],
                   },
                 ],
               ],
-              'event': 'AgentRunsLoaded',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'AgentRunsLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'error',
+                    'type': 'alert',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'AgentRunsLoadFailed',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'RUN_RECORDED',
               'effects': [
                 [
                   'fetch',
                   ('AgentRun' satisfies _StdAgentTraceEntityName),
                   {
                     'emit': {
-                      'failure': 'AgentRunsLoadFailed',
                       'success': 'AgentRunsLoaded',
+                      'failure': 'AgentRunsLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'RUN_RECORDED',
-              'from': 'browsing',
-              'to': 'browsing',
             },
           ],
         },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

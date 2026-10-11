@@ -63,40 +63,40 @@ export interface StdLearnMeasureMeasureResetPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnMeasureConfig {
-  /** Default: `5` */
-  amplitude?: number;
-  /** Default: `12` */
-  duration?: number;
-  /** Default: `1` */
-  gridStep?: number;
+  /** Default: `600` */
+  width?: number;
   /** Default: `360` */
   height?: number;
+  /** Default: `5` */
+  amplitude?: number;
   /** Default: `""` */
   matchMode?: string;
-  /** Default: `"highlight"` */
-  probeColor?: string;
   /** Default: `"Probe"` */
   probeLabel?: string;
   /** Default: `1.2` */
   rate?: number;
-  /** Default: `"ink"` */
-  signalColor?: string;
-  /** Default: `"sine"` */
-  signalKind?: string;
-  /** Default: `""` */
-  summary?: string;
-  /** Default: `"Run the signal, then press Probe to record measurements. Watch the running mean settle."` */
-  taskText?: string;
   /** Default: `"Measurement Lab"` */
   title?: string;
+  /** Default: `12` */
+  duration?: number;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `1` */
+  gridStep?: number;
   /** Default: `"value"` */
   valueLabel?: string;
-  /** Default: `6` */
-  valueMax?: number;
+  /** Default: `"highlight"` */
+  probeColor?: string;
+  /** Default: `"Run the signal, then press Probe to record measurements. Watch the running mean settle."` */
+  taskText?: string;
+  /** Default: `"sine"` */
+  signalKind?: string;
   /** Default: `-6` */
   valueMin?: number;
-  /** Default: `600` */
-  width?: number;
+  /** Default: `"ink"` */
+  signalColor?: string;
+  /** Default: `6` */
+  valueMax?: number;
 }
 
 /**

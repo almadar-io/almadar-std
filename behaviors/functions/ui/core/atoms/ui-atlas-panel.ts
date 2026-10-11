@@ -39,21 +39,21 @@ export type StdUiAtlasPanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAtlasPanelConfig {
-  ariaHidden?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `{}` */
+  style?: Record<string, TraitConfig>;
   asset?: EntityRow;
+  className?: string;
+  ariaHidden?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `16` */
   borderSlice?: number;
+  /** Default: `"nineSlice"` */
+  mode?: 'nineSlice' | 'repeat';
   /** Default: `16` */
   borderWidth?: number;
   children?: PatternValue;
-  className?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
-  /** Default: `"nineSlice"` */
-  mode?: 'nineSlice' | 'repeat';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `{}` */
-  style?: Record<string, TraitConfig>;
 }
 
 /**

@@ -39,14 +39,14 @@ export type StdUiGameAudioCueEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameAudioCueConfig {
+  volume?: number;
+  muted?: boolean;
   baseUrl?: string;
   cue?: string;
   cueSeq?: number;
+  music?: string;
   /** Default: `{}` */
   manifest?: Record<string, TraitConfig>;
-  music?: string;
-  muted?: boolean;
-  volume?: number;
 }
 
 /**

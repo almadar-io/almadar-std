@@ -54,26 +54,26 @@ export interface StdLearnSampleAccumulatorAccumulatorResetPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnSampleAccumulatorConfig {
-  /** Default: `25` */
-  batchSize?: number;
-  /** Default: `0.5` */
-  bias?: number;
-  /** Default: `10` */
-  binCount?: number;
   /** Default: `"series-1"` */
   color?: string;
   /** Default: `400` */
   height?: number;
   /** Default: `""` */
   matchMode?: string;
-  /** Default: `"uniform"` */
-  sourceKind?: string;
   /** Default: `""` */
   summary?: string;
-  /** Default: `"Sample Accumulator"` */
-  title?: string;
+  /** Default: `0.5` */
+  bias?: number;
+  /** Default: `10` */
+  binCount?: number;
   /** Default: `600` */
   width?: number;
+  /** Default: `25` */
+  batchSize?: number;
+  /** Default: `"uniform"` */
+  sourceKind?: string;
+  /** Default: `"Sample Accumulator"` */
+  title?: string;
 }
 
 /**

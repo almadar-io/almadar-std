@@ -70,20 +70,20 @@ export interface StdReminderSchedulerReminderSteppedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdReminderSchedulerConfig {
-  /** Default: `"dueAt"` */
-  dateField?: string;
   /** Default: `"future"` */
   direction?: 'future' | 'past';
-  /** Default: `false` */
-  enabled?: boolean;
-  /** Default: `24` */
-  offsetHours?: number;
   /** Default: `"info"` */
   severity?: string;
-  /** Default: `"ReminderRunLog"` */
-  targetEntity?: unknown;
   /** Default: `""` */
   template?: string;
+  /** Default: `"ReminderRunLog"` */
+  targetEntity?: unknown;
+  /** Default: `24` */
+  offsetHours?: number;
+  /** Default: `false` */
+  enabled?: boolean;
+  /** Default: `"dueAt"` */
+  dateField?: string;
 }
 
 /**
@@ -227,57 +227,57 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'targetEntity',
+            'type': 'string',
             'default': '',
             'description': 'The entity to which the reminder applies.',
-            'name': 'targetEntity',
             'synonyms': 'subject, referenced entity, related object',
-            'type': 'string',
           },
           {
+            'name': 'recordCount',
+            'type': 'number',
             'default': 0,
             'description': 'The number of records processed during this run.',
-            'name': 'recordCount',
             'synonyms': 'count, total, size',
-            'type': 'number',
           },
           {
+            'name': 'ranAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when the process was executed.',
-            'name': 'ranAt',
             'synonyms': 'execution time, timestamp, run time',
-            'type': 'number',
           },
           {
+            'name': 'errors',
+            'type': 'string',
             'default': '',
             'description': 'Records any errors encountered during processing.',
-            'name': 'errors',
             'synonyms': 'error, problem, fault',
-            'type': 'string',
           },
           {
+            'name': 'dueAt',
+            'type': 'number',
             'default': 0,
             'description': 'Deadline timestamp (also lets the standalone default target validate).',
-            'name': 'dueAt',
             'synonyms': 'deadline, due, expiry',
-            'type': 'number',
           },
           {
+            'name': 'remindedAt',
+            'type': 'number',
             'default': 0,
             'description': 'When this record was last reminded — the dedup marker; 0 = not yet reminded.',
-            'name': 'remindedAt',
             'synonyms': 'notified at, last reminder',
-            'type': 'number',
           },
           {
+            'name': 'headId',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: id of the record the scan loop is currently reminding.',
-            'name': 'headId',
             'synonyms': 'current id, cursor',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -288,68 +288,13 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'dateField': {
-            'default': 'dueAt',
-            'description': 'Field on the target entity holding the deadline (e.g. \'dueAt\', \'startsAt\'). Accepts a ms-epoch number or an ISO datetime string; both are coerced to ms-epoch for comparison.',
-            'label': 'Which date field is the deadline?',
-            'synonyms': 'due date field, timestamp field, cutoff field, expiry field, when it\'s due',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'direction': {
-            'default': 'future',
-            'description': '\'future\' (default) matches records whose dateField is still ahead, up to offsetHours out — upcoming-deadline reminders. \'past\' matches records whose dateField is at least offsetHours behind now — act-after-the-fact policies. The emitted event and the dedup marker are identical either way.',
-            'label': 'Scan which side of now?',
-            'synonyms': 'direction, past due, overdue, after the deadline, look back, backward scan, past-window',
-            'tier': 'infra',
-            'type': 'string',
-            'values': [
-              'future',
-              'past',
-            ],
-          },
-          'enabled': {
-            'default': false,
-            'description': 'Automatically remind about upcoming deadlines. Off by default.',
-            'label': 'Send deadline reminders',
-            'synonyms': 'enable, turn on, activate, switch on, reminders, deadline reminders, due-date reminders, advance notice, heads up, nudge before due',
-            'tier': 'infra',
-            'type': 'boolean',
-          },
-          'offsetHours': {
-            'default': 24,
-            'description': 'A reminder fires once the deadline is within this many hours of now.',
-            'label': 'How many hours before the deadline to remind?',
-            'synonyms': 'advance notice, lead time, heads up, early warning hours, how far ahead',
-            'tier': 'infra',
-            'type': 'number',
-          },
-          'severity': {
-            'default': 'info',
-            'description': 'Severity passed to the notifier: info / warning / error.',
-            'label': 'How urgent are the reminders?',
-            'synonyms': 'urgency level, priority, importance, alert level, how urgent',
-            'tier': 'infra',
-            'type': 'string',
-          },
-          'targetEntity': {
-            'default': 'ReminderRunLog',
-            'description': 'Entity to scan for upcoming deadlines (e.g. \'Task\', \'ClassSession\'). Defaults to the atom\'s own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically.',
-            'label': 'Target entity',
-            'synonyms': 'entity to monitor, entity to watch, record type, object type',
-            'tier': 'internal',
-            'type': 'entity',
-          },
-          'template': {
-            'default': '',
-            'description': 'Message body passed to the notifier.',
-            'label': 'What should the reminder message say?',
-            'synonyms': 'message text, reminder body, notification copy, alert message, what to say',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'ReminderScheduler',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'headId',
+          ],
         },
         'effectRow': [
           {
@@ -358,19 +303,19 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
           },
           {
             'kind': 'fetch',
-            'resolved': false,
             'resource': '@config.targetEntity',
+            'resolved': false,
           },
           {
             'kind': 'fetch',
-            'resolved': false,
             'resource': '@config.targetEntity',
+            'resolved': false,
             'site': 'tick',
           },
           {
             'kind': 'persist',
-            'resolved': false,
             'resource': '@config.targetEntity',
+            'resolved': false,
           },
           {
             'kind': 'render-ui',
@@ -385,9 +330,12 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
             'site': 'tick',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'ReminderRunLog',
         'emits': [
           {
             'event': 'ReminderDue',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'entityId',
@@ -402,7 +350,6 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
                 'type': 'string',
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'ScanRecordsLoaded',
@@ -436,17 +383,16 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
             ],
           },
         ],
-        'entityContract': {
-          'provides': [
-            'headId',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'ReminderRunLog',
-        'name': 'ReminderScheduler',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'scanning',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -505,22 +451,28 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'scanning',
-            },
-          ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
+              'event': 'INIT',
             },
             {
+              'from': 'idle',
+              'to': 'scanning',
+              'event': 'ScanRecordsLoaded',
+              'guard': [
+                'and',
+                '@config.enabled',
+                [
+                  '>',
+                  [
+                    'array/len',
+                    '@payload.data',
+                  ],
+                  0,
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -547,36 +499,22 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
                   'update',
                   '@config.targetEntity',
                   {
-                    'id': '@entity.headId',
                     'remindedAt': '@now',
+                    'id': '@entity.headId',
                   },
                   {
                     'emit': {
-                      'failure': 'ScanFailed',
                       'success': 'ReminderStepped',
+                      'failure': 'ScanFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ScanRecordsLoaded',
-              'from': 'idle',
-              'guard': [
-                'and',
-                '@config.enabled',
-                [
-                  '>',
-                  [
-                    'array/len',
-                    '@payload.data',
-                  ],
-                  0,
-                ],
-              ],
-              'to': 'scanning',
             },
             {
-              'event': 'ScanRecordsLoaded',
               'from': 'idle',
+              'to': 'idle',
+              'event': 'ScanRecordsLoaded',
               'guard': [
                 '=',
                 [
@@ -585,19 +523,21 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
                 ],
                 0,
               ],
-              'to': 'idle',
             },
             {
-              'event': 'ScanRecordsLoaded',
               'from': 'idle',
+              'to': 'idle',
+              'event': 'ScanRecordsLoaded',
               'guard': [
                 '=',
                 '@config.enabled',
                 false,
               ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ScanFailed',
               'effects': [
                 [
                   'render-ui',
@@ -614,24 +554,24 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
                   },
                 ],
               ],
-              'event': 'ScanFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
-              'event': 'INIT',
               'from': 'scanning',
               'to': 'idle',
+              'event': 'INIT',
             },
             {
+              'from': 'scanning',
+              'to': 'scanning',
+              'event': 'ReminderStepped',
               'effects': [
                 [
                   'fetch',
                   '@config.targetEntity',
                   {
                     'emit': {
-                      'failure': 'ScanFailed',
                       'success': 'ScanRecordsLoaded',
+                      'failure': 'ScanFailed',
                     },
                     'filter': [
                       'and',
@@ -719,11 +659,19 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
                   },
                 ],
               ],
-              'event': 'ReminderStepped',
-              'from': 'scanning',
-              'to': 'scanning',
             },
             {
+              'from': 'scanning',
+              'to': 'scanning',
+              'event': 'ScanRecordsLoaded',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'set',
@@ -750,8 +698,8 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
                   'update',
                   '@config.targetEntity',
                   {
-                    'id': '@entity.headId',
                     'remindedAt': '@now',
+                    'id': '@entity.headId',
                   },
                   {
                     'emit': {
@@ -761,21 +709,11 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
                   },
                 ],
               ],
-              'event': 'ScanRecordsLoaded',
-              'from': 'scanning',
-              'guard': [
-                '>',
-                [
-                  'array/len',
-                  '@payload.data',
-                ],
-                0,
-              ],
-              'to': 'scanning',
             },
             {
-              'event': 'ScanRecordsLoaded',
               'from': 'scanning',
+              'to': 'idle',
+              'event': 'ScanRecordsLoaded',
               'guard': [
                 '=',
                 [
@@ -784,42 +722,39 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
                 ],
                 0,
               ],
-              'to': 'idle',
             },
             {
+              'from': 'scanning',
+              'to': 'idle',
+              'event': 'ScanFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
                     'dismissible': true,
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Couldn\'t scan for reminders — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'ScanFailed',
-              'from': 'scanning',
-              'to': 'idle',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'scanCycle',
+            'interval': '*/15 * * * *',
             'effects': [
               [
                 'fetch',
                 '@config.targetEntity',
                 {
-                  'emit': {
-                    'failure': 'ScanFailed',
-                    'success': 'ScanRecordsLoaded',
-                  },
                   'filter': [
                     'and',
                     [
@@ -903,14 +838,79 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
                       ],
                     ],
                   ],
+                  'emit': {
+                    'failure': 'ScanFailed',
+                    'success': 'ScanRecordsLoaded',
+                  },
                 },
               ],
             ],
-            'interval': '*/15 * * * *',
-            'name': 'scanCycle',
             'runsInBackground': true,
           },
         ],
+        'config': {
+          'direction': {
+            'type': 'string',
+            'default': 'future',
+            'label': 'Scan which side of now?',
+            'description': '\'future\' (default) matches records whose dateField is still ahead, up to offsetHours out — upcoming-deadline reminders. \'past\' matches records whose dateField is at least offsetHours behind now — act-after-the-fact policies. The emitted event and the dedup marker are identical either way.',
+            'synonyms': 'direction, past due, overdue, after the deadline, look back, backward scan, past-window',
+            'tier': 'infra',
+            'values': [
+              'future',
+              'past',
+            ],
+          },
+          'severity': {
+            'type': 'string',
+            'default': 'info',
+            'label': 'How urgent are the reminders?',
+            'description': 'Severity passed to the notifier: info / warning / error.',
+            'synonyms': 'urgency level, priority, importance, alert level, how urgent',
+            'tier': 'infra',
+          },
+          'template': {
+            'type': 'string',
+            'default': '',
+            'label': 'What should the reminder message say?',
+            'description': 'Message body passed to the notifier.',
+            'synonyms': 'message text, reminder body, notification copy, alert message, what to say',
+            'tier': 'presentation',
+          },
+          'targetEntity': {
+            'type': 'entity',
+            'default': 'ReminderRunLog',
+            'label': 'Target entity',
+            'description': 'Entity to scan for upcoming deadlines (e.g. \'Task\', \'ClassSession\'). Defaults to the atom\'s own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically.',
+            'synonyms': 'entity to monitor, entity to watch, record type, object type',
+            'tier': 'internal',
+          },
+          'offsetHours': {
+            'type': 'number',
+            'default': 24,
+            'label': 'How many hours before the deadline to remind?',
+            'description': 'A reminder fires once the deadline is within this many hours of now.',
+            'synonyms': 'advance notice, lead time, heads up, early warning hours, how far ahead',
+            'tier': 'infra',
+          },
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Send deadline reminders',
+            'description': 'Automatically remind about upcoming deadlines. Off by default.',
+            'synonyms': 'enable, turn on, activate, switch on, reminders, deadline reminders, due-date reminders, advance notice, heads up, nudge before due',
+            'tier': 'infra',
+          },
+          'dateField': {
+            'type': 'string',
+            'default': 'dueAt',
+            'label': 'Which date field is the deadline?',
+            'description': 'Field on the target entity holding the deadline (e.g. \'dueAt\', \'startsAt\'). Accepts a ms-epoch number or an ISO datetime string; both are coerced to ms-epoch for comparison.',
+            'synonyms': 'due date field, timestamp field, cutoff field, expiry field, when it\'s due',
+            'tier': 'internal',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

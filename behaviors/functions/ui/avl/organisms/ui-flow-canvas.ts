@@ -131,70 +131,70 @@ export interface StdUiFlowCanvasSelectedPatternChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFlowCanvasConfig {
-  animated?: boolean;
-  /** Default: `{"item":{"layer":"Layer"}}` */
-  behaviorMeta?: Record<string, TraitConfig>;
-  className?: string;
-  color?: string;
-  editable?: boolean;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `false` */
-  externalInspector?: boolean;
-  focusTarget?: EntityRow;
-  focusedOrbital?: string;
-  /** Default: `500` */
-  height?: unknown;
-  initialLevel?: 'overview' | 'trait-expanded' | 'system';
-  initialOrbital?: string;
-  initialSelectedNode?: EntityRow;
-  initialTrait?: string;
-  layoutHint?: 'pipeline' | 'grid';
-  /** Default: `{"item":{"width":1,"x":1,"y":1}}` */
-  nodePositions?: Record<string, TraitConfig>;
-  /** Default: `"EVENT_WIRE"` */
-  onEventWire?: string;
-  /** Default: `"FOCUS_CHANGE"` */
-  onFocusChange?: string;
-  /** Default: `"NODE_CLICK"` */
-  onNodeClick?: string;
-  /** Default: `"NODE_SELECT"` */
-  onNodeSelect?: string;
-  /** Default: `"ORBITAL_HOVER"` */
-  onOrbitalHover?: string;
-  /** Default: `"PATTERN_DELETE"` */
-  onPatternDelete?: string;
-  /** Default: `"POSITIONS_CHANGE"` */
-  onPositionsChange?: string;
-  /** Default: `"SCHEMA_CHANGE"` */
-  onSchemaChange?: string;
-  /** Default: `"SELECTED_NODE_CHANGE"` */
-  onSelectedNodeChange?: string;
-  /** Default: `"SELECTED_PATTERN_CHANGE"` */
-  onSelectedPatternChange?: string;
-  /** Default: `"TRAIT_VIEW_CHANGE"` */
-  onTraitViewChange?: string;
-  /** Default: `"ZOOM_CHANGE"` */
-  onZoomChange?: string;
-  /** Default: `"OPEN_BEHAVIOR"` */
-  openBehaviorEvent?: string;
-  /** Default: `{}` */
-  orbitalStatus?: Record<string, TraitConfig>;
-  scene?: EntityRow;
-  schema?: EntityRow;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `{"item":"Item"}` */
-  stateCoverage?: Record<string, TraitConfig>;
-  systemDependencies?: EntityRow;
-  systemMap?: EntityRow;
-  /** Default: `[]` */
-  tools?: string[];
-  traitView?: EntityRow;
   /** Default: `"builder"` */
   userType?: 'builder' | 'designer' | 'architect';
+  /** Default: `{"item":"Item"}` */
+  stateCoverage?: Record<string, TraitConfig>;
+  initialTrait?: string;
+  focusTarget?: EntityRow;
+  /** Default: `"SELECTED_PATTERN_CHANGE"` */
+  onSelectedPatternChange?: string;
+  editable?: boolean;
   verify?: EntityRow;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `"SELECTED_NODE_CHANGE"` */
+  onSelectedNodeChange?: string;
+  /** Default: `[]` */
+  tools?: string[];
+  layoutHint?: 'pipeline' | 'grid';
+  /** Default: `"OPEN_BEHAVIOR"` */
+  openBehaviorEvent?: string;
+  /** Default: `"PATTERN_DELETE"` */
+  onPatternDelete?: string;
+  /** Default: `"NODE_SELECT"` */
+  onNodeSelect?: string;
+  /** Default: `"TRAIT_VIEW_CHANGE"` */
+  onTraitViewChange?: string;
+  systemDependencies?: EntityRow;
+  /** Default: `{"item":{"layer":"Layer"}}` */
+  behaviorMeta?: Record<string, TraitConfig>;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   /** Default: `"100%"` */
   width?: unknown;
+  /** Default: `"ZOOM_CHANGE"` */
+  onZoomChange?: string;
+  /** Default: `"ORBITAL_HOVER"` */
+  onOrbitalHover?: string;
+  focusedOrbital?: string;
+  /** Default: `{}` */
+  orbitalStatus?: Record<string, TraitConfig>;
+  /** Default: `"EVENT_WIRE"` */
+  onEventWire?: string;
+  systemMap?: EntityRow;
+  /** Default: `{"item":{"y":1,"x":1,"width":1}}` */
+  nodePositions?: Record<string, TraitConfig>;
+  scene?: EntityRow;
+  initialSelectedNode?: EntityRow;
+  animated?: boolean;
+  color?: string;
+  schema?: EntityRow;
+  /** Default: `false` */
+  externalInspector?: boolean;
+  className?: string;
+  enterDelay?: number;
+  /** Default: `"NODE_CLICK"` */
+  onNodeClick?: string;
+  /** Default: `500` */
+  height?: unknown;
+  initialOrbital?: string;
+  /** Default: `"POSITIONS_CHANGE"` */
+  onPositionsChange?: string;
+  initialLevel?: 'overview' | 'trait-expanded' | 'system';
+  /** Default: `"SCHEMA_CHANGE"` */
+  onSchemaChange?: string;
+  /** Default: `"FOCUS_CHANGE"` */
+  onFocusChange?: string;
+  traitView?: EntityRow;
 }
 
 type _StdUiFlowCanvasEntityName = 'FlowCanvasItem';
@@ -254,8 +254,8 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -266,865 +266,11 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'animated': {
-            'description': 'animated prop',
-            'label': 'Animated',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'behaviorMeta': {
-            'default': {
-              'item': {
-                'layer': 'Layer',
-              },
-            },
-            'description': 'Behavior layer metadata for node styling (layer color bands).',
-            'items': {
-              'properties': {
-                'layer': {
-                  'name': 'layer',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Behavior Meta',
-            'tier': 'presentation',
-            'type': 'Map<string,FlowCanvasBehaviorMetaValue>',
-          },
-          'className': {
-            'description': 'className prop',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'color': {
-            'description': 'color prop',
-            'label': 'Color',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'editable': {
-            'description': 'Enable editing in the inspector. When true, fields become inputs.',
-            'label': 'Editable',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'externalInspector': {
-            'default': false,
-            'description': 'When true, FlowCanvas does not render its inline `OrbInspector` — the consumer is expected to render one externally, fed by `onSelectedNodeChange` + `onSelectedPatternChange`. Selection highlighting, keyboard delete, and every other behavior is unchanged. Default `false` preserves the built-in inline panel.',
-            'label': 'External Inspector',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'focusTarget': {
-            'description': 'focusTarget prop',
-            'label': 'Focus Target',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'required': true,
-                'type': 'string',
-              },
-              'type': {
-                'name': 'type',
-                'required': true,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'FlowCanvasFocusTarget',
-          },
-          'focusedOrbital': {
-            'description': 'Focus this orbital (e.g. picked in a Layers panel); changing it moves the focus without remounting.',
-            'label': 'Focused Orbital',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'height': {
-            'default': 500,
-            'description': 'height prop',
-            'label': 'Height',
-            'tier': 'presentation',
-            'type': 'scalar',
-          },
-          'initialLevel': {
-            'description': '`trait-expanded`: one card per trait of `initialOrbital` (cosmic). Default: orbital cards.',
-            'label': 'Initial Level',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'overview',
-              'trait-expanded',
-              'system',
-            ],
-          },
-          'initialOrbital': {
-            'description': 'The orbital cards open on (local view) — or, with `initialLevel=\'trait-expanded\'`, the orbital whose traits are shown.',
-            'label': 'Initial Orbital',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'initialSelectedNode': {
-            'description': 'Pre-select a node on mount (opens OrbInspector).',
-            'label': 'Initial Selected Node',
-            'properties': {
-              '_fullSchema': {
-                'name': '_fullSchema',
-                'required': false,
-                'type': 'SExpr',
-              },
-              'bandCount': {
-                'name': 'bandCount',
-                'required': false,
-                'type': 'number',
-              },
-              'bandKind': {
-                'name': 'bandKind',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'connected',
-                  'standalone',
-                ],
-              },
-              'cardLabel': {
-                'name': 'cardLabel',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'screen',
-                ],
-              },
-              'cardWidth': {
-                'name': 'cardWidth',
-                'required': false,
-                'type': 'number',
-              },
-              'dependencyColumn': {
-                'name': 'dependencyColumn',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'app',
-                  'own',
-                  'io',
-                  'std',
-                  'primitive',
-                  'unknown',
-                  'client',
-                  'host',
-                  'service',
-                  'store',
-                  'external',
-                ],
-              },
-              'dependencyRole': {
-                'name': 'dependencyRole',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'selected',
-                  'upstream',
-                  'downstream',
-                  'both',
-                  'dim',
-                ],
-              },
-              'effectTypes': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'effectTypes',
-                'required': false,
-                'type': 'array',
-              },
-              'emits': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'emits',
-                'required': false,
-                'type': 'array',
-              },
-              'enteredBy': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'enteredBy',
-                'required': false,
-                'type': 'array',
-              },
-              'entityName': {
-                'name': 'entityName',
-                'required': false,
-                'type': 'string',
-              },
-              'eventSources': {
-                'items': {
-                  'properties': {
-                    'event': {
-                      'name': 'event',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'label': {
-                      'name': 'label',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'path': {
-                      'name': 'path',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'patternType': {
-                      'name': 'patternType',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'payloadFields': {
-                      'items': {
-                        'properties': {
-                          'name': {
-                            'name': 'name',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'required': {
-                            'name': 'required',
-                            'required': false,
-                            'type': 'boolean',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'name': 'payloadFields',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'positionHint': {
-                      'name': 'positionHint',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'eventSources',
-                'required': true,
-                'type': 'array',
-              },
-              'fieldCount': {
-                'name': 'fieldCount',
-                'required': false,
-                'type': 'number',
-              },
-              'flowRenderPieces': {
-                'name': 'flowRenderPieces',
-                'required': false,
-                'type': 'number',
-              },
-              'flowTraits': {
-                'name': 'flowTraits',
-                'required': false,
-                'type': 'number',
-              },
-              'focused': {
-                'name': 'focused',
-                'required': false,
-                'type': 'boolean',
-              },
-              'fromState': {
-                'name': 'fromState',
-                'required': false,
-                'type': 'string',
-              },
-              'guard': {
-                'name': 'guard',
-                'required': false,
-                'type': 'SExpr',
-              },
-              'kind': {
-                'name': 'kind',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'trait-card',
-                  'system-orbital',
-                  'system-band',
-                  'dependency',
-                  'dependency-column',
-                ],
-              },
-              'layer': {
-                'name': 'layer',
-                'required': false,
-                'type': 'string',
-              },
-              'linkedEntity': {
-                'name': 'linkedEntity',
-                'required': false,
-                'type': 'string',
-              },
-              'listens': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'listens',
-                'required': false,
-                'type': 'array',
-              },
-              'orbitalName': {
-                'name': 'orbitalName',
-                'required': true,
-                'type': 'string',
-              },
-              'pageRoutes': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'pageRoutes',
-                'required': false,
-                'type': 'array',
-              },
-              'patterns': {
-                'items': {
-                  'properties': {
-                    'pattern': {
-                      'name': 'pattern',
-                      'required': true,
-                      'type': 'SExpr',
-                    },
-                    'slot': {
-                      'name': 'slot',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'patterns',
-                'required': true,
-                'type': 'array',
-              },
-              'persistence': {
-                'name': 'persistence',
-                'required': false,
-                'type': 'string',
-              },
-              'sourceSchemaName': {
-                'name': 'sourceSchemaName',
-                'required': false,
-                'type': 'string',
-              },
-              'stateName': {
-                'name': 'stateName',
-                'required': false,
-                'type': 'string',
-              },
-              'stateRole': {
-                'name': 'stateRole',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'initial',
-                  'terminal',
-                  'hub',
-                  'default',
-                ],
-              },
-              'status': {
-                'name': 'status',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'idle',
-                  'running',
-                  'success',
-                  'error',
-                ],
-              },
-              'toState': {
-                'name': 'toState',
-                'required': false,
-                'type': 'string',
-              },
-              'traitCount': {
-                'name': 'traitCount',
-                'required': false,
-                'type': 'number',
-              },
-              'traitName': {
-                'name': 'traitName',
-                'required': false,
-                'type': 'string',
-              },
-              'transitionEvent': {
-                'name': 'transitionEvent',
-                'required': false,
-                'type': 'string',
-              },
-              'transitions': {
-                'items': {
-                  'properties': {
-                    'event': {
-                      'name': 'event',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'fromState': {
-                      'name': 'fromState',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'toState': {
-                      'name': 'toState',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'transitions',
-                'required': false,
-                'type': 'array',
-              },
-              'unitMetric': {
-                'name': 'unitMetric',
-                'required': false,
-                'type': 'string',
-              },
-              'unitStatus': {
-                'name': 'unitStatus',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'ok',
-                  'degraded',
-                  'down',
-                  'idle',
-                ],
-              },
-              'wireEvents': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'wireEvents',
-                'required': false,
-                'type': 'array',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'FlowCanvasInitialSelectedNode',
-          },
-          'initialTrait': {
-            'description': 'initialTrait prop',
-            'label': 'Initial Trait',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'layoutHint': {
-            'description': 'Layout hint: \'pipeline\' renders nodes left-to-right, \'grid\' (default) uses sqrt-based grid.',
-            'label': 'Layout Hint',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'pipeline',
-              'grid',
-            ],
-          },
-          'nodePositions': {
-            'default': {
-              'item': {
-                'width': 1,
-                'x': 1,
-                'y': 1,
-              },
-            },
-            'description': 'Persisted node positions keyed by node id. When the node set changes (level/schema switch), any id present here overrides the computed layout position, restoring a user\'s manual drag arrangement. Node ids are unique per view level, so a single flat map covers overview + expanded. A saved `width` restores a card frame the designer resized.',
-            'items': {
-              'properties': {
-                'width': {
-                  'name': 'width',
-                  'required': false,
-                  'type': 'number',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Node Positions',
-            'tier': 'presentation',
-            'type': 'Map<string,FlowCanvasNodePositionsValue>',
-          },
-          'onEventWire': {
-            'default': 'EVENT_WIRE',
-            'description': 'Called when the user drags from a source handle to a target handle (event wiring).',
-            'label': 'On Event Wire',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onFocusChange': {
-            'default': 'FOCUS_CHANGE',
-            'description': 'Fired when the focused orbital, the scope, or the focused card\'s state changes.',
-            'label': 'On Focus Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onNodeClick': {
-            'default': 'NODE_CLICK',
-            'description': 'onNodeClick prop',
-            'label': 'On Node Click',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onNodeSelect': {
-            'default': 'NODE_SELECT',
-            'description': 'Called when the user clicks a node in overview level (for composition hints).',
-            'label': 'On Node Select',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onOrbitalHover': {
-            'default': 'ORBITAL_HOVER',
-            'description': 'Hover handler for overview-level orbital nodes. Fires with the orbital name on enter and `null` on leave. Reserved for the upcoming trace tooltip: consumers will use it to anchor a popover that shows the subagent\'s live trace + reasoning for the hovered orbital.',
-            'label': 'On Orbital Hover',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onPatternDelete': {
-            'default': 'PATTERN_DELETE',
-            'description': 'Called when the user presses Delete/Backspace with patterns selected (all of a multi-select).',
-            'label': 'On Pattern Delete',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onPositionsChange': {
-            'default': 'POSITIONS_CHANGE',
-            'description': 'Fired on node drag-stop and card resize with the full {id → placement} map of the current node set, so the consumer can persist the arrangement.',
-            'label': 'On Positions Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onSchemaChange': {
-            'default': 'SCHEMA_CHANGE',
-            'description': 'Called when the user edits the schema via the inspector.',
-            'label': 'On Schema Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onSelectedNodeChange': {
-            'default': 'SELECTED_NODE_CHANGE',
-            'description': 'Fired whenever the internal `selectedNode` changes — select, clear-on- escape, clear-on-level-change, and pattern-selection sync all route through this. Lets a consumer mirror selection into a persistent properties panel rendered outside the canvas (see `externalInspector`).',
-            'label': 'On Selected Node Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onSelectedPatternChange': {
-            'default': 'SELECTED_PATTERN_CHANGE',
-            'description': 'Fired whenever the in-node pattern selection changes (a pattern click inside `OrbPreviewNode`, cleared on background click / Escape / pattern delete). `PatternSelectionContext` is internal to this component\'s own render tree, so an externally-rendered `OrbInspector` (see `externalInspector`) has no other way to learn which pattern the user picked — pass this straight through to `OrbInspector`\'s `selectedPattern` prop to keep Design-tab prop editing working outside the canvas.',
-            'label': 'On Selected Pattern Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onTraitViewChange': {
-            'default': 'TRAIT_VIEW_CHANGE',
-            'description': 'onTraitViewChange prop',
-            'label': 'On Trait View Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onZoomChange': {
-            'default': 'ZOOM_CHANGE',
-            'description': 'onZoomChange prop',
-            'label': 'On Zoom Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'openBehaviorEvent': {
-            'default': 'OPEN_BEHAVIOR',
-            'description': 'Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior\'s source.',
-            'label': 'Open Behavior Event',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'orbitalStatus': {
-            'default': {},
-            'description': 'Per-orbital generation status. Keyed by orbital name. Drives the spinner + accent border treatment on the overview node and (future) the hover trace surface. Defaults to `\'idle\'` for missing entries. Consumers derive this from agent subagent_start/complete SSE events.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Orbital Status',
-            'tier': 'presentation',
-            'type': 'Map<string,string>',
-          },
-          'scene': {
-            'description': 'With `initialLevel=\'trait-expanded\'`: played steps lighting each trait card\'s state machine.',
-            'label': 'Scene',
-            'properties': {
-              'cursor': {
-                'name': 'cursor',
-                'required': true,
-                'type': 'number',
-              },
-              'steps': {
-                'items': {
-                  'properties': {
-                    'from': {
-                      'name': 'from',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'orbital': {
-                      'name': 'orbital',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'trait': {
-                      'name': 'trait',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'steps',
-                'required': true,
-                'type': 'array',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'FlowCanvasScene',
-          },
-          'schema': {
-            'description': 'schema prop',
-            'label': 'Schema',
-            'tier': 'presentation',
-            'type': 'SExpr',
-          },
-          'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'header',
-              'table',
-              'list',
-              'grid',
-              'detail',
-              'stats',
-              'form',
-              'card',
-              'text',
-              'none',
-            ],
-          },
-          'stateCoverage': {
-            'default': {
-              'item': 'Item',
-            },
-            'description': 'stateCoverage prop',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'State Coverage',
-            'tier': 'presentation',
-            'type': 'Map<string,string>',
-          },
-          'systemDependencies': {
-            'description': 'With `initialLevel=\'system\'`: the app\'s imports, for the Dependencies lens (absent: Events only).',
-            'label': 'System Dependencies',
-            'properties': {
-              'behaviors': {
-                'items': {
-                  'properties': {
-                    'imports': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'imports',
-                      'required': true,
-                      'type': 'array',
-                    },
-                    'layer': {
-                      'name': 'layer',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'io',
-                        'std',
-                        'primitive',
-                        'unknown',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'behaviors',
-                'required': true,
-                'type': 'object',
-              },
-              'orbitals': {
-                'items': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'type': 'array',
-                },
-                'name': 'orbitals',
-                'required': true,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'FlowCanvasSystemDependencies',
-          },
-          'systemMap': {
-            'description': 'With `initialLevel=\'system\'`: what an orbital chip does (drill in, hover preview, open code, preview).',
-            'label': 'System Map',
-            'properties': {
-              'highlighted': {
-                'name': 'highlighted',
-                'required': false,
-                'type': 'string',
-              },
-              'openCodeEvent': {
-                'name': 'openCodeEvent',
-                'required': false,
-                'type': 'string',
-              },
-              'previewEvent': {
-                'name': 'previewEvent',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'FlowCanvasSystemMap',
-          },
-          'tools': {
-            'default': [],
-            'description': 'Editing tools the canvas turns on (a persona\'s shell manifest declares them); all by default.',
-            'items': {
-              'type': 'string',
-              'values': [
-                'multiSelect',
-                'clipboard',
-                'inlineText',
-                'zoomToSelection',
-                'designHandles',
-                'autoLayout',
-                'sizeLimits',
-                'absolute',
-                'guides',
-                'measure',
-              ],
-            },
-            'label': 'Tools',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'traitView': {
-            'description': 'Trait level: which lens (and trait filter) shows — pass with `onTraitViewChange` to keep it across remounts.',
-            'label': 'Trait View',
-            'properties': {
-              'filter': {
-                'name': 'filter',
-                'properties': {
-                  'traits': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'traits',
-                    'required': true,
-                    'type': 'array',
-                  },
-                  'unit': {
-                    'name': 'unit',
-                    'required': true,
-                    'type': 'string',
-                  },
-                },
-                'required': false,
-                'type': 'object',
-              },
-              'lens': {
-                'name': 'lens',
-                'required': true,
-                'type': 'string',
-                'values': [
-                  'flow',
-                  'traits',
-                ],
-              },
-            },
-            'tier': 'presentation',
-            'type': 'FlowCanvasTraitView',
-          },
-          'userType': {
-            'default': 'builder',
-            'description': 'Studio persona viewing the canvas. Drives `OrbInspector` tab/section visibility — designers and builders hide the raw `code` tab and the architect-only Entity / raw-guard / raw-effects sections; architects see everything. Default `\'builder\'` preserves pre-Phase-2 behavior.',
-            'label': 'User Type',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'builder',
-              'designer',
-              'architect',
-            ],
-          },
-          'verify': {
-            'description': 'A host that verifies from the canvas: cards show verify controls and the trait\'s verdict, and follow `UI:CANVAS_SHOW_STATE` to the states a run reaches.',
-            'label': 'Verify',
-            'properties': {},
-            'tier': 'presentation',
-            'type': 'FlowCanvasVerify',
-          },
-          'width': {
-            'default': '100%',
-            'description': 'width prop',
-            'label': 'Width',
-            'tier': 'presentation',
-            'type': 'scalar',
-          },
+        'name': 'FlowCanvasRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -1132,18 +278,21 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'FlowCanvasItem',
         'emits': [
           {
-            'definerKnob': 'onNodeClick',
-            'description': 'onNodeClick prop',
             'event': '@config.onNodeClick',
+            'description': 'onNodeClick prop',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'context',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'level',
-                    'required': true,
                     'type': 'string',
                     'values': [
                       'overview',
@@ -1152,11 +301,12 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       'code',
                       'transition',
                     ],
+                    'required': true,
                   },
                   {
                     'name': 'orbital',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'trait',
@@ -1171,133 +321,135 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                     'type': 'number',
                   },
                 ],
-                'type': 'object',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onNodeClick',
           },
           {
-            'definerKnob': 'onTraitViewChange',
-            'description': 'onTraitViewChange prop',
             'event': '@config.onTraitViewChange',
+            'description': 'onTraitViewChange prop',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'view',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'lens',
-                    'required': true,
                     'type': 'string',
                     'values': [
                       'flow',
                       'traits',
                     ],
+                    'required': true,
                   },
                   {
                     'name': 'filter',
+                    'type': 'object',
                     'properties': [
                       {
                         'name': 'unit',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'traits',
-                        'required': true,
                         'type': '[string]',
+                        'required': true,
                       },
                     ],
-                    'type': 'object',
                   },
                 ],
-                'type': 'object',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onTraitViewChange',
           },
           {
-            'definerKnob': 'openBehaviorEvent',
-            'description': 'Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior\'s source.',
             'event': '@config.openBehaviorEvent',
+            'description': 'Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior\'s source.',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'name',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'openBehaviorEvent',
           },
           {
-            'definerKnob': 'onFocusChange',
-            'description': 'Fired when the focused orbital, the scope, or the focused card\'s state changes.',
             'event': '@config.onFocusChange',
+            'description': 'Fired when the focused orbital, the scope, or the focused card\'s state changes.',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'focus',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'orbital',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'scope',
-                    'required': true,
                     'type': 'string',
                     'values': [
                       'local',
                       'world',
                     ],
+                    'required': true,
                   },
                   {
                     'name': 'state',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'type': 'object',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onFocusChange',
           },
           {
-            'definerKnob': 'onSchemaChange',
-            'description': 'Called when the user edits the schema via the inspector.',
             'event': '@config.onSchemaChange',
+            'description': 'Called when the user edits the schema via the inspector.',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'schema',
                 'type': 'SExpr',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onSchemaChange',
           },
           {
-            'definerKnob': 'onPatternDelete',
-            'description': 'Called when the user presses Delete/Backspace with patterns selected (all of a multi-select).',
             'event': '@config.onPatternDelete',
+            'description': 'Called when the user presses Delete/Backspace with patterns selected (all of a multi-select).',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'context',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'patternIds',
-                    'required': true,
                     'type': '[string]',
+                    'required': true,
                   },
                   {
                     'name': 'nodeData',
+                    'type': 'object',
+                    'required': true,
                     'properties': [
                       {
                         'name': 'orbitalName',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'traitName',
@@ -1336,33 +488,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       },
                       {
                         'name': 'patterns',
+                        'type': '[object]',
+                        'required': true,
                         'properties': [
                           {
                             'name': 'slot',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'pattern',
-                            'required': true,
                             'type': 'SExpr',
+                            'required': true,
                           },
                         ],
-                        'required': true,
-                        'type': '[object]',
                       },
                       {
                         'name': 'eventSources',
+                        'type': '[object]',
+                        'required': true,
                         'properties': [
                           {
                             'name': 'event',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'patternType',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'label',
@@ -1370,37 +524,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                           },
                           {
                             'name': 'path',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'positionHint',
-                            'required': true,
                             'type': 'number',
+                            'required': true,
                           },
                           {
                             'name': 'payloadFields',
+                            'type': '[object]',
                             'properties': [
                               {
                                 'name': 'name',
-                                'required': true,
                                 'type': 'string',
+                                'required': true,
                               },
                               {
                                 'name': 'type',
-                                'required': true,
                                 'type': 'string',
+                                'required': true,
                               },
                               {
                                 'name': 'required',
                                 'type': 'boolean',
                               },
                             ],
-                            'type': '[object]',
                           },
                         ],
-                        'required': true,
-                        'type': '[object]',
                       },
                       {
                         'name': 'layer',
@@ -1541,24 +693,24 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       },
                       {
                         'name': 'transitions',
+                        'type': '[object]',
                         'properties': [
                           {
                             'name': 'event',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'fromState',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'toState',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                         ],
-                        'type': '[object]',
                       },
                       {
                         'name': 'emits',
@@ -1577,15 +729,13 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         'type': 'SExpr',
                       },
                     ],
-                    'required': true,
-                    'type': 'object',
                   },
                   {
                     'name': 'elements',
+                    'type': '[object]',
                     'properties': [
                       {
                         'name': 'level',
-                        'required': true,
                         'type': 'string',
                         'values': [
                           'node',
@@ -1596,11 +746,12 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                           'page',
                           'orbital',
                         ],
+                        'required': true,
                       },
                       {
                         'name': 'orbital',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'trait',
@@ -1636,41 +787,40 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       },
                       {
                         'name': 'label',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                     ],
-                    'type': '[object]',
                   },
                 ],
-                'type': 'object',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onPatternDelete',
           },
           {
-            'definerKnob': 'onEventWire',
-            'description': 'Called when the user drags from a source handle to a target handle (event wiring).',
             'event': '@config.onEventWire',
+            'description': 'Called when the user drags from a source handle to a target handle (event wiring).',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'wire',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'eventName',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'sourceOrbital',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetOrbital',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'sourceTraitName',
@@ -1681,42 +831,41 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                     'type': 'string',
                   },
                 ],
-                'type': 'object',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onEventWire',
           },
           {
-            'definerKnob': 'onOrbitalHover',
-            'description': 'Hover handler for overview-level orbital nodes. Fires with the orbital name on enter and `null` on leave. Reserved for the upcoming trace tooltip: consumers will use it to anchor a popover that shows the subagent\'s live trace + reasoning for the hovered orbital.',
             'event': '@config.onOrbitalHover',
+            'description': 'Hover handler for overview-level orbital nodes. Fires with the orbital name on enter and `null` on leave. Reserved for the upcoming trace tooltip: consumers will use it to anchor a popover that shows the subagent\'s live trace + reasoning for the hovered orbital.',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'orbitalName',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onOrbitalHover',
           },
           {
-            'definerKnob': 'onNodeSelect',
-            'description': 'Called when the user clicks a node in overview level (for composition hints).',
             'event': '@config.onNodeSelect',
+            'description': 'Called when the user clicks a node in overview level (for composition hints).',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'orbitalName',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onNodeSelect',
           },
           {
-            'definerKnob': 'onZoomChange',
-            'description': 'onZoomChange prop',
             'event': '@config.onZoomChange',
+            'description': 'onZoomChange prop',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'level',
@@ -1727,34 +876,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                 'type': 'Map<string,string>',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onZoomChange',
           },
           {
-            'definerKnob': 'onPositionsChange',
-            'description': 'Fired on node drag-stop and card resize with the full {id → placement} map of the current node set, so the consumer can persist the arrangement.',
             'event': '@config.onPositionsChange',
+            'description': 'Fired on node drag-stop and card resize with the full {id → placement} map of the current node set, so the consumer can persist the arrangement.',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'positions',
                 'type': 'Map<string,FlowCanvasPOSITIONSCHANGEPositionsValue>',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onPositionsChange',
           },
           {
-            'definerKnob': 'onSelectedNodeChange',
-            'description': 'Fired whenever the internal `selectedNode` changes — select, clear-on- escape, clear-on-level-change, and pattern-selection sync all route through this. Lets a consumer mirror selection into a persistent properties panel rendered outside the canvas (see `externalInspector`).',
             'event': '@config.onSelectedNodeChange',
+            'description': 'Fired whenever the internal `selectedNode` changes — select, clear-on- escape, clear-on-level-change, and pattern-selection sync all route through this. Lets a consumer mirror selection into a persistent properties panel rendered outside the canvas (see `externalInspector`).',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'node',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'orbitalName',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'traitName',
@@ -1793,33 +943,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                   },
                   {
                     'name': 'patterns',
+                    'type': '[object]',
+                    'required': true,
                     'properties': [
                       {
                         'name': 'slot',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'pattern',
-                        'required': true,
                         'type': 'SExpr',
+                        'required': true,
                       },
                     ],
-                    'required': true,
-                    'type': '[object]',
                   },
                   {
                     'name': 'eventSources',
+                    'type': '[object]',
+                    'required': true,
                     'properties': [
                       {
                         'name': 'event',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'patternType',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'label',
@@ -1827,37 +979,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       },
                       {
                         'name': 'path',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'positionHint',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                       {
                         'name': 'payloadFields',
+                        'type': '[object]',
                         'properties': [
                           {
                             'name': 'name',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'type',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'required',
                             'type': 'boolean',
                           },
                         ],
-                        'type': '[object]',
                       },
                     ],
-                    'required': true,
-                    'type': '[object]',
                   },
                   {
                     'name': 'layer',
@@ -1998,24 +1148,24 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                   },
                   {
                     'name': 'transitions',
+                    'type': '[object]',
                     'properties': [
                       {
                         'name': 'event',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'fromState',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'toState',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                     ],
-                    'type': '[object]',
                   },
                   {
                     'name': 'emits',
@@ -2034,24 +1184,24 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                     'type': 'SExpr',
                   },
                 ],
-                'type': 'object',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onSelectedNodeChange',
           },
           {
-            'definerKnob': 'onSelectedPatternChange',
-            'description': 'Fired whenever the in-node pattern selection changes (a pattern click inside `OrbPreviewNode`, cleared on background click / Escape / pattern delete). `PatternSelectionContext` is internal to this component\'s own render tree, so an externally-rendered `OrbInspector` (see `externalInspector`) has no other way to learn which pattern the user picked — pass this straight through to `OrbInspector`\'s `selectedPattern` prop to keep Design-tab prop editing working outside the canvas.',
             'event': '@config.onSelectedPatternChange',
+            'description': 'Fired whenever the in-node pattern selection changes (a pattern click inside `OrbPreviewNode`, cleared on background click / Escape / pattern delete). `PatternSelectionContext` is internal to this component\'s own render tree, so an externally-rendered `OrbInspector` (see `externalInspector`) has no other way to learn which pattern the user picked — pass this straight through to `OrbInspector`\'s `selectedPattern` prop to keep Design-tab prop editing working outside the canvas.',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'pattern',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'patternType',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'patternId',
@@ -2059,11 +1209,13 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                   },
                   {
                     'name': 'nodeData',
+                    'type': 'object',
+                    'required': true,
                     'properties': [
                       {
                         'name': 'orbitalName',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'traitName',
@@ -2102,33 +1254,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       },
                       {
                         'name': 'patterns',
+                        'type': '[object]',
+                        'required': true,
                         'properties': [
                           {
                             'name': 'slot',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'pattern',
-                            'required': true,
                             'type': 'SExpr',
+                            'required': true,
                           },
                         ],
-                        'required': true,
-                        'type': '[object]',
                       },
                       {
                         'name': 'eventSources',
+                        'type': '[object]',
+                        'required': true,
                         'properties': [
                           {
                             'name': 'event',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'patternType',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'label',
@@ -2136,37 +1290,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                           },
                           {
                             'name': 'path',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'positionHint',
-                            'required': true,
                             'type': 'number',
+                            'required': true,
                           },
                           {
                             'name': 'payloadFields',
+                            'type': '[object]',
                             'properties': [
                               {
                                 'name': 'name',
-                                'required': true,
                                 'type': 'string',
+                                'required': true,
                               },
                               {
                                 'name': 'type',
-                                'required': true,
                                 'type': 'string',
+                                'required': true,
                               },
                               {
                                 'name': 'required',
                                 'type': 'boolean',
                               },
                             ],
-                            'type': '[object]',
                           },
                         ],
-                        'required': true,
-                        'type': '[object]',
                       },
                       {
                         'name': 'layer',
@@ -2307,24 +1459,24 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       },
                       {
                         'name': 'transitions',
+                        'type': '[object]',
                         'properties': [
                           {
                             'name': 'event',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'fromState',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                           {
                             'name': 'toState',
-                            'required': true,
                             'type': 'string',
+                            'required': true,
                           },
                         ],
-                        'type': '[object]',
                       },
                       {
                         'name': 'emits',
@@ -2343,8 +1495,6 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         'type': 'SExpr',
                       },
                     ],
-                    'required': true,
-                    'type': 'object',
                   },
                   {
                     'name': 'sourceTrait',
@@ -2352,29 +1502,29 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                   },
                   {
                     'name': 'rect',
+                    'type': 'object',
                     'properties': [
                       {
                         'name': 'top',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                       {
                         'name': 'left',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                       {
                         'name': 'width',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                       {
                         'name': 'height',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                     ],
-                    'type': 'object',
                   },
                   {
                     'name': 'selection',
@@ -2382,46 +1532,46 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                   },
                   {
                     'name': 'offsetInParent',
+                    'type': 'object',
                     'properties': [
                       {
                         'name': 'left',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                       {
                         'name': 'top',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                       {
                         'name': 'right',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                       {
                         'name': 'bottom',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                       {
                         'name': 'parentWidth',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                       {
                         'name': 'parentHeight',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
                       },
                     ],
-                    'type': 'object',
                   },
                   {
                     'name': 'focus',
+                    'type': 'object',
                     'properties': [
                       {
                         'name': 'level',
-                        'required': true,
                         'type': 'string',
                         'values': [
                           'node',
@@ -2432,11 +1582,12 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                           'page',
                           'orbital',
                         ],
+                        'required': true,
                       },
                       {
                         'name': 'orbital',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'trait',
@@ -2472,18 +1623,17 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       },
                       {
                         'name': 'label',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                     ],
-                    'type': 'object',
                   },
                   {
                     'name': 'elements',
+                    'type': '[object]',
                     'properties': [
                       {
                         'name': 'level',
-                        'required': true,
                         'type': 'string',
                         'values': [
                           'node',
@@ -2494,11 +1644,12 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                           'page',
                           'orbital',
                         ],
+                        'required': true,
                       },
                       {
                         'name': 'orbital',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                       {
                         'name': 'trait',
@@ -2534,45 +1685,41 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       },
                       {
                         'name': 'label',
-                        'required': true,
                         'type': 'string',
+                        'required': true,
                       },
                     ],
-                    'type': '[object]',
                   },
                 ],
-                'type': 'object',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onSelectedPatternChange',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'FlowCanvasItem',
-        'name': 'FlowCanvasRender',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'onNodeClick prop',
               'key': '@config.onNodeClick',
               'name': '@config.on node click',
+              'description': 'onNodeClick prop',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'context',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'level',
-                      'required': true,
                       'type': 'string',
                       'values': [
                         'overview',
@@ -2581,11 +1728,12 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         'code',
                         'transition',
                       ],
+                      'required': true,
                     },
                     {
                       'name': 'orbital',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'trait',
@@ -2600,128 +1748,130 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       'type': 'number',
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'onTraitViewChange prop',
               'key': '@config.onTraitViewChange',
               'name': '@config.on trait view change',
+              'description': 'onTraitViewChange prop',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'view',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'lens',
-                      'required': true,
                       'type': 'string',
                       'values': [
                         'flow',
                         'traits',
                       ],
+                      'required': true,
                     },
                     {
                       'name': 'filter',
+                      'type': 'object',
                       'properties': [
                         {
                           'name': 'unit',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'traits',
-                          'required': true,
                           'type': '[string]',
+                          'required': true,
                         },
                       ],
-                      'type': 'object',
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior\'s source.',
               'key': '@config.openBehaviorEvent',
               'name': '@config.open behavior event',
+              'description': 'Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior\'s source.',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'name',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Fired when the focused orbital, the scope, or the focused card\'s state changes.',
               'key': '@config.onFocusChange',
               'name': '@config.on focus change',
+              'description': 'Fired when the focused orbital, the scope, or the focused card\'s state changes.',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'focus',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'orbital',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'scope',
-                      'required': true,
                       'type': 'string',
                       'values': [
                         'local',
                         'world',
                       ],
+                      'required': true,
                     },
                     {
                       'name': 'state',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Called when the user edits the schema via the inspector.',
               'key': '@config.onSchemaChange',
               'name': '@config.on schema change',
+              'description': 'Called when the user edits the schema via the inspector.',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'schema',
                   'type': 'SExpr',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Called when the user presses Delete/Backspace with patterns selected (all of a multi-select).',
               'key': '@config.onPatternDelete',
               'name': '@config.on pattern delete',
+              'description': 'Called when the user presses Delete/Backspace with patterns selected (all of a multi-select).',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'context',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'patternIds',
-                      'required': true,
                       'type': '[string]',
+                      'required': true,
                     },
                     {
                       'name': 'nodeData',
+                      'type': 'object',
+                      'required': true,
                       'properties': [
                         {
                           'name': 'orbitalName',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'traitName',
@@ -2760,33 +1910,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         },
                         {
                           'name': 'patterns',
+                          'type': '[object]',
+                          'required': true,
                           'properties': [
                             {
                               'name': 'slot',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'pattern',
-                              'required': true,
                               'type': 'SExpr',
+                              'required': true,
                             },
                           ],
-                          'required': true,
-                          'type': '[object]',
                         },
                         {
                           'name': 'eventSources',
+                          'type': '[object]',
+                          'required': true,
                           'properties': [
                             {
                               'name': 'event',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'patternType',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'label',
@@ -2794,37 +1946,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                             },
                             {
                               'name': 'path',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'positionHint',
-                              'required': true,
                               'type': 'number',
+                              'required': true,
                             },
                             {
                               'name': 'payloadFields',
+                              'type': '[object]',
                               'properties': [
                                 {
                                   'name': 'name',
-                                  'required': true,
                                   'type': 'string',
+                                  'required': true,
                                 },
                                 {
                                   'name': 'type',
-                                  'required': true,
                                   'type': 'string',
+                                  'required': true,
                                 },
                                 {
                                   'name': 'required',
                                   'type': 'boolean',
                                 },
                               ],
-                              'type': '[object]',
                             },
                           ],
-                          'required': true,
-                          'type': '[object]',
                         },
                         {
                           'name': 'layer',
@@ -2965,24 +2115,24 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         },
                         {
                           'name': 'transitions',
+                          'type': '[object]',
                           'properties': [
                             {
                               'name': 'event',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'fromState',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'toState',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                           ],
-                          'type': '[object]',
                         },
                         {
                           'name': 'emits',
@@ -3001,15 +2151,13 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                           'type': 'SExpr',
                         },
                       ],
-                      'required': true,
-                      'type': 'object',
                     },
                     {
                       'name': 'elements',
+                      'type': '[object]',
                       'properties': [
                         {
                           'name': 'level',
-                          'required': true,
                           'type': 'string',
                           'values': [
                             'node',
@@ -3020,11 +2168,12 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                             'page',
                             'orbital',
                           ],
+                          'required': true,
                         },
                         {
                           'name': 'orbital',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'trait',
@@ -3060,40 +2209,39 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         },
                         {
                           'name': 'label',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                       ],
-                      'type': '[object]',
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Called when the user drags from a source handle to a target handle (event wiring).',
               'key': '@config.onEventWire',
               'name': '@config.on event wire',
+              'description': 'Called when the user drags from a source handle to a target handle (event wiring).',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'wire',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'eventName',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'sourceOrbital',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'targetOrbital',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'sourceTraitName',
@@ -3104,39 +2252,38 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Hover handler for overview-level orbital nodes. Fires with the orbital name on enter and `null` on leave. Reserved for the upcoming trace tooltip: consumers will use it to anchor a popover that shows the subagent\'s live trace + reasoning for the hovered orbital.',
               'key': '@config.onOrbitalHover',
               'name': '@config.on orbital hover',
+              'description': 'Hover handler for overview-level orbital nodes. Fires with the orbital name on enter and `null` on leave. Reserved for the upcoming trace tooltip: consumers will use it to anchor a popover that shows the subagent\'s live trace + reasoning for the hovered orbital.',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'orbitalName',
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Called when the user clicks a node in overview level (for composition hints).',
               'key': '@config.onNodeSelect',
               'name': '@config.on node select',
+              'description': 'Called when the user clicks a node in overview level (for composition hints).',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'orbitalName',
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'onZoomChange prop',
               'key': '@config.onZoomChange',
               'name': '@config.on zoom change',
+              'description': 'onZoomChange prop',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'level',
@@ -3147,32 +2294,33 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                   'type': 'Map<string,string>',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Fired on node drag-stop and card resize with the full {id → placement} map of the current node set, so the consumer can persist the arrangement.',
               'key': '@config.onPositionsChange',
               'name': '@config.on positions change',
+              'description': 'Fired on node drag-stop and card resize with the full {id → placement} map of the current node set, so the consumer can persist the arrangement.',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'positions',
                   'type': 'Map<string,FlowCanvasPOSITIONSCHANGEPositionsValue>',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Fired whenever the internal `selectedNode` changes — select, clear-on- escape, clear-on-level-change, and pattern-selection sync all route through this. Lets a consumer mirror selection into a persistent properties panel rendered outside the canvas (see `externalInspector`).',
               'key': '@config.onSelectedNodeChange',
               'name': '@config.on selected node change',
+              'description': 'Fired whenever the internal `selectedNode` changes — select, clear-on- escape, clear-on-level-change, and pattern-selection sync all route through this. Lets a consumer mirror selection into a persistent properties panel rendered outside the canvas (see `externalInspector`).',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'node',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'orbitalName',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'traitName',
@@ -3211,33 +2359,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                     },
                     {
                       'name': 'patterns',
+                      'type': '[object]',
+                      'required': true,
                       'properties': [
                         {
                           'name': 'slot',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'pattern',
-                          'required': true,
                           'type': 'SExpr',
+                          'required': true,
                         },
                       ],
-                      'required': true,
-                      'type': '[object]',
                     },
                     {
                       'name': 'eventSources',
+                      'type': '[object]',
+                      'required': true,
                       'properties': [
                         {
                           'name': 'event',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'patternType',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'label',
@@ -3245,37 +2395,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         },
                         {
                           'name': 'path',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'positionHint',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                         {
                           'name': 'payloadFields',
+                          'type': '[object]',
                           'properties': [
                             {
                               'name': 'name',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'type',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'required',
                               'type': 'boolean',
                             },
                           ],
-                          'type': '[object]',
                         },
                       ],
-                      'required': true,
-                      'type': '[object]',
                     },
                     {
                       'name': 'layer',
@@ -3416,24 +2564,24 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                     },
                     {
                       'name': 'transitions',
+                      'type': '[object]',
                       'properties': [
                         {
                           'name': 'event',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'fromState',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'toState',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                       ],
-                      'type': '[object]',
                     },
                     {
                       'name': 'emits',
@@ -3452,23 +2600,23 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                       'type': 'SExpr',
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Fired whenever the in-node pattern selection changes (a pattern click inside `OrbPreviewNode`, cleared on background click / Escape / pattern delete). `PatternSelectionContext` is internal to this component\'s own render tree, so an externally-rendered `OrbInspector` (see `externalInspector`) has no other way to learn which pattern the user picked — pass this straight through to `OrbInspector`\'s `selectedPattern` prop to keep Design-tab prop editing working outside the canvas.',
               'key': '@config.onSelectedPatternChange',
               'name': '@config.on selected pattern change',
+              'description': 'Fired whenever the in-node pattern selection changes (a pattern click inside `OrbPreviewNode`, cleared on background click / Escape / pattern delete). `PatternSelectionContext` is internal to this component\'s own render tree, so an externally-rendered `OrbInspector` (see `externalInspector`) has no other way to learn which pattern the user picked — pass this straight through to `OrbInspector`\'s `selectedPattern` prop to keep Design-tab prop editing working outside the canvas.',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'pattern',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'patternType',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'patternId',
@@ -3476,11 +2624,13 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                     },
                     {
                       'name': 'nodeData',
+                      'type': 'object',
+                      'required': true,
                       'properties': [
                         {
                           'name': 'orbitalName',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'traitName',
@@ -3519,33 +2669,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         },
                         {
                           'name': 'patterns',
+                          'type': '[object]',
+                          'required': true,
                           'properties': [
                             {
                               'name': 'slot',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'pattern',
-                              'required': true,
                               'type': 'SExpr',
+                              'required': true,
                             },
                           ],
-                          'required': true,
-                          'type': '[object]',
                         },
                         {
                           'name': 'eventSources',
+                          'type': '[object]',
+                          'required': true,
                           'properties': [
                             {
                               'name': 'event',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'patternType',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'label',
@@ -3553,37 +2705,35 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                             },
                             {
                               'name': 'path',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'positionHint',
-                              'required': true,
                               'type': 'number',
+                              'required': true,
                             },
                             {
                               'name': 'payloadFields',
+                              'type': '[object]',
                               'properties': [
                                 {
                                   'name': 'name',
-                                  'required': true,
                                   'type': 'string',
+                                  'required': true,
                                 },
                                 {
                                   'name': 'type',
-                                  'required': true,
                                   'type': 'string',
+                                  'required': true,
                                 },
                                 {
                                   'name': 'required',
                                   'type': 'boolean',
                                 },
                               ],
-                              'type': '[object]',
                             },
                           ],
-                          'required': true,
-                          'type': '[object]',
                         },
                         {
                           'name': 'layer',
@@ -3724,24 +2874,24 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         },
                         {
                           'name': 'transitions',
+                          'type': '[object]',
                           'properties': [
                             {
                               'name': 'event',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'fromState',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                             {
                               'name': 'toState',
-                              'required': true,
                               'type': 'string',
+                              'required': true,
                             },
                           ],
-                          'type': '[object]',
                         },
                         {
                           'name': 'emits',
@@ -3760,8 +2910,6 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                           'type': 'SExpr',
                         },
                       ],
-                      'required': true,
-                      'type': 'object',
                     },
                     {
                       'name': 'sourceTrait',
@@ -3769,29 +2917,29 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                     },
                     {
                       'name': 'rect',
+                      'type': 'object',
                       'properties': [
                         {
                           'name': 'top',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                         {
                           'name': 'left',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                         {
                           'name': 'width',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                         {
                           'name': 'height',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                       ],
-                      'type': 'object',
                     },
                     {
                       'name': 'selection',
@@ -3799,46 +2947,46 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                     },
                     {
                       'name': 'offsetInParent',
+                      'type': 'object',
                       'properties': [
                         {
                           'name': 'left',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                         {
                           'name': 'top',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                         {
                           'name': 'right',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                         {
                           'name': 'bottom',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                         {
                           'name': 'parentWidth',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                         {
                           'name': 'parentHeight',
-                          'required': true,
                           'type': 'number',
+                          'required': true,
                         },
                       ],
-                      'type': 'object',
                     },
                     {
                       'name': 'focus',
+                      'type': 'object',
                       'properties': [
                         {
                           'name': 'level',
-                          'required': true,
                           'type': 'string',
                           'values': [
                             'node',
@@ -3849,11 +2997,12 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                             'page',
                             'orbital',
                           ],
+                          'required': true,
                         },
                         {
                           'name': 'orbital',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'trait',
@@ -3889,18 +3038,17 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         },
                         {
                           'name': 'label',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                       ],
-                      'type': 'object',
                     },
                     {
                       'name': 'elements',
+                      'type': '[object]',
                       'properties': [
                         {
                           'name': 'level',
-                          'required': true,
                           'type': 'string',
                           'values': [
                             'node',
@@ -3911,11 +3059,12 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                             'page',
                             'orbital',
                           ],
+                          'required': true,
                         },
                         {
                           'name': 'orbital',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                         {
                           'name': 'trait',
@@ -3951,84 +3100,935 @@ export function stdUiFlowCanvasFlowCanvasOrbital(params: StdUiFlowCanvasFlowCanv
                         },
                         {
                           'name': 'label',
-                          'required': true,
                           'type': 'string',
+                          'required': true,
                         },
                       ],
-                      'type': '[object]',
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'animated': '@config.animated',
                     'behaviorMeta': '@config.behaviorMeta',
-                    'className': '@config.className',
+                    'onSelectedPatternChange': '@config.onSelectedPatternChange',
+                    'onFocusChange': '@config.onFocusChange',
+                    'layoutHint': '@config.layoutHint',
+                    'initialSelectedNode': '@config.initialSelectedNode',
+                    'animated': '@config.animated',
+                    'enter': '@config.enter',
+                    'userType': '@config.userType',
+                    'externalInspector': '@config.externalInspector',
+                    'traitView': '@config.traitView',
                     'color': '@config.color',
                     'editable': '@config.editable',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'externalInspector': '@config.externalInspector',
-                    'focusTarget': '@config.focusTarget',
-                    'focusedOrbital': '@config.focusedOrbital',
-                    'height': '@config.height',
-                    'initialLevel': '@config.initialLevel',
-                    'initialOrbital': '@config.initialOrbital',
-                    'initialSelectedNode': '@config.initialSelectedNode',
-                    'initialTrait': '@config.initialTrait',
-                    'layoutHint': '@config.layoutHint',
-                    'nodePositions': '@config.nodePositions',
-                    'onEventWire': '@config.onEventWire',
-                    'onFocusChange': '@config.onFocusChange',
-                    'onNodeClick': '@config.onNodeClick',
-                    'onNodeSelect': '@config.onNodeSelect',
-                    'onOrbitalHover': '@config.onOrbitalHover',
-                    'onPatternDelete': '@config.onPatternDelete',
-                    'onPositionsChange': '@config.onPositionsChange',
-                    'onSchemaChange': '@config.onSchemaChange',
-                    'onSelectedNodeChange': '@config.onSelectedNodeChange',
-                    'onSelectedPatternChange': '@config.onSelectedPatternChange',
-                    'onTraitViewChange': '@config.onTraitViewChange',
-                    'onZoomChange': '@config.onZoomChange',
-                    'openBehaviorEvent': '@config.openBehaviorEvent',
-                    'orbitalStatus': '@config.orbitalStatus',
-                    'scene': '@config.scene',
-                    'schema': '@config.schema',
                     'skeleton': '@config.skeleton',
-                    'stateCoverage': '@config.stateCoverage',
-                    'systemDependencies': '@config.systemDependencies',
-                    'systemMap': '@config.systemMap',
                     'tools': '@config.tools',
-                    'traitView': '@config.traitView',
-                    'type': 'flow-canvas',
-                    'userType': '@config.userType',
                     'verify': '@config.verify',
+                    'onZoomChange': '@config.onZoomChange',
+                    'stateCoverage': '@config.stateCoverage',
+                    'onTraitViewChange': '@config.onTraitViewChange',
+                    'openBehaviorEvent': '@config.openBehaviorEvent',
+                    'onOrbitalHover': '@config.onOrbitalHover',
+                    'scene': '@config.scene',
+                    'type': 'flow-canvas',
+                    'systemDependencies': '@config.systemDependencies',
+                    'initialTrait': '@config.initialTrait',
+                    'initialOrbital': '@config.initialOrbital',
+                    'schema': '@config.schema',
+                    'onSchemaChange': '@config.onSchemaChange',
+                    'onNodeSelect': '@config.onNodeSelect',
+                    'nodePositions': '@config.nodePositions',
+                    'height': '@config.height',
+                    'enterDelay': '@config.enterDelay',
+                    'focusTarget': '@config.focusTarget',
+                    'orbitalStatus': '@config.orbitalStatus',
+                    'onEventWire': '@config.onEventWire',
+                    'onNodeClick': '@config.onNodeClick',
+                    'onSelectedNodeChange': '@config.onSelectedNodeChange',
+                    'focusedOrbital': '@config.focusedOrbital',
+                    'systemMap': '@config.systemMap',
                     'width': '@config.width',
+                    'initialLevel': '@config.initialLevel',
+                    'onPatternDelete': '@config.onPatternDelete',
+                    'className': '@config.className',
+                    'onPositionsChange': '@config.onPositionsChange',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'userType': {
+            'type': 'string',
+            'default': 'builder',
+            'label': 'User Type',
+            'description': 'Studio persona viewing the canvas. Drives `OrbInspector` tab/section visibility — designers and builders hide the raw `code` tab and the architect-only Entity / raw-guard / raw-effects sections; architects see everything. Default `\'builder\'` preserves pre-Phase-2 behavior.',
+            'tier': 'presentation',
+            'values': [
+              'builder',
+              'designer',
+              'architect',
+            ],
+          },
+          'stateCoverage': {
+            'type': 'Map<string,string>',
+            'default': {
+              'item': 'Item',
+            },
+            'label': 'State Coverage',
+            'description': 'stateCoverage prop',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'initialTrait': {
+            'type': 'string',
+            'label': 'Initial Trait',
+            'description': 'initialTrait prop',
+            'tier': 'presentation',
+          },
+          'focusTarget': {
+            'type': 'FlowCanvasFocusTarget',
+            'label': 'Focus Target',
+            'description': 'focusTarget prop',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
+              'type': {
+                'name': 'type',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'onSelectedPatternChange': {
+            'type': 'event',
+            'default': 'SELECTED_PATTERN_CHANGE',
+            'label': 'On Selected Pattern Change',
+            'description': 'Fired whenever the in-node pattern selection changes (a pattern click inside `OrbPreviewNode`, cleared on background click / Escape / pattern delete). `PatternSelectionContext` is internal to this component\'s own render tree, so an externally-rendered `OrbInspector` (see `externalInspector`) has no other way to learn which pattern the user picked — pass this straight through to `OrbInspector`\'s `selectedPattern` prop to keep Design-tab prop editing working outside the canvas.',
+            'tier': 'presentation',
+          },
+          'editable': {
+            'type': 'boolean',
+            'label': 'Editable',
+            'description': 'Enable editing in the inspector. When true, fields become inputs.',
+            'tier': 'presentation',
+          },
+          'verify': {
+            'type': 'FlowCanvasVerify',
+            'label': 'Verify',
+            'description': 'A host that verifies from the canvas: cards show verify controls and the trait\'s verdict, and follow `UI:CANVAS_SHOW_STATE` to the states a run reaches.',
+            'tier': 'presentation',
+            'properties': {},
+          },
+          'skeleton': {
+            'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
+          'onSelectedNodeChange': {
+            'type': 'event',
+            'default': 'SELECTED_NODE_CHANGE',
+            'label': 'On Selected Node Change',
+            'description': 'Fired whenever the internal `selectedNode` changes — select, clear-on- escape, clear-on-level-change, and pattern-selection sync all route through this. Lets a consumer mirror selection into a persistent properties panel rendered outside the canvas (see `externalInspector`).',
+            'tier': 'presentation',
+          },
+          'tools': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Tools',
+            'description': 'Editing tools the canvas turns on (a persona\'s shell manifest declares them); all by default.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+              'values': [
+                'multiSelect',
+                'clipboard',
+                'inlineText',
+                'zoomToSelection',
+                'designHandles',
+                'autoLayout',
+                'sizeLimits',
+                'absolute',
+                'guides',
+                'measure',
+              ],
+            },
+          },
+          'layoutHint': {
+            'type': 'string',
+            'label': 'Layout Hint',
+            'description': 'Layout hint: \'pipeline\' renders nodes left-to-right, \'grid\' (default) uses sqrt-based grid.',
+            'tier': 'presentation',
+            'values': [
+              'pipeline',
+              'grid',
+            ],
+          },
+          'openBehaviorEvent': {
+            'type': 'event',
+            'default': 'OPEN_BEHAVIOR',
+            'label': 'Open Behavior Event',
+            'description': 'Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior\'s source.',
+            'tier': 'presentation',
+          },
+          'onPatternDelete': {
+            'type': 'event',
+            'default': 'PATTERN_DELETE',
+            'label': 'On Pattern Delete',
+            'description': 'Called when the user presses Delete/Backspace with patterns selected (all of a multi-select).',
+            'tier': 'presentation',
+          },
+          'onNodeSelect': {
+            'type': 'event',
+            'default': 'NODE_SELECT',
+            'label': 'On Node Select',
+            'description': 'Called when the user clicks a node in overview level (for composition hints).',
+            'tier': 'presentation',
+          },
+          'onTraitViewChange': {
+            'type': 'event',
+            'default': 'TRAIT_VIEW_CHANGE',
+            'label': 'On Trait View Change',
+            'description': 'onTraitViewChange prop',
+            'tier': 'presentation',
+          },
+          'systemDependencies': {
+            'type': 'FlowCanvasSystemDependencies',
+            'label': 'System Dependencies',
+            'description': 'With `initialLevel=\'system\'`: the app\'s imports, for the Dependencies lens (absent: Events only).',
+            'tier': 'presentation',
+            'properties': {
+              'orbitals': {
+                'name': 'orbitals',
+                'type': 'object',
+                'required': true,
+                'items': {
+                  'type': 'array',
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+              },
+              'behaviors': {
+                'name': 'behaviors',
+                'type': 'object',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'imports': {
+                      'name': 'imports',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'layer': {
+                      'name': 'layer',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'io',
+                        'std',
+                        'primitive',
+                        'unknown',
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'behaviorMeta': {
+            'type': 'Map<string,FlowCanvasBehaviorMetaValue>',
+            'default': {
+              'item': {
+                'layer': 'Layer',
+              },
+            },
+            'label': 'Behavior Meta',
+            'description': 'Behavior layer metadata for node styling (layer color bands).',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'layer': {
+                  'name': 'layer',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'width': {
+            'type': 'scalar',
+            'default': '100%',
+            'label': 'Width',
+            'description': 'width prop',
+            'tier': 'presentation',
+          },
+          'onZoomChange': {
+            'type': 'event',
+            'default': 'ZOOM_CHANGE',
+            'label': 'On Zoom Change',
+            'description': 'onZoomChange prop',
+            'tier': 'presentation',
+          },
+          'onOrbitalHover': {
+            'type': 'event',
+            'default': 'ORBITAL_HOVER',
+            'label': 'On Orbital Hover',
+            'description': 'Hover handler for overview-level orbital nodes. Fires with the orbital name on enter and `null` on leave. Reserved for the upcoming trace tooltip: consumers will use it to anchor a popover that shows the subagent\'s live trace + reasoning for the hovered orbital.',
+            'tier': 'presentation',
+          },
+          'focusedOrbital': {
+            'type': 'string',
+            'label': 'Focused Orbital',
+            'description': 'Focus this orbital (e.g. picked in a Layers panel); changing it moves the focus without remounting.',
+            'tier': 'presentation',
+          },
+          'orbitalStatus': {
+            'type': 'Map<string,string>',
+            'default': {},
+            'label': 'Orbital Status',
+            'description': 'Per-orbital generation status. Keyed by orbital name. Drives the spinner + accent border treatment on the overview node and (future) the hover trace surface. Defaults to `\'idle\'` for missing entries. Consumers derive this from agent subagent_start/complete SSE events.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'onEventWire': {
+            'type': 'event',
+            'default': 'EVENT_WIRE',
+            'label': 'On Event Wire',
+            'description': 'Called when the user drags from a source handle to a target handle (event wiring).',
+            'tier': 'presentation',
+          },
+          'systemMap': {
+            'type': 'FlowCanvasSystemMap',
+            'label': 'System Map',
+            'description': 'With `initialLevel=\'system\'`: what an orbital chip does (drill in, hover preview, open code, preview).',
+            'tier': 'presentation',
+            'properties': {
+              'highlighted': {
+                'name': 'highlighted',
+                'type': 'string',
+                'required': false,
+              },
+              'previewEvent': {
+                'name': 'previewEvent',
+                'type': 'string',
+                'required': false,
+              },
+              'openCodeEvent': {
+                'name': 'openCodeEvent',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'nodePositions': {
+            'type': 'Map<string,FlowCanvasNodePositionsValue>',
+            'default': {
+              'item': {
+                'y': 1,
+                'x': 1,
+                'width': 1,
+              },
+            },
+            'label': 'Node Positions',
+            'description': 'Persisted node positions keyed by node id. When the node set changes (level/schema switch), any id present here overrides the computed layout position, restoring a user\'s manual drag arrangement. Node ids are unique per view level, so a single flat map covers overview + expanded. A saved `width` restores a card frame the designer resized.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'width': {
+                  'name': 'width',
+                  'type': 'number',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'scene': {
+            'type': 'FlowCanvasScene',
+            'label': 'Scene',
+            'description': 'With `initialLevel=\'trait-expanded\'`: played steps lighting each trait card\'s state machine.',
+            'tier': 'presentation',
+            'properties': {
+              'steps': {
+                'name': 'steps',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'orbital': {
+                      'name': 'orbital',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'trait': {
+                      'name': 'trait',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'from': {
+                      'name': 'from',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'cursor': {
+                'name': 'cursor',
+                'type': 'number',
+                'required': true,
+              },
+            },
+          },
+          'initialSelectedNode': {
+            'type': 'FlowCanvasInitialSelectedNode',
+            'label': 'Initial Selected Node',
+            'description': 'Pre-select a node on mount (opens OrbInspector).',
+            'tier': 'presentation',
+            'properties': {
+              'transitionEvent': {
+                'name': 'transitionEvent',
+                'type': 'string',
+                'required': false,
+              },
+              'cardWidth': {
+                'name': 'cardWidth',
+                'type': 'number',
+                'required': false,
+              },
+              'entityName': {
+                'name': 'entityName',
+                'type': 'string',
+                'required': false,
+              },
+              'cardLabel': {
+                'name': 'cardLabel',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'screen',
+                ],
+              },
+              'enteredBy': {
+                'name': 'enteredBy',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'unitMetric': {
+                'name': 'unitMetric',
+                'type': 'string',
+                'required': false,
+              },
+              'layer': {
+                'name': 'layer',
+                'type': 'string',
+                'required': false,
+              },
+              'bandCount': {
+                'name': 'bandCount',
+                'type': 'number',
+                'required': false,
+              },
+              'stateName': {
+                'name': 'stateName',
+                'type': 'string',
+                'required': false,
+              },
+              'traitCount': {
+                'name': 'traitCount',
+                'type': 'number',
+                'required': false,
+              },
+              'unitStatus': {
+                'name': 'unitStatus',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'ok',
+                  'degraded',
+                  'down',
+                  'idle',
+                ],
+              },
+              'wireEvents': {
+                'name': 'wireEvents',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'flowRenderPieces': {
+                'name': 'flowRenderPieces',
+                'type': 'number',
+                'required': false,
+              },
+              'listens': {
+                'name': 'listens',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'sourceSchemaName': {
+                'name': 'sourceSchemaName',
+                'type': 'string',
+                'required': false,
+              },
+              'focused': {
+                'name': 'focused',
+                'type': 'boolean',
+                'required': false,
+              },
+              'patterns': {
+                'name': 'patterns',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'slot': {
+                      'name': 'slot',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'pattern': {
+                      'name': 'pattern',
+                      'type': 'SExpr',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'status': {
+                'name': 'status',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'idle',
+                  'running',
+                  'success',
+                  'error',
+                ],
+              },
+              'guard': {
+                'name': 'guard',
+                'type': 'SExpr',
+                'required': false,
+              },
+              '_fullSchema': {
+                'name': '_fullSchema',
+                'type': 'SExpr',
+                'required': false,
+              },
+              'bandKind': {
+                'name': 'bandKind',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'connected',
+                  'standalone',
+                ],
+              },
+              'fromState': {
+                'name': 'fromState',
+                'type': 'string',
+                'required': false,
+              },
+              'dependencyRole': {
+                'name': 'dependencyRole',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'selected',
+                  'upstream',
+                  'downstream',
+                  'both',
+                  'dim',
+                ],
+              },
+              'eventSources': {
+                'name': 'eventSources',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'payloadFields': {
+                      'name': 'payloadFields',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'required': {
+                            'name': 'required',
+                            'type': 'boolean',
+                            'required': false,
+                          },
+                          'name': {
+                            'name': 'name',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'patternType': {
+                      'name': 'patternType',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'path': {
+                      'name': 'path',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'event': {
+                      'name': 'event',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'positionHint': {
+                      'name': 'positionHint',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'traitName': {
+                'name': 'traitName',
+                'type': 'string',
+                'required': false,
+              },
+              'dependencyColumn': {
+                'name': 'dependencyColumn',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'app',
+                  'own',
+                  'io',
+                  'std',
+                  'primitive',
+                  'unknown',
+                  'client',
+                  'host',
+                  'service',
+                  'store',
+                  'external',
+                ],
+              },
+              'fieldCount': {
+                'name': 'fieldCount',
+                'type': 'number',
+                'required': false,
+              },
+              'pageRoutes': {
+                'name': 'pageRoutes',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'linkedEntity': {
+                'name': 'linkedEntity',
+                'type': 'string',
+                'required': false,
+              },
+              'persistence': {
+                'name': 'persistence',
+                'type': 'string',
+                'required': false,
+              },
+              'effectTypes': {
+                'name': 'effectTypes',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'toState': {
+                'name': 'toState',
+                'type': 'string',
+                'required': false,
+              },
+              'flowTraits': {
+                'name': 'flowTraits',
+                'type': 'number',
+                'required': false,
+              },
+              'emits': {
+                'name': 'emits',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'transitions': {
+                'name': 'transitions',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'event': {
+                      'name': 'event',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'fromState': {
+                      'name': 'fromState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'toState': {
+                      'name': 'toState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'orbitalName': {
+                'name': 'orbitalName',
+                'type': 'string',
+                'required': true,
+              },
+              'kind': {
+                'name': 'kind',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'trait-card',
+                  'system-orbital',
+                  'system-band',
+                  'dependency',
+                  'dependency-column',
+                ],
+              },
+              'stateRole': {
+                'name': 'stateRole',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'initial',
+                  'terminal',
+                  'hub',
+                  'default',
+                ],
+              },
+            },
+          },
+          'animated': {
+            'type': 'boolean',
+            'label': 'Animated',
+            'description': 'animated prop',
+            'tier': 'presentation',
+          },
+          'color': {
+            'type': 'string',
+            'label': 'Color',
+            'description': 'color prop',
+            'tier': 'presentation',
+          },
+          'schema': {
+            'type': 'SExpr',
+            'label': 'Schema',
+            'description': 'schema prop',
+            'tier': 'presentation',
+          },
+          'externalInspector': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'External Inspector',
+            'description': 'When true, FlowCanvas does not render its inline `OrbInspector` — the consumer is expected to render one externally, fed by `onSelectedNodeChange` + `onSelectedPatternChange`. Selection highlighting, keyboard delete, and every other behavior is unchanged. Default `false` preserves the built-in inline panel.',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'className prop',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
+          },
+          'onNodeClick': {
+            'type': 'event',
+            'default': 'NODE_CLICK',
+            'label': 'On Node Click',
+            'description': 'onNodeClick prop',
+            'tier': 'presentation',
+          },
+          'height': {
+            'type': 'scalar',
+            'default': 500,
+            'label': 'Height',
+            'description': 'height prop',
+            'tier': 'presentation',
+          },
+          'initialOrbital': {
+            'type': 'string',
+            'label': 'Initial Orbital',
+            'description': 'The orbital cards open on (local view) — or, with `initialLevel=\'trait-expanded\'`, the orbital whose traits are shown.',
+            'tier': 'presentation',
+          },
+          'onPositionsChange': {
+            'type': 'event',
+            'default': 'POSITIONS_CHANGE',
+            'label': 'On Positions Change',
+            'description': 'Fired on node drag-stop and card resize with the full {id → placement} map of the current node set, so the consumer can persist the arrangement.',
+            'tier': 'presentation',
+          },
+          'initialLevel': {
+            'type': 'string',
+            'label': 'Initial Level',
+            'description': '`trait-expanded`: one card per trait of `initialOrbital` (cosmic). Default: orbital cards.',
+            'tier': 'presentation',
+            'values': [
+              'overview',
+              'trait-expanded',
+              'system',
+            ],
+          },
+          'onSchemaChange': {
+            'type': 'event',
+            'default': 'SCHEMA_CHANGE',
+            'label': 'On Schema Change',
+            'description': 'Called when the user edits the schema via the inspector.',
+            'tier': 'presentation',
+          },
+          'onFocusChange': {
+            'type': 'event',
+            'default': 'FOCUS_CHANGE',
+            'label': 'On Focus Change',
+            'description': 'Fired when the focused orbital, the scope, or the focused card\'s state changes.',
+            'tier': 'presentation',
+          },
+          'traitView': {
+            'type': 'FlowCanvasTraitView',
+            'label': 'Trait View',
+            'description': 'Trait level: which lens (and trait filter) shows — pass with `onTraitViewChange` to keep it across remounts.',
+            'tier': 'presentation',
+            'properties': {
+              'lens': {
+                'name': 'lens',
+                'type': 'string',
+                'required': true,
+                'values': [
+                  'flow',
+                  'traits',
+                ],
+              },
+              'filter': {
+                'name': 'filter',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'traits': {
+                    'name': 'traits',
+                    'type': 'array',
+                    'required': true,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'unit': {
+                    'name': 'unit',
+                    'type': 'string',
+                    'required': true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -61,20 +61,20 @@ export interface StdModalModalRecordLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModalConfig {
-  /** Default: `"stack"` */
-  detailPattern?: unknown;
+  /** Default: `"Details"` */
+  title?: string;
+  /** Default: `"create"` */
+  mode?: 'create' | 'edit';
   /** Default: `"modal"` */
   detailSlot?: unknown;
   /** Default: `[]` */
-  fieldOverrides?: EntityRow[];
-  /** Default: `[]` */
   fields?: string[];
+  /** Default: `[]` */
+  fieldOverrides?: EntityRow[];
+  /** Default: `"stack"` */
+  detailPattern?: unknown;
   /** Default: `"layout-panel-top"` */
   icon?: string;
-  /** Default: `"create"` */
-  mode?: 'create' | 'edit';
-  /** Default: `"Details"` */
-  title?: string;
 }
 
 /**
@@ -220,38 +220,38 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             'type': 'string',
           },
           {
-            'description': 'A user-facing identifier for the modal.',
             'name': 'name',
+            'type': 'string',
+            'description': 'A user-facing identifier for the modal.',
             'synonyms': 'title, label, identifier',
-            'type': 'string',
           },
           {
-            'description': 'A textual explanation of the modal\'s content or function.',
             'name': 'description',
-            'synonyms': 'details, explanation, notes, summary',
             'type': 'string',
+            'description': 'A textual explanation of the modal\'s content or function.',
+            'synonyms': 'details, explanation, notes, summary',
           },
           {
-            'default': 'active',
-            'description': 'Current operational state of the record.',
             'name': 'status',
-            'synonyms': 'state, condition, flag',
             'type': 'string',
+            'default': 'active',
             'values': [
               'active',
               'inactive',
               'pending',
             ],
+            'description': 'Current operational state of the record.',
+            'synonyms': 'state, condition, flag',
           },
           {
+            'name': 'seedRow',
+            'type': 'object',
             'default': {},
-            'description': 'The row an edit-mode OPEN pre-fills from when its payload carries no row. Stashed by SEED — hosts route the surface\'s loaded event here (e.g. a document look\'s RecordItemLoaded) so scalar-only action events ({ id }) can still open a fully seeded settings form.',
-            'intrinsic': true,
             'items': {
               'type': 'scalar',
             },
-            'name': 'seedRow',
-            'type': 'object',
+            'intrinsic': true,
+            'description': 'The row an edit-mode OPEN pre-fills from when its payload carries no row. Stashed by SEED — hosts route the surface\'s loaded event here (e.g. a document look\'s RecordItemLoaded) so scalar-only action events ({ id }) can still open a fully seeded settings form.',
           },
           {
             'name': 'createdAt',
@@ -266,94 +266,13 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'detailPattern': {
-            'default': 'stack',
-            'description': 'Pattern used to arrange the form body',
-            'label': 'Layout pattern',
-            'tier': 'internal',
-            'type': 'pattern',
-          },
-          'detailSlot': {
-            'default': 'modal',
-            'description': 'UI slot the modal renders into',
-            'label': 'Render slot',
-            'tier': 'internal',
-            'type': 'slot',
-          },
-          'fieldOverrides': {
-            'default': [],
-            'description': 'Per-field label/placeholder/hint overrides, keyed by field name. Types, options and required-ness stay entity-schema-driven (declare once on the entity); override only display copy the entity\'s @description doesn\'t fit.',
-            'items': {
-              'properties': {
-                'hint': {
-                  'name': 'hint',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': true,
-                  'type': 'string',
-                },
-                'placeholder': {
-                  'name': 'placeholder',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Any per-field display copy overrides?',
-            'synonyms': 'field labels, custom labels, help text overrides, placeholder text',
-            'tier': 'presentation',
-            'type': '[ModalFieldOverride]',
-          },
-          'fields': {
-            'default': [],
-            'description': 'Entity fields rendered as inputs inside the modal form.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Which fields appear in the form?',
-            'synonyms': 'form fields, inputs, editable fields, field list',
-            'tier': 'domain',
-            'type': '[string]',
-          },
-          'icon': {
-            'default': 'layout-panel-top',
-            'description': 'Lucide icon name shown next to the modal title.',
-            'label': 'Which icon appears in the modal header?',
-            'synonyms': 'header icon, modal icon, title icon',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'mode': {
-            'default': 'create',
-            'description': 'create = blank form; edit = pre-filled from the selected row.',
-            'label': 'Is this for creating or editing?',
-            'synonyms': 'form mode, create or edit, new or update, add or modify',
-            'tier': 'internal',
-            'type': 'string',
-            'values': [
-              'create',
-              'edit',
-            ],
-          },
-          'title': {
-            'default': 'Details',
-            'description': 'Heading displayed at the top of the modal.',
-            'label': 'What should the modal heading say?',
-            'synonyms': 'modal title, dialog heading, panel title, form title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'ModalRecordModal',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'seedRow',
+          ],
         },
         'effectRow': [
           {
@@ -362,8 +281,8 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.detailSlot',
+            'resolved': false,
           },
           {
             'kind': 'render-ui',
@@ -378,29 +297,34 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             'resource': '@entity.seedRow',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'ModalRecord',
         'emits': [
           {
-            'description': 'Indicates a successful data save operation.',
             'event': 'SAVE',
+            'description': 'Indicates a successful data save operation.',
+            'synonyms': 'submit, persist, confirm',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'data',
-                'required': true,
                 'type': '@entity',
+                'required': true,
               },
             ],
-            'synonyms': 'submit, persist, confirm',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates the modal window is being closed.',
             'event': 'CLOSE',
+            'description': 'Indicates the modal window is being closed.',
             'synonyms': 'dismiss, hide, cancel',
             'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to load the record data.',
             'event': 'ModalRecordLoadFailed',
+            'description': 'Indicates a failure to load the record data.',
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -411,17 +335,17 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'error, failure, problem, unsuccessful',
-            'tier': 'internal',
           },
           {
-            'description': 'Signals that the modal\'s data has been successfully loaded.',
             'event': 'ModalRecordLoaded',
+            'description': 'Signals that the modal\'s data has been successfully loaded.',
+            'synonyms': 'loaded, data ready, populated',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ModalRecord',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -453,34 +377,32 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ModalRecord',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'loaded, data ready, populated',
-            'tier': 'domain',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'seedRow',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'ModalRecord',
-        'name': 'ModalRecordModal',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates a failure to load the record data.',
               'key': 'ModalRecordLoadFailed',
               'name': 'ModalRecord load failed',
+              'description': 'Indicates a failure to load the record data.',
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -491,17 +413,17 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, problem, unsuccessful',
-              'tier': 'internal',
             },
             {
-              'description': 'Stash the row an edit-mode OPEN will pre-fill from. Hosts route the owning surface\'s loaded event here (e.g. RecordItemLoaded from a document look) so an OPEN carrying only { id } still opens a fully seeded form.',
               'key': 'SEED',
               'name': 'Seed',
+              'description': 'Stash the row an edit-mode OPEN will pre-fill from. Hosts route the owning surface\'s loaded event here (e.g. RecordItemLoaded from a document look) so an OPEN carrying only { id } still opens a fully seeded form.',
+              'synonyms': 'preload row, stash record, seed form, prefill',
+              'tier': 'domain',
               'payloadSchema': [
                 {
-                  'entity': 'ModalRecord',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
@@ -533,24 +455,24 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
+                  'entity': 'ModalRecord',
                 },
               ],
-              'synonyms': 'preload row, stash record, seed form, prefill',
-              'tier': 'domain',
             },
             {
-              'description': 'A request to display the modal window.',
               'key': 'OPEN',
               'name': 'Open',
+              'description': 'A request to display the modal window.',
+              'synonyms': 'show, display, present, reveal',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
                 {
-                  'entity': 'ModalRecord',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
@@ -582,41 +504,41 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
+                  'entity': 'ModalRecord',
                 },
               ],
-              'synonyms': 'show, display, present, reveal',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates the modal window is being closed.',
               'key': 'CLOSE',
               'name': 'Close',
+              'description': 'Indicates the modal window is being closed.',
               'synonyms': 'dismiss, hide, cancel',
               'tier': 'domain',
             },
             {
-              'description': 'Indicates a successful data save operation.',
               'key': 'SAVE',
               'name': 'Save',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'required': true,
-                  'type': '@entity',
-                },
-              ],
+              'description': 'Indicates a successful data save operation.',
               'synonyms': 'submit, persist, confirm',
               'tier': 'domain',
-            },
-            {
-              'description': 'Signals that the modal\'s data has been successfully loaded.',
-              'key': 'ModalRecordLoaded',
-              'name': 'ModalRecord loaded',
               'payloadSchema': [
                 {
-                  'entity': 'ModalRecord',
                   'name': 'data',
+                  'type': '@entity',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'ModalRecordLoaded',
+              'name': 'ModalRecord loaded',
+              'description': 'Signals that the modal\'s data has been successfully loaded.',
+              'synonyms': 'loaded, data ready, populated',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -648,24 +570,16 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'ModalRecord',
                 },
               ],
-              'synonyms': 'loaded, data ready, populated',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'closed',
-            },
-            {
-              'name': 'open',
             },
           ],
           'transitions': [
             {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -678,32 +592,32 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'closed',
-              'to': 'closed',
             },
             {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'ModalRecordLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'type': 'alert',
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t load the record — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'ModalRecordLoadFailed',
-              'from': 'closed',
-              'to': 'closed',
             },
             {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'SEED',
               'effects': [
                 [
                   'set',
@@ -715,68 +629,11 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   ],
                 ],
               ],
-              'event': 'SEED',
-              'from': 'closed',
-              'to': 'closed',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.id',
-                  '@payload.id',
-                ],
-                [
-                  'render-ui',
-                  '@config.detailSlot',
-                  {
-                    'children': [
-                      {
-                        'children': [
-                          {
-                            'name': '@config.icon',
-                            'size': 'lg',
-                            'type': 'icon',
-                          },
-                          {
-                            'content': '@config.title',
-                            'type': 'typography',
-                            'variant': 'h3',
-                          },
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
-                      },
-                      {
-                        'type': 'divider',
-                      },
-                      {
-                        'cancelEvent': 'CLOSE',
-                        'entity': [
-                          'object/merge',
-                          '@entity.seedRow',
-                          [
-                            'object/merge',
-                            '@payload.row',
-                            {},
-                          ],
-                        ],
-                        'fieldOverrides': '@config.fieldOverrides',
-                        'fields': '@config.fields',
-                        'mode': '@config.mode',
-                        'submitEvent': 'SAVE',
-                        'type': 'form-section',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': '@config.detailPattern',
-                  },
-                ],
-              ],
-              'event': 'OPEN',
               'from': 'closed',
+              'to': 'open',
+              'event': 'OPEN',
               'guard': [
                 'or',
                 [
@@ -799,9 +656,66 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   '',
                 ],
               ],
-              'to': 'open',
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+                [
+                  'render-ui',
+                  '@config.detailSlot',
+                  {
+                    'gap': 'md',
+                    'type': '@config.detailPattern',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': '@config.icon',
+                            'size': 'lg',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h3',
+                            'content': '@config.title',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'mode': '@config.mode',
+                        'entity': [
+                          'object/merge',
+                          '@entity.seedRow',
+                          [
+                            'object/merge',
+                            '@payload.row',
+                            {},
+                          ],
+                        ],
+                        'fieldOverrides': '@config.fieldOverrides',
+                        'type': 'form-section',
+                        'fields': '@config.fields',
+                        'submitEvent': 'SAVE',
+                        'cancelEvent': 'CLOSE',
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
             {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
@@ -809,11 +723,11 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   null,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'open',
-              'to': 'closed',
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'SEED',
               'effects': [
                 [
                   'set',
@@ -825,11 +739,11 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   ],
                 ],
               ],
-              'event': 'SEED',
-              'from': 'open',
-              'to': 'open',
             },
             {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
               'effects': [
                 [
                   'render-ui',
@@ -840,18 +754,18 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
-                    'message': 'Cancelled',
-                    'type': 'alert',
                     'variant': 'info',
+                    'type': 'alert',
+                    'message': 'Cancelled',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'open',
-              'to': 'closed',
             },
             {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
               'effects': [
                 [
                   'render-ui',
@@ -859,12 +773,98 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   null,
                 ],
               ],
-              'event': 'SAVE',
-              'from': 'open',
-              'to': 'closed',
             },
           ],
         },
+        'config': {
+          'title': {
+            'type': 'string',
+            'default': 'Details',
+            'label': 'What should the modal heading say?',
+            'description': 'Heading displayed at the top of the modal.',
+            'synonyms': 'modal title, dialog heading, panel title, form title',
+            'tier': 'presentation',
+          },
+          'mode': {
+            'type': 'string',
+            'default': 'create',
+            'label': 'Is this for creating or editing?',
+            'description': 'create = blank form; edit = pre-filled from the selected row.',
+            'synonyms': 'form mode, create or edit, new or update, add or modify',
+            'tier': 'internal',
+            'values': [
+              'create',
+              'edit',
+            ],
+          },
+          'detailSlot': {
+            'type': 'slot',
+            'default': 'modal',
+            'label': 'Render slot',
+            'description': 'UI slot the modal renders into',
+            'tier': 'internal',
+          },
+          'fields': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Which fields appear in the form?',
+            'description': 'Entity fields rendered as inputs inside the modal form.',
+            'synonyms': 'form fields, inputs, editable fields, field list',
+            'tier': 'domain',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'fieldOverrides': {
+            'type': '[ModalFieldOverride]',
+            'default': [],
+            'label': 'Any per-field display copy overrides?',
+            'description': 'Per-field label/placeholder/hint overrides, keyed by field name. Types, options and required-ness stay entity-schema-driven (declare once on the entity); override only display copy the entity\'s @description doesn\'t fit.',
+            'synonyms': 'field labels, custom labels, help text overrides, placeholder text',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'placeholder': {
+                  'name': 'placeholder',
+                  'type': 'string',
+                  'required': false,
+                },
+                'hint': {
+                  'name': 'hint',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'detailPattern': {
+            'type': 'pattern',
+            'default': 'stack',
+            'label': 'Layout pattern',
+            'description': 'Pattern used to arrange the form body',
+            'tier': 'internal',
+          },
+          'icon': {
+            'type': 'string',
+            'default': 'layout-panel-top',
+            'label': 'Which icon appears in the modal header?',
+            'description': 'Lucide icon name shown next to the modal title.',
+            'synonyms': 'header icon, modal icon, title icon',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -63,15 +63,15 @@ export interface StdStatusLifecycleStatusChangeFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStatusLifecycleConfig {
-  /** Default: `false` */
-  enabled?: boolean;
+  /** Default: `"StatusRecord"` */
+  targetEntity?: unknown;
   /** Default: `["draft","active","archived"]` */
   states?: string[];
   /** Default: `"status"` */
   statusField?: string;
-  /** Default: `"StatusRecord"` */
-  targetEntity?: unknown;
-  /** Default: `[{"event":"ACTIVATE","from":"draft","label":"Activate","to":"active"},{"event":"ARCHIVE","from":"active","label":"Archive","to":"archived"}]` */
+  /** Default: `false` */
+  enabled?: boolean;
+  /** Default: `[{"from":"draft","event":"ACTIVATE","label":"Activate","to":"active"},{"label":"Archive","from":"active","to":"archived","event":"ARCHIVE"}]` */
   transitions?: EntityRow[];
 }
 
@@ -216,15 +216,15 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'status',
+            'type': 'string',
             'default': '',
             'description': 'Current lifecycle status of the record.',
-            'name': 'status',
             'synonyms': 'state, stage, phase',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -235,92 +235,11 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'enabled': {
-            'default': false,
-            'description': 'Validate and apply status transitions against the configured table. Off by default.',
-            'label': 'Enforce status lifecycle rules?',
-            'synonyms': 'lifecycle, statuses, states, stages, workflow, status transitions, enforce, enable, apply',
-            'tier': 'infra',
-            'type': 'boolean',
-          },
-          'states': {
-            'default': [
-              'draft',
-              'active',
-              'archived',
-            ],
-            'description': 'The complete set of statuses a record can hold.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'What are the possible statuses?',
-            'synonyms': 'states, stages, phases, statuses, lifecycle, workflow steps',
-            'tier': 'domain',
-            'type': '[string]',
-          },
-          'statusField': {
-            'default': 'status',
-            'description': 'Entity field this lifecycle drives (e.g. \'status\', \'state\', \'stage\', \'phase\').',
-            'label': 'Which field holds the status?',
-            'synonyms': 'state field, stage field, status column, lifecycle field',
-            'tier': 'infra',
-            'type': 'string',
-          },
-          'targetEntity': {
-            'default': 'StatusRecord',
-            'description': 'Entity name whose status field this lifecycle drives (e.g. \'Contract\'). Rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically.',
-            'label': 'Target entity',
-            'tier': 'internal',
-            'type': 'entity',
-          },
-          'transitions': {
-            'default': [
-              {
-                'event': 'ACTIVATE',
-                'from': 'draft',
-                'label': 'Activate',
-                'to': 'active',
-              },
-              {
-                'event': 'ARCHIVE',
-                'from': 'active',
-                'label': 'Archive',
-                'to': 'archived',
-              },
-            ],
-            'description': 'Legal transitions as { from, to, event, label }. Only matching moves are applied.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'string',
-                },
-                'from': {
-                  'name': 'from',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'to': {
-                  'name': 'to',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Which status moves are allowed?',
-            'synonyms': 'edges, allowed moves, status flow, workflow transitions',
-            'tier': 'domain',
-            'type': '[TransitionSpec]',
-          },
+        'name': 'StatusMachine',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -329,17 +248,20 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
           },
           {
             'kind': 'persist',
-            'resolved': false,
             'resource': '@config.targetEntity',
+            'resolved': false,
           },
           {
             'kind': 'render-ui',
             'resource': 'toast',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'StatusRecord',
         'emits': [
           {
             'event': 'StatusChanged',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'entityId',
@@ -350,27 +272,27 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
                 'type': 'string',
               },
             ],
-            'scope': 'external',
           },
           {
-            'description': 'Internal: the status write landed; carries the persisted row flat.',
             'event': 'StatusPersisted',
-            'payloadEntity': 'StatusRecord',
+            'description': 'Internal: the status write landed; carries the persisted row flat.',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'status',
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
+            'payloadEntity': 'StatusRecord',
           },
           {
             'event': 'StatusChangeFailed',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -381,18 +303,15 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
                 'type': 'string',
               },
             ],
-            'scope': 'external',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'StatusRecord',
-        'name': 'StatusMachine',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'ChangeStatusRequested',
@@ -415,18 +334,18 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
             {
               'key': 'StatusPersisted',
               'name': 'Status persisted',
-              'payloadEntity': 'StatusRecord',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'status',
                   'type': 'string',
                 },
               ],
+              'payloadEntity': 'StatusRecord',
             },
             {
               'key': 'StatusChangeFailed',
@@ -457,37 +376,11 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
           'transitions': [
             {
-              'effects': [
-                [
-                  'persist',
-                  'update',
-                  '@config.targetEntity',
-                  [
-                    'object/set',
-                    {
-                      'id': '@payload.id',
-                    },
-                    '@config.statusField',
-                    '@payload.to',
-                  ],
-                  {
-                    'emit': {
-                      'failure': 'StatusChangeFailed',
-                      'success': 'StatusPersisted',
-                    },
-                  },
-                ],
-              ],
-              'event': 'ChangeStatusRequested',
               'from': 'idle',
+              'to': 'idle',
+              'event': 'ChangeStatusRequested',
               'guard': [
                 'and',
                 '@config.enabled',
@@ -526,9 +419,41 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
                   ],
                 ],
               ],
-              'to': 'idle',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  '@config.targetEntity',
+                  [
+                    'object/set',
+                    {
+                      'id': '@payload.id',
+                    },
+                    '@config.statusField',
+                    '@payload.to',
+                  ],
+                  {
+                    'emit': {
+                      'failure': 'StatusChangeFailed',
+                      'success': 'StatusPersisted',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'StatusPersisted',
+              'guard': [
+                '!=',
+                [
+                  'str/default',
+                  '@payload.id',
+                  '',
+                ],
+                '',
+              ],
               'effects': [
                 [
                   'emit',
@@ -546,42 +471,117 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
                   },
                 ],
               ],
-              'event': 'StatusPersisted',
-              'from': 'idle',
-              'guard': [
-                '!=',
-                [
-                  'str/default',
-                  '@payload.id',
-                  '',
-                ],
-                '',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'StatusChangeFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t change the status — ',
                       '@payload.error',
                     ],
                     'type': 'alert',
+                    'dismissible': true,
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'StatusChangeFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'targetEntity': {
+            'type': 'entity',
+            'default': 'StatusRecord',
+            'label': 'Target entity',
+            'description': 'Entity name whose status field this lifecycle drives (e.g. \'Contract\'). Rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically.',
+            'tier': 'internal',
+          },
+          'states': {
+            'type': '[string]',
+            'default': [
+              'draft',
+              'active',
+              'archived',
+            ],
+            'label': 'What are the possible statuses?',
+            'description': 'The complete set of statuses a record can hold.',
+            'synonyms': 'states, stages, phases, statuses, lifecycle, workflow steps',
+            'tier': 'domain',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'statusField': {
+            'type': 'string',
+            'default': 'status',
+            'label': 'Which field holds the status?',
+            'description': 'Entity field this lifecycle drives (e.g. \'status\', \'state\', \'stage\', \'phase\').',
+            'synonyms': 'state field, stage field, status column, lifecycle field',
+            'tier': 'infra',
+          },
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Enforce status lifecycle rules?',
+            'description': 'Validate and apply status transitions against the configured table. Off by default.',
+            'synonyms': 'lifecycle, statuses, states, stages, workflow, status transitions, enforce, enable, apply',
+            'tier': 'infra',
+          },
+          'transitions': {
+            'type': '[TransitionSpec]',
+            'default': [
+              {
+                'from': 'draft',
+                'event': 'ACTIVATE',
+                'label': 'Activate',
+                'to': 'active',
+              },
+              {
+                'label': 'Archive',
+                'from': 'active',
+                'to': 'archived',
+                'event': 'ARCHIVE',
+              },
+            ],
+            'label': 'Which status moves are allowed?',
+            'description': 'Legal transitions as { from, to, event, label }. Only matching moves are applied.',
+            'synonyms': 'edges, allowed moves, status flow, workflow transitions',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'to': {
+                  'name': 'to',
+                  'type': 'string',
+                  'required': true,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
+                'from': {
+                  'name': 'from',
+                  'type': 'string',
+                  'required': true,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -39,32 +39,32 @@ export type StdUiToastSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiToastSlotConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
+  children?: PatternValue;
   ariaLabelledby?: string;
+  ariaLabel?: string;
+  ariaDescribedby?: string;
+  error?: EntityRow;
+  title?: string;
+  /** Default: `5000` */
+  duration?: number;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  sourceTrait?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   ariaLive?: 'off' | 'polite' | 'assertive';
   ariaPressed?: 'true' | 'false' | 'mixed';
   ariaSelected?: boolean;
-  children?: PatternValue;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `5000` */
-  duration?: number;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
-  error?: EntityRow;
-  isLoading?: boolean;
-  lang?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  sourceTrait?: string;
-  tabIndex?: number;
-  title?: string;
   variant?: 'success' | 'error' | 'info' | 'warning';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaExpanded?: boolean;
+  className?: string;
+  isLoading?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  tabIndex?: number;
+  ariaBusy?: boolean;
+  lang?: string;
+  ariaHidden?: boolean;
 }
 
 type _StdUiToastSlotEntityName = 'ToastSlotItem';
@@ -131,8 +131,8 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -143,191 +143,159 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
     } as Entity,
     traits: [
       {
+        'name': 'ToastSlotRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ToastSlotItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
+        'linkedEntity': 'ToastSlotItem',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  ('ToastSlotItem' satisfies _StdUiToastSlotEntityName),
+                  {},
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'type': 'toast-slot',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'error': '@config.error',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-selected': '@config.ariaSelected',
+                    'dir': '@config.dir',
+                    'enterDelay': '@config.enterDelay',
+                    'aria-busy': '@config.ariaBusy',
+                    'variant': '@config.variant',
+                    'enter': '@config.enter',
+                    'aria-hidden': '@config.ariaHidden',
+                    'children': '@config.children',
+                    'title': '@config.title',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-live': '@config.ariaLive',
+                    'entity': 'ToastSlotItem',
+                    'isLoading': '@config.isLoading',
+                    'sourceTrait': '@config.sourceTrait',
+                    'duration': '@config.duration',
+                    'lang': '@config.lang',
+                    'tabIndex': '@config.tabIndex',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'aria-label': '@config.ariaLabel',
+                    'skeleton': '@config.skeleton',
+                    'role': '@config.role',
+                    'aria-current': '@config.ariaCurrent',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
         'config': {
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
+          'children': {
+            'type': 'node',
+            'label': 'Children',
+            'description': 'Content to display in the toast (message or ReactNode)',
             'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
-            'label': 'Aria-current',
-            'synonyms': 'aria-current',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'page',
-              'step',
-              'location',
-              'date',
-              'time',
-              'true',
-              'false',
-            ],
-          },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
           },
           'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
+            'type': 'string',
             'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
             'synonyms': 'aria-labelledby',
             'tier': 'presentation',
+          },
+          'ariaLabel': {
             'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
             'tier': 'presentation',
+          },
+          'ariaDescribedby': {
             'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
             'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'children': {
-            'description': 'Content to display in the toast (message or ReactNode)',
-            'label': 'Children',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'className': {
-            'description': 'Custom class name',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
-          },
-          'duration': {
-            'default': 5000,
-            'description': 'Auto-dismiss duration in ms (0 = no auto-dismiss)',
-            'label': 'Duration',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
           },
           'error': {
-            'description': 'Error state',
+            'type': 'ToastSlotError',
             'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
             'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
               'name': {
                 'name': 'name',
-                'required': false,
                 'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
               },
               'stack': {
                 'name': 'stack',
-                'required': false,
                 'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
               },
             },
-            'tier': 'presentation',
-            'type': 'ToastSlotError',
           },
-          'isLoading': {
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
+          'title': {
             'type': 'string',
+            'label': 'Title',
+            'description': 'Toast title',
+            'tier': 'presentation',
+          },
+          'duration': {
+            'type': 'number',
+            'default': 5000,
+            'label': 'Duration',
+            'description': 'Auto-dismiss duration in ms (0 = no auto-dismiss)',
+            'tier': 'presentation',
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -412,11 +380,28 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
               'treeitem',
             ],
           },
-          'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
+          'dir': {
             'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'sourceTrait': {
+            'type': 'string',
+            'label': 'Source Trait',
+            'description': 'Source trait name for qualified event emission',
+            'tier': 'presentation',
+          },
+          'skeleton': {
+            'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
             'values': [
               'header',
               'table',
@@ -430,29 +415,48 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
               'none',
             ],
           },
-          'sourceTrait': {
-            'description': 'Source trait name for qualified event emission',
-            'label': 'Source Trait',
-            'tier': 'presentation',
+          'ariaLive': {
             'type': 'string',
-          },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
             'tier': 'presentation',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
             'type': 'number',
-          },
-          'title': {
-            'description': 'Toast title',
-            'label': 'Title',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
             'tier': 'presentation',
-            'type': 'string',
           },
           'variant': {
-            'description': 'Toast variant',
-            'label': 'Variant',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Variant',
+            'description': 'Toast variant',
+            'tier': 'presentation',
             'values': [
               'success',
               'error',
@@ -460,86 +464,82 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
               'warning',
             ],
           },
-        },
-        'effectRow': [
-          {
-            'kind': 'fetch',
-            'resource': 'ToastSlotItem',
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
           },
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
           },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Custom class name',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'ariaCurrent': {
+            'type': 'string',
+            'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'synonyms': 'aria-current',
+            'tier': 'presentation',
+            'values': [
+              'page',
+              'step',
+              'location',
+              'date',
+              'time',
+              'true',
+              'false',
+            ],
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+          },
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+          },
         },
-        'entityRebindable': true,
-        'linkedEntity': 'ToastSlotItem',
-        'name': 'ToastSlotRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('ToastSlotItem' satisfies _StdUiToastSlotEntityName),
-                  {},
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'children': '@config.children',
-                    'className': '@config.className',
-                    'dir': '@config.dir',
-                    'duration': '@config.duration',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': 'ToastSlotItem',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'lang': '@config.lang',
-                    'role': '@config.role',
-                    'skeleton': '@config.skeleton',
-                    'sourceTrait': '@config.sourceTrait',
-                    'tabIndex': '@config.tabIndex',
-                    'title': '@config.title',
-                    'type': 'toast-slot',
-                    'variant': '@config.variant',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

@@ -53,42 +53,42 @@ export interface StdUiDashboardLayoutSearchSubmitPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardLayoutConfig {
-  appName?: string;
-  children?: PatternValue;
-  currentPath?: string;
-  /** Default: `false` */
-  fullBleed?: boolean;
-  headerActions?: PatternValue;
-  /** Default: `"sidebar"` */
-  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal' | 'drawer';
-  logo?: PatternValue;
-  /** Default: `[]` */
-  navItems?: EntityRow[];
-  /** Default: `"NOTIFICATION_CLICK"` */
-  notificationClickEvent?: string;
-  /** Default: `[]` */
-  notifications?: EntityRow[];
-  /** Default: `"NOTIFICATION_CLICK"` */
-  onNotificationClick?: string;
-  /** Default: `"SEARCH_SUBMIT"` */
-  onSearchSubmit?: string;
-  /** Default: `"SIGN_OUT"` */
-  onSignOut?: string;
-  /** Default: `"SEARCH"` */
-  searchEvent?: string;
   /** Default: `false` */
   showSearch?: boolean;
-  /** Default: `true` */
-  showThemeToggle?: boolean;
-  sidebarContent?: PatternValue;
-  sidebarFooter?: PatternValue;
-  /** Default: `[]` */
-  topBarActions?: EntityRow[];
-  user?: EntityRow;
-  /** Default: `[]` */
-  userMenuItems?: EntityRow[];
+  /** Default: `"NOTIFICATION_CLICK"` */
+  notificationClickEvent?: string;
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `true` */
+  showThemeToggle?: boolean;
+  /** Default: `"sidebar"` */
+  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal' | 'drawer';
+  /** Default: `"SIGN_OUT"` */
+  onSignOut?: string;
+  /** Default: `[]` */
+  notifications?: EntityRow[];
+  logo?: PatternValue;
+  /** Default: `[]` */
+  userMenuItems?: EntityRow[];
+  user?: EntityRow;
+  /** Default: `false` */
+  fullBleed?: boolean;
+  /** Default: `[]` */
+  topBarActions?: EntityRow[];
+  /** Default: `[]` */
+  navItems?: EntityRow[];
+  children?: PatternValue;
+  currentPath?: string;
+  /** Default: `"SEARCH"` */
+  searchEvent?: string;
+  sidebarContent?: PatternValue;
+  sidebarFooter?: PatternValue;
+  /** Default: `"NOTIFICATION_CLICK"` */
+  onNotificationClick?: string;
+  headerActions?: PatternValue;
+  /** Default: `"SEARCH_SUBMIT"` */
+  onSearchSubmit?: string;
+  appName?: string;
 }
 
 /**

@@ -89,10 +89,10 @@ export interface StdSignatureCaptureSignatureSubmitFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSignatureCaptureConfig {
-  /** Default: `"Use your finger or stylus to sign below"` */
-  instructions?: string;
   /** Default: `"Sign here"` */
   title?: string;
+  /** Default: `"Use your finger or stylus to sign below"` */
+  instructions?: string;
 }
 
 /**
@@ -236,48 +236,48 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Unique identifier for the target of the signature.',
             'name': 'targetId',
+            'type': 'string',
             'required': true,
+            'description': 'Unique identifier for the target of the signature.',
             'synonyms': 'referenceId, associatedId, target',
-            'type': 'string',
           },
           {
-            'description': 'Specifies the type of target associated with the signature.',
             'name': 'targetType',
+            'type': 'string',
             'required': true,
+            'description': 'Specifies the type of target associated with the signature.',
             'synonyms': 'type, kind, category',
-            'type': 'string',
           },
           {
-            'description': 'The name of the person providing the signature.',
             'name': 'signerName',
+            'type': 'string',
             'required': true,
+            'description': 'The name of the person providing the signature.',
             'synonyms': 'name, user, person',
-            'type': 'string',
           },
           {
-            'description': 'Encoded signature image data, typically a data URL.',
             'name': 'signatureDataUrl',
+            'type': 'string',
             'required': true,
+            'description': 'Encoded signature image data, typically a data URL.',
             'synonyms': 'signature image, image data, signature representation',
-            'type': 'string',
           },
           {
-            'description': 'Timestamp indicating when the signature was captured.',
             'name': 'signedAt',
-            'synonyms': 'date, time, timestamp',
             'type': 'datetime',
+            'description': 'Timestamp indicating when the signature was captured.',
+            'synonyms': 'date, time, timestamp',
           },
           {
-            'description': 'The client\'s IP address during signature capture.',
             'name': 'ipAddress',
-            'synonyms': 'client IP, source IP, originating IP',
             'type': 'string',
+            'description': 'The client\'s IP address during signature capture.',
+            'synonyms': 'client IP, source IP, originating IP',
           },
         ];
         const extras = params.fields ?? [];
@@ -288,23 +288,7 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'instructions': {
-            'default': 'Use your finger or stylus to sign below',
-            'description': 'Helper text shown to the signer above the pad',
-            'label': 'Instructions',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'title': {
-            'default': 'Sign here',
-            'description': 'Heading shown above the signature pad',
-            'label': 'Pad title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-        },
+        'name': 'SignatureCapture',
         'effectRow': [
           {
             'kind': 'fetch',
@@ -323,71 +307,75 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
             'resource': '@entity.signatureDataUrl',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'Signature',
         'emits': [
           {
-            'description': 'Indicates a change in the signature drawing.',
             'event': 'CHANGE',
+            'description': 'Indicates a change in the signature drawing.',
+            'synonyms': 'update, modify, alter',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'dataUrl',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'synonyms': 'update, modify, alter',
-            'tier': 'presentation',
           },
           {
-            'description': 'Signals the signature capture process is complete.',
             'event': 'SUBMIT',
+            'description': 'Signals the signature capture process is complete.',
+            'synonyms': 'done, finalized, confirmed, saved',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'data',
-                'required': true,
                 'type': '@entity',
+                'required': true,
               },
             ],
-            'synonyms': 'done, finalized, confirmed, saved',
-            'tier': 'domain',
           },
           {
-            'description': 'Signals the signature pad has been cleared.',
             'event': 'CLEAR',
+            'description': 'Signals the signature pad has been cleared.',
             'synonyms': 'reset, erase, remove',
             'tier': 'domain',
           },
           {
-            'description': 'Indicates the signature pad is ready for use.',
             'event': 'SignatureLoaded',
+            'description': 'Indicates the signature pad is ready for use.',
+            'synonyms': 'ready, initialized, available',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'Signature',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetType',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'signerName',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'signatureDataUrl',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'signedAt',
@@ -398,15 +386,15 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'Signature',
               },
             ],
-            'synonyms': 'ready, initialized, available',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates the signature data could not be loaded.',
             'event': 'SignatureLoadFailed',
+            'description': 'Indicates the signature data could not be loaded.',
+            'synonyms': 'load error, failed load, data error',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -417,38 +405,38 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                 'type': 'string',
               },
             ],
-            'synonyms': 'load error, failed load, data error',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates a signature has been successfully captured and submitted.',
             'event': 'SignatureSubmitted',
-            'payloadEntity': 'Signature',
+            'description': 'Indicates a signature has been successfully captured and submitted.',
+            'synonyms': 'signed, finalized, completed',
+            'tier': 'domain',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'targetId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'targetType',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'signerName',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'signatureDataUrl',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'signedAt',
@@ -459,13 +447,13 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'signed, finalized, completed',
-            'tier': 'domain',
+            'payloadEntity': 'Signature',
           },
           {
-            'description': 'Indicates signature submission failed.',
             'event': 'SignatureSubmitFailed',
+            'description': 'Indicates signature submission failed.',
+            'synonyms': 'error, failure, rejected',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -476,185 +464,13 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure, rejected',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'Signature',
-        'name': 'SignatureCapture',
-        'scope': 'instance',
         'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Indicates the signature pad is ready for use.',
-              'key': 'SignatureLoaded',
-              'name': 'Signature loaded',
-              'payloadSchema': [
-                {
-                  'entity': 'Signature',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'targetId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'targetType',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'signerName',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'signatureDataUrl',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'signedAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'ipAddress',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'ready, initialized, available',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates the signature data could not be loaded.',
-              'key': 'SignatureLoadFailed',
-              'name': 'Signature load failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'load error, failed load, data error',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Indicates a change in the signature drawing.',
-              'key': 'CHANGE',
-              'name': 'Change',
-              'payloadSchema': [
-                {
-                  'name': 'dataUrl',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'update, modify, alter',
-              'tier': 'presentation',
-            },
-            {
-              'description': 'Signals the signature pad has been cleared.',
-              'key': 'CLEAR',
-              'name': 'Clear',
-              'synonyms': 'reset, erase, remove',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Signals the signature capture process is complete.',
-              'key': 'SUBMIT',
-              'name': 'Submit',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'required': true,
-                  'type': '@entity',
-                },
-              ],
-              'synonyms': 'done, finalized, confirmed, saved',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates a signature has been successfully captured and submitted.',
-              'key': 'SignatureSubmitted',
-              'name': 'Signature submitted',
-              'payloadEntity': 'Signature',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'targetId',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'targetType',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'signerName',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'signatureDataUrl',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'signedAt',
-                  'type': 'datetime',
-                },
-                {
-                  'name': 'ipAddress',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'signed, finalized, completed',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates signature submission failed.',
-              'key': 'SignatureSubmitFailed',
-              'name': 'Signature submit failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'error, failure, rejected',
-              'tier': 'internal',
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'loading',
+              'isInitial': true,
             },
             {
               'name': 'idle',
@@ -666,143 +482,178 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
               'name': 'submitted',
             },
           ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SignatureLoaded',
+              'name': 'Signature loaded',
+              'description': 'Indicates the signature pad is ready for use.',
+              'synonyms': 'ready, initialized, available',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'targetId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'targetType',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'signerName',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'signatureDataUrl',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'ipAddress',
+                      'type': 'string',
+                    },
+                  ],
+                  'entity': 'Signature',
+                },
+              ],
+            },
+            {
+              'key': 'SignatureLoadFailed',
+              'name': 'Signature load failed',
+              'description': 'Indicates the signature data could not be loaded.',
+              'synonyms': 'load error, failed load, data error',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CHANGE',
+              'name': 'Change',
+              'description': 'Indicates a change in the signature drawing.',
+              'synonyms': 'update, modify, alter',
+              'tier': 'presentation',
+              'payloadSchema': [
+                {
+                  'name': 'dataUrl',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CLEAR',
+              'name': 'Clear',
+              'description': 'Signals the signature pad has been cleared.',
+              'synonyms': 'reset, erase, remove',
+              'tier': 'domain',
+            },
+            {
+              'key': 'SUBMIT',
+              'name': 'Submit',
+              'description': 'Signals the signature capture process is complete.',
+              'synonyms': 'done, finalized, confirmed, saved',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '@entity',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'SignatureSubmitted',
+              'name': 'Signature submitted',
+              'description': 'Indicates a signature has been successfully captured and submitted.',
+              'synonyms': 'signed, finalized, completed',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'targetId',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'targetType',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'signerName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'signatureDataUrl',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'signedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'ipAddress',
+                  'type': 'string',
+                },
+              ],
+              'payloadEntity': 'Signature',
+            },
+            {
+              'key': 'SignatureSubmitFailed',
+              'name': 'Signature submit failed',
+              'description': 'Indicates signature submission failed.',
+              'synonyms': 'error, failure, rejected',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
           'transitions': [
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('Signature' satisfies _StdSignatureCaptureEntityName),
-                  {
-                    'emit': {
-                      'failure': 'SignatureLoadFailed',
-                      'success': 'SignatureLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'type': 'skeleton',
-                    'variant': 'card',
-                  },
-                ],
-              ],
-              'event': 'INIT',
               'from': 'loading',
               'to': 'loading',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'content': '@config.title',
-                        'type': 'typography',
-                        'variant': 'h3',
-                      },
-                      {
-                        'color': 'muted',
-                        'content': '@config.instructions',
-                        'type': 'typography',
-                        'variant': 'caption',
-                      },
-                      {
-                        'onChange': 'CHANGE',
-                        'type': 'signature-pad',
-                        'value': '@entity.signatureDataUrl',
-                      },
-                      {
-                        'children': [
-                          {
-                            'action': 'CLEAR',
-                            'icon': 'trash',
-                            'label': 'Clear',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'action': 'SUBMIT',
-                            'icon': 'send',
-                            'label': 'Submit',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'SignatureLoaded',
-              'from': 'loading',
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'content': '@config.title',
-                        'type': 'typography',
-                        'variant': 'h3',
-                      },
-                      {
-                        'color': 'muted',
-                        'content': '@config.instructions',
-                        'type': 'typography',
-                        'variant': 'caption',
-                      },
-                      {
-                        'onChange': 'CHANGE',
-                        'type': 'signature-pad',
-                        'value': '@entity.signatureDataUrl',
-                      },
-                      {
-                        'children': [
-                          {
-                            'action': 'CLEAR',
-                            'icon': 'trash',
-                            'label': 'Clear',
-                            'type': 'button',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'action': 'SUBMIT',
-                            'icon': 'send',
-                            'label': 'Submit',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'SignatureLoadFailed',
-              'from': 'loading',
-              'to': 'idle',
-            },
-            {
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -814,12 +665,147 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                     },
                   },
                 ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'variant': 'card',
+                    'type': 'skeleton',
+                  },
+                ],
               ],
-              'event': 'INIT',
+            },
+            {
+              'from': 'loading',
+              'to': 'idle',
+              'event': 'SignatureLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'variant': 'h3',
+                        'content': '@config.title',
+                        'type': 'typography',
+                      },
+                      {
+                        'content': '@config.instructions',
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                      {
+                        'type': 'signature-pad',
+                        'onChange': 'CHANGE',
+                        'value': '@entity.signatureDataUrl',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'button',
+                            'icon': 'trash',
+                            'variant': 'secondary',
+                            'label': 'Clear',
+                            'action': 'CLEAR',
+                          },
+                          {
+                            'action': 'SUBMIT',
+                            'icon': 'send',
+                            'label': 'Submit',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'loading',
+              'to': 'idle',
+              'event': 'SignatureLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'content': '@config.title',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': '@config.instructions',
+                      },
+                      {
+                        'onChange': 'CHANGE',
+                        'type': 'signature-pad',
+                        'value': '@entity.signatureDataUrl',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'icon': 'trash',
+                            'type': 'button',
+                            'action': 'CLEAR',
+                            'variant': 'secondary',
+                            'label': 'Clear',
+                          },
+                          {
+                            'icon': 'send',
+                            'variant': 'primary',
+                            'label': 'Submit',
+                            'type': 'button',
+                            'action': 'SUBMIT',
+                          },
+                        ],
+                        'gap': 'sm',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
               'from': 'idle',
               'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  ('Signature' satisfies _StdSignatureCaptureEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SignatureLoadFailed',
+                      'success': 'SignatureLoaded',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CHANGE',
               'effects': [
                 [
                   'set',
@@ -827,11 +813,11 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                   '@payload.dataUrl',
                 ],
               ],
-              'event': 'CHANGE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CLEAR',
               'effects': [
                 [
                   'set',
@@ -842,38 +828,40 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'content': '@config.title',
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                       },
                       {
                         'color': 'muted',
-                        'content': '@config.instructions',
                         'type': 'typography',
                         'variant': 'caption',
+                        'content': '@config.instructions',
                       },
                       {
-                        'onChange': 'CHANGE',
                         'type': 'signature-pad',
+                        'onChange': 'CHANGE',
                         'value': '@entity.signatureDataUrl',
                       },
                       {
                         'children': [
                           {
-                            'action': 'CLEAR',
-                            'icon': 'trash',
                             'label': 'Clear',
-                            'type': 'button',
                             'variant': 'secondary',
+                            'icon': 'trash',
+                            'action': 'CLEAR',
+                            'type': 'button',
                           },
                           {
-                            'action': 'SUBMIT',
-                            'icon': 'send',
-                            'label': 'Submit',
                             'type': 'button',
                             'variant': 'primary',
+                            'label': 'Submit',
+                            'action': 'SUBMIT',
+                            'icon': 'send',
                           },
                         ],
                         'direction': 'horizontal',
@@ -881,17 +869,15 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                         'type': 'stack',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'CLEAR',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'submitting',
+              'event': 'SUBMIT',
               'effects': [
                 [
                   'persist',
@@ -900,8 +886,8 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'SignatureSubmitFailed',
                       'success': 'SignatureSubmitted',
+                      'failure': 'SignatureSubmitFailed',
                     },
                   },
                 ],
@@ -909,30 +895,30 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'Submitting your signature…',
                         'type': 'typography',
+                        'content': 'Submitting your signature…',
+                        'color': 'muted',
                         'variant': 'caption',
                       },
                     ],
+                    'align': 'center',
                     'className': 'py-12',
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SUBMIT',
-              'from': 'idle',
-              'to': 'submitting',
             },
             {
+              'from': 'submitting',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -948,47 +934,47 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                   'render-ui',
                   'main',
                   {
-                    'type': 'skeleton',
                     'variant': 'card',
+                    'type': 'skeleton',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'submitting',
-              'to': 'loading',
             },
             {
+              'from': 'submitting',
+              'to': 'submitted',
+              'event': 'SignatureSubmitted',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
                     'align': 'center',
+                    'className': 'py-12',
+                    'type': 'stack',
                     'children': [
                       {
+                        'type': 'icon',
+                        'size': 'lg',
                         'color': 'success',
                         'name': 'check-circle',
-                        'size': 'lg',
-                        'type': 'icon',
                       },
                       {
-                        'content': 'Signature recorded. Thank you.',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': 'Signature recorded. Thank you.',
                       },
                     ],
-                    'className': 'py-12',
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SignatureSubmitted',
-              'from': 'submitting',
-              'to': 'submitted',
             },
             {
+              'from': 'submitting',
+              'to': 'idle',
+              'event': 'SignatureSubmitFailed',
               'effects': [
                 [
                   'render-ui',
@@ -1000,11 +986,11 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                   },
                 ],
               ],
-              'event': 'SignatureSubmitFailed',
-              'from': 'submitting',
-              'to': 'idle',
             },
             {
+              'from': 'submitted',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1015,57 +1001,71 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
+                        'variant': 'h3',
                         'content': '@config.title',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
                         'color': 'muted',
-                        'content': '@config.instructions',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'type': 'typography',
+                        'content': '@config.instructions',
                       },
                       {
+                        'value': '@entity.signatureDataUrl',
                         'onChange': 'CHANGE',
                         'type': 'signature-pad',
-                        'value': '@entity.signatureDataUrl',
                       },
                       {
                         'children': [
                           {
+                            'label': 'Clear',
                             'action': 'CLEAR',
                             'icon': 'trash',
-                            'label': 'Clear',
-                            'type': 'button',
                             'variant': 'secondary',
+                            'type': 'button',
                           },
                           {
-                            'action': 'SUBMIT',
-                            'icon': 'send',
-                            'label': 'Submit',
-                            'type': 'button',
                             'variant': 'primary',
+                            'label': 'Submit',
+                            'action': 'SUBMIT',
+                            'type': 'button',
+                            'icon': 'send',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'submitted',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'title': {
+            'type': 'string',
+            'default': 'Sign here',
+            'label': 'Pad title',
+            'description': 'Heading shown above the signature pad',
+            'tier': 'presentation',
+          },
+          'instructions': {
+            'type': 'string',
+            'default': 'Use your finger or stylus to sign below',
+            'label': 'Instructions',
+            'description': 'Helper text shown to the signer above the pad',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

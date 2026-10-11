@@ -76,54 +76,54 @@ export interface StdUiCalendarGridCalendarGridLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCalendarGridConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `"color"` */
-  colorField?: string;
-  dayWindow?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `"endTime"` */
   endField?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
+  dir?: 'ltr' | 'rtl' | 'auto';
   lang?: string;
-  /** Default: `"LONG_PRESS"` */
-  longPressEvent?: string;
-  longPressPayload?: unknown;
-  /** Default: `"DAY_CLICK"` */
-  onDayClick?: string;
-  /** Default: `"EVENT_CLICK"` */
-  onEventClick?: string;
-  /** Default: `"SLOT_CLICK"` */
-  onSlotClick?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `true` */
-  selfFetch?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaLabel?: string;
   /** Default: `"startTime"` */
   startField?: string;
-  /** Default: `"auto"` */
-  surface?: 'auto' | 'none';
-  /** Default: `"SWIPE_LEFT"` */
-  swipeLeftEvent?: string;
+  ariaLabelledby?: string;
+  ariaDescribedby?: string;
   /** Default: `"SWIPE_RIGHT"` */
   swipeRightEvent?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
   tabIndex?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  className?: string;
   /** Default: `[]` */
   timeSlots?: string[];
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
+  /** Default: `"color"` */
+  colorField?: string;
+  ariaExpanded?: boolean;
   /** Default: `"title"` */
   titleField?: string;
+  dayWindow?: string;
+  /** Default: `"EVENT_CLICK"` */
+  onEventClick?: string;
+  /** Default: `"DAY_CLICK"` */
+  onDayClick?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `true` */
+  selfFetch?: boolean;
+  enterDelay?: number;
+  ariaSelected?: boolean;
+  ariaHidden?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaBusy?: boolean;
+  longPressPayload?: unknown;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"2024-01-01"` */
   weekStart?: string;
+  /** Default: `"SWIPE_LEFT"` */
+  swipeLeftEvent?: string;
+  /** Default: `"SLOT_CLICK"` */
+  onSlotClick?: string;
+  /** Default: `"LONG_PRESS"` */
+  longPressEvent?: string;
 }
 
 /**

@@ -218,22 +218,22 @@ export function stdRecordStoreRecordStoreOrbital(params: StdRecordStoreRecordSto
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'name',
+            'type': 'string',
             'default': '',
             'description': 'A user-facing name for the record.',
-            'name': 'name',
             'synonyms': 'title, label',
-            'type': 'string',
           },
           {
+            'name': 'description',
+            'type': 'string',
             'default': '',
             'description': 'Free text about the record.',
-            'name': 'description',
             'synonyms': 'details, notes',
-            'type': 'string',
           },
           {
             'name': 'createdAt',
@@ -248,16 +248,11 @@ export function stdRecordStoreRecordStoreOrbital(params: StdRecordStoreRecordSto
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'ownerField': {
-            'default': '',
-            'description': 'Field set to the signed-in user\'s id when a record is created. Empty means records carry no owner.',
-            'label': 'Which field records who created it?',
-            'synonyms': 'owner, created by, author, holder, belongs to',
-            'tier': 'domain',
-            'type': 'string',
-          },
+        'name': 'RecordStore',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -269,48 +264,51 @@ export function stdRecordStoreRecordStoreOrbital(params: StdRecordStoreRecordSto
             'resource': 'toast',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'StoredRecord',
         'emits': [
           {
-            'description': 'A new record was saved.',
             'event': 'RECORD_CREATED',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
+            'description': 'A new record was saved.',
             'synonyms': 'created, added, saved',
             'tier': 'domain',
-          },
-          {
-            'description': 'A record\'s changes were saved.',
-            'event': 'RECORD_UPDATED',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
+          },
+          {
+            'event': 'RECORD_UPDATED',
+            'description': 'A record\'s changes were saved.',
             'synonyms': 'updated, edited, changed',
             'tier': 'domain',
-          },
-          {
-            'description': 'A record was removed.',
-            'event': 'RECORD_DELETED',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
+          },
+          {
+            'event': 'RECORD_DELETED',
+            'description': 'A record was removed.',
             'synonyms': 'deleted, removed',
             'tier': 'domain',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
           {
             'event': 'RecordSaveFailed',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -321,109 +319,110 @@ export function stdRecordStoreRecordStoreOrbital(params: StdRecordStoreRecordSto
                 'type': 'string',
               },
             ],
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'StoredRecord',
-        'name': 'RecordStore',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+            {
+              'name': 'saving',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Save a new record from a submitted form.',
-              'external': true,
               'key': 'DO_CREATE',
               'name': 'Do Create',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'required': true,
-                  'type': '@entity',
-                },
-              ],
+              'description': 'Save a new record from a submitted form.',
               'synonyms': 'create, add, save new, submit',
               'tier': 'domain',
-            },
-            {
-              'description': 'Save the changes to an existing record.',
-              'external': true,
-              'key': 'DO_UPDATE',
-              'name': 'Do Update',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'required': true,
                   'type': '@entity',
+                  'required': true,
                 },
               ],
+              'external': true,
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'description': 'Save the changes to an existing record.',
               'synonyms': 'update, edit, save changes',
               'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '@entity',
+                  'required': true,
+                },
+              ],
+              'external': true,
             },
             {
-              'description': 'Remove a record.',
-              'external': true,
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'description': 'Remove a record.',
               'synonyms': 'delete, remove',
               'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'external': true,
             },
             {
-              'description': 'A new record was saved.',
               'key': 'RECORD_CREATED',
               'name': 'Record Created',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'description': 'A new record was saved.',
               'synonyms': 'created, added, saved',
               'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
-              'description': 'A record\'s changes were saved.',
               'key': 'RECORD_UPDATED',
               'name': 'Record Updated',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'description': 'A record\'s changes were saved.',
               'synonyms': 'updated, edited, changed',
               'tier': 'domain',
-            },
-            {
-              'description': 'A record was removed.',
-              'key': 'RECORD_DELETED',
-              'name': 'Record Deleted',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+            },
+            {
+              'key': 'RECORD_DELETED',
+              'name': 'Record Deleted',
+              'description': 'A record was removed.',
               'synonyms': 'deleted, removed',
               'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
               'key': 'RecordSaveFailed',
               'name': 'Record save failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -434,25 +433,18 @@ export function stdRecordStoreRecordStoreOrbital(params: StdRecordStoreRecordSto
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
-            },
-            {
-              'name': 'saving',
             },
           ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'ready',
               'to': 'ready',
+              'event': 'INIT',
             },
             {
+              'from': 'ready',
+              'to': 'saving',
+              'event': 'DO_CREATE',
               'effects': [
                 [
                   'persist',
@@ -475,17 +467,17 @@ export function stdRecordStoreRecordStoreOrbital(params: StdRecordStoreRecordSto
                   ],
                   {
                     'emit': {
-                      'failure': 'RecordSaveFailed',
                       'success': 'RECORD_CREATED',
+                      'failure': 'RecordSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'DO_CREATE',
-              'from': 'ready',
-              'to': 'saving',
             },
             {
+              'from': 'ready',
+              'to': 'saving',
+              'event': 'DO_UPDATE',
               'effects': [
                 [
                   'persist',
@@ -494,17 +486,17 @@ export function stdRecordStoreRecordStoreOrbital(params: StdRecordStoreRecordSto
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'RecordSaveFailed',
                       'success': 'RECORD_UPDATED',
+                      'failure': 'RecordSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'DO_UPDATE',
-              'from': 'ready',
-              'to': 'saving',
             },
             {
+              'from': 'ready',
+              'to': 'saving',
+              'event': 'DO_DELETE',
               'effects': [
                 [
                   'persist',
@@ -513,59 +505,67 @@ export function stdRecordStoreRecordStoreOrbital(params: StdRecordStoreRecordSto
                   '@payload.id',
                   {
                     'emit': {
-                      'failure': 'RecordSaveFailed',
                       'success': 'RECORD_DELETED',
+                      'failure': 'RecordSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'DO_DELETE',
-              'from': 'ready',
-              'to': 'saving',
             },
             {
+              'from': 'saving',
+              'to': 'ready',
               'event': 'INIT',
-              'from': 'saving',
-              'to': 'ready',
             },
             {
+              'from': 'saving',
+              'to': 'ready',
               'event': 'RECORD_CREATED',
-              'from': 'saving',
-              'to': 'ready',
             },
             {
+              'from': 'saving',
+              'to': 'ready',
               'event': 'RECORD_UPDATED',
-              'from': 'saving',
-              'to': 'ready',
             },
             {
+              'from': 'saving',
+              'to': 'ready',
               'event': 'RECORD_DELETED',
-              'from': 'saving',
-              'to': 'ready',
             },
             {
+              'from': 'saving',
+              'to': 'ready',
+              'event': 'RecordSaveFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
                     'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t save the record — ',
                       '@payload.error',
                     ],
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'RecordSaveFailed',
-              'from': 'saving',
-              'to': 'ready',
             },
           ],
         },
+        'config': {
+          'ownerField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Which field records who created it?',
+            'description': 'Field set to the signed-in user\'s id when a record is created. Empty means records carry no owner.',
+            'synonyms': 'owner, created by, author, holder, belongs to',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

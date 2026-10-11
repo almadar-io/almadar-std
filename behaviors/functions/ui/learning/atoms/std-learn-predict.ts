@@ -71,34 +71,34 @@ export interface StdLearnPredictLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnPredictConfig {
-  /** Default: `25` */
-  gridStep?: number;
-  /** Default: `320` */
-  height?: number;
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `"Next"` */
-  nextLabel?: string;
-  /** Default: `"Try Again"` */
-  retryLabel?: string;
-  /** Default: `"series-1"` */
-  revealColor?: string;
   /** Default: `"Outcome"` */
   revealLabel?: string;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `[{"correctIndex":1,"explanation":"With no limiting factor yet, growth compounds each season.","frames":[{"caption":"Season 1: 40 rabbits","value":40},{"caption":"Season 2: 52 rabbits","value":52},{"caption":"Season 3: 68 rabbits","value":68},{"caption":"Season 4: 88 rabbits","value":88},{"caption":"Season 5: 114 rabbits","value":114},{"caption":"Season 6: 148 rabbits — still accelerating","value":148}],"options":["It levels off","It keeps accelerating","It collapses"],"question":"What happens to the population over the next six seasons?","setup":"A small island hosts 40 rabbits with unlimited grass and no predators."},{"correctIndex":1,"explanation":"Predation and food limits impose a carrying capacity.","frames":[{"caption":"Season 1: 148 rabbits","value":148},{"caption":"Season 2: 160 rabbits","value":160},{"caption":"Season 3: 166 rabbits","value":166},{"caption":"Season 4: 169 rabbits","value":169},{"caption":"Season 5: 170 rabbits — the curve flattens","value":170}],"options":["It keeps accelerating","It levels off near a ceiling","It grows linearly"],"question":"What happens to the rabbit population now?","setup":"The same island now has foxes, and grass is running short."}]` */
-  scenarios?: EntityRow[];
-  /** Default: `""` */
-  summary?: string;
-  /** Default: `"Predict, Then Watch"` */
-  title?: string;
+  /** Default: `"series-1"` */
+  revealColor?: string;
   /** Default: `200` */
   valueMax?: number;
   /** Default: `0` */
   valueMin?: number;
+  /** Default: `320` */
+  height?: number;
+  /** Default: `25` */
+  gridStep?: number;
+  /** Default: `""` */
+  matchMode?: string;
+  /** Default: `[{"correctIndex":1,"frames":[{"caption":"Season 1: 40 rabbits","value":40},{"caption":"Season 2: 52 rabbits","value":52},{"value":68,"caption":"Season 3: 68 rabbits"},{"caption":"Season 4: 88 rabbits","value":88},{"value":114,"caption":"Season 5: 114 rabbits"},{"caption":"Season 6: 148 rabbits — still accelerating","value":148}],"explanation":"With no limiting factor yet, growth compounds each season.","setup":"A small island hosts 40 rabbits with unlimited grass and no predators.","question":"What happens to the population over the next six seasons?","options":["It levels off","It keeps accelerating","It collapses"]},{"question":"What happens to the rabbit population now?","setup":"The same island now has foxes, and grass is running short.","frames":[{"caption":"Season 1: 148 rabbits","value":148},{"value":160,"caption":"Season 2: 160 rabbits"},{"caption":"Season 3: 166 rabbits","value":166},{"caption":"Season 4: 169 rabbits","value":169},{"value":170,"caption":"Season 5: 170 rabbits — the curve flattens"}],"options":["It keeps accelerating","It levels off near a ceiling","It grows linearly"],"correctIndex":1,"explanation":"Predation and food limits impose a carrying capacity."}]` */
+  scenarios?: EntityRow[];
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `600` */
   width?: number;
+  /** Default: `"Predict, Then Watch"` */
+  title?: string;
+  /** Default: `"Next"` */
+  nextLabel?: string;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `"Try Again"` */
+  retryLabel?: string;
 }
 
 /**

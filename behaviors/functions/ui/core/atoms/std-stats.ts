@@ -39,28 +39,28 @@ export type StdStatsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdStatsConfig {
-  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"entity":"@entity.cards","fields":[],"renderItem":["fn","card",{"clickEvent":"@card.clickEvent","format":"@card.format","icon":"@card.icon","label":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"look":"@config.statLook","max":"@card.max","prefix":"@card.prefix","sparklineData":"@card.sparklineData","suffix":"@card.suffix","target":"@card.target","trend":"@card.trend","trendFormat":"@card.trendFormat","trendPolarity":"@card.trendPolarity","type":"stat-display","value":"@card.value","variant":"@card.variant"}],"type":"@config.viewPattern"}],"data-theme":"@config.theme","type":"box"}` */
-  bodyContent?: unknown;
-  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"entity":"@entity.cards","fields":[],"gap":"none","renderItem":["fn","card",{"children":[{"children":[{"align":"center","children":[{"align":"center","children":[{"color":"muted","name":"@card.icon","size":"md","type":"icon"},{"className":"uppercase tracking-widest","color":"muted","content":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"type":"typography","variant":"overline","weight":"bold"}],"direction":"horizontal","gap":"sm","justify":"center","type":"stack"},{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"h2","weight":"normal"},{"className":"text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]","format":"@card.format","type":"animated-counter","value":"@card.value"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"h2","weight":"normal"}],"className":"py-section","direction":"horizontal","gap":"xs","justify":"center","type":"stack"},{"showValue":true,"size":"md","type":"trend-indicator","value":"@card.trend"}],"className":"relative z-10 w-full max-w-2xl mx-auto text-center","direction":"vertical","gap":"md","type":"stack"},{"className":"absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none","color":"auto","data":"@card.sparklineData","fill":true,"height":96,"strokeWidth":1,"type":"sparkline"}],"look":"elevated","padding":"lg","type":"card"}],"className":"relative w-full rounded-xl shadow-lg overflow-hidden","direction":"vertical","gap":"none","type":"stack"}],"type":"data-list"}],"data-theme":"@config.theme","type":"box"}` */
-  heroMetricBodyContent?: unknown;
-  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full","entity":"@entity.cards","fields":[],"gap":"lg","minCardWidth":220,"renderItem":["fn","card",{"children":[{"align":"center","children":[{"className":"uppercase tracking-wide","color":"muted","content":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"type":"typography","variant":"caption","weight":"medium"},{"color":"muted","name":"@card.icon","size":"sm","type":"icon"}],"direction":"horizontal","gap":"xs","justify":"between","type":"stack"},{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"caption"},{"className":"text-4xl font-bold tracking-tight","format":"@card.format","type":"animated-counter","value":"@card.value"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"caption"}],"direction":"horizontal","gap":"xs","type":"stack"},{"align":"center","children":[{"showValue":true,"size":"sm","type":"trend-indicator","value":"@card.trend"},{"className":"flex-1","color":"auto","data":"@card.sparklineData","fill":true,"height":24,"type":"sparkline"}],"direction":"horizontal","gap":"sm","type":"stack"}],"className":"rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow","direction":"vertical","gap":"sm","type":"stack"}],"type":"data-grid"}],"data-theme":"@config.theme","type":"box"}` */
-  kpiTilesBodyContent?: unknown;
   /** Default: `[]` */
   metricLabels?: string[];
-  /** Default: `[{"aggregation":"count","format":"number","icon":"list","label":"Total Items","sparklineData":[2,4,3,6,5,8,7],"variant":"primary"},{"aggregation":"count","format":"number","icon":"check-circle","label":"Active","sparklineData":[1,3,2,4,6,5,7],"variant":"success"},{"aggregation":"avg","field":"value","format":"number","icon":"trending-up","label":"Avg Value","sparklineData":[5,4,6,3,5,7,6],"variant":"info"}]` */
-  metrics?: EntityRow[];
-  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","type":"typography","variant":"h3"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full","entity":"@entity.cards","fields":[],"gap":"md","minCardWidth":260,"renderItem":["fn","card",{"children":[{"align":"center","children":[{"color":"muted","name":"@card.icon","size":"xs","type":"icon"},{"className":"uppercase tracking-wide truncate","color":"muted","content":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"type":"typography","variant":"overline","weight":"semibold"}],"direction":"horizontal","gap":"xs","type":"stack"},{"className":"w-full","color":"auto","data":"@card.sparklineData","fill":true,"height":64,"strokeWidth":2,"type":"sparkline"},{"align":"baseline","children":[{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"caption"},{"className":"text-2xl font-semibold tabular-nums","format":"@card.format","type":"animated-counter","value":"@card.value"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"caption"}],"direction":"horizontal","gap":"xs","type":"stack"},{"showValue":true,"size":"sm","type":"trend-indicator","value":"@card.trend"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack"}],"className":"surface-content p-card-md hover:shadow-elevation-dialog transition-shadow min-h-[180px]","direction":"vertical","gap":"sm","type":"stack"}],"type":"data-grid"}],"data-theme":"@config.theme","type":"box"}` */
-  sparklineRowBodyContent?: unknown;
-  /** Default: `"elevated"` */
-  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `"cards"` */
-  statsLook?: 'cards' | 'kpi-tiles' | 'hero-metric' | 'sparkline-row';
   /** Default: `""` */
   theme?: string;
-  /** Default: `""` */
-  title?: string;
   /** Default: `"data-grid"` */
   viewPattern?: unknown;
+  /** Default: `"cards"` */
+  statsLook?: 'cards' | 'kpi-tiles' | 'hero-metric' | 'sparkline-row';
+  /** Default: `{"type":"box","data-theme":"@config.theme","children":[["if",["!=","@config.title",""],{"variant":"h3","type":"typography","content":"@config.title"},{"gap":"none","type":"stack","children":[]}],{"fields":[],"entity":"@entity.cards","type":"data-list","renderItem":["fn","card",{"children":[{"look":"elevated","children":[{"type":"stack","children":[{"children":[{"size":"md","type":"icon","color":"muted","name":"@card.icon"},{"color":"muted","content":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"weight":"bold","type":"typography","className":"uppercase tracking-widest","variant":"overline"}],"type":"stack","direction":"horizontal","gap":"sm","align":"center","justify":"center"},{"align":"baseline","type":"stack","className":"py-section","justify":"center","children":[{"content":"@card.prefix","weight":"normal","variant":"h2","type":"typography","color":"muted"},{"className":"text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]","value":"@card.value","type":"animated-counter","format":"@card.format"},{"color":"muted","weight":"normal","variant":"h2","content":"@card.suffix","type":"typography"}],"gap":"xs","direction":"horizontal"},{"value":"@card.trend","showValue":true,"size":"md","type":"trend-indicator"}],"gap":"md","align":"center","className":"relative z-10 w-full max-w-2xl mx-auto text-center","direction":"vertical"},{"fill":true,"data":"@card.sparklineData","color":"auto","strokeWidth":1,"height":96,"type":"sparkline","className":"absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none"}],"type":"card","padding":"lg"}],"direction":"vertical","gap":"none","className":"relative w-full rounded-xl shadow-lg overflow-hidden","type":"stack"}],"gap":"none"}]}` */
+  heroMetricBodyContent?: unknown;
+  /** Default: `{"children":[["if",["!=","@config.title",""],{"content":"@config.title","variant":"h3","type":"typography"},{"gap":"none","type":"stack","children":[]}],{"gap":"md","entity":"@entity.cards","minCardWidth":260,"type":"data-grid","className":"w-full","fields":[],"renderItem":["fn","card",{"gap":"sm","children":[{"gap":"xs","type":"stack","align":"center","direction":"horizontal","children":[{"name":"@card.icon","size":"xs","color":"muted","type":"icon"},{"content":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"weight":"semibold","type":"typography","className":"uppercase tracking-wide truncate","color":"muted","variant":"overline"}]},{"className":"w-full","color":"auto","height":64,"fill":true,"type":"sparkline","data":"@card.sparklineData","strokeWidth":2},{"children":[{"direction":"horizontal","type":"stack","align":"baseline","children":[{"type":"typography","variant":"caption","content":"@card.prefix","color":"muted"},{"className":"text-2xl font-semibold tabular-nums","type":"animated-counter","format":"@card.format","value":"@card.value"},{"variant":"caption","color":"muted","type":"typography","content":"@card.suffix"}],"gap":"xs"},{"size":"sm","type":"trend-indicator","showValue":true,"value":"@card.trend"}],"type":"stack","align":"baseline","direction":"horizontal","gap":"sm","justify":"between"}],"className":"surface-content p-card-md hover:shadow-elevation-dialog transition-shadow min-h-[180px]","direction":"vertical","type":"stack"}]}],"data-theme":"@config.theme","type":"box"}` */
+  sparklineRowBodyContent?: unknown;
+  /** Default: `""` */
+  title?: string;
+  /** Default: `"elevated"` */
+  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `[{"format":"number","label":"Total Items","sparklineData":[2,4,3,6,5,8,7],"icon":"list","variant":"primary","aggregation":"count"},{"variant":"success","label":"Active","format":"number","sparklineData":[1,3,2,4,6,5,7],"icon":"check-circle","aggregation":"count"},{"icon":"trending-up","format":"number","label":"Avg Value","aggregation":"avg","variant":"info","field":"value","sparklineData":[5,4,6,3,5,7,6]}]` */
+  metrics?: EntityRow[];
+  /** Default: `{"children":[["if",["!=","@config.title",""],{"variant":"h3","content":"@config.title","type":"typography"},{"gap":"none","children":[],"type":"stack"}],{"className":"w-full","gap":"lg","renderItem":["fn","card",{"type":"stack","children":[{"align":"center","justify":"between","type":"stack","direction":"horizontal","children":[{"weight":"medium","className":"uppercase tracking-wide","variant":"caption","color":"muted","content":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"type":"typography"},{"color":"muted","name":"@card.icon","size":"sm","type":"icon"}],"gap":"xs"},{"children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"caption"},{"className":"text-4xl font-bold tracking-tight","type":"animated-counter","value":"@card.value","format":"@card.format"},{"variant":"caption","content":"@card.suffix","color":"muted","type":"typography"}],"direction":"horizontal","gap":"xs","align":"baseline","type":"stack"},{"type":"stack","align":"center","gap":"sm","children":[{"value":"@card.trend","showValue":true,"size":"sm","type":"trend-indicator"},{"data":"@card.sparklineData","height":24,"type":"sparkline","fill":true,"color":"auto","className":"flex-1"}],"direction":"horizontal"}],"className":"rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow","gap":"sm","direction":"vertical"}],"entity":"@entity.cards","minCardWidth":220,"fields":[],"type":"data-grid"}],"data-theme":"@config.theme","type":"box"}` */
+  kpiTilesBodyContent?: unknown;
+  /** Default: `{"data-theme":"@config.theme","type":"box","children":[["if",["!=","@config.title",""],{"variant":"h3","type":"typography","content":"@config.title"},{"type":"stack","gap":"none","children":[]}],{"entity":"@entity.cards","renderItem":["fn","card",{"max":"@card.max","trendFormat":"@card.trendFormat","format":"@card.format","type":"stat-display","prefix":"@card.prefix","variant":"@card.variant","look":"@config.statLook","trend":"@card.trend","trendPolarity":"@card.trendPolarity","sparklineData":"@card.sparklineData","value":"@card.value","label":["if",["=",["array/len","@config.metricLabels"],0],"@card.label",["array/nth","@config.metricLabels","@card.position"]],"clickEvent":"@card.clickEvent","target":"@card.target","suffix":"@card.suffix","icon":"@card.icon"}],"fields":[],"type":"@config.viewPattern"}]}` */
+  bodyContent?: unknown;
 }
 
 /**
@@ -192,105 +192,68 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'cards',
+            'type': 'array',
             'default': [],
-            'description': 'A collection of statistical cards to display.',
-            'intrinsic': true,
             'items': {
+              'type': 'object',
               'properties': {
-                'clickEvent': {
-                  'name': 'clickEvent',
-                  'required': false,
-                  'type': 'string',
-                },
-                'format': {
-                  'name': 'format',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'number',
-                    'currency',
-                    'percent',
-                  ],
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'max': {
-                  'name': 'max',
-                  'required': false,
-                  'type': 'number',
-                },
-                'position': {
-                  'name': 'position',
-                  'required': false,
-                  'type': 'number',
-                },
-                'prefix': {
-                  'name': 'prefix',
-                  'required': false,
-                  'type': 'string',
-                },
-                'sparklineData': {
-                  'items': {
-                    'type': 'number',
-                  },
-                  'name': 'sparklineData',
-                  'required': false,
-                  'type': 'array',
-                },
-                'suffix': {
-                  'name': 'suffix',
-                  'required': false,
-                  'type': 'string',
-                },
-                'target': {
-                  'name': 'target',
-                  'required': false,
-                  'type': 'number',
-                },
-                'trend': {
-                  'name': 'trend',
-                  'required': false,
-                  'type': 'number',
-                },
-                'trendFormat': {
-                  'name': 'trendFormat',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'absolute',
-                    'percent',
-                  ],
-                },
                 'trendPolarity': {
                   'name': 'trendPolarity',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'higher-is-better',
                     'lower-is-better',
                   ],
                 },
+                'trendFormat': {
+                  'name': 'trendFormat',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'absolute',
+                    'percent',
+                  ],
+                },
+                'position': {
+                  'name': 'position',
+                  'type': 'number',
+                  'required': false,
+                },
+                'clickEvent': {
+                  'name': 'clickEvent',
+                  'type': 'string',
+                  'required': false,
+                },
+                'target': {
+                  'name': 'target',
+                  'type': 'number',
+                  'required': false,
+                },
+                'max': {
+                  'name': 'max',
+                  'type': 'number',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
                 'value': {
                   'name': 'value',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
                 },
                 'variant': {
                   'name': 'variant',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'default',
                     'primary',
@@ -300,12 +263,49 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                     'info',
                   ],
                 },
+                'trend': {
+                  'name': 'trend',
+                  'type': 'number',
+                  'required': false,
+                },
+                'suffix': {
+                  'name': 'suffix',
+                  'type': 'string',
+                  'required': false,
+                },
+                'prefix': {
+                  'name': 'prefix',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'format': {
+                  'name': 'format',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'number',
+                    'currency',
+                    'percent',
+                  ],
+                },
+                'sparklineData': {
+                  'name': 'sparklineData',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'number',
+                  },
+                },
               },
-              'type': 'object',
             },
-            'name': 'cards',
+            'intrinsic': true,
+            'description': 'A collection of statistical cards to display.',
             'synonyms': 'statistics, items, displays',
-            'type': 'array',
           },
         ];
         const extras = params.fields ?? [];
@@ -316,739 +316,13 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'bodyContent': {
-            'default': {
-              'children': [
-                [
-                  'if',
-                  [
-                    '!=',
-                    '@config.title',
-                    '',
-                  ],
-                  {
-                    'content': '@config.title',
-                    'type': 'typography',
-                    'variant': 'h3',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                {
-                  'entity': '@entity.cards',
-                  'fields': [],
-                  'renderItem': [
-                    'fn',
-                    'card',
-                    {
-                      'clickEvent': '@card.clickEvent',
-                      'format': '@card.format',
-                      'icon': '@card.icon',
-                      'label': [
-                        'if',
-                        [
-                          '=',
-                          [
-                            'array/len',
-                            '@config.metricLabels',
-                          ],
-                          0,
-                        ],
-                        '@card.label',
-                        [
-                          'array/nth',
-                          '@config.metricLabels',
-                          '@card.position',
-                        ],
-                      ],
-                      'look': '@config.statLook',
-                      'max': '@card.max',
-                      'prefix': '@card.prefix',
-                      'sparklineData': '@card.sparklineData',
-                      'suffix': '@card.suffix',
-                      'target': '@card.target',
-                      'trend': '@card.trend',
-                      'trendFormat': '@card.trendFormat',
-                      'trendPolarity': '@card.trendPolarity',
-                      'type': 'stat-display',
-                      'value': '@card.value',
-                      'variant': '@card.variant',
-                    },
-                  ],
-                  'type': '@config.viewPattern',
-                },
-              ],
-              'data-theme': '@config.theme',
-              'type': 'box',
-            },
-            'description': 'Render-ui SExpr rendered after metrics aggregate for statsLook=\'cards\' — the canonical data-grid call mapping @entity.cards through stat-display. Other statsLook values render kpiTilesBodyContent / heroMetricBodyContent / sparklineRowBodyContent instead; all four share this trait\'s state machine, aggregation pipeline, and listens.',
-            'label': 'Body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
-          'heroMetricBodyContent': {
-            'default': {
-              'children': [
-                [
-                  'if',
-                  [
-                    '!=',
-                    '@config.title',
-                    '',
-                  ],
-                  {
-                    'content': '@config.title',
-                    'type': 'typography',
-                    'variant': 'h3',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                {
-                  'entity': '@entity.cards',
-                  'fields': [],
-                  'gap': 'none',
-                  'renderItem': [
-                    'fn',
-                    'card',
-                    {
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'color': 'muted',
-                                      'name': '@card.icon',
-                                      'size': 'md',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'className': 'uppercase tracking-widest',
-                                      'color': 'muted',
-                                      'content': [
-                                        'if',
-                                        [
-                                          '=',
-                                          [
-                                            'array/len',
-                                            '@config.metricLabels',
-                                          ],
-                                          0,
-                                        ],
-                                        '@card.label',
-                                        [
-                                          'array/nth',
-                                          '@config.metricLabels',
-                                          '@card.position',
-                                        ],
-                                      ],
-                                      'type': 'typography',
-                                      'variant': 'overline',
-                                      'weight': 'bold',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
-                                  'justify': 'center',
-                                  'type': 'stack',
-                                },
-                                {
-                                  'align': 'baseline',
-                                  'children': [
-                                    {
-                                      'color': 'muted',
-                                      'content': '@card.prefix',
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                      'weight': 'normal',
-                                    },
-                                    {
-                                      'className': 'text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]',
-                                      'format': '@card.format',
-                                      'type': 'animated-counter',
-                                      'value': '@card.value',
-                                    },
-                                    {
-                                      'color': 'muted',
-                                      'content': '@card.suffix',
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                      'weight': 'normal',
-                                    },
-                                  ],
-                                  'className': 'py-section',
-                                  'direction': 'horizontal',
-                                  'gap': 'xs',
-                                  'justify': 'center',
-                                  'type': 'stack',
-                                },
-                                {
-                                  'showValue': true,
-                                  'size': 'md',
-                                  'type': 'trend-indicator',
-                                  'value': '@card.trend',
-                                },
-                              ],
-                              'className': 'relative z-10 w-full max-w-2xl mx-auto text-center',
-                              'direction': 'vertical',
-                              'gap': 'md',
-                              'type': 'stack',
-                            },
-                            {
-                              'className': 'absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none',
-                              'color': 'auto',
-                              'data': '@card.sparklineData',
-                              'fill': true,
-                              'height': 96,
-                              'strokeWidth': 1,
-                              'type': 'sparkline',
-                            },
-                          ],
-                          'look': 'elevated',
-                          'padding': 'lg',
-                          'type': 'card',
-                        },
-                      ],
-                      'className': 'relative w-full rounded-xl shadow-lg overflow-hidden',
-                      'direction': 'vertical',
-                      'gap': 'none',
-                      'type': 'stack',
-                    },
-                  ],
-                  'type': 'data-list',
-                },
-              ],
-              'data-theme': '@config.theme',
-              'type': 'box',
-            },
-            'description': 'Render-ui SExpr for statsLook=\'hero-metric\' — one elevated card, one oversize number, background sparkline.',
-            'label': 'Hero metric body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
-          'kpiTilesBodyContent': {
-            'default': {
-              'children': [
-                [
-                  'if',
-                  [
-                    '!=',
-                    '@config.title',
-                    '',
-                  ],
-                  {
-                    'content': '@config.title',
-                    'type': 'typography',
-                    'variant': 'h3',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                {
-                  'className': 'w-full',
-                  'entity': '@entity.cards',
-                  'fields': [],
-                  'gap': 'lg',
-                  'minCardWidth': 220,
-                  'renderItem': [
-                    'fn',
-                    'card',
-                    {
-                      'children': [
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'className': 'uppercase tracking-wide',
-                              'color': 'muted',
-                              'content': [
-                                'if',
-                                [
-                                  '=',
-                                  [
-                                    'array/len',
-                                    '@config.metricLabels',
-                                  ],
-                                  0,
-                                ],
-                                '@card.label',
-                                [
-                                  'array/nth',
-                                  '@config.metricLabels',
-                                  '@card.position',
-                                ],
-                              ],
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'weight': 'medium',
-                            },
-                            {
-                              'color': 'muted',
-                              'name': '@card.icon',
-                              'size': 'sm',
-                              'type': 'icon',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'xs',
-                          'justify': 'between',
-                          'type': 'stack',
-                        },
-                        {
-                          'align': 'baseline',
-                          'children': [
-                            {
-                              'color': 'muted',
-                              'content': '@card.prefix',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                            {
-                              'className': 'text-4xl font-bold tracking-tight',
-                              'format': '@card.format',
-                              'type': 'animated-counter',
-                              'value': '@card.value',
-                            },
-                            {
-                              'color': 'muted',
-                              'content': '@card.suffix',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'xs',
-                          'type': 'stack',
-                        },
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'showValue': true,
-                              'size': 'sm',
-                              'type': 'trend-indicator',
-                              'value': '@card.trend',
-                            },
-                            {
-                              'className': 'flex-1',
-                              'color': 'auto',
-                              'data': '@card.sparklineData',
-                              'fill': true,
-                              'height': 24,
-                              'type': 'sparkline',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
-                        },
-                      ],
-                      'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow',
-                      'direction': 'vertical',
-                      'gap': 'sm',
-                      'type': 'stack',
-                    },
-                  ],
-                  'type': 'data-grid',
-                },
-              ],
-              'data-theme': '@config.theme',
-              'type': 'box',
-            },
-            'description': 'Render-ui SExpr for statsLook=\'kpi-tiles\' — Stripe-dashboard style tile grid: huge typography number, label, trend indicator, sparkline hint.',
-            'label': 'KPI tiles body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
-          'metricLabels': {
-            'default': [],
-            'description': 'In metric order: the label shown on each card, in place of its `metrics` label (render-only, so it may be translated)',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Metric labels',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'metrics': {
-            'default': [
-              {
-                'aggregation': 'count',
-                'format': 'number',
-                'icon': 'list',
-                'label': 'Total Items',
-                'sparklineData': [
-                  2,
-                  4,
-                  3,
-                  6,
-                  5,
-                  8,
-                  7,
-                ],
-                'variant': 'primary',
-              },
-              {
-                'aggregation': 'count',
-                'format': 'number',
-                'icon': 'check-circle',
-                'label': 'Active',
-                'sparklineData': [
-                  1,
-                  3,
-                  2,
-                  4,
-                  6,
-                  5,
-                  7,
-                ],
-                'variant': 'success',
-              },
-              {
-                'aggregation': 'avg',
-                'field': 'value',
-                'format': 'number',
-                'icon': 'trending-up',
-                'label': 'Avg Value',
-                'sparklineData': [
-                  5,
-                  4,
-                  6,
-                  3,
-                  5,
-                  7,
-                  6,
-                ],
-                'variant': 'info',
-              },
-            ],
-            'description': 'One stat card per entry; declares aggregation, format, and styling',
-            'items': {
-              'properties': {
-                'aggregation': {
-                  'name': 'aggregation',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'count',
-                    'sum',
-                    'avg',
-                    'min',
-                    'max',
-                    'variance',
-                  ],
-                },
-                'clickEvent': {
-                  'name': 'clickEvent',
-                  'required': false,
-                  'type': 'string',
-                },
-                'field': {
-                  'name': 'field',
-                  'required': false,
-                  'type': 'string',
-                },
-                'format': {
-                  'name': 'format',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'number',
-                    'currency',
-                    'percent',
-                  ],
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'max': {
-                  'name': 'max',
-                  'required': false,
-                  'type': 'number',
-                },
-                'prefix': {
-                  'name': 'prefix',
-                  'required': false,
-                  'type': 'string',
-                },
-                'sparklineData': {
-                  'items': {
-                    'type': 'number',
-                  },
-                  'name': 'sparklineData',
-                  'required': false,
-                  'type': 'array',
-                },
-                'suffix': {
-                  'name': 'suffix',
-                  'required': false,
-                  'type': 'string',
-                },
-                'target': {
-                  'name': 'target',
-                  'required': false,
-                  'type': 'number',
-                },
-                'trend': {
-                  'name': 'trend',
-                  'required': false,
-                  'type': 'number',
-                },
-                'trendFormat': {
-                  'name': 'trendFormat',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'absolute',
-                    'percent',
-                  ],
-                },
-                'trendPolarity': {
-                  'name': 'trendPolarity',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'higher-is-better',
-                    'lower-is-better',
-                  ],
-                },
-                'value': {
-                  'name': 'value',
-                  'required': false,
-                  'type': 'number',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'default',
-                    'primary',
-                    'success',
-                    'warning',
-                    'error',
-                    'info',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Metrics',
-            'synonyms': 'list of KPI cards / stat tiles / metric cards. each entry has label / value / format / icon / variant / aggregation. user phrases: \'replace metrics with X, Y, Z\' -> rewrite array; \'add Revenue tile\' -> append entry; \'change KPIs to X\' -> rewrite array',
-            'tier': 'presentation',
-            'type': '[MetricSpec]',
-          },
-          'sparklineRowBodyContent': {
-            'default': {
-              'children': [
-                [
-                  'if',
-                  [
-                    '!=',
-                    '@config.title',
-                    '',
-                  ],
-                  {
-                    'content': '@config.title',
-                    'type': 'typography',
-                    'variant': 'h3',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                {
-                  'className': 'w-full',
-                  'entity': '@entity.cards',
-                  'fields': [],
-                  'gap': 'md',
-                  'minCardWidth': 260,
-                  'renderItem': [
-                    'fn',
-                    'card',
-                    {
-                      'children': [
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'color': 'muted',
-                              'name': '@card.icon',
-                              'size': 'xs',
-                              'type': 'icon',
-                            },
-                            {
-                              'className': 'uppercase tracking-wide truncate',
-                              'color': 'muted',
-                              'content': [
-                                'if',
-                                [
-                                  '=',
-                                  [
-                                    'array/len',
-                                    '@config.metricLabels',
-                                  ],
-                                  0,
-                                ],
-                                '@card.label',
-                                [
-                                  'array/nth',
-                                  '@config.metricLabels',
-                                  '@card.position',
-                                ],
-                              ],
-                              'type': 'typography',
-                              'variant': 'overline',
-                              'weight': 'semibold',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'xs',
-                          'type': 'stack',
-                        },
-                        {
-                          'className': 'w-full',
-                          'color': 'auto',
-                          'data': '@card.sparklineData',
-                          'fill': true,
-                          'height': 64,
-                          'strokeWidth': 2,
-                          'type': 'sparkline',
-                        },
-                        {
-                          'align': 'baseline',
-                          'children': [
-                            {
-                              'align': 'baseline',
-                              'children': [
-                                {
-                                  'color': 'muted',
-                                  'content': '@card.prefix',
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                },
-                                {
-                                  'className': 'text-2xl font-semibold tabular-nums',
-                                  'format': '@card.format',
-                                  'type': 'animated-counter',
-                                  'value': '@card.value',
-                                },
-                                {
-                                  'color': 'muted',
-                                  'content': '@card.suffix',
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'xs',
-                              'type': 'stack',
-                            },
-                            {
-                              'showValue': true,
-                              'size': 'sm',
-                              'type': 'trend-indicator',
-                              'value': '@card.trend',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'between',
-                          'type': 'stack',
-                        },
-                      ],
-                      'className': 'surface-content p-card-md hover:shadow-elevation-dialog transition-shadow min-h-[180px]',
-                      'direction': 'vertical',
-                      'gap': 'sm',
-                      'type': 'stack',
-                    },
-                  ],
-                  'type': 'data-grid',
-                },
-              ],
-              'data-theme': '@config.theme',
-              'type': 'box',
-            },
-            'description': 'Render-ui SExpr for statsLook=\'sparkline-row\' — chart-first tiles where the mini trend line is the visual centerpiece, label above, value+delta footer.',
-            'label': 'Sparkline row body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
-          'statLook': {
-            'default': 'elevated',
-            'description': 'Layer 2 visual treatment for stat / KPI cards.',
-            'label': 'Stat display look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'elevated',
-              'flat',
-              'progress-backed',
-              'gauge',
-              'sparkline',
-            ],
-          },
-          'statsLook': {
-            'default': 'cards',
-            'description': 'Layer 3 body layout: default per-metric stat-card grid (\'cards\'), Stripe-dashboard KPI tile row (\'kpi-tiles\'), single oversize hero number (\'hero-metric\'), or chart-first sparkline tile grid (\'sparkline-row\').',
-            'label': 'Stats look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'cards',
-              'kpi-tiles',
-              'hero-metric',
-              'sparkline-row',
-            ],
-          },
-          'theme': {
-            'default': '',
-            'description': 'Data-theme skin applied to the stat body root — for chrome-less pages composed without an AppShell.',
-            'label': 'Theme',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'title': {
-            'default': '',
-            'description': 'Heading shown above the stat-card grid',
-            'label': 'Section title',
-            'synonyms': 'the section header text. user phrases: \'rename section to X\' / \'title the KPIs X\' / \'change section title to X\' -> X',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewPattern': {
-            'default': 'data-grid',
-            'description': 'UI pattern used to arrange the stat cards',
-            'label': 'Render pattern',
-            'synonyms': 'internal pattern selector. user prompts rarely target this directly',
-            'tier': 'internal',
-            'type': 'pattern',
-          },
+        'name': 'StatsItemStats',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'cards',
+          ],
         },
         'effectRow': [
           {
@@ -1060,29 +334,30 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
             'resource': '@entity.cards',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'cards',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
+        'category': 'interaction',
         'linkedEntity': 'StatsItem',
-        'name': 'StatsItemStats',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Data has been loaded and is ready for processing.',
               'key': 'ITEMS_LOADED',
               'name': 'Items Loaded',
+              'description': 'Data has been loaded and is ready for processing.',
+              'synonyms': 'data ready, update, refresh, loaded',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -1097,25 +372,19 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
                 {
                   'name': 'totalCount',
                   'type': 'number',
                 },
               ],
-              'synonyms': 'data ready, update, refresh, loaded',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1127,17 +396,35 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                       'fn',
                       'metric',
                       {
-                        'clickEvent': [
+                        'target': [
                           'object/get',
                           '@metric',
-                          'clickEvent',
-                          '',
+                          'target',
+                          0,
                         ],
-                        'format': [
+                        'value': [
                           'object/get',
                           '@metric',
-                          'format',
-                          'number',
+                          'value',
+                          0,
+                        ],
+                        'trendPolarity': [
+                          'object/get',
+                          '@metric',
+                          'trendPolarity',
+                          'higher-is-better',
+                        ],
+                        'trendFormat': [
+                          'object/get',
+                          '@metric',
+                          'trendFormat',
+                          'absolute',
+                        ],
+                        'variant': [
+                          'object/get',
+                          '@metric',
+                          'variant',
+                          'default',
                         ],
                         'icon': [
                           'object/get',
@@ -1145,18 +432,6 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                           'icon',
                           '',
                         ],
-                        'label': [
-                          'object/get',
-                          '@metric',
-                          'label',
-                        ],
-                        'max': [
-                          'object/get',
-                          '@metric',
-                          'max',
-                          0,
-                        ],
-                        'position': '@index',
                         'prefix': [
                           'object/get',
                           '@metric',
@@ -1169,46 +444,40 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                           'sparklineData',
                           [],
                         ],
+                        'trend': [
+                          'object/get',
+                          '@metric',
+                          'trend',
+                        ],
+                        'clickEvent': [
+                          'object/get',
+                          '@metric',
+                          'clickEvent',
+                          '',
+                        ],
                         'suffix': [
                           'object/get',
                           '@metric',
                           'suffix',
                           '',
                         ],
-                        'target': [
+                        'position': '@index',
+                        'label': [
                           'object/get',
                           '@metric',
-                          'target',
+                          'label',
+                        ],
+                        'max': [
+                          'object/get',
+                          '@metric',
+                          'max',
                           0,
                         ],
-                        'trend': [
+                        'format': [
                           'object/get',
                           '@metric',
-                          'trend',
-                        ],
-                        'trendFormat': [
-                          'object/get',
-                          '@metric',
-                          'trendFormat',
-                          'absolute',
-                        ],
-                        'trendPolarity': [
-                          'object/get',
-                          '@metric',
-                          'trendPolarity',
-                          'higher-is-better',
-                        ],
-                        'value': [
-                          'object/get',
-                          '@metric',
-                          'value',
-                          0,
-                        ],
-                        'variant': [
-                          'object/get',
-                          '@metric',
-                          'variant',
-                          'default',
+                          'format',
+                          'number',
                         ],
                       },
                     ],
@@ -1259,11 +528,11 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                   ],
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ITEMS_LOADED',
               'effects': [
                 [
                   'set',
@@ -1275,130 +544,12 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                       'fn',
                       'metric',
                       {
-                        'clickEvent': [
-                          'object/get',
-                          '@metric',
-                          'clickEvent',
-                          '',
-                        ],
-                        'format': [
-                          'object/get',
-                          '@metric',
-                          'format',
-                          'number',
-                        ],
-                        'icon': [
-                          'object/get',
-                          '@metric',
-                          'icon',
-                          '',
-                        ],
-                        'label': [
-                          'object/get',
-                          '@metric',
-                          'label',
-                        ],
-                        'max': [
-                          'object/get',
-                          '@metric',
-                          'max',
-                          0,
-                        ],
                         'position': '@index',
-                        'prefix': [
-                          'object/get',
-                          '@metric',
-                          'prefix',
-                          '',
-                        ],
-                        'sparklineData': [
-                          'object/get',
-                          '@metric',
-                          'sparklineData',
-                          [],
-                        ],
                         'suffix': [
                           'object/get',
                           '@metric',
                           'suffix',
                           '',
-                        ],
-                        'target': [
-                          'object/get',
-                          '@metric',
-                          'target',
-                          0,
-                        ],
-                        'trend': [
-                          'if',
-                          [
-                            '=',
-                            [
-                              'object/get',
-                              '@metric',
-                              'aggregation',
-                              'count',
-                            ],
-                            'variance',
-                          ],
-                          [
-                            '-',
-                            [
-                              'array/sum',
-                              [
-                                'array/filter',
-                                '@payload.data',
-                                [
-                                  'object/get',
-                                  '@metric',
-                                  'filter',
-                                  true,
-                                ],
-                              ],
-                              [
-                                'object/get',
-                                '@metric',
-                                'field',
-                                '',
-                              ],
-                            ],
-                            [
-                              'array/sum',
-                              [
-                                'array/filter',
-                                '@payload.data',
-                                [
-                                  'object/get',
-                                  '@metric',
-                                  'baselineFilter',
-                                  true,
-                                ],
-                              ],
-                              [
-                                'object/get',
-                                '@metric',
-                                'field',
-                                '',
-                              ],
-                            ],
-                          ],
-                          [
-                            'object/get',
-                            '@metric',
-                            'trend',
-                          ],
-                        ],
-                        'trendFormat': [
-                          'object/get',
-                          '@metric',
-                          'trendFormat',
-                          'absolute',
-                        ],
-                        'trendPolarity': [
-                          'object/get',
-                          '@metric',
-                          'trendPolarity',
-                          'higher-is-better',
                         ],
                         'value': [
                           'if',
@@ -1573,6 +724,124 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                             ],
                           ],
                         ],
+                        'trend': [
+                          'if',
+                          [
+                            '=',
+                            [
+                              'object/get',
+                              '@metric',
+                              'aggregation',
+                              'count',
+                            ],
+                            'variance',
+                          ],
+                          [
+                            '-',
+                            [
+                              'array/sum',
+                              [
+                                'array/filter',
+                                '@payload.data',
+                                [
+                                  'object/get',
+                                  '@metric',
+                                  'filter',
+                                  true,
+                                ],
+                              ],
+                              [
+                                'object/get',
+                                '@metric',
+                                'field',
+                                '',
+                              ],
+                            ],
+                            [
+                              'array/sum',
+                              [
+                                'array/filter',
+                                '@payload.data',
+                                [
+                                  'object/get',
+                                  '@metric',
+                                  'baselineFilter',
+                                  true,
+                                ],
+                              ],
+                              [
+                                'object/get',
+                                '@metric',
+                                'field',
+                                '',
+                              ],
+                            ],
+                          ],
+                          [
+                            'object/get',
+                            '@metric',
+                            'trend',
+                          ],
+                        ],
+                        'trendFormat': [
+                          'object/get',
+                          '@metric',
+                          'trendFormat',
+                          'absolute',
+                        ],
+                        'trendPolarity': [
+                          'object/get',
+                          '@metric',
+                          'trendPolarity',
+                          'higher-is-better',
+                        ],
+                        'clickEvent': [
+                          'object/get',
+                          '@metric',
+                          'clickEvent',
+                          '',
+                        ],
+                        'prefix': [
+                          'object/get',
+                          '@metric',
+                          'prefix',
+                          '',
+                        ],
+                        'icon': [
+                          'object/get',
+                          '@metric',
+                          'icon',
+                          '',
+                        ],
+                        'sparklineData': [
+                          'object/get',
+                          '@metric',
+                          'sparklineData',
+                          [],
+                        ],
+                        'target': [
+                          'object/get',
+                          '@metric',
+                          'target',
+                          0,
+                        ],
+                        'label': [
+                          'object/get',
+                          '@metric',
+                          'label',
+                        ],
+                        'format': [
+                          'object/get',
+                          '@metric',
+                          'format',
+                          'number',
+                        ],
+                        'max': [
+                          'object/get',
+                          '@metric',
+                          'max',
+                          0,
+                        ],
                         'variant': [
                           'object/get',
                           '@metric',
@@ -1628,12 +897,743 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                   ],
                 ],
               ],
-              'event': 'ITEMS_LOADED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'metricLabels': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Metric labels',
+            'description': 'In metric order: the label shown on each card, in place of its `metrics` label (render-only, so it may be translated)',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'theme': {
+            'type': 'string',
+            'default': '',
+            'label': 'Theme',
+            'description': 'Data-theme skin applied to the stat body root — for chrome-less pages composed without an AppShell.',
+            'tier': 'presentation',
+          },
+          'viewPattern': {
+            'type': 'pattern',
+            'default': 'data-grid',
+            'label': 'Render pattern',
+            'description': 'UI pattern used to arrange the stat cards',
+            'synonyms': 'internal pattern selector. user prompts rarely target this directly',
+            'tier': 'internal',
+          },
+          'statsLook': {
+            'type': 'string',
+            'default': 'cards',
+            'label': 'Stats look',
+            'description': 'Layer 3 body layout: default per-metric stat-card grid (\'cards\'), Stripe-dashboard KPI tile row (\'kpi-tiles\'), single oversize hero number (\'hero-metric\'), or chart-first sparkline tile grid (\'sparkline-row\').',
+            'tier': 'presentation',
+            'values': [
+              'cards',
+              'kpi-tiles',
+              'hero-metric',
+              'sparkline-row',
+            ],
+          },
+          'heroMetricBodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'type': 'box',
+              'data-theme': '@config.theme',
+              'children': [
+                [
+                  'if',
+                  [
+                    '!=',
+                    '@config.title',
+                    '',
+                  ],
+                  {
+                    'variant': 'h3',
+                    'type': 'typography',
+                    'content': '@config.title',
+                  },
+                  {
+                    'gap': 'none',
+                    'type': 'stack',
+                    'children': [],
+                  },
+                ],
+                {
+                  'fields': [],
+                  'entity': '@entity.cards',
+                  'type': 'data-list',
+                  'renderItem': [
+                    'fn',
+                    'card',
+                    {
+                      'children': [
+                        {
+                          'look': 'elevated',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'size': 'md',
+                                      'type': 'icon',
+                                      'color': 'muted',
+                                      'name': '@card.icon',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'content': [
+                                        'if',
+                                        [
+                                          '=',
+                                          [
+                                            'array/len',
+                                            '@config.metricLabels',
+                                          ],
+                                          0,
+                                        ],
+                                        '@card.label',
+                                        [
+                                          'array/nth',
+                                          '@config.metricLabels',
+                                          '@card.position',
+                                        ],
+                                      ],
+                                      'weight': 'bold',
+                                      'type': 'typography',
+                                      'className': 'uppercase tracking-widest',
+                                      'variant': 'overline',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'justify': 'center',
+                                },
+                                {
+                                  'align': 'baseline',
+                                  'type': 'stack',
+                                  'className': 'py-section',
+                                  'justify': 'center',
+                                  'children': [
+                                    {
+                                      'content': '@card.prefix',
+                                      'weight': 'normal',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'color': 'muted',
+                                    },
+                                    {
+                                      'className': 'text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]',
+                                      'value': '@card.value',
+                                      'type': 'animated-counter',
+                                      'format': '@card.format',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'weight': 'normal',
+                                      'variant': 'h2',
+                                      'content': '@card.suffix',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'xs',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'value': '@card.trend',
+                                  'showValue': true,
+                                  'size': 'md',
+                                  'type': 'trend-indicator',
+                                },
+                              ],
+                              'gap': 'md',
+                              'align': 'center',
+                              'className': 'relative z-10 w-full max-w-2xl mx-auto text-center',
+                              'direction': 'vertical',
+                            },
+                            {
+                              'fill': true,
+                              'data': '@card.sparklineData',
+                              'color': 'auto',
+                              'strokeWidth': 1,
+                              'height': 96,
+                              'type': 'sparkline',
+                              'className': 'absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none',
+                            },
+                          ],
+                          'type': 'card',
+                          'padding': 'lg',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'gap': 'none',
+                      'className': 'relative w-full rounded-xl shadow-lg overflow-hidden',
+                      'type': 'stack',
+                    },
+                  ],
+                  'gap': 'none',
+                },
+              ],
+            },
+            'label': 'Hero metric body content tree',
+            'description': 'Render-ui SExpr for statsLook=\'hero-metric\' — one elevated card, one oversize number, background sparkline.',
+            'tier': 'internal',
+          },
+          'sparklineRowBodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'children': [
+                [
+                  'if',
+                  [
+                    '!=',
+                    '@config.title',
+                    '',
+                  ],
+                  {
+                    'content': '@config.title',
+                    'variant': 'h3',
+                    'type': 'typography',
+                  },
+                  {
+                    'gap': 'none',
+                    'type': 'stack',
+                    'children': [],
+                  },
+                ],
+                {
+                  'gap': 'md',
+                  'entity': '@entity.cards',
+                  'minCardWidth': 260,
+                  'type': 'data-grid',
+                  'className': 'w-full',
+                  'fields': [],
+                  'renderItem': [
+                    'fn',
+                    'card',
+                    {
+                      'gap': 'sm',
+                      'children': [
+                        {
+                          'gap': 'xs',
+                          'type': 'stack',
+                          'align': 'center',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'name': '@card.icon',
+                              'size': 'xs',
+                              'color': 'muted',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': [
+                                'if',
+                                [
+                                  '=',
+                                  [
+                                    'array/len',
+                                    '@config.metricLabels',
+                                  ],
+                                  0,
+                                ],
+                                '@card.label',
+                                [
+                                  'array/nth',
+                                  '@config.metricLabels',
+                                  '@card.position',
+                                ],
+                              ],
+                              'weight': 'semibold',
+                              'type': 'typography',
+                              'className': 'uppercase tracking-wide truncate',
+                              'color': 'muted',
+                              'variant': 'overline',
+                            },
+                          ],
+                        },
+                        {
+                          'className': 'w-full',
+                          'color': 'auto',
+                          'height': 64,
+                          'fill': true,
+                          'type': 'sparkline',
+                          'data': '@card.sparklineData',
+                          'strokeWidth': 2,
+                        },
+                        {
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'baseline',
+                              'children': [
+                                {
+                                  'type': 'typography',
+                                  'variant': 'caption',
+                                  'content': '@card.prefix',
+                                  'color': 'muted',
+                                },
+                                {
+                                  'className': 'text-2xl font-semibold tabular-nums',
+                                  'type': 'animated-counter',
+                                  'format': '@card.format',
+                                  'value': '@card.value',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'color': 'muted',
+                                  'type': 'typography',
+                                  'content': '@card.suffix',
+                                },
+                              ],
+                              'gap': 'xs',
+                            },
+                            {
+                              'size': 'sm',
+                              'type': 'trend-indicator',
+                              'showValue': true,
+                              'value': '@card.trend',
+                            },
+                          ],
+                          'type': 'stack',
+                          'align': 'baseline',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'between',
+                        },
+                      ],
+                      'className': 'surface-content p-card-md hover:shadow-elevation-dialog transition-shadow min-h-[180px]',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                    },
+                  ],
+                },
+              ],
+              'data-theme': '@config.theme',
+              'type': 'box',
+            },
+            'label': 'Sparkline row body content tree',
+            'description': 'Render-ui SExpr for statsLook=\'sparkline-row\' — chart-first tiles where the mini trend line is the visual centerpiece, label above, value+delta footer.',
+            'tier': 'internal',
+          },
+          'title': {
+            'type': 'string',
+            'default': '',
+            'label': 'Section title',
+            'description': 'Heading shown above the stat-card grid',
+            'synonyms': 'the section header text. user phrases: \'rename section to X\' / \'title the KPIs X\' / \'change section title to X\' -> X',
+            'tier': 'presentation',
+          },
+          'statLook': {
+            'type': 'string',
+            'default': 'elevated',
+            'label': 'Stat display look',
+            'description': 'Layer 2 visual treatment for stat / KPI cards.',
+            'tier': 'presentation',
+            'values': [
+              'elevated',
+              'flat',
+              'progress-backed',
+              'gauge',
+              'sparkline',
+            ],
+          },
+          'metrics': {
+            'type': '[MetricSpec]',
+            'default': [
+              {
+                'format': 'number',
+                'label': 'Total Items',
+                'sparklineData': [
+                  2,
+                  4,
+                  3,
+                  6,
+                  5,
+                  8,
+                  7,
+                ],
+                'icon': 'list',
+                'variant': 'primary',
+                'aggregation': 'count',
+              },
+              {
+                'variant': 'success',
+                'label': 'Active',
+                'format': 'number',
+                'sparklineData': [
+                  1,
+                  3,
+                  2,
+                  4,
+                  6,
+                  5,
+                  7,
+                ],
+                'icon': 'check-circle',
+                'aggregation': 'count',
+              },
+              {
+                'icon': 'trending-up',
+                'format': 'number',
+                'label': 'Avg Value',
+                'aggregation': 'avg',
+                'variant': 'info',
+                'field': 'value',
+                'sparklineData': [
+                  5,
+                  4,
+                  6,
+                  3,
+                  5,
+                  7,
+                  6,
+                ],
+              },
+            ],
+            'label': 'Metrics',
+            'description': 'One stat card per entry; declares aggregation, format, and styling',
+            'synonyms': 'list of KPI cards / stat tiles / metric cards. each entry has label / value / format / icon / variant / aggregation. user phrases: \'replace metrics with X, Y, Z\' -> rewrite array; \'add Revenue tile\' -> append entry; \'change KPIs to X\' -> rewrite array',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'default',
+                    'primary',
+                    'success',
+                    'warning',
+                    'error',
+                    'info',
+                  ],
+                },
+                'value': {
+                  'name': 'value',
+                  'type': 'number',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'suffix': {
+                  'name': 'suffix',
+                  'type': 'string',
+                  'required': false,
+                },
+                'prefix': {
+                  'name': 'prefix',
+                  'type': 'string',
+                  'required': false,
+                },
+                'sparklineData': {
+                  'name': 'sparklineData',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'number',
+                  },
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': false,
+                },
+                'trendPolarity': {
+                  'name': 'trendPolarity',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'higher-is-better',
+                    'lower-is-better',
+                  ],
+                },
+                'max': {
+                  'name': 'max',
+                  'type': 'number',
+                  'required': false,
+                },
+                'format': {
+                  'name': 'format',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'number',
+                    'currency',
+                    'percent',
+                  ],
+                },
+                'target': {
+                  'name': 'target',
+                  'type': 'number',
+                  'required': false,
+                },
+                'aggregation': {
+                  'name': 'aggregation',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'count',
+                    'sum',
+                    'avg',
+                    'min',
+                    'max',
+                    'variance',
+                  ],
+                },
+                'trendFormat': {
+                  'name': 'trendFormat',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'absolute',
+                    'percent',
+                  ],
+                },
+                'trend': {
+                  'name': 'trend',
+                  'type': 'number',
+                  'required': false,
+                },
+                'clickEvent': {
+                  'name': 'clickEvent',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'kpiTilesBodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'children': [
+                [
+                  'if',
+                  [
+                    '!=',
+                    '@config.title',
+                    '',
+                  ],
+                  {
+                    'variant': 'h3',
+                    'content': '@config.title',
+                    'type': 'typography',
+                  },
+                  {
+                    'gap': 'none',
+                    'children': [],
+                    'type': 'stack',
+                  },
+                ],
+                {
+                  'className': 'w-full',
+                  'gap': 'lg',
+                  'renderItem': [
+                    'fn',
+                    'card',
+                    {
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'weight': 'medium',
+                              'className': 'uppercase tracking-wide',
+                              'variant': 'caption',
+                              'color': 'muted',
+                              'content': [
+                                'if',
+                                [
+                                  '=',
+                                  [
+                                    'array/len',
+                                    '@config.metricLabels',
+                                  ],
+                                  0,
+                                ],
+                                '@card.label',
+                                [
+                                  'array/nth',
+                                  '@config.metricLabels',
+                                  '@card.position',
+                                ],
+                              ],
+                              'type': 'typography',
+                            },
+                            {
+                              'color': 'muted',
+                              'name': '@card.icon',
+                              'size': 'sm',
+                              'type': 'icon',
+                            },
+                          ],
+                          'gap': 'xs',
+                        },
+                        {
+                          'children': [
+                            {
+                              'color': 'muted',
+                              'content': '@card.prefix',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'className': 'text-4xl font-bold tracking-tight',
+                              'type': 'animated-counter',
+                              'value': '@card.value',
+                              'format': '@card.format',
+                            },
+                            {
+                              'variant': 'caption',
+                              'content': '@card.suffix',
+                              'color': 'muted',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'xs',
+                          'align': 'baseline',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'value': '@card.trend',
+                              'showValue': true,
+                              'size': 'sm',
+                              'type': 'trend-indicator',
+                            },
+                            {
+                              'data': '@card.sparklineData',
+                              'height': 24,
+                              'type': 'sparkline',
+                              'fill': true,
+                              'color': 'auto',
+                              'className': 'flex-1',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                      ],
+                      'className': 'rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow',
+                      'gap': 'sm',
+                      'direction': 'vertical',
+                    },
+                  ],
+                  'entity': '@entity.cards',
+                  'minCardWidth': 220,
+                  'fields': [],
+                  'type': 'data-grid',
+                },
+              ],
+              'data-theme': '@config.theme',
+              'type': 'box',
+            },
+            'label': 'KPI tiles body content tree',
+            'description': 'Render-ui SExpr for statsLook=\'kpi-tiles\' — Stripe-dashboard style tile grid: huge typography number, label, trend indicator, sparkline hint.',
+            'tier': 'internal',
+          },
+          'bodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'data-theme': '@config.theme',
+              'type': 'box',
+              'children': [
+                [
+                  'if',
+                  [
+                    '!=',
+                    '@config.title',
+                    '',
+                  ],
+                  {
+                    'variant': 'h3',
+                    'type': 'typography',
+                    'content': '@config.title',
+                  },
+                  {
+                    'type': 'stack',
+                    'gap': 'none',
+                    'children': [],
+                  },
+                ],
+                {
+                  'entity': '@entity.cards',
+                  'renderItem': [
+                    'fn',
+                    'card',
+                    {
+                      'max': '@card.max',
+                      'trendFormat': '@card.trendFormat',
+                      'format': '@card.format',
+                      'type': 'stat-display',
+                      'prefix': '@card.prefix',
+                      'variant': '@card.variant',
+                      'look': '@config.statLook',
+                      'trend': '@card.trend',
+                      'trendPolarity': '@card.trendPolarity',
+                      'sparklineData': '@card.sparklineData',
+                      'value': '@card.value',
+                      'label': [
+                        'if',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            '@config.metricLabels',
+                          ],
+                          0,
+                        ],
+                        '@card.label',
+                        [
+                          'array/nth',
+                          '@config.metricLabels',
+                          '@card.position',
+                        ],
+                      ],
+                      'clickEvent': '@card.clickEvent',
+                      'target': '@card.target',
+                      'suffix': '@card.suffix',
+                      'icon': '@card.icon',
+                    },
+                  ],
+                  'fields': [],
+                  'type': '@config.viewPattern',
+                },
+              ],
+            },
+            'label': 'Body content tree',
+            'description': 'Render-ui SExpr rendered after metrics aggregate for statsLook=\'cards\' — the canonical data-grid call mapping @entity.cards through stat-display. Other statsLook values render kpiTilesBodyContent / heroMetricBodyContent / sparklineRowBodyContent instead; all four share this trait\'s state machine, aggregation pipeline, and listens.',
+            'tier': 'internal',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

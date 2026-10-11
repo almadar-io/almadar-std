@@ -56,12 +56,12 @@ export interface StdMlExactCheckExactUnmatchedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMlExactCheckConfig {
+  /** Default: `true` */
+  trimWhitespace?: boolean;
   /** Default: `false` */
   caseSensitive?: boolean;
   /** Default: `0` */
   numericTolerance?: number;
-  /** Default: `true` */
-  trimWhitespace?: boolean;
 }
 
 /**
@@ -192,14 +192,14 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': false,
             'name': 'matched',
             'type': 'boolean',
+            'default': false,
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'checked',
@@ -214,30 +214,7 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'caseSensitive': {
-            'default': false,
-            'description': 'Compare candidate and key with case sensitivity; off lowercases both sides before comparing',
-            'label': 'Case sensitive',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'numericTolerance': {
-            'default': 0,
-            'description': 'Absolute tolerance applied when both candidate and key are numbers; 0 requires an exact numeric match',
-            'label': 'Numeric tolerance',
-            'tier': 'policy',
-            'type': 'float',
-          },
-          'trimWhitespace': {
-            'default': true,
-            'description': 'Strip leading and trailing whitespace from both sides before comparing',
-            'label': 'Trim whitespace',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-        },
+        'name': 'ExactCheckRun',
         'effectRow': [
           {
             'kind': 'emit',
@@ -256,52 +233,60 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'ExactCheck',
         'emits': [
           {
-            'description': 'Fired when the candidate exactly equals the key under the configured normalization',
             'event': 'EXACT_MATCHED',
+            'description': 'Fired when the candidate exactly equals the key under the configured normalization',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'candidate',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
               {
                 'name': 'key',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
           {
-            'description': 'Abstain — candidate does not equal the key; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
             'event': 'EXACT_UNMATCHED',
+            'description': 'Abstain — candidate does not equal the key; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'candidate',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
               {
                 'name': 'key',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
               {
                 'name': 'request',
                 'type': '$r',
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'ExactCheck',
-        'name': 'ExactCheckRun',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'checked',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -313,13 +298,13 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
               'payloadSchema': [
                 {
                   'name': 'candidate',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'key',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'request',
@@ -332,57 +317,51 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
               'name': 'Reset',
             },
             {
-              'description': 'Fired when the candidate exactly equals the key under the configured normalization',
               'key': 'EXACT_MATCHED',
               'name': 'Exact Matched',
+              'description': 'Fired when the candidate exactly equals the key under the configured normalization',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'candidate',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'key',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'Abstain — candidate does not equal the key; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
               'key': 'EXACT_UNMATCHED',
               'name': 'Exact Unmatched',
+              'description': 'Abstain — candidate does not equal the key; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'candidate',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'key',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'request',
                   'type': '$r',
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'checked',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -395,11 +374,11 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'checked',
+              'event': 'CHECK',
               'effects': [
                 [
                   'let',
@@ -546,19 +525,19 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
                         'EXACT_UNMATCHED',
                         {
                           'candidate': '@payload.candidate',
-                          'key': '@payload.key',
                           'request': '@payload.request',
+                          'key': '@payload.key',
                         },
                       ],
                     ],
                   ],
                 ],
               ],
-              'event': 'CHECK',
-              'from': 'idle',
-              'to': 'checked',
             },
             {
+              'from': 'checked',
+              'to': 'checked',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -566,11 +545,11 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
                   'checked',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'checked',
-              'to': 'checked',
             },
             {
+              'from': 'checked',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -583,16 +562,37 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'checked',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'trimWhitespace': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Trim whitespace',
+            'description': 'Strip leading and trailing whitespace from both sides before comparing',
+            'tier': 'policy',
+          },
+          'caseSensitive': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Case sensitive',
+            'description': 'Compare candidate and key with case sensitivity; off lowercases both sides before comparing',
+            'tier': 'policy',
+          },
+          'numericTolerance': {
+            'type': 'float',
+            'default': 0,
+            'label': 'Numeric tolerance',
+            'description': 'Absolute tolerance applied when both candidate and key are numbers; 0 requires an exact numeric match',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
         'typeParams': [
           {
-            'kind': 'Entity',
             'name': 'r',
+            'kind': 'Entity',
           },
         ],
       } satisfies Trait,

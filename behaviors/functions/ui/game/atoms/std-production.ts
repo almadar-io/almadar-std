@@ -54,22 +54,22 @@ export interface StdProductionSpawnPayload {
 export interface StdProductionConfig {
   /** Default: `2` */
   pointsPerTurn?: number;
-  /** Default: `true` */
-  running?: boolean;
-  /** Default: `3` */
-  spawnCost?: number;
   /** Default: `3` */
   spawnHealth?: number;
-  /** Default: `"player"` */
-  spawnTeam?: string;
   /** Default: `"unit"` */
   spawnUnitType?: string;
+  /** Default: `"player"` */
+  spawnTeam?: string;
   /** Default: `0` */
   spawnX?: number;
+  /** Default: `true` */
+  running?: boolean;
   /** Default: `0` */
   spawnY?: number;
   /** Default: `0` */
   startPoints?: number;
+  /** Default: `3` */
+  spawnCost?: number;
 }
 
 /**

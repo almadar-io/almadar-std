@@ -55,39 +55,39 @@ export interface StdUiCodeRunnerPanelResetPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeRunnerPanelConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `""` */
-  code?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
+  ariaBusy?: boolean;
+  className?: string;
   error?: string;
-  lang?: string;
-  /** Default: `""` */
-  language?: string;
+  /** Default: `false` */
+  running?: boolean;
+  enterDelay?: number;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   output?: EntityRow;
-  /** Default: `"RESET"` */
-  resetEvent?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `"RUN"` */
   runEvent?: string;
   runId?: string;
+  ariaSelected?: boolean;
   /** Default: `false` */
   runnable?: boolean;
-  /** Default: `false` */
-  running?: boolean;
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `""` */
+  language?: string;
   tabIndex?: number;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  lang?: string;
+  /** Default: `""` */
+  code?: string;
+  ariaLabel?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaLabelledby?: string;
+  /** Default: `"RESET"` */
+  resetEvent?: string;
+  ariaDescribedby?: string;
+  ariaHidden?: boolean;
+  ariaExpanded?: boolean;
 }
 
 type _StdUiCodeRunnerPanelEntityName = 'CodeRunnerPanelItem';
@@ -147,25 +147,25 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'default': '',
-            'intrinsic': true,
             'name': 'code',
             'type': 'string',
-          },
-          {
             'default': '',
             'intrinsic': true,
-            'name': 'language',
-            'type': 'string',
           },
           {
+            'name': 'language',
+            'type': 'string',
+            'default': '',
             'intrinsic': true,
+          },
+          {
             'name': 'runId',
             'type': 'string',
+            'intrinsic': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -176,21 +176,370 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
     } as Entity,
     traits: [
       {
+        'name': 'CodeRunnerPanelRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'code',
+            'language',
+            'runId',
+          ],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.code',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.language',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.runId',
+          },
+        ],
         'category': 'interaction',
+        'linkedEntity': 'CodeRunnerPanelItem',
+        'emits': [
+          {
+            'event': '@config.runEvent',
+            'description': 'Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to \'RUN_CODE\'.',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'code',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'language',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'runId',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+            'definerKnob': 'runEvent',
+          },
+          {
+            'event': '@config.resetEvent',
+            'description': 'Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent.',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'runId',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+            'definerKnob': 'resetEvent',
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'RUN',
+              'name': 'Run',
+              'payloadSchema': [
+                {
+                  'name': 'code',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'language',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'runId',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+              'payloadSchema': [
+                {
+                  'name': 'runId',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': '@config.runEvent',
+              'name': '@config.run event',
+              'description': 'Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to \'RUN_CODE\'.',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'code',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'language',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'runId',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': '@config.resetEvent',
+              'name': '@config.reset event',
+              'description': 'Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent.',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'runId',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.code',
+                  '@config.code',
+                ],
+                [
+                  'set',
+                  '@entity.language',
+                  '@config.language',
+                ],
+                [
+                  'set',
+                  '@entity.runId',
+                  '@config.runId',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'code-runner-panel',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'enter': '@config.enter',
+                    'language': '@entity.language',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'skeleton': '@config.skeleton',
+                    'aria-live': '@config.ariaLive',
+                    'aria-hidden': '@config.ariaHidden',
+                    'lang': '@config.lang',
+                    'aria-selected': '@config.ariaSelected',
+                    'code': '@entity.code',
+                    'className': '@config.className',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-pressed': '@config.ariaPressed',
+                    'role': '@config.role',
+                    'enterDelay': '@config.enterDelay',
+                    'aria-label': '@config.ariaLabel',
+                    'runId': '@entity.runId',
+                    'runnable': '@config.runnable',
+                    'tabIndex': '@config.tabIndex',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'output': '@config.output',
+                    'runEvent': '@config.runEvent',
+                    'resetEvent': '@config.resetEvent',
+                    'dir': '@config.dir',
+                    'running': '@config.running',
+                    'aria-current': '@config.ariaCurrent',
+                    'error': '@config.error',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'RUN',
+              'effects': [
+                [
+                  'set',
+                  '@entity.code',
+                  '@payload.code',
+                ],
+                [
+                  'set',
+                  '@entity.language',
+                  '@payload.language',
+                ],
+                [
+                  'set',
+                  '@entity.runId',
+                  '@payload.runId',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'resetEvent': '@config.resetEvent',
+                    'language': '@entity.language',
+                    'aria-current': '@config.ariaCurrent',
+                    'className': '@config.className',
+                    'runnable': '@config.runnable',
+                    'enterDelay': '@config.enterDelay',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'lang': '@config.lang',
+                    'skeleton': '@config.skeleton',
+                    'tabIndex': '@config.tabIndex',
+                    'role': '@config.role',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-pressed': '@config.ariaPressed',
+                    'aria-selected': '@config.ariaSelected',
+                    'aria-live': '@config.ariaLive',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'running': '@config.running',
+                    'dir': '@config.dir',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-hidden': '@config.ariaHidden',
+                    'runId': '@entity.runId',
+                    'code': '@entity.code',
+                    'output': '@config.output',
+                    'runEvent': '@config.runEvent',
+                    'aria-label': '@config.ariaLabel',
+                    'enter': '@config.enter',
+                    'error': '@config.error',
+                    'type': 'code-runner-panel',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.runId',
+                  '@payload.runId',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'enterDelay': '@config.enterDelay',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-selected': '@config.ariaSelected',
+                    'aria-live': '@config.ariaLive',
+                    'error': '@config.error',
+                    'aria-pressed': '@config.ariaPressed',
+                    'code': '@entity.code',
+                    'skeleton': '@config.skeleton',
+                    'lang': '@config.lang',
+                    'runnable': '@config.runnable',
+                    'className': '@config.className',
+                    'type': 'code-runner-panel',
+                    'language': '@entity.language',
+                    'role': '@config.role',
+                    'output': '@config.output',
+                    'runEvent': '@config.runEvent',
+                    'running': '@config.running',
+                    'resetEvent': '@config.resetEvent',
+                    'tabIndex': '@config.tabIndex',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'runId': '@entity.runId',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'dir': '@config.dir',
+                    'aria-hidden': '@config.ariaHidden',
+                    'enter': '@config.enter',
+                    'aria-label': '@config.ariaLabel',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
         'config': {
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
           'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'type': 'boolean',
             'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
             'synonyms': 'aria-busy',
             'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'string',
+            'label': 'Error',
+            'description': 'A run failure message from the program; replaces the output body.',
+            'tier': 'presentation',
+          },
+          'running': {
             'type': 'boolean',
+            'default': false,
+            'label': 'Running',
+            'description': 'True while the program is running the code.',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
           },
           'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'type': 'string',
             'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
             'synonyms': 'aria-current',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
               'page',
               'step',
@@ -201,199 +550,122 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
               'false',
             ],
           },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'className': {
-            'description': 'Additional CSS classes',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'code': {
-            'default': '',
-            'description': 'Initial code content',
-            'label': 'Code',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'error': {
-            'description': 'A run failure message from the program; replaces the output body.',
-            'label': 'Error',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'language': {
-            'default': '',
-            'description': 'Programming language for syntax highlighting',
-            'label': 'Language',
-            'tier': 'presentation',
-            'type': 'string',
-          },
           'output': {
-            'description': 'The program\'s result for the last run, bound back into the panel.',
+            'type': 'CodeRunnerPanelOutput',
             'label': 'Output',
+            'description': 'The program\'s result for the last run, bound back into the panel.',
+            'tier': 'presentation',
             'properties': {
-              'exitCode': {
-                'name': 'exitCode',
-                'required': true,
-                'type': 'number',
-              },
-              'stderr': {
-                'name': 'stderr',
-                'required': true,
-                'type': 'string',
-              },
-              'stdout': {
-                'name': 'stdout',
-                'required': true,
-                'type': 'string',
-              },
               'testResults': {
+                'name': 'testResults',
+                'type': 'array',
+                'required': true,
                 'items': {
+                  'type': 'object',
                   'properties': {
+                    'passed': {
+                      'name': 'passed',
+                      'type': 'boolean',
+                      'required': true,
+                    },
                     'actualOutput': {
                       'name': 'actualOutput',
-                      'required': true,
                       'type': 'string',
-                    },
-                    'expectedOutput': {
-                      'name': 'expectedOutput',
                       'required': true,
-                      'type': 'string',
                     },
                     'input': {
                       'name': 'input',
-                      'required': true,
                       'type': 'string',
-                    },
-                    'passed': {
-                      'name': 'passed',
                       'required': true,
-                      'type': 'boolean',
+                    },
+                    'expectedOutput': {
+                      'name': 'expectedOutput',
+                      'type': 'string',
+                      'required': true,
                     },
                   },
-                  'type': 'object',
                 },
-                'name': 'testResults',
+              },
+              'stderr': {
+                'name': 'stderr',
+                'type': 'string',
                 'required': true,
-                'type': 'array',
+              },
+              'stdout': {
+                'name': 'stdout',
+                'type': 'string',
+                'required': true,
+              },
+              'exitCode': {
+                'name': 'exitCode',
+                'type': 'number',
+                'required': true,
               },
             },
-            'tier': 'presentation',
-            'type': 'CodeRunnerPanelOutput',
           },
-          'resetEvent': {
-            'default': 'RESET',
-            'description': 'Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent.',
-            'label': 'Reset Event',
-            'tier': 'presentation',
+          'runEvent': {
             'type': 'event',
+            'default': 'RUN',
+            'label': 'Run Event',
+            'description': 'Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to \'RUN_CODE\'.',
+            'tier': 'presentation',
+          },
+          'runId': {
+            'type': 'string',
+            'label': 'Run Id',
+            'description': 'Identifies this panel in its run/reset payloads (e.g. a lesson segment); empty when one panel stands alone.',
+            'tier': 'presentation',
+          },
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'runnable': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Runnable',
+            'description': 'Whether the panel is editable and runnable (default false = read-only code block)',
+            'tier': 'presentation',
+          },
+          'skeleton': {
+            'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
+          'language': {
+            'type': 'string',
+            'default': '',
+            'label': 'Language',
+            'description': 'Programming language for syntax highlighting',
+            'tier': 'presentation',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -478,370 +750,98 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
               'treeitem',
             ],
           },
-          'runEvent': {
-            'default': 'RUN',
-            'description': 'Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to \'RUN_CODE\'.',
-            'label': 'Run Event',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'runId': {
-            'description': 'Identifies this panel in its run/reset payloads (e.g. a lesson segment); empty when one panel stands alone.',
-            'label': 'Run Id',
-            'tier': 'presentation',
+          'ariaLive': {
             'type': 'string',
-          },
-          'runnable': {
-            'default': false,
-            'description': 'Whether the panel is editable and runnable (default false = read-only code block)',
-            'label': 'Runnable',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
             'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'running': {
-            'default': false,
-            'description': 'True while the program is running the code.',
-            'label': 'Running',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
-            'type': 'string',
             'values': [
-              'header',
-              'table',
-              'list',
-              'grid',
-              'detail',
-              'stats',
-              'form',
-              'card',
-              'text',
-              'none',
+              'off',
+              'polite',
+              'assertive',
             ],
           },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
             'tier': 'presentation',
-            'type': 'number',
-          },
-        },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-          {
-            'kind': 'set',
-            'resource': '@entity.code',
-          },
-          {
-            'kind': 'set',
-            'resource': '@entity.language',
-          },
-          {
-            'kind': 'set',
-            'resource': '@entity.runId',
-          },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'runEvent',
-            'description': 'Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to \'RUN_CODE\'.',
-            'event': '@config.runEvent',
-            'payloadSchema': [
-              {
-                'name': 'code',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'language',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'runId',
-                'required': true,
-                'type': 'string',
-              },
+            'values': [
+              'true',
+              'false',
+              'mixed',
             ],
-            'scope': 'external',
-            'tier': 'essential',
           },
-          {
-            'definerKnob': 'resetEvent',
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
+          },
+          'code': {
+            'type': 'string',
+            'default': '',
+            'label': 'Code',
+            'description': 'Initial code content',
+            'tier': 'presentation',
+          },
+          'ariaLabel': {
+            'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+          },
+          'dir': {
+            'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'ariaLabelledby': {
+            'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+          },
+          'resetEvent': {
+            'type': 'event',
+            'default': 'RESET',
+            'label': 'Reset Event',
             'description': 'Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent.',
-            'event': '@config.resetEvent',
-            'payloadSchema': [
-              {
-                'name': 'runId',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
+            'tier': 'presentation',
           },
-        ],
-        'entityContract': {
-          'provides': [
-            'code',
-            'language',
-            'runId',
-          ],
-          'requires': [],
+          'ariaDescribedby': {
+            'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+          },
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
         },
-        'entityRebindable': true,
-        'linkedEntity': 'CodeRunnerPanelItem',
-        'name': 'CodeRunnerPanelRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'key': 'RUN',
-              'name': 'Run',
-              'payloadSchema': [
-                {
-                  'name': 'code',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'language',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'runId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'key': 'RESET',
-              'name': 'Reset',
-              'payloadSchema': [
-                {
-                  'name': 'runId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'description': 'Event emitted on Run as `UI:<runEvent>` with `{ code, language, runId }`. Defaults to \'RUN_CODE\'.',
-              'key': '@config.runEvent',
-              'name': '@config.run event',
-              'payloadSchema': [
-                {
-                  'name': 'code',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'language',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'runId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'Event emitted on Reset as `UI:<resetEvent>` with `{ runId }`; Reset only restores the code when absent.',
-              'key': '@config.resetEvent',
-              'name': '@config.reset event',
-              'payloadSchema': [
-                {
-                  'name': 'runId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.code',
-                  '@config.code',
-                ],
-                [
-                  'set',
-                  '@entity.language',
-                  '@config.language',
-                ],
-                [
-                  'set',
-                  '@entity.runId',
-                  '@config.runId',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'code': '@entity.code',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'error': '@config.error',
-                    'lang': '@config.lang',
-                    'language': '@entity.language',
-                    'output': '@config.output',
-                    'resetEvent': '@config.resetEvent',
-                    'role': '@config.role',
-                    'runEvent': '@config.runEvent',
-                    'runId': '@entity.runId',
-                    'runnable': '@config.runnable',
-                    'running': '@config.running',
-                    'skeleton': '@config.skeleton',
-                    'tabIndex': '@config.tabIndex',
-                    'type': 'code-runner-panel',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.code',
-                  '@payload.code',
-                ],
-                [
-                  'set',
-                  '@entity.language',
-                  '@payload.language',
-                ],
-                [
-                  'set',
-                  '@entity.runId',
-                  '@payload.runId',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'code': '@entity.code',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'error': '@config.error',
-                    'lang': '@config.lang',
-                    'language': '@entity.language',
-                    'output': '@config.output',
-                    'resetEvent': '@config.resetEvent',
-                    'role': '@config.role',
-                    'runEvent': '@config.runEvent',
-                    'runId': '@entity.runId',
-                    'runnable': '@config.runnable',
-                    'running': '@config.running',
-                    'skeleton': '@config.skeleton',
-                    'tabIndex': '@config.tabIndex',
-                    'type': 'code-runner-panel',
-                  },
-                ],
-              ],
-              'event': 'RUN',
-              'from': 'idle',
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.runId',
-                  '@payload.runId',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'code': '@entity.code',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'error': '@config.error',
-                    'lang': '@config.lang',
-                    'language': '@entity.language',
-                    'output': '@config.output',
-                    'resetEvent': '@config.resetEvent',
-                    'role': '@config.role',
-                    'runEvent': '@config.runEvent',
-                    'runId': '@entity.runId',
-                    'runnable': '@config.runnable',
-                    'running': '@config.running',
-                    'skeleton': '@config.skeleton',
-                    'tabIndex': '@config.tabIndex',
-                    'type': 'code-runner-panel',
-                  },
-                ],
-              ],
-              'event': 'RESET',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

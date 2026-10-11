@@ -68,56 +68,56 @@ export interface StdAppLayoutAppLayoutStateLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAppLayoutConfig {
-  /** Default: `"Ask an administrator if you need it."` */
-  accessDeniedDescription?: string;
-  /** Default: `"You don't have access to this page"` */
-  accessDeniedTitle?: string;
-  /** Default: `[]` */
-  allowedRoles?: string[];
-  /** Default: `"App"` */
-  appName?: string;
-  /** Default: `"max-w-5xl mx-auto w-full"` */
-  contentClassName?: string;
-  contentTrait?: TraitFieldRef;
-  /** Default: `""` */
-  currentPath?: string;
-  /** Default: `false` */
-  fullBleed?: boolean;
-  /** Default: `"sidebar"` */
-  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal' | 'drawer';
+  /** Default: `"@currentTheme"` */
+  theme?: string;
   /** Default: `"dashboard-layout"` */
   layoutPattern?: unknown;
   /** Default: `""` */
-  logoSrc?: string;
-  /** Default: `"@pages"` */
-  navItems?: EntityRow[];
-  /** Default: `"NOTIFY_CLICK"` */
-  notificationClickEvent?: string;
-  /** Default: `[]` */
-  notifications?: EntityRow[];
-  /** Default: `"SEARCH"` */
-  searchEvent?: string;
-  /** Default: `true` */
-  showNotifications?: boolean;
-  /** Default: `true` */
-  showSearch?: boolean;
-  /** Default: `true` */
-  showThemeToggle?: boolean;
-  sidebarTrait?: TraitFieldRef;
-  /** Default: `"@currentTheme"` */
-  theme?: string;
-  /** Default: `[]` */
-  topBarActions?: EntityRow[];
+  viewerEmail?: string;
+  /** Default: `"sidebar"` */
+  layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal' | 'drawer';
+  /** Default: `false` */
+  fullBleed?: boolean;
   /** Default: `[]` */
   userMenuItems?: EntityRow[];
-  /** Default: `""` */
-  viewerAvatar?: string;
-  /** Default: `""` */
-  viewerEmail?: string;
-  /** Default: `""` */
-  viewerName?: string;
+  /** Default: `"App"` */
+  appName?: string;
+  /** Default: `"SEARCH"` */
+  searchEvent?: string;
+  /** Default: `[]` */
+  notifications?: EntityRow[];
+  /** Default: `"@pages"` */
+  navItems?: EntityRow[];
+  /** Default: `true` */
+  showNotifications?: boolean;
+  sidebarTrait?: TraitFieldRef;
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `""` */
+  viewerName?: string;
+  /** Default: `"max-w-5xl mx-auto w-full"` */
+  contentClassName?: string;
+  /** Default: `true` */
+  showSearch?: boolean;
+  /** Default: `""` */
+  logoSrc?: string;
+  /** Default: `"You don't have access to this page"` */
+  accessDeniedTitle?: string;
+  /** Default: `"NOTIFY_CLICK"` */
+  notificationClickEvent?: string;
+  /** Default: `"Ask an administrator if you need it."` */
+  accessDeniedDescription?: string;
+  /** Default: `true` */
+  showThemeToggle?: boolean;
+  /** Default: `""` */
+  currentPath?: string;
+  /** Default: `""` */
+  viewerAvatar?: string;
+  /** Default: `[]` */
+  topBarActions?: EntityRow[];
+  contentTrait?: TraitFieldRef;
+  /** Default: `[]` */
+  allowedRoles?: string[];
 }
 
 /**
@@ -260,8 +260,8 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -272,351 +272,11 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'accessDeniedDescription': {
-            'default': 'Ask an administrator if you need it.',
-            'label': 'Access-denied message',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'accessDeniedTitle': {
-            'default': 'You don\'t have access to this page',
-            'label': 'Access-denied title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'allowedRoles': {
-            'default': [],
-            'description': 'Roles (matched against viewerRole) allowed to see this page\'s content. Empty = everyone; anyone else sees the access-denied state instead. Nav items and top-bar actions carry their own `roles` the same way.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Who may open this page?',
-            'synonyms': 'access, permission, restrict, only for, roles allowed, who can see',
-            'tier': 'policy',
-            'type': '[string]',
-          },
-          'appName': {
-            'default': 'App',
-            'description': 'Name shown in the top-left of the chrome header.',
-            'label': 'What should this app be called?',
-            'synonyms': 'app title, product name, brand name, application name, site name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'contentClassName': {
-            'default': 'max-w-5xl mx-auto w-full',
-            'description': 'CSS class applied to the content area wrapper.',
-            'label': 'Content wrapper class',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'contentTrait': {
-            'description': 'Trait rendered inside the app layout content area',
-            'label': 'Content trait',
-            'tier': 'presentation',
-            'type': 'trait',
-          },
-          'currentPath': {
-            'default': '',
-            'description': 'Nav-highlight ONLY: which nav item to mark active. This is NOT the page route — it does not change what page loads or where the orbital lives. To set the landing route or a page path, use the orbital\'s pagePath / page path, not this knob. When omitted, the layout reads the current route.',
-            'label': 'Current path',
-            'synonyms': 'active nav item, highlighted nav link, which menu item is selected, nav highlight',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'fullBleed': {
-            'default': false,
-            'description': 'Content runs edge to edge at full height, with no padding or width cap — for workspaces, canvases and maps.',
-            'label': 'Should pages fill the whole area?',
-            'synonyms': 'full width, edge to edge, no padding, full screen content',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'layoutMode': {
-            'default': 'sidebar',
-            'description': 'sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav; drawer = navigation behind a menu button at every width, content full width.',
-            'label': 'Where should navigation be placed?',
-            'synonyms': 'nav position, navigation style, menu placement, layout style',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'sidebar',
-              'topnav',
-              'bottomnav',
-              'minimal',
-              'drawer',
-            ],
-          },
-          'layoutPattern': {
-            'default': 'dashboard-layout',
-            'description': 'UI pattern used to render the application chrome',
-            'label': 'Layout pattern',
-            'tier': 'internal',
-            'type': 'pattern',
-          },
-          'logoSrc': {
-            'default': '',
-            'description': 'Address of the logo shown beside the app name in the chrome header (an image URL or an inline data: SVG); empty shows the name\'s first letter.',
-            'label': 'Logo image',
-            'synonyms': 'logo, brand mark, app icon, logo url',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'navItems': {
-            'default': '@pages',
-            'description': 'Top-level navigation links shown on the left rail.',
-            'items': {
-              'properties': {
-                'badge': {
-                  'name': 'badge',
-                  'required': false,
-                  'type': 'string',
-                },
-                'children': {
-                  'items': {
-                    'type': 'union',
-                    'values': [
-                      'NavItem',
-                    ],
-                  },
-                  'name': 'children',
-                  'required': false,
-                  'type': 'array',
-                },
-                'href': {
-                  'name': 'href',
-                  'required': true,
-                  'type': 'string',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Which sections appear in the sidebar?',
-            'synonyms': 'nav links, menu items, sidebar sections, navigation entries, pages',
-            'tier': 'presentation',
-            'type': '[NavItem]',
-          },
-          'notificationClickEvent': {
-            'default': 'NOTIFY_CLICK',
-            'description': 'Event emitted when the user picks a notification',
-            'label': 'Notification click event',
-            'tier': 'internal',
-            'type': 'event',
-          },
-          'notifications': {
-            'default': [],
-            'description': 'Items shown in the notifications dropdown.',
-            'items': {
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'message': {
-                  'name': 'message',
-                  'required': false,
-                  'type': 'string',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'What notifications should appear?',
-            'synonyms': 'alerts, messages, notices, notification items, bell items',
-            'tier': 'presentation',
-            'type': '[NotificationSpec]',
-          },
-          'searchEvent': {
-            'default': 'SEARCH',
-            'description': 'Event emitted when the user runs a global search',
-            'label': 'Search event',
-            'tier': 'internal',
-            'type': 'event',
-          },
-          'showNotifications': {
-            'default': true,
-            'description': 'The bell and its dropdown in the top bar; turn off for apps that have no notifications.',
-            'label': 'Show the notifications bell?',
-            'synonyms': 'bell, alerts icon, hide notifications',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'showSearch': {
-            'default': true,
-            'description': 'The top-bar search box; turn off for apps whose pages carry their own search.',
-            'label': 'Show the search box?',
-            'synonyms': 'search bar, top search, hide search',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'showThemeToggle': {
-            'default': true,
-            'description': 'The theme toggle in the top bar; turn off when the app offers it elsewhere, such as a settings page.',
-            'label': 'Show the light/dark toggle?',
-            'synonyms': 'dark mode button, theme switch, hide theme toggle',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'sidebarTrait': {
-            'description': 'Optional trait rendered in the sidebar between the nav links and the footer — the Notion/Confluence-style always-visible page tree; scrolls independently. Unset renders plain nav only.',
-            'label': 'Sidebar trait',
-            'synonyms': 'sidebar tree, nav tree, page tree in sidebar, hierarchy rail',
-            'tier': 'presentation',
-            'type': 'trait',
-          },
-          'theme': {
-            'default': '@currentTheme',
-            'description': 'Data-theme attribute applied to the layout root (e.g. almadar-website-dark).',
-            'label': 'Theme',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'topBarActions': {
-            'default': [],
-            'description': 'Icon buttons shown on the right side of the top bar (e.g. cart, help, profile).',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'required': false,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'What shortcuts go in the top bar?',
-            'synonyms': 'toolbar buttons, header actions, shortcut icons, quick actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'userMenuItems': {
-            'default': [],
-            'description': 'Entries listed above Sign out in the signed-in viewer\'s account menu (e.g. Settings, Profile); each navigates (navigatesTo) or emits its event.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'required': false,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'What goes in the account menu?',
-            'synonyms': 'account menu, user menu, profile menu, avatar menu',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'viewerAvatar': {
-            'default': '',
-            'description': 'Avatar image URL for the account menu.',
-            'label': 'Signed-in avatar',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerEmail': {
-            'default': '',
-            'description': 'Email shown under the name in the account menu — typically @user.email.',
-            'label': 'Signed-in email',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerName': {
-            'default': '',
-            'description': 'Display name of the signed-in viewer, shown in the app bar\'s account menu — typically @user.name. Blank renders no account menu, so people can see which account (and which persona) they are viewing the app as only when it is actually known.',
-            'label': 'Who is signed in',
-            'synonyms': 'signed in user, current user, account, profile, persona, who am i',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that allowedRoles and each nav item\'s / top-bar action\'s `roles` are checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only items with no `roles` show and a page with allowedRoles is denied.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
+        'name': 'AppLayout',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -632,57 +292,62 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'resource': 'toast',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AppLayoutData',
         'emits': [
           {
-            'description': 'Indicates a search query has been submitted.',
             'event': 'SEARCH',
+            'description': 'Indicates a search query has been submitted.',
+            'synonyms': 'query, find, lookup',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'value',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'query, find, lookup',
-            'tier': 'domain',
           },
           {
-            'description': 'A user interacted with a notification.',
             'event': 'NOTIFY_CLICK',
+            'description': 'A user interacted with a notification.',
+            'synonyms': 'click, tap, select',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'click, tap, select',
-            'tier': 'domain',
           },
           {
-            'description': 'Signals the layout has finished loading and is ready.',
             'event': 'AppLayoutStateLoaded',
+            'description': 'Signals the layout has finished loading and is ready.',
+            'synonyms': 'ready, initialized, loaded',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AppLayoutData',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AppLayoutData',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'ready, initialized, loaded',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates failure to load the layout state.',
             'event': 'AppLayoutStateLoadFailed',
+            'description': 'Indicates failure to load the layout state.',
+            'synonyms': 'error, failure, load failed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -693,50 +358,47 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'error, failure, load failed',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AppLayoutData',
-        'name': 'AppLayout',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals the layout has finished loading and is ready.',
               'key': 'AppLayoutStateLoaded',
               'name': 'App layout state loaded',
+              'description': 'Signals the layout has finished loading and is ready.',
+              'synonyms': 'ready, initialized, loaded',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AppLayoutData',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AppLayoutData',
                 },
               ],
-              'synonyms': 'ready, initialized, loaded',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates failure to load the layout state.',
               'key': 'AppLayoutStateLoadFailed',
               'name': 'App layout state load failed',
+              'description': 'Indicates failure to load the layout state.',
+              'synonyms': 'error, failure, load failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -747,292 +409,39 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, load failed',
-              'tier': 'internal',
             },
             {
-              'description': 'Indicates a search query has been submitted.',
               'key': 'SEARCH',
               'name': 'Search',
+              'description': 'Indicates a search query has been submitted.',
+              'synonyms': 'query, find, lookup',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'query, find, lookup',
-              'tier': 'domain',
             },
             {
-              'description': 'A user interacted with a notification.',
               'key': 'NOTIFY_CLICK',
               'name': 'Notify Click',
+              'description': 'A user interacted with a notification.',
+              'synonyms': 'click, tap, select',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'click, tap, select',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'composing',
             },
           ],
           'transitions': [
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('AppLayoutData' satisfies _StdAppLayoutEntityName),
-                  {
-                    'emit': {
-                      'failure': 'AppLayoutStateLoadFailed',
-                      'success': 'AppLayoutStateLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'appName': '@config.appName',
-                        'children': [
-                          {
-                            'children': [
-                              '@config.contentTrait',
-                            ],
-                            'className': '@config.contentClassName',
-                            'direction': 'vertical',
-                            'gap': 'lg',
-                            'type': 'stack',
-                          },
-                        ],
-                        'currentPath': '@config.currentPath',
-                        'fullBleed': '@config.fullBleed',
-                        'layoutMode': '@config.layoutMode',
-                        'logo': [
-                          'if',
-                          [
-                            '==',
-                            '@config.logoSrc',
-                            '',
-                          ],
-                          null,
-                          {
-                            'alt': '',
-                            'className': 'h-8 w-8',
-                            'fit': 'contain',
-                            'src': '@config.logoSrc',
-                            'type': 'image',
-                          },
-                        ],
-                        'navItems': [
-                          'array/map',
-                          [
-                            'array/filter',
-                            '@config.navItems',
-                            [
-                              'fn',
-                              'item',
-                              [
-                                'or',
-                                [
-                                  '=',
-                                  [
-                                    'array/len',
-                                    [
-                                      'object/get',
-                                      '@item',
-                                      'roles',
-                                      [],
-                                    ],
-                                  ],
-                                  0,
-                                ],
-                                [
-                                  'array/includes',
-                                  [
-                                    'object/get',
-                                    '@item',
-                                    'roles',
-                                    [],
-                                  ],
-                                  '@config.viewerRole',
-                                ],
-                              ],
-                            ],
-                          ],
-                          [
-                            'fn',
-                            'item',
-                            [
-                              'if',
-                              [
-                                'object/has',
-                                '@item',
-                                'children',
-                              ],
-                              [
-                                'object/merge',
-                                '@item',
-                                {
-                                  'children': [
-                                    'array/filter',
-                                    [
-                                      'object/get',
-                                      '@item',
-                                      'children',
-                                      [],
-                                    ],
-                                    [
-                                      'fn',
-                                      'child',
-                                      [
-                                        'or',
-                                        [
-                                          '=',
-                                          [
-                                            'array/len',
-                                            [
-                                              'object/get',
-                                              '@child',
-                                              'roles',
-                                              [],
-                                            ],
-                                          ],
-                                          0,
-                                        ],
-                                        [
-                                          'array/includes',
-                                          [
-                                            'object/get',
-                                            '@child',
-                                            'roles',
-                                            [],
-                                          ],
-                                          '@config.viewerRole',
-                                        ],
-                                      ],
-                                    ],
-                                  ],
-                                },
-                              ],
-                              '@item',
-                            ],
-                          ],
-                        ],
-                        'notificationClickEvent': '@config.notificationClickEvent',
-                        'notifications': [
-                          'if',
-                          '@config.showNotifications',
-                          '@config.notifications',
-                          null,
-                        ],
-                        'searchEvent': [
-                          'if',
-                          '@config.showSearch',
-                          '@config.searchEvent',
-                          null,
-                        ],
-                        'showThemeToggle': '@config.showThemeToggle',
-                        'sidebarContent': '@config.sidebarTrait',
-                        'topBarActions': [
-                          'array/filter',
-                          '@config.topBarActions',
-                          [
-                            'fn',
-                            'action',
-                            [
-                              'or',
-                              [
-                                '=',
-                                [
-                                  'array/len',
-                                  [
-                                    'object/get',
-                                    '@action',
-                                    'roles',
-                                    [],
-                                  ],
-                                ],
-                                0,
-                              ],
-                              [
-                                'array/includes',
-                                [
-                                  'object/get',
-                                  '@action',
-                                  'roles',
-                                  [],
-                                ],
-                                '@config.viewerRole',
-                              ],
-                            ],
-                          ],
-                        ],
-                        'type': '@config.layoutPattern',
-                        'user': [
-                          'if',
-                          '@config.viewerName',
-                          {
-                            'avatar': '@config.viewerAvatar',
-                            'email': '@config.viewerEmail',
-                            'name': '@config.viewerName',
-                          },
-                          null,
-                        ],
-                        'userMenuItems': [
-                          'array/filter',
-                          '@config.userMenuItems',
-                          [
-                            'fn',
-                            'action',
-                            [
-                              'or',
-                              [
-                                '=',
-                                [
-                                  'array/len',
-                                  [
-                                    'object/get',
-                                    '@action',
-                                    'roles',
-                                    [],
-                                  ],
-                                ],
-                                0,
-                              ],
-                              [
-                                'array/includes',
-                                [
-                                  'object/get',
-                                  '@action',
-                                  'roles',
-                                  [],
-                                ],
-                                '@config.viewerRole',
-                              ],
-                            ],
-                          ],
-                        ],
-                      },
-                    ],
-                    'className': 'min-h-screen w-full',
-                    'data-theme': '@config.theme',
-                    'fullHeight': true,
-                    'type': 'box',
-                  },
-                ],
-              ],
-              'event': 'INIT',
               'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
               'guard': [
                 'or',
                 [
@@ -1049,17 +458,14 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                   '@config.viewerRole',
                 ],
               ],
-              'to': 'composing',
-            },
-            {
               'effects': [
                 [
                   'fetch',
                   ('AppLayoutData' satisfies _StdAppLayoutEntityName),
                   {
                     'emit': {
-                      'failure': 'AppLayoutStateLoadFailed',
                       'success': 'AppLayoutStateLoaded',
+                      'failure': 'AppLayoutStateLoadFailed',
                     },
                   },
                 ],
@@ -1067,43 +473,35 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                   'render-ui',
                   'main',
                   {
+                    'data-theme': '@config.theme',
+                    'type': 'box',
+                    'className': 'min-h-screen w-full',
                     'children': [
                       {
-                        'appName': '@config.appName',
+                        'type': '@config.layoutPattern',
+                        'currentPath': '@config.currentPath',
                         'children': [
                           {
-                            'children': [
-                              {
-                                'description': '@config.accessDeniedDescription',
-                                'icon': 'lock',
-                                'title': '@config.accessDeniedTitle',
-                                'type': 'empty-state',
-                              },
-                            ],
-                            'className': '@config.contentClassName',
                             'direction': 'vertical',
-                            'gap': 'lg',
+                            'className': '@config.contentClassName',
                             'type': 'stack',
+                            'gap': 'lg',
+                            'children': [
+                              '@config.contentTrait',
+                            ],
                           },
                         ],
-                        'currentPath': '@config.currentPath',
+                        'sidebarContent': '@config.sidebarTrait',
                         'fullBleed': '@config.fullBleed',
-                        'layoutMode': '@config.layoutMode',
-                        'logo': [
+                        'user': [
                           'if',
-                          [
-                            '==',
-                            '@config.logoSrc',
-                            '',
-                          ],
-                          null,
+                          '@config.viewerName',
                           {
-                            'alt': '',
-                            'className': 'h-8 w-8',
-                            'fit': 'contain',
-                            'src': '@config.logoSrc',
-                            'type': 'image',
+                            'avatar': '@config.viewerAvatar',
+                            'name': '@config.viewerName',
+                            'email': '@config.viewerEmail',
                           },
+                          null,
                         ],
                         'navItems': [
                           'array/map',
@@ -1201,20 +599,7 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                           ],
                         ],
                         'notificationClickEvent': '@config.notificationClickEvent',
-                        'notifications': [
-                          'if',
-                          '@config.showNotifications',
-                          '@config.notifications',
-                          null,
-                        ],
-                        'searchEvent': [
-                          'if',
-                          '@config.showSearch',
-                          '@config.searchEvent',
-                          null,
-                        ],
                         'showThemeToggle': '@config.showThemeToggle',
-                        'sidebarContent': '@config.sidebarTrait',
                         'topBarActions': [
                           'array/filter',
                           '@config.topBarActions',
@@ -1249,16 +634,35 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                             ],
                           ],
                         ],
-                        'type': '@config.layoutPattern',
-                        'user': [
+                        'notifications': [
                           'if',
-                          '@config.viewerName',
-                          {
-                            'avatar': '@config.viewerAvatar',
-                            'email': '@config.viewerEmail',
-                            'name': '@config.viewerName',
-                          },
+                          '@config.showNotifications',
+                          '@config.notifications',
                           null,
+                        ],
+                        'appName': '@config.appName',
+                        'layoutMode': '@config.layoutMode',
+                        'searchEvent': [
+                          'if',
+                          '@config.showSearch',
+                          '@config.searchEvent',
+                          null,
+                        ],
+                        'logo': [
+                          'if',
+                          [
+                            '==',
+                            '@config.logoSrc',
+                            '',
+                          ],
+                          null,
+                          {
+                            'alt': '',
+                            'type': 'image',
+                            'fit': 'contain',
+                            'src': '@config.logoSrc',
+                            'className': 'h-8 w-8',
+                          },
                         ],
                         'userMenuItems': [
                           'array/filter',
@@ -1296,15 +700,15 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                         ],
                       },
                     ],
-                    'className': 'min-h-screen w-full',
-                    'data-theme': '@config.theme',
                     'fullHeight': true,
-                    'type': 'box',
                   },
                 ],
               ],
-              'event': 'INIT',
+            },
+            {
               'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
               'guard': [
                 'not',
                 [
@@ -1324,46 +728,642 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                   ],
                 ],
               ],
-              'to': 'composing',
+              'effects': [
+                [
+                  'fetch',
+                  ('AppLayoutData' satisfies _StdAppLayoutEntityName),
+                  {
+                    'emit': {
+                      'success': 'AppLayoutStateLoaded',
+                      'failure': 'AppLayoutStateLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                    'data-theme': '@config.theme',
+                    'children': [
+                      {
+                        'showThemeToggle': '@config.showThemeToggle',
+                        'notifications': [
+                          'if',
+                          '@config.showNotifications',
+                          '@config.notifications',
+                          null,
+                        ],
+                        'navItems': [
+                          'array/map',
+                          [
+                            'array/filter',
+                            '@config.navItems',
+                            [
+                              'fn',
+                              'item',
+                              [
+                                'or',
+                                [
+                                  '=',
+                                  [
+                                    'array/len',
+                                    [
+                                      'object/get',
+                                      '@item',
+                                      'roles',
+                                      [],
+                                    ],
+                                  ],
+                                  0,
+                                ],
+                                [
+                                  'array/includes',
+                                  [
+                                    'object/get',
+                                    '@item',
+                                    'roles',
+                                    [],
+                                  ],
+                                  '@config.viewerRole',
+                                ],
+                              ],
+                            ],
+                          ],
+                          [
+                            'fn',
+                            'item',
+                            [
+                              'if',
+                              [
+                                'object/has',
+                                '@item',
+                                'children',
+                              ],
+                              [
+                                'object/merge',
+                                '@item',
+                                {
+                                  'children': [
+                                    'array/filter',
+                                    [
+                                      'object/get',
+                                      '@item',
+                                      'children',
+                                      [],
+                                    ],
+                                    [
+                                      'fn',
+                                      'child',
+                                      [
+                                        'or',
+                                        [
+                                          '=',
+                                          [
+                                            'array/len',
+                                            [
+                                              'object/get',
+                                              '@child',
+                                              'roles',
+                                              [],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        [
+                                          'array/includes',
+                                          [
+                                            'object/get',
+                                            '@child',
+                                            'roles',
+                                            [],
+                                          ],
+                                          '@config.viewerRole',
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                              '@item',
+                            ],
+                          ],
+                        ],
+                        'user': [
+                          'if',
+                          '@config.viewerName',
+                          {
+                            'email': '@config.viewerEmail',
+                            'name': '@config.viewerName',
+                            'avatar': '@config.viewerAvatar',
+                          },
+                          null,
+                        ],
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'lg',
+                            'direction': 'vertical',
+                            'children': [
+                              {
+                                'description': '@config.accessDeniedDescription',
+                                'title': '@config.accessDeniedTitle',
+                                'icon': 'lock',
+                                'type': 'empty-state',
+                              },
+                            ],
+                            'className': '@config.contentClassName',
+                          },
+                        ],
+                        'layoutMode': '@config.layoutMode',
+                        'searchEvent': [
+                          'if',
+                          '@config.showSearch',
+                          '@config.searchEvent',
+                          null,
+                        ],
+                        'logo': [
+                          'if',
+                          [
+                            '==',
+                            '@config.logoSrc',
+                            '',
+                          ],
+                          null,
+                          {
+                            'type': 'image',
+                            'alt': '',
+                            'className': 'h-8 w-8',
+                            'src': '@config.logoSrc',
+                            'fit': 'contain',
+                          },
+                        ],
+                        'type': '@config.layoutPattern',
+                        'fullBleed': '@config.fullBleed',
+                        'appName': '@config.appName',
+                        'sidebarContent': '@config.sidebarTrait',
+                        'currentPath': '@config.currentPath',
+                        'notificationClickEvent': '@config.notificationClickEvent',
+                        'userMenuItems': [
+                          'array/filter',
+                          '@config.userMenuItems',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
+                        ],
+                        'topBarActions': [
+                          'array/filter',
+                          '@config.topBarActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
+                        ],
+                      },
+                    ],
+                    'className': 'min-h-screen w-full',
+                    'fullHeight': true,
+                  },
+                ],
+              ],
             },
             {
-              'event': 'AppLayoutStateLoaded',
               'from': 'composing',
               'to': 'composing',
+              'event': 'AppLayoutStateLoaded',
             },
             {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'AppLayoutStateLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t load the layout — ',
                       '@payload.error',
                     ],
                     'type': 'alert',
-                    'variant': 'error',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'AppLayoutStateLoadFailed',
-              'from': 'composing',
-              'to': 'composing',
             },
             {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'SEARCH',
-              'from': 'composing',
-              'to': 'composing',
             },
             {
-              'event': 'NOTIFY_CLICK',
               'from': 'composing',
               'to': 'composing',
+              'event': 'NOTIFY_CLICK',
             },
           ],
         },
+        'config': {
+          'theme': {
+            'type': 'string',
+            'default': '@currentTheme',
+            'label': 'Theme',
+            'description': 'Data-theme attribute applied to the layout root (e.g. almadar-website-dark).',
+            'tier': 'presentation',
+          },
+          'layoutPattern': {
+            'type': 'pattern',
+            'default': 'dashboard-layout',
+            'label': 'Layout pattern',
+            'description': 'UI pattern used to render the application chrome',
+            'tier': 'internal',
+          },
+          'viewerEmail': {
+            'type': 'string',
+            'default': '',
+            'label': 'Signed-in email',
+            'description': 'Email shown under the name in the account menu — typically @user.email.',
+            'tier': 'presentation',
+          },
+          'layoutMode': {
+            'type': 'string',
+            'default': 'sidebar',
+            'label': 'Where should navigation be placed?',
+            'description': 'sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav; drawer = navigation behind a menu button at every width, content full width.',
+            'synonyms': 'nav position, navigation style, menu placement, layout style',
+            'tier': 'presentation',
+            'values': [
+              'sidebar',
+              'topnav',
+              'bottomnav',
+              'minimal',
+              'drawer',
+            ],
+          },
+          'fullBleed': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Should pages fill the whole area?',
+            'description': 'Content runs edge to edge at full height, with no padding or width cap — for workspaces, canvases and maps.',
+            'synonyms': 'full width, edge to edge, no padding, full screen content',
+            'tier': 'presentation',
+          },
+          'userMenuItems': {
+            'type': '[ItemAction]',
+            'default': [],
+            'label': 'What goes in the account menu?',
+            'description': 'Entries listed above Sign out in the signed-in viewer\'s account menu (e.g. Settings, Profile); each navigates (navigatesTo) or emits its event.',
+            'synonyms': 'account menu, user menu, profile menu, avatar menu',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'appName': {
+            'type': 'string',
+            'default': 'App',
+            'label': 'What should this app be called?',
+            'description': 'Name shown in the top-left of the chrome header.',
+            'synonyms': 'app title, product name, brand name, application name, site name',
+            'tier': 'presentation',
+          },
+          'searchEvent': {
+            'type': 'event',
+            'default': 'SEARCH',
+            'label': 'Search event',
+            'description': 'Event emitted when the user runs a global search',
+            'tier': 'internal',
+          },
+          'notifications': {
+            'type': '[NotificationSpec]',
+            'default': [],
+            'label': 'What notifications should appear?',
+            'description': 'Items shown in the notifications dropdown.',
+            'synonyms': 'alerts, messages, notices, notification items, bell items',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'message': {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'navItems': {
+            'type': '[NavItem]',
+            'default': '@pages',
+            'label': 'Which sections appear in the sidebar?',
+            'description': 'Top-level navigation links shown on the left rail.',
+            'synonyms': 'nav links, menu items, sidebar sections, navigation entries, pages',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'href': {
+                  'name': 'href',
+                  'type': 'string',
+                  'required': true,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'badge': {
+                  'name': 'badge',
+                  'type': 'string',
+                  'required': false,
+                },
+                'children': {
+                  'name': 'children',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'union',
+                    'values': [
+                      'NavItem',
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          'showNotifications': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show the notifications bell?',
+            'description': 'The bell and its dropdown in the top bar; turn off for apps that have no notifications.',
+            'synonyms': 'bell, alerts icon, hide notifications',
+            'tier': 'presentation',
+          },
+          'sidebarTrait': {
+            'type': 'trait',
+            'label': 'Sidebar trait',
+            'description': 'Optional trait rendered in the sidebar between the nav links and the footer — the Notion/Confluence-style always-visible page tree; scrolls independently. Unset renders plain nav only.',
+            'synonyms': 'sidebar tree, nav tree, page tree in sidebar, hierarchy rail',
+            'tier': 'presentation',
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that allowedRoles and each nav item\'s / top-bar action\'s `roles` are checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only items with no `roles` show and a page with allowedRoles is denied.',
+            'tier': 'policy',
+          },
+          'viewerName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Who is signed in',
+            'description': 'Display name of the signed-in viewer, shown in the app bar\'s account menu — typically @user.name. Blank renders no account menu, so people can see which account (and which persona) they are viewing the app as only when it is actually known.',
+            'synonyms': 'signed in user, current user, account, profile, persona, who am i',
+            'tier': 'presentation',
+          },
+          'contentClassName': {
+            'type': 'string',
+            'default': 'max-w-5xl mx-auto w-full',
+            'label': 'Content wrapper class',
+            'description': 'CSS class applied to the content area wrapper.',
+            'tier': 'internal',
+          },
+          'showSearch': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show the search box?',
+            'description': 'The top-bar search box; turn off for apps whose pages carry their own search.',
+            'synonyms': 'search bar, top search, hide search',
+            'tier': 'presentation',
+          },
+          'logoSrc': {
+            'type': 'string',
+            'default': '',
+            'label': 'Logo image',
+            'description': 'Address of the logo shown beside the app name in the chrome header (an image URL or an inline data: SVG); empty shows the name\'s first letter.',
+            'synonyms': 'logo, brand mark, app icon, logo url',
+            'tier': 'presentation',
+          },
+          'accessDeniedTitle': {
+            'type': 'string',
+            'default': 'You don\'t have access to this page',
+            'label': 'Access-denied title',
+            'tier': 'presentation',
+          },
+          'notificationClickEvent': {
+            'type': 'event',
+            'default': 'NOTIFY_CLICK',
+            'label': 'Notification click event',
+            'description': 'Event emitted when the user picks a notification',
+            'tier': 'internal',
+          },
+          'accessDeniedDescription': {
+            'type': 'string',
+            'default': 'Ask an administrator if you need it.',
+            'label': 'Access-denied message',
+            'tier': 'presentation',
+          },
+          'showThemeToggle': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show the light/dark toggle?',
+            'description': 'The theme toggle in the top bar; turn off when the app offers it elsewhere, such as a settings page.',
+            'synonyms': 'dark mode button, theme switch, hide theme toggle',
+            'tier': 'presentation',
+          },
+          'currentPath': {
+            'type': 'string',
+            'default': '',
+            'label': 'Current path',
+            'description': 'Nav-highlight ONLY: which nav item to mark active. This is NOT the page route — it does not change what page loads or where the orbital lives. To set the landing route or a page path, use the orbital\'s pagePath / page path, not this knob. When omitted, the layout reads the current route.',
+            'synonyms': 'active nav item, highlighted nav link, which menu item is selected, nav highlight',
+            'tier': 'internal',
+          },
+          'viewerAvatar': {
+            'type': 'string',
+            'default': '',
+            'label': 'Signed-in avatar',
+            'description': 'Avatar image URL for the account menu.',
+            'tier': 'presentation',
+          },
+          'topBarActions': {
+            'type': '[ItemAction]',
+            'default': [],
+            'label': 'What shortcuts go in the top bar?',
+            'description': 'Icon buttons shown on the right side of the top bar (e.g. cart, help, profile).',
+            'synonyms': 'toolbar buttons, header actions, shortcut icons, quick actions',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'contentTrait': {
+            'type': 'trait',
+            'label': 'Content trait',
+            'description': 'Trait rendered inside the app layout content area',
+            'tier': 'presentation',
+          },
+          'allowedRoles': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Who may open this page?',
+            'description': 'Roles (matched against viewerRole) allowed to see this page\'s content. Empty = everyone; anyone else sees the access-denied state instead. Nav items and top-bar actions carry their own `roles` the same way.',
+            'synonyms': 'access, permission, restrict, only for, roles allowed, who can see',
+            'tier': 'policy',
+            'items': {
+              'type': 'string',
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

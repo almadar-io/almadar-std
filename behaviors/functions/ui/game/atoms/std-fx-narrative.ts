@@ -55,7 +55,7 @@ export interface StdFxNarrativeShowPayload {
 export interface StdFxNarrativeConfig {
   /** Default: `true` */
   running?: boolean;
-  /** Default: `{"celebrate":{"color":"#facc15","effect":"sparkle","size":0.9,"ttl":3},"fact":{"color":"#38bdf8","effect":"float-text","size":0.7,"ttl":3},"hint":{"color":"#a78bfa","effect":"float-text","size":0.6,"ttl":2},"warn":{"color":"#f87171","effect":"shake","size":0.6,"ttl":1.5}}` */
+  /** Default: `{"warn":{"color":"#f87171","size":0.6,"effect":"shake","ttl":1.5},"fact":{"size":0.7,"color":"#38bdf8","effect":"float-text","ttl":3},"celebrate":{"size":0.9,"color":"#facc15","effect":"sparkle","ttl":3},"hint":{"size":0.6,"ttl":2,"color":"#a78bfa","effect":"float-text"}}` */
   styles?: Record<string, TraitConfig>;
 }
 

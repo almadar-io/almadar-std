@@ -68,58 +68,58 @@ export interface StdUiTraitSlotDropPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTraitSlotConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `{}` */
-  categoryColors?: Record<string, TraitConfig>;
-  className?: string;
-  /** Default: `"CLICK"` */
-  clickEvent?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `false` */
-  draggable?: boolean;
-  /** Default: `"DROP"` */
-  dropEvent?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
-  equippedItem?: EntityRow;
-  error?: EntityRow;
-  feedback?: 'correct' | 'wrong';
-  isLoading?: boolean;
-  lang?: string;
-  lockLabel?: string;
-  /** Default: `false` */
-  locked?: boolean;
-  /** Default: `"CLICK"` */
-  onClick?: string;
-  /** Default: `"DRAG_START"` */
-  onDragStart?: string;
-  /** Default: `"ITEM_DROP"` */
-  onItemDrop?: string;
+  tooltipFrameUrl?: EntityRow;
+  ariaDescribedby?: string;
   /** Default: `""` */
   onRemove?: string;
-  /** Default: `""` */
-  removeEvent?: string;
+  error?: EntityRow;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaHidden?: boolean;
+  lang?: string;
+  /** Default: `"ITEM_DROP"` */
+  onItemDrop?: string;
+  /** Default: `"DRAG_START"` */
+  onDragStart?: string;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `false` */
-  selected?: boolean;
-  /** Default: `true` */
-  showTooltip?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaExpanded?: boolean;
+  ariaLabel?: string;
+  /** Default: `false` */
+  locked?: boolean;
+  /** Default: `{}` */
+  categoryColors?: Record<string, TraitConfig>;
+  /** Default: `true` */
+  showTooltip?: boolean;
+  /** Default: `false` */
+  draggable?: boolean;
   /** Default: `1` */
   slotNumber?: number;
+  ariaSelected?: boolean;
+  ariaBusy?: boolean;
+  /** Default: `false` */
+  selected?: boolean;
+  className?: string;
+  lockLabel?: string;
+  /** Default: `""` */
+  removeEvent?: string;
+  equippedItem?: EntityRow;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `"CLICK"` */
+  onClick?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  isLoading?: boolean;
+  ariaLabelledby?: string;
+  /** Default: `"CLICK"` */
+  clickEvent?: string;
   tabIndex?: number;
-  tooltipFrameUrl?: EntityRow;
+  feedback?: 'correct' | 'wrong';
+  /** Default: `"DROP"` */
+  dropEvent?: string;
 }
 
 /**

@@ -69,78 +69,78 @@ export interface StdUiDataGridDataGridLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  accepts?: string;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  cols?: number;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  dir?: 'ltr' | 'rtl' | 'auto';
-  dndItemIdField?: string;
-  dndRoot?: boolean;
-  dragGroup?: string;
-  dropEvent?: string;
-  emptyAction?: EntityRow;
-  emptyDescription?: string;
-  emptyIcon?: unknown;
-  emptyTitle?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `[]` */
-  fields?: EntityRow[];
-  /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  hasMore?: boolean;
-  imageField?: string;
-  infiniteScroll?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `"ITEM_CLICK"` */
-  itemClickEvent?: string;
-  itemEnter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  lang?: string;
-  /** Default: `"LOAD_MORE"` */
-  loadMoreEvent?: string;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  maxInlineActions?: number;
-  /** Default: `280` */
-  minCardWidth?: number;
-  /** Default: `0` */
-  pageSize?: number;
-  positionEvent?: string;
-  /** Default: `{}` */
-  relationsData?: Record<string, TraitConfig>;
-  reorderEvent?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `false` */
-  scrollX?: boolean;
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `"SELECTION"` */
-  selectionEvent?: string;
-  /** Default: `true` */
-  selfFetch?: boolean;
-  /** Default: `"grid"` */
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sortable?: boolean;
+  ariaLabel?: string;
+  error?: EntityRow;
   /** Default: `"auto"` */
   surface?: 'auto' | 'none';
-  tabIndex?: number;
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  ariaSelected?: boolean;
+  positionEvent?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  emptyTitle?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  dropEvent?: string;
+  accepts?: string;
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  /** Default: `280` */
+  minCardWidth?: number;
+  lang?: string;
+  emptyAction?: EntityRow;
+  cols?: number;
+  maxInlineActions?: number;
+  /** Default: `false` */
+  scrollX?: boolean;
+  hasMore?: boolean;
+  /** Default: `true` */
+  selfFetch?: boolean;
+  /** Default: `false` */
+  selectable?: boolean;
+  ariaHidden?: boolean;
+  imageField?: string;
+  emptyIcon?: unknown;
+  enterDelay?: number;
+  /** Default: `{}` */
+  relationsData?: Record<string, TraitConfig>;
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `0` */
+  pageSize?: number;
+  reorderEvent?: string;
+  itemEnter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  dndItemIdField?: string;
+  /** Default: `"LOAD_MORE"` */
+  loadMoreEvent?: string;
+  className?: string;
+  /** Default: `"SELECTION"` */
+  selectionEvent?: string;
+  ariaExpanded?: boolean;
+  /** Default: `"ITEM_CLICK"` */
+  itemClickEvent?: string;
+  ariaDescribedby?: string;
+  dndRoot?: boolean;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  emptyDescription?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  tabIndex?: number;
+  ariaLabelledby?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  dragGroup?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaBusy?: boolean;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"grid"` */
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  infiniteScroll?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `"md"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 /**

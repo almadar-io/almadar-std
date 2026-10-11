@@ -103,16 +103,16 @@ export interface StdTagTaxonomyTagCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTagTaxonomyConfig {
-  /** Default: `false` */
-  allowEdit?: boolean;
-  /** Default: `"New tag"` */
-  createLabel?: string;
-  /** Default: `"All tags"` */
-  rootLabel?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Categories"` */
   title?: string;
+  /** Default: `"New tag"` */
+  createLabel?: string;
+  /** Default: `false` */
+  allowEdit?: boolean;
+  /** Default: `"All tags"` */
+  rootLabel?: string;
 }
 
 /**
@@ -256,44 +256,44 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'The descriptive label for this item.',
             'name': 'name',
+            'type': 'string',
             'required': true,
+            'description': 'The descriptive label for this item.',
             'synonyms': 'label, title, description',
-            'type': 'string',
           },
           {
-            'description': 'Reference to the parent tag in the hierarchy; empty marks a root.',
             'name': 'parentId',
-            'relation': {
-              'cardinality': 'one',
-              'entity': 'Tag',
-            },
-            'synonyms': 'parent, superior, ancestor',
             'type': 'relation',
+            'relation': {
+              'entity': 'Tag',
+              'cardinality': 'one',
+            },
+            'description': 'Reference to the parent tag in the hierarchy; empty marks a root.',
+            'synonyms': 'parent, superior, ancestor',
           },
           {
-            'description': 'A unique, URL-friendly identifier.',
             'name': 'slug',
+            'type': 'string',
+            'description': 'A unique, URL-friendly identifier.',
             'synonyms': 'identifier, key, code',
-            'type': 'string',
           },
           {
-            'description': 'A visual identifier, often used for categorization.',
             'name': 'color',
-            'synonyms': 'hue, shade, tint, category color',
             'type': 'string',
+            'description': 'A visual identifier, often used for categorization.',
+            'synonyms': 'hue, shade, tint, category color',
           },
           {
+            'name': 'count',
+            'type': 'number',
             'default': 0,
             'description': 'The number of items associated with this entry.',
-            'name': 'count',
             'synonyms': 'quantity, total, size, amount',
-            'type': 'number',
           },
           {
             'name': 'createdAt',
@@ -308,53 +308,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'allowEdit': {
-            'default': false,
-            'description': 'Render the create-tag affordance: creations land at the level currently open (top level, or inside the drilled-into category). Rename is a follow-up (ledgered).',
-            'label': 'Allow editing',
-            'tier': 'domain',
-            'type': 'boolean',
-          },
-          'createLabel': {
-            'default': 'New tag',
-            'description': 'Label on the create affordance and its form heading — say what this taxonomy calls its entries (New tag, New category, New topic).',
-            'label': 'Create-button label',
-            'synonyms': 'add label, new tag label, create caption',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'rootLabel': {
-            'default': 'All tags',
-            'description': 'Label on the back affordance that returns from a drilled-in level to the root — phrase it in this taxonomy\'s vocabulary (All tags, All categories).',
-            'label': 'Back-to-root label',
-            'synonyms': 'back label, root caption, all label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
-            'label': 'Table look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'title': {
-            'default': 'Categories',
-            'description': 'Heading shown above the tag tree',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-        },
+        'name': 'TagBrowse',
         'effectRow': [
           {
             'kind': 'emit',
@@ -389,41 +343,45 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             'resource': '@entity.parentId',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'Tag',
         'emits': [
           {
-            'description': 'Signals a tag has been chosen for navigation.',
             'event': 'SELECT_TAG',
+            'description': 'Signals a tag has been chosen for navigation.',
+            'synonyms': 'choose, pick, activate, navigate',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'tagId',
-                'projectedFrom': {
-                  'field': 'id',
-                  'type': 'Tag',
-                },
-                'required': true,
                 'type': 'string',
+                'required': true,
+                'projectedFrom': {
+                  'type': 'Tag',
+                  'field': 'id',
+                },
               },
             ],
-            'synonyms': 'choose, pick, activate, navigate',
-            'tier': 'domain',
           },
           {
-            'description': 'Signals that the tag data has been successfully retrieved.',
             'event': 'TagLoaded',
+            'description': 'Signals that the tag data has been successfully retrieved.',
+            'synonyms': 'loaded, fetched, received, ready',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'Tag',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'name',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'parentId',
@@ -446,15 +404,15 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'Tag',
               },
             ],
-            'synonyms': 'loaded, fetched, received, ready',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates failure to load tag data.',
             'event': 'TagLoadFailed',
+            'description': 'Indicates failure to load tag data.',
+            'synonyms': 'error, failed, problem, issue',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -465,85 +423,85 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failed, problem, issue',
-            'tier': 'internal',
           },
           {
-            'description': 'Signals a tag has been chosen for further exploration.',
             'event': 'TagSelected',
+            'description': 'Signals a tag has been chosen for further exploration.',
+            'synonyms': 'chosen, picked, activated, highlighted',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'tagId',
-                'projectedFrom': {
-                  'field': 'id',
-                  'type': 'Tag',
-                },
-                'required': true,
                 'type': 'string',
+                'required': true,
+                'projectedFrom': {
+                  'type': 'Tag',
+                  'field': 'id',
+                },
               },
             ],
-            'synonyms': 'chosen, picked, activated, highlighted',
-            'tier': 'domain',
           },
           {
-            'description': 'The new-category form committed; data carries the name and the parent level.',
             'event': 'COMMIT_TAG',
+            'description': 'The new-category form committed; data carries the name and the parent level.',
+            'synonyms': 'save tag, create tag',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'data',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'name',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'parentId',
                     'type': 'string',
                   },
                 ],
-                'type': 'object',
               },
             ],
-            'synonyms': 'save tag, create tag',
-            'tier': 'internal',
           },
           {
-            'description': 'The new-category form was dismissed without creating.',
             'event': 'CANCEL_TAG',
+            'description': 'The new-category form was dismissed without creating.',
             'synonyms': 'cancel, back',
             'tier': 'internal',
           },
           {
-            'description': 'Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload).',
             'event': 'LEVEL_RELOAD',
+            'description': 'Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload).',
+            'synonyms': 'reload level, refresh',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'tagId',
-                'projectedFrom': {
-                  'field': 'id',
-                  'type': 'Tag',
-                },
                 'type': 'string',
+                'projectedFrom': {
+                  'type': 'Tag',
+                  'field': 'id',
+                },
               },
             ],
-            'synonyms': 'reload level, refresh',
-            'tier': 'internal',
           },
           {
-            'description': 'A new tag row persisted; the open level refetches to show it.',
             'event': 'TagCreated',
-            'payloadEntity': 'Tag',
+            'description': 'A new tag row persisted; the open level refetches to show it.',
+            'synonyms': 'created, added',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'name',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'parentId',
@@ -566,13 +524,13 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'created, added',
-            'tier': 'internal',
+            'payloadEntity': 'Tag',
           },
           {
-            'description': 'The tag create failed.',
             'event': 'TagCreateFailed',
+            'description': 'The tag create failed.',
+            'synonyms': 'error, failure',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -583,54 +541,69 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'Tag',
-        'name': 'TagBrowse',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'creating',
+            },
+            {
+              'name': 'editing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
-              'description': 'Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload).',
               'key': 'LEVEL_RELOAD',
               'name': 'Level Reload',
+              'description': 'Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload).',
+              'synonyms': 'reload level, refresh',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'tagId',
-                  'projectedFrom': {
-                    'field': 'id',
-                    'type': 'Tag',
-                  },
                   'type': 'string',
+                  'projectedFrom': {
+                    'type': 'Tag',
+                    'field': 'id',
+                  },
                 },
               ],
-              'synonyms': 'reload level, refresh',
-              'tier': 'internal',
             },
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals that the tag data has been successfully retrieved.',
               'key': 'TagLoaded',
               'name': 'Tag loaded',
+              'description': 'Signals that the tag data has been successfully retrieved.',
+              'synonyms': 'loaded, fetched, received, ready',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'Tag',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'name',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'parentId',
@@ -653,16 +626,16 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'Tag',
                 },
               ],
-              'synonyms': 'loaded, fetched, received, ready',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates failure to load tag data.',
               'key': 'TagLoadFailed',
               'name': 'Tag load failed',
+              'description': 'Indicates failure to load tag data.',
+              'synonyms': 'error, failed, problem, issue',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -673,66 +646,64 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failed, problem, issue',
-              'tier': 'internal',
             },
             {
-              'description': 'Signals a tag has been chosen for navigation.',
               'key': 'SELECT_TAG',
               'name': 'Select Tag',
+              'description': 'Signals a tag has been chosen for navigation.',
+              'synonyms': 'choose, pick, activate, navigate',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'tagId',
-                  'projectedFrom': {
-                    'field': 'id',
-                    'type': 'Tag',
-                  },
-                  'required': true,
                   'type': 'string',
+                  'required': true,
+                  'projectedFrom': {
+                    'type': 'Tag',
+                    'field': 'id',
+                  },
                 },
               ],
-              'synonyms': 'choose, pick, activate, navigate',
-              'tier': 'domain',
             },
             {
               'key': 'SHOW_ROOT',
               'name': 'Show Root',
             },
             {
-              'description': 'The New-category affordance was clicked.',
               'key': 'NEW_TAG',
               'name': 'New Tag',
+              'description': 'The New-category affordance was clicked.',
               'synonyms': 'add tag, create category',
               'tier': 'domain',
             },
             {
-              'description': 'The new-category form committed; data carries the name and the parent level.',
               'key': 'COMMIT_TAG',
               'name': 'Commit Tag',
+              'description': 'The new-category form committed; data carries the name and the parent level.',
+              'synonyms': 'save tag, create tag',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'name',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'parentId',
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'synonyms': 'save tag, create tag',
-              'tier': 'internal',
             },
             {
-              'description': 'The new-category form was dismissed without creating.',
               'key': 'CANCEL_TAG',
               'name': 'Cancel Tag',
+              'description': 'The new-category form was dismissed without creating.',
               'synonyms': 'cancel, back',
               'tier': 'internal',
             },
@@ -741,20 +712,21 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'name': 'Close',
             },
             {
-              'description': 'A new tag row persisted; the open level refetches to show it.',
               'key': 'TagCreated',
               'name': 'Tag created',
-              'payloadEntity': 'Tag',
+              'description': 'A new tag row persisted; the open level refetches to show it.',
+              'synonyms': 'created, added',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'name',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'parentId',
@@ -777,13 +749,14 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'type': 'string',
                 },
               ],
-              'synonyms': 'created, added',
-              'tier': 'internal',
+              'payloadEntity': 'Tag',
             },
             {
-              'description': 'The tag create failed.',
               'key': 'TagCreateFailed',
               'name': 'Tag create failed',
+              'description': 'The tag create failed.',
+              'synonyms': 'error, failure',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -794,56 +767,39 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure',
-              'tier': 'internal',
             },
             {
-              'description': 'Signals a tag has been chosen for further exploration.',
               'key': 'TagSelected',
               'name': 'Tag selected',
+              'description': 'Signals a tag has been chosen for further exploration.',
+              'synonyms': 'chosen, picked, activated, highlighted',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'tagId',
-                  'projectedFrom': {
-                    'field': 'id',
-                    'type': 'Tag',
-                  },
-                  'required': true,
                   'type': 'string',
+                  'required': true,
+                  'projectedFrom': {
+                    'type': 'Tag',
+                    'field': 'id',
+                  },
                 },
               ],
-              'synonyms': 'chosen, picked, activated, highlighted',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'browsing',
-            },
-            {
-              'name': 'creating',
-            },
-            {
-              'name': 'editing',
-            },
-            {
-              'name': 'error',
             },
           ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'LEVEL_RELOAD',
               'effects': [
                 [
                   'fetch',
                   ('Tag' satisfies _StdTagTaxonomyEntityName),
                   {
                     'emit': {
-                      'failure': 'TagLoadFailed',
                       'success': 'TagLoaded',
+                      'failure': 'TagLoadFailed',
                     },
                     'filter': [
                       '=',
@@ -861,11 +817,11 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   },
                 ],
               ],
-              'event': 'LEVEL_RELOAD',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -881,10 +837,6 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'fetch',
                   ('Tag' satisfies _StdTagTaxonomyEntityName),
                   {
-                    'emit': {
-                      'failure': 'TagLoadFailed',
-                      'success': 'TagLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -894,42 +846,46 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       ],
                       '',
                     ],
+                    'emit': {
+                      'success': 'TagLoaded',
+                      'failure': 'TagLoadFailed',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'grid',
-                      },
-                    ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
+                    'children': [
+                      {
+                        'variant': 'header',
+                        'type': 'skeleton',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'grid',
+                        'rows': 6,
+                      },
+                    ],
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'TagLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'action': 'SHOW_ROOT',
                         'disabled': [
                           'if',
                           [
@@ -940,133 +896,133 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                           false,
                           true,
                         ],
-                        'icon': 'arrow-left',
                         'label': '@config.rootLabel',
-                        'size': 'sm',
+                        'action': 'SHOW_ROOT',
                         'type': 'button',
+                        'size': 'sm',
                         'variant': 'ghost',
+                        'icon': 'arrow-left',
                       },
                       {
-                        'content': '@config.title',
                         'type': 'typography',
+                        'content': '@config.title',
                         'variant': 'h3',
                       },
                       [
                         'if',
                         '@config.allowEdit',
                         {
-                          'action': 'NEW_TAG',
-                          'icon': 'plus',
                           'label': '@config.createLabel',
-                          'size': 'sm',
                           'type': 'button',
                           'variant': 'secondary',
+                          'size': 'sm',
+                          'action': 'NEW_TAG',
+                          'icon': 'plus',
                         },
                         null,
                       ],
                       {
-                        'entity': '@payload.data',
                         'fields': [],
-                        'gap': 'sm',
-                        'look': '@config.tableLook',
-                        'minCardWidth': 180,
+                        'type': 'data-grid',
+                        'entity': '@payload.data',
                         'renderItem': [
                           'fn',
                           'tag',
                           {
+                            'padding': 'sm',
+                            'look': 'flat-bordered',
+                            'className': 'cursor-pointer hover:shadow-md transition-shadow',
+                            'type': 'card',
                             'children': [
                               {
-                                'children': [
-                                  {
-                                    'align': 'center',
-                                    'children': [
-                                      {
-                                        'align': 'center',
-                                        'children': [
-                                          {
-                                            'name': 'tag',
-                                            'size': 'sm',
-                                            'type': 'icon',
-                                          },
-                                          {
-                                            'className': 'truncate',
-                                            'content': '@tag.name',
-                                            'type': 'typography',
-                                            'variant': 'body',
-                                            'weight': 'medium',
-                                          },
-                                        ],
-                                        'className': 'min-w-0',
-                                        'direction': 'horizontal',
-                                        'gap': 'sm',
-                                        'type': 'stack',
-                                      },
-                                      {
-                                        'label': '@tag.count',
-                                        'size': 'sm',
-                                        'type': 'badge',
-                                        'variant': 'neutral',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'action': 'SELECT_TAG',
-                                    'actionPayload': {
-                                      'tagId': '@tag.id',
-                                    },
-                                    'className': 'w-full justify-center',
-                                    'icon': 'chevron-right',
-                                    'label': 'Open',
-                                    'size': 'sm',
-                                    'type': 'button',
-                                    'variant': 'ghost',
-                                  },
-                                ],
                                 'direction': 'vertical',
                                 'gap': 'xs',
                                 'type': 'stack',
+                                'children': [
+                                  {
+                                    'justify': 'between',
+                                    'gap': 'sm',
+                                    'type': 'stack',
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'children': [
+                                          {
+                                            'size': 'sm',
+                                            'type': 'icon',
+                                            'name': 'tag',
+                                          },
+                                          {
+                                            'className': 'truncate',
+                                            'weight': 'medium',
+                                            'variant': 'body',
+                                            'content': '@tag.name',
+                                            'type': 'typography',
+                                          },
+                                        ],
+                                        'type': 'stack',
+                                        'direction': 'horizontal',
+                                        'className': 'min-w-0',
+                                        'gap': 'sm',
+                                        'align': 'center',
+                                      },
+                                      {
+                                        'size': 'sm',
+                                        'type': 'badge',
+                                        'variant': 'neutral',
+                                        'label': '@tag.count',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                  },
+                                  {
+                                    'className': 'w-full justify-center',
+                                    'type': 'button',
+                                    'icon': 'chevron-right',
+                                    'label': 'Open',
+                                    'actionPayload': {
+                                      'tagId': '@tag.id',
+                                    },
+                                    'size': 'sm',
+                                    'action': 'SELECT_TAG',
+                                    'variant': 'ghost',
+                                  },
+                                ],
                               },
                             ],
-                            'className': 'cursor-pointer hover:shadow-md transition-shadow',
-                            'look': 'flat-bordered',
-                            'padding': 'sm',
-                            'type': 'card',
                           },
                         ],
-                        'type': 'data-grid',
+                        'gap': 'sm',
+                        'look': '@config.tableLook',
+                        'minCardWidth': 180,
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
-              'event': 'TagLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'TagLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
                     'variant': 'error',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'TagLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1082,10 +1038,6 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'fetch',
                   ('Tag' satisfies _StdTagTaxonomyEntityName),
                   {
-                    'emit': {
-                      'failure': 'TagLoadFailed',
-                      'success': 'TagLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -1095,6 +1047,10 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       ],
                       '',
                     ],
+                    'emit': {
+                      'success': 'TagLoaded',
+                      'failure': 'TagLoadFailed',
+                    },
                   },
                 ],
                 [
@@ -1103,26 +1059,26 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   {
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
+                        'variant': 'grid',
                         'rows': 6,
                         'type': 'skeleton',
-                        'variant': 'grid',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'editing',
+              'event': 'SELECT_TAG',
               'effects': [
                 [
                   'set',
@@ -1145,10 +1101,6 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'fetch',
                   ('Tag' satisfies _StdTagTaxonomyEntityName),
                   {
-                    'emit': {
-                      'failure': 'TagLoadFailed',
-                      'success': 'TagLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -1158,34 +1110,38 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       ],
                       '@payload.tagId',
                     ],
+                    'emit': {
+                      'failure': 'TagLoadFailed',
+                      'success': 'TagLoaded',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
-                        'rows': 6,
                         'type': 'skeleton',
+                        'rows': 6,
                         'variant': 'grid',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SELECT_TAG',
-              'from': 'browsing',
-              'to': 'editing',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'SHOW_ROOT',
               'effects': [
                 [
                   'set',
@@ -1220,10 +1176,13 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
@@ -1231,25 +1190,23 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'variant': 'grid',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SHOW_ROOT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'TagLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
-                        'action': 'SHOW_ROOT',
                         'disabled': [
                           'if',
                           [
@@ -1260,10 +1217,11 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                           false,
                           true,
                         ],
-                        'icon': 'arrow-left',
                         'label': '@config.rootLabel',
                         'size': 'sm',
+                        'action': 'SHOW_ROOT',
                         'type': 'button',
+                        'icon': 'arrow-left',
                         'variant': 'ghost',
                       },
                       {
@@ -1275,115 +1233,115 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'if',
                         '@config.allowEdit',
                         {
-                          'action': 'NEW_TAG',
-                          'icon': 'plus',
-                          'label': '@config.createLabel',
                           'size': 'sm',
-                          'type': 'button',
+                          'icon': 'plus',
+                          'action': 'NEW_TAG',
                           'variant': 'secondary',
+                          'label': '@config.createLabel',
+                          'type': 'button',
                         },
                         null,
                       ],
                       {
+                        'type': 'data-grid',
                         'entity': '@payload.data',
-                        'fields': [],
-                        'gap': 'sm',
                         'look': '@config.tableLook',
-                        'minCardWidth': 180,
                         'renderItem': [
                           'fn',
                           'tag',
                           {
+                            'padding': 'sm',
+                            'className': 'cursor-pointer hover:shadow-md transition-shadow',
+                            'type': 'card',
+                            'look': 'flat-bordered',
                             'children': [
                               {
+                                'direction': 'vertical',
+                                'gap': 'xs',
                                 'children': [
                                   {
+                                    'justify': 'between',
                                     'align': 'center',
                                     'children': [
                                       {
+                                        'className': 'min-w-0',
                                         'align': 'center',
+                                        'gap': 'sm',
+                                        'direction': 'horizontal',
                                         'children': [
                                           {
-                                            'name': 'tag',
-                                            'size': 'sm',
                                             'type': 'icon',
+                                            'size': 'sm',
+                                            'name': 'tag',
                                           },
                                           {
+                                            'variant': 'body',
+                                            'weight': 'medium',
                                             'className': 'truncate',
                                             'content': '@tag.name',
                                             'type': 'typography',
-                                            'variant': 'body',
-                                            'weight': 'medium',
                                           },
                                         ],
-                                        'className': 'min-w-0',
-                                        'direction': 'horizontal',
-                                        'gap': 'sm',
                                         'type': 'stack',
                                       },
                                       {
-                                        'label': '@tag.count',
                                         'size': 'sm',
-                                        'type': 'badge',
+                                        'label': '@tag.count',
                                         'variant': 'neutral',
+                                        'type': 'badge',
                                       },
                                     ],
-                                    'direction': 'horizontal',
                                     'gap': 'sm',
-                                    'justify': 'between',
+                                    'direction': 'horizontal',
                                     'type': 'stack',
                                   },
                                   {
-                                    'action': 'SELECT_TAG',
+                                    'icon': 'chevron-right',
+                                    'label': 'Open',
                                     'actionPayload': {
                                       'tagId': '@tag.id',
                                     },
                                     'className': 'w-full justify-center',
-                                    'icon': 'chevron-right',
-                                    'label': 'Open',
+                                    'variant': 'ghost',
                                     'size': 'sm',
                                     'type': 'button',
-                                    'variant': 'ghost',
+                                    'action': 'SELECT_TAG',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'gap': 'xs',
                                 'type': 'stack',
                               },
                             ],
-                            'className': 'cursor-pointer hover:shadow-md transition-shadow',
-                            'look': 'flat-bordered',
-                            'padding': 'sm',
-                            'type': 'card',
                           },
                         ],
-                        'type': 'data-grid',
+                        'gap': 'sm',
+                        'fields': [],
+                        'minCardWidth': 180,
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'TagLoaded',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'creating',
+              'event': 'NEW_TAG',
+              'guard': '@config.allowEdit',
               'effects': [
                 [
                   'render-ui',
                   'modal',
                   {
+                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
-                        'content': '@config.createLabel',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': '@config.createLabel',
                       },
                       {
-                        'color': 'muted',
                         'content': [
                           'if',
                           [
@@ -1396,11 +1354,14 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         ],
                         'type': 'typography',
                         'variant': 'caption',
+                        'color': 'muted',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'form-section',
+                        'mode': 'create',
                         'cancelEvent': 'CANCEL_TAG',
                         'entity': {
                           'parentId': '@entity.id',
@@ -1408,39 +1369,34 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'fields': [
                           'name',
                         ],
-                        'mode': 'create',
                         'submitEvent': 'COMMIT_TAG',
-                        'type': 'form-section',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'NEW_TAG',
-              'from': 'browsing',
-              'guard': '@config.allowEdit',
-              'to': 'creating',
             },
             {
+              'from': 'browsing',
+              'to': 'error',
+              'event': 'TagLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
                     'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'error',
+                    'type': 'alert',
                   },
                 ],
               ],
-              'event': 'TagLoadFailed',
-              'from': 'browsing',
-              'to': 'error',
             },
             {
+              'from': 'creating',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
@@ -1461,10 +1417,6 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'fetch',
                   ('Tag' satisfies _StdTagTaxonomyEntityName),
                   {
-                    'emit': {
-                      'failure': 'TagLoadFailed',
-                      'success': 'TagLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -1474,6 +1426,10 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       ],
                       '',
                     ],
+                    'emit': {
+                      'success': 'TagLoaded',
+                      'failure': 'TagLoadFailed',
+                    },
                   },
                 ],
                 [
@@ -1486,33 +1442,28 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'variant': 'header',
                       },
                       {
+                        'variant': 'grid',
                         'rows': 6,
                         'type': 'skeleton',
-                        'variant': 'grid',
                       },
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'creating',
-              'to': 'loading',
             },
             {
+              'from': 'creating',
+              'to': 'creating',
+              'event': 'COMMIT_TAG',
               'effects': [
                 [
                   'persist',
                   'create',
                   ('Tag' satisfies _StdTagTaxonomyEntityName),
                   {
-                    'name': [
-                      'object/get',
-                      '@payload.data',
-                      'name',
-                    ],
                     'parentId': [
                       'str/default',
                       [
@@ -1521,6 +1472,11 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'parentId',
                       ],
                       '',
+                    ],
+                    'name': [
+                      'object/get',
+                      '@payload.data',
+                      'name',
                     ],
                   },
                   {
@@ -1531,50 +1487,11 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   },
                 ],
               ],
-              'event': 'COMMIT_TAG',
-              'from': 'creating',
-              'to': 'creating',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'modal',
-                  null,
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'grid',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-                [
-                  'emit',
-                  'LEVEL_RELOAD',
-                  {
-                    'tagId': '@entity.id',
-                  },
-                ],
-              ],
+              'from': 'creating',
+              'to': 'loading',
               'event': 'CANCEL_TAG',
-              'from': 'creating',
-              'to': 'loading',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
@@ -1587,16 +1504,55 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   {
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
+                        'variant': 'grid',
                         'type': 'skeleton',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+                [
+                  'emit',
+                  'LEVEL_RELOAD',
+                  {
+                    'tagId': '@entity.id',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'creating',
+              'to': 'loading',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'variant': 'header',
+                        'type': 'skeleton',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'rows': 6,
                         'variant': 'grid',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
                   },
@@ -1609,11 +1565,11 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   },
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'creating',
-              'to': 'loading',
             },
             {
+              'from': 'creating',
+              'to': 'loading',
+              'event': 'TagCreated',
               'effects': [
                 [
                   'render-ui',
@@ -1624,32 +1580,28 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'Loading…',
                         'type': 'typography',
+                        'content': 'Loading…',
+                        'color': 'muted',
                         'variant': 'caption',
                       },
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
                 [
                   'fetch',
                   ('Tag' satisfies _StdTagTaxonomyEntityName),
                   {
-                    'emit': {
-                      'failure': 'TagLoadFailed',
-                      'success': 'TagLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -1663,30 +1615,34 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         '',
                       ],
                     ],
+                    'emit': {
+                      'failure': 'TagLoadFailed',
+                      'success': 'TagLoaded',
+                    },
                   },
                 ],
               ],
-              'event': 'TagCreated',
-              'from': 'creating',
-              'to': 'loading',
             },
             {
+              'from': 'creating',
+              'to': 'creating',
+              'event': 'TagCreateFailed',
               'effects': [
                 [
                   'render-ui',
                   'modal',
                   {
-                    'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'error',
+                    'type': 'alert',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'TagCreateFailed',
-              'from': 'creating',
-              'to': 'creating',
             },
             {
+              'from': 'editing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1703,8 +1659,8 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   ('Tag' satisfies _StdTagTaxonomyEntityName),
                   {
                     'emit': {
-                      'failure': 'TagLoadFailed',
                       'success': 'TagLoaded',
+                      'failure': 'TagLoadFailed',
                     },
                     'filter': [
                       '=',
@@ -1721,28 +1677,28 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
-                        'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'grid',
+                        'type': 'skeleton',
+                        'rows': 6,
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'editing',
-              'to': 'loading',
             },
             {
+              'from': 'editing',
+              'to': 'editing',
+              'event': 'SELECT_TAG',
               'effects': [
                 [
                   'set',
@@ -1762,11 +1718,11 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   },
                 ],
               ],
-              'event': 'SELECT_TAG',
-              'from': 'editing',
-              'to': 'editing',
             },
             {
+              'from': 'editing',
+              'to': 'editing',
+              'event': 'TagSelected',
               'effects': [
                 [
                   'set',
@@ -1779,11 +1735,11 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   '@payload.tagId',
                 ],
               ],
-              'event': 'TagSelected',
-              'from': 'editing',
-              'to': 'editing',
             },
             {
+              'from': 'editing',
+              'to': 'browsing',
+              'event': 'TagLoaded',
               'effects': [
                 [
                   'render-ui',
@@ -1792,6 +1748,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                     'children': [
                       {
                         'action': 'SHOW_ROOT',
+                        'size': 'sm',
                         'disabled': [
                           'if',
                           [
@@ -1802,133 +1759,132 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                           false,
                           true,
                         ],
-                        'icon': 'arrow-left',
                         'label': '@config.rootLabel',
-                        'size': 'sm',
-                        'type': 'button',
                         'variant': 'ghost',
+                        'icon': 'arrow-left',
+                        'type': 'button',
                       },
                       {
-                        'content': '@config.title',
                         'type': 'typography',
+                        'content': '@config.title',
                         'variant': 'h3',
                       },
                       [
                         'if',
                         '@config.allowEdit',
                         {
-                          'action': 'NEW_TAG',
-                          'icon': 'plus',
-                          'label': '@config.createLabel',
                           'size': 'sm',
+                          'icon': 'plus',
                           'type': 'button',
+                          'label': '@config.createLabel',
                           'variant': 'secondary',
+                          'action': 'NEW_TAG',
                         },
                         null,
                       ],
                       {
+                        'type': 'data-grid',
                         'entity': '@payload.data',
-                        'fields': [],
-                        'gap': 'sm',
-                        'look': '@config.tableLook',
-                        'minCardWidth': 180,
                         'renderItem': [
                           'fn',
                           'tag',
                           {
+                            'type': 'card',
+                            'look': 'flat-bordered',
+                            'className': 'cursor-pointer hover:shadow-md transition-shadow',
                             'children': [
                               {
+                                'type': 'stack',
+                                'gap': 'xs',
+                                'direction': 'vertical',
                                 'children': [
                                   {
+                                    'justify': 'between',
                                     'align': 'center',
+                                    'direction': 'horizontal',
                                     'children': [
                                       {
-                                        'align': 'center',
                                         'children': [
                                           {
-                                            'name': 'tag',
                                             'size': 'sm',
+                                            'name': 'tag',
                                             'type': 'icon',
                                           },
                                           {
-                                            'className': 'truncate',
-                                            'content': '@tag.name',
-                                            'type': 'typography',
                                             'variant': 'body',
+                                            'type': 'typography',
+                                            'content': '@tag.name',
                                             'weight': 'medium',
+                                            'className': 'truncate',
                                           },
                                         ],
+                                        'align': 'center',
                                         'className': 'min-w-0',
                                         'direction': 'horizontal',
                                         'gap': 'sm',
                                         'type': 'stack',
                                       },
                                       {
-                                        'label': '@tag.count',
-                                        'size': 'sm',
-                                        'type': 'badge',
                                         'variant': 'neutral',
+                                        'size': 'sm',
+                                        'label': '@tag.count',
+                                        'type': 'badge',
                                       },
                                     ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
                                     'type': 'stack',
+                                    'gap': 'sm',
                                   },
                                   {
-                                    'action': 'SELECT_TAG',
+                                    'type': 'button',
+                                    'size': 'sm',
                                     'actionPayload': {
                                       'tagId': '@tag.id',
                                     },
-                                    'className': 'w-full justify-center',
                                     'icon': 'chevron-right',
-                                    'label': 'Open',
-                                    'size': 'sm',
-                                    'type': 'button',
+                                    'className': 'w-full justify-center',
+                                    'action': 'SELECT_TAG',
                                     'variant': 'ghost',
+                                    'label': 'Open',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'gap': 'xs',
-                                'type': 'stack',
                               },
                             ],
-                            'className': 'cursor-pointer hover:shadow-md transition-shadow',
-                            'look': 'flat-bordered',
                             'padding': 'sm',
-                            'type': 'card',
                           },
                         ],
-                        'type': 'data-grid',
+                        'fields': [],
+                        'gap': 'sm',
+                        'minCardWidth': 180,
+                        'look': '@config.tableLook',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'TagLoaded',
-              'from': 'editing',
-              'to': 'browsing',
             },
             {
+              'from': 'editing',
+              'to': 'error',
+              'event': 'TagLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
                     'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'error',
+                    'type': 'alert',
                   },
                 ],
               ],
-              'event': 'TagLoadFailed',
-              'from': 'editing',
-              'to': 'error',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1963,29 +1919,73 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
-                        'rows': 6,
                         'type': 'skeleton',
                         'variant': 'grid',
+                        'rows': 6,
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Table look',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Categories',
+            'label': 'Section title',
+            'description': 'Heading shown above the tag tree',
+            'tier': 'presentation',
+          },
+          'createLabel': {
+            'type': 'string',
+            'default': 'New tag',
+            'label': 'Create-button label',
+            'description': 'Label on the create affordance and its form heading — say what this taxonomy calls its entries (New tag, New category, New topic).',
+            'synonyms': 'add label, new tag label, create caption',
+            'tier': 'presentation',
+          },
+          'allowEdit': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Allow editing',
+            'description': 'Render the create-tag affordance: creations land at the level currently open (top level, or inside the drilled-into category). Rename is a follow-up (ledgered).',
+            'tier': 'domain',
+          },
+          'rootLabel': {
+            'type': 'string',
+            'default': 'All tags',
+            'label': 'Back-to-root label',
+            'description': 'Label on the back affordance that returns from a drilled-in level to the root — phrase it in this taxonomy\'s vocabulary (All tags, All categories).',
+            'synonyms': 'back label, root caption, all label',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

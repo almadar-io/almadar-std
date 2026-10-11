@@ -47,34 +47,34 @@ export interface StdBookReaderChapterOpenedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBookReaderConfig {
-  /** Default: `""` */
-  author?: string;
-  /** Default: `[{"content":"The first chapter's text, in **markdown**.","title":"Chapter one"},{"content":"The second chapter's text.","title":"Chapter two"}]` */
-  chapters?: EntityRow[];
-  /** Default: `"Contents"` */
-  contentsLabel?: string;
-  /** Default: `{"children":[{"children":[{"children":[{"align":"center","children":[{"alt":"@config.title","bordered":true,"className":"max-w-xs","loading":"eager","rounded":"lg","src":"@config.coverImage","type":"image"},{"align":"center","className":"tracking-tight text-balance","content":"@config.title","type":"typography","variant":"h1","weight":"bold"},{"align":"center","className":["if",["==","@config.subtitle",""],"hidden","text-pretty"],"color":"muted","content":"@config.subtitle","type":"typography","variant":"large"},{"align":"center","className":["if",["==","@config.author",""],"hidden",""],"color":"muted","content":"@config.author","type":"typography","variant":"label"},{"action":"START_READING","className":["if",["==",["array/len","@config.chapters"],0],"hidden",""],"label":"@config.startLabel","size":"lg","type":"button","variant":"primary"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[{"content":"@config.contentsLabel","type":"typography","variant":"label","weight":"semibold"},{"align":"start","children":["array/map","@config.chapters",["fn","chapter",{"action":"OPEN_CHAPTER","actionPayload":{"index":"@index"},"label":["str/concat",["+","@index",1],". ",["object/get","@chapter","title",""]],"type":"button","variant":"link"}]],"direction":"vertical","gap":"none","type":"stack"}],"className":["if",["==",["array/len","@config.chapters"],0],"hidden",""],"direction":"vertical","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xl","type":"stack"}],"maxWidth":"md","padding":"lg","size":"md","type":"container"}],"dir":"@config.direction","fullWidth":true,"paddingY":"2xl","type":"box"}` */
-  coverContent?: unknown;
-  /** Default: `""` */
-  coverImage?: string;
-  /** Default: `"Cover"` */
-  coverLabel?: string;
-  /** Default: `"ltr"` */
-  direction?: 'ltr' | 'rtl';
-  /** Default: `"Next"` */
-  nextLabel?: string;
-  /** Default: `"cover"` */
-  opensAt?: 'cover' | 'reading';
-  /** Default: `"Previous"` */
-  previousLabel?: string;
-  /** Default: `{"children":[{"children":[{"children":[{"align":"start","children":[{"className":"text-balance","content":"@config.title","type":"typography","variant":"h5","weight":"semibold"},{"className":["if",["==","@config.author",""],"hidden","pb-2"],"color":"muted","content":"@config.author","type":"typography","variant":"caption"},{"action":"BACK_TO_COVER","label":"@config.coverLabel","leftIcon":"book-open","type":"button","variant":"link"},{"className":"pt-2","content":"@config.contentsLabel","type":"typography","variant":"label","weight":"semibold"},{"align":"start","children":["array/map","@config.chapters",["fn","chapter",{"action":"OPEN_CHAPTER","actionPayload":{"index":"@index"},"aria-current":["if",["==","@index","@entity.chapterIndex"],"page","false"],"className":["if",["==","@index","@entity.chapterIndex"],"h-auto justify-start text-start text-foreground font-semibold","h-auto justify-start text-start"],"label":["object/get","@chapter","title",""],"type":"button","variant":"link"}]],"direction":"vertical","gap":"none","type":"stack"}],"className":"lg:sticky lg:top-6 self-start","direction":"vertical","gap":"xs","type":"stack"},{"children":[{"children":[{"color":"muted","content":"@entity.progressLabel","type":"typography","variant":"caption"},{"className":"tracking-tight","content":"@entity.chapterTitle","size":"3xl","type":"typography","variant":"h1","weight":"bold"}],"direction":"vertical","gap":"lg","role":"status","type":"stack"},{"content":"@entity.chapterContent","direction":"@config.direction","type":"markdown-content"},{"type":"divider"},{"children":[{"action":"PREV_CHAPTER","disabled":"@entity.isFirst","label":"@config.previousLabel","leftIcon":["if",["==","@config.direction","rtl"],"chevron-right","chevron-left"],"type":"button","variant":"secondary"},{"action":"NEXT_CHAPTER","disabled":"@entity.isLast","label":"@config.nextLabel","rightIcon":["if",["==","@config.direction","rtl"],"chevron-left","chevron-right"],"type":"button","variant":"primary"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"}],"direction":"vertical","gap":"lg","type":"stack"}],"gap":"xl","ratio":"1:3","type":"split"}],"maxWidth":"xl","padding":"lg","size":"xl","type":"container"}],"dir":"@config.direction","fullWidth":true,"paddingY":"xl","type":"box"}` */
+  /** Default: `{"fullWidth":true,"type":"box","children":[{"maxWidth":"xl","type":"container","size":"xl","children":[{"gap":"xl","children":[{"gap":"xs","type":"stack","className":"lg:sticky lg:top-6 self-start","children":[{"type":"typography","variant":"h5","weight":"semibold","className":"text-balance","content":"@config.title"},{"className":["if",["==","@config.author",""],"hidden","pb-2"],"color":"muted","content":"@config.author","type":"typography","variant":"caption"},{"variant":"link","action":"BACK_TO_COVER","type":"button","leftIcon":"book-open","label":"@config.coverLabel"},{"weight":"semibold","content":"@config.contentsLabel","variant":"label","type":"typography","className":"pt-2"},{"children":["array/map","@config.chapters",["fn","chapter",{"action":"OPEN_CHAPTER","aria-current":["if",["==","@index","@entity.chapterIndex"],"page","false"],"actionPayload":{"index":"@index"},"variant":"link","label":["object/get","@chapter","title",""],"className":["if",["==","@index","@entity.chapterIndex"],"h-auto justify-start text-start text-foreground font-semibold","h-auto justify-start text-start"],"type":"button"}]],"direction":"vertical","align":"start","gap":"none","type":"stack"}],"align":"start","direction":"vertical"},{"gap":"lg","children":[{"children":[{"content":"@entity.progressLabel","type":"typography","variant":"caption","color":"muted"},{"variant":"h1","content":"@entity.chapterTitle","className":"tracking-tight","type":"typography","weight":"bold","size":"3xl"}],"gap":"lg","role":"status","direction":"vertical","type":"stack"},{"type":"markdown-content","direction":"@config.direction","content":"@entity.chapterContent"},{"type":"divider"},{"children":[{"label":"@config.previousLabel","disabled":"@entity.isFirst","variant":"secondary","type":"button","leftIcon":["if",["==","@config.direction","rtl"],"chevron-right","chevron-left"],"action":"PREV_CHAPTER"},{"action":"NEXT_CHAPTER","label":"@config.nextLabel","rightIcon":["if",["==","@config.direction","rtl"],"chevron-left","chevron-right"],"variant":"primary","type":"button","disabled":"@entity.isLast"}],"gap":"md","type":"stack","justify":"between","direction":"horizontal"}],"type":"stack","direction":"vertical"}],"type":"split","ratio":"1:3"}],"padding":"lg"}],"dir":"@config.direction","paddingY":"xl"}` */
   readingContent?: unknown;
-  /** Default: `"Start reading"` */
-  startLabel?: string;
-  /** Default: `""` */
-  subtitle?: string;
+  /** Default: `{"fullWidth":true,"paddingY":"2xl","children":[{"type":"container","children":[{"gap":"xl","direction":"vertical","children":[{"type":"stack","direction":"vertical","align":"center","children":[{"loading":"eager","bordered":true,"type":"image","alt":"@config.title","className":"max-w-xs","rounded":"lg","src":"@config.coverImage"},{"className":"tracking-tight text-balance","content":"@config.title","variant":"h1","align":"center","weight":"bold","type":"typography"},{"content":"@config.subtitle","align":"center","className":["if",["==","@config.subtitle",""],"hidden","text-pretty"],"color":"muted","variant":"large","type":"typography"},{"className":["if",["==","@config.author",""],"hidden",""],"variant":"label","color":"muted","align":"center","content":"@config.author","type":"typography"},{"variant":"primary","action":"START_READING","className":["if",["==",["array/len","@config.chapters"],0],"hidden",""],"type":"button","label":"@config.startLabel","size":"lg"}],"gap":"md"},{"direction":"vertical","gap":"xs","children":[{"weight":"semibold","variant":"label","type":"typography","content":"@config.contentsLabel"},{"gap":"none","type":"stack","children":["array/map","@config.chapters",["fn","chapter",{"actionPayload":{"index":"@index"},"label":["str/concat",["+","@index",1],". ",["object/get","@chapter","title",""]],"variant":"link","action":"OPEN_CHAPTER","type":"button"}]],"direction":"vertical","align":"start"}],"className":["if",["==",["array/len","@config.chapters"],0],"hidden",""],"type":"stack"}],"type":"stack"}],"maxWidth":"md","size":"md","padding":"lg"}],"type":"box","dir":"@config.direction"}` */
+  coverContent?: unknown;
   /** Default: `"Untitled book"` */
   title?: string;
+  /** Default: `"Contents"` */
+  contentsLabel?: string;
+  /** Default: `""` */
+  subtitle?: string;
+  /** Default: `"Previous"` */
+  previousLabel?: string;
+  /** Default: `"ltr"` */
+  direction?: 'ltr' | 'rtl';
+  /** Default: `"Start reading"` */
+  startLabel?: string;
+  /** Default: `[{"content":"The first chapter's text, in **markdown**.","title":"Chapter one"},{"content":"The second chapter's text.","title":"Chapter two"}]` */
+  chapters?: EntityRow[];
+  /** Default: `""` */
+  author?: string;
+  /** Default: `""` */
+  coverImage?: string;
+  /** Default: `"Next"` */
+  nextLabel?: string;
+  /** Default: `"Cover"` */
+  coverLabel?: string;
+  /** Default: `"cover"` */
+  opensAt?: 'cover' | 'reading';
 }
 
 /**

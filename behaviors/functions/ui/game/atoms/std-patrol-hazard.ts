@@ -48,16 +48,16 @@ export interface StdPatrolHazardPatrolHitPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPatrolHazardConfig {
-  /** Default: `0.7` */
-  hitRadius?: number;
   /** Default: `[]` */
   patrols?: EntityRow[];
-  /** Default: `0` */
-  playerSpawnX?: number;
   /** Default: `0` */
   playerSpawnY?: number;
   /** Default: `true` */
   running?: boolean;
+  /** Default: `0.7` */
+  hitRadius?: number;
+  /** Default: `0` */
+  playerSpawnX?: number;
 }
 
 /**

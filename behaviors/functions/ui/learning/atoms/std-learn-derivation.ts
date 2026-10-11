@@ -57,42 +57,42 @@ export interface StdLearnDerivationLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnDerivationConfig {
-  /** Default: `800` */
-  autoApplyIntervalMs?: number;
-  /** Default: `false` */
-  autoRun?: boolean;
-  /** Default: `"Paused — apply steps manually."` */
-  autoRunOffMessage?: string;
-  /** Default: `"Auto-stepping — tick applies the next available step."` */
-  autoRunOnMessage?: string;
-  /** Default: `[{"deriveNegationMode":"same","deriveSide":"right","key":"FORWARD","label":"Forward Rule","matchNegationMode":"same","matchSide":"left","noMatchFeedback":"No matching premises yet for the forward rule.","resultBadgeLabel":"DERIVED","resultBadgeVariant":"success"},{"deriveNegationMode":"invert","deriveSide":"left","key":"BACKWARD","label":"Backward Rule","matchNegationMode":"opposite","matchSide":"right","noMatchFeedback":"No matching premises yet for the backward rule.","resultBadgeLabel":"DERIVED","resultBadgeVariant":"success"}]` */
-  candidates?: EntityRow[];
-  /** Default: `"B"` */
-  goalLabel?: string;
-  /** Default: `"Goal: derive "` */
-  goalPrefix?: string;
-  /** Default: `"Goal reached."` */
-  goalReachedMessage?: string;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `"¬"` */
-  negationSymbol?: string;
-  /** Default: `"No further steps are available yet."` */
-  noStepAvailableMessage?: string;
-  /** Default: `[{"badgeLabel":"GIVEN","badgeVariant":"neutral","id":"given-a","kind":"fact","label":"A","negated":false,"subject":"A"},{"badgeLabel":"RULE","badgeVariant":"info","id":"given-a-implies-b","kind":"link","label":"A → B","leftNegated":false,"leftSubject":"A","rightNegated":false,"rightSubject":"B"}]` */
-  premises?: EntityRow[];
-  /** Default: `"Reset"` */
-  resetLabel?: string;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
   /** Default: `""` */
   summary?: string;
-  /** Default: `"Derivation Lab"` */
-  title?: string;
+  /** Default: `"Reset"` */
+  resetLabel?: string;
+  /** Default: `false` */
+  autoRun?: boolean;
+  /** Default: `[{"matchNegationMode":"same","resultBadgeLabel":"DERIVED","label":"Forward Rule","key":"FORWARD","deriveNegationMode":"same","deriveSide":"right","matchSide":"left","noMatchFeedback":"No matching premises yet for the forward rule.","resultBadgeVariant":"success"},{"matchNegationMode":"opposite","noMatchFeedback":"No matching premises yet for the backward rule.","matchSide":"right","resultBadgeVariant":"success","deriveNegationMode":"invert","deriveSide":"left","label":"Backward Rule","resultBadgeLabel":"DERIVED","key":"BACKWARD"}]` */
+  candidates?: EntityRow[];
+  /** Default: `400` */
+  height?: number;
+  /** Default: `[{"badgeVariant":"neutral","kind":"fact","negated":false,"badgeLabel":"GIVEN","label":"A","subject":"A","id":"given-a"},{"id":"given-a-implies-b","leftSubject":"A","rightNegated":false,"badgeVariant":"info","badgeLabel":"RULE","label":"A → B","leftNegated":false,"kind":"link","rightSubject":"B"}]` */
+  premises?: EntityRow[];
+  /** Default: `""` */
+  matchMode?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
+  /** Default: `800` */
+  autoApplyIntervalMs?: number;
+  /** Default: `"Paused — apply steps manually."` */
+  autoRunOffMessage?: string;
   /** Default: `600` */
   width?: number;
+  /** Default: `"¬"` */
+  negationSymbol?: string;
+  /** Default: `"Goal: derive "` */
+  goalPrefix?: string;
+  /** Default: `"B"` */
+  goalLabel?: string;
+  /** Default: `"No further steps are available yet."` */
+  noStepAvailableMessage?: string;
+  /** Default: `"Derivation Lab"` */
+  title?: string;
+  /** Default: `"Goal reached."` */
+  goalReachedMessage?: string;
+  /** Default: `"Auto-stepping — tick applies the next available step."` */
+  autoRunOnMessage?: string;
 }
 
 /**

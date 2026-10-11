@@ -39,12 +39,12 @@ export type StdFxParticlesEventKey = 'BURST' | 'INIT' | 'RESTART';
  * without modifying its state-machine topology.
  */
 export interface StdFxParticlesConfig {
-  /** Default: `1` */
-  decayRate?: number;
-  /** Default: `[]` */
-  fx?: EntityRow[];
   /** Default: `true` */
   running?: boolean;
+  /** Default: `[]` */
+  fx?: EntityRow[];
+  /** Default: `1` */
+  decayRate?: number;
 }
 
 /**

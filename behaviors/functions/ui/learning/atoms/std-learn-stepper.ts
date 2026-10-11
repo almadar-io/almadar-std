@@ -48,54 +48,54 @@ export interface StdLearnStepperStepperAdvancedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnStepperConfig {
-  /** Default: `"All"` */
-  allLabel?: string;
-  /** Default: `"Taken together, every stage contributes to the full sequence. No single category tells the whole story."` */
-  allSummary?: string;
-  /** Default: `false` */
-  animate?: boolean;
-  /** Default: `" — Last stage; press Reset to review from the start."` */
-  atEndNote?: string;
-  /** Default: `60` */
-  axisMarginLeft?: number;
-  /** Default: `60` */
-  axisMarginRight?: number;
-  /** Default: `220` */
-  axisY?: number;
-  /** Default: `""` */
-  backgroundColor?: string;
-  /** Default: `[{"category":"a","color":"series-1","label":"Category A"},{"category":"b","color":"series-2","label":"Category B"}]` */
-  categories?: EntityRow[];
-  /** Default: `[{"category":"a","summary":"Viewed through Category A alone, only the stages tagged A are highlighted."},{"category":"b","summary":"Viewed through Category B alone, only the stages tagged B are highlighted."}]` */
-  categorySummaries?: EntityRow[];
-  /** Default: `420` */
-  height?: number;
-  /** Default: `false` */
-  interactive?: boolean;
-  /** Default: `14` */
-  markerHighlightRadius?: number;
   /** Default: `8` */
   markerRadius?: number;
+  /** Default: `"Taken together, every stage contributes to the full sequence. No single category tells the whole story."` */
+  allSummary?: string;
   /** Default: `""` */
   matchMode?: string;
-  /** Default: `4` */
-  maxPosition?: number;
-  /** Default: `0` */
-  minPosition?: number;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `[{"category":"a","description":"First stage in the sequence.","id":"stage-1","label":"Stage One","position":1},{"category":"b","description":"Second stage in the sequence.","id":"stage-2","label":"Stage Two","position":2},{"category":"a","description":"Third stage in the sequence.","id":"stage-3","label":"Stage Three","position":3}]` */
-  stages?: EntityRow[];
-  /** Default: `"Press Next to begin."` */
-  startPrompt?: string;
-  /** Default: `""` */
-  summary?: string;
-  /** Default: `"Stepper"` */
-  title?: string;
-  /** Default: `"muted"` */
-  unreachedColor?: string;
+  /** Default: `" — Last stage; press Reset to review from the start."` */
+  atEndNote?: string;
+  /** Default: `14` */
+  markerHighlightRadius?: number;
+  /** Default: `"All"` */
+  allLabel?: string;
   /** Default: `640` */
   width?: number;
+  /** Default: `[{"summary":"Viewed through Category A alone, only the stages tagged A are highlighted.","category":"a"},{"summary":"Viewed through Category B alone, only the stages tagged B are highlighted.","category":"b"}]` */
+  categorySummaries?: EntityRow[];
+  /** Default: `60` */
+  axisMarginLeft?: number;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
+  /** Default: `[{"label":"Category A","category":"a","color":"series-1"},{"category":"b","color":"series-2","label":"Category B"}]` */
+  categories?: EntityRow[];
+  /** Default: `""` */
+  backgroundColor?: string;
+  /** Default: `220` */
+  axisY?: number;
+  /** Default: `4` */
+  maxPosition?: number;
+  /** Default: `[{"description":"First stage in the sequence.","id":"stage-1","category":"a","label":"Stage One","position":1},{"description":"Second stage in the sequence.","id":"stage-2","position":2,"label":"Stage Two","category":"b"},{"id":"stage-3","position":3,"label":"Stage Three","category":"a","description":"Third stage in the sequence."}]` */
+  stages?: EntityRow[];
+  /** Default: `420` */
+  height?: number;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `"muted"` */
+  unreachedColor?: string;
+  /** Default: `0` */
+  minPosition?: number;
+  /** Default: `"Stepper"` */
+  title?: string;
+  /** Default: `60` */
+  axisMarginRight?: number;
+  /** Default: `"Press Next to begin."` */
+  startPrompt?: string;
+  /** Default: `false` */
+  interactive?: boolean;
+  /** Default: `false` */
+  animate?: boolean;
 }
 
 /**

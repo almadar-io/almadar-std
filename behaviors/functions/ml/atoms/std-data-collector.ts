@@ -179,27 +179,27 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
+            'name': 'buffer',
+            'type': 'array',
             'default': [],
-            'description': 'Data points accumulated in the current cycle.',
             'items': {
+              'type': 'object',
               'items': {
                 'type': 'scalar',
               },
-              'type': 'object',
             },
-            'name': 'buffer',
-            'type': 'array',
+            'description': 'Data points accumulated in the current cycle.',
           },
           {
-            'default': 0,
-            'description': 'Number of points currently in the buffer.',
             'name': 'count',
             'type': 'number',
+            'default': 0,
+            'description': 'Number of points currently in the buffer.',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'collecting',
@@ -214,15 +214,15 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'bufferSize': {
-            'default': 100,
-            'description': 'Number of data points collected before BUFFER_READY fires.',
-            'label': 'Buffer size',
-            'tier': 'domain',
-            'type': 'int',
-          },
+        'name': 'DataCollectorRun',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'buffer',
+            'count',
+            'status',
+          ],
         },
         'effectRow': [
           {
@@ -242,39 +242,35 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'DataBuffer',
         'emits': [
           {
-            'description': 'Fired when the buffer reaches config.bufferSize; carries the full accumulated buffer and its count, then the buffer resets for the next cycle.',
             'event': 'BUFFER_READY',
+            'description': 'Fired when the buffer reaches config.bufferSize; carries the full accumulated buffer and its count, then the buffer resets for the next cycle.',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'buffer',
-                'required': true,
                 'type': '[Map<string,scalar>]',
+                'required': true,
               },
               {
                 'name': 'count',
-                'required': true,
                 'type': 'int',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'buffer',
-            'count',
-            'status',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'DataBuffer',
-        'name': 'DataCollectorRun',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'collecting',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -286,38 +282,35 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
               'payloadSchema': [
                 {
                   'name': 'point',
-                  'required': true,
                   'type': 'Map<string,scalar>',
+                  'required': true,
                 },
               ],
             },
             {
-              'description': 'Fired when the buffer reaches config.bufferSize; carries the full accumulated buffer and its count, then the buffer resets for the next cycle.',
               'key': 'BUFFER_READY',
               'name': 'Buffer Ready',
+              'description': 'Fired when the buffer reaches config.bufferSize; carries the full accumulated buffer and its count, then the buffer resets for the next cycle.',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'buffer',
-                  'required': true,
                   'type': '[Map<string,scalar>]',
+                  'required': true,
                 },
                 {
                   'name': 'count',
-                  'required': true,
                   'type': 'int',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'collecting',
             },
           ],
           'transitions': [
             {
+              'from': 'collecting',
+              'to': 'collecting',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -335,11 +328,11 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'collecting',
-              'to': 'collecting',
             },
             {
+              'from': 'collecting',
+              'to': 'collecting',
+              'event': 'COLLECT',
               'effects': [
                 [
                   'let',
@@ -389,8 +382,8 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
                         'emit',
                         'BUFFER_READY',
                         {
-                          'buffer': '@newBuffer',
                           'count': '@newCount',
+                          'buffer': '@newBuffer',
                         },
                       ],
                     ],
@@ -415,12 +408,19 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
                   ],
                 ],
               ],
-              'event': 'COLLECT',
-              'from': 'collecting',
-              'to': 'collecting',
             },
           ],
         },
+        'config': {
+          'bufferSize': {
+            'type': 'int',
+            'default': 100,
+            'label': 'Buffer size',
+            'description': 'Number of data points collected before BUFFER_READY fires.',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

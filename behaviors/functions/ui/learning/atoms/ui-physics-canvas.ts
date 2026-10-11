@@ -47,83 +47,83 @@ export interface StdUiPhysicsCanvasShapeClickPayload {
  */
 export interface StdUiPhysicsCanvasConfig {
   /** Default: `[]` */
-  angles?: EntityRow[];
+  bodies?: EntityRow[];
   /** Default: `false` */
   animate?: boolean;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  backgroundColor?: string;
-  /** Default: `[]` */
-  bodies?: EntityRow[];
-  camera?: EntityRow;
-  className?: string;
-  /** Default: `[]` */
-  constraints?: EntityRow[];
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  field?: EntityRow;
-  /** Default: `20` */
-  forceScale?: number;
-  /** Default: `400` */
-  height?: number;
-  interactive?: boolean;
-  isLoading?: boolean;
-  /** Default: `{"item":"INIT"}` */
-  keyMap?: Record<string, TraitConfig>;
-  /** Default: `{"item":"INIT"}` */
-  keyUpMap?: Record<string, TraitConfig>;
-  lang?: string;
-  lighting?: EntityRow;
-  /** Default: `[]` */
-  meters?: EntityRow[];
-  /** Default: `"2d"` */
-  mode?: '2d' | '3d';
-  /** Default: `"SHAPE_CLICK"` */
-  onShapeClick?: string;
-  post?: EntityRow;
-  /** Default: `[]` */
-  readouts?: EntityRow[];
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `[]` */
-  sceneObjects?: EntityRow[];
-  /** Default: `[]` */
-  series?: string[];
-  shadows?: boolean;
-  /** Default: `[]` */
-  shapes?: EntityRow[];
-  /** Default: `false` */
-  showForces?: boolean;
-  showGrid?: boolean;
-  /** Default: `true` */
-  showVelocity?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  surface3d?: EntityRow;
-  tabIndex?: number;
-  title?: string;
   /** Default: `[]` */
   traces?: EntityRow[];
   /** Default: `[]` */
+  shapes?: EntityRow[];
+  /** Default: `{"item":"INIT"}` */
+  keyUpMap?: Record<string, TraitConfig>;
+  surface3d?: EntityRow;
+  ariaDescribedby?: string;
+  /** Default: `[]` */
   trails?: EntityRow[];
-  /** Default: `1` */
-  vectorScale?: number;
   /** Default: `[]` */
   vectors?: EntityRow[];
+  /** Default: `true` */
+  showVelocity?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `400` */
+  height?: number;
+  title?: string;
   /** Default: `[]` */
-  vectors3d?: EntityRow[];
+  series?: string[];
+  ariaHidden?: boolean;
+  /** Default: `[]` */
+  meters?: EntityRow[];
+  showGrid?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `[]` */
+  angles?: EntityRow[];
+  /** Default: `"2d"` */
+  mode?: '2d' | '3d';
   /** Default: `20` */
   velocityScale?: number;
+  /** Default: `{"item":"INIT"}` */
+  keyMap?: Record<string, TraitConfig>;
+  ariaBusy?: boolean;
+  post?: EntityRow;
+  lang?: string;
+  tabIndex?: number;
+  field?: EntityRow;
+  /** Default: `[]` */
+  vectors3d?: EntityRow[];
+  ariaLabel?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `[]` */
+  constraints?: EntityRow[];
+  /** Default: `false` */
+  showForces?: boolean;
+  /** Default: `1` */
+  vectorScale?: number;
   /** Default: `600` */
   width?: number;
+  /** Default: `20` */
+  forceScale?: number;
+  /** Default: `[]` */
+  readouts?: EntityRow[];
+  /** Default: `[]` */
+  sceneObjects?: EntityRow[];
+  shadows?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  interactive?: boolean;
+  backgroundColor?: string;
+  ariaSelected?: boolean;
+  error?: EntityRow;
+  isLoading?: boolean;
+  camera?: EntityRow;
+  ariaExpanded?: boolean;
+  lighting?: EntityRow;
+  className?: string;
+  /** Default: `"SHAPE_CLICK"` */
+  onShapeClick?: string;
+  enterDelay?: number;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaLabelledby?: string;
 }
 
 /**

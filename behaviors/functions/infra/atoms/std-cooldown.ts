@@ -179,22 +179,22 @@ export function stdCooldownCooldownOrbital(params: StdCooldownCooldownOrbitalPar
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'remainingMs',
+            'type': 'number',
             'default': 0,
             'description': 'Milliseconds remaining on the active cooldown.',
-            'name': 'remainingMs',
             'synonyms': 'time left, remaining, countdown, ms left',
-            'type': 'number',
           },
           {
+            'name': 'active',
+            'type': 'boolean',
             'default': false,
             'description': 'Whether the cooldown is currently counting down.',
-            'name': 'active',
             'synonyms': 'cooling, on cooldown, busy, in progress',
-            'type': 'boolean',
           },
         ];
         const extras = params.fields ?? [];
@@ -205,17 +205,7 @@ export function stdCooldownCooldownOrbital(params: StdCooldownCooldownOrbitalPar
     } as Entity,
     traits: [
       {
-        'category': 'game-core',
-        'config': {
-          'defaultDurationMs': {
-            'default': 3000,
-            'description': 'Milliseconds the cooldown runs when START is received without an explicit durationMs payload.',
-            'label': 'Default cooldown duration (ms)',
-            'synonyms': 'cooldown time, duration, delay, recharge time, wait time',
-            'tier': 'domain',
-            'type': 'number',
-          },
-        },
+        'name': 'Cooldown',
         'effectRow': [
           {
             'kind': 'emit',
@@ -244,29 +234,37 @@ export function stdCooldownCooldownOrbital(params: StdCooldownCooldownOrbitalPar
             'site': 'tick',
           },
         ],
+        'category': 'game-core',
+        'linkedEntity': 'CooldownRecord',
         'emits': [
           {
-            'description': 'Fired when the cooldown expires; wire to re-enable the ability or action.',
             'event': 'CooldownReady',
+            'description': 'Fired when the cooldown expires; wire to re-enable the ability or action.',
+            'synonyms': 'ready, cooldown-done, available, recharged, action-ready',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'entityId',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'ready, cooldown-done, available, recharged, action-ready',
-            'tier': 'domain',
           },
           {
-            'description': 'Internal: fired by the expiry tick to drive the cooling→ready transition.',
             'event': 'EXPIRE',
+            'description': 'Internal: fired by the expiry tick to drive the cooling→ready transition.',
           },
         ],
-        'linkedEntity': 'CooldownRecord',
-        'name': 'Cooldown',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+            {
+              'name': 'cooling',
+            },
+          ],
           'events': [
             {
               'key': 'START',
@@ -279,35 +277,29 @@ export function stdCooldownCooldownOrbital(params: StdCooldownCooldownOrbitalPar
               ],
             },
             {
-              'description': 'Internal: fired by the expiry tick to drive the cooling→ready transition.',
               'key': 'EXPIRE',
               'name': 'Expire',
+              'description': 'Internal: fired by the expiry tick to drive the cooling→ready transition.',
             },
             {
-              'description': 'Fired when the cooldown expires; wire to re-enable the ability or action.',
               'key': 'CooldownReady',
               'name': 'Cooldown ready',
+              'description': 'Fired when the cooldown expires; wire to re-enable the ability or action.',
+              'synonyms': 'ready, cooldown-done, available, recharged, action-ready',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'entityId',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'ready, cooldown-done, available, recharged, action-ready',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
-            },
-            {
-              'name': 'cooling',
             },
           ],
           'transitions': [
             {
+              'from': 'ready',
+              'to': 'cooling',
+              'event': 'START',
               'effects': [
                 [
                   'set',
@@ -320,11 +312,11 @@ export function stdCooldownCooldownOrbital(params: StdCooldownCooldownOrbitalPar
                   true,
                 ],
               ],
-              'event': 'START',
-              'from': 'ready',
-              'to': 'cooling',
             },
             {
+              'from': 'cooling',
+              'to': 'ready',
+              'event': 'EXPIRE',
               'effects': [
                 [
                   'set',
@@ -342,14 +334,18 @@ export function stdCooldownCooldownOrbital(params: StdCooldownCooldownOrbitalPar
                   {},
                 ],
               ],
-              'event': 'EXPIRE',
-              'from': 'cooling',
-              'to': 'ready',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'cooldownTick',
+            'interval': 100,
+            'guard': [
+              '==',
+              '@entity.active',
+              true,
+            ],
             'effects': [
               [
                 'set',
@@ -365,22 +361,10 @@ export function stdCooldownCooldownOrbital(params: StdCooldownCooldownOrbitalPar
                 ],
               ],
             ],
-            'guard': [
-              '==',
-              '@entity.active',
-              true,
-            ],
-            'interval': 100,
-            'name': 'cooldownTick',
           },
           {
-            'effects': [
-              [
-                'emit',
-                'EXPIRE',
-                {},
-              ],
-            ],
+            'name': 'expiryCheck',
+            'interval': 100,
             'guard': [
               'and',
               [
@@ -394,10 +378,26 @@ export function stdCooldownCooldownOrbital(params: StdCooldownCooldownOrbitalPar
                 0,
               ],
             ],
-            'interval': 100,
-            'name': 'expiryCheck',
+            'effects': [
+              [
+                'emit',
+                'EXPIRE',
+                {},
+              ],
+            ],
           },
         ],
+        'config': {
+          'defaultDurationMs': {
+            'type': 'number',
+            'default': 3000,
+            'label': 'Default cooldown duration (ms)',
+            'description': 'Milliseconds the cooldown runs when START is received without an explicit durationMs payload.',
+            'synonyms': 'cooldown time, duration, delay, recharge time, wait time',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

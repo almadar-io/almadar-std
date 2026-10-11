@@ -39,11 +39,11 @@ export type StdStatRowsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdStatRowsConfig {
-  className?: string;
+  /** Default: `[{"value":"$12.4k","label":"Revenue"},{"value":"1,204","label":"Active users"},{"label":"Churn","value":"1.8%"}]` */
+  rows?: EntityRow[];
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
-  /** Default: `[{"label":"Revenue","value":"$12.4k"},{"label":"Active users","value":"1,204"},{"label":"Churn","value":"1.8%"}]` */
-  rows?: EntityRow[];
+  className?: string;
 }
 
 /**

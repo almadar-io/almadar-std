@@ -68,22 +68,22 @@ export interface StdFormAdvancedFormEntrySaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFormAdvancedConfig {
-  cancelLabel?: string;
-  /** Default: `[{"label":"Name","name":"name"},{"label":"Description","name":"description"},{"label":"Status","name":"status","type":"enum","values":["active","inactive","pending"]},{"label":"Notes","name":"notes","type":"textarea"},{"label":"Age","name":"age","type":"number"},{"label":"Is Active","name":"isActive","type":"boolean"},{"label":"Birth Date","name":"birthDate","type":"date"},{"label":"Priority","name":"priority","type":"enum","values":["low","medium","high","critical"]},{"label":"Category ID","name":"categoryId","relation":{"cardinality":"one","entity":"FormEntry"},"type":"relation"}]` */
-  fields?: EntityRow[];
-  /** Default: `"file-text"` */
-  icon?: string;
-  /** Default: `"New Entry"` */
-  newEntryLabel?: string;
   /** Default: `true` */
   showCancel?: boolean;
-  submitLabel?: string;
-  /** Default: `"Your form has been submitted successfully."` */
-  successMessage?: string;
   /** Default: `"Form Submitted"` */
   successTitle?: string;
+  /** Default: `[{"label":"Name","name":"name"},{"label":"Description","name":"description"},{"name":"status","type":"enum","values":["active","inactive","pending"],"label":"Status"},{"type":"textarea","label":"Notes","name":"notes"},{"type":"number","name":"age","label":"Age"},{"name":"isActive","label":"Is Active","type":"boolean"},{"label":"Birth Date","type":"date","name":"birthDate"},{"name":"priority","label":"Priority","type":"enum","values":["low","medium","high","critical"]},{"relation":{"entity":"FormEntry","cardinality":"one"},"label":"Category ID","type":"relation","name":"categoryId"}]` */
+  fields?: EntityRow[];
+  /** Default: `"Your form has been submitted successfully."` */
+  successMessage?: string;
+  /** Default: `"New Entry"` */
+  newEntryLabel?: string;
+  /** Default: `"file-text"` */
+  icon?: string;
+  cancelLabel?: string;
   /** Default: `"Form"` */
   title?: string;
+  submitLabel?: string;
 }
 
 /**
@@ -229,80 +229,80 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
             'type': 'string',
           },
           {
-            'description': 'The identifier or title for the form entry.',
             'name': 'name',
+            'type': 'string',
+            'description': 'The identifier or title for the form entry.',
             'synonyms': 'title, label, identifier',
-            'type': 'string',
           },
           {
-            'description': 'A textual explanation or details about the entry.',
             'name': 'description',
-            'synonyms': 'details, explanation, notes, summary',
             'type': 'string',
+            'description': 'A textual explanation or details about the entry.',
+            'synonyms': 'details, explanation, notes, summary',
           },
           {
-            'default': 'active',
-            'description': 'Indicates the current operational state of the entry.',
             'name': 'status',
-            'synonyms': 'state, condition, mode',
             'type': 'string',
+            'default': 'active',
             'values': [
               'active',
               'inactive',
               'pending',
             ],
+            'description': 'Indicates the current operational state of the entry.',
+            'synonyms': 'state, condition, mode',
           },
           {
             'name': 'createdAt',
             'type': 'string',
           },
           {
+            'name': 'notes',
+            'type': 'string',
             'default': '',
             'description': 'Free-text comments or additional information.',
-            'name': 'notes',
             'synonyms': 'comment, remark, details, memo',
-            'type': 'string',
           },
           {
+            'name': 'age',
+            'type': 'number',
             'default': 0,
             'description': 'Numerical value representing a person\'s age.',
-            'name': 'age',
             'synonyms': 'years, age, period',
-            'type': 'number',
           },
           {
+            'name': 'isActive',
+            'type': 'boolean',
             'default': false,
             'description': 'Indicates whether the entry is currently active.',
-            'name': 'isActive',
             'synonyms': 'active, enabled, status',
-            'type': 'boolean',
           },
           {
+            'name': 'birthDate',
+            'type': 'datetime',
             'default': '',
             'description': 'Date of birth.',
-            'name': 'birthDate',
             'synonyms': 'dob, date of birth, birthday',
-            'type': 'datetime',
           },
           {
-            'default': 'medium',
-            'description': 'Indicates the level of importance or urgency.',
             'name': 'priority',
-            'synonyms': 'level, importance, urgency',
             'type': 'string',
+            'default': 'medium',
             'values': [
               'low',
               'medium',
               'high',
               'critical',
             ],
+            'description': 'Indicates the level of importance or urgency.',
+            'synonyms': 'level, importance, urgency',
           },
           {
+            'name': 'categoryId',
+            'type': 'string',
             'default': '',
             'description': 'Identifies the related category record.',
-            'name': 'categoryId',
             'synonyms': 'category, type, group',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -313,168 +313,11 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'cancelLabel': {
-            'description': 'Label on the cancel button; unset keeps the translated Cancel',
-            'label': 'Cancel button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'fields': {
-            'default': [
-              {
-                'label': 'Name',
-                'name': 'name',
-              },
-              {
-                'label': 'Description',
-                'name': 'description',
-              },
-              {
-                'label': 'Status',
-                'name': 'status',
-                'type': 'enum',
-                'values': [
-                  'active',
-                  'inactive',
-                  'pending',
-                ],
-              },
-              {
-                'label': 'Notes',
-                'name': 'notes',
-                'type': 'textarea',
-              },
-              {
-                'label': 'Age',
-                'name': 'age',
-                'type': 'number',
-              },
-              {
-                'label': 'Is Active',
-                'name': 'isActive',
-                'type': 'boolean',
-              },
-              {
-                'label': 'Birth Date',
-                'name': 'birthDate',
-                'type': 'date',
-              },
-              {
-                'label': 'Priority',
-                'name': 'priority',
-                'type': 'enum',
-                'values': [
-                  'low',
-                  'medium',
-                  'high',
-                  'critical',
-                ],
-              },
-              {
-                'label': 'Category ID',
-                'name': 'categoryId',
-                'relation': {
-                  'cardinality': 'one',
-                  'entity': 'FormEntry',
-                },
-                'type': 'relation',
-              },
-            ],
-            'description': 'Inputs to render; each entry follows the form-section field schema',
-            'items': {
-              'properties': {
-                'format': {
-                  'name': 'format',
-                  'required': false,
-                  'type': 'string',
-                },
-                'header': {
-                  'name': 'header',
-                  'required': false,
-                  'type': 'string',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'key': {
-                  'name': 'key',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': true,
-                  'type': 'string',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Form fields',
-            'tier': 'presentation',
-            'type': '[FieldSpec]',
-          },
-          'icon': {
-            'default': 'file-text',
-            'description': 'Icon shown beside the form title',
-            'label': 'Header icon',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'newEntryLabel': {
-            'default': 'New Entry',
-            'description': 'Label on the button that starts another entry after a submit',
-            'label': 'New entry button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'showCancel': {
-            'default': true,
-            'description': 'Whether the form shows a cancel button',
-            'label': 'Show cancel',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'submitLabel': {
-            'description': 'Label on the submit button; unset keeps the translated Save',
-            'label': 'Submit button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'successMessage': {
-            'default': 'Your form has been submitted successfully.',
-            'description': 'Message shown after a successful submit',
-            'label': 'Confirmation message',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'successTitle': {
-            'default': 'Form Submitted',
-            'description': 'Heading shown after a successful submit',
-            'label': 'Confirmation title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'title': {
-            'default': 'Form',
-            'description': 'Heading shown above the form',
-            'label': 'Form title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'FormEntryFormAdvanced',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -494,14 +337,19 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
             'resource': 'toast',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'FormEntry',
         'emits': [
           {
-            'description': 'Signals successful loading of form entry data.',
             'event': 'FormEntryLoaded',
+            'description': 'Signals successful loading of form entry data.',
+            'synonyms': 'loaded, initialized, populated',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'FormEntry',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -559,42 +407,42 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                     'type': 'relation',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'FormEntry',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'loaded, initialized, populated',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates failure to load form entry data.',
             'event': 'FormEntryLoadFailed',
+            'description': 'Indicates failure to load form entry data.',
+            'synonyms': 'load error, data fetch failed, failed to retrieve',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'message',
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'load error, data fetch failed, failed to retrieve',
-            'tier': 'internal',
           },
           {
-            'description': 'Signals successful saving of form entry data.',
             'event': 'FormEntrySaved',
+            'description': 'Signals successful saving of form entry data.',
+            'synonyms': 'saved, persisted, submitted, confirmed',
+            'tier': 'domain',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'saved, persisted, submitted, confirmed',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to save form entry data.',
             'event': 'FormEntrySaveFailed',
+            'description': 'Indicates a failure to save form entry data.',
+            'synonyms': 'error, failure, rejected, invalid',
+            'tier': 'domain',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -605,54 +453,54 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'error, failure, rejected, invalid',
-            'tier': 'domain',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'FormEntry',
-        'name': 'FormEntryFormAdvanced',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'editing',
+              'isInitial': true,
+            },
+            {
+              'name': 'submitted',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates the form\'s entries have been discarded and it should be reset.',
               'key': 'CANCEL',
               'name': 'Cancel',
+              'description': 'Indicates the form\'s entries have been discarded and it should be reset.',
               'synonyms': 'cancel, discard, clear, start over',
               'tier': 'domain',
             },
             {
-              'description': 'Indicates the form has been submitted for processing.',
               'key': 'SUBMIT',
               'name': 'Submit',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'required': true,
-                  'type': '@entity',
-                },
-              ],
+              'description': 'Indicates the form has been submitted for processing.',
               'synonyms': 'submit, send, post',
               'tier': 'domain',
-            },
-            {
-              'description': 'Signals successful loading of form entry data.',
-              'key': 'FormEntryLoaded',
-              'name': 'FormEntry loaded',
               'payloadSchema': [
                 {
-                  'entity': 'FormEntry',
                   'name': 'data',
+                  'type': '@entity',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'FormEntryLoaded',
+              'name': 'FormEntry loaded',
+              'description': 'Signals successful loading of form entry data.',
+              'synonyms': 'loaded, initialized, populated',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -710,46 +558,46 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                       'type': 'relation',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'FormEntry',
                 },
               ],
-              'synonyms': 'loaded, initialized, populated',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates failure to load form entry data.',
               'key': 'FormEntryLoadFailed',
               'name': 'FormEntry load failed',
+              'description': 'Indicates failure to load form entry data.',
+              'synonyms': 'load error, data fetch failed, failed to retrieve',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'message',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'load error, data fetch failed, failed to retrieve',
-              'tier': 'internal',
             },
             {
               'key': 'RESET',
               'name': 'Reset',
             },
             {
-              'description': 'Signals successful saving of form entry data.',
               'key': 'FormEntrySaved',
               'name': 'FormEntry saved',
+              'description': 'Signals successful saving of form entry data.',
+              'synonyms': 'saved, persisted, submitted, confirmed',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'saved, persisted, submitted, confirmed',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a failure to save form entry data.',
               'key': 'FormEntrySaveFailed',
               'name': 'FormEntry save failed',
+              'description': 'Indicates a failure to save form entry data.',
+              'synonyms': 'error, failure, rejected, invalid',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -760,90 +608,82 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, rejected, invalid',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'editing',
-            },
-            {
-              'name': 'submitted',
             },
           ],
           'transitions': [
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
-                  {
-                    'emit': {
-                      'failure': 'FormEntryLoadFailed',
-                      'success': 'FormEntryLoaded',
-                    },
-                  },
-                ],
-                [
-                  'fetch',
-                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
-                  {
-                    'emit': {
-                      'failure': 'FormEntryLoadFailed',
-                      'success': 'FormEntryLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'name': '@config.icon',
-                            'size': 'xl',
-                            'type': 'icon',
-                          },
-                          {
-                            'content': '@config.title',
-                            'type': 'typography',
-                            'variant': 'h2',
-                          },
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
-                      },
-                      {
-                        'type': 'divider',
-                      },
-                      {
-                        'cancelEvent': 'CANCEL',
-                        'cancelLabel': '@config.cancelLabel',
-                        'fields': '@config.fields',
-                        'mode': 'create',
-                        'showCancel': '@config.showCancel',
-                        'submitEvent': 'SUBMIT',
-                        'submitLabel': '@config.submitLabel',
-                        'type': 'form-section',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
+              'from': 'editing',
+              'to': 'editing',
               'event': 'INIT',
-              'from': 'editing',
-              'to': 'editing',
+              'effects': [
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FormEntryLoadFailed',
+                      'success': 'FormEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'success': 'FormEntryLoaded',
+                      'failure': 'FormEntryLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': '@config.icon',
+                            'type': 'icon',
+                            'size': 'xl',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': '@config.title',
+                          },
+                        ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cancelEvent': 'CANCEL',
+                        'submitEvent': 'SUBMIT',
+                        'showCancel': '@config.showCancel',
+                        'cancelLabel': '@config.cancelLabel',
+                        'type': 'form-section',
+                        'submitLabel': '@config.submitLabel',
+                        'fields': '@config.fields',
+                        'mode': 'create',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'editing',
+              'to': 'editing',
+              'event': 'CANCEL',
               'effects': [
                 [
                   'fetch',
@@ -859,14 +699,16 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
                             'name': '@config.icon',
-                            'size': 'xl',
                             'type': 'icon',
+                            'size': 'xl',
                           },
                           {
                             'content': '@config.title',
@@ -875,6 +717,7 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                           },
                         ],
                         'direction': 'horizontal',
+                        'align': 'center',
                         'gap': 'sm',
                         'type': 'stack',
                       },
@@ -882,27 +725,24 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                         'type': 'divider',
                       },
                       {
-                        'cancelEvent': 'CANCEL',
-                        'cancelLabel': '@config.cancelLabel',
-                        'fields': '@config.fields',
-                        'mode': 'create',
-                        'showCancel': '@config.showCancel',
-                        'submitEvent': 'SUBMIT',
                         'submitLabel': '@config.submitLabel',
+                        'showCancel': '@config.showCancel',
+                        'fields': '@config.fields',
+                        'cancelLabel': '@config.cancelLabel',
+                        'cancelEvent': 'CANCEL',
                         'type': 'form-section',
+                        'mode': 'create',
+                        'submitEvent': 'SUBMIT',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'CANCEL',
-              'from': 'editing',
-              'to': 'editing',
             },
             {
+              'from': 'editing',
+              'to': 'submitted',
+              'event': 'SUBMIT',
               'effects': [
                 [
                   'persist',
@@ -921,132 +761,63 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                   'main',
                   {
                     'align': 'center',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
+                        'type': 'icon',
                         'name': 'check-circle',
                         'size': 'xl',
-                        'type': 'icon',
                       },
                       {
-                        'content': '@config.successTitle',
                         'type': 'typography',
                         'variant': 'h2',
+                        'content': '@config.successTitle',
                       },
                       {
-                        'message': '@config.successMessage',
                         'type': 'alert',
+                        'message': '@config.successMessage',
                         'variant': 'success',
                       },
                       {
-                        'action': 'RESET',
-                        'icon': 'plus',
-                        'label': '@config.newEntryLabel',
                         'type': 'button',
+                        'icon': 'plus',
                         'variant': 'primary',
+                        'action': 'RESET',
+                        'label': '@config.newEntryLabel',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SUBMIT',
-              'from': 'editing',
-              'to': 'submitted',
             },
             {
+              'from': 'editing',
+              'to': 'editing',
               'event': 'FormEntryLoaded',
-              'from': 'editing',
-              'to': 'editing',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'toast',
-                  {
-                    'dismissible': true,
-                    'message': 'Failed to load form',
-                    'type': 'alert',
-                    'variant': 'error',
-                  },
-                ],
-              ],
+              'from': 'editing',
+              'to': 'editing',
               'event': 'FormEntryLoadFailed',
-              'from': 'editing',
-              'to': 'editing',
-            },
-            {
               'effects': [
                 [
-                  'fetch',
-                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
-                  {
-                    'emit': {
-                      'failure': 'FormEntryLoadFailed',
-                      'success': 'FormEntryLoaded',
-                    },
-                  },
-                ],
-                [
-                  'fetch',
-                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
-                  {
-                    'emit': {
-                      'failure': 'FormEntryLoadFailed',
-                      'success': 'FormEntryLoaded',
-                    },
-                  },
-                ],
-                [
                   'render-ui',
-                  'main',
+                  'toast',
                   {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'name': '@config.icon',
-                            'size': 'xl',
-                            'type': 'icon',
-                          },
-                          {
-                            'content': '@config.title',
-                            'type': 'typography',
-                            'variant': 'h2',
-                          },
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
-                      },
-                      {
-                        'type': 'divider',
-                      },
-                      {
-                        'cancelEvent': 'CANCEL',
-                        'cancelLabel': '@config.cancelLabel',
-                        'fields': '@config.fields',
-                        'mode': 'create',
-                        'showCancel': '@config.showCancel',
-                        'submitEvent': 'SUBMIT',
-                        'submitLabel': '@config.submitLabel',
-                        'type': 'form-section',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
+                    'message': 'Failed to load form',
+                    'dismissible': true,
+                    'type': 'alert',
+                    'variant': 'error',
                   },
                 ],
               ],
+            },
+            {
+              'from': 'submitted',
+              'to': 'editing',
               'event': 'INIT',
-              'from': 'submitted',
-              'to': 'editing',
-            },
-            {
               'effects': [
                 [
                   'fetch',
@@ -1063,8 +834,8 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                   ('FormEntry' satisfies _StdFormAdvancedEntityName),
                   {
                     'emit': {
-                      'failure': 'FormEntryLoadFailed',
                       'success': 'FormEntryLoaded',
+                      'failure': 'FormEntryLoadFailed',
                     },
                   },
                 ],
@@ -1072,14 +843,16 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
-                            'name': '@config.icon',
-                            'size': 'xl',
                             'type': 'icon',
+                            'size': 'xl',
+                            'name': '@config.icon',
                           },
                           {
                             'content': '@config.title',
@@ -1087,58 +860,285 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                             'variant': 'h2',
                           },
                         ],
+                        'align': 'center',
                         'direction': 'horizontal',
                         'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cancelLabel': '@config.cancelLabel',
+                        'mode': 'create',
+                        'fields': '@config.fields',
+                        'cancelEvent': 'CANCEL',
+                        'showCancel': '@config.showCancel',
+                        'submitLabel': '@config.submitLabel',
+                        'submitEvent': 'SUBMIT',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'submitted',
+              'to': 'editing',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'FormEntryLoadFailed',
+                      'success': 'FormEntryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'fetch',
+                  ('FormEntry' satisfies _StdFormAdvancedEntityName),
+                  {
+                    'emit': {
+                      'success': 'FormEntryLoaded',
+                      'failure': 'FormEntryLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
                         'type': 'stack',
+                        'children': [
+                          {
+                            'name': '@config.icon',
+                            'type': 'icon',
+                            'size': 'xl',
+                          },
+                          {
+                            'content': '@config.title',
+                            'variant': 'h2',
+                            'type': 'typography',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'cancelEvent': 'CANCEL',
-                        'cancelLabel': '@config.cancelLabel',
-                        'fields': '@config.fields',
                         'mode': 'create',
-                        'showCancel': '@config.showCancel',
-                        'submitEvent': 'SUBMIT',
                         'submitLabel': '@config.submitLabel',
                         'type': 'form-section',
+                        'showCancel': '@config.showCancel',
+                        'fields': '@config.fields',
+                        'cancelLabel': '@config.cancelLabel',
+                        'submitEvent': 'SUBMIT',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'RESET',
-              'from': 'submitted',
-              'to': 'editing',
             },
             {
-              'event': 'FormEntrySaved',
               'from': 'submitted',
               'to': 'submitted',
+              'event': 'FormEntrySaved',
             },
             {
+              'from': 'submitted',
+              'to': 'submitted',
+              'event': 'FormEntrySaveFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
                     'dismissible': true,
-                    'message': 'Failed to save form entry',
-                    'type': 'alert',
                     'variant': 'error',
+                    'type': 'alert',
+                    'message': 'Failed to save form entry',
                   },
                 ],
               ],
-              'event': 'FormEntrySaveFailed',
-              'from': 'submitted',
-              'to': 'submitted',
             },
           ],
         },
+        'config': {
+          'showCancel': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show cancel',
+            'description': 'Whether the form shows a cancel button',
+            'tier': 'presentation',
+          },
+          'successTitle': {
+            'type': 'string',
+            'default': 'Form Submitted',
+            'label': 'Confirmation title',
+            'description': 'Heading shown after a successful submit',
+            'tier': 'presentation',
+          },
+          'fields': {
+            'type': '[FieldSpec]',
+            'default': [
+              {
+                'label': 'Name',
+                'name': 'name',
+              },
+              {
+                'label': 'Description',
+                'name': 'description',
+              },
+              {
+                'name': 'status',
+                'type': 'enum',
+                'values': [
+                  'active',
+                  'inactive',
+                  'pending',
+                ],
+                'label': 'Status',
+              },
+              {
+                'type': 'textarea',
+                'label': 'Notes',
+                'name': 'notes',
+              },
+              {
+                'type': 'number',
+                'name': 'age',
+                'label': 'Age',
+              },
+              {
+                'name': 'isActive',
+                'label': 'Is Active',
+                'type': 'boolean',
+              },
+              {
+                'label': 'Birth Date',
+                'type': 'date',
+                'name': 'birthDate',
+              },
+              {
+                'name': 'priority',
+                'label': 'Priority',
+                'type': 'enum',
+                'values': [
+                  'low',
+                  'medium',
+                  'high',
+                  'critical',
+                ],
+              },
+              {
+                'relation': {
+                  'entity': 'FormEntry',
+                  'cardinality': 'one',
+                },
+                'label': 'Category ID',
+                'type': 'relation',
+                'name': 'categoryId',
+              },
+            ],
+            'label': 'Form fields',
+            'description': 'Inputs to render; each entry follows the form-section field schema',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'format': {
+                  'name': 'format',
+                  'type': 'string',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'header': {
+                  'name': 'header',
+                  'type': 'string',
+                  'required': false,
+                },
+                'key': {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'successMessage': {
+            'type': 'string',
+            'default': 'Your form has been submitted successfully.',
+            'label': 'Confirmation message',
+            'description': 'Message shown after a successful submit',
+            'tier': 'presentation',
+          },
+          'newEntryLabel': {
+            'type': 'string',
+            'default': 'New Entry',
+            'label': 'New entry button',
+            'description': 'Label on the button that starts another entry after a submit',
+            'tier': 'presentation',
+          },
+          'icon': {
+            'type': 'string',
+            'default': 'file-text',
+            'label': 'Header icon',
+            'description': 'Icon shown beside the form title',
+            'tier': 'presentation',
+          },
+          'cancelLabel': {
+            'type': 'string',
+            'label': 'Cancel button',
+            'description': 'Label on the cancel button; unset keeps the translated Cancel',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Form',
+            'label': 'Form title',
+            'description': 'Heading shown above the form',
+            'tier': 'presentation',
+          },
+          'submitLabel': {
+            'type': 'string',
+            'label': 'Submit button',
+            'description': 'Label on the submit button; unset keeps the translated Save',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

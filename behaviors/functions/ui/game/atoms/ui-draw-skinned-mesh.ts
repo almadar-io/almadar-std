@@ -39,21 +39,21 @@ export type StdUiDrawSkinnedMeshEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawSkinnedMeshConfig {
-  asset?: EntityRow;
-  /** Default: `[{"name":"Name","parent":"Parent","pivot":[1,2],"tip":[1,2]},{"name":"Name 2","parent":"Parent 2","pivot":[1,2],"tip":[1,2]}]` */
-  bones?: EntityRow[];
-  clip?: EntityRow;
-  clipName?: string;
   frame?: number;
-  ghost?: EntityRow;
-  mesh?: EntityRow;
   meshUrl?: string;
-  opacity?: number;
+  asset?: EntityRow;
+  mesh?: EntityRow;
+  weightsOverlay?: boolean;
+  /** Default: `{"y":1,"z":1,"x":1}` */
+  position?: EntityRow;
+  /** Default: `[{"name":"Name","pivot":[1,2],"tip":[1,2],"parent":"Parent"},{"pivot":[1,2],"tip":[1,2],"parent":"Parent 2","name":"Name 2"}]` */
+  bones?: EntityRow[];
+  ghost?: EntityRow;
+  clipName?: string;
   /** Default: `{"item":1}` */
   pose?: Record<string, TraitConfig>;
-  /** Default: `{"x":1,"y":1,"z":1}` */
-  position?: EntityRow;
-  weightsOverlay?: boolean;
+  opacity?: number;
+  clip?: EntityRow;
 }
 
 /**

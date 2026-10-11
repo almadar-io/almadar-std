@@ -220,18 +220,18 @@ export function stdPageTreatPageTreatOrbital(params: StdPageTreatPageTreatOrbita
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
+            'name': 'treated',
+            'type': 'number',
             'default': 0,
             'description': 'How many treatments were applied',
-            'name': 'treated',
             'synonyms': 'count, applied',
-            'type': 'number',
           },
           {
+            'name': 'errorMessage',
+            'type': 'string',
             'default': '',
             'description': 'Why the last treatment failed; blank = none',
-            'name': 'errorMessage',
             'synonyms': 'error, failure reason',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -242,17 +242,7 @@ export function stdPageTreatPageTreatOrbital(params: StdPageTreatPageTreatOrbita
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'statusSlot': {
-            'default': 'main',
-            'description': 'Where the atom shows its one-line status; an organism running it in the background sends it to `system`',
-            'label': 'Status slot',
-            'synonyms': 'status area, slot',
-            'tier': 'presentation',
-            'type': 'slot',
-          },
-        },
+        'name': 'PageTreat',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -276,8 +266,8 @@ export function stdPageTreatPageTreatOrbital(params: StdPageTreatPageTreatOrbita
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.statusSlot',
+            'resolved': false,
           },
           {
             'kind': 'set',
@@ -288,420 +278,464 @@ export function stdPageTreatPageTreatOrbital(params: StdPageTreatPageTreatOrbita
             'resource': '@entity.treated',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'PageTreatRecord',
         'emits': [
           {
-            'description': 'The page service applied the treatment',
             'event': 'APPLIED',
+            'description': 'The page service applied the treatment',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'applied',
-                'required': true,
                 'type': 'boolean',
+                'required': true,
               },
               {
                 'name': 'tab',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'elementId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'treatment',
                 'type': 'string',
+                'values': [
+                  'hide',
+                  'blur',
+                  'highlight',
+                  'label',
+                  'restore',
+                ],
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The page service applied a list of treatments',
             'event': 'APPLIED_MANY',
+            'description': 'The page service applied a list of treatments',
+            'tier': 'secondary',
             'payloadSchema': [
               {
-                'entity': 'PageElementRef',
                 'name': 'applied',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'tab',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'elementId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'type': '[object]',
+                'entity': 'PageElementRef',
               },
               {
-                'entity': 'PageElementRef',
                 'name': 'missing',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'tab',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'elementId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'type': '[object]',
+                'entity': 'PageElementRef',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The page service could not apply the treatment',
             'event': 'APPLY_FAILED',
+            'description': 'The page service could not apply the treatment',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The element now shows the treatment (or, for restore, is back as it was)',
             'event': 'TREATED',
-            'payloadSchema': [
-              {
-                'name': 'tab',
-                'required': true,
-                'type': 'number',
-              },
-              {
-                'name': 'elementId',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'treatment',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
+            'description': 'The element now shows the treatment (or, for restore, is back as it was)',
             'synonyms': 'hidden, blurred, highlighted, labelled, restored',
             'tier': 'primary',
-          },
-          {
-            'description': 'Each listed element now shows its treatment; `missing` lists those that had left their page (or whose tab closed)',
-            'event': 'TREATED_MANY',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'PageElementRef',
-                'name': 'applied',
-                'properties': [
-                  {
-                    'name': 'tab',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'elementId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                ],
-                'type': '[object]',
+                'name': 'tab',
+                'type': 'number',
+                'required': true,
               },
               {
-                'entity': 'PageElementRef',
-                'name': 'missing',
+                'name': 'elementId',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'treatment',
+                'type': 'string',
+                'values': [
+                  'hide',
+                  'blur',
+                  'highlight',
+                  'label',
+                  'restore',
+                ],
+              },
+            ],
+          },
+          {
+            'event': 'TREATED_MANY',
+            'description': 'Each listed element now shows its treatment; `missing` lists those that had left their page (or whose tab closed)',
+            'synonyms': 'hidden, blurred, restored, treated',
+            'tier': 'primary',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'applied',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'tab',
-                    'required': true,
                     'type': 'number',
+                    'required': true,
                   },
                   {
                     'name': 'elementId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
+                'entity': 'PageElementRef',
+              },
+              {
+                'name': 'missing',
                 'type': '[object]',
+                'properties': [
+                  {
+                    'name': 'tab',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  {
+                    'name': 'elementId',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+                'entity': 'PageElementRef',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'hidden, blurred, restored, treated',
-            'tier': 'primary',
           },
           {
-            'description': 'The treatment could not be applied (the element is gone, or the tab closed)',
             'event': 'TREAT_FAILED',
+            'description': 'The treatment could not be applied (the element is gone, or the tab closed)',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'PageTreatRecord',
-        'name': 'PageTreat',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Treat one page element; `label` is the text shown with it (for example why it was hidden)',
-              'external': true,
               'key': 'TREAT',
               'name': 'Treat',
+              'description': 'Treat one page element; `label` is the text shown with it (for example why it was hidden)',
               'payloadSchema': [
                 {
                   'name': 'tab',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'elementId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'treatment',
                   'type': 'string',
+                  'values': [
+                    'hide',
+                    'blur',
+                    'highlight',
+                    'label',
+                    'restore',
+                  ],
                 },
                 {
                   'name': 'label',
                   'type': 'string',
                 },
               ],
+              'external': true,
             },
             {
-              'description': 'The page service applied the treatment',
               'key': 'APPLIED',
               'name': 'Applied',
+              'description': 'The page service applied the treatment',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'applied',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
                 {
                   'name': 'tab',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'elementId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'treatment',
                   'type': 'string',
+                  'values': [
+                    'hide',
+                    'blur',
+                    'highlight',
+                    'label',
+                    'restore',
+                  ],
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Treat a list of page elements in one call, each with its own treatment and label',
-              'external': true,
               'key': 'TREAT_MANY',
               'name': 'Treat Many',
+              'description': 'Treat a list of page elements in one call, each with its own treatment and label',
               'payloadSchema': [
                 {
                   'name': 'items',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'tab',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'elementId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'treatment',
                       'type': 'string',
+                      'values': [
+                        'hide',
+                        'blur',
+                        'highlight',
+                        'label',
+                        'restore',
+                      ],
                     },
                     {
                       'name': 'label',
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
+              'external': true,
             },
             {
-              'description': 'The page service applied a list of treatments',
               'key': 'APPLIED_MANY',
               'name': 'Applied Many',
+              'description': 'The page service applied a list of treatments',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
-                  'entity': 'PageElementRef',
                   'name': 'applied',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'tab',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'elementId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'PageElementRef',
                 },
                 {
-                  'entity': 'PageElementRef',
                   'name': 'missing',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'tab',
-                      'required': true,
                       'type': 'number',
+                      'required': true,
                     },
                     {
                       'name': 'elementId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'PageElementRef',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'The page service could not apply the treatment',
               'key': 'APPLY_FAILED',
               'name': 'Apply Failed',
+              'description': 'The page service could not apply the treatment',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'The element now shows the treatment (or, for restore, is back as it was)',
               'key': 'TREATED',
               'name': 'Treated',
+              'description': 'The element now shows the treatment (or, for restore, is back as it was)',
+              'synonyms': 'hidden, blurred, highlighted, labelled, restored',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'tab',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'elementId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'treatment',
                   'type': 'string',
+                  'values': [
+                    'hide',
+                    'blur',
+                    'highlight',
+                    'label',
+                    'restore',
+                  ],
                 },
               ],
-              'synonyms': 'hidden, blurred, highlighted, labelled, restored',
-              'tier': 'primary',
             },
             {
-              'description': 'Each listed element now shows its treatment; `missing` lists those that had left their page (or whose tab closed)',
               'key': 'TREATED_MANY',
               'name': 'Treated Many',
-              'payloadSchema': [
-                {
-                  'entity': 'PageElementRef',
-                  'name': 'applied',
-                  'properties': [
-                    {
-                      'name': 'tab',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'elementId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-                {
-                  'entity': 'PageElementRef',
-                  'name': 'missing',
-                  'properties': [
-                    {
-                      'name': 'tab',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'elementId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
+              'description': 'Each listed element now shows its treatment; `missing` lists those that had left their page (or whose tab closed)',
               'synonyms': 'hidden, blurred, restored, treated',
               'tier': 'primary',
+              'payloadSchema': [
+                {
+                  'name': 'applied',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'tab',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    {
+                      'name': 'elementId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'PageElementRef',
+                },
+                {
+                  'name': 'missing',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'tab',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    {
+                      'name': 'elementId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'PageElementRef',
+                },
+              ],
             },
             {
-              'description': 'The treatment could not be applied (the element is gone, or the tab closed)',
               'key': 'TREAT_FAILED',
               'name': 'Treat Failed',
+              'description': 'The treatment could not be applied (the element is gone, or the tab closed)',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
             },
           ],
           'transitions': [
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   '@config.statusSlot',
                   {
-                    'content': 'Ready to treat page elements',
+                    'variant': 'body',
                     'role': 'status',
                     'type': 'typography',
-                    'variant': 'body',
+                    'content': 'Ready to treat page elements',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'TREAT',
               'effects': [
                 [
                   'call-service',
@@ -709,23 +743,23 @@ export function stdPageTreatPageTreatOrbital(params: StdPageTreatPageTreatOrbita
                   'apply',
                   {
                     'elementId': '@payload.elementId',
-                    'label': '@payload.label',
                     'tab': '@payload.tab',
                     'treatment': '@payload.treatment',
+                    'label': '@payload.label',
                   },
                   {
                     'emit': {
-                      'failure': 'APPLY_FAILED',
                       'success': 'APPLIED',
+                      'failure': 'APPLY_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'TREAT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'APPLIED',
               'effects': [
                 [
                   'set',
@@ -746,11 +780,11 @@ export function stdPageTreatPageTreatOrbital(params: StdPageTreatPageTreatOrbita
                   },
                 ],
               ],
-              'event': 'APPLIED',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'TREAT_MANY',
               'effects': [
                 [
                   'call-service',
@@ -761,17 +795,17 @@ export function stdPageTreatPageTreatOrbital(params: StdPageTreatPageTreatOrbita
                   },
                   {
                     'emit': {
-                      'failure': 'APPLY_FAILED',
                       'success': 'APPLIED_MANY',
+                      'failure': 'APPLY_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'TREAT_MANY',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'APPLIED_MANY',
               'effects': [
                 [
                   'set',
@@ -789,16 +823,16 @@ export function stdPageTreatPageTreatOrbital(params: StdPageTreatPageTreatOrbita
                   'emit',
                   'TREATED_MANY',
                   {
-                    'applied': '@payload.applied',
                     'missing': '@payload.missing',
+                    'applied': '@payload.applied',
                   },
                 ],
               ],
-              'event': 'APPLIED_MANY',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'APPLY_FAILED',
               'effects': [
                 [
                   'set',
@@ -816,23 +850,31 @@ export function stdPageTreatPageTreatOrbital(params: StdPageTreatPageTreatOrbita
                   'render-ui',
                   '@config.statusSlot',
                   {
+                    'role': 'status',
                     'content': [
                       'str/concat',
                       'Couldn\'t treat a page element: ',
                       '@payload.error',
                     ],
-                    'role': 'status',
                     'type': 'typography',
                     'variant': 'body',
                   },
                 ],
               ],
-              'event': 'APPLY_FAILED',
-              'from': 'ready',
-              'to': 'ready',
             },
           ],
         },
+        'config': {
+          'statusSlot': {
+            'type': 'slot',
+            'default': 'main',
+            'label': 'Status slot',
+            'description': 'Where the atom shows its one-line status; an organism running it in the background sends it to `system`',
+            'synonyms': 'status area, slot',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

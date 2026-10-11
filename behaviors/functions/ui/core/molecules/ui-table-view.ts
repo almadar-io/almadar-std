@@ -77,73 +77,73 @@ export interface StdUiTableViewTableViewLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  accepts?: string;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  dir?: 'ltr' | 'rtl' | 'auto';
-  dndItemIdField?: string;
-  dndRoot?: boolean;
   dragGroup?: string;
-  dropEvent?: string;
-  emptyAction?: EntityRow;
-  emptyDescription?: string;
-  emptyIcon?: unknown;
-  emptyMessage?: string;
+  sortDirection?: 'asc' | 'desc';
   emptyTitle?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `[]` */
-  fields?: EntityRow[];
-  groupBy?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `"ITEM_CLICK"` */
-  itemClickEvent?: string;
-  lang?: string;
+  ariaSelected?: boolean;
+  maxInlineActions?: number;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
-  maxInlineActions?: number;
-  /** Default: `0` */
-  pageSize?: number;
-  positionEvent?: string;
+  ariaLabelledby?: string;
+  dropEvent?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `[]` */
+  selectedIds?: string[];
+  ariaBusy?: boolean;
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  accepts?: string;
+  className?: string;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
+  emptyIcon?: unknown;
+  emptyMessage?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"SORT"` */
+  sortEvent?: string;
+  ariaDescribedby?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   /** Default: `{}` */
   relationsData?: Record<string, TraitConfig>;
   reorderEvent?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `"SELECT"` */
-  selectEvent?: string;
-  /** Default: `false` */
-  selectable?: boolean;
   /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `true` */
-  selfFetch?: boolean;
-  /** Default: `"table"` */
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  sortColumn?: string;
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `"SORT"` */
-  sortEvent?: string;
-  sortable?: boolean;
-  /** Default: `"auto"` */
-  surface?: 'auto' | 'none';
-  tabIndex?: number;
+  fields?: EntityRow[];
   /** Default: `""` */
   viewerRole?: string;
+  dndItemIdField?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  lang?: string;
+  /** Default: `"ITEM_CLICK"` */
+  itemClickEvent?: string;
+  ariaLabel?: string;
+  tabIndex?: number;
+  enterDelay?: number;
+  /** Default: `false` */
+  selectable?: boolean;
+  groupBy?: string;
+  /** Default: `"table"` */
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  dndRoot?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  emptyAction?: EntityRow;
+  sortable?: boolean;
+  sortColumn?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  positionEvent?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `0` */
+  pageSize?: number;
+  emptyDescription?: string;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
+  /** Default: `"SELECT"` */
+  selectEvent?: string;
+  error?: EntityRow;
+  /** Default: `true` */
+  selfFetch?: boolean;
 }
 
 /**

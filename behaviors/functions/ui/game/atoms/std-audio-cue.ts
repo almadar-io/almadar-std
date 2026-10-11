@@ -48,14 +48,14 @@ export interface StdAudioCueAudioMutedPayload {
 export interface StdAudioCueConfig {
   /** Default: `""` */
   baseUrl?: string;
-  /** Default: `""` */
-  initialMusic?: string;
-  /** Default: `false` */
-  initialMuted?: boolean;
   /** Default: `1` */
   initialVolume?: number;
   /** Default: `{}` */
   manifest?: Record<string, TraitConfig>;
+  /** Default: `""` */
+  initialMusic?: string;
+  /** Default: `false` */
+  initialMuted?: boolean;
 }
 
 /**

@@ -46,62 +46,62 @@ export interface StdUiStatCardStatCardLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStatCardConfig {
-  action?: EntityRow;
-  /** Default: `{}` */
-  activeFilters?: Record<string, TraitConfig>;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
   compact?: boolean;
-  currentValue?: number;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  icon?: unknown;
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
-  /** Default: `false` */
-  invertTrend?: boolean;
-  isLoading?: boolean;
-  label?: string;
-  lang?: string;
-  /** Default: `[]` */
-  metrics?: EntityRow[];
-  pageProp?: number;
-  pageSize?: number;
-  previousValue?: number;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  searchValue?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
+  sortDirection?: 'asc' | 'desc';
+  subtitle?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   /** Default: `true` */
   selfFetch?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `[]` */
-  sparklineData?: number[];
-  subtitle?: string;
-  /** Default: `"auto"` */
-  surface?: 'auto' | 'none';
-  tabIndex?: number;
-  title?: string;
-  totalCount?: number;
-  trend?: number;
-  trendDirection?: 'up' | 'down' | 'neutral';
   /** Default: `[]` */
   value?: string[];
+  /** Default: `{}` */
+  activeFilters?: Record<string, TraitConfig>;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `false` */
+  invertTrend?: boolean;
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
+  /** Default: `[]` */
+  metrics?: EntityRow[];
+  ariaLabelledby?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  trendDirection?: 'up' | 'down' | 'neutral';
+  action?: EntityRow;
+  error?: EntityRow;
+  pageSize?: number;
+  ariaBusy?: boolean;
+  previousValue?: number;
+  sortBy?: string;
+  ariaLabel?: string;
+  tabIndex?: number;
+  currentValue?: number;
+  className?: string;
+  totalCount?: number;
+  trend?: number;
+  isLoading?: boolean;
+  enterDelay?: number;
+  lang?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaExpanded?: boolean;
+  ariaDescribedby?: string;
+  label?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  searchValue?: string;
+  title?: string;
+  icon?: unknown;
+  pageProp?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaHidden?: boolean;
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  ariaSelected?: boolean;
+  /** Default: `[]` */
+  sparklineData?: number[];
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
 }
 
 type _StdUiStatCardEntityName = 'StatCardItem';
@@ -168,8 +168,8 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -180,54 +180,307 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
     } as Entity,
     traits: [
       {
+        'name': 'StatCardRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'StatCardItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
+        'linkedEntity': 'StatCardItem',
+        'emits': [
+          {
+            'event': 'StatCardLoaded',
+            'description': 'StatCard rows finished loading; payload.data holds the collection.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[object]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+                'entity': 'StatCardItem',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'StatCardLoaded',
+              'name': 'Stat card loaded',
+              'description': 'StatCard rows finished loading; payload.data holds the collection.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  ],
+                  'entity': 'StatCardItem',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': '@config.selfFetch',
+              'effects': [
+                [
+                  'fetch',
+                  ('StatCardItem' satisfies _StdUiStatCardEntityName),
+                  {
+                    'emit': {
+                      'success': 'StatCardLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'aria-live': '@config.ariaLive',
+                    'className': '@config.className',
+                    'totalCount': '@config.totalCount',
+                    'lang': '@config.lang',
+                    'subtitle': '@config.subtitle',
+                    'activeFilters': '@config.activeFilters',
+                    'aria-hidden': '@config.ariaHidden',
+                    'skeleton': '@config.skeleton',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'entity': '@entity',
+                    'aria-current': '@config.ariaCurrent',
+                    'aria-pressed': '@config.ariaPressed',
+                    'value': '@config.value',
+                    'currentValue': '@config.currentValue',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'selectedIds': '@config.selectedIds',
+                    'aria-busy': '@config.ariaBusy',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-selected': '@config.ariaSelected',
+                    'metrics': '@config.metrics',
+                    'sparklineData': '@config.sparklineData',
+                    'enterDelay': '@config.enterDelay',
+                    'iconColor': '@config.iconColor',
+                    'error': '@config.error',
+                    'type': 'stat-card',
+                    'tabIndex': '@config.tabIndex',
+                    'title': '@config.title',
+                    'sortBy': '@config.sortBy',
+                    'invertTrend': '@config.invertTrend',
+                    'role': '@config.role',
+                    'label': '@config.label',
+                    'surface': '@config.surface',
+                    'pageSize': '@config.pageSize',
+                    'page': '@config.pageProp',
+                    'trendDirection': '@config.trendDirection',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'action': '@config.action',
+                    'compact': '@config.compact',
+                    'icon': '@config.icon',
+                    'enter': '@config.enter',
+                    'iconBg': '@config.iconBg',
+                    'dir': '@config.dir',
+                    'trend': '@config.trend',
+                    'searchValue': '@config.searchValue',
+                    'sortDirection': '@config.sortDirection',
+                    'previousValue': '@config.previousValue',
+                    'isLoading': '@config.isLoading',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'dir': '@config.dir',
+                    'icon': '@config.icon',
+                    'compact': '@config.compact',
+                    'aria-pressed': '@config.ariaPressed',
+                    'sortBy': '@config.sortBy',
+                    'iconBg': '@config.iconBg',
+                    'title': '@config.title',
+                    'role': '@config.role',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'sparklineData': '@config.sparklineData',
+                    'currentValue': '@config.currentValue',
+                    'isLoading': '@config.isLoading',
+                    'label': '@config.label',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'value': '@config.value',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'tabIndex': '@config.tabIndex',
+                    'error': '@config.error',
+                    'skeleton': '@config.skeleton',
+                    'totalCount': '@config.totalCount',
+                    'aria-busy': '@config.ariaBusy',
+                    'trend': '@config.trend',
+                    'page': '@config.pageProp',
+                    'subtitle': '@config.subtitle',
+                    'pageSize': '@config.pageSize',
+                    'sortDirection': '@config.sortDirection',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'surface': '@config.surface',
+                    'activeFilters': '@config.activeFilters',
+                    'trendDirection': '@config.trendDirection',
+                    'aria-label': '@config.ariaLabel',
+                    'entity': '@entity',
+                    'aria-hidden': '@config.ariaHidden',
+                    'enter': '@config.enter',
+                    'metrics': '@config.metrics',
+                    'enterDelay': '@config.enterDelay',
+                    'iconColor': '@config.iconColor',
+                    'lang': '@config.lang',
+                    'aria-live': '@config.ariaLive',
+                    'className': '@config.className',
+                    'action': '@config.action',
+                    'invertTrend': '@config.invertTrend',
+                    'type': 'stat-card',
+                    'aria-current': '@config.ariaCurrent',
+                    'previousValue': '@config.previousValue',
+                    'aria-selected': '@config.ariaSelected',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'StatCardLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'error': '@config.error',
+                    'page': '@config.pageProp',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'totalCount': '@config.totalCount',
+                    'invertTrend': '@config.invertTrend',
+                    'trend': '@config.trend',
+                    'pageSize': '@config.pageSize',
+                    'role': '@config.role',
+                    'aria-label': '@config.ariaLabel',
+                    'compact': '@config.compact',
+                    'aria-hidden': '@config.ariaHidden',
+                    'title': '@config.title',
+                    'subtitle': '@config.subtitle',
+                    'entity': '@payload.data',
+                    'action': '@config.action',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'activeFilters': '@config.activeFilters',
+                    'surface': '@config.surface',
+                    'aria-live': '@config.ariaLive',
+                    'sparklineData': '@config.sparklineData',
+                    'trendDirection': '@config.trendDirection',
+                    'selectedIds': '@config.selectedIds',
+                    'tabIndex': '@config.tabIndex',
+                    'aria-current': '@config.ariaCurrent',
+                    'lang': '@config.lang',
+                    'aria-pressed': '@config.ariaPressed',
+                    'type': 'stat-card',
+                    'skeleton': '@config.skeleton',
+                    'enterDelay': '@config.enterDelay',
+                    'iconColor': '@config.iconColor',
+                    'sortBy': '@config.sortBy',
+                    'label': '@config.label',
+                    'enter': '@config.enter',
+                    'iconBg': '@config.iconBg',
+                    'metrics': '@config.metrics',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'isLoading': '@config.isLoading',
+                    'value': '@config.value',
+                    'className': '@config.className',
+                    'aria-busy': '@config.ariaBusy',
+                    'icon': '@config.icon',
+                    'currentValue': '@config.currentValue',
+                    'dir': '@config.dir',
+                    'searchValue': '@config.searchValue',
+                    'previousValue': '@config.previousValue',
+                    'sortDirection': '@config.sortDirection',
+                    'aria-selected': '@config.ariaSelected',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
         'config': {
-          'action': {
-            'description': 'Action button',
-            'label': 'Action',
-            'properties': {
-              'event': {
-                'name': 'event',
-                'required': false,
-                'type': 'string',
-              },
-              'label': {
-                'name': 'label',
-                'required': true,
-                'type': 'string',
-              },
-              'navigatesTo': {
-                'name': 'navigatesTo',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'StatCardAction',
-          },
-          'activeFilters': {
-            'default': {},
-            'description': 'Active filters',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Active Filters',
-            'tier': 'presentation',
-            'type': 'Map<string,string>',
-          },
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
+          'compact': {
             'type': 'boolean',
+            'label': 'Compact',
+            'description': 'Compact display mode',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'subtitle': {
+            'type': 'string',
+            'label': 'Subtitle',
+            'description': 'Subtitle or description',
+            'tier': 'presentation',
           },
           'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'type': 'string',
             'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
             'synonyms': 'aria-current',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
               'page',
               'step',
@@ -238,106 +491,364 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
               'false',
             ],
           },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
+          'selfFetch': {
             'type': 'boolean',
+            'default': true,
+            'label': 'Fetch its own rows on mount?',
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'tier': 'internal',
           },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
+          'value': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Value',
+            'description': 'Primary value - accepts array from generated code (will use first element or length)',
             'tier': 'presentation',
-            'type': 'boolean',
+            'items': {
+              'type': 'string',
+            },
           },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
+          'activeFilters': {
+            'type': 'Map<string,string>',
+            'default': {},
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
+            'items': {
+              'type': 'string',
+            },
           },
           'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'type': 'string',
             'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
             'synonyms': 'aria-live',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
               'off',
               'polite',
               'assertive',
             ],
           },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
+          'invertTrend': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Invert Trend',
+            'description': 'Whether up is good (green) or bad (red)',
             'tier': 'presentation',
+          },
+          'surface': {
             'type': 'string',
+            'default': 'auto',
+            'label': 'Surface',
+            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out.',
+            'tier': 'presentation',
             'values': [
-              'true',
-              'false',
-              'mixed',
+              'auto',
+              'none',
             ],
           },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
+          'metrics': {
+            'type': '[StatCardMetricsItem]',
+            'default': [],
+            'label': 'Metrics',
+            'description': 'Metrics to display (schema format) - accepts readonly for compatibility with generated const arrays',
             'tier': 'presentation',
-            'type': 'boolean',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'value': {
+                  'name': 'value',
+                  'type': 'string',
+                  'required': false,
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'format': {
+                  'name': 'format',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'aggregate': {
+                  'name': 'aggregate',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'count',
+                    'sum',
+                  ],
+                },
+                'filter': {
+                  'name': 'filter',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'equals': {
+                      'name': 'equals',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'field': {
+                      'name': 'field',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+            },
           },
-          'className': {
-            'description': 'Additional CSS classes',
-            'label': 'Class Name',
-            'tier': 'presentation',
+          'ariaLabelledby': {
             'type': 'string',
-          },
-          'compact': {
-            'description': 'Compact display mode',
-            'label': 'Compact',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
             'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'trendDirection': {
+            'type': 'string',
+            'label': 'Trend Direction',
+            'description': 'Trend direction (overrides calculation)',
+            'tier': 'presentation',
+            'values': [
+              'up',
+              'down',
+              'neutral',
+            ],
+          },
+          'action': {
+            'type': 'StatCardAction',
+            'label': 'Action',
+            'description': 'Action button',
+            'tier': 'presentation',
+            'properties': {
+              'label': {
+                'name': 'label',
+                'type': 'string',
+                'required': true,
+              },
+              'navigatesTo': {
+                'name': 'navigatesTo',
+                'type': 'string',
+                'required': false,
+              },
+              'event': {
+                'name': 'event',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'error': {
+            'type': 'StatCardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'pageSize': {
+            'type': 'number',
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'ariaBusy': {
             'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+          },
+          'previousValue': {
+            'type': 'number',
+            'label': 'Previous Value',
+            'description': 'Previous value for comparison',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'ariaLabel': {
+            'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
           },
           'currentValue': {
-            'description': 'Current value as number for trend calculation',
-            'label': 'Current Value',
-            'tier': 'presentation',
             'type': 'number',
+            'label': 'Current Value',
+            'description': 'Current value as number for trend calculation',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'trend': {
+            'type': 'number',
+            'label': 'Trend',
+            'description': 'Manual trend percentage (overrides calculation)',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
+          },
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
           },
           'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
             'values': [
               'ltr',
               'rtl',
               'auto',
             ],
           },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
             'tier': 'presentation',
+          },
+          'ariaDescribedby': {
             'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+          },
+          'label': {
+            'type': 'string',
+            'label': 'Label',
+            'description': 'Main label',
+            'tier': 'presentation',
+          },
+          'skeleton': {
+            'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
+            'values': [
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
+            ],
+          },
+          'searchValue': {
+            'type': 'string',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'label': 'Title',
+            'description': 'Title (alias for label)',
+            'tier': 'presentation',
+          },
+          'icon': {
+            'type': 'icon',
+            'label': 'Icon',
+            'description': 'Icon to display (Lucide component or icon name string)',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
             'values': [
               'none',
               'fade',
@@ -346,172 +857,11 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
               'slide',
             ],
           },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'error': {
-            'description': 'Error state (UiError)',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'StatCardError',
-          },
-          'icon': {
-            'description': 'Icon to display (Lucide component or icon name string)',
-            'label': 'Icon',
-            'tier': 'presentation',
-            'type': 'icon',
-          },
-          'iconBg': {
-            'default': 'bg-muted',
-            'description': 'Icon background color',
-            'label': 'Icon Bg',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'iconColor': {
-            'default': 'text-foreground',
-            'description': 'Icon color',
-            'label': 'Icon Color',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'invertTrend': {
-            'default': false,
-            'description': 'Whether up is good (green) or bad (red)',
-            'label': 'Invert Trend',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'isLoading': {
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'label': {
-            'description': 'Main label',
-            'label': 'Label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'metrics': {
-            'default': [],
-            'description': 'Metrics to display (schema format) - accepts readonly for compatibility with generated const arrays',
-            'items': {
-              'properties': {
-                'aggregate': {
-                  'name': 'aggregate',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'count',
-                    'sum',
-                  ],
-                },
-                'field': {
-                  'name': 'field',
-                  'required': false,
-                  'type': 'string',
-                },
-                'filter': {
-                  'name': 'filter',
-                  'properties': {
-                    'equals': {
-                      'name': 'equals',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'field': {
-                      'name': 'field',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'format': {
-                  'name': 'format',
-                  'required': false,
-                  'type': 'string',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'value': {
-                  'name': 'value',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Metrics',
-            'tier': 'presentation',
-            'type': '[StatCardMetricsItem]',
-          },
-          'pageProp': {
-            'description': 'Current page number',
-            'label': 'Page',
-            'synonyms': 'page',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'pageSize': {
-            'description': 'Number of items per page',
-            'label': 'Page Size',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'previousValue': {
-            'description': 'Previous value for comparison',
-            'label': 'Previous Value',
-            'tier': 'presentation',
-            'type': 'number',
-          },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -596,408 +946,58 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
               'treeitem',
             ],
           },
-          'searchValue': {
-            'description': 'Current search query value',
-            'label': 'Search Value',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'selectedIds': {
-            'default': [],
-            'description': 'Currently selected item IDs',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Selected Ids',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'selfFetch': {
-            'default': true,
-            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
-            'label': 'Fetch its own rows on mount?',
-            'tier': 'internal',
+          'ariaHidden': {
             'type': 'boolean',
-          },
-          'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
             'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'header',
-              'table',
-              'list',
-              'grid',
-              'detail',
-              'stats',
-              'form',
-              'card',
-              'text',
-              'none',
-            ],
           },
-          'sortBy': {
-            'description': 'Current sort field',
-            'label': 'Sort By',
-            'tier': 'presentation',
+          'iconBg': {
             'type': 'string',
+            'default': 'bg-muted',
+            'label': 'Icon Bg',
+            'description': 'Icon background color',
+            'tier': 'presentation',
           },
-          'sortDirection': {
-            'description': 'Current sort direction',
-            'label': 'Sort Direction',
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
             'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'asc',
-              'desc',
-            ],
           },
           'sparklineData': {
+            'type': '[number]',
             'default': [],
+            'label': 'Sparkline Data',
             'description': 'Sparkline data points for an inline trend chart',
+            'tier': 'presentation',
             'items': {
               'type': 'number',
             },
-            'label': 'Sparkline Data',
-            'tier': 'presentation',
-            'type': '[number]',
           },
-          'subtitle': {
-            'description': 'Subtitle or description',
-            'label': 'Subtitle',
-            'tier': 'presentation',
+          'ariaPressed': {
             'type': 'string',
-          },
-          'surface': {
-            'default': 'auto',
-            'description': 'Content surface: `auto` paints the theme\'s surface behind this block unless it already sits on one (a card, dialog or another block); `none` opts out.',
-            'label': 'Surface',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
-              'auto',
-              'none',
+              'true',
+              'false',
+              'mixed',
             ],
           },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'title': {
-            'description': 'Title (alias for label)',
-            'label': 'Title',
-            'tier': 'presentation',
+          'iconColor': {
             'type': 'string',
-          },
-          'totalCount': {
-            'description': 'Total number of items',
-            'label': 'Total Count',
+            'default': 'text-foreground',
+            'label': 'Icon Color',
+            'description': 'Icon color',
             'tier': 'presentation',
-            'type': 'number',
-          },
-          'trend': {
-            'description': 'Manual trend percentage (overrides calculation)',
-            'label': 'Trend',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'trendDirection': {
-            'description': 'Trend direction (overrides calculation)',
-            'label': 'Trend Direction',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'up',
-              'down',
-              'neutral',
-            ],
-          },
-          'value': {
-            'default': [],
-            'description': 'Primary value - accepts array from generated code (will use first element or length)',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Value',
-            'tier': 'presentation',
-            'type': '[string]',
           },
         },
-        'effectRow': [
-          {
-            'kind': 'fetch',
-            'resource': 'StatCardItem',
-          },
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'emits': [
-          {
-            'description': 'StatCard rows finished loading; payload.data holds the collection.',
-            'event': 'StatCardLoaded',
-            'payloadSchema': [
-              {
-                'entity': 'StatCardItem',
-                'name': 'data',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                ],
-                'type': '[object]',
-              },
-            ],
-            'scope': 'internal',
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'essential',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'StatCardItem',
-        'name': 'StatCardRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'StatCard rows finished loading; payload.data holds the collection.',
-              'key': 'StatCardLoaded',
-              'name': 'Stat card loaded',
-              'payloadSchema': [
-                {
-                  'entity': 'StatCardItem',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('StatCardItem' satisfies _StdUiStatCardEntityName),
-                  {
-                    'emit': {
-                      'success': 'StatCardLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'action': '@config.action',
-                    'activeFilters': '@config.activeFilters',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'compact': '@config.compact',
-                    'currentValue': '@config.currentValue',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'icon': '@config.icon',
-                    'iconBg': '@config.iconBg',
-                    'iconColor': '@config.iconColor',
-                    'invertTrend': '@config.invertTrend',
-                    'isLoading': '@config.isLoading',
-                    'label': '@config.label',
-                    'lang': '@config.lang',
-                    'metrics': '@config.metrics',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'previousValue': '@config.previousValue',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'skeleton': '@config.skeleton',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'sparklineData': '@config.sparklineData',
-                    'subtitle': '@config.subtitle',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'title': '@config.title',
-                    'totalCount': '@config.totalCount',
-                    'trend': '@config.trend',
-                    'trendDirection': '@config.trendDirection',
-                    'type': 'stat-card',
-                    'value': '@config.value',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'guard': '@config.selfFetch',
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'action': '@config.action',
-                    'activeFilters': '@config.activeFilters',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'compact': '@config.compact',
-                    'currentValue': '@config.currentValue',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'icon': '@config.icon',
-                    'iconBg': '@config.iconBg',
-                    'iconColor': '@config.iconColor',
-                    'invertTrend': '@config.invertTrend',
-                    'isLoading': '@config.isLoading',
-                    'label': '@config.label',
-                    'lang': '@config.lang',
-                    'metrics': '@config.metrics',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'previousValue': '@config.previousValue',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'skeleton': '@config.skeleton',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'sparklineData': '@config.sparklineData',
-                    'subtitle': '@config.subtitle',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'title': '@config.title',
-                    'totalCount': '@config.totalCount',
-                    'trend': '@config.trend',
-                    'trendDirection': '@config.trendDirection',
-                    'type': 'stat-card',
-                    'value': '@config.value',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'guard': [
-                'not',
-                '@config.selfFetch',
-              ],
-              'to': 'idle',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'action': '@config.action',
-                    'activeFilters': '@config.activeFilters',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'compact': '@config.compact',
-                    'currentValue': '@config.currentValue',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': '@payload.data',
-                    'error': '@config.error',
-                    'icon': '@config.icon',
-                    'iconBg': '@config.iconBg',
-                    'iconColor': '@config.iconColor',
-                    'invertTrend': '@config.invertTrend',
-                    'isLoading': '@config.isLoading',
-                    'label': '@config.label',
-                    'lang': '@config.lang',
-                    'metrics': '@config.metrics',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'previousValue': '@config.previousValue',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'skeleton': '@config.skeleton',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'sparklineData': '@config.sparklineData',
-                    'subtitle': '@config.subtitle',
-                    'surface': '@config.surface',
-                    'tabIndex': '@config.tabIndex',
-                    'title': '@config.title',
-                    'totalCount': '@config.totalCount',
-                    'trend': '@config.trend',
-                    'trendDirection': '@config.trendDirection',
-                    'type': 'stat-card',
-                    'value': '@config.value',
-                  },
-                ],
-              ],
-              'event': 'StatCardLoaded',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

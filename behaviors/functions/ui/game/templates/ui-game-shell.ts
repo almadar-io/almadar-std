@@ -40,22 +40,22 @@ export type StdUiGameShellEventKey = 'INIT';
  */
 export interface StdUiGameShellConfig {
   addons?: PatternValue;
-  /** Default: `"Game"` */
-  appName?: string;
-  backgroundAsset?: EntityRow;
-  /** Default: `[{"type":"canvas-2d"}]` */
-  children?: PatternValue;
   className?: string;
-  controls?: PatternValue;
-  /** Default: `""` */
-  fontFamily?: string;
-  hud?: PatternValue;
-  hudBackgroundAsset?: EntityRow;
-  overlay?: PatternValue;
-  /** Default: `true` */
-  showTopBar?: boolean;
   /** Default: `""` */
   theme?: string;
+  overlay?: PatternValue;
+  /** Default: `[{"type":"canvas-2d"}]` */
+  children?: PatternValue;
+  controls?: PatternValue;
+  hud?: PatternValue;
+  backgroundAsset?: EntityRow;
+  /** Default: `"Game"` */
+  appName?: string;
+  /** Default: `""` */
+  fontFamily?: string;
+  /** Default: `true` */
+  showTopBar?: boolean;
+  hudBackgroundAsset?: EntityRow;
 }
 
 /**

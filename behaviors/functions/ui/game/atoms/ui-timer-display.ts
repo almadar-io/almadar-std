@@ -39,19 +39,19 @@ export type StdUiTimerDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTimerDisplayConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"mm:ss"` */
-  format?: 'mm:ss' | 'ss' | 'countdown';
   iconAsset?: EntityRow;
-  /** Default: `0` */
-  lowThreshold?: number;
-  /** Default: `true` */
-  running?: boolean;
   /** Default: `90` */
   seconds?: number;
+  /** Default: `true` */
+  running?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `"mm:ss"` */
+  format?: 'mm:ss' | 'ss' | 'countdown';
+  /** Default: `0` */
+  lowThreshold?: number;
 }
 
 /**
@@ -183,18 +183,18 @@ export function stdUiTimerDisplayTimerDisplayOrbital(params: StdUiTimerDisplayTi
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'default': 90,
             'name': 'seconds',
             'type': 'number',
+            'default': 90,
           },
           {
-            'default': true,
             'name': 'running',
             'type': 'boolean',
+            'default': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -205,148 +205,14 @@ export function stdUiTimerDisplayTimerDisplayOrbital(params: StdUiTimerDisplayTi
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'className': {
-            'default': '',
-            'description': 'Additional CSS classes',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'format': {
-            'default': 'mm:ss',
-            'description': 'Display format',
-            'label': 'Format',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'mm:ss',
-              'ss',
-              'countdown',
-            ],
-          },
-          'iconAsset': {
-            'description': 'Icon asset rendered to the left of the time value. Falls back to no icon.',
-            'label': 'Icon Asset',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  '1:1',
-                  '16:9',
-                  '5:7',
-                  '8:1',
-                ],
-              },
-              'atlas': {
-                'name': 'atlas',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': true,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  '2d',
-                  '3d',
-                ],
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': true,
-                'type': 'string',
-              },
-              'sprite': {
-                'name': 'sprite',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'pixel',
-                  'vector',
-                  'hd',
-                  '1-bit',
-                  'isometric',
-                ],
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': true,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'TimerDisplayIconAsset',
-          },
-          'lowThreshold': {
-            'default': 0,
-            'description': 'Seconds below which to pulse red',
-            'label': 'Low Threshold',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'running': {
-            'default': true,
-            'description': 'Whether the timer is running',
-            'label': 'Running',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'seconds': {
-            'default': 90,
-            'description': 'Time in seconds',
-            'label': 'Seconds',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'size': {
-            'default': 'md',
-            'description': 'Size variant',
-            'label': 'Size',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
-          },
+        'name': 'TimerDisplayRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'running',
+            'seconds',
+          ],
         },
         'effectRow': [
           {
@@ -376,32 +242,26 @@ export function stdUiTimerDisplayTimerDisplayOrbital(params: StdUiTimerDisplayTi
             'site': 'tick',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'running',
-            'seconds',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
+        'category': 'interaction',
         'linkedEntity': 'TimerDisplayItem',
-        'name': 'TimerDisplayRender',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -417,25 +277,37 @@ export function stdUiTimerDisplayTimerDisplayOrbital(params: StdUiTimerDisplayTi
                   'render-ui',
                   'main',
                   {
-                    'className': '@config.className',
-                    'format': '@config.format',
                     'iconAsset': '@config.iconAsset',
+                    'className': '@config.className',
                     'lowThreshold': '@config.lowThreshold',
-                    'running': '@entity.running',
-                    'seconds': '@entity.seconds',
                     'size': '@config.size',
+                    'format': '@config.format',
+                    'seconds': '@entity.seconds',
+                    'running': '@entity.running',
                     'type': 'timer-display',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'timerTick',
+            'interval': 1000,
+            'guard': [
+              'and',
+              [
+                '==',
+                '@entity.running',
+                true,
+              ],
+              [
+                '>',
+                '@entity.seconds',
+                0,
+              ],
+            ],
             'effects': [
               [
                 'set',
@@ -450,34 +322,162 @@ export function stdUiTimerDisplayTimerDisplayOrbital(params: StdUiTimerDisplayTi
                 'render-ui',
                 'main',
                 {
-                  'className': '@config.className',
-                  'format': '@config.format',
-                  'iconAsset': '@config.iconAsset',
                   'lowThreshold': '@config.lowThreshold',
-                  'running': '@entity.running',
-                  'seconds': '@entity.seconds',
                   'size': '@config.size',
+                  'className': '@config.className',
                   'type': 'timer-display',
+                  'seconds': '@entity.seconds',
+                  'running': '@entity.running',
+                  'iconAsset': '@config.iconAsset',
+                  'format': '@config.format',
                 },
               ],
             ],
-            'guard': [
-              'and',
-              [
-                '==',
-                '@entity.running',
-                true,
-              ],
-              [
-                '>',
-                '@entity.seconds',
-                0,
-              ],
-            ],
-            'interval': 1000,
-            'name': 'timerTick',
           },
         ],
+        'config': {
+          'iconAsset': {
+            'type': 'TimerDisplayIconAsset',
+            'label': 'Icon Asset',
+            'description': 'Icon asset rendered to the left of the time value. Falls back to no icon.',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'variant': {
+                'name': 'variant',
+                'type': 'string',
+                'required': false,
+              },
+              'url': {
+                'name': 'url',
+                'type': 'string',
+                'required': true,
+              },
+              'aspect': {
+                'name': 'aspect',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  '1:1',
+                  '16:9',
+                  '5:7',
+                  '8:1',
+                ],
+              },
+              'dimension': {
+                'name': 'dimension',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  '2d',
+                  '3d',
+                ],
+              },
+              'category': {
+                'name': 'category',
+                'type': 'string',
+                'required': true,
+              },
+              'animations': {
+                'name': 'animations',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'role': {
+                'name': 'role',
+                'type': 'string',
+                'required': true,
+              },
+              'sprite': {
+                'name': 'sprite',
+                'type': 'string',
+                'required': false,
+              },
+              'atlas': {
+                'name': 'atlas',
+                'type': 'string',
+                'required': false,
+              },
+              'style': {
+                'name': 'style',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'pixel',
+                  'vector',
+                  'hd',
+                  '1-bit',
+                  'isometric',
+                ],
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'seconds': {
+            'type': 'number',
+            'default': 90,
+            'label': 'Seconds',
+            'description': 'Time in seconds',
+            'tier': 'presentation',
+          },
+          'running': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Running',
+            'description': 'Whether the timer is running',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'size': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Size variant',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
+          },
+          'format': {
+            'type': 'string',
+            'default': 'mm:ss',
+            'label': 'Format',
+            'description': 'Display format',
+            'tier': 'presentation',
+            'values': [
+              'mm:ss',
+              'ss',
+              'countdown',
+            ],
+          },
+          'lowThreshold': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Low Threshold',
+            'description': 'Seconds below which to pulse red',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

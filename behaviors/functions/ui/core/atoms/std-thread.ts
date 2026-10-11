@@ -130,22 +130,22 @@ export interface StdThreadThreadPostCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdThreadConfig {
-  /** Default: `{"children":[["if",["!=","@config.sectionTitle",""],{"content":"@config.sectionTitle","type":"typography","variant":"h4"},{"children":[],"gap":"none","type":"stack"}],{"entity":"@payload.data","fields":[{"label":"Author","name":"authorName","variant":"h4"},{"label":"","name":"content","variant":"body"},{"label":"Votes","name":"voteCount","variant":"caption"}],"gap":"sm","itemActions":["array/filter","@config.itemActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"look":"@config.tableLook","type":"data-list","variant":"card"},["if",["!=","@config.sectionTitle",""],"@trait.ThreadReplyGate",{"children":[],"gap":"none","type":"stack"}]],"direction":"vertical","gap":"md","type":"stack"}` */
-  bodyContent?: unknown;
-  /** Default: `"Add comment"` */
-  composerLabel?: string;
-  /** Default: `[{"event":"REPLY","icon":"message-square","label":"Reply"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `""` */
+  threadRootId?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `[]` */
   replyRoles?: string[];
   /** Default: `""` */
-  sectionTitle?: string;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `""` */
-  threadRootId?: string;
-  /** Default: `""` */
   viewerRole?: string;
+  /** Default: `[{"event":"REPLY","icon":"message-square","label":"Reply"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `""` */
+  sectionTitle?: string;
+  /** Default: `{"gap":"md","direction":"vertical","type":"stack","children":[["if",["!=","@config.sectionTitle",""],{"type":"typography","content":"@config.sectionTitle","variant":"h4"},{"children":[],"type":"stack","gap":"none"}],{"entity":"@payload.data","gap":"sm","look":"@config.tableLook","fields":[{"label":"Author","name":"authorName","variant":"h4"},{"variant":"body","label":"","name":"content"},{"label":"Votes","variant":"caption","name":"voteCount"}],"type":"data-list","itemActions":["array/filter","@config.itemActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"variant":"card"},["if",["!=","@config.sectionTitle",""],"@trait.ThreadReplyGate",{"type":"stack","children":[],"gap":"none"}]]}` */
+  bodyContent?: unknown;
+  /** Default: `"Add comment"` */
+  composerLabel?: string;
 }
 
 /**
@@ -312,12 +312,12 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
     name: 'ThreadPostOrbital',
     uses: [
       {
-        'as': 'RoleGate',
         'from': 'std/behaviors/std-role-gate',
+        'as': 'RoleGate',
       },
       {
-        'as': 'Button',
         'from': 'std/behaviors/ui-button',
+        'as': 'Button',
       },
     ],
     expects: [
@@ -333,109 +333,109 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Identifier of the parent ThreadPost in a nested thread.',
             'name': 'parentId',
+            'type': 'string',
+            'description': 'Identifier of the parent ThreadPost in a nested thread.',
             'synonyms': 'parent, ancestor, source',
-            'type': 'string',
           },
           {
-            'description': 'Identifier of the top-level thread this post belongs to.',
             'name': 'threadRootId',
+            'type': 'string',
             'required': true,
+            'description': 'Identifier of the top-level thread this post belongs to.',
             'synonyms': 'rootId, topLevelId, parentThreadId',
-            'type': 'string',
           },
           {
-            'description': 'Unique identifier for the post\'s author.',
             'name': 'authorId',
+            'type': 'string',
             'required': true,
+            'description': 'Unique identifier for the post\'s author.',
             'synonyms': 'user id, creator id, author',
-            'type': 'string',
           },
           {
-            'description': 'The name of the post\'s author.',
             'name': 'authorName',
-            'required': true,
-            'synonyms': 'author, username, poster',
             'type': 'string',
+            'required': true,
+            'description': 'The name of the post\'s author.',
+            'synonyms': 'author, username, poster',
           },
           {
-            'description': 'The main text content of the post.',
             'name': 'content',
-            'required': true,
-            'synonyms': 'text, message, body',
             'type': 'string',
+            'required': true,
+            'description': 'The main text content of the post.',
+            'synonyms': 'text, message, body',
           },
           {
             'name': 'createdAt',
             'type': 'string',
           },
           {
+            'name': 'voteCount',
+            'type': 'number',
             'default': 0,
             'description': 'The number of votes associated with this item.',
-            'name': 'voteCount',
             'synonyms': 'votes, rating, score',
-            'type': 'number',
           },
           {
+            'name': 'replyCount',
+            'type': 'number',
             'default': 0,
             'description': 'The number of replies to this post.',
-            'name': 'replyCount',
             'synonyms': 'count, number of replies, child posts',
-            'type': 'number',
           },
           {
-            'description': 'A list of child ThreadPost entities.',
             'name': 'replies',
-            'relation': {
-              'cardinality': 'many',
-              'entity': 'ThreadPost',
-            },
-            'synonyms': 'children, descendants, sub-posts',
             'type': 'relation',
+            'relation': {
+              'entity': 'ThreadPost',
+              'cardinality': 'many',
+            },
+            'description': 'A list of child ThreadPost entities.',
+            'synonyms': 'children, descendants, sub-posts',
           },
           {
+            'name': 'focusedRow',
+            'type': 'object',
             'default': {},
-            'description': 'The currently selected or active row within the thread.',
-            'intrinsic': true,
             'items': {
               'type': 'scalar',
             },
-            'name': 'focusedRow',
+            'intrinsic': true,
+            'description': 'The currently selected or active row within the thread.',
             'synonyms': 'selection, active, current',
-            'type': 'object',
           },
           {
-            'default': '',
-            'description': 'Reply text being composed.',
-            'intrinsic': true,
             'name': 'replyDraft',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'Reply text being composed.',
           },
           {
-            'default': '',
-            'description': 'Post the reply being composed answers.',
-            'intrinsic': true,
             'name': 'replyParentId',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'Post the reply being composed answers.',
           },
           {
-            'default': '',
-            'description': 'Thread root the reply being composed belongs to.',
-            'intrinsic': true,
             'name': 'replyRootId',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'Thread root the reply being composed belongs to.',
           },
           {
-            'default': '',
-            'description': 'Reply just created, added to its parent post\'s replies.',
-            'intrinsic': true,
             'name': 'lastReplyId',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
+            'description': 'Reply just created, added to its parent post\'s replies.',
           },
         ];
         const extras = params.fields ?? [];
@@ -446,212 +446,17 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'bodyContent': {
-            'default': {
-              'children': [
-                [
-                  'if',
-                  [
-                    '!=',
-                    '@config.sectionTitle',
-                    '',
-                  ],
-                  {
-                    'content': '@config.sectionTitle',
-                    'type': 'typography',
-                    'variant': 'h4',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                {
-                  'entity': '@payload.data',
-                  'fields': [
-                    {
-                      'label': 'Author',
-                      'name': 'authorName',
-                      'variant': 'h4',
-                    },
-                    {
-                      'label': '',
-                      'name': 'content',
-                      'variant': 'body',
-                    },
-                    {
-                      'label': 'Votes',
-                      'name': 'voteCount',
-                      'variant': 'caption',
-                    },
-                  ],
-                  'gap': 'sm',
-                  'itemActions': [
-                    'array/filter',
-                    '@config.itemActions',
-                    [
-                      'fn',
-                      'action',
-                      [
-                        'or',
-                        [
-                          '=',
-                          [
-                            'array/len',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                          ],
-                          0,
-                        ],
-                        [
-                          'array/includes',
-                          [
-                            'object/get',
-                            '@action',
-                            'roles',
-                            [],
-                          ],
-                          '@config.viewerRole',
-                        ],
-                      ],
-                    ],
-                  ],
-                  'look': '@config.tableLook',
-                  'type': 'data-list',
-                  'variant': 'card',
-                },
-                [
-                  'if',
-                  [
-                    '!=',
-                    '@config.sectionTitle',
-                    '',
-                  ],
-                  '@trait.ThreadReplyGate',
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'direction': 'vertical',
-              'gap': 'md',
-              'type': 'stack',
-            },
-            'description': 'Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.',
-            'label': 'Body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
-          'composerLabel': {
-            'default': 'Add comment',
-            'description': 'Label of the standalone composer button rendered under the post list when sectionTitle is non-empty.',
-            'label': 'composerLabel',
-            'synonyms': 'reply label, comment button, add comment',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'itemActions': {
-            'default': [
-              {
-                'event': 'REPLY',
-                'icon': 'message-square',
-                'label': 'Reply',
-              },
-            ],
-            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'when': {
-                  'name': 'when',
-                  'required': false,
-                  'type': 'SExpr',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Row actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'replyRoles': {
-            'default': [],
-            'description': 'Roles (matched against viewerRole) that see the thread\'s Reply button. Empty = everyone.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Roles that can reply',
-            'tier': 'policy',
-            'type': '[string]',
-          },
-          'sectionTitle': {
-            'default': '',
-            'description': 'Section header rendered by the default bodyContent when non-empty, along with a standalone composer button — the only REPLY affordance an empty thread has. Blank (the default) keeps the bare post list for embedded threads that bring their own chrome (chat rails, custom comment sections).',
-            'label': 'sectionTitle',
-            'synonyms': 'header, comments title, discussion title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
-            'label': 'Table look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'threadRootId': {
-            'default': '',
-            'description': 'Top-level post whose descendants are loaded, filters every fetch and defaults new top-level replies\' threadRootId (blank = all roots, unfiltered)',
-            'label': 'Root post id',
-            'synonyms': 'rootId, topLevelId, scope, threadScope',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
+        'name': 'ThreadPostBrowse',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'focusedRow',
+            'lastReplyId',
+            'replyDraft',
+            'replyParentId',
+            'replyRootId',
+          ],
         },
         'effectRow': [
           {
@@ -691,10 +496,15 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
             'resource': '@entity.replyRootId',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'ThreadPost',
         'emits': [
           {
-            'description': 'Indicates a post or reply has been chosen for interaction.',
             'event': 'SELECT',
+            'description': 'Indicates a post or reply has been chosen for interaction.',
+            'synonyms': 'choose, highlight, focus, activate',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -702,17 +512,16 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
               },
               {
                 'name': 'row',
-                'required': true,
                 'type': '@entity',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'choose, highlight, focus, activate',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a new reply has been created and added to the thread.',
             'event': 'REPLY',
+            'description': 'Indicates a new reply has been created and added to the thread.',
+            'synonyms': 'add, post, respond, submit',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'parentId',
@@ -727,46 +536,46 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                 'type': 'string',
               },
             ],
-            'synonyms': 'add, post, respond, submit',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a reply has been modified.',
             'event': 'EDIT_REPLY',
+            'description': 'Indicates a reply has been modified.',
+            'synonyms': 'update, change, modify',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'value',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'synonyms': 'update, change, modify',
-            'tier': 'presentation',
           },
           {
-            'description': 'Signals the composed draft should be persisted as a new post — the draft is read from the entity frame (@entity.content), so bare buttons can emit it.',
             'event': 'SUBMIT_REPLY',
+            'description': 'Signals the composed draft should be persisted as a new post — the draft is read from the entity frame (@entity.content), so bare buttons can emit it.',
             'synonyms': 'post, send, add, publish',
             'tier': 'domain',
           },
           {
-            'description': 'Indicates a reply creation was aborted by the user.',
             'event': 'CANCEL_REPLY',
+            'description': 'Indicates a reply creation was aborted by the user.',
             'synonyms': 'abort, dismiss, undo, cancel',
             'tier': 'presentation',
           },
           {
-            'description': 'Signals a thread post has been successfully retrieved.',
             'event': 'ThreadPostLoaded',
+            'description': 'Signals a thread post has been successfully retrieved.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ThreadPost',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'parentId',
@@ -774,23 +583,23 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   },
                   {
                     'name': 'threadRootId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'authorId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'authorName',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'createdAt',
@@ -829,15 +638,15 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ThreadPost',
               },
             ],
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to load a thread post.',
             'event': 'ThreadPostLoadFailed',
+            'description': 'Indicates a failure to load a thread post.',
+            'synonyms': 'load error, fetch failed, retrieval failed',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -848,43 +657,44 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                 'type': 'string',
               },
             ],
-            'synonyms': 'load error, fetch failed, retrieval failed',
-            'tier': 'internal',
           },
           {
-            'description': 'A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field.',
             'event': 'ThreadPostCreated',
+            'description': 'A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field.',
+            'synonyms': 'new post, added, created',
+            'tier': 'domain',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'threadRootId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'parentId',
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'new post, added, created',
-            'tier': 'domain',
           },
           {
             'event': 'ReplyParentLoaded',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ThreadPost',
                 'name': 'data',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'parentId',
@@ -892,23 +702,23 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   },
                   {
                     'name': 'threadRootId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'authorId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'authorName',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'createdAt',
@@ -947,22 +757,20 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                     'type': 'string',
                   },
                 ],
-                'required': true,
-                'type': 'object',
+                'entity': 'ThreadPost',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
-            'description': 'Fired after a new reply is added to its parent post\'s replies',
             'event': 'ReplyParentUpdated',
-            'payloadEntity': 'ThreadPost',
+            'description': 'Fired after a new reply is added to its parent post\'s replies',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'parentId',
@@ -970,23 +778,23 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
               },
               {
                 'name': 'threadRootId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'authorId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'authorName',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'content',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'createdAt',
@@ -1025,23 +833,24 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
+            'payloadEntity': 'ThreadPost',
           },
           {
             'event': 'ReplyParentLoadFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates a failure to create a new thread post.',
             'event': 'ThreadPostCreateFailed',
+            'description': 'Indicates a failure to create a new thread post.',
+            'synonyms': 'error, failed, creation failed',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1052,43 +861,44 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failed, creation failed',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'focusedRow',
-            'lastReplyId',
-            'replyDraft',
-            'replyParentId',
-            'replyRootId',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'ThreadPost',
-        'name': 'ThreadPostBrowse',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'replying',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals a thread post has been successfully retrieved.',
               'key': 'ThreadPostLoaded',
               'name': 'ThreadPost loaded',
+              'description': 'Signals a thread post has been successfully retrieved.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'ThreadPost',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'parentId',
@@ -1096,23 +906,23 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                     },
                     {
                       'name': 'threadRootId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'authorId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'authorName',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'createdAt',
@@ -1151,16 +961,16 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'ThreadPost',
                 },
               ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a failure to load a thread post.',
               'key': 'ThreadPostLoadFailed',
               'name': 'ThreadPost load failed',
+              'description': 'Indicates a failure to load a thread post.',
+              'synonyms': 'load error, fetch failed, retrieval failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1171,27 +981,27 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   'type': 'string',
                 },
               ],
-              'synonyms': 'load error, fetch failed, retrieval failed',
-              'tier': 'internal',
             },
             {
-              'description': 'Scopes every fetch, and new-reply threadRootId stamping, to the descendants of one document root.',
               'key': 'SET_THREAD_ROOT',
               'name': 'Set Thread Root',
+              'description': 'Scopes every fetch, and new-reply threadRootId stamping, to the descendants of one document root.',
+              'synonyms': 'scope, focus, set root, document scope, thread scope',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'rootId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'scope, focus, set root, document scope, thread scope',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a new reply has been created and added to the thread.',
               'key': 'REPLY',
               'name': 'Reply',
+              'description': 'Indicates a new reply has been created and added to the thread.',
+              'synonyms': 'add, post, respond, submit',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'parentId',
@@ -1206,44 +1016,44 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   'type': 'string',
                 },
               ],
-              'synonyms': 'add, post, respond, submit',
-              'tier': 'domain',
             },
             {
-              'description': 'A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field.',
               'key': 'ThreadPostCreated',
               'name': 'ThreadPost created',
+              'description': 'A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field.',
+              'synonyms': 'new post, added, created',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'threadRootId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'parentId',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'new post, added, created',
-              'tier': 'domain',
             },
             {
               'key': 'ReplyParentLoaded',
               'name': 'Reply parent loaded',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'ThreadPost',
                   'name': 'data',
+                  'type': 'object',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'parentId',
@@ -1251,23 +1061,23 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                     },
                     {
                       'name': 'threadRootId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'authorId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'authorName',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'createdAt',
@@ -1306,32 +1116,30 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                       'type': 'string',
                     },
                   ],
-                  'required': true,
-                  'type': 'object',
+                  'entity': 'ThreadPost',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'ReplyParentLoadFailed',
               'name': 'Reply parent load failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'ReplyParentUpdated',
               'name': 'Reply parent updated',
-              'payloadEntity': 'ThreadPost',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'parentId',
@@ -1339,23 +1147,23 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                 },
                 {
                   'name': 'threadRootId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'authorId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'authorName',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'content',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'createdAt',
@@ -1394,12 +1202,14 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
+              'payloadEntity': 'ThreadPost',
             },
             {
-              'description': 'Indicates a post or reply has been chosen for interaction.',
               'key': 'SELECT',
               'name': 'Select',
+              'description': 'Indicates a post or reply has been chosen for interaction.',
+              'synonyms': 'choose, highlight, focus, activate',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1407,45 +1217,45 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                 },
                 {
                   'name': 'row',
-                  'required': true,
                   'type': '@entity',
+                  'required': true,
                 },
               ],
-              'synonyms': 'choose, highlight, focus, activate',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a reply has been modified.',
               'key': 'EDIT_REPLY',
               'name': 'Edit Reply',
+              'description': 'Indicates a reply has been modified.',
+              'synonyms': 'update, change, modify',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'value',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'update, change, modify',
-              'tier': 'presentation',
             },
             {
-              'description': 'Signals the composed draft should be persisted as a new post — the draft is read from the entity frame (@entity.content), so bare buttons can emit it.',
               'key': 'SUBMIT_REPLY',
               'name': 'Submit Reply',
+              'description': 'Signals the composed draft should be persisted as a new post — the draft is read from the entity frame (@entity.content), so bare buttons can emit it.',
               'synonyms': 'post, send, add, publish',
               'tier': 'domain',
             },
             {
-              'description': 'Indicates a reply creation was aborted by the user.',
               'key': 'CANCEL_REPLY',
               'name': 'Cancel Reply',
+              'description': 'Indicates a reply creation was aborted by the user.',
               'synonyms': 'abort, dismiss, undo, cancel',
               'tier': 'presentation',
             },
             {
-              'description': 'Indicates a failure to create a new thread post.',
               'key': 'ThreadPostCreateFailed',
               'name': 'ThreadPost create failed',
+              'description': 'Indicates a failure to create a new thread post.',
+              'synonyms': 'error, failed, creation failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1456,36 +1266,21 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failed, creation failed',
-              'tier': 'internal',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'browsing',
-            },
-            {
-              'name': 'replying',
-            },
-            {
-              'name': 'error',
             },
           ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('ThreadPost' satisfies _StdThreadEntityName),
                   {
-                    'emit': {
-                      'failure': 'ThreadPostLoadFailed',
-                      'success': 'ThreadPostLoaded',
-                    },
+                    'include': [
+                      'replies',
+                    ],
                     'filter': [
                       'and',
                       [
@@ -1527,26 +1322,27 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                         '',
                       ],
                     ],
-                    'include': [
-                      'replies',
-                    ],
+                    'emit': {
+                      'success': 'ThreadPostLoaded',
+                      'failure': 'ThreadPostLoadFailed',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'rows': 6,
                     'type': 'skeleton',
                     'variant': 'list',
+                    'rows': 6,
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'ThreadPostLoaded',
               'effects': [
                 [
                   'render-ui',
@@ -1554,27 +1350,27 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   '@config.bodyContent',
                 ],
               ],
-              'event': 'ThreadPostLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'ThreadPostLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
+                    'message': '@payload.error',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'ThreadPostLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'SET_THREAD_ROOT',
               'effects': [
                 [
                   'set',
@@ -1589,6 +1385,9 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                       'failure': 'ThreadPostLoadFailed',
                       'success': 'ThreadPostLoaded',
                     },
+                    'include': [
+                      'replies',
+                    ],
                     'filter': [
                       'and',
                       [
@@ -1622,26 +1421,23 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                         '',
                       ],
                     ],
-                    'include': [
-                      'replies',
-                    ],
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'rows': 6,
-                    'type': 'skeleton',
                     'variant': 'list',
+                    'type': 'skeleton',
+                    'rows': 6,
                   },
                 ],
               ],
-              'event': 'SET_THREAD_ROOT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1701,17 +1497,17 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'rows': 6,
                     'type': 'skeleton',
+                    'rows': 6,
                     'variant': 'list',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ThreadPostLoaded',
               'effects': [
                 [
                   'render-ui',
@@ -1719,46 +1515,11 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   '@config.bodyContent',
                 ],
               ],
-              'event': 'ThreadPostLoaded',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
-              'effects': [
-                [
-                  'persist',
-                  'create',
-                  ('ThreadPost' satisfies _StdThreadEntityName),
-                  {
-                    'authorId': '@user.id',
-                    'authorName': '@user.name',
-                    'content': '@payload.content',
-                    'createdAt': '@now',
-                    'parentId': [
-                      'str/default',
-                      '@payload.parentNodeId',
-                      '@payload.parentId',
-                    ],
-                    'threadRootId': [
-                      'str/default',
-                      '@entity.replyRootId',
-                      [
-                        'str/default',
-                        '@config.threadRootId',
-                        'root',
-                      ],
-                    ],
-                  },
-                  {
-                    'emit': {
-                      'failure': 'ThreadPostCreateFailed',
-                      'success': 'ThreadPostCreated',
-                    },
-                  },
-                ],
-              ],
-              'event': 'REPLY',
               'from': 'browsing',
+              'to': 'browsing',
+              'event': 'REPLY',
               'guard': [
                 'not',
                 [
@@ -1771,9 +1532,53 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   '',
                 ],
               ],
-              'to': 'browsing',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'authorId': '@user.id',
+                    'parentId': [
+                      'str/default',
+                      '@payload.parentNodeId',
+                      '@payload.parentId',
+                    ],
+                    'authorName': '@user.name',
+                    'threadRootId': [
+                      'str/default',
+                      '@entity.replyRootId',
+                      [
+                        'str/default',
+                        '@config.threadRootId',
+                        'root',
+                      ],
+                    ],
+                    'createdAt': '@now',
+                    'content': '@payload.content',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostCreateFailed',
+                      'success': 'ThreadPostCreated',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'browsing',
+              'to': 'replying',
+              'event': 'REPLY',
+              'guard': [
+                '=',
+                [
+                  'str/default',
+                  '@payload.content',
+                  '',
+                ],
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -1791,29 +1596,29 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                     'children': [
                       {
                         'content': 'Write a reply',
-                        'type': 'typography',
                         'variant': 'h4',
+                        'type': 'typography',
                       },
                       {
+                        'type': 'textarea',
+                        'placeholder': 'Your reply…',
                         'aria-label': 'Your reply',
                         'onChange': 'EDIT_REPLY',
-                        'placeholder': 'Your reply…',
-                        'type': 'textarea',
                       },
                       {
                         'children': [
                           {
                             'action': 'SUBMIT_REPLY',
+                            'variant': 'primary',
                             'icon': 'send',
                             'label': 'Submit',
                             'type': 'button',
-                            'variant': 'primary',
                           },
                           {
                             'action': 'CANCEL_REPLY',
+                            'variant': 'secondary',
                             'label': 'Cancel',
                             'type': 'button',
-                            'variant': 'secondary',
                           },
                         ],
                         'direction': 'horizontal',
@@ -1827,20 +1632,23 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   },
                 ],
               ],
-              'event': 'REPLY',
-              'from': 'browsing',
-              'guard': [
-                '=',
-                [
-                  'str/default',
-                  '@payload.content',
-                  '',
-                ],
-                '',
-              ],
-              'to': 'replying',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ThreadPostCreated',
+              'guard': [
+                'not',
+                [
+                  '=',
+                  [
+                    'str/default',
+                    '@payload.parentId',
+                    '',
+                  ],
+                  '',
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -1869,23 +1677,20 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   },
                 ],
               ],
-              'event': 'ThreadPostCreated',
-              'from': 'browsing',
-              'guard': [
-                'not',
-                [
-                  '=',
-                  [
-                    'str/default',
-                    '@payload.parentId',
-                    '',
-                  ],
-                  '',
-                ],
-              ],
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ThreadPostCreated',
+              'guard': [
+                '=',
+                [
+                  'str/default',
+                  '@payload.parentId',
+                  '',
+                ],
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -1905,6 +1710,9 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                       'failure': 'ThreadPostLoadFailed',
                       'success': 'ThreadPostLoaded',
                     },
+                    'include': [
+                      'replies',
+                    ],
                     'filter': [
                       'and',
                       [
@@ -1938,32 +1746,30 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                         '',
                       ],
                     ],
-                    'include': [
-                      'replies',
-                    ],
                   },
                 ],
               ],
-              'event': 'ThreadPostCreated',
-              'from': 'browsing',
-              'guard': [
-                '=',
-                [
-                  'str/default',
-                  '@payload.parentId',
-                  '',
-                ],
-                '',
-              ],
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ReplyParentLoaded',
               'effects': [
                 [
                   'persist',
                   'update',
                   ('ThreadPost' satisfies _StdThreadEntityName),
                   {
+                    'replyCount': [
+                      '+',
+                      [
+                        'object/get',
+                        '@payload.data',
+                        'replyCount',
+                        0,
+                      ],
+                      1,
+                    ],
                     'id': '@payload.data.id',
                     'replies': [
                       'array/append',
@@ -1975,53 +1781,39 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                       ],
                       '@entity.lastReplyId',
                     ],
-                    'replyCount': [
-                      '+',
-                      [
-                        'object/get',
-                        '@payload.data',
-                        'replyCount',
-                        0,
-                      ],
-                      1,
-                    ],
                   },
                   {
                     'emit': {
-                      'failure': 'ThreadPostCreateFailed',
                       'success': 'ReplyParentUpdated',
+                      'failure': 'ThreadPostCreateFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ReplyParentLoaded',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ReplyParentLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
                     'dismissible': true,
+                    'type': 'alert',
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t attach the reply to its post — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
                 [
                   'fetch',
                   ('ThreadPost' satisfies _StdThreadEntityName),
                   {
-                    'emit': {
-                      'failure': 'ThreadPostLoadFailed',
-                      'success': 'ThreadPostLoaded',
-                    },
                     'filter': [
                       'and',
                       [
@@ -2063,26 +1855,26 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                         '',
                       ],
                     ],
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
                     'include': [
                       'replies',
                     ],
                   },
                 ],
               ],
-              'event': 'ReplyParentLoadFailed',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ReplyParentUpdated',
               'effects': [
                 [
                   'fetch',
                   ('ThreadPost' satisfies _StdThreadEntityName),
                   {
-                    'emit': {
-                      'failure': 'ThreadPostLoadFailed',
-                      'success': 'ThreadPostLoaded',
-                    },
                     'filter': [
                       'and',
                       [
@@ -2119,14 +1911,18 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                     'include': [
                       'replies',
                     ],
+                    'emit': {
+                      'success': 'ThreadPostLoaded',
+                      'failure': 'ThreadPostLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'ReplyParentUpdated',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'SELECT',
               'effects': [
                 [
                   'set',
@@ -2138,8 +1934,8 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   ('ThreadPost' satisfies _StdThreadEntityName),
                   {
                     'emit': {
-                      'failure': 'ThreadPostLoadFailed',
                       'success': 'ThreadPostLoaded',
+                      'failure': 'ThreadPostLoadFailed',
                     },
                     'filter': [
                       'and',
@@ -2180,11 +1976,11 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   },
                 ],
               ],
-              'event': 'SELECT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'EDIT_REPLY',
               'effects': [
                 [
                   'set',
@@ -2192,46 +1988,11 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   '@payload.value',
                 ],
               ],
-              'event': 'EDIT_REPLY',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
-              'effects': [
-                [
-                  'persist',
-                  'create',
-                  ('ThreadPost' satisfies _StdThreadEntityName),
-                  {
-                    'authorId': '@user.id',
-                    'authorName': '@user.name',
-                    'content': '@entity.replyDraft',
-                    'createdAt': '@now',
-                    'parentId': [
-                      'str/default',
-                      '@entity.replyParentId',
-                      '',
-                    ],
-                    'threadRootId': [
-                      'str/default',
-                      '@entity.replyRootId',
-                      [
-                        'str/default',
-                        '@config.threadRootId',
-                        'root',
-                      ],
-                    ],
-                  },
-                  {
-                    'emit': {
-                      'failure': 'ThreadPostCreateFailed',
-                      'success': 'ThreadPostCreated',
-                    },
-                  },
-                ],
-              ],
-              'event': 'SUBMIT_REPLY',
               'from': 'browsing',
+              'to': 'browsing',
+              'event': 'SUBMIT_REPLY',
               'guard': [
                 'not',
                 [
@@ -2244,9 +2005,44 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   '',
                 ],
               ],
-              'to': 'browsing',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'threadRootId': [
+                      'str/default',
+                      '@entity.replyRootId',
+                      [
+                        'str/default',
+                        '@config.threadRootId',
+                        'root',
+                      ],
+                    ],
+                    'parentId': [
+                      'str/default',
+                      '@entity.replyParentId',
+                      '',
+                    ],
+                    'content': '@entity.replyDraft',
+                    'createdAt': '@now',
+                    'authorId': '@user.id',
+                    'authorName': '@user.name',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostCreateFailed',
+                      'success': 'ThreadPostCreated',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'CANCEL_REPLY',
               'effects': [
                 [
                   'set',
@@ -2259,27 +2055,11 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   '',
                 ],
               ],
-              'event': 'CANCEL_REPLY',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'message': '@payload.error',
-                    'type': 'alert',
-                    'variant': 'error',
-                  },
-                ],
-              ],
+              'from': 'browsing',
+              'to': 'browsing',
               'event': 'ThreadPostCreateFailed',
-              'from': 'browsing',
-              'to': 'browsing',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
@@ -2291,11 +2071,27 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   },
                 ],
               ],
-              'event': 'ThreadPostLoadFailed',
+            },
+            {
               'from': 'browsing',
               'to': 'error',
+              'event': 'ThreadPostLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'alert',
+                    'variant': 'error',
+                    'message': '@payload.error',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'SET_THREAD_ROOT',
               'effects': [
                 [
                   'set',
@@ -2306,10 +2102,6 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   'fetch',
                   ('ThreadPost' satisfies _StdThreadEntityName),
                   {
-                    'emit': {
-                      'failure': 'ThreadPostLoadFailed',
-                      'success': 'ThreadPostLoaded',
-                    },
                     'filter': [
                       'and',
                       [
@@ -2346,32 +2138,32 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                     'include': [
                       'replies',
                     ],
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'rows': 6,
                     'type': 'skeleton',
                     'variant': 'list',
+                    'rows': 6,
                   },
                 ],
               ],
-              'event': 'SET_THREAD_ROOT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
+              'from': 'replying',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('ThreadPost' satisfies _StdThreadEntityName),
                   {
-                    'emit': {
-                      'failure': 'ThreadPostLoadFailed',
-                      'success': 'ThreadPostLoaded',
-                    },
                     'filter': [
                       'and',
                       [
@@ -2413,6 +2205,10 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                         '',
                       ],
                     ],
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
                     'include': [
                       'replies',
                     ],
@@ -2422,17 +2218,17 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'variant': 'list',
                     'rows': 6,
                     'type': 'skeleton',
-                    'variant': 'list',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'replying',
-              'to': 'loading',
             },
             {
+              'from': 'replying',
+              'to': 'replying',
+              'event': 'EDIT_REPLY',
               'effects': [
                 [
                   'set',
@@ -2440,46 +2236,11 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   '@payload.value',
                 ],
               ],
-              'event': 'EDIT_REPLY',
-              'from': 'replying',
-              'to': 'replying',
             },
             {
-              'effects': [
-                [
-                  'persist',
-                  'create',
-                  ('ThreadPost' satisfies _StdThreadEntityName),
-                  {
-                    'authorId': '@user.id',
-                    'authorName': '@user.name',
-                    'content': '@entity.replyDraft',
-                    'createdAt': '@now',
-                    'parentId': [
-                      'str/default',
-                      '@entity.replyParentId',
-                      '',
-                    ],
-                    'threadRootId': [
-                      'str/default',
-                      '@entity.replyRootId',
-                      [
-                        'str/default',
-                        '@config.threadRootId',
-                        'root',
-                      ],
-                    ],
-                  },
-                  {
-                    'emit': {
-                      'failure': 'ThreadPostCreateFailed',
-                      'success': 'ThreadPostCreated',
-                    },
-                  },
-                ],
-              ],
-              'event': 'SUBMIT_REPLY',
               'from': 'replying',
+              'to': 'browsing',
+              'event': 'SUBMIT_REPLY',
               'guard': [
                 'not',
                 [
@@ -2492,9 +2253,44 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   '',
                 ],
               ],
-              'to': 'browsing',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'content': '@entity.replyDraft',
+                    'authorId': '@user.id',
+                    'authorName': '@user.name',
+                    'threadRootId': [
+                      'str/default',
+                      '@entity.replyRootId',
+                      [
+                        'str/default',
+                        '@config.threadRootId',
+                        'root',
+                      ],
+                    ],
+                    'createdAt': '@now',
+                    'parentId': [
+                      'str/default',
+                      '@entity.replyParentId',
+                      '',
+                    ],
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ThreadPostCreateFailed',
+                      'success': 'ThreadPostCreated',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'replying',
+              'to': 'browsing',
+              'event': 'CANCEL_REPLY',
               'effects': [
                 [
                   'set',
@@ -2507,11 +2303,23 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   '',
                 ],
               ],
-              'event': 'CANCEL_REPLY',
-              'from': 'replying',
-              'to': 'browsing',
             },
             {
+              'from': 'replying',
+              'to': 'browsing',
+              'event': 'ThreadPostCreated',
+              'guard': [
+                'not',
+                [
+                  '=',
+                  [
+                    'str/default',
+                    '@payload.parentId',
+                    '',
+                  ],
+                  '',
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -2532,31 +2340,28 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   'fetch',
                   ('ThreadPost' satisfies _StdThreadEntityName),
                   {
+                    'id': '@payload.parentId',
                     'emit': {
                       'failure': 'ReplyParentLoadFailed',
                       'success': 'ReplyParentLoaded',
                     },
-                    'id': '@payload.parentId',
                   },
                 ],
               ],
-              'event': 'ThreadPostCreated',
-              'from': 'replying',
-              'guard': [
-                'not',
-                [
-                  '=',
-                  [
-                    'str/default',
-                    '@payload.parentId',
-                    '',
-                  ],
-                  '',
-                ],
-              ],
-              'to': 'browsing',
             },
             {
+              'from': 'replying',
+              'to': 'browsing',
+              'event': 'ThreadPostCreated',
+              'guard': [
+                '=',
+                [
+                  'str/default',
+                  '@payload.parentId',
+                  '',
+                ],
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -2572,10 +2377,6 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   'fetch',
                   ('ThreadPost' satisfies _StdThreadEntityName),
                   {
-                    'emit': {
-                      'failure': 'ThreadPostLoadFailed',
-                      'success': 'ThreadPostLoaded',
-                    },
                     'filter': [
                       'and',
                       [
@@ -2612,106 +2413,101 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                     'include': [
                       'replies',
                     ],
+                    'emit': {
+                      'success': 'ThreadPostLoaded',
+                      'failure': 'ThreadPostLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'ThreadPostCreated',
-              'from': 'replying',
-              'guard': [
-                '=',
-                [
-                  'str/default',
-                  '@payload.parentId',
-                  '',
-                ],
-                '',
-              ],
-              'to': 'browsing',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'message': '@payload.error',
-                    'type': 'alert',
-                    'variant': 'error',
-                  },
-                ],
-              ],
-              'event': 'ThreadPostCreateFailed',
               'from': 'replying',
               'to': 'replying',
-            },
-            {
+              'event': 'ThreadPostCreateFailed',
               'effects': [
-                [
-                  'set',
-                  '@entity.replyRootId',
-                  '@payload.rootId',
-                ],
-                [
-                  'fetch',
-                  ('ThreadPost' satisfies _StdThreadEntityName),
-                  {
-                    'emit': {
-                      'failure': 'ThreadPostLoadFailed',
-                      'success': 'ThreadPostLoaded',
-                    },
-                    'filter': [
-                      'and',
-                      [
-                        'or',
-                        [
-                          '=',
-                          '@payload.rootId',
-                          '',
-                        ],
-                        [
-                          '=',
-                          [
-                            'object/get',
-                            '@entity',
-                            'threadRootId',
-                          ],
-                          '@payload.rootId',
-                        ],
-                      ],
-                      [
-                        '=',
-                        [
-                          'str/default',
-                          [
-                            'object/get',
-                            '@entity',
-                            'parentId',
-                          ],
-                          '',
-                        ],
-                        '',
-                      ],
-                    ],
-                    'include': [
-                      'replies',
-                    ],
-                  },
-                ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'rows': 6,
-                    'type': 'skeleton',
-                    'variant': 'list',
+                    'type': 'alert',
+                    'variant': 'error',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'SET_THREAD_ROOT',
+            },
+            {
               'from': 'replying',
               'to': 'loading',
+              'event': 'SET_THREAD_ROOT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.replyRootId',
+                  '@payload.rootId',
+                ],
+                [
+                  'fetch',
+                  ('ThreadPost' satisfies _StdThreadEntityName),
+                  {
+                    'filter': [
+                      'and',
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@payload.rootId',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            'threadRootId',
+                          ],
+                          '@payload.rootId',
+                        ],
+                      ],
+                      [
+                        '=',
+                        [
+                          'str/default',
+                          [
+                            'object/get',
+                            '@entity',
+                            'parentId',
+                          ],
+                          '',
+                        ],
+                        '',
+                      ],
+                    ],
+                    'include': [
+                      'replies',
+                    ],
+                    'emit': {
+                      'failure': 'ThreadPostLoadFailed',
+                      'success': 'ThreadPostLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'skeleton',
+                    'rows': 6,
+                    'variant': 'list',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -2721,6 +2517,9 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                       'failure': 'ThreadPostLoadFailed',
                       'success': 'ThreadPostLoaded',
                     },
+                    'include': [
+                      'replies',
+                    ],
                     'filter': [
                       'and',
                       [
@@ -2762,9 +2561,6 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                         '',
                       ],
                     ],
-                    'include': [
-                      'replies',
-                    ],
                   },
                 ],
                 [
@@ -2777,11 +2573,11 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'SET_THREAD_ROOT',
               'effects': [
                 [
                   'set',
@@ -2793,9 +2589,12 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                   ('ThreadPost' satisfies _StdThreadEntityName),
                   {
                     'emit': {
-                      'failure': 'ThreadPostLoadFailed',
                       'success': 'ThreadPostLoaded',
+                      'failure': 'ThreadPostLoadFailed',
                     },
+                    'include': [
+                      'replies',
+                    ],
                     'filter': [
                       'and',
                       [
@@ -2829,67 +2628,268 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                         '',
                       ],
                     ],
-                    'include': [
-                      'replies',
-                    ],
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'rows': 6,
                     'type': 'skeleton',
+                    'rows': 6,
                     'variant': 'list',
                   },
                 ],
               ],
-              'event': 'SET_THREAD_ROOT',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
-      } satisfies Trait,
-      makeTraitRef({
         'config': {
-          'action': {
-            'default': 'REPLY',
-            'type': 'unknown',
+          'threadRootId': {
+            'type': 'string',
+            'default': '',
+            'label': 'Root post id',
+            'description': 'Top-level post whose descendants are loaded, filters every fetch and defaults new top-level replies\' threadRootId (blank = all roots, unfiltered)',
+            'synonyms': 'rootId, topLevelId, scope, threadScope',
+            'tier': 'domain',
           },
-          'icon': {
-            'default': 'message-square',
-            'type': 'unknown',
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Table look',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
           },
-          'label': {
-            'default': '@config.composerLabel',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'secondary',
-            'type': 'unknown',
-          },
-        },
-        'name': 'ThreadReplyButton',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdThreadThreadPostOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'content': {
-            'default': '@trait.ThreadReplyButton',
-            'type': 'unknown',
-          },
-          'roles': {
-            'default': '@config.replyRoles',
-            'type': 'unknown',
+          'replyRoles': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Roles that can reply',
+            'description': 'Roles (matched against viewerRole) that see the thread\'s Reply button. Empty = everyone.',
+            'tier': 'policy',
+            'items': {
+              'type': 'string',
+            },
           },
           'viewerRole': {
-            'default': '@config.viewerRole',
-            'type': 'unknown',
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'itemActions': {
+            'type': '[ItemAction]',
+            'default': [
+              {
+                'event': 'REPLY',
+                'icon': 'message-square',
+                'label': 'Reply',
+              },
+            ],
+            'label': 'Row actions',
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'when': {
+                  'name': 'when',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'sectionTitle': {
+            'type': 'string',
+            'default': '',
+            'label': 'sectionTitle',
+            'description': 'Section header rendered by the default bodyContent when non-empty, along with a standalone composer button — the only REPLY affordance an empty thread has. Blank (the default) keeps the bare post list for embedded threads that bring their own chrome (chat rails, custom comment sections).',
+            'synonyms': 'header, comments title, discussion title',
+            'tier': 'presentation',
+          },
+          'bodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'gap': 'md',
+              'direction': 'vertical',
+              'type': 'stack',
+              'children': [
+                [
+                  'if',
+                  [
+                    '!=',
+                    '@config.sectionTitle',
+                    '',
+                  ],
+                  {
+                    'type': 'typography',
+                    'content': '@config.sectionTitle',
+                    'variant': 'h4',
+                  },
+                  {
+                    'children': [],
+                    'type': 'stack',
+                    'gap': 'none',
+                  },
+                ],
+                {
+                  'entity': '@payload.data',
+                  'gap': 'sm',
+                  'look': '@config.tableLook',
+                  'fields': [
+                    {
+                      'label': 'Author',
+                      'name': 'authorName',
+                      'variant': 'h4',
+                    },
+                    {
+                      'variant': 'body',
+                      'label': '',
+                      'name': 'content',
+                    },
+                    {
+                      'label': 'Votes',
+                      'variant': 'caption',
+                      'name': 'voteCount',
+                    },
+                  ],
+                  'type': 'data-list',
+                  'itemActions': [
+                    'array/filter',
+                    '@config.itemActions',
+                    [
+                      'fn',
+                      'action',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@action',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
+                  'variant': 'card',
+                },
+                [
+                  'if',
+                  [
+                    '!=',
+                    '@config.sectionTitle',
+                    '',
+                  ],
+                  '@trait.ThreadReplyGate',
+                  {
+                    'type': 'stack',
+                    'children': [],
+                    'gap': 'none',
+                  },
+                ],
+              ],
+            },
+            'label': 'Body content tree',
+            'description': 'Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.',
+            'tier': 'internal',
+          },
+          'composerLabel': {
+            'type': 'string',
+            'default': 'Add comment',
+            'label': 'composerLabel',
+            'description': 'Label of the standalone composer button rendered under the post list when sectionTitle is non-empty.',
+            'synonyms': 'reply label, comment button, add comment',
+            'tier': 'presentation',
           },
         },
-        'name': 'ThreadReplyGate',
+        'scope': 'collection',
+      } satisfies Trait,
+      makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdThreadThreadPostOrbitalUsesRef),
+        'name': 'ThreadReplyButton',
+        'config': {
+          'action': {
+            'type': 'unknown',
+            'default': 'REPLY',
+          },
+          'icon': {
+            'type': 'unknown',
+            'default': 'message-square',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': '@config.composerLabel',
+          },
+          'variant': {
+            'type': 'unknown',
+            'default': 'secondary',
+          },
+        },
+      }),
+      makeTraitRef({
         'ref': ('RoleGate.traits.RoleGate' satisfies _StdThreadThreadPostOrbitalUsesRef),
+        'name': 'ThreadReplyGate',
+        'config': {
+          'viewerRole': {
+            'type': 'unknown',
+            'default': '@config.viewerRole',
+          },
+          'content': {
+            'type': 'unknown',
+            'default': '@trait.ThreadReplyButton',
+          },
+          'roles': {
+            'type': 'unknown',
+            'default': '@config.replyRoles',
+          },
+        },
       }),
     ],
     pages: [

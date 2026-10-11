@@ -126,64 +126,64 @@ export interface StdBoardBoardItemsSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBoardConfig {
-  /** Default: `"floating"` */
-  addPlacement?: 'floating' | 'inline' | 'none';
-  /** Default: `"columns"` */
-  boardLook?: 'columns' | 'kanban-classic';
-  /** Default: `{"children":[["if",["=","@config.addPlacement","inline"],{"children":[{"action":"ADD_CARD","icon":"plus","label":"Add item","size":"sm","type":"button","variant":"secondary"}],"direction":"horizontal","gap":"sm","justify":"end","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"lg","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"cols":"@config.gridCols","dndRoot":"@config.draggable","entity":"@entity.boards","fields":[],"gap":"md","renderItem":["fn",["col","colIndex"],{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"content":["if",["==",["array/len","@config.columnLabels"],0],"@col.label",["array/nth","@config.columnLabels","@colIndex"]],"type":"typography","variant":"h4"},{"label":"@col.count","type":"badge","variant":"@col.variant"}],"direction":"horizontal","gap":"xs","type":"stack"},{"accepts":["if","@config.draggable","*",""],"dragGroup":["if","@config.draggable","@col.key",""],"dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","itemEnter":"@config.cardEnter","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"h4"},{"color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"icon":"arrow-right","label":"Open","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"look":"@config.cardLook","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":"@config.draggable","type":"data-list"}],"direction":"vertical","gap":"sm","type":"stack"}],"look":"@config.cardLook","type":"card"}],"type":"data-grid"},["if",["=","@config.addPlacement","floating"],{"action":"ADD_CARD","icon":"plus","label":"Add item","type":"floating-action-button","variant":"primary"},{"children":[],"gap":"none","type":"stack"}]],"direction":"vertical","gap":"md","type":"stack"}` */
-  bodyContent?: unknown;
   /** Default: `false` */
   bodySearch?: boolean;
-  /** Default: `[{"event":"DELETE_CARD","icon":"trash-2","label":"Delete","variant":"danger"}]` */
-  cardActions?: EntityRow[];
-  /** Default: `{"align":"center","children":["array/map",["array/filter","@config.cardActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],["fn","a",{"action":"@a.event","actionPayload":{"id":"@entity.currentId"},"icon":"@a.icon","label":"@a.label","type":"button","variant":"@a.variant"}]],"direction":"horizontal","gap":"sm","type":"stack"}` */
-  cardActionsContent?: unknown;
-  /** Default: `"@item.description"` */
-  cardDescriptionBinding?: string;
-  /** Default: `"none"` */
-  cardEnter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  /** Default: `"@item.id"` */
-  cardIdBinding?: string;
-  /** Default: `"elevated"` */
-  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `"@item.notes"` */
-  cardNotesBinding?: string;
-  /** Default: `"@item.stage"` */
-  cardStageBinding?: string;
-  /** Default: `"@item.title"` */
-  cardTitleBinding?: string;
-  /** Default: `[]` */
-  columnLabels?: string[];
-  /** Default: `[{"icon":"circle","key":"todo","label":"To Do","variant":"default"},{"icon":"circle-dot","key":"doing","label":"In Progress","variant":"primary"},{"icon":"check-circle","key":"done","label":"Done","variant":"success"}]` */
-  columns?: EntityRow[];
-  /** Default: `true` */
-  draggable?: boolean;
-  /** Default: `"toolbar"` */
-  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
-  /** Default: `[]` */
-  filters?: EntityRow[];
-  /** Default: `["title","description","stage","notes"]` */
-  formFields?: string[];
-  /** Default: `3` */
-  gridCols?: number;
   /** Default: `"stage"` */
   groupByField?: string;
-  /** Default: `[]` */
-  include?: string[];
-  /** Default: `{"children":[["if",["=","@config.addPlacement","inline"],{"children":[{"action":"ADD_CARD","icon":"plus","label":"Add card","size":"sm","type":"button","variant":"secondary"}],"direction":"horizontal","gap":"sm","justify":"end","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full pb-2","dndRoot":"@config.draggable","entity":"@entity.boards","fields":[],"gap":"lg","minCardWidth":300,"renderItem":["fn",["col","colIndex"],{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"className":"flex-1","content":["if",["==",["array/len","@config.columnLabels"],0],"@col.label",["array/nth","@config.columnLabels","@colIndex"]],"type":"typography","variant":"h4"},{"label":"@col.count","size":"sm","type":"badge","variant":"primary"}],"className":"p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]","direction":"horizontal","gap":"sm","type":"stack"},{"accepts":["if","@config.draggable","*",""],"className":"p-card-md min-h-[120px]","dragGroup":["if","@config.draggable","@col.key",""],"dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","itemEnter":"@config.cardEnter","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"body","weight":"medium"},{"className":"line-clamp-2","color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"label":"@config.cardStageBinding","size":"sm","type":"badge","variant":"@col.variant"},{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"className":"ml-auto","icon":"arrow-right","label":"Open","size":"sm","type":"button","variant":"ghost"}],"className":"pt-1","direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"className":"cursor-grab hover:shadow-lg transition-shadow","look":"@config.cardLook","padding":"sm","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":"@config.draggable","type":"data-list"}],"direction":"vertical","gap":"none","type":"stack"}],"className":"w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden","look":"elevated","padding":"none","type":"card"}],"scrollX":true,"type":"data-grid"},["if",["=","@config.addPlacement","floating"],{"action":"ADD_CARD","icon":"plus","label":"Add card","type":"floating-action-button","variant":"primary"},{"children":[],"gap":"none","type":"stack"}]],"className":"h-full","direction":"vertical","gap":"md","type":"stack"}` */
-  kanbanClassicBodyContent?: unknown;
-  /** Default: `10` */
-  pageSize?: number;
+  /** Default: `"columns"` */
+  boardLook?: 'columns' | 'kanban-classic';
   /** Default: `"title"` */
   searchField?: string;
-  /** Default: `"Search…"` */
-  searchPlaceholder?: string;
-  /** Default: `true` */
-  showHeader?: boolean;
+  /** Default: `3` */
+  gridCols?: number;
   /** Default: `"Board"` */
   title?: string;
+  /** Default: `["title","description","stage","notes"]` */
+  formFields?: string[];
+  /** Default: `"floating"` */
+  addPlacement?: 'floating' | 'inline' | 'none';
+  /** Default: `[]` */
+  include?: string[];
+  /** Default: `[{"label":"To Do","variant":"default","icon":"circle","key":"todo"},{"label":"In Progress","key":"doing","icon":"circle-dot","variant":"primary"},{"variant":"success","icon":"check-circle","key":"done","label":"Done"}]` */
+  columns?: EntityRow[];
+  /** Default: `"@item.description"` */
+  cardDescriptionBinding?: string;
+  /** Default: `"Search…"` */
+  searchPlaceholder?: string;
+  /** Default: `{"type":"stack","gap":"md","direction":"vertical","children":[["if",["=","@config.addPlacement","inline"],{"justify":"end","gap":"sm","direction":"horizontal","type":"stack","children":[{"label":"Add item","type":"button","variant":"secondary","icon":"plus","action":"ADD_CARD","size":"sm"}]},{"gap":"none","type":"stack","children":[]}],["if","@config.showHeader",{"type":"stack","direction":"vertical","children":[{"gap":"sm","type":"stack","children":[{"type":"icon","name":"kanban-square","size":"lg"},{"variant":"h3","type":"typography","content":"@config.title"}],"direction":"horizontal","align":"center"},{"type":"divider"}],"gap":"md"},{"gap":"none","type":"stack","children":[]}],["if","@config.bodySearch",{"type":"stack","direction":"horizontal","gap":"sm","children":[{"className":"w-full max-w-md","placeholder":"@config.searchPlaceholder","type":"search-input","clearable":true,"event":"REFETCH_QUERY"}]},{"children":[],"type":"stack","gap":"none"}],["if",[">",["array/len","@config.filters"],0],{"type":"stack","direction":"horizontal","children":[{"event":"REFETCH_FILTER","entity":"BoardView","type":"filter-group","filters":"@config.filters","look":"@config.filterBarLook"}],"gap":"sm"},{"type":"stack","children":[],"gap":"none"}],{"gap":"md","cols":"@config.gridCols","type":"data-grid","dndRoot":"@config.draggable","fields":[],"entity":"@entity.boards","renderItem":["fn",["col","colIndex"],{"type":"card","children":[{"direction":"vertical","gap":"sm","type":"stack","children":[{"gap":"xs","children":[{"type":"icon","name":"@col.icon"},{"content":["if",["==",["array/len","@config.columnLabels"],0],"@col.label",["array/nth","@config.columnLabels","@colIndex"]],"variant":"h4","type":"typography"},{"type":"badge","label":"@col.count","variant":"@col.variant"}],"align":"center","type":"stack","direction":"horizontal"},{"type":"data-list","sortable":"@config.draggable","gap":"sm","itemEnter":"@config.cardEnter","accepts":["if","@config.draggable","*",""],"dropEvent":"MOVE_CARD","renderItem":["fn","item",{"look":"@config.cardLook","children":[{"gap":"xs","children":[{"content":"@config.cardTitleBinding","variant":"h4","type":"typography"},{"color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"children":[{"label":"Open","action":"OPEN_CARD","type":"button","variant":"ghost","icon":"arrow-right","actionPayload":{"description":"@config.cardDescriptionBinding","notes":"@config.cardNotesBinding","row":"@item","id":"@config.cardIdBinding","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"}}],"type":"stack","align":"center","direction":"horizontal","gap":"xs"}],"type":"stack","direction":"vertical"}],"type":"card"}],"dragGroup":["if","@config.draggable","@col.key",""],"positionEvent":"REORDER_POSITION","entity":"@col.items","fields":[],"reorderEvent":"REORDER_CARD"}]}],"look":"@config.cardLook"}]},["if",["=","@config.addPlacement","floating"],{"variant":"primary","action":"ADD_CARD","type":"floating-action-button","icon":"plus","label":"Add item"},{"type":"stack","gap":"none","children":[]}]]}` */
+  bodyContent?: unknown;
+  /** Default: `[]` */
+  filters?: EntityRow[];
+  /** Default: `"@item.title"` */
+  cardTitleBinding?: string;
+  /** Default: `[{"icon":"trash-2","variant":"danger","event":"DELETE_CARD","label":"Delete"}]` */
+  cardActions?: EntityRow[];
+  /** Default: `{"direction":"horizontal","type":"stack","gap":"sm","align":"center","children":["array/map",["array/filter","@config.cardActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],["fn","a",{"label":"@a.label","icon":"@a.icon","type":"button","action":"@a.event","variant":"@a.variant","actionPayload":{"id":"@entity.currentId"}}]]}` */
+  cardActionsContent?: unknown;
+  /** Default: `true` */
+  showHeader?: boolean;
+  /** Default: `true` */
+  draggable?: boolean;
+  /** Default: `"@item.notes"` */
+  cardNotesBinding?: string;
+  /** Default: `"elevated"` */
+  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `"none"` */
+  cardEnter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `"@item.stage"` */
+  cardStageBinding?: string;
+  /** Default: `10` */
+  pageSize?: number;
   /** Default: `""` */
   viewerRole?: string;
+  /** Default: `"@item.id"` */
+  cardIdBinding?: string;
+  /** Default: `[]` */
+  columnLabels?: string[];
+  /** Default: `{"className":"h-full","direction":"vertical","children":[["if",["=","@config.addPlacement","inline"],{"gap":"sm","justify":"end","type":"stack","children":[{"size":"sm","label":"Add card","action":"ADD_CARD","type":"button","variant":"secondary","icon":"plus"}],"direction":"horizontal"},{"children":[],"type":"stack","gap":"none"}],["if","@config.showHeader",{"direction":"vertical","gap":"md","children":[{"className":"px-card-md","direction":"horizontal","align":"center","gap":"sm","children":[{"type":"icon","size":"xl","name":"kanban-square"},{"variant":"h2","type":"typography","content":"@config.title"}],"type":"stack"},{"type":"divider"}],"type":"stack"},{"type":"stack","gap":"none","children":[]}],["if","@config.bodySearch",{"type":"stack","className":"px-card-md","children":[{"type":"search-input","event":"REFETCH_QUERY","className":"w-full max-w-md","placeholder":"@config.searchPlaceholder","clearable":true}],"gap":"sm","direction":"horizontal"},{"gap":"none","type":"stack","children":[]}],["if",[">",["array/len","@config.filters"],0],{"children":[{"event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","entity":"BoardView","type":"filter-group"}],"gap":"sm","className":"px-card-md","type":"stack","direction":"horizontal"},{"type":"stack","gap":"none","children":[]}],{"dndRoot":"@config.draggable","gap":"lg","scrollX":true,"entity":"@entity.boards","className":"w-full pb-2","fields":[],"minCardWidth":300,"renderItem":["fn",["col","colIndex"],{"look":"elevated","className":"w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden","padding":"none","children":[{"children":[{"gap":"sm","align":"center","children":[{"name":"@col.icon","type":"icon"},{"type":"typography","variant":"h4","className":"flex-1","content":["if",["==",["array/len","@config.columnLabels"],0],"@col.label",["array/nth","@config.columnLabels","@colIndex"]]},{"variant":"primary","label":"@col.count","size":"sm","type":"badge"}],"type":"stack","direction":"horizontal","className":"p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]"},{"accepts":["if","@config.draggable","*",""],"positionEvent":"REORDER_POSITION","dropEvent":"MOVE_CARD","gap":"sm","renderItem":["fn","item",{"className":"cursor-grab hover:shadow-lg transition-shadow","padding":"sm","type":"card","children":[{"gap":"xs","type":"stack","direction":"vertical","children":[{"variant":"body","type":"typography","weight":"medium","content":"@config.cardTitleBinding"},{"className":"line-clamp-2","variant":"caption","type":"typography","color":"muted","content":"@config.cardDescriptionBinding"},{"children":[{"label":"@config.cardStageBinding","type":"badge","size":"sm","variant":"@col.variant"},{"icon":"arrow-right","label":"Open","type":"button","action":"OPEN_CARD","size":"sm","actionPayload":{"row":"@item","id":"@config.cardIdBinding","stage":"@config.cardStageBinding","notes":"@config.cardNotesBinding","title":"@config.cardTitleBinding","description":"@config.cardDescriptionBinding"},"variant":"ghost","className":"ml-auto"}],"type":"stack","direction":"horizontal","className":"pt-1","gap":"xs","align":"center"}]}],"look":"@config.cardLook"}],"dragGroup":["if","@config.draggable","@col.key",""],"type":"data-list","reorderEvent":"REORDER_CARD","entity":"@col.items","sortable":"@config.draggable","itemEnter":"@config.cardEnter","fields":[],"className":"p-card-md min-h-[120px]"}],"gap":"none","type":"stack","direction":"vertical"}],"type":"card"}],"type":"data-grid"},["if",["=","@config.addPlacement","floating"],{"label":"Add card","action":"ADD_CARD","variant":"primary","type":"floating-action-button","icon":"plus"},{"type":"stack","children":[],"gap":"none"}]],"type":"stack","gap":"md"}` */
+  kanbanClassicBodyContent?: unknown;
+  /** Default: `"toolbar"` */
+  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
 }
 
 /**
@@ -327,118 +327,65 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'The descriptive name of the board.',
             'name': 'title',
-            'required': true,
-            'synonyms': 'name, heading, label',
             'type': 'string',
+            'required': true,
+            'description': 'The descriptive name of the board.',
+            'synonyms': 'name, heading, label',
           },
           {
+            'name': 'description',
+            'type': 'string',
             'default': '',
             'description': 'A textual explanation or summary of the board.',
-            'name': 'description',
             'synonyms': 'summary, details, notes, explanation',
-            'type': 'string',
           },
           {
-            'default': 'todo',
-            'description': 'The current status or lifecycle phase of the board.',
             'name': 'stage',
-            'synonyms': 'status, lifecycle, progress, state',
             'type': 'string',
+            'default': 'todo',
             'values': [
               'todo',
               'doing',
               'done',
             ],
+            'description': 'The current status or lifecycle phase of the board.',
+            'synonyms': 'status, lifecycle, progress, state',
           },
           {
+            'name': 'notes',
+            'type': 'string',
             'default': '',
             'description': 'Free-form text providing additional information.',
-            'name': 'notes',
             'synonyms': 'comments, remarks, details, annotations',
-            'type': 'string',
           },
           {
+            'name': 'position',
+            'type': 'number',
             'default': 0,
             'description': 'The sequential order of this item within a collection.',
-            'name': 'position',
             'synonyms': 'order, sequence, index, rank',
-            'type': 'number',
           },
           {
+            'name': 'boards',
+            'type': 'array',
             'default': [],
-            'intrinsic': true,
             'items': {
+              'type': 'object',
               'properties': {
-                'count': {
-                  'name': 'count',
-                  'required': false,
-                  'type': 'number',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'items': {
-                  'items': {
-                    'properties': {
-                      'description': {
-                        'name': 'description',
-                        'required': false,
-                        'type': 'string',
-                      },
-                      'id': {
-                        'name': 'id',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      'notes': {
-                        'name': 'notes',
-                        'required': false,
-                        'type': 'string',
-                      },
-                      'position': {
-                        'name': 'position',
-                        'required': false,
-                        'type': 'number',
-                      },
-                      'stage': {
-                        'name': 'stage',
-                        'required': false,
-                        'type': 'string',
-                      },
-                      'title': {
-                        'name': 'title',
-                        'required': false,
-                        'type': 'string',
-                      },
-                    },
-                    'type': 'object',
-                  },
-                  'name': 'items',
-                  'required': false,
-                  'type': 'array',
-                },
-                'key': {
-                  'name': 'key',
-                  'required': true,
-                  'type': 'string',
-                },
                 'label': {
                   'name': 'label',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'variant': {
                   'name': 'variant',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
                   'values': [
                     'default',
                     'primary',
@@ -448,56 +395,109 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                     'info',
                   ],
                 },
+                'count': {
+                  'name': 'count',
+                  'type': 'number',
+                  'required': false,
+                },
+                'items': {
+                  'name': 'items',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'title': {
+                        'name': 'title',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'stage': {
+                        'name': 'stage',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'notes': {
+                        'name': 'notes',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'description': {
+                        'name': 'description',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'id': {
+                        'name': 'id',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'position': {
+                        'name': 'position',
+                        'type': 'number',
+                        'required': false,
+                      },
+                    },
+                  },
+                },
+                'key': {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
               },
-              'type': 'object',
             },
-            'name': 'boards',
-            'type': 'array',
+            'intrinsic': true,
           },
           {
-            'default': '',
-            'intrinsic': true,
             'name': 'currentId',
             'type': 'string',
-          },
-          {
             'default': '',
             'intrinsic': true,
+          },
+          {
             'name': 'currentTitle',
             'type': 'string',
-          },
-          {
             'default': '',
             'intrinsic': true,
+          },
+          {
             'name': 'currentDescription',
             'type': 'string',
-          },
-          {
             'default': '',
             'intrinsic': true,
+          },
+          {
             'name': 'currentStage',
             'type': 'string',
-          },
-          {
             'default': '',
             'intrinsic': true,
-            'name': 'currentNotes',
-            'type': 'string',
           },
           {
-            'default': {},
+            'name': 'currentNotes',
+            'type': 'string',
+            'default': '',
             'intrinsic': true,
+          },
+          {
+            'name': 'currentRow',
+            'type': 'object',
+            'default': {},
             'items': {
               'type': 'scalar',
             },
-            'name': 'currentRow',
-            'type': 'object',
+            'intrinsic': true,
           },
           {
-            'default': '',
-            'intrinsic': true,
             'name': 'errorMessage',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -508,1029 +508,20 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'addPlacement': {
-            'default': 'floating',
-            'description': 'Where the add-item button sits: \'floating\' (default) pins a floating action button to the screen corner; \'inline\' renders an ordinary Add button above the columns, for a board embedded in a card or panel.; none hides the add button (a read-only board)',
-            'label': 'Add button placement',
-            'synonyms': 'add button position, floating add, inline add, add item button placement. user phrases: \'put the add button inside the board\' / \'no floating button\' -> inline',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'floating',
-              'inline',
-              'none',
-            ],
-          },
-          'boardLook': {
-            'default': 'columns',
-            'description': 'Layer 3 body layout: default N-column data-grid (\'columns\'), or a Trello-style wide-column kanban with sticky column headers (\'kanban-classic\').',
-            'label': 'Board look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'columns',
-              'kanban-classic',
-            ],
-          },
-          'bodyContent': {
-            'default': {
-              'children': [
-                [
-                  'if',
-                  [
-                    '=',
-                    '@config.addPlacement',
-                    'inline',
-                  ],
-                  {
-                    'children': [
-                      {
-                        'action': 'ADD_CARD',
-                        'icon': 'plus',
-                        'label': 'Add item',
-                        'size': 'sm',
-                        'type': 'button',
-                        'variant': 'secondary',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'justify': 'end',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                [
-                  'if',
-                  '@config.showHeader',
-                  {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'name': 'kanban-square',
-                            'size': 'lg',
-                            'type': 'icon',
-                          },
-                          {
-                            'content': '@config.title',
-                            'type': 'typography',
-                            'variant': 'h3',
-                          },
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
-                      },
-                      {
-                        'type': 'divider',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                [
-                  'if',
-                  '@config.bodySearch',
-                  {
-                    'children': [
-                      {
-                        'className': 'w-full max-w-md',
-                        'clearable': true,
-                        'event': 'REFETCH_QUERY',
-                        'placeholder': '@config.searchPlaceholder',
-                        'type': 'search-input',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                [
-                  'if',
-                  [
-                    '>',
-                    [
-                      'array/len',
-                      '@config.filters',
-                    ],
-                    0,
-                  ],
-                  {
-                    'children': [
-                      {
-                        'entity': 'BoardView',
-                        'event': 'REFETCH_FILTER',
-                        'filters': '@config.filters',
-                        'look': '@config.filterBarLook',
-                        'type': 'filter-group',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                {
-                  'cols': '@config.gridCols',
-                  'dndRoot': '@config.draggable',
-                  'entity': '@entity.boards',
-                  'fields': [],
-                  'gap': 'md',
-                  'renderItem': [
-                    'fn',
-                    [
-                      'col',
-                      'colIndex',
-                    ],
-                    {
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': '@col.icon',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': [
-                                    'if',
-                                    [
-                                      '==',
-                                      [
-                                        'array/len',
-                                        '@config.columnLabels',
-                                      ],
-                                      0,
-                                    ],
-                                    '@col.label',
-                                    [
-                                      'array/nth',
-                                      '@config.columnLabels',
-                                      '@colIndex',
-                                    ],
-                                  ],
-                                  'type': 'typography',
-                                  'variant': 'h4',
-                                },
-                                {
-                                  'label': '@col.count',
-                                  'type': 'badge',
-                                  'variant': '@col.variant',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'xs',
-                              'type': 'stack',
-                            },
-                            {
-                              'accepts': [
-                                'if',
-                                '@config.draggable',
-                                '*',
-                                '',
-                              ],
-                              'dragGroup': [
-                                'if',
-                                '@config.draggable',
-                                '@col.key',
-                                '',
-                              ],
-                              'dropEvent': 'MOVE_CARD',
-                              'entity': '@col.items',
-                              'fields': [],
-                              'gap': 'sm',
-                              'itemEnter': '@config.cardEnter',
-                              'positionEvent': 'REORDER_POSITION',
-                              'renderItem': [
-                                'fn',
-                                'item',
-                                {
-                                  'children': [
-                                    {
-                                      'children': [
-                                        {
-                                          'content': '@config.cardTitleBinding',
-                                          'type': 'typography',
-                                          'variant': 'h4',
-                                        },
-                                        {
-                                          'color': 'muted',
-                                          'content': '@config.cardDescriptionBinding',
-                                          'type': 'typography',
-                                          'variant': 'caption',
-                                        },
-                                        {
-                                          'align': 'center',
-                                          'children': [
-                                            {
-                                              'action': 'OPEN_CARD',
-                                              'actionPayload': {
-                                                'description': '@config.cardDescriptionBinding',
-                                                'id': '@config.cardIdBinding',
-                                                'notes': '@config.cardNotesBinding',
-                                                'row': '@item',
-                                                'stage': '@config.cardStageBinding',
-                                                'title': '@config.cardTitleBinding',
-                                              },
-                                              'icon': 'arrow-right',
-                                              'label': 'Open',
-                                              'type': 'button',
-                                              'variant': 'ghost',
-                                            },
-                                          ],
-                                          'direction': 'horizontal',
-                                          'gap': 'xs',
-                                          'type': 'stack',
-                                        },
-                                      ],
-                                      'direction': 'vertical',
-                                      'gap': 'xs',
-                                      'type': 'stack',
-                                    },
-                                  ],
-                                  'look': '@config.cardLook',
-                                  'type': 'card',
-                                },
-                              ],
-                              'reorderEvent': 'REORDER_CARD',
-                              'sortable': '@config.draggable',
-                              'type': 'data-list',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'sm',
-                          'type': 'stack',
-                        },
-                      ],
-                      'look': '@config.cardLook',
-                      'type': 'card',
-                    },
-                  ],
-                  'type': 'data-grid',
-                },
-                [
-                  'if',
-                  [
-                    '=',
-                    '@config.addPlacement',
-                    'floating',
-                  ],
-                  {
-                    'action': 'ADD_CARD',
-                    'icon': 'plus',
-                    'label': 'Add item',
-                    'type': 'floating-action-button',
-                    'variant': 'primary',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'direction': 'vertical',
-              'gap': 'md',
-              'type': 'stack',
-            },
-            'description': 'Render-ui SExpr rendered after the board loads for boardLook=\'columns\' — the canonical column data-grid with nested per-column data-lists. boardLook=\'kanban-classic\' renders kanbanClassicBodyContent instead; both share this trait\'s state machine, emits, and listens.',
-            'label': 'Body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
-          'bodySearch': {
-            'default': false,
-            'description': 'Renders an inline search box above the columns. Defaults false: unlike std-browse, std-board has never had a search box, so defaulting this true would silently add one to every existing consumer. The wired path — composing std-search beside the board and routing its FILTER/SEARCH event to REFETCH_QUERY — works regardless of this knob; set true only for a standalone board with no page-level search affordance.',
-            'label': 'Show the board\'s own search box?',
-            'synonyms': 'inline search, board search, built-in search, show search, duplicate search',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'cardActions': {
-            'default': [
-              {
-                'event': 'DELETE_CARD',
-                'icon': 'trash-2',
-                'label': 'Delete',
-                'variant': 'danger',
-              },
-            ],
-            'description': 'Buttons on the open-card panel\'s actions row, built by the default cardActionsContent. Give an item `roles` to show it only to those viewer roles.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                    'danger',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Card panel action list',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'cardActionsContent': {
-            'default': {
-              'align': 'center',
-              'children': [
-                'array/map',
-                [
-                  'array/filter',
-                  '@config.cardActions',
-                  [
-                    'fn',
-                    'action',
-                    [
-                      'or',
-                      [
-                        '=',
-                        [
-                          'array/len',
-                          [
-                            'object/get',
-                            '@action',
-                            'roles',
-                            [],
-                          ],
-                        ],
-                        0,
-                      ],
-                      [
-                        'array/includes',
-                        [
-                          'object/get',
-                          '@action',
-                          'roles',
-                          [],
-                        ],
-                        '@config.viewerRole',
-                      ],
-                    ],
-                  ],
-                ],
-                [
-                  'fn',
-                  'a',
-                  {
-                    'action': '@a.event',
-                    'actionPayload': {
-                      'id': '@entity.currentId',
-                    },
-                    'icon': '@a.icon',
-                    'label': '@a.label',
-                    'type': 'button',
-                    'variant': '@a.variant',
-                  },
-                ],
-              ],
-              'direction': 'horizontal',
-              'gap': 'sm',
-              'type': 'stack',
-            },
-            'description': 'Actions row of the open-card panel. Default is the Delete button only. Override to add consumer-wired actions — e.g. an Edit button with action: EDIT_CARD and actionPayload: { id: @entity.currentId, row: @entity.currentRow }, listened to by the organism\'s edit modal. Never leave a button here without a listener.',
-            'label': 'Card panel actions',
-            'tier': 'presentation',
-            'type': 'render-ui',
-          },
-          'cardDescriptionBinding': {
-            'default': '@item.description',
-            'description': 'Per-card binding for the description slot.',
-            'label': 'Card description binding',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cardEnter': {
-            'default': 'none',
-            'description': 'Animation a card plays when it appears in a column, so a moved card visibly arrives',
-            'label': 'Card entrance',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'cardIdBinding': {
-            'default': '@item.id',
-            'description': 'Per-card binding for the id used in action payloads.',
-            'label': 'Card id binding',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cardLook': {
-            'default': 'elevated',
-            'description': 'Layer 2 visual treatment for cards rendered by this board.',
-            'label': 'Card look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'elevated',
-              'flat-bordered',
-              'borderless-divider',
-              'ticket',
-              'invoice',
-              'chip',
-              'tile-image-first',
-            ],
-          },
-          'cardNotesBinding': {
-            'default': '@item.notes',
-            'description': 'Per-card binding for the notes slot shown in the card detail view. Set to an empty string for hosts with no notes-equivalent field — declared as \'no notes capture\', never inferred.',
-            'label': 'Card notes binding',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cardStageBinding': {
-            'default': '@item.stage',
-            'description': 'Per-card binding for the stage/status slot.',
-            'label': 'Card stage binding',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cardTitleBinding': {
-            'default': '@item.title',
-            'description': 'Per-card binding for the title slot.',
-            'label': 'Card title binding',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'columnLabels': {
-            'default': [],
-            'description': 'Optional labels in the same order as the columns, used only where the board is drawn, so they may be translated; empty shows each column\'s own label',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Column labels',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'columns': {
-            'default': [
-              {
-                'icon': 'circle',
-                'key': 'todo',
-                'label': 'To Do',
-                'variant': 'default',
-              },
-              {
-                'icon': 'circle-dot',
-                'key': 'doing',
-                'label': 'In Progress',
-                'variant': 'primary',
-              },
-              {
-                'icon': 'check-circle',
-                'key': 'done',
-                'label': 'Done',
-                'variant': 'success',
-              },
-            ],
-            'description': 'Board columns; each row\'s stage maps to a column key',
-            'items': {
-              'properties': {
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'key': {
-                  'name': 'key',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Columns',
-            'tier': 'domain',
-            'type': '[ColumnSpec]',
-          },
-          'draggable': {
-            'default': true,
-            'description': 'Let people drag cards between columns and reorder them; off shows the board read-only to the pointer (moves still work through events)',
-            'label': 'Drag cards',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'filterBarLook': {
-            'default': 'toolbar',
-            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
-            'label': 'Filter bar look',
-            'synonyms': 'filter bar style, facet style, chips, pills',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'toolbar',
-              'chips',
-              'pills',
-              'popover-trigger',
-              'inline-column-header',
-            ],
-          },
-          'filters': {
-            'default': [],
-            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the columns; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this board and routes its FILTER event to REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone board with no page-level filter affordance.',
-            'items': {
-              'properties': {
-                'field': {
-                  'name': 'field',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'options': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'options',
-                  'required': false,
-                  'type': 'array',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Which filters should appear above the board?',
-            'synonyms': 'filter bar, faceted filters, field filters, column filters, dropdowns',
-            'tier': 'presentation',
-            'type': '[FilterSpec]',
-          },
-          'formFields': {
-            'default': [
-              'title',
-              'description',
-              'stage',
-              'notes',
-            ],
-            'description': 'Fields shown in the add-card form',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'New-card fields',
-            'tier': 'presentation',
-            'type': '[string]',
-          },
-          'gridCols': {
-            'default': 3,
-            'description': 'Outer grid column count before the board wraps',
-            'label': 'Grid columns',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'groupByField': {
-            'default': 'stage',
-            'description': 'Entity field whose value matches a column key — items are filtered into columns by it. Default \'stage\'; set to \'status\' (or any field) for entities that track state under a different name.',
-            'label': 'Group-by field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'include': {
-            'default': [],
-            'description': 'Entity relation field names to hydrate on fetch (e.g. an `assignee : TeamMember` field named `assignee`), so card bindings can use dot-paths like @item.assignee.name. Empty = no hydration, the default.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Which relation fields to hydrate?',
-            'synonyms': 'relation hydration, populate relations, joined fields, hydrate relations',
-            'tier': 'domain',
-            'type': '[string]',
-          },
-          'kanbanClassicBodyContent': {
-            'default': {
-              'children': [
-                [
-                  'if',
-                  [
-                    '=',
-                    '@config.addPlacement',
-                    'inline',
-                  ],
-                  {
-                    'children': [
-                      {
-                        'action': 'ADD_CARD',
-                        'icon': 'plus',
-                        'label': 'Add card',
-                        'size': 'sm',
-                        'type': 'button',
-                        'variant': 'secondary',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'justify': 'end',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                [
-                  'if',
-                  '@config.showHeader',
-                  {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'name': 'kanban-square',
-                            'size': 'xl',
-                            'type': 'icon',
-                          },
-                          {
-                            'content': '@config.title',
-                            'type': 'typography',
-                            'variant': 'h2',
-                          },
-                        ],
-                        'className': 'px-card-md',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
-                      },
-                      {
-                        'type': 'divider',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                [
-                  'if',
-                  '@config.bodySearch',
-                  {
-                    'children': [
-                      {
-                        'className': 'w-full max-w-md',
-                        'clearable': true,
-                        'event': 'REFETCH_QUERY',
-                        'placeholder': '@config.searchPlaceholder',
-                        'type': 'search-input',
-                      },
-                    ],
-                    'className': 'px-card-md',
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                [
-                  'if',
-                  [
-                    '>',
-                    [
-                      'array/len',
-                      '@config.filters',
-                    ],
-                    0,
-                  ],
-                  {
-                    'children': [
-                      {
-                        'entity': 'BoardView',
-                        'event': 'REFETCH_FILTER',
-                        'filters': '@config.filters',
-                        'look': '@config.filterBarLook',
-                        'type': 'filter-group',
-                      },
-                    ],
-                    'className': 'px-card-md',
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                {
-                  'className': 'w-full pb-2',
-                  'dndRoot': '@config.draggable',
-                  'entity': '@entity.boards',
-                  'fields': [],
-                  'gap': 'lg',
-                  'minCardWidth': 300,
-                  'renderItem': [
-                    'fn',
-                    [
-                      'col',
-                      'colIndex',
-                    ],
-                    {
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': '@col.icon',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'className': 'flex-1',
-                                  'content': [
-                                    'if',
-                                    [
-                                      '==',
-                                      [
-                                        'array/len',
-                                        '@config.columnLabels',
-                                      ],
-                                      0,
-                                    ],
-                                    '@col.label',
-                                    [
-                                      'array/nth',
-                                      '@config.columnLabels',
-                                      '@colIndex',
-                                    ],
-                                  ],
-                                  'type': 'typography',
-                                  'variant': 'h4',
-                                },
-                                {
-                                  'label': '@col.count',
-                                  'size': 'sm',
-                                  'type': 'badge',
-                                  'variant': 'primary',
-                                },
-                              ],
-                              'className': 'p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'type': 'stack',
-                            },
-                            {
-                              'accepts': [
-                                'if',
-                                '@config.draggable',
-                                '*',
-                                '',
-                              ],
-                              'className': 'p-card-md min-h-[120px]',
-                              'dragGroup': [
-                                'if',
-                                '@config.draggable',
-                                '@col.key',
-                                '',
-                              ],
-                              'dropEvent': 'MOVE_CARD',
-                              'entity': '@col.items',
-                              'fields': [],
-                              'gap': 'sm',
-                              'itemEnter': '@config.cardEnter',
-                              'positionEvent': 'REORDER_POSITION',
-                              'renderItem': [
-                                'fn',
-                                'item',
-                                {
-                                  'children': [
-                                    {
-                                      'children': [
-                                        {
-                                          'content': '@config.cardTitleBinding',
-                                          'type': 'typography',
-                                          'variant': 'body',
-                                          'weight': 'medium',
-                                        },
-                                        {
-                                          'className': 'line-clamp-2',
-                                          'color': 'muted',
-                                          'content': '@config.cardDescriptionBinding',
-                                          'type': 'typography',
-                                          'variant': 'caption',
-                                        },
-                                        {
-                                          'align': 'center',
-                                          'children': [
-                                            {
-                                              'label': '@config.cardStageBinding',
-                                              'size': 'sm',
-                                              'type': 'badge',
-                                              'variant': '@col.variant',
-                                            },
-                                            {
-                                              'action': 'OPEN_CARD',
-                                              'actionPayload': {
-                                                'description': '@config.cardDescriptionBinding',
-                                                'id': '@config.cardIdBinding',
-                                                'notes': '@config.cardNotesBinding',
-                                                'row': '@item',
-                                                'stage': '@config.cardStageBinding',
-                                                'title': '@config.cardTitleBinding',
-                                              },
-                                              'className': 'ml-auto',
-                                              'icon': 'arrow-right',
-                                              'label': 'Open',
-                                              'size': 'sm',
-                                              'type': 'button',
-                                              'variant': 'ghost',
-                                            },
-                                          ],
-                                          'className': 'pt-1',
-                                          'direction': 'horizontal',
-                                          'gap': 'xs',
-                                          'type': 'stack',
-                                        },
-                                      ],
-                                      'direction': 'vertical',
-                                      'gap': 'xs',
-                                      'type': 'stack',
-                                    },
-                                  ],
-                                  'className': 'cursor-grab hover:shadow-lg transition-shadow',
-                                  'look': '@config.cardLook',
-                                  'padding': 'sm',
-                                  'type': 'card',
-                                },
-                              ],
-                              'reorderEvent': 'REORDER_CARD',
-                              'sortable': '@config.draggable',
-                              'type': 'data-list',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'none',
-                          'type': 'stack',
-                        },
-                      ],
-                      'className': 'w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden',
-                      'look': 'elevated',
-                      'padding': 'none',
-                      'type': 'card',
-                    },
-                  ],
-                  'scrollX': true,
-                  'type': 'data-grid',
-                },
-                [
-                  'if',
-                  [
-                    '=',
-                    '@config.addPlacement',
-                    'floating',
-                  ],
-                  {
-                    'action': 'ADD_CARD',
-                    'icon': 'plus',
-                    'label': 'Add card',
-                    'type': 'floating-action-button',
-                    'variant': 'primary',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'className': 'h-full',
-              'direction': 'vertical',
-              'gap': 'md',
-              'type': 'stack',
-            },
-            'description': 'Render-ui SExpr for boardLook=\'kanban-classic\' — Trello-style wide elevated columns with sticky headers, dense cards with a status badge; per-item cards honor config.cardLook (the column wrapper stays elevated — it is column chrome, not a card).',
-            'label': 'Kanban classic body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
-          'pageSize': {
-            'default': 10,
-            'description': 'Records fetched per REFETCH_PAGE request. std-board renders no pagination control itself — this only feeds the fetch limit/offset when a consumer wires a composed std-pagination to REFETCH_PAGE.',
-            'label': 'Fetch page size',
-            'synonyms': 'fetch limit, records per page, batch size, page limit',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'searchField': {
-            'default': 'title',
-            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field (e.g. name, summary) or the search box can never match a card.',
-            'label': 'Which column does the search box match against?',
-            'synonyms': 'search column, search on field, match field, search key',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'searchPlaceholder': {
-            'default': 'Search…',
-            'description': 'Hint text inside the board\'s embedded search box (e.g. \'Search cards…\'). Only shown when bodySearch is true.',
-            'label': 'Search box placeholder text',
-            'synonyms': 'search hint, placeholder, search box text, search label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'showHeader': {
-            'default': true,
-            'description': 'Off when the page already carries a page header naming the same thing, so the page shows one title.',
-            'label': 'Show the board\'s own title row?',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'title': {
-            'default': 'Board',
-            'description': 'Heading shown above the column board',
-            'label': 'Board title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each card action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
+        'name': 'BoardItemBoard',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'boards',
+            'currentDescription',
+            'currentId',
+            'currentNotes',
+            'currentRow',
+            'currentStage',
+            'currentTitle',
+            'errorMessage',
+          ],
         },
         'effectRow': [
           {
@@ -1582,64 +573,68 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'resource': '@entity.errorMessage',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'BoardView',
         'emits': [
           {
-            'description': 'Indicates a card within the board has been selected.',
             'event': 'OPEN_CARD',
+            'description': 'Indicates a card within the board has been selected.',
+            'synonyms': 'select, choose, activate, display',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'row',
-                'required': true,
                 'type': '@entity',
+                'required': true,
               },
             ],
-            'synonyms': 'select, choose, activate, display',
-            'tier': 'domain',
           },
           {
-            'description': 'Signals a card is being dismissed or closed.',
             'event': 'CLOSE_CARD',
+            'description': 'Signals a card is being dismissed or closed.',
             'synonyms': 'dismiss, hide, close, remove',
             'tier': 'domain',
           },
           {
-            'description': 'Signals a new card is being added to the board.',
             'event': 'ADD_CARD',
+            'description': 'Signals a new card is being added to the board.',
             'synonyms': 'create, new, append',
             'tier': 'domain',
           },
           {
-            'description': 'Aborts an in-progress addition operation.',
             'event': 'CANCEL_ADD',
+            'description': 'Aborts an in-progress addition operation.',
             'synonyms': 'discard, undo, reset',
             'tier': 'presentation',
           },
           {
-            'description': 'Signals that a card\'s data has been successfully saved.',
             'event': 'SAVE_CARD',
+            'description': 'Signals that a card\'s data has been successfully saved.',
+            'synonyms': 'persist, update, store',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'data',
-                'required': true,
                 'type': '@entity',
+                'required': true,
               },
             ],
-            'synonyms': 'persist, update, store',
-            'tier': 'domain',
           },
           {
-            'description': 'Signals a card has been repositioned within a column.',
             'event': 'MOVE_CARD',
+            'description': 'Signals a card has been repositioned within a column.',
+            'synonyms': 'reorder, drag, reposition',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'sourceGroup',
@@ -1647,25 +642,25 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
               },
               {
                 'name': 'targetGroup',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'newIndex',
                 'type': 'number',
               },
             ],
-            'synonyms': 'reorder, drag, reposition',
-            'tier': 'presentation',
           },
           {
-            'description': 'Signals a change in the order of cards within a column.',
             'event': 'REORDER_CARD',
+            'description': 'Signals a change in the order of cards within a column.',
+            'synonyms': 'rearrange, sort, shuffle, reposition',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'oldIndex',
@@ -1676,47 +671,47 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 'type': 'number',
               },
             ],
-            'synonyms': 'rearrange, sort, shuffle, reposition',
-            'tier': 'presentation',
           },
           {
-            'description': 'Signals removal of a card from the board.',
             'event': 'DELETE_CARD',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-            ],
+            'description': 'Signals removal of a card from the board.',
             'synonyms': 'remove, delete, discard',
             'tier': 'presentation',
-          },
-          {
-            'description': 'Signals a request to edit the currently open card. The board renders no edit form itself — consumers override cardActionsContent with an Edit button and wire this emit to their edit modal/form trait.',
-            'event': 'EDIT_CARD',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'EDIT_CARD',
+            'description': 'Signals a request to edit the currently open card. The board renders no edit form itself — consumers override cardActionsContent with an Edit button and wire this emit to their edit modal/form trait.',
+            'synonyms': 'edit, modify, update, change',
+            'tier': 'domain',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
               },
               {
                 'name': 'row',
                 'type': '@entity',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'edit, modify, update, change',
-            'tier': 'domain',
           },
           {
-            'description': 'Signals that board items have been successfully loaded.',
             'event': 'BoardItemsLoaded',
+            'description': 'Signals that board items have been successfully loaded.',
+            'synonyms': 'loaded, fetched, retrieved, populated',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ObjectSpec',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -1731,15 +726,15 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ObjectSpec',
               },
             ],
-            'synonyms': 'loaded, fetched, retrieved, populated',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to load board items.',
             'event': 'BoardItemsLoadFailed',
+            'description': 'Indicates a failure to load board items.',
+            'synonyms': 'error, failed, problem, loading failure',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1750,25 +745,25 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failed, problem, loading failure',
-            'tier': 'internal',
           },
           {
-            'description': 'Signals that board items have been successfully saved.',
             'event': 'BoardItemsSaved',
+            'description': 'Signals that board items have been successfully saved.',
+            'synonyms': 'saved, persisted, updated',
+            'tier': 'domain',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'value',
                 'type': '@entity',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'saved, persisted, updated',
-            'tier': 'domain',
           },
           {
-            'description': 'Signals a board item has been deleted; carries the deleted row\'s id, not the row.',
             'event': 'BoardItemDeleted',
+            'description': 'Signals a board item has been deleted; carries the deleted row\'s id, not the row.',
+            'synonyms': 'deleted, removed, discarded',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1779,12 +774,12 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 'type': 'boolean',
               },
             ],
-            'synonyms': 'deleted, removed, discarded',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to save board items.',
             'event': 'BoardItemsSaveFailed',
+            'description': 'Indicates a failure to save board items.',
+            'synonyms': 'error, failed, save error',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1795,40 +790,42 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failed, save error',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'boards',
-            'currentDescription',
-            'currentId',
-            'currentNotes',
-            'currentRow',
-            'currentStage',
-            'currentTitle',
-            'errorMessage',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'BoardView',
-        'name': 'BoardItemBoard',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'viewing_board',
+            },
+            {
+              'name': 'viewing_card',
+            },
+            {
+              'name': 'adding',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Signals that board items have been successfully loaded.',
               'key': 'BoardItemsLoaded',
               'name': 'Board items loaded',
+              'description': 'Signals that board items have been successfully loaded.',
+              'synonyms': 'loaded, fetched, retrieved, populated',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -1843,16 +840,15 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'synonyms': 'loaded, fetched, retrieved, populated',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a failure to load board items.',
               'key': 'BoardItemsLoadFailed',
               'name': 'Board items load failed',
+              'description': 'Indicates a failure to load board items.',
+              'synonyms': 'error, failed, problem, loading failure',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1863,26 +859,26 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failed, problem, loading failure',
-              'tier': 'internal',
             },
             {
-              'description': 'Signals that board items have been successfully saved.',
               'key': 'BoardItemsSaved',
               'name': 'Board items saved',
+              'description': 'Signals that board items have been successfully saved.',
+              'synonyms': 'saved, persisted, updated',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': '@entity',
                 },
               ],
-              'synonyms': 'saved, persisted, updated',
-              'tier': 'domain',
             },
             {
-              'description': 'Signals a board item has been deleted; carries the deleted row\'s id, not the row.',
               'key': 'BoardItemDeleted',
               'name': 'Board item deleted',
+              'description': 'Signals a board item has been deleted; carries the deleted row\'s id, not the row.',
+              'synonyms': 'deleted, removed, discarded',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1893,13 +889,13 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'type': 'boolean',
                 },
               ],
-              'synonyms': 'deleted, removed, discarded',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a failure to save board items.',
               'key': 'BoardItemsSaveFailed',
               'name': 'Board items save failed',
+              'description': 'Indicates a failure to save board items.',
+              'synonyms': 'error, failed, save error',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1910,23 +906,23 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failed, save error',
-              'tier': 'internal',
             },
             {
-              'description': 'Indicates a card within the board has been selected.',
               'key': 'OPEN_CARD',
               'name': 'Open Card',
+              'description': 'Indicates a card within the board has been selected.',
+              'synonyms': 'select, choose, activate, display',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'row',
-                  'required': true,
                   'type': '@entity',
+                  'required': true,
                 },
                 {
                   'name': 'title',
@@ -1945,25 +941,25 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'type': 'string',
                 },
               ],
-              'synonyms': 'select, choose, activate, display',
-              'tier': 'domain',
             },
             {
-              'description': 'Signals a new card is being added to the board.',
               'key': 'ADD_CARD',
               'name': 'Add Card',
+              'description': 'Signals a new card is being added to the board.',
               'synonyms': 'create, new, append',
               'tier': 'domain',
             },
             {
-              'description': 'Signals a card has been repositioned within a column.',
               'key': 'MOVE_CARD',
               'name': 'Move Card',
+              'description': 'Signals a card has been repositioned within a column.',
+              'synonyms': 'reorder, drag, reposition',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'sourceGroup',
@@ -1971,26 +967,26 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 },
                 {
                   'name': 'targetGroup',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'newIndex',
                   'type': 'number',
                 },
               ],
-              'synonyms': 'reorder, drag, reposition',
-              'tier': 'presentation',
             },
             {
-              'description': 'Signals a change in the order of cards within a column.',
               'key': 'REORDER_CARD',
               'name': 'Reorder Card',
+              'description': 'Signals a change in the order of cards within a column.',
+              'synonyms': 'rearrange, sort, shuffle, reposition',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'oldIndex',
@@ -2001,173 +997,156 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'type': 'number',
                 },
               ],
-              'synonyms': 'rearrange, sort, shuffle, reposition',
-              'tier': 'presentation',
             },
             {
-              'description': 'Indicates a change in the order of items within a column.',
               'key': 'REORDER_POSITION',
               'name': 'Reorder Position',
+              'description': 'Indicates a change in the order of items within a column.',
+              'synonyms': 'sort, rearrange, reposition',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'position',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'synonyms': 'sort, rearrange, reposition',
-              'tier': 'presentation',
             },
             {
-              'description': 'Triggers a board refresh based on the current search query.',
               'key': 'REFETCH_QUERY',
               'name': 'Refetch Query',
+              'description': 'Triggers a board refresh based on the current search query.',
+              'synonyms': 'refresh, reload, update, re-query',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'searchTerm',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'refresh, reload, update, re-query',
-              'tier': 'domain',
             },
             {
-              'description': 'Triggers a board refresh based on current filter criteria.',
               'key': 'REFETCH_FILTER',
               'name': 'Refetch Filter',
+              'description': 'Triggers a board refresh based on current filter criteria.',
+              'synonyms': 'refresh, filter, update, reload',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'entity',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'field',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'value',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'query',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'refresh, filter, update, reload',
-              'tier': 'domain',
             },
             {
-              'description': 'Triggers a board refresh for a given page. std-board itself renders no pagination control; this exists so a composed std-pagination can drive one.',
               'key': 'REFETCH_PAGE',
               'name': 'Refetch Page',
+              'description': 'Triggers a board refresh for a given page. std-board itself renders no pagination control; this exists so a composed std-pagination can drive one.',
+              'synonyms': 'reload, refresh, update, paginate',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'page',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'synonyms': 'reload, refresh, update, paginate',
-              'tier': 'domain',
             },
             {
-              'description': 'Signals a card is being dismissed or closed.',
               'key': 'CLOSE_CARD',
               'name': 'Close Card',
+              'description': 'Signals a card is being dismissed or closed.',
               'synonyms': 'dismiss, hide, close, remove',
               'tier': 'domain',
             },
             {
-              'description': 'Signals removal of a card from the board.',
               'key': 'DELETE_CARD',
               'name': 'Delete Card',
+              'description': 'Signals removal of a card from the board.',
+              'synonyms': 'remove, delete, discard',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'remove, delete, discard',
-              'tier': 'presentation',
             },
             {
-              'description': 'Signals that a card\'s data has been successfully saved.',
               'key': 'SAVE_CARD',
               'name': 'Save Card',
+              'description': 'Signals that a card\'s data has been successfully saved.',
+              'synonyms': 'persist, update, store',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'required': true,
                   'type': '@entity',
+                  'required': true,
                 },
               ],
-              'synonyms': 'persist, update, store',
-              'tier': 'domain',
             },
             {
-              'description': 'Aborts an in-progress addition operation.',
               'key': 'CANCEL_ADD',
               'name': 'Cancel Add',
+              'description': 'Aborts an in-progress addition operation.',
               'synonyms': 'discard, undo, reset',
               'tier': 'presentation',
             },
             {
-              'description': 'Signals a request to edit the currently open card. The board renders no edit form itself — consumers override cardActionsContent with an Edit button and wire this emit to their edit modal/form trait.',
               'key': 'EDIT_CARD',
               'name': 'Edit Card',
+              'description': 'Signals a request to edit the currently open card. The board renders no edit form itself — consumers override cardActionsContent with an Edit button and wire this emit to their edit modal/form trait.',
+              'synonyms': 'edit, modify, update, change',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'row',
                   'type': '@entity',
                 },
               ],
-              'synonyms': 'edit, modify, update, change',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'viewing_board',
-            },
-            {
-              'name': 'viewing_card',
-            },
-            {
-              'name': 'adding',
-            },
-            {
-              'name': 'error',
             },
           ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('BoardView' satisfies _StdBoardEntityName),
                   {
                     'emit': {
-                      'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
+                      'failure': 'BoardItemsLoadFailed',
                     },
                     'include': '@config.include',
                   },
@@ -2181,11 +1160,11 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'viewing_board',
+              'event': 'BoardItemsLoaded',
               'effects': [
                 [
                   'set',
@@ -2197,35 +1176,15 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'fn',
                       'col',
                       {
-                        'count': [
-                          'array/len',
-                          [
-                            'array/filter',
-                            '@payload.data',
-                            [
-                              'fn',
-                              'item',
-                              [
-                                '=',
-                                [
-                                  'object/get',
-                                  '@item',
-                                  '@config.groupByField',
-                                ],
-                                [
-                                  'object/get',
-                                  '@col',
-                                  'key',
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                        'icon': [
+                        'key': [
                           'object/get',
                           '@col',
-                          'icon',
-                          'circle',
+                          'key',
+                        ],
+                        'label': [
+                          'object/get',
+                          '@col',
+                          'label',
                         ],
                         'items': [
                           'array/sort',
@@ -2252,21 +1211,41 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                           ],
                           'position',
                         ],
-                        'key': [
+                        'icon': [
                           'object/get',
                           '@col',
-                          'key',
-                        ],
-                        'label': [
-                          'object/get',
-                          '@col',
-                          'label',
+                          'icon',
+                          'circle',
                         ],
                         'variant': [
                           'object/get',
                           '@col',
                           'variant',
                           'default',
+                        ],
+                        'count': [
+                          'array/len',
+                          [
+                            'array/filter',
+                            '@payload.data',
+                            [
+                              'fn',
+                              'item',
+                              [
+                                '=',
+                                [
+                                  'object/get',
+                                  '@item',
+                                  '@config.groupByField',
+                                ],
+                                [
+                                  'object/get',
+                                  '@col',
+                                  'key',
+                                ],
+                              ],
+                            ],
+                          ],
                         ],
                       },
                     ],
@@ -2291,11 +1270,11 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   ],
                 ],
               ],
-              'event': 'BoardItemsLoaded',
-              'from': 'loading',
-              'to': 'viewing_board',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'BoardItemsLoadFailed',
               'effects': [
                 [
                   'set',
@@ -2306,61 +1285,61 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'message': '@entity.errorMessage',
                     'title': 'Failed to load board',
                     'type': 'error-state',
+                    'message': '@entity.errorMessage',
                   },
                 ],
               ],
-              'event': 'BoardItemsLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'BoardItemsSaved',
               'effects': [
                 [
                   'fetch',
                   ('BoardView' satisfies _StdBoardEntityName),
                   {
-                    'emit': {
-                      'failure': 'BoardItemsLoadFailed',
-                      'success': 'BoardItemsLoaded',
-                    },
                     'include': '@config.include',
+                    'emit': {
+                      'success': 'BoardItemsLoaded',
+                      'failure': 'BoardItemsLoadFailed',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'type': 'skeleton',
                     'variant': 'card',
+                    'type': 'skeleton',
                   },
                 ],
               ],
-              'event': 'BoardItemsSaved',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'BoardItemDeleted',
               'effects': [
                 [
                   'fetch',
                   ('BoardView' satisfies _StdBoardEntityName),
                   {
                     'emit': {
-                      'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
+                      'failure': 'BoardItemsLoadFailed',
                     },
                     'include': '@config.include',
                   },
                 ],
               ],
-              'event': 'BoardItemDeleted',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'BoardItemsSaveFailed',
               'effects': [
                 [
                   'set',
@@ -2377,11 +1356,11 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   },
                 ],
               ],
-              'event': 'BoardItemsSaveFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'viewing_board',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -2398,16 +1377,16 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'type': 'skeleton',
                     'variant': 'card',
+                    'type': 'skeleton',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'viewing_board',
-              'to': 'loading',
             },
             {
+              'from': 'viewing_board',
+              'to': 'viewing_card',
+              'event': 'OPEN_CARD',
               'effects': [
                 [
                   'set',
@@ -2445,89 +1424,89 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   {
                     'children': [
                       {
-                        'align': 'center',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'action': 'CLOSE_CARD',
                             'icon': 'arrow-left',
-                            'label': 'Back',
                             'type': 'button',
+                            'action': 'CLOSE_CARD',
+                            'label': 'Back',
                             'variant': 'ghost',
                           },
                           {
                             'name': 'credit-card',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
                           },
                           {
                             'content': '@entity.currentTitle',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                           {
-                            'label': '@entity.currentStage',
                             'type': 'badge',
                             'variant': 'primary',
+                            'label': '@entity.currentStage',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'card',
+                        'look': '@config.cardLook',
                         'children': [
                           {
+                            'type': 'stack',
                             'children': [
                               {
-                                'color': 'muted',
+                                'variant': 'caption',
                                 'content': 'Description',
                                 'type': 'typography',
-                                'variant': 'caption',
+                                'color': 'muted',
                               },
                               {
+                                'variant': 'body',
                                 'content': '@entity.currentDescription',
                                 'type': 'typography',
-                                'variant': 'body',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
-                                'color': 'muted',
-                                'content': 'Notes',
                                 'type': 'typography',
+                                'content': 'Notes',
+                                'color': 'muted',
                                 'variant': 'caption',
                               },
                               {
+                                'variant': 'body',
                                 'content': '@entity.currentNotes',
                                 'type': 'typography',
-                                'variant': 'body',
                               },
                             ],
-                            'direction': 'vertical',
                             'gap': 'sm',
-                            'type': 'stack',
+                            'direction': 'vertical',
                           },
                         ],
-                        'look': '@config.cardLook',
-                        'type': 'card',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'Move to stage:',
                         'type': 'typography',
+                        'content': 'Move to stage:',
+                        'color': 'muted',
                         'variant': 'caption',
                       },
                       {
-                        'entity': '@entity.boards',
                         'fields': [],
                         'gap': 'sm',
+                        'variant': 'default',
                         'renderItem': [
                           'fn',
                           [
@@ -2535,12 +1514,10 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                             'colIndex',
                           ],
                           {
-                            'action': 'MOVE_CARD',
                             'actionPayload': {
                               'id': '@entity.currentId',
                               'targetGroup': '@col.key',
                             },
-                            'icon': '@col.icon',
                             'label': [
                               'if',
                               [
@@ -2558,26 +1535,28 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                                 '@colIndex',
                               ],
                             ],
-                            'type': 'button',
+                            'icon': '@col.icon',
                             'variant': 'secondary',
+                            'type': 'button',
+                            'action': 'MOVE_CARD',
                           },
                         ],
                         'type': 'data-list',
-                        'variant': 'default',
+                        'entity': '@entity.boards',
                       },
                       '@config.cardActionsContent',
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'OPEN_CARD',
-              'from': 'viewing_board',
-              'to': 'viewing_card',
             },
             {
+              'from': 'viewing_board',
+              'to': 'adding',
+              'event': 'ADD_CARD',
               'effects': [
                 [
                   'set',
@@ -2610,14 +1589,14 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   {
                     'children': [
                       {
-                        'align': 'center',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'action': 'CANCEL_ADD',
                             'icon': 'x',
                             'label': 'Cancel',
-                            'type': 'button',
                             'variant': 'ghost',
+                            'type': 'button',
+                            'action': 'CANCEL_ADD',
                           },
                           {
                             'name': 'plus',
@@ -2625,87 +1604,87 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                             'type': 'icon',
                           },
                           {
-                            'content': 'New board item',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': 'New board item',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'cancelEvent': 'CANCEL_ADD',
                         'entity': '@entity',
-                        'fields': '@config.formFields',
                         'mode': 'create',
+                        'cancelEvent': 'CANCEL_ADD',
                         'submitEvent': 'SAVE_CARD',
+                        'fields': '@config.formFields',
                         'type': 'form-section',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'ADD_CARD',
-              'from': 'viewing_board',
-              'to': 'adding',
             },
             {
-              'effects': [
-                [
-                  'persist',
-                  'update',
-                  ('BoardView' satisfies _StdBoardEntityName),
-                  {
-                    'id': '@payload.id',
-                    'stage': '@payload.targetGroup',
-                  },
-                  {
-                    'emit': {
-                      'failure': 'BoardItemsSaveFailed',
-                      'success': 'BoardItemsSaved',
-                    },
-                  },
-                ],
-              ],
+              'from': 'viewing_board',
+              'to': 'viewing_board',
               'event': 'MOVE_CARD',
-              'from': 'viewing_board',
-              'to': 'viewing_board',
-            },
-            {
-              'event': 'REORDER_CARD',
-              'from': 'viewing_board',
-              'to': 'viewing_board',
-            },
-            {
               'effects': [
                 [
                   'persist',
                   'update',
                   ('BoardView' satisfies _StdBoardEntityName),
                   {
+                    'stage': '@payload.targetGroup',
                     'id': '@payload.id',
-                    'position': '@payload.position',
                   },
                   {
                     'emit': {
-                      'failure': 'BoardItemsSaveFailed',
                       'success': 'BoardItemsSaved',
+                      'failure': 'BoardItemsSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'REORDER_POSITION',
-              'from': 'viewing_board',
-              'to': 'viewing_board',
             },
             {
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+              'event': 'REORDER_CARD',
+            },
+            {
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+              'event': 'REORDER_POSITION',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  ('BoardView' satisfies _StdBoardEntityName),
+                  {
+                    'position': '@payload.position',
+                    'id': '@payload.id',
+                  },
+                  {
+                    'emit': {
+                      'success': 'BoardItemsSaved',
+                      'failure': 'BoardItemsSaveFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+              'event': 'BoardItemsSaved',
               'effects': [
                 [
                   'fetch',
@@ -2719,11 +1698,11 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   },
                 ],
               ],
-              'event': 'BoardItemsSaved',
-              'from': 'viewing_board',
-              'to': 'viewing_board',
             },
             {
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+              'event': 'REFETCH_QUERY',
               'effects': [
                 [
                   'fetch',
@@ -2733,6 +1712,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
                     },
+                    'include': '@config.include',
                     'filter': [
                       'or',
                       [
@@ -2750,24 +1730,20 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                         '@payload.searchTerm',
                       ],
                     ],
-                    'include': '@config.include',
                   },
                 ],
               ],
-              'event': 'REFETCH_QUERY',
-              'from': 'viewing_board',
-              'to': 'viewing_board',
             },
             {
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+              'event': 'REFETCH_FILTER',
               'effects': [
                 [
                   'fetch',
                   ('BoardView' satisfies _StdBoardEntityName),
                   {
-                    'emit': {
-                      'failure': 'BoardItemsLoadFailed',
-                      'success': 'BoardItemsLoaded',
-                    },
+                    'include': '@config.include',
                     'filter': [
                       'or',
                       [
@@ -2785,26 +1761,23 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                         '@payload.value',
                       ],
                     ],
-                    'include': '@config.include',
+                    'emit': {
+                      'success': 'BoardItemsLoaded',
+                      'failure': 'BoardItemsLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'REFETCH_FILTER',
-              'from': 'viewing_board',
-              'to': 'viewing_board',
             },
             {
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+              'event': 'REFETCH_PAGE',
               'effects': [
                 [
                   'fetch',
                   ('BoardView' satisfies _StdBoardEntityName),
                   {
-                    'emit': {
-                      'failure': 'BoardItemsLoadFailed',
-                      'success': 'BoardItemsLoaded',
-                    },
-                    'include': '@config.include',
-                    'limit': '@config.pageSize',
                     'offset': [
                       '*',
                       [
@@ -2814,14 +1787,20 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       ],
                       '@config.pageSize',
                     ],
+                    'emit': {
+                      'failure': 'BoardItemsLoadFailed',
+                      'success': 'BoardItemsLoaded',
+                    },
+                    'include': '@config.include',
+                    'limit': '@config.pageSize',
                   },
                 ],
               ],
-              'event': 'REFETCH_PAGE',
-              'from': 'viewing_board',
-              'to': 'viewing_board',
             },
             {
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+              'event': 'BoardItemsLoaded',
               'effects': [
                 [
                   'set',
@@ -2833,6 +1812,36 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'fn',
                       'col',
                       {
+                        'label': [
+                          'object/get',
+                          '@col',
+                          'label',
+                        ],
+                        'items': [
+                          'array/sort',
+                          [
+                            'array/filter',
+                            '@payload.data',
+                            [
+                              'fn',
+                              'item',
+                              [
+                                '=',
+                                [
+                                  'object/get',
+                                  '@item',
+                                  '@config.groupByField',
+                                ],
+                                [
+                                  'object/get',
+                                  '@col',
+                                  'key',
+                                ],
+                              ],
+                            ],
+                          ],
+                          'position',
+                        ],
                         'count': [
                           'array/len',
                           [
@@ -2863,40 +1872,10 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                           'icon',
                           'circle',
                         ],
-                        'items': [
-                          'array/sort',
-                          [
-                            'array/filter',
-                            '@payload.data',
-                            [
-                              'fn',
-                              'item',
-                              [
-                                '=',
-                                [
-                                  'object/get',
-                                  '@item',
-                                  '@config.groupByField',
-                                ],
-                                [
-                                  'object/get',
-                                  '@col',
-                                  'key',
-                                ],
-                              ],
-                            ],
-                          ],
-                          'position',
-                        ],
                         'key': [
                           'object/get',
                           '@col',
                           'key',
-                        ],
-                        'label': [
-                          'object/get',
-                          '@col',
-                          'label',
                         ],
                         'variant': [
                           'object/get',
@@ -2909,11 +1888,11 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   ],
                 ],
               ],
-              'event': 'BoardItemsLoaded',
-              'from': 'viewing_board',
-              'to': 'viewing_board',
             },
             {
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+              'event': 'BoardItemsSaveFailed',
               'effects': [
                 [
                   'set',
@@ -2924,22 +1903,22 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t save the board — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
+                    'dismissible': true,
                     'variant': 'error',
+                    'type': 'alert',
                   },
                 ],
               ],
-              'event': 'BoardItemsSaveFailed',
-              'from': 'viewing_board',
-              'to': 'viewing_board',
             },
             {
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+              'event': 'BoardItemsLoadFailed',
               'effects': [
                 [
                   'set',
@@ -2951,81 +1930,81 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'toast',
                   {
                     'dismissible': true,
+                    'type': 'alert',
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t refresh the board — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'BoardItemsLoadFailed',
-              'from': 'viewing_board',
-              'to': 'viewing_board',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('BoardView' satisfies _StdBoardEntityName),
-                  {
-                    'emit': {
-                      'failure': 'BoardItemsLoadFailed',
-                      'success': 'BoardItemsLoaded',
-                    },
-                    'include': '@config.include',
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'type': 'skeleton',
-                    'variant': 'card',
-                  },
-                ],
-              ],
+              'from': 'viewing_card',
+              'to': 'loading',
               'event': 'INIT',
-              'from': 'viewing_card',
-              'to': 'loading',
-            },
-            {
               'effects': [
                 [
                   'fetch',
                   ('BoardView' satisfies _StdBoardEntityName),
                   {
+                    'include': '@config.include',
                     'emit': {
                       'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
                     },
-                    'include': '@config.include',
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'type': 'skeleton',
                     'variant': 'card',
+                    'type': 'skeleton',
                   },
                 ],
               ],
-              'event': 'CLOSE_CARD',
-              'from': 'viewing_card',
-              'to': 'loading',
             },
             {
+              'from': 'viewing_card',
+              'to': 'loading',
+              'event': 'CLOSE_CARD',
+              'effects': [
+                [
+                  'fetch',
+                  ('BoardView' satisfies _StdBoardEntityName),
+                  {
+                    'include': '@config.include',
+                    'emit': {
+                      'success': 'BoardItemsLoaded',
+                      'failure': 'BoardItemsLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'variant': 'card',
+                    'type': 'skeleton',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'viewing_card',
+              'to': 'loading',
+              'event': 'MOVE_CARD',
               'effects': [
                 [
                   'persist',
                   'update',
                   ('BoardView' satisfies _StdBoardEntityName),
                   {
-                    'id': '@payload.id',
                     'stage': '@payload.targetGroup',
+                    'id': '@payload.id',
                   },
                   {
                     'emit': {
@@ -3038,16 +2017,16 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'title': 'Moving item…',
                     'type': 'loading-state',
+                    'title': 'Moving item…',
                   },
                 ],
               ],
-              'event': 'MOVE_CARD',
-              'from': 'viewing_card',
-              'to': 'loading',
             },
             {
+              'from': 'viewing_card',
+              'to': 'loading',
+              'event': 'DELETE_CARD',
               'effects': [
                 [
                   'persist',
@@ -3056,25 +2035,25 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   '@payload.id',
                   {
                     'emit': {
-                      'failure': 'BoardItemsSaveFailed',
                       'success': 'BoardItemDeleted',
+                      'failure': 'BoardItemsSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'DELETE_CARD',
-              'from': 'viewing_card',
-              'to': 'loading',
             },
             {
+              'from': 'adding',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('BoardView' satisfies _StdBoardEntityName),
                   {
                     'emit': {
-                      'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
+                      'failure': 'BoardItemsLoadFailed',
                     },
                     'include': '@config.include',
                   },
@@ -3088,11 +2067,11 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'adding',
-              'to': 'loading',
             },
             {
+              'from': 'adding',
+              'to': 'loading',
+              'event': 'SAVE_CARD',
               'effects': [
                 [
                   'persist',
@@ -3101,17 +2080,17 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'BoardItemsSaveFailed',
                       'success': 'BoardItemsSaved',
+                      'failure': 'BoardItemsSaveFailed',
                     },
                   },
                 ],
               ],
-              'event': 'SAVE_CARD',
-              'from': 'adding',
-              'to': 'loading',
             },
             {
+              'from': 'adding',
+              'to': 'viewing_board',
+              'event': 'CANCEL_ADD',
               'effects': [
                 [
                   'render-ui',
@@ -3122,27 +2101,1048 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   },
                 ],
               ],
-              'event': 'CANCEL_ADD',
-              'from': 'adding',
-              'to': 'viewing_board',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'type': 'skeleton',
                     'variant': 'card',
+                    'type': 'skeleton',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'bodySearch': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show the board\'s own search box?',
+            'description': 'Renders an inline search box above the columns. Defaults false: unlike std-browse, std-board has never had a search box, so defaulting this true would silently add one to every existing consumer. The wired path — composing std-search beside the board and routing its FILTER/SEARCH event to REFETCH_QUERY — works regardless of this knob; set true only for a standalone board with no page-level search affordance.',
+            'synonyms': 'inline search, board search, built-in search, show search, duplicate search',
+            'tier': 'presentation',
+          },
+          'groupByField': {
+            'type': 'string',
+            'default': 'stage',
+            'label': 'Group-by field',
+            'description': 'Entity field whose value matches a column key — items are filtered into columns by it. Default \'stage\'; set to \'status\' (or any field) for entities that track state under a different name.',
+            'tier': 'presentation',
+          },
+          'boardLook': {
+            'type': 'string',
+            'default': 'columns',
+            'label': 'Board look',
+            'description': 'Layer 3 body layout: default N-column data-grid (\'columns\'), or a Trello-style wide-column kanban with sticky column headers (\'kanban-classic\').',
+            'tier': 'presentation',
+            'values': [
+              'columns',
+              'kanban-classic',
+            ],
+          },
+          'searchField': {
+            'type': 'string',
+            'default': 'title',
+            'label': 'Which column does the search box match against?',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field (e.g. name, summary) or the search box can never match a card.',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+          },
+          'gridCols': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Grid columns',
+            'description': 'Outer grid column count before the board wraps',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Board',
+            'label': 'Board title',
+            'description': 'Heading shown above the column board',
+            'tier': 'presentation',
+          },
+          'formFields': {
+            'type': '[string]',
+            'default': [
+              'title',
+              'description',
+              'stage',
+              'notes',
+            ],
+            'label': 'New-card fields',
+            'description': 'Fields shown in the add-card form',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'addPlacement': {
+            'type': 'string',
+            'default': 'floating',
+            'label': 'Add button placement',
+            'description': 'Where the add-item button sits: \'floating\' (default) pins a floating action button to the screen corner; \'inline\' renders an ordinary Add button above the columns, for a board embedded in a card or panel.; none hides the add button (a read-only board)',
+            'synonyms': 'add button position, floating add, inline add, add item button placement. user phrases: \'put the add button inside the board\' / \'no floating button\' -> inline',
+            'tier': 'presentation',
+            'values': [
+              'floating',
+              'inline',
+              'none',
+            ],
+          },
+          'include': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Which relation fields to hydrate?',
+            'description': 'Entity relation field names to hydrate on fetch (e.g. an `assignee : TeamMember` field named `assignee`), so card bindings can use dot-paths like @item.assignee.name. Empty = no hydration, the default.',
+            'synonyms': 'relation hydration, populate relations, joined fields, hydrate relations',
+            'tier': 'domain',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'columns': {
+            'type': '[ColumnSpec]',
+            'default': [
+              {
+                'label': 'To Do',
+                'variant': 'default',
+                'icon': 'circle',
+                'key': 'todo',
+              },
+              {
+                'label': 'In Progress',
+                'key': 'doing',
+                'icon': 'circle-dot',
+                'variant': 'primary',
+              },
+              {
+                'variant': 'success',
+                'icon': 'check-circle',
+                'key': 'done',
+                'label': 'Done',
+              },
+            ],
+            'label': 'Columns',
+            'description': 'Board columns; each row\'s stage maps to a column key',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'key': {
+                  'name': 'key',
+                  'type': 'string',
+                  'required': true,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'cardDescriptionBinding': {
+            'type': 'string',
+            'default': '@item.description',
+            'label': 'Card description binding',
+            'description': 'Per-card binding for the description slot.',
+            'tier': 'presentation',
+          },
+          'searchPlaceholder': {
+            'type': 'string',
+            'default': 'Search…',
+            'label': 'Search box placeholder text',
+            'description': 'Hint text inside the board\'s embedded search box (e.g. \'Search cards…\'). Only shown when bodySearch is true.',
+            'synonyms': 'search hint, placeholder, search box text, search label',
+            'tier': 'presentation',
+          },
+          'bodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'type': 'stack',
+              'gap': 'md',
+              'direction': 'vertical',
+              'children': [
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.addPlacement',
+                    'inline',
+                  ],
+                  {
+                    'justify': 'end',
+                    'gap': 'sm',
+                    'direction': 'horizontal',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'label': 'Add item',
+                        'type': 'button',
+                        'variant': 'secondary',
+                        'icon': 'plus',
+                        'action': 'ADD_CARD',
+                        'size': 'sm',
+                      },
+                    ],
+                  },
+                  {
+                    'gap': 'none',
+                    'type': 'stack',
+                    'children': [],
+                  },
+                ],
+                [
+                  'if',
+                  '@config.showHeader',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'kanban-square',
+                            'size': 'lg',
+                          },
+                          {
+                            'variant': 'h3',
+                            'type': 'typography',
+                            'content': '@config.title',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                    ],
+                    'gap': 'md',
+                  },
+                  {
+                    'gap': 'none',
+                    'type': 'stack',
+                    'children': [],
+                  },
+                ],
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'type': 'stack',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'children': [
+                      {
+                        'className': 'w-full max-w-md',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                      },
+                    ],
+                  },
+                  {
+                    'children': [],
+                    'type': 'stack',
+                    'gap': 'none',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'type': 'stack',
+                    'direction': 'horizontal',
+                    'children': [
+                      {
+                        'event': 'REFETCH_FILTER',
+                        'entity': 'BoardView',
+                        'type': 'filter-group',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                      },
+                    ],
+                    'gap': 'sm',
+                  },
+                  {
+                    'type': 'stack',
+                    'children': [],
+                    'gap': 'none',
+                  },
+                ],
+                {
+                  'gap': 'md',
+                  'cols': '@config.gridCols',
+                  'type': 'data-grid',
+                  'dndRoot': '@config.draggable',
+                  'fields': [],
+                  'entity': '@entity.boards',
+                  'renderItem': [
+                    'fn',
+                    [
+                      'col',
+                      'colIndex',
+                    ],
+                    {
+                      'type': 'card',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'gap': 'xs',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': '@col.icon',
+                                },
+                                {
+                                  'content': [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'array/len',
+                                        '@config.columnLabels',
+                                      ],
+                                      0,
+                                    ],
+                                    '@col.label',
+                                    [
+                                      'array/nth',
+                                      '@config.columnLabels',
+                                      '@colIndex',
+                                    ],
+                                  ],
+                                  'variant': 'h4',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': '@col.count',
+                                  'variant': '@col.variant',
+                                },
+                              ],
+                              'align': 'center',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'data-list',
+                              'sortable': '@config.draggable',
+                              'gap': 'sm',
+                              'itemEnter': '@config.cardEnter',
+                              'accepts': [
+                                'if',
+                                '@config.draggable',
+                                '*',
+                                '',
+                              ],
+                              'dropEvent': 'MOVE_CARD',
+                              'renderItem': [
+                                'fn',
+                                'item',
+                                {
+                                  'look': '@config.cardLook',
+                                  'children': [
+                                    {
+                                      'gap': 'xs',
+                                      'children': [
+                                        {
+                                          'content': '@config.cardTitleBinding',
+                                          'variant': 'h4',
+                                          'type': 'typography',
+                                        },
+                                        {
+                                          'color': 'muted',
+                                          'content': '@config.cardDescriptionBinding',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'label': 'Open',
+                                              'action': 'OPEN_CARD',
+                                              'type': 'button',
+                                              'variant': 'ghost',
+                                              'icon': 'arrow-right',
+                                              'actionPayload': {
+                                                'description': '@config.cardDescriptionBinding',
+                                                'notes': '@config.cardNotesBinding',
+                                                'row': '@item',
+                                                'id': '@config.cardIdBinding',
+                                                'stage': '@config.cardStageBinding',
+                                                'title': '@config.cardTitleBinding',
+                                              },
+                                            },
+                                          ],
+                                          'type': 'stack',
+                                          'align': 'center',
+                                          'direction': 'horizontal',
+                                          'gap': 'xs',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                      'direction': 'vertical',
+                                    },
+                                  ],
+                                  'type': 'card',
+                                },
+                              ],
+                              'dragGroup': [
+                                'if',
+                                '@config.draggable',
+                                '@col.key',
+                                '',
+                              ],
+                              'positionEvent': 'REORDER_POSITION',
+                              'entity': '@col.items',
+                              'fields': [],
+                              'reorderEvent': 'REORDER_CARD',
+                            },
+                          ],
+                        },
+                      ],
+                      'look': '@config.cardLook',
+                    },
+                  ],
+                },
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.addPlacement',
+                    'floating',
+                  ],
+                  {
+                    'variant': 'primary',
+                    'action': 'ADD_CARD',
+                    'type': 'floating-action-button',
+                    'icon': 'plus',
+                    'label': 'Add item',
+                  },
+                  {
+                    'type': 'stack',
+                    'gap': 'none',
+                    'children': [],
+                  },
+                ],
+              ],
+            },
+            'label': 'Body content tree',
+            'description': 'Render-ui SExpr rendered after the board loads for boardLook=\'columns\' — the canonical column data-grid with nested per-column data-lists. boardLook=\'kanban-classic\' renders kanbanClassicBodyContent instead; both share this trait\'s state machine, emits, and listens.',
+            'tier': 'internal',
+          },
+          'filters': {
+            'type': '[FilterSpec]',
+            'default': [],
+            'label': 'Which filters should appear above the board?',
+            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the columns; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this board and routes its FILTER event to REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone board with no page-level filter affordance.',
+            'synonyms': 'filter bar, faceted filters, field filters, column filters, dropdowns',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': true,
+                },
+                'options': {
+                  'name': 'options',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+              },
+            },
+          },
+          'cardTitleBinding': {
+            'type': 'string',
+            'default': '@item.title',
+            'label': 'Card title binding',
+            'description': 'Per-card binding for the title slot.',
+            'tier': 'presentation',
+          },
+          'cardActions': {
+            'type': '[ItemAction]',
+            'default': [
+              {
+                'icon': 'trash-2',
+                'variant': 'danger',
+                'event': 'DELETE_CARD',
+                'label': 'Delete',
+              },
+            ],
+            'label': 'Card panel action list',
+            'description': 'Buttons on the open-card panel\'s actions row, built by the default cardActionsContent. Give an item `roles` to show it only to those viewer roles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+              },
+            },
+          },
+          'cardActionsContent': {
+            'type': 'render-ui',
+            'default': {
+              'direction': 'horizontal',
+              'type': 'stack',
+              'gap': 'sm',
+              'align': 'center',
+              'children': [
+                'array/map',
+                [
+                  'array/filter',
+                  '@config.cardActions',
+                  [
+                    'fn',
+                    'action',
+                    [
+                      'or',
+                      [
+                        '=',
+                        [
+                          'array/len',
+                          [
+                            'object/get',
+                            '@action',
+                            'roles',
+                            [],
+                          ],
+                        ],
+                        0,
+                      ],
+                      [
+                        'array/includes',
+                        [
+                          'object/get',
+                          '@action',
+                          'roles',
+                          [],
+                        ],
+                        '@config.viewerRole',
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'fn',
+                  'a',
+                  {
+                    'label': '@a.label',
+                    'icon': '@a.icon',
+                    'type': 'button',
+                    'action': '@a.event',
+                    'variant': '@a.variant',
+                    'actionPayload': {
+                      'id': '@entity.currentId',
+                    },
+                  },
+                ],
+              ],
+            },
+            'label': 'Card panel actions',
+            'description': 'Actions row of the open-card panel. Default is the Delete button only. Override to add consumer-wired actions — e.g. an Edit button with action: EDIT_CARD and actionPayload: { id: @entity.currentId, row: @entity.currentRow }, listened to by the organism\'s edit modal. Never leave a button here without a listener.',
+            'tier': 'presentation',
+          },
+          'showHeader': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show the board\'s own title row?',
+            'description': 'Off when the page already carries a page header naming the same thing, so the page shows one title.',
+            'tier': 'presentation',
+          },
+          'draggable': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Drag cards',
+            'description': 'Let people drag cards between columns and reorder them; off shows the board read-only to the pointer (moves still work through events)',
+            'tier': 'presentation',
+          },
+          'cardNotesBinding': {
+            'type': 'string',
+            'default': '@item.notes',
+            'label': 'Card notes binding',
+            'description': 'Per-card binding for the notes slot shown in the card detail view. Set to an empty string for hosts with no notes-equivalent field — declared as \'no notes capture\', never inferred.',
+            'tier': 'presentation',
+          },
+          'cardLook': {
+            'type': 'string',
+            'default': 'elevated',
+            'label': 'Card look',
+            'description': 'Layer 2 visual treatment for cards rendered by this board.',
+            'tier': 'presentation',
+            'values': [
+              'elevated',
+              'flat-bordered',
+              'borderless-divider',
+              'ticket',
+              'invoice',
+              'chip',
+              'tile-image-first',
+            ],
+          },
+          'cardEnter': {
+            'type': 'string',
+            'default': 'none',
+            'label': 'Card entrance',
+            'description': 'Animation a card plays when it appears in a column, so a moved card visibly arrives',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'cardStageBinding': {
+            'type': 'string',
+            'default': '@item.stage',
+            'label': 'Card stage binding',
+            'description': 'Per-card binding for the stage/status slot.',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 10,
+            'label': 'Fetch page size',
+            'description': 'Records fetched per REFETCH_PAGE request. std-board renders no pagination control itself — this only feeds the fetch limit/offset when a consumer wires a composed std-pagination to REFETCH_PAGE.',
+            'synonyms': 'fetch limit, records per page, batch size, page limit',
+            'tier': 'presentation',
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each card action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'cardIdBinding': {
+            'type': 'string',
+            'default': '@item.id',
+            'label': 'Card id binding',
+            'description': 'Per-card binding for the id used in action payloads.',
+            'tier': 'presentation',
+          },
+          'columnLabels': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Column labels',
+            'description': 'Optional labels in the same order as the columns, used only where the board is drawn, so they may be translated; empty shows each column\'s own label',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'kanbanClassicBodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'className': 'h-full',
+              'direction': 'vertical',
+              'children': [
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.addPlacement',
+                    'inline',
+                  ],
+                  {
+                    'gap': 'sm',
+                    'justify': 'end',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'size': 'sm',
+                        'label': 'Add card',
+                        'action': 'ADD_CARD',
+                        'type': 'button',
+                        'variant': 'secondary',
+                        'icon': 'plus',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                  },
+                  {
+                    'children': [],
+                    'type': 'stack',
+                    'gap': 'none',
+                  },
+                ],
+                [
+                  'if',
+                  '@config.showHeader',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'className': 'px-card-md',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'size': 'xl',
+                            'name': 'kanban-square',
+                          },
+                          {
+                            'variant': 'h2',
+                            'type': 'typography',
+                            'content': '@config.title',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                  {
+                    'type': 'stack',
+                    'gap': 'none',
+                    'children': [],
+                  },
+                ],
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'type': 'stack',
+                    'className': 'px-card-md',
+                    'children': [
+                      {
+                        'type': 'search-input',
+                        'event': 'REFETCH_QUERY',
+                        'className': 'w-full max-w-md',
+                        'placeholder': '@config.searchPlaceholder',
+                        'clearable': true,
+                      },
+                    ],
+                    'gap': 'sm',
+                    'direction': 'horizontal',
+                  },
+                  {
+                    'gap': 'none',
+                    'type': 'stack',
+                    'children': [],
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'children': [
+                      {
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'entity': 'BoardView',
+                        'type': 'filter-group',
+                      },
+                    ],
+                    'gap': 'sm',
+                    'className': 'px-card-md',
+                    'type': 'stack',
+                    'direction': 'horizontal',
+                  },
+                  {
+                    'type': 'stack',
+                    'gap': 'none',
+                    'children': [],
+                  },
+                ],
+                {
+                  'dndRoot': '@config.draggable',
+                  'gap': 'lg',
+                  'scrollX': true,
+                  'entity': '@entity.boards',
+                  'className': 'w-full pb-2',
+                  'fields': [],
+                  'minCardWidth': 300,
+                  'renderItem': [
+                    'fn',
+                    [
+                      'col',
+                      'colIndex',
+                    ],
+                    {
+                      'look': 'elevated',
+                      'className': 'w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden',
+                      'padding': 'none',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': '@col.icon',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h4',
+                                  'className': 'flex-1',
+                                  'content': [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'array/len',
+                                        '@config.columnLabels',
+                                      ],
+                                      0,
+                                    ],
+                                    '@col.label',
+                                    [
+                                      'array/nth',
+                                      '@config.columnLabels',
+                                      '@colIndex',
+                                    ],
+                                  ],
+                                },
+                                {
+                                  'variant': 'primary',
+                                  'label': '@col.count',
+                                  'size': 'sm',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'className': 'p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]',
+                            },
+                            {
+                              'accepts': [
+                                'if',
+                                '@config.draggable',
+                                '*',
+                                '',
+                              ],
+                              'positionEvent': 'REORDER_POSITION',
+                              'dropEvent': 'MOVE_CARD',
+                              'gap': 'sm',
+                              'renderItem': [
+                                'fn',
+                                'item',
+                                {
+                                  'className': 'cursor-grab hover:shadow-lg transition-shadow',
+                                  'padding': 'sm',
+                                  'type': 'card',
+                                  'children': [
+                                    {
+                                      'gap': 'xs',
+                                      'type': 'stack',
+                                      'direction': 'vertical',
+                                      'children': [
+                                        {
+                                          'variant': 'body',
+                                          'type': 'typography',
+                                          'weight': 'medium',
+                                          'content': '@config.cardTitleBinding',
+                                        },
+                                        {
+                                          'className': 'line-clamp-2',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'color': 'muted',
+                                          'content': '@config.cardDescriptionBinding',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'label': '@config.cardStageBinding',
+                                              'type': 'badge',
+                                              'size': 'sm',
+                                              'variant': '@col.variant',
+                                            },
+                                            {
+                                              'icon': 'arrow-right',
+                                              'label': 'Open',
+                                              'type': 'button',
+                                              'action': 'OPEN_CARD',
+                                              'size': 'sm',
+                                              'actionPayload': {
+                                                'row': '@item',
+                                                'id': '@config.cardIdBinding',
+                                                'stage': '@config.cardStageBinding',
+                                                'notes': '@config.cardNotesBinding',
+                                                'title': '@config.cardTitleBinding',
+                                                'description': '@config.cardDescriptionBinding',
+                                              },
+                                              'variant': 'ghost',
+                                              'className': 'ml-auto',
+                                            },
+                                          ],
+                                          'type': 'stack',
+                                          'direction': 'horizontal',
+                                          'className': 'pt-1',
+                                          'gap': 'xs',
+                                          'align': 'center',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'look': '@config.cardLook',
+                                },
+                              ],
+                              'dragGroup': [
+                                'if',
+                                '@config.draggable',
+                                '@col.key',
+                                '',
+                              ],
+                              'type': 'data-list',
+                              'reorderEvent': 'REORDER_CARD',
+                              'entity': '@col.items',
+                              'sortable': '@config.draggable',
+                              'itemEnter': '@config.cardEnter',
+                              'fields': [],
+                              'className': 'p-card-md min-h-[120px]',
+                            },
+                          ],
+                          'gap': 'none',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'card',
+                    },
+                  ],
+                  'type': 'data-grid',
+                },
+                [
+                  'if',
+                  [
+                    '=',
+                    '@config.addPlacement',
+                    'floating',
+                  ],
+                  {
+                    'label': 'Add card',
+                    'action': 'ADD_CARD',
+                    'variant': 'primary',
+                    'type': 'floating-action-button',
+                    'icon': 'plus',
+                  },
+                  {
+                    'type': 'stack',
+                    'children': [],
+                    'gap': 'none',
+                  },
+                ],
+              ],
+              'type': 'stack',
+              'gap': 'md',
+            },
+            'label': 'Kanban classic body content tree',
+            'description': 'Render-ui SExpr for boardLook=\'kanban-classic\' — Trello-style wide elevated columns with sticky headers, dense cards with a status badge; per-item cards honor config.cardLook (the column wrapper stays elevated — it is column chrome, not a card).',
+            'tier': 'internal',
+          },
+          'filterBarLook': {
+            'type': 'string',
+            'default': 'toolbar',
+            'label': 'Filter bar look',
+            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
+            'synonyms': 'filter bar style, facet style, chips, pills',
+            'tier': 'presentation',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

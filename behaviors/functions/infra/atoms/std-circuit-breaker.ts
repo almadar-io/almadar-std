@@ -424,40 +424,40 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
     name: 'ServiceNodeOrbital',
     uses: [
       {
-        'as': 'Icon',
         'from': 'std/behaviors/ui-icon',
+        'as': 'Icon',
       },
       {
-        'as': 'Typography',
         'from': 'std/behaviors/ui-typography',
+        'as': 'Typography',
       },
       {
-        'as': 'StatusDot',
         'from': 'std/behaviors/ui-status-dot',
+        'as': 'StatusDot',
       },
       {
-        'as': 'Alert',
         'from': 'std/behaviors/ui-alert',
+        'as': 'Alert',
       },
       {
-        'as': 'StatDisplay',
         'from': 'std/behaviors/ui-stat-display',
+        'as': 'StatDisplay',
       },
       {
-        'as': 'Meter',
         'from': 'std/behaviors/ui-meter',
+        'as': 'Meter',
       },
       {
-        'as': 'Button',
         'from': 'std/behaviors/ui-button',
+        'as': 'Button',
       },
       {
-        'as': 'Divider',
         'from': 'std/behaviors/ui-divider',
+        'as': 'Divider',
       },
       {
-        'as': 'SimpleGrid',
         'from': 'std/behaviors/ui-simple-grid',
+        'as': 'SimpleGrid',
       },
     ],
     entity: {
@@ -471,56 +471,56 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
             'type': 'string',
           },
           {
-            'description': 'A user-defined identifier for the circuit breaker.',
             'name': 'name',
+            'type': 'string',
+            'description': 'A user-defined identifier for the circuit breaker.',
             'synonyms': 'identifier, label, designation',
-            'type': 'string',
           },
           {
-            'description': 'A textual explanation of the service node\'s function.',
             'name': 'description',
-            'synonyms': 'explanation, details, notes, information',
             'type': 'string',
+            'description': 'A textual explanation of the service node\'s function.',
+            'synonyms': 'explanation, details, notes, information',
           },
           {
-            'default': 'active',
-            'description': 'Current operational state of the component.',
             'name': 'status',
-            'synonyms': 'state, condition, operationalStatus',
             'type': 'string',
+            'default': 'active',
             'values': [
               'active',
               'inactive',
               'pending',
             ],
+            'description': 'Current operational state of the component.',
+            'synonyms': 'state, condition, operationalStatus',
           },
           {
             'name': 'createdAt',
             'type': 'string',
           },
           {
-            'default': 0,
-            'description': 'The number of times the circuit breaker has failed.',
-            'intrinsic': true,
             'name': 'failureCount',
-            'synonyms': 'error count, failures, error occurrences',
             'type': 'number',
-          },
-          {
             'default': 0,
-            'description': 'Number of successful operations.',
             'intrinsic': true,
-            'name': 'successCount',
-            'synonyms': 'successes, hits, completions',
-            'type': 'number',
+            'description': 'The number of times the circuit breaker has failed.',
+            'synonyms': 'error count, failures, error occurrences',
           },
           {
-            'default': 5,
-            'description': 'Maximum value before triggering an action.',
-            'intrinsic': true,
-            'name': 'threshold',
-            'synonyms': 'limit, cap, boundary',
+            'name': 'successCount',
             'type': 'number',
+            'default': 0,
+            'intrinsic': true,
+            'description': 'Number of successful operations.',
+            'synonyms': 'successes, hits, completions',
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+            'default': 5,
+            'intrinsic': true,
+            'description': 'Maximum value before triggering an action.',
+            'synonyms': 'limit, cap, boundary',
           },
         ];
         const extras = params.fields ?? [];
@@ -531,284 +531,260 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
     } as Entity,
     traits: [
       makeTraitRef({
-        'config': {
-          'name': {
-            'default': 'shield',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'ServiceNode',
+        'ref': ('Icon.traits.IconRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
         'name': 'ShieldIcon',
-        'ref': ('Icon.traits.IconRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'ServiceNode',
         'config': {
           'name': {
-            'default': 'alert-triangle',
             'type': 'unknown',
+            'default': 'shield',
           },
         },
-        'linkedEntity': 'ServiceNode',
+      }),
+      makeTraitRef({
+        'ref': ('Icon.traits.IconRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
         'name': 'AlertTriangleIcon',
-        'ref': ('Icon.traits.IconRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'ServiceNode',
         'config': {
           'name': {
-            'default': 'activity',
             'type': 'unknown',
+            'default': 'alert-triangle',
           },
         },
-        'linkedEntity': 'ServiceNode',
-        'name': 'ActivityIcon',
+      }),
+      makeTraitRef({
         'ref': ('Icon.traits.IconRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'name': 'ActivityIcon',
+        'linkedEntity': 'ServiceNode',
         'config': {
-          'content': {
-            'default': 'ServiceNode',
+          'name': {
             'type': 'unknown',
-          },
-          'variant': {
-            'default': 'h2',
-            'type': 'unknown',
+            'default': 'activity',
           },
         },
-        'linkedEntity': 'ServiceNode',
-        'name': 'ServiceNodeLabel',
+      }),
+      makeTraitRef({
         'ref': ('Typography.traits.TypographyRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'name': 'ServiceNodeLabel',
+        'linkedEntity': 'ServiceNode',
         'config': {
-          'label': {
-            'default': 'Circuit Closed',
+          'variant': {
             'type': 'unknown',
+            'default': 'h2',
           },
-          'pulse': {
-            'default': false,
+          'content': {
             'type': 'unknown',
-          },
-          'status': {
-            'default': 'online',
-            'type': 'unknown',
+            'default': 'ServiceNode',
           },
         },
-        'linkedEntity': 'ServiceNode',
+      }),
+      makeTraitRef({
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
         'name': 'ClosedStatusDot',
-        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'ServiceNode',
         'config': {
-          'label': {
-            'default': 'Circuit Open',
+          'status': {
             'type': 'unknown',
+            'default': 'online',
           },
           'pulse': {
-            'default': true,
             'type': 'unknown',
+            'default': false,
           },
-          'status': {
-            'default': 'critical',
+          'label': {
             'type': 'unknown',
+            'default': 'Circuit Closed',
           },
         },
-        'linkedEntity': 'ServiceNode',
+      }),
+      makeTraitRef({
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
         'name': 'OpenStatusDot',
-        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'ServiceNode',
         'config': {
-          'label': {
-            'default': 'Circuit Half-Open',
+          'status': {
             'type': 'unknown',
+            'default': 'critical',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Circuit Open',
           },
           'pulse': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
+          },
+        },
+      }),
+      makeTraitRef({
+        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
+        'name': 'HalfOpenStatusDot',
+        'linkedEntity': 'ServiceNode',
+        'config': {
+          'pulse': {
+            'type': 'unknown',
+            'default': true,
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Circuit Half-Open',
           },
           'status': {
-            'default': 'warning',
             'type': 'unknown',
+            'default': 'warning',
           },
         },
-        'linkedEntity': 'ServiceNode',
-        'name': 'HalfOpenStatusDot',
-        'ref': ('StatusDot.traits.StatusDotRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
       }),
       makeTraitRef({
-        'config': {
-          'message': {
-            'default': 'Service is healthy. All requests are being processed.',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'success',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'ServiceNode',
+        'ref': ('Alert.traits.AlertRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
         'name': 'SuccessAlert',
-        'ref': ('Alert.traits.AlertRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'ServiceNode',
         'config': {
           'message': {
-            'default': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
             'type': 'unknown',
+            'default': 'Service is healthy. All requests are being processed.',
           },
           'variant': {
-            'default': 'error',
             'type': 'unknown',
+            'default': 'success',
           },
         },
-        'linkedEntity': 'ServiceNode',
+      }),
+      makeTraitRef({
+        'ref': ('Alert.traits.AlertRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
         'name': 'ErrorAlert',
-        'ref': ('Alert.traits.AlertRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
+        'linkedEntity': 'ServiceNode',
+        'config': {
+          'variant': {
+            'type': 'unknown',
+            'default': 'error',
+          },
+          'message': {
+            'type': 'unknown',
+            'default': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+          },
+        },
       }),
       makeTraitRef({
+        'ref': ('Alert.traits.AlertRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
+        'name': 'WarningAlert',
+        'linkedEntity': 'ServiceNode',
         'config': {
           'message': {
-            'default': 'Testing recovery. Limited requests are being allowed through.',
             'type': 'unknown',
+            'default': 'Testing recovery. Limited requests are being allowed through.',
           },
           'variant': {
+            'type': 'unknown',
             'default': 'warning',
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'ServiceNode',
-        'name': 'WarningAlert',
-        'ref': ('Alert.traits.AlertRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
       }),
       makeTraitRef({
-        'config': {
-          'label': {
-            'default': 'Failures',
-            'type': 'unknown',
-          },
-          'look': {
-            'default': '@config.statLook',
-            'type': 'unknown',
-          },
-          'value': {
-            'default': '@entity.failureCount',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'ServiceNode',
+        'ref': ('StatDisplay.traits.StatDisplayRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
         'name': 'FailuresStat',
-        'ref': ('StatDisplay.traits.StatDisplayRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'ServiceNode',
         'config': {
-          'label': {
-            'default': 'Successes',
+          'value': {
             'type': 'unknown',
+            'default': '@entity.failureCount',
+          },
+          'label': {
+            'type': 'unknown',
+            'default': 'Failures',
           },
           'look': {
+            'type': 'unknown',
             'default': '@config.statLook',
-            'type': 'unknown',
-          },
-          'value': {
-            'default': '@entity.successCount',
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'ServiceNode',
-        'name': 'SuccessesStat',
-        'ref': ('StatDisplay.traits.StatDisplayRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('StatDisplay.traits.StatDisplayRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
+        'name': 'SuccessesStat',
+        'linkedEntity': 'ServiceNode',
+        'config': {
+          'label': {
+            'type': 'unknown',
+            'default': 'Successes',
+          },
+          'look': {
+            'type': 'unknown',
+            'default': '@config.statLook',
+          },
+          'value': {
+            'type': 'unknown',
+            'default': '@entity.successCount',
+          },
+        },
+      }),
+      makeTraitRef({
+        'ref': ('Meter.traits.MeterRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
+        'name': 'FailuresMeter',
+        'linkedEntity': 'ServiceNode',
         'config': {
           'max': {
-            'default': '@entity.threshold',
             'type': 'unknown',
+            'default': '@entity.threshold',
           },
           'min': {
-            'default': 0,
             'type': 'unknown',
+            'default': 0,
           },
           'value': {
-            'default': '@entity.failureCount',
             'type': 'unknown',
+            'default': '@entity.failureCount',
           },
         },
-        'linkedEntity': 'ServiceNode',
-        'name': 'FailuresMeter',
-        'ref': ('Meter.traits.MeterRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
+        'name': 'ResetButton',
+        'linkedEntity': 'ServiceNode',
         'config': {
-          'action': {
-            'default': 'RESET',
+          'label': {
             'type': 'unknown',
+            'default': 'Reset',
           },
           'icon': {
+            'type': 'unknown',
             'default': 'rotate-ccw',
-            'type': 'unknown',
           },
-          'label': {
-            'default': 'Reset',
+          'action': {
             'type': 'unknown',
+            'default': 'RESET',
           },
           'variant': {
-            'default': 'ghost',
             'type': 'unknown',
+            'default': 'ghost',
           },
         },
-        'linkedEntity': 'ServiceNode',
-        'name': 'ResetButton',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
       }),
       makeTraitRef({
-        'linkedEntity': 'ServiceNode',
-        'name': 'CircuitDivider',
         'ref': ('Divider.traits.DividerRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
+        'name': 'CircuitDivider',
+        'linkedEntity': 'ServiceNode',
       }),
       makeTraitRef({
+        'ref': ('SimpleGrid.traits.SimpleGridRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
+        'name': 'StatsGrid',
+        'linkedEntity': 'ServiceNode',
         'config': {
+          'cols': {
+            'type': 'unknown',
+            'default': 2,
+          },
           'children': {
+            'type': 'unknown',
             'default': [
               '@trait.FailuresStat',
               '@trait.SuccessesStat',
             ],
-            'type': 'unknown',
-          },
-          'cols': {
-            'default': 2,
-            'type': 'unknown',
           },
         },
-        'linkedEntity': 'ServiceNode',
-        'name': 'StatsGrid',
-        'ref': ('SimpleGrid.traits.SimpleGridRender' satisfies _StdCircuitBreakerServiceNodeOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'failureThreshold': {
-            'default': 5,
-            'description': 'Number of consecutive failures before the circuit opens and starts rejecting requests.',
-            'label': 'Failure threshold',
-            'synonyms': 'open trigger, failure count',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'statLook': {
-            'default': 'elevated',
-            'description': 'Layer 2 visual treatment for stat / KPI cards.',
-            'label': 'Stat display look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'elevated',
-              'flat',
-              'progress-backed',
-              'gauge',
-              'sparkline',
-            ],
-          },
-        },
+        'name': 'ServiceNodeCircuitBreaker',
         'effectRow': [
           {
             'kind': 'fetch',
@@ -835,14 +811,19 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
             'resource': '@entity.threshold',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'ServiceNode',
         'emits': [
           {
-            'description': 'Signals successful loading of a service node.',
             'event': 'ServiceNodeLoaded',
+            'description': 'Signals successful loading of a service node.',
+            'synonyms': 'loaded, initialized, ready',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ServiceNode',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -882,48 +863,54 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ServiceNode',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'loaded, initialized, ready',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates a node failed to load, potentially disrupting service.',
             'event': 'ServiceNodeLoadFailed',
+            'description': 'Indicates a node failed to load, potentially disrupting service.',
+            'synonyms': 'failure, error, unavailable, outage',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'message',
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'failure, error, unavailable, outage',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'ServiceNode',
-        'name': 'ServiceNodeCircuitBreaker',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+            {
+              'name': 'halfOpen',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates a node failed to load, potentially disrupting service.',
               'key': 'ServiceNodeLoadFailed',
               'name': 'ServiceNode load failed',
+              'description': 'Indicates a node failed to load, potentially disrupting service.',
+              'synonyms': 'failure, error, unavailable, outage',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'message',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'failure, error, unavailable, outage',
-              'tier': 'internal',
             },
             {
               'key': 'FAILURE',
@@ -942,13 +929,15 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
               'name': 'Reset',
             },
             {
-              'description': 'Signals successful loading of a service node.',
               'key': 'ServiceNodeLoaded',
               'name': 'ServiceNode loaded',
+              'description': 'Signals successful loading of a service node.',
+              'synonyms': 'loaded, initialized, ready',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'ServiceNode',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -988,27 +977,16 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'ServiceNode',
                 },
               ],
-              'synonyms': 'loaded, initialized, ready',
-              'tier': 'internal',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'closed',
-            },
-            {
-              'name': 'open',
-            },
-            {
-              'name': 'halfOpen',
             },
           ],
           'transitions': [
             {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1039,89 +1017,91 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
+                        'justify': 'between',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
                         'children': [
                           {
+                            'type': 'stack',
+                            'gap': 'md',
                             'align': 'center',
                             'children': [
                               '@trait.ShieldIcon',
                               '@trait.ServiceNodeLabel',
                             ],
                             'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                           '@trait.ClosedStatusDot',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
                       },
                       '@trait.CircuitDivider',
                       '@trait.SuccessAlert',
                       '@trait.StatsGrid',
                       '@trait.FailuresMeter',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'closed',
-              'to': 'closed',
             },
             {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'ServiceNodeLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t load the service node — ',
                       '@payload.message',
                     ],
                     'type': 'alert',
-                    'variant': 'error',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'ServiceNodeLoadFailed',
-              'from': 'closed',
-              'to': 'closed',
             },
             {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'FAILURE',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
+                        'justify': 'between',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'align': 'center',
                             'children': [
                               '@trait.AlertTriangleIcon',
                               '@trait.ServiceNodeLabel',
                             ],
-                            'direction': 'horizontal',
+                            'align': 'center',
                             'gap': 'md',
                             'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           '@trait.OpenStatusDot',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
                         'type': 'stack',
+                        'align': 'center',
+                        'gap': 'md',
                       },
                       '@trait.CircuitDivider',
                       '@trait.ErrorAlert',
@@ -1130,16 +1110,14 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                       '@trait.ResetButton',
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'FAILURE',
-              'from': 'closed',
-              'to': 'open',
             },
             {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'SUCCESS',
               'effects': [
                 [
                   'render-ui',
@@ -1147,23 +1125,23 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                   {
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
                             'align': 'center',
                             'children': [
                               '@trait.ShieldIcon',
                               '@trait.ServiceNodeLabel',
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                           '@trait.ClosedStatusDot',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
                         'justify': 'between',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'type': 'stack',
                       },
                       '@trait.CircuitDivider',
@@ -1171,17 +1149,17 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                       '@trait.StatsGrid',
                       '@trait.FailuresMeter',
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SUCCESS',
-              'from': 'closed',
-              'to': 'closed',
             },
             {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1204,24 +1182,24 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                   {
                     'children': [
                       {
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
                         'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'align': 'center',
                             'children': [
                               '@trait.ShieldIcon',
                               '@trait.ServiceNodeLabel',
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                           '@trait.ClosedStatusDot',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
                       },
                       '@trait.CircuitDivider',
                       '@trait.SuccessAlert',
@@ -1234,94 +1212,94 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'open',
-              'to': 'closed',
             },
             {
+              'from': 'open',
+              'to': 'halfOpen',
+              'event': 'TIMEOUT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
+                        'justify': 'between',
                         'children': [
                           {
-                            'align': 'center',
+                            'type': 'stack',
                             'children': [
                               '@trait.ActivityIcon',
                               '@trait.ServiceNodeLabel',
                             ],
+                            'align': 'center',
                             'direction': 'horizontal',
                             'gap': 'md',
-                            'type': 'stack',
                           },
                           '@trait.HalfOpenStatusDot',
                         ],
+                        'align': 'center',
                         'direction': 'horizontal',
                         'gap': 'md',
-                        'justify': 'between',
                         'type': 'stack',
                       },
                       '@trait.CircuitDivider',
                       '@trait.WarningAlert',
                       '@trait.StatsGrid',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'TIMEOUT',
-              'from': 'open',
-              'to': 'halfOpen',
             },
             {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'RESET',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
+                        'justify': 'between',
+                        'type': 'stack',
                         'children': [
                           {
                             'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               '@trait.ShieldIcon',
                               '@trait.ServiceNodeLabel',
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'type': 'stack',
+                            'gap': 'md',
                           },
                           '@trait.ClosedStatusDot',
                         ],
                         'direction': 'horizontal',
                         'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
+                        'align': 'center',
                       },
                       '@trait.CircuitDivider',
                       '@trait.SuccessAlert',
                       '@trait.StatsGrid',
                       '@trait.FailuresMeter',
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'RESET',
-              'from': 'open',
-              'to': 'closed',
             },
             {
+              'from': 'halfOpen',
+              'to': 'closed',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1342,109 +1320,110 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'gap': 'md',
+                        'direction': 'horizontal',
                         'align': 'center',
                         'children': [
                           {
-                            'align': 'center',
+                            'type': 'stack',
                             'children': [
                               '@trait.ShieldIcon',
                               '@trait.ServiceNodeLabel',
                             ],
-                            'direction': 'horizontal',
+                            'align': 'center',
                             'gap': 'md',
-                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           '@trait.ClosedStatusDot',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
                         'type': 'stack',
+                        'justify': 'between',
                       },
                       '@trait.CircuitDivider',
                       '@trait.SuccessAlert',
                       '@trait.StatsGrid',
                       '@trait.FailuresMeter',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'halfOpen',
-              'to': 'closed',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'align': 'center',
-                            'children': [
-                              '@trait.ShieldIcon',
-                              '@trait.ServiceNodeLabel',
-                            ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
-                          },
-                          '@trait.ClosedStatusDot',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
-                      },
-                      '@trait.CircuitDivider',
-                      '@trait.SuccessAlert',
-                      '@trait.StatsGrid',
-                      '@trait.FailuresMeter',
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
+              'from': 'halfOpen',
+              'to': 'closed',
               'event': 'SUCCESS',
-              'from': 'halfOpen',
-              'to': 'closed',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'align': 'center',
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.ServiceNodeLabel',
+                            ],
+                            'align': 'center',
+                          },
+                          '@trait.ClosedStatusDot',
+                        ],
+                      },
+                      '@trait.CircuitDivider',
+                      '@trait.SuccessAlert',
+                      '@trait.StatsGrid',
+                      '@trait.FailuresMeter',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'halfOpen',
+              'to': 'open',
+              'event': 'FAILURE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
                     'children': [
                       {
                         'align': 'center',
                         'children': [
                           {
-                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               '@trait.AlertTriangleIcon',
                               '@trait.ServiceNodeLabel',
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
+                            'align': 'center',
                             'type': 'stack',
+                            'gap': 'md',
                           },
                           '@trait.OpenStatusDot',
                         ],
+                        'justify': 'between',
                         'direction': 'horizontal',
                         'gap': 'md',
-                        'justify': 'between',
                         'type': 'stack',
                       },
                       '@trait.CircuitDivider',
@@ -1453,17 +1432,16 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                       '@trait.FailuresMeter',
                       '@trait.ResetButton',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'FAILURE',
-              'from': 'halfOpen',
-              'to': 'open',
             },
             {
+              'from': 'halfOpen',
+              'to': 'closed',
+              'event': 'RESET',
               'effects': [
                 [
                   'render-ui',
@@ -1471,42 +1449,64 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                   {
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                        'justify': 'between',
                         'align': 'center',
                         'children': [
                           {
+                            'gap': 'md',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'align': 'center',
                             'children': [
                               '@trait.ShieldIcon',
                               '@trait.ServiceNodeLabel',
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                           '@trait.ClosedStatusDot',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'type': 'stack',
                       },
                       '@trait.CircuitDivider',
                       '@trait.SuccessAlert',
                       '@trait.StatsGrid',
                       '@trait.FailuresMeter',
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'RESET',
-              'from': 'halfOpen',
-              'to': 'closed',
             },
           ],
         },
+        'config': {
+          'failureThreshold': {
+            'type': 'number',
+            'default': 5,
+            'label': 'Failure threshold',
+            'description': 'Number of consecutive failures before the circuit opens and starts rejecting requests.',
+            'synonyms': 'open trigger, failure count',
+            'tier': 'domain',
+          },
+          'statLook': {
+            'type': 'string',
+            'default': 'elevated',
+            'label': 'Stat display look',
+            'description': 'Layer 2 visual treatment for stat / KPI cards.',
+            'tier': 'presentation',
+            'values': [
+              'elevated',
+              'flat',
+              'progress-backed',
+              'gauge',
+              'sparkline',
+            ],
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

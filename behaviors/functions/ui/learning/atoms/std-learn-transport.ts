@@ -54,42 +54,42 @@ export interface StdLearnTransportLearnUpdatedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnTransportConfig {
-  /** Default: `false` */
-  autoRun?: boolean;
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `"Done"` */
-  doneLabel?: string;
   /** Default: `""` */
-  matchMode?: string;
+  summary?: string;
   /** Default: `"of"` */
   ofWord?: string;
-  /** Default: `"Pause"` */
-  pauseLabel?: string;
-  /** Default: `"Paused"` */
-  pausedLabel?: string;
-  /** Default: `"Play"` */
-  playLabel?: string;
-  /** Default: `"Reset"` */
-  resetLabel?: string;
-  /** Default: `false` */
-  runWhenVisible?: boolean;
   /** Default: `"Running"` */
   runningLabel?: string;
-  /** Default: `"Speed"` */
-  speedLabel?: string;
+  /** Default: `"Pause"` */
+  pauseLabel?: string;
+  /** Default: `"Learning Instrument"` */
+  title?: string;
+  /** Default: `"Step"` */
+  stepWord?: string;
+  /** Default: `"Done"` */
+  doneLabel?: string;
+  /** Default: `false` */
+  compact?: boolean;
   /** Default: `500` */
   stepIntervalMs?: number;
   /** Default: `"Step"` */
   stepLabel?: string;
-  /** Default: `"Step"` */
-  stepWord?: string;
-  /** Default: `""` */
-  summary?: string;
-  /** Default: `"Learning Instrument"` */
-  title?: string;
+  /** Default: `"Speed"` */
+  speedLabel?: string;
   /** Default: `0` */
   totalSteps?: number;
+  /** Default: `"Paused"` */
+  pausedLabel?: string;
+  /** Default: `"Play"` */
+  playLabel?: string;
+  /** Default: `false` */
+  autoRun?: boolean;
+  /** Default: `""` */
+  matchMode?: string;
+  /** Default: `false` */
+  runWhenVisible?: boolean;
+  /** Default: `"Reset"` */
+  resetLabel?: string;
 }
 
 /**

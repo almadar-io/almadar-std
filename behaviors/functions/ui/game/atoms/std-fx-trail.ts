@@ -39,12 +39,12 @@ export type StdFxTrailEventKey = 'BODY_MOVED' | 'INIT' | 'RESTART';
  * without modifying its state-machine topology.
  */
 export interface StdFxTrailConfig {
+  /** Default: `600` */
+  ttl?: number;
   /** Default: `0.5` */
   minSpeed?: number;
   /** Default: `true` */
   running?: boolean;
-  /** Default: `600` */
-  ttl?: number;
 }
 
 /**

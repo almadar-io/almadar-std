@@ -46,51 +46,51 @@ export interface StdUiSubagentTracePanelOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSubagentTracePanelConfig {
-  /** Default: `{}` */
-  activeFilters?: Record<string, TraitConfig>;
-  ariaBusy?: boolean;
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `[]` */
-  coordinatorActivities?: EntityRow[];
-  /** Default: `[]` */
-  coordinatorMessages?: EntityRow[];
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `1` */
-  disclosureLevel?: number;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  focusedOrbital?: string;
-  isLoading?: boolean;
-  lang?: string;
-  /** Default: `"overlay"` */
-  mode?: 'overlay' | 'tab';
-  /** Default: `"CLOSE"` */
-  onClose?: string;
   /** Default: `false` */
   open?: boolean;
+  ariaHidden?: boolean;
+  /** Default: `{}` */
+  activeFilters?: Record<string, TraitConfig>;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `"CLOSE"` */
+  onClose?: string;
+  ariaLabel?: string;
   pageProp?: number;
-  pageSize?: number;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  searchValue?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
+  tabIndex?: number;
+  enterDelay?: number;
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `[{"durationMs":1,"id":"Id","messages":[{"message":"Message","timestamp":1,"tool":"Tool"},{"message":"Message 2","timestamp":2,"tool":"Tool 2"}],"name":"Name","orbitalName":"Orbital Name","parentId":"Parent Id","role":"Role","status":"running","task":"Task","timeline":[]},{"durationMs":2,"id":"Id 2","messages":[{"message":"Message","timestamp":1,"tool":"Tool"},{"message":"Message 2","timestamp":2,"tool":"Tool 2"}],"name":"Name 2","orbitalName":"Orbital Name 2","parentId":"Parent Id 2","role":"Role 2","status":"complete","task":"Task 2","timeline":[]}]` */
-  subagents?: EntityRow[];
-  tabIndex?: number;
+  error?: EntityRow;
   totalCount?: number;
+  /** Default: `1` */
+  disclosureLevel?: number;
+  /** Default: `"overlay"` */
+  mode?: 'overlay' | 'tab';
+  isLoading?: boolean;
+  /** Default: `[]` */
+  coordinatorMessages?: EntityRow[];
+  pageSize?: number;
+  className?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaLabelledby?: string;
+  sortDirection?: 'asc' | 'desc';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `[]` */
+  coordinatorActivities?: EntityRow[];
+  ariaExpanded?: boolean;
+  searchValue?: string;
+  ariaDescribedby?: string;
+  ariaBusy?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaSelected?: boolean;
+  lang?: string;
+  /** Default: `[{"status":"running","orbitalName":"Orbital Name","role":"Role","parentId":"Parent Id","id":"Id","durationMs":1,"task":"Task","name":"Name","messages":[{"tool":"Tool","timestamp":1,"message":"Message"},{"tool":"Tool 2","timestamp":2,"message":"Message 2"}],"timeline":[]},{"name":"Name 2","durationMs":2,"task":"Task 2","messages":[{"timestamp":1,"tool":"Tool","message":"Message"},{"timestamp":2,"message":"Message 2","tool":"Tool 2"}],"role":"Role 2","timeline":[],"status":"complete","parentId":"Parent Id 2","id":"Id 2","orbitalName":"Orbital Name 2"}]` */
+  subagents?: EntityRow[];
+  focusedOrbital?: string;
 }
 
 type _StdUiSubagentTracePanelEntityName = 'SubagentTracePanelItem';
@@ -150,8 +150,8 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -162,31 +162,201 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
     } as Entity,
     traits: [
       {
+        'name': 'SubagentTracePanelRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'overlay',
+          },
+        ],
         'category': 'interaction',
-        'config': {
-          'activeFilters': {
-            'default': {},
-            'description': 'Active filters',
-            'items': {
-              'type': 'string',
+        'linkedEntity': 'SubagentTracePanelItem',
+        'emits': [
+          {
+            'event': '@config.onClose',
+            'description': 'Optional dismiss handler.',
+            'tier': 'essential',
+            'scope': 'external',
+            'definerKnob': 'onClose',
+          },
+          {
+            'event': 'OPEN',
+            'description': 'Open the Subagent-trace-panel.',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
             },
-            'label': 'Active Filters',
-            'tier': 'presentation',
-            'type': 'Map<string,string>',
-          },
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'OPEN',
+              'name': 'Open',
+              'description': 'Open the Subagent-trace-panel.',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': '@config.onClose',
+              'name': '@config.on close',
+              'description': 'Optional dismiss handler.',
+              'tier': 'essential',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'action': 'OPEN',
+                    'type': 'button',
+                    'label': 'Open Subagent-trace-panel',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'overlay',
+                  {
+                    'role': '@config.role',
+                    'coordinatorActivities': '@config.coordinatorActivities',
+                    'lang': '@config.lang',
+                    'page': '@config.pageProp',
+                    'sortDirection': '@config.sortDirection',
+                    'aria-label': '@config.ariaLabel',
+                    'enterDelay': '@config.enterDelay',
+                    'enter': '@config.enter',
+                    'aria-hidden': '@config.ariaHidden',
+                    'coordinatorMessages': '@config.coordinatorMessages',
+                    'type': 'subagent-trace-panel',
+                    'subagents': '@config.subagents',
+                    'className': '@config.className',
+                    'aria-busy': '@config.ariaBusy',
+                    'selectedIds': '@config.selectedIds',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'sortBy': '@config.sortBy',
+                    'tabIndex': '@config.tabIndex',
+                    'skeleton': '@config.skeleton',
+                    'onClose': '@config.onClose',
+                    'isLoading': '@config.isLoading',
+                    'searchValue': '@config.searchValue',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'pageSize': '@config.pageSize',
+                    'dir': '@config.dir',
+                    'focusedOrbital': '@config.focusedOrbital',
+                    'open': '@config.open',
+                    'activeFilters': '@config.activeFilters',
+                    'disclosureLevel': '@config.disclosureLevel',
+                    'aria-current': '@config.ariaCurrent',
+                    'error': '@config.error',
+                    'aria-pressed': '@config.ariaPressed',
+                    'mode': '@config.mode',
+                    'aria-selected': '@config.ariaSelected',
+                    'aria-live': '@config.ariaLive',
+                    'totalCount': '@config.totalCount',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'overlay',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'button',
+                    'label': 'Open Subagent-trace-panel',
+                    'action': 'OPEN',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'overlay',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'button',
+                    'action': 'OPEN',
+                    'label': 'Open Subagent-trace-panel',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
           'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'type': 'string',
             'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
             'synonyms': 'aria-current',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
               'page',
               'step',
@@ -197,920 +367,210 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
               'false',
             ],
           },
-          'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
-            'label': 'Aria-describedby',
-            'synonyms': 'aria-describedby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
+          'open': {
             'type': 'boolean',
+            'default': false,
+            'label': 'Open',
+            'description': 'Whether the panel is visible. Typically auto-opens during generation in overlay mode.',
+            'tier': 'presentation',
           },
           'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
+            'type': 'boolean',
             'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
             'synonyms': 'aria-hidden',
             'tier': 'presentation',
-            'type': 'boolean',
           },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
+          'activeFilters': {
+            'type': 'Map<string,string>',
+            'default': {},
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
+            'items': {
+              'type': 'string',
+            },
           },
           'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'type': 'string',
             'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
             'synonyms': 'aria-live',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
               'off',
               'polite',
               'assertive',
             ],
           },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
+          'onClose': {
+            'type': 'event',
+            'default': 'CLOSE',
+            'label': 'On Close',
+            'description': 'Optional dismiss handler.',
             'tier': 'presentation',
+          },
+          'ariaLabel': {
             'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
+          },
+          'skeleton': {
+            'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
             'values': [
-              'true',
-              'false',
-              'mixed',
+              'header',
+              'table',
+              'list',
+              'grid',
+              'detail',
+              'stats',
+              'form',
+              'card',
+              'text',
+              'none',
             ],
           },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'className': {
-            'description': 'Additional CSS classes',
-            'label': 'Class Name',
-            'tier': 'presentation',
+          'sortBy': {
             'type': 'string',
-          },
-          'coordinatorActivities': {
-            'default': [],
-            'description': 'Full coordinator activities (tool calls, results, messages, errors).',
-            'items': {
-              'properties': {
-                'SubagentTracePanelCoordinatorActivitiesItemAnalysis': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemAnalysis',
-                  'properties': {
-                    'complexity': {
-                      'name': 'complexity',
-                      'properties': {
-                        'category': {
-                          'name': 'category',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'reasoning': {
-                          'name': 'reasoning',
-                          'required': true,
-                          'type': 'string',
-                        },
-                      },
-                      'required': false,
-                      'type': 'object',
-                    },
-                    'deletes': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'deletes',
-                      'required': true,
-                      'type': 'array',
-                    },
-                    'organism': {
-                      'name': 'organism',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'organismReason': {
-                      'name': 'organismReason',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'renames': {
-                      'items': {
-                        'properties': {
-                          'from': {
-                            'name': 'from',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'to': {
-                            'name': 'to',
-                            'required': true,
-                            'type': 'string',
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'name': 'renames',
-                      'required': true,
-                      'type': 'array',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'analysis',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemCancelled': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemCancelled',
-                  'properties': {
-                    'message': {
-                      'name': 'message',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'cancelled',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemClarificationQuestion': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemClarificationQuestion',
-                  'properties': {
-                    'candidates': {
-                      'items': {
-                        'properties': {
-                          'description': {
-                            'name': 'description',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'id': {
-                            'name': 'id',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'label': {
-                            'name': 'label',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'whyThisFits': {
-                            'name': 'whyThisFits',
-                            'required': true,
-                            'type': 'string',
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'name': 'candidates',
-                      'required': true,
-                      'type': 'array',
-                    },
-                    'level': {
-                      'name': 'level',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'organism',
-                        'molecule',
-                        'atom_trait',
-                      ],
-                    },
-                    'question': {
-                      'name': 'question',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'scope': {
-                      'name': 'scope',
-                      'properties': {
-                        'orbitalName': {
-                          'name': 'orbitalName',
-                          'required': false,
-                          'type': 'string',
-                        },
-                        'traitName': {
-                          'name': 'traitName',
-                          'required': false,
-                          'type': 'string',
-                        },
-                      },
-                      'required': true,
-                      'type': 'object',
-                    },
-                    'skipDefault': {
-                      'name': 'skipDefault',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'clarification_question',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemCoordinatorDecision': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemCoordinatorDecision',
-                  'properties': {
-                    'organism': {
-                      'name': 'organism',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'priorOrganism': {
-                      'name': 'priorOrganism',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'reason': {
-                      'name': 'reason',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'coordinator_decision',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemDone': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemDone',
-                  'properties': {
-                    'orbitalCount': {
-                      'name': 'orbitalCount',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'done',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemError': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemError',
-                  'properties': {
-                    'code': {
-                      'name': 'code',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'message': {
-                      'name': 'message',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'error',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemFileOperation': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemFileOperation',
-                  'properties': {
-                    'operation': {
-                      'name': 'operation',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'ls',
-                        'read_file',
-                        'write_file',
-                        'edit_file',
-                      ],
-                    },
-                    'path': {
-                      'name': 'path',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'success': {
-                      'name': 'success',
-                      'required': false,
-                      'type': 'boolean',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'file_operation',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemLlmResponse': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemLlmResponse',
-                  'properties': {
-                    'content': {
-                      'name': 'content',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'llm': {
-                      'name': 'llm',
-                      'properties': {
-                        'attempt': {
-                          'name': 'attempt',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'cachedPromptTokens': {
-                          'name': 'cachedPromptTokens',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'completionTokens': {
-                          'name': 'completionTokens',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'costUSD': {
-                          'name': 'costUSD',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'durationMs': {
-                          'name': 'durationMs',
-                          'required': true,
-                          'type': 'number',
-                        },
-                        'model': {
-                          'name': 'model',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'promptTokens': {
-                          'name': 'promptTokens',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'provider': {
-                          'name': 'provider',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'service': {
-                          'name': 'service',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'systemPrompt': {
-                          'name': 'systemPrompt',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'toolCallsJson': {
-                          'name': 'toolCallsJson',
-                          'required': false,
-                          'type': 'string',
-                        },
-                        'userPrompt': {
-                          'name': 'userPrompt',
-                          'required': true,
-                          'type': 'string',
-                        },
-                      },
-                      'required': false,
-                      'type': 'object',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'llm_response',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemMessage': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemMessage',
-                  'properties': {
-                    'content': {
-                      'name': 'content',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'isStreaming': {
-                      'name': 'isStreaming',
-                      'required': false,
-                      'type': 'boolean',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'user',
-                        'assistant',
-                        'system',
-                      ],
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'message',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemOrbitalDone': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemOrbitalDone',
-                  'properties': {
-                    'orbitalName': {
-                      'name': 'orbitalName',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'traitCount': {
-                      'name': 'traitCount',
-                      'required': false,
-                      'type': 'number',
-                    },
-                    'transitionCount': {
-                      'name': 'transitionCount',
-                      'required': false,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'orbital_done',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemOrbitalStarted': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemOrbitalStarted',
-                  'properties': {
-                    'orbitalName': {
-                      'name': 'orbitalName',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'orbital_started',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemPendingQuestion': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemPendingQuestion',
-                  'properties': {
-                    'orbitalName': {
-                      'name': 'orbitalName',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'question': {
-                      'name': 'question',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'questionId': {
-                      'name': 'questionId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'pending_question',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemPlanCommitted': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemPlanCommitted',
-                  'properties': {
-                    'orbitals': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'orbitals',
-                      'required': true,
-                      'type': 'array',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'plan_committed',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemSchemaChange': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemSchemaChange',
-                  'properties': {
-                    'changeKind': {
-                      'name': 'changeKind',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'orbital-added',
-                        'orbital-removed',
-                        'entity-fields-changed',
-                        'trait-added',
-                        'trait-removed',
-                        'trait-config-changed',
-                        'state-machine-changed',
-                        'guard-changed',
-                        'effect-changed',
-                        'render-ui-changed',
-                        'event-wiring-changed',
-                        'page-changed',
-                        'theme-changed',
-                        'behavior-composed',
-                      ],
-                    },
-                    'orbitalName': {
-                      'name': 'orbitalName',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'traitName': {
-                      'name': 'traitName',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'transitionEvent': {
-                      'name': 'transitionEvent',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'schema_change',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemSchemaDiff': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemSchemaDiff',
-                  'properties': {
-                    'filePath': {
-                      'name': 'filePath',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'hunks': {
-                      'items': {
-                        'properties': {
-                          'lines': {
-                            'items': {
-                              'properties': {
-                                'content': {
-                                  'name': 'content',
-                                  'required': true,
-                                  'type': 'string',
-                                },
-                                'type': {
-                                  'name': 'type',
-                                  'required': true,
-                                  'type': 'string',
-                                  'values': [
-                                    'add',
-                                    'remove',
-                                    'context',
-                                  ],
-                                },
-                              },
-                              'type': 'object',
-                            },
-                            'name': 'lines',
-                            'required': true,
-                            'type': 'array',
-                          },
-                          'newLines': {
-                            'name': 'newLines',
-                            'required': true,
-                            'type': 'number',
-                          },
-                          'newStart': {
-                            'name': 'newStart',
-                            'required': true,
-                            'type': 'number',
-                          },
-                          'oldLines': {
-                            'name': 'oldLines',
-                            'required': true,
-                            'type': 'number',
-                          },
-                          'oldStart': {
-                            'name': 'oldStart',
-                            'required': true,
-                            'type': 'number',
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'name': 'hunks',
-                      'required': true,
-                      'type': 'array',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'schema_diff',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemToolCall': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemToolCall',
-                  'properties': {
-                    'argsText': {
-                      'name': 'argsText',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'isExecuting': {
-                      'name': 'isExecuting',
-                      'required': false,
-                      'type': 'boolean',
-                    },
-                    'kind': {
-                      'name': 'kind',
-                      'required': false,
-                      'type': 'string',
-                      'values': [
-                        'input',
-                        'read',
-                        'invalid',
-                      ],
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'tool': {
-                      'name': 'tool',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'tool_call',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SubagentTracePanelCoordinatorActivitiesItemToolResult': {
-                  'name': 'SubagentTracePanelCoordinatorActivitiesItemToolResult',
-                  'properties': {
-                    'detail': {
-                      'name': 'detail',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'kind': {
-                      'name': 'kind',
-                      'required': false,
-                      'type': 'string',
-                      'values': [
-                        'input',
-                        'read',
-                        'invalid',
-                      ],
-                    },
-                    'resultText': {
-                      'name': 'resultText',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'rows': {
-                      'name': 'rows',
-                      'required': false,
-                      'type': 'number',
-                    },
-                    'success': {
-                      'name': 'success',
-                      'required': true,
-                      'type': 'boolean',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'tool': {
-                      'name': 'tool',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'tool_result',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-              },
-              'type': 'union',
-              'values': [
-                'SubagentTracePanelCoordinatorActivitiesItemMessage',
-                'SubagentTracePanelCoordinatorActivitiesItemToolCall',
-                'SubagentTracePanelCoordinatorActivitiesItemToolResult',
-                'SubagentTracePanelCoordinatorActivitiesItemFileOperation',
-                'SubagentTracePanelCoordinatorActivitiesItemSchemaDiff',
-                'SubagentTracePanelCoordinatorActivitiesItemError',
-                'SubagentTracePanelCoordinatorActivitiesItemCoordinatorDecision',
-                'SubagentTracePanelCoordinatorActivitiesItemPlanCommitted',
-                'SubagentTracePanelCoordinatorActivitiesItemPendingQuestion',
-                'SubagentTracePanelCoordinatorActivitiesItemClarificationQuestion',
-                'SubagentTracePanelCoordinatorActivitiesItemAnalysis',
-                'SubagentTracePanelCoordinatorActivitiesItemOrbitalStarted',
-                'SubagentTracePanelCoordinatorActivitiesItemOrbitalDone',
-                'SubagentTracePanelCoordinatorActivitiesItemSchemaChange',
-                'SubagentTracePanelCoordinatorActivitiesItemDone',
-                'SubagentTracePanelCoordinatorActivitiesItemCancelled',
-                'SubagentTracePanelCoordinatorActivitiesItemLlmResponse',
-              ],
-            },
-            'label': 'Coordinator Activities',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
-            'type': '[SubagentTracePanelCoordinatorActivitiesItem]',
+          },
+          'error': {
+            'type': 'SubagentTracePanelError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'totalCount': {
+            'type': 'number',
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'disclosureLevel': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Disclosure Level',
+            'description': 'Drives density: 1-2 → compact, 3-4 → full activity embed (when mode=\'overlay\').',
+            'tier': 'presentation',
+          },
+          'mode': {
+            'type': 'string',
+            'default': 'overlay',
+            'label': 'Mode',
+            'description': 'Rendering mode. - `\'overlay\'` (default): floating side panel positioned absolutely over the canvas. Density follows `disclosureLevel` (compact L1/L2, rich L3+). The `open` flag actually hides the panel when false. - `\'tab\'`: full-width content for a dedicated \'trace\' supplemental tab. Always renders rich (regardless of disclosure level), always visible (the `open` flag is ignored), and includes an empty state when no subagents are present so users see the surface even before generation starts.',
+            'tier': 'presentation',
+            'values': [
+              'overlay',
+              'tab',
+            ],
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
           },
           'coordinatorMessages': {
+            'type': '[SubagentTracePanelCoordinatorMessagesItem]',
             'default': [],
+            'label': 'Coordinator Messages',
             'description': 'Canonical Coordinator conversation — same shape live and on reload. When present, takes precedence over `coordinatorActivities` for the Coordinator section.',
+            'tier': 'presentation',
             'items': {
+              'type': 'object',
               'properties': {
                 'content': {
                   'name': 'content',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
+                },
+                'toolCalls': {
+                  'name': 'toolCalls',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'id': {
+                        'name': 'id',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'name': {
+                        'name': 'name',
+                        'type': 'string',
+                        'required': true,
+                      },
+                    },
+                  },
                 },
                 'reasoningContent': {
                   'name': 'reasoningContent',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
+                },
+                'toolName': {
+                  'name': 'toolName',
+                  'type': 'string',
+                  'required': false,
+                },
+                'toolCallId': {
+                  'name': 'toolCallId',
+                  'type': 'string',
+                  'required': false,
                 },
                 'role': {
                   'name': 'role',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                   'values': [
                     'system',
                     'user',
@@ -1118,169 +578,64 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
                     'tool',
                   ],
                 },
-                'toolCallId': {
-                  'name': 'toolCallId',
-                  'required': false,
-                  'type': 'string',
-                },
-                'toolCalls': {
-                  'items': {
-                    'properties': {
-                      'id': {
-                        'name': 'id',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      'name': {
-                        'name': 'name',
-                        'required': true,
-                        'type': 'string',
-                      },
-                    },
-                    'type': 'object',
-                  },
-                  'name': 'toolCalls',
-                  'required': false,
-                  'type': 'array',
-                },
-                'toolName': {
-                  'name': 'toolName',
-                  'required': false,
-                  'type': 'string',
-                },
               },
-              'type': 'object',
             },
-            'label': 'Coordinator Messages',
+          },
+          'pageSize': {
+            'type': 'number',
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
-            'type': '[SubagentTracePanelCoordinatorMessagesItem]',
+          },
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
           'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
             'values': [
               'ltr',
               'rtl',
               'auto',
             ],
           },
-          'disclosureLevel': {
-            'default': 1,
-            'description': 'Drives density: 1-2 → compact, 3-4 → full activity embed (when mode=\'overlay\').',
-            'label': 'Disclosure Level',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
+          'ariaLabelledby': {
             'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
             'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
+              'asc',
+              'desc',
             ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'error': {
-            'description': 'Error state (UiError)',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'SubagentTracePanelError',
-          },
-          'focusedOrbital': {
-            'description': 'Current canvas focus orbital — only used by overlay mode. Tab mode ignores this.',
-            'label': 'Focused Orbital',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'isLoading': {
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'mode': {
-            'default': 'overlay',
-            'description': 'Rendering mode. - `\'overlay\'` (default): floating side panel positioned absolutely over the canvas. Density follows `disclosureLevel` (compact L1/L2, rich L3+). The `open` flag actually hides the panel when false. - `\'tab\'`: full-width content for a dedicated \'trace\' supplemental tab. Always renders rich (regardless of disclosure level), always visible (the `open` flag is ignored), and includes an empty state when no subagents are present so users see the surface even before generation starts.',
-            'label': 'Mode',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'overlay',
-              'tab',
-            ],
-          },
-          'onClose': {
-            'default': 'CLOSE',
-            'description': 'Optional dismiss handler.',
-            'label': 'On Close',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'open': {
-            'default': false,
-            'description': 'Whether the panel is visible. Typically auto-opens during generation in overlay mode.',
-            'label': 'Open',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'pageProp': {
-            'description': 'Current page number',
-            'label': 'Page',
-            'synonyms': 'page',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'pageSize': {
-            'description': 'Number of items per page',
-            'label': 'Page Size',
-            'tier': 'presentation',
-            'type': 'number',
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -1365,477 +720,1010 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
               'treeitem',
             ],
           },
-          'searchValue': {
-            'description': 'Current search query value',
-            'label': 'Search Value',
-            'tier': 'presentation',
+          'enter': {
             'type': 'string',
-          },
-          'selectedIds': {
-            'default': [],
-            'description': 'Currently selected item IDs',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Selected Ids',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
             'tier': 'presentation',
-            'type': '[string]',
-          },
-          'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
-            'type': 'string',
             'values': [
-              'header',
-              'table',
-              'list',
-              'grid',
-              'detail',
-              'stats',
-              'form',
-              'card',
-              'text',
               'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
             ],
           },
-          'sortBy': {
-            'description': 'Current sort field',
-            'label': 'Sort By',
+          'coordinatorActivities': {
+            'type': '[SubagentTracePanelCoordinatorActivitiesItem]',
+            'default': [],
+            'label': 'Coordinator Activities',
+            'description': 'Full coordinator activities (tool calls, results, messages, errors).',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'sortDirection': {
-            'description': 'Current sort direction',
-            'label': 'Sort Direction',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'subagents': {
-            'default': [
-              {
-                'durationMs': 1,
-                'id': 'Id',
-                'messages': [
-                  {
-                    'message': 'Message',
-                    'timestamp': 1,
-                    'tool': 'Tool',
-                  },
-                  {
-                    'message': 'Message 2',
-                    'timestamp': 2,
-                    'tool': 'Tool 2',
-                  },
-                ],
-                'name': 'Name',
-                'orbitalName': 'Orbital Name',
-                'parentId': 'Parent Id',
-                'role': 'Role',
-                'status': 'running',
-                'task': 'Task',
-                'timeline': [],
-              },
-              {
-                'durationMs': 2,
-                'id': 'Id 2',
-                'messages': [
-                  {
-                    'message': 'Message',
-                    'timestamp': 1,
-                    'tool': 'Tool',
-                  },
-                  {
-                    'message': 'Message 2',
-                    'timestamp': 2,
-                    'tool': 'Tool 2',
-                  },
-                ],
-                'name': 'Name 2',
-                'orbitalName': 'Orbital Name 2',
-                'parentId': 'Parent Id 2',
-                'role': 'Role 2',
-                'status': 'complete',
-                'task': 'Task 2',
-                'timeline': [],
-              },
-            ],
-            'description': 'All known subagents from the runner.',
             'items': {
+              'type': 'union',
+              'values': [
+                'SubagentTracePanelCoordinatorActivitiesItemMessage',
+                'SubagentTracePanelCoordinatorActivitiesItemToolCall',
+                'SubagentTracePanelCoordinatorActivitiesItemToolResult',
+                'SubagentTracePanelCoordinatorActivitiesItemFileOperation',
+                'SubagentTracePanelCoordinatorActivitiesItemSchemaDiff',
+                'SubagentTracePanelCoordinatorActivitiesItemError',
+                'SubagentTracePanelCoordinatorActivitiesItemCoordinatorDecision',
+                'SubagentTracePanelCoordinatorActivitiesItemPlanCommitted',
+                'SubagentTracePanelCoordinatorActivitiesItemPendingQuestion',
+                'SubagentTracePanelCoordinatorActivitiesItemClarificationQuestion',
+                'SubagentTracePanelCoordinatorActivitiesItemAnalysis',
+                'SubagentTracePanelCoordinatorActivitiesItemOrbitalStarted',
+                'SubagentTracePanelCoordinatorActivitiesItemOrbitalDone',
+                'SubagentTracePanelCoordinatorActivitiesItemSchemaChange',
+                'SubagentTracePanelCoordinatorActivitiesItemDone',
+                'SubagentTracePanelCoordinatorActivitiesItemCancelled',
+                'SubagentTracePanelCoordinatorActivitiesItemLlmResponse',
+              ],
               'properties': {
-                'durationMs': {
-                  'name': 'durationMs',
-                  'required': false,
-                  'type': 'number',
+                'SubagentTracePanelCoordinatorActivitiesItemCoordinatorDecision': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemCoordinatorDecision',
+                  'type': 'object',
+                  'properties': {
+                    'organism': {
+                      'name': 'organism',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'coordinator_decision',
+                      ],
+                    },
+                    'reason': {
+                      'name': 'reason',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'priorOrganism': {
+                      'name': 'priorOrganism',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
                 },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
+                'SubagentTracePanelCoordinatorActivitiesItemToolResult': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemToolResult',
+                  'type': 'object',
+                  'properties': {
+                    'resultText': {
+                      'name': 'resultText',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'rows': {
+                      'name': 'rows',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'success': {
+                      'name': 'success',
+                      'type': 'boolean',
+                      'required': true,
+                    },
+                    'detail': {
+                      'name': 'detail',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'tool': {
+                      'name': 'tool',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'tool_result',
+                      ],
+                    },
+                    'kind': {
+                      'name': 'kind',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'input',
+                        'read',
+                        'invalid',
+                      ],
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
                 },
-                'messages': {
-                  'items': {
-                    'properties': {
-                      'message': {
-                        'name': 'message',
-                        'required': true,
-                        'type': 'string',
+                'SubagentTracePanelCoordinatorActivitiesItemError': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemError',
+                  'type': 'object',
+                  'properties': {
+                    'code': {
+                      'name': 'code',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'message': {
+                      'name': 'message',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'error',
+                      ],
+                    },
+                  },
+                },
+                'SubagentTracePanelCoordinatorActivitiesItemSchemaDiff': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemSchemaDiff',
+                  'type': 'object',
+                  'properties': {
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'hunks': {
+                      'name': 'hunks',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'oldStart': {
+                            'name': 'oldStart',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'newStart': {
+                            'name': 'newStart',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'lines': {
+                            'name': 'lines',
+                            'type': 'array',
+                            'required': true,
+                            'items': {
+                              'type': 'object',
+                              'properties': {
+                                'type': {
+                                  'name': 'type',
+                                  'type': 'string',
+                                  'required': true,
+                                  'values': [
+                                    'add',
+                                    'remove',
+                                    'context',
+                                  ],
+                                },
+                                'content': {
+                                  'name': 'content',
+                                  'type': 'string',
+                                  'required': true,
+                                },
+                              },
+                            },
+                          },
+                          'newLines': {
+                            'name': 'newLines',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'oldLines': {
+                            'name': 'oldLines',
+                            'type': 'number',
+                            'required': true,
+                          },
+                        },
                       },
-                      'timestamp': {
-                        'name': 'timestamp',
-                        'required': true,
-                        'type': 'number',
-                      },
-                      'tool': {
-                        'name': 'tool',
-                        'required': false,
+                    },
+                    'filePath': {
+                      'name': 'filePath',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'schema_diff',
+                      ],
+                    },
+                  },
+                },
+                'SubagentTracePanelCoordinatorActivitiesItemAnalysis': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemAnalysis',
+                  'type': 'object',
+                  'properties': {
+                    'deletes': {
+                      'name': 'deletes',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
                         'type': 'string',
                       },
                     },
-                    'type': 'object',
+                    'renames': {
+                      'name': 'renames',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'from': {
+                            'name': 'from',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'to': {
+                            'name': 'to',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'complexity': {
+                      'name': 'complexity',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'reasoning': {
+                          'name': 'reasoning',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'category': {
+                          'name': 'category',
+                          'type': 'string',
+                          'required': true,
+                        },
+                      },
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'organism': {
+                      'name': 'organism',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'organismReason': {
+                      'name': 'organismReason',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'analysis',
+                      ],
+                    },
                   },
-                  'name': 'messages',
-                  'required': true,
-                  'type': 'array',
                 },
-                'name': {
-                  'name': 'name',
-                  'required': true,
-                  'type': 'string',
+                'SubagentTracePanelCoordinatorActivitiesItemToolCall': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemToolCall',
+                  'type': 'object',
+                  'properties': {
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'kind': {
+                      'name': 'kind',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'input',
+                        'read',
+                        'invalid',
+                      ],
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'tool_call',
+                      ],
+                    },
+                    'isExecuting': {
+                      'name': 'isExecuting',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                    'tool': {
+                      'name': 'tool',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'argsText': {
+                      'name': 'argsText',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
                 },
-                'orbitalName': {
-                  'name': 'orbitalName',
-                  'required': false,
-                  'type': 'string',
+                'SubagentTracePanelCoordinatorActivitiesItemFileOperation': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemFileOperation',
+                  'type': 'object',
+                  'properties': {
+                    'path': {
+                      'name': 'path',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'operation': {
+                      'name': 'operation',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'ls',
+                        'read_file',
+                        'write_file',
+                        'edit_file',
+                      ],
+                    },
+                    'success': {
+                      'name': 'success',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'file_operation',
+                      ],
+                    },
+                  },
                 },
-                'parentId': {
-                  'name': 'parentId',
-                  'required': false,
-                  'type': 'string',
+                'SubagentTracePanelCoordinatorActivitiesItemSchemaChange': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemSchemaChange',
+                  'type': 'object',
+                  'properties': {
+                    'orbitalName': {
+                      'name': 'orbitalName',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'changeKind': {
+                      'name': 'changeKind',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'orbital-added',
+                        'orbital-removed',
+                        'entity-fields-changed',
+                        'trait-added',
+                        'trait-removed',
+                        'trait-config-changed',
+                        'state-machine-changed',
+                        'guard-changed',
+                        'effect-changed',
+                        'render-ui-changed',
+                        'event-wiring-changed',
+                        'page-changed',
+                        'theme-changed',
+                        'behavior-composed',
+                      ],
+                    },
+                    'traitName': {
+                      'name': 'traitName',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'transitionEvent': {
+                      'name': 'transitionEvent',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'schema_change',
+                      ],
+                    },
+                  },
                 },
-                'role': {
-                  'name': 'role',
-                  'required': true,
-                  'type': 'string',
+                'SubagentTracePanelCoordinatorActivitiesItemOrbitalStarted': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemOrbitalStarted',
+                  'type': 'object',
+                  'properties': {
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'orbital_started',
+                      ],
+                    },
+                    'orbitalName': {
+                      'name': 'orbitalName',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
                 },
+                'SubagentTracePanelCoordinatorActivitiesItemPlanCommitted': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemPlanCommitted',
+                  'type': 'object',
+                  'properties': {
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'plan_committed',
+                      ],
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'orbitals': {
+                      'name': 'orbitals',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                  },
+                },
+                'SubagentTracePanelCoordinatorActivitiesItemOrbitalDone': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemOrbitalDone',
+                  'type': 'object',
+                  'properties': {
+                    'transitionCount': {
+                      'name': 'transitionCount',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'orbital_done',
+                      ],
+                    },
+                    'traitCount': {
+                      'name': 'traitCount',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'orbitalName': {
+                      'name': 'orbitalName',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'SubagentTracePanelCoordinatorActivitiesItemCancelled': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemCancelled',
+                  'type': 'object',
+                  'properties': {
+                    'message': {
+                      'name': 'message',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'cancelled',
+                      ],
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'SubagentTracePanelCoordinatorActivitiesItemMessage': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemMessage',
+                  'type': 'object',
+                  'properties': {
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'isStreaming': {
+                      'name': 'isStreaming',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'user',
+                        'assistant',
+                        'system',
+                      ],
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'message',
+                      ],
+                    },
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+                'SubagentTracePanelCoordinatorActivitiesItemLlmResponse': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemLlmResponse',
+                  'type': 'object',
+                  'properties': {
+                    'llm': {
+                      'name': 'llm',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'toolCallsJson': {
+                          'name': 'toolCallsJson',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'completionTokens': {
+                          'name': 'completionTokens',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'service': {
+                          'name': 'service',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'promptTokens': {
+                          'name': 'promptTokens',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'userPrompt': {
+                          'name': 'userPrompt',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'provider': {
+                          'name': 'provider',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'costUSD': {
+                          'name': 'costUSD',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'cachedPromptTokens': {
+                          'name': 'cachedPromptTokens',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'systemPrompt': {
+                          'name': 'systemPrompt',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'durationMs': {
+                          'name': 'durationMs',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'model': {
+                          'name': 'model',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'attempt': {
+                          'name': 'attempt',
+                          'type': 'number',
+                          'required': false,
+                        },
+                      },
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'llm_response',
+                      ],
+                    },
+                  },
+                },
+                'SubagentTracePanelCoordinatorActivitiesItemClarificationQuestion': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemClarificationQuestion',
+                  'type': 'object',
+                  'properties': {
+                    'scope': {
+                      'name': 'scope',
+                      'type': 'object',
+                      'required': true,
+                      'properties': {
+                        'orbitalName': {
+                          'name': 'orbitalName',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'traitName': {
+                          'name': 'traitName',
+                          'type': 'string',
+                          'required': false,
+                        },
+                      },
+                    },
+                    'candidates': {
+                      'name': 'candidates',
+                      'type': 'array',
+                      'required': true,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'whyThisFits': {
+                            'name': 'whyThisFits',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'description': {
+                            'name': 'description',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'label': {
+                            'name': 'label',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'id': {
+                            'name': 'id',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'skipDefault': {
+                      'name': 'skipDefault',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'clarification_question',
+                      ],
+                    },
+                    'level': {
+                      'name': 'level',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'organism',
+                        'molecule',
+                        'atom_trait',
+                      ],
+                    },
+                    'question': {
+                      'name': 'question',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+                'SubagentTracePanelCoordinatorActivitiesItemDone': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemDone',
+                  'type': 'object',
+                  'properties': {
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'done',
+                      ],
+                    },
+                    'orbitalCount': {
+                      'name': 'orbitalCount',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'SubagentTracePanelCoordinatorActivitiesItemPendingQuestion': {
+                  'name': 'SubagentTracePanelCoordinatorActivitiesItemPendingQuestion',
+                  'type': 'object',
+                  'properties': {
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'pending_question',
+                      ],
+                    },
+                    'questionId': {
+                      'name': 'questionId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'question': {
+                      'name': 'question',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'orbitalName': {
+                      'name': 'orbitalName',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'ariaDescribedby': {
+            'type': 'string',
+            'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
+            'synonyms': 'aria-describedby',
+            'tier': 'presentation',
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'ariaSelected': {
+            'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
+          },
+          'subagents': {
+            'type': '[SubagentTracePanelSubagentsItem]',
+            'default': [
+              {
+                'status': 'running',
+                'orbitalName': 'Orbital Name',
+                'role': 'Role',
+                'parentId': 'Parent Id',
+                'id': 'Id',
+                'durationMs': 1,
+                'task': 'Task',
+                'name': 'Name',
+                'messages': [
+                  {
+                    'tool': 'Tool',
+                    'timestamp': 1,
+                    'message': 'Message',
+                  },
+                  {
+                    'tool': 'Tool 2',
+                    'timestamp': 2,
+                    'message': 'Message 2',
+                  },
+                ],
+                'timeline': [],
+              },
+              {
+                'name': 'Name 2',
+                'durationMs': 2,
+                'task': 'Task 2',
+                'messages': [
+                  {
+                    'timestamp': 1,
+                    'tool': 'Tool',
+                    'message': 'Message',
+                  },
+                  {
+                    'timestamp': 2,
+                    'message': 'Message 2',
+                    'tool': 'Tool 2',
+                  },
+                ],
+                'role': 'Role 2',
+                'timeline': [],
+                'status': 'complete',
+                'parentId': 'Parent Id 2',
+                'id': 'Id 2',
+                'orbitalName': 'Orbital Name 2',
+              },
+            ],
+            'label': 'Subagents',
+            'description': 'All known subagents from the runner.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
                 'status': {
                   'name': 'status',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                   'values': [
                     'running',
                     'complete',
                     'error',
                   ],
                 },
-                'task': {
-                  'name': 'task',
-                  'required': true,
-                  'type': 'string',
+                'durationMs': {
+                  'name': 'durationMs',
+                  'type': 'number',
+                  'required': false,
                 },
-                'timeline': {
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+                'role': {
+                  'name': 'role',
+                  'type': 'string',
+                  'required': true,
+                },
+                'orbitalName': {
+                  'name': 'orbitalName',
+                  'type': 'string',
+                  'required': false,
+                },
+                'messages': {
+                  'name': 'messages',
+                  'type': 'array',
+                  'required': true,
                   'items': {
+                    'type': 'object',
                     'properties': {
-                      'SubagentTracePanelSubagentsItemTimelineItemError': {
-                        'name': 'SubagentTracePanelSubagentsItemTimelineItemError',
-                        'properties': {
-                          'code': {
-                            'name': 'code',
-                            'required': false,
-                            'type': 'string',
-                          },
-                          'message': {
-                            'name': 'message',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'timestamp': {
-                            'name': 'timestamp',
-                            'required': true,
-                            'type': 'number',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                            'values': [
-                              'error',
-                            ],
-                          },
-                        },
-                        'type': 'object',
+                      'timestamp': {
+                        'name': 'timestamp',
+                        'type': 'number',
+                        'required': true,
                       },
-                      'SubagentTracePanelSubagentsItemTimelineItemFileOperation': {
-                        'name': 'SubagentTracePanelSubagentsItemTimelineItemFileOperation',
-                        'properties': {
-                          'operation': {
-                            'name': 'operation',
-                            'required': true,
-                            'type': 'string',
-                            'values': [
-                              'ls',
-                              'read_file',
-                              'write_file',
-                              'edit_file',
-                            ],
-                          },
-                          'path': {
-                            'name': 'path',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'success': {
-                            'name': 'success',
-                            'required': false,
-                            'type': 'boolean',
-                          },
-                          'timestamp': {
-                            'name': 'timestamp',
-                            'required': true,
-                            'type': 'number',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                            'values': [
-                              'file_operation',
-                            ],
-                          },
-                        },
-                        'type': 'object',
+                      'tool': {
+                        'name': 'tool',
+                        'type': 'string',
+                        'required': false,
                       },
-                      'SubagentTracePanelSubagentsItemTimelineItemMessage': {
-                        'name': 'SubagentTracePanelSubagentsItemTimelineItemMessage',
-                        'properties': {
-                          'content': {
-                            'name': 'content',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'isStreaming': {
-                            'name': 'isStreaming',
-                            'required': false,
-                            'type': 'boolean',
-                          },
-                          'label': {
-                            'name': 'label',
-                            'required': false,
-                            'type': 'string',
-                          },
-                          'role': {
-                            'name': 'role',
-                            'required': true,
-                            'type': 'string',
-                            'values': [
-                              'user',
-                              'assistant',
-                              'system',
-                              'tool',
-                            ],
-                          },
-                          'timestamp': {
-                            'name': 'timestamp',
-                            'required': true,
-                            'type': 'number',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                            'values': [
-                              'message',
-                            ],
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'SubagentTracePanelSubagentsItemTimelineItemMilestone': {
-                        'name': 'SubagentTracePanelSubagentsItemTimelineItemMilestone',
-                        'properties': {
-                          'milestone': {
-                            'name': 'milestone',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'summary': {
-                            'name': 'summary',
-                            'required': false,
-                            'type': 'string',
-                          },
-                          'timestamp': {
-                            'name': 'timestamp',
-                            'required': true,
-                            'type': 'number',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                            'values': [
-                              'milestone',
-                            ],
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'SubagentTracePanelSubagentsItemTimelineItemSchemaDiff': {
-                        'name': 'SubagentTracePanelSubagentsItemTimelineItemSchemaDiff',
-                        'properties': {
-                          'filePath': {
-                            'name': 'filePath',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'hunks': {
-                            'items': {
-                              'properties': {
-                                'lines': {
-                                  'items': {
-                                    'properties': {
-                                      'content': {
-                                        'name': 'content',
-                                        'required': true,
-                                        'type': 'string',
-                                      },
-                                      'type': {
-                                        'name': 'type',
-                                        'required': true,
-                                        'type': 'string',
-                                        'values': [
-                                          'add',
-                                          'remove',
-                                          'context',
-                                        ],
-                                      },
-                                    },
-                                    'type': 'object',
-                                  },
-                                  'name': 'lines',
-                                  'required': true,
-                                  'type': 'array',
-                                },
-                                'newLines': {
-                                  'name': 'newLines',
-                                  'required': true,
-                                  'type': 'number',
-                                },
-                                'newStart': {
-                                  'name': 'newStart',
-                                  'required': true,
-                                  'type': 'number',
-                                },
-                                'oldLines': {
-                                  'name': 'oldLines',
-                                  'required': true,
-                                  'type': 'number',
-                                },
-                                'oldStart': {
-                                  'name': 'oldStart',
-                                  'required': true,
-                                  'type': 'number',
-                                },
-                              },
-                              'type': 'object',
-                            },
-                            'name': 'hunks',
-                            'required': true,
-                            'type': 'array',
-                          },
-                          'timestamp': {
-                            'name': 'timestamp',
-                            'required': true,
-                            'type': 'number',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                            'values': [
-                              'schema_diff',
-                            ],
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'SubagentTracePanelSubagentsItemTimelineItemToolCall': {
-                        'name': 'SubagentTracePanelSubagentsItemTimelineItemToolCall',
-                        'properties': {
-                          'argsText': {
-                            'name': 'argsText',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'isExecuting': {
-                            'name': 'isExecuting',
-                            'required': false,
-                            'type': 'boolean',
-                          },
-                          'timestamp': {
-                            'name': 'timestamp',
-                            'required': true,
-                            'type': 'number',
-                          },
-                          'tool': {
-                            'name': 'tool',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                            'values': [
-                              'tool_call',
-                            ],
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'SubagentTracePanelSubagentsItemTimelineItemToolResult': {
-                        'name': 'SubagentTracePanelSubagentsItemTimelineItemToolResult',
-                        'properties': {
-                          'durationMs': {
-                            'name': 'durationMs',
-                            'required': false,
-                            'type': 'number',
-                          },
-                          'resultText': {
-                            'name': 'resultText',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'success': {
-                            'name': 'success',
-                            'required': true,
-                            'type': 'boolean',
-                          },
-                          'timestamp': {
-                            'name': 'timestamp',
-                            'required': true,
-                            'type': 'number',
-                          },
-                          'tool': {
-                            'name': 'tool',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                            'values': [
-                              'tool_result',
-                            ],
-                          },
-                        },
-                        'type': 'object',
+                      'message': {
+                        'name': 'message',
+                        'type': 'string',
+                        'required': true,
                       },
                     },
+                  },
+                },
+                'timeline': {
+                  'name': 'timeline',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
                     'type': 'union',
                     'values': [
                       'SubagentTracePanelSubagentsItemTimelineItemMessage',
@@ -1846,219 +1734,331 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
                       'SubagentTracePanelSubagentsItemTimelineItemError',
                       'SubagentTracePanelSubagentsItemTimelineItemMilestone',
                     ],
+                    'properties': {
+                      'SubagentTracePanelSubagentsItemTimelineItemMessage': {
+                        'name': 'SubagentTracePanelSubagentsItemTimelineItemMessage',
+                        'type': 'object',
+                        'properties': {
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                            'values': [
+                              'message',
+                            ],
+                          },
+                          'timestamp': {
+                            'name': 'timestamp',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'role': {
+                            'name': 'role',
+                            'type': 'string',
+                            'required': true,
+                            'values': [
+                              'user',
+                              'assistant',
+                              'system',
+                              'tool',
+                            ],
+                          },
+                          'label': {
+                            'name': 'label',
+                            'type': 'string',
+                            'required': false,
+                          },
+                          'content': {
+                            'name': 'content',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'isStreaming': {
+                            'name': 'isStreaming',
+                            'type': 'boolean',
+                            'required': false,
+                          },
+                        },
+                      },
+                      'SubagentTracePanelSubagentsItemTimelineItemError': {
+                        'name': 'SubagentTracePanelSubagentsItemTimelineItemError',
+                        'type': 'object',
+                        'properties': {
+                          'message': {
+                            'name': 'message',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                            'values': [
+                              'error',
+                            ],
+                          },
+                          'code': {
+                            'name': 'code',
+                            'type': 'string',
+                            'required': false,
+                          },
+                          'timestamp': {
+                            'name': 'timestamp',
+                            'type': 'number',
+                            'required': true,
+                          },
+                        },
+                      },
+                      'SubagentTracePanelSubagentsItemTimelineItemMilestone': {
+                        'name': 'SubagentTracePanelSubagentsItemTimelineItemMilestone',
+                        'type': 'object',
+                        'properties': {
+                          'milestone': {
+                            'name': 'milestone',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'summary': {
+                            'name': 'summary',
+                            'type': 'string',
+                            'required': false,
+                          },
+                          'timestamp': {
+                            'name': 'timestamp',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                            'values': [
+                              'milestone',
+                            ],
+                          },
+                        },
+                      },
+                      'SubagentTracePanelSubagentsItemTimelineItemToolCall': {
+                        'name': 'SubagentTracePanelSubagentsItemTimelineItemToolCall',
+                        'type': 'object',
+                        'properties': {
+                          'timestamp': {
+                            'name': 'timestamp',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'isExecuting': {
+                            'name': 'isExecuting',
+                            'type': 'boolean',
+                            'required': false,
+                          },
+                          'tool': {
+                            'name': 'tool',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'argsText': {
+                            'name': 'argsText',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                            'values': [
+                              'tool_call',
+                            ],
+                          },
+                        },
+                      },
+                      'SubagentTracePanelSubagentsItemTimelineItemToolResult': {
+                        'name': 'SubagentTracePanelSubagentsItemTimelineItemToolResult',
+                        'type': 'object',
+                        'properties': {
+                          'success': {
+                            'name': 'success',
+                            'type': 'boolean',
+                            'required': true,
+                          },
+                          'timestamp': {
+                            'name': 'timestamp',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'resultText': {
+                            'name': 'resultText',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'durationMs': {
+                            'name': 'durationMs',
+                            'type': 'number',
+                            'required': false,
+                          },
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                            'values': [
+                              'tool_result',
+                            ],
+                          },
+                          'tool': {
+                            'name': 'tool',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                      'SubagentTracePanelSubagentsItemTimelineItemSchemaDiff': {
+                        'name': 'SubagentTracePanelSubagentsItemTimelineItemSchemaDiff',
+                        'type': 'object',
+                        'properties': {
+                          'filePath': {
+                            'name': 'filePath',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                            'values': [
+                              'schema_diff',
+                            ],
+                          },
+                          'hunks': {
+                            'name': 'hunks',
+                            'type': 'array',
+                            'required': true,
+                            'items': {
+                              'type': 'object',
+                              'properties': {
+                                'oldStart': {
+                                  'name': 'oldStart',
+                                  'type': 'number',
+                                  'required': true,
+                                },
+                                'oldLines': {
+                                  'name': 'oldLines',
+                                  'type': 'number',
+                                  'required': true,
+                                },
+                                'newStart': {
+                                  'name': 'newStart',
+                                  'type': 'number',
+                                  'required': true,
+                                },
+                                'newLines': {
+                                  'name': 'newLines',
+                                  'type': 'number',
+                                  'required': true,
+                                },
+                                'lines': {
+                                  'name': 'lines',
+                                  'type': 'array',
+                                  'required': true,
+                                  'items': {
+                                    'type': 'object',
+                                    'properties': {
+                                      'type': {
+                                        'name': 'type',
+                                        'type': 'string',
+                                        'required': true,
+                                        'values': [
+                                          'add',
+                                          'remove',
+                                          'context',
+                                        ],
+                                      },
+                                      'content': {
+                                        'name': 'content',
+                                        'type': 'string',
+                                        'required': true,
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                          'timestamp': {
+                            'name': 'timestamp',
+                            'type': 'number',
+                            'required': true,
+                          },
+                        },
+                      },
+                      'SubagentTracePanelSubagentsItemTimelineItemFileOperation': {
+                        'name': 'SubagentTracePanelSubagentsItemTimelineItemFileOperation',
+                        'type': 'object',
+                        'properties': {
+                          'timestamp': {
+                            'name': 'timestamp',
+                            'type': 'number',
+                            'required': true,
+                          },
+                          'operation': {
+                            'name': 'operation',
+                            'type': 'string',
+                            'required': true,
+                            'values': [
+                              'ls',
+                              'read_file',
+                              'write_file',
+                              'edit_file',
+                            ],
+                          },
+                          'path': {
+                            'name': 'path',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'success': {
+                            'name': 'success',
+                            'type': 'boolean',
+                            'required': false,
+                          },
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                            'values': [
+                              'file_operation',
+                            ],
+                          },
+                        },
+                      },
+                    },
                   },
-                  'name': 'timeline',
-                  'required': false,
-                  'type': 'array',
                 },
-              },
-              'type': 'object',
-            },
-            'label': 'Subagents',
-            'tier': 'presentation',
-            'type': '[SubagentTracePanelSubagentsItem]',
-          },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'totalCount': {
-            'description': 'Total number of items',
-            'label': 'Total Count',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-        },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-          {
-            'kind': 'render-ui',
-            'resource': 'overlay',
-          },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'onClose',
-            'description': 'Optional dismiss handler.',
-            'event': '@config.onClose',
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'description': 'Open the Subagent-trace-panel.',
-            'event': 'OPEN',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'SubagentTracePanelItem',
-        'name': 'SubagentTracePanelRender',
-        'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Open the Subagent-trace-panel.',
-              'key': 'OPEN',
-              'name': 'Open',
-              'payloadSchema': [
-                {
+                'parentId': {
+                  'name': 'parentId',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
                   'name': 'id',
                   'type': 'string',
+                  'required': true,
                 },
-              ],
-              'tier': 'essential',
+                'task': {
+                  'name': 'task',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
             },
-            {
-              'key': 'CLOSE',
-              'name': 'Close',
-            },
-            {
-              'description': 'Optional dismiss handler.',
-              'key': '@config.onClose',
-              'name': '@config.on close',
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'closed',
-            },
-            {
-              'name': 'open',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'action': 'OPEN',
-                    'label': 'Open Subagent-trace-panel',
-                    'type': 'button',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'closed',
-              'to': 'closed',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'overlay',
-                  {
-                    'activeFilters': '@config.activeFilters',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'className': '@config.className',
-                    'coordinatorActivities': '@config.coordinatorActivities',
-                    'coordinatorMessages': '@config.coordinatorMessages',
-                    'dir': '@config.dir',
-                    'disclosureLevel': '@config.disclosureLevel',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'error': '@config.error',
-                    'focusedOrbital': '@config.focusedOrbital',
-                    'isLoading': '@config.isLoading',
-                    'lang': '@config.lang',
-                    'mode': '@config.mode',
-                    'onClose': '@config.onClose',
-                    'open': '@config.open',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'role': '@config.role',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'skeleton': '@config.skeleton',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'subagents': '@config.subagents',
-                    'tabIndex': '@config.tabIndex',
-                    'totalCount': '@config.totalCount',
-                    'type': 'subagent-trace-panel',
-                  },
-                ],
-              ],
-              'event': 'OPEN',
-              'from': 'closed',
-              'to': 'open',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'overlay',
-                  null,
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'action': 'OPEN',
-                    'label': 'Open Subagent-trace-panel',
-                    'type': 'button',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'open',
-              'to': 'closed',
-            },
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'overlay',
-                  null,
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'action': 'OPEN',
-                    'label': 'Open Subagent-trace-panel',
-                    'type': 'button',
-                  },
-                ],
-              ],
-              'event': 'CLOSE',
-              'from': 'open',
-              'to': 'closed',
-            },
-          ],
+          },
+          'focusedOrbital': {
+            'type': 'string',
+            'label': 'Focused Orbital',
+            'description': 'Current canvas focus orbital — only used by overlay mode. Tab mode ignores this.',
+            'tier': 'presentation',
+          },
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

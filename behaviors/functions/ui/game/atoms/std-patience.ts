@@ -62,12 +62,12 @@ export interface StdPatienceCustomerLostPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPatienceConfig {
-  /** Default: `[]` */
-  customers?: EntityRow[];
-  /** Default: `true` */
-  running?: boolean;
   /** Default: `1` */
   serveRadius?: number;
+  /** Default: `true` */
+  running?: boolean;
+  /** Default: `[]` */
+  customers?: EntityRow[];
 }
 
 /**

@@ -50,12 +50,12 @@ export interface StdGraphBuilderGraphReadyPayload {
  * without modifying its state-machine topology.
  */
 export interface StdGraphBuilderConfig {
-  /** Default: `false` */
-  directed?: boolean;
   /** Default: `""` */
   edgeField?: string;
   /** Default: `[]` */
   nodeFeatures?: string[];
+  /** Default: `false` */
+  directed?: boolean;
 }
 
 /**
@@ -186,50 +186,50 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
+            'name': 'nodes',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'items': {
                 'type': 'scalar',
               },
-              'type': 'object',
             },
-            'name': 'nodes',
-            'type': 'array',
           },
           {
+            'name': 'edges',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
                 'source': {
                   'name': 'source',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'target': {
                   'name': 'target',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'edges',
-            'type': 'array',
           },
           {
-            'default': 0,
             'name': 'nodeCount',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'edgeCount',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'built',
@@ -244,33 +244,7 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'directed': {
-            'default': false,
-            'description': 'Carried through for downstream consumers; edges are emitted once per adjacency entry, so an undirected reader should treat each edge as bidirectional',
-            'label': 'Directed',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'edgeField': {
-            'default': '',
-            'description': 'Field on each source entity holding its adjacency — an array of target ids',
-            'label': 'Edge field',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'nodeFeatures': {
-            'default': [],
-            'description': 'Entity fields carried onto each node alongside id',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Node features',
-            'tier': 'domain',
-            'type': '[string]',
-          },
-        },
+        'name': 'GraphBuilderRun',
         'effectRow': [
           {
             'kind': 'emit',
@@ -297,58 +271,66 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'GraphStructure',
         'emits': [
           {
-            'description': 'Fired when node/edge structures have been built from the source entity collection',
             'event': 'GRAPH_READY',
+            'description': 'Fired when node/edge structures have been built from the source entity collection',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'nodes',
-                'required': true,
                 'type': '[Map<string,scalar>]',
+                'required': true,
               },
               {
-                'entity': 'GraphBuilderEdge',
                 'name': 'edges',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'source',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'target',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'GraphBuilderEdge',
               },
               {
                 'name': 'nodeCount',
-                'required': true,
                 'type': 'int',
+                'required': true,
               },
               {
                 'name': 'edgeCount',
-                'required': true,
                 'type': 'int',
+                'required': true,
               },
               {
                 'name': 'directed',
-                'required': true,
                 'type': 'boolean',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'GraphStructure',
-        'name': 'GraphBuilderRun',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'built',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -360,8 +342,8 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
               'payloadSchema': [
                 {
                   'name': 'entities',
-                  'required': true,
                   'type': '[Map<string,scalar>]',
+                  'required': true,
                 },
               ],
             },
@@ -370,63 +352,57 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
               'name': 'Reset',
             },
             {
-              'description': 'Fired when node/edge structures have been built from the source entity collection',
               'key': 'GRAPH_READY',
               'name': 'Graph Ready',
+              'description': 'Fired when node/edge structures have been built from the source entity collection',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'nodes',
-                  'required': true,
                   'type': '[Map<string,scalar>]',
+                  'required': true,
                 },
                 {
-                  'entity': 'GraphBuilderEdge',
                   'name': 'edges',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'source',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'target',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'GraphBuilderEdge',
                 },
                 {
                   'name': 'nodeCount',
-                  'required': true,
                   'type': 'int',
+                  'required': true,
                 },
                 {
                   'name': 'edgeCount',
-                  'required': true,
                   'type': 'int',
+                  'required': true,
                 },
                 {
                   'name': 'directed',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'built',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -454,11 +430,11 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'built',
+              'event': 'BUILD_GRAPH',
               'effects': [
                 [
                   'let',
@@ -512,12 +488,12 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                                 'fn',
                                 'target',
                                 {
+                                  'target': '@target',
                                   'source': [
                                     'object/get',
                                     '@e',
                                     'id',
                                   ],
-                                  'target': '@target',
                                 },
                               ],
                             ],
@@ -563,27 +539,27 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                       'emit',
                       'GRAPH_READY',
                       {
-                        'directed': '@config.directed',
+                        'edges': '@edges',
                         'edgeCount': [
                           'array/len',
                           '@edges',
                         ],
-                        'edges': '@edges',
                         'nodeCount': [
                           'array/len',
                           '@nodes',
                         ],
                         'nodes': '@nodes',
+                        'directed': '@config.directed',
                       },
                     ],
                   ],
                 ],
               ],
-              'event': 'BUILD_GRAPH',
-              'from': 'idle',
-              'to': 'built',
             },
             {
+              'from': 'built',
+              'to': 'built',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -591,11 +567,11 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                   'built',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'built',
-              'to': 'built',
             },
             {
+              'from': 'built',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -623,12 +599,36 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'built',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'edgeField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Edge field',
+            'description': 'Field on each source entity holding its adjacency — an array of target ids',
+            'tier': 'domain',
+          },
+          'nodeFeatures': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Node features',
+            'description': 'Entity fields carried onto each node alongside id',
+            'tier': 'domain',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'directed': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Directed',
+            'description': 'Carried through for downstream consumers; edges are emitted once per adjacency entry, so an undirected reader should treat each edge as bidirectional',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

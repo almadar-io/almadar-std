@@ -39,20 +39,20 @@ export type StdStatBandEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdStatBandConfig {
-  /** Default: `"none"` */
-  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
   /** Default: `"background"` */
   edgeColor?: 'background' | 'muted' | 'surface' | 'gradient' | 'inverse';
-  /** Default: `"none"` */
-  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
-  /** Default: `""` */
-  heading?: string;
-  /** Default: `[{"label":"Building blocks","value":"120+"},{"label":"Languages","value":"3"},{"label":"Uptime","value":"99.9%"}]` */
-  items?: EntityRow[];
   /** Default: `"plain"` */
   surface?: 'plain' | 'muted' | 'accent' | 'inverse';
+  /** Default: `"none"` */
+  edgeTop?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `"none"` */
+  edgeBottom?: 'none' | 'curve' | 'wave' | 'arc' | 'tilt' | 'step' | 'scallop';
+  /** Default: `[{"value":"120+","label":"Building blocks"},{"value":"3","label":"Languages"},{"label":"Uptime","value":"99.9%"}]` */
+  items?: EntityRow[];
   /** Default: `false` */
   texture?: boolean;
+  /** Default: `""` */
+  heading?: string;
 }
 
 /**

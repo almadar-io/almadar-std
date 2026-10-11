@@ -63,50 +63,50 @@ export interface StdCalendarPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCalendarConfig {
-  /** Default: `"date"` */
-  agendaGroupBy?: string;
-  /** Default: `[]` */
-  agendaItemActions?: EntityRow[];
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"list","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack","wrap":true},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"entity":"@payload.data","fields":[],"gap":"md","groupBy":"@config.agendaGroupBy","groupFormat":"date","itemActions":["array/filter","@config.agendaItemActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"renderItem":["fn","item",{"children":[{"align":"start","children":[{"align":"center","children":[{"color":"muted","content":"@config.timeBinding","format":"time","type":"typography","variant":"overline"},{"className":"hidden sm:block","color":"muted","name":"clock","size":"sm","type":"icon"}],"className":"w-14 sm:w-16 shrink-0","direction":"vertical","gap":"xs","type":"stack"},{"className":"hidden sm:block","orientation":"vertical","type":"divider"},{"children":[{"align":"center","children":[{"className":"min-w-[8rem] flex-1 line-clamp-2 break-words","content":"@config.titleBinding","type":"typography","variant":"h4","weight":"medium"},{"className":"shrink-0 whitespace-nowrap","label":"@config.badgeBinding","size":"sm","type":"badge","variant":"default"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack","wrap":true},{"className":"truncate","color":"muted","content":"@config.descriptionBinding","type":"typography","variant":"body2"}],"className":"flex-1 min-w-0","direction":"vertical","gap":"xs","type":"stack"}],"direction":"horizontal","gap":"md","type":"stack"}],"look":"flat-bordered","padding":"md","type":"card"}],"surface":"none","type":"data-list","variant":"default"}],"className":"w-full p-card-md","direction":"vertical","gap":"lg","type":"stack"}` */
-  agendaListBodyContent?: unknown;
-  /** Default: `"@item.status"` */
-  badgeBinding?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack","wrap":true},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":"@config.fields","itemActions":["array/filter","@config.agendaItemActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
-  bodyContent?: unknown;
-  /** Default: `false` */
-  bodySearch?: boolean;
-  /** Default: `"month"` */
-  calendarLook?: 'month' | 'agenda-list' | 'week-timeline';
-  /** Default: `"@item.description"` */
-  descriptionBinding?: string;
-  /** Default: `[{"icon":"calendar","label":"Event","name":"name","variant":"h4"},{"label":"Time","name":"time","variant":"badge"},{"format":"date","label":"Date","name":"date","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}]` */
-  fields?: EntityRow[];
-  /** Default: `"toolbar"` */
-  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
-  /** Default: `[]` */
-  filters?: EntityRow[];
   /** Default: `[]` */
   include?: string[];
   /** Default: `""` */
-  onEventClick?: string;
-  /** Default: `"name"` */
-  searchField?: string;
-  /** Default: `"Search…"` */
-  searchPlaceholder?: string;
+  viewerRole?: string;
   /** Default: `"date"` */
-  startField?: string;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"@item.time"` */
-  timeBinding?: string;
+  agendaGroupBy?: string;
+  /** Default: `"toolbar"` */
+  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
+  /** Default: `false` */
+  bodySearch?: boolean;
   /** Default: `"Calendar"` */
   title?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `{"children":[{"children":[{"direction":"horizontal","type":"stack","align":"center","children":[{"name":"list","type":"icon","size":"xl"},{"variant":"h2","type":"typography","content":"@config.title"}],"gap":"sm"},{"onSelect":"SELECT_DAY","type":"date-range-selector","selected":"@entity.selectedRange"}],"justify":"between","direction":"horizontal","align":"center","type":"stack","wrap":true,"gap":"md"},["if","@config.bodySearch",{"children":[{"event":"REFETCH_QUERY","className":"w-full max-w-md","placeholder":"@config.searchPlaceholder","clearable":true,"type":"search-input"}],"gap":"sm","direction":"horizontal","type":"stack"},{"type":"stack","children":[],"gap":"none"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","look":"@config.filterBarLook","type":"filter-group","filters":"@config.filters"}],"type":"stack","gap":"sm","direction":"horizontal"},{"type":"stack","children":[],"gap":"none"}],{"type":"divider"},{"entity":"@payload.data","groupBy":"@config.agendaGroupBy","surface":"none","itemActions":["array/filter","@config.agendaItemActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"fields":[],"groupFormat":"date","type":"data-list","gap":"md","renderItem":["fn","item",{"children":[{"children":[{"align":"center","children":[{"type":"typography","variant":"overline","format":"time","content":"@config.timeBinding","color":"muted"},{"size":"sm","className":"hidden sm:block","type":"icon","color":"muted","name":"clock"}],"direction":"vertical","className":"w-14 sm:w-16 shrink-0","gap":"xs","type":"stack"},{"orientation":"vertical","className":"hidden sm:block","type":"divider"},{"children":[{"wrap":true,"children":[{"content":"@config.titleBinding","type":"typography","className":"min-w-[8rem] flex-1 line-clamp-2 break-words","weight":"medium","variant":"h4"},{"type":"badge","label":"@config.badgeBinding","size":"sm","variant":"default","className":"shrink-0 whitespace-nowrap"}],"gap":"sm","type":"stack","align":"center","justify":"between","direction":"horizontal"},{"type":"typography","content":"@config.descriptionBinding","variant":"body2","className":"truncate","color":"muted"}],"className":"flex-1 min-w-0","gap":"xs","direction":"vertical","type":"stack"}],"type":"stack","gap":"md","direction":"horizontal","align":"start"}],"type":"card","look":"flat-bordered","padding":"md"}],"variant":"default"}],"gap":"lg","className":"w-full p-card-md","direction":"vertical","type":"stack"}` */
+  agendaListBodyContent?: unknown;
+  /** Default: `{"gap":"lg","children":[{"gap":"md","direction":"horizontal","align":"center","children":[{"gap":"sm","align":"center","children":[{"size":"xl","name":"calendar","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","type":"stack"},{"selected":"@entity.selectedRange","onSelect":"SELECT_DAY","type":"date-range-selector"}],"type":"stack","justify":"between","wrap":true},["if","@config.bodySearch",{"type":"stack","direction":"horizontal","gap":"sm","children":[{"clearable":true,"type":"search-input","event":"REFETCH_QUERY","className":"w-full max-w-md","placeholder":"@config.searchPlaceholder"}]},{"type":"stack","gap":"none","children":[]}],["if",[">",["array/len","@config.filters"],0],{"direction":"horizontal","gap":"sm","children":[{"type":"filter-group","filters":"@config.filters","look":"@config.filterBarLook","entity":"CalendarEvent","event":"REFETCH_FILTER"}],"type":"stack"},{"gap":"none","type":"stack","children":[]}],{"type":"divider"},{"onEventClick":"@config.onEventClick","renderItem":["fn","item",{"variant":"small","content":"@config.titleBinding","type":"typography"}],"events":"@payload.data","startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"variant":"h4","content":"Upcoming Events","type":"typography"},{"look":"@config.tableLook","fields":"@config.fields","itemActions":["array/filter","@config.agendaItemActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"type":"data-list","entity":"@payload.data"}],"type":"stack","direction":"vertical"}` */
+  bodyContent?: unknown;
+  /** Default: `[{"name":"name","variant":"h4","icon":"calendar","label":"Event"},{"label":"Time","name":"time","variant":"badge"},{"format":"date","variant":"caption","label":"Date","name":"date"},{"variant":"badge","label":"Status","name":"status"}]` */
+  fields?: EntityRow[];
+  /** Default: `"@item.time"` */
+  timeBinding?: string;
+  /** Default: `"date"` */
+  startField?: string;
+  /** Default: `"@item.status"` */
+  badgeBinding?: string;
+  /** Default: `{"children":[{"type":"stack","justify":"between","wrap":true,"direction":"horizontal","align":"center","gap":"md","children":[{"align":"center","children":[{"type":"icon","size":"xl","name":"calendar"},{"content":"@config.title","type":"typography","variant":"h2"}],"gap":"sm","type":"stack","direction":"horizontal"},{"gap":"xs","children":[{"type":"button","action":"CALENDAR_PREV_WEEK","variant":"ghost","label":"Previous week","icon":"chevron-left"},{"color":"muted","type":"typography","variant":"caption","content":["time/format","@entity.weekAnchor","MMM D, YYYY"]},{"label":"Next week","action":"CALENDAR_NEXT_WEEK","variant":"ghost","icon":"chevron-right","type":"button"}],"type":"stack","direction":"horizontal","align":"center"},{"selected":"@entity.selectedRange","type":"date-range-selector","onSelect":"SELECT_DAY"}]},["if","@config.bodySearch",{"gap":"sm","direction":"horizontal","type":"stack","children":[{"event":"REFETCH_QUERY","type":"search-input","clearable":true,"placeholder":"@config.searchPlaceholder","className":"w-full max-w-md"}]},{"children":[],"type":"stack","gap":"none"}],["if",[">",["array/len","@config.filters"],0],{"type":"stack","gap":"sm","direction":"horizontal","children":[{"entity":"CalendarEvent","filters":"@config.filters","type":"filter-group","event":"REFETCH_FILTER","look":"@config.filterBarLook"}]},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"onEventClick":"@config.onEventClick","renderItem":["fn","item",{"variant":"small","content":"@config.titleBinding","type":"typography"}],"swipeLeftEvent":"CALENDAR_NEXT_WEEK","weekStart":"@entity.weekAnchor","className":"w-full","type":"calendar-grid","dayWindow":7,"startField":"@config.startField","events":"@payload.data","swipeRightEvent":"CALENDAR_PREV_WEEK"}],"gap":"md","direction":"vertical","type":"stack"}` */
+  weekTimelineBodyContent?: unknown;
+  /** Default: `"name"` */
+  searchField?: string;
+  /** Default: `"@item.description"` */
+  descriptionBinding?: string;
+  /** Default: `[]` */
+  filters?: EntityRow[];
   /** Default: `"@item.name"` */
   titleBinding?: string;
+  /** Default: `[]` */
+  agendaItemActions?: EntityRow[];
+  /** Default: `"Search…"` */
+  searchPlaceholder?: string;
   /** Default: `""` */
-  viewerRole?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"align":"center","children":[{"action":"CALENDAR_PREV_WEEK","icon":"chevron-left","label":"Previous week","type":"button","variant":"ghost"},{"color":"muted","content":["time/format","@entity.weekAnchor","MMM D, YYYY"],"type":"typography","variant":"caption"},{"action":"CALENDAR_NEXT_WEEK","icon":"chevron-right","label":"Next week","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack","wrap":true},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"className":"w-full","dayWindow":7,"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","swipeLeftEvent":"CALENDAR_NEXT_WEEK","swipeRightEvent":"CALENDAR_PREV_WEEK","type":"calendar-grid","weekStart":"@entity.weekAnchor"}],"direction":"vertical","gap":"md","type":"stack"}` */
-  weekTimelineBodyContent?: unknown;
+  onEventClick?: string;
+  /** Default: `"month"` */
+  calendarLook?: 'month' | 'agenda-list' | 'week-timeline';
 }
 
 /**
@@ -249,33 +249,33 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'event title shown on the calendar',
             'name': 'name',
+            'type': 'string',
             'required': true,
+            'description': 'event title shown on the calendar',
             'synonyms': 'title, label, summary, subject',
-            'type': 'string',
           },
           {
-            'description': 'event details or notes',
             'name': 'description',
-            'synonyms': 'details, notes, body, summary',
             'type': 'string',
+            'description': 'event details or notes',
+            'synonyms': 'details, notes, body, summary',
           },
           {
-            'default': 'active',
-            'description': 'event lifecycle status',
             'name': 'status',
-            'synonyms': 'state, stage, phase',
             'type': 'string',
+            'default': 'active',
             'values': [
               'active',
               'inactive',
               'pending',
             ],
+            'description': 'event lifecycle status',
+            'synonyms': 'state, stage, phase',
           },
           {
             'name': 'createdAt',
@@ -286,29 +286,29 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'type': 'datetime',
           },
           {
+            'name': 'time',
+            'type': 'string',
             'default': '',
             'description': 'event start time of day',
-            'name': 'time',
             'synonyms': 'start, scheduled time, begins, when, start time',
-            'type': 'string',
           },
           {
+            'name': 'duration',
+            'type': 'number',
             'default': 60,
             'description': 'event length in minutes',
-            'name': 'duration',
             'synonyms': 'minutes, length, span, duration',
-            'type': 'number',
           },
           {
-            'default': 'month',
-            'intrinsic': true,
             'name': 'selectedRange',
             'type': 'string',
+            'default': 'month',
+            'intrinsic': true,
           },
           {
-            'intrinsic': true,
             'name': 'weekAnchor',
             'type': 'date',
+            'intrinsic': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -319,867 +319,14 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'agendaGroupBy': {
-            'default': 'date',
-            'description': 'Row field the agenda list groups its day sections by. Rebound hosts point this at their own timestamp column (e.g. startTime, scheduledAt).',
-            'label': 'Agenda group-by field',
-            'synonyms': 'group field, section field, day field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'agendaItemActions': {
-            'default': [],
-            'description': 'Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'required': false,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                    'danger',
-                  ],
-                },
-                'when': {
-                  'name': 'when',
-                  'required': false,
-                  'type': 'SExpr',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Agenda item actions',
-            'synonyms': 'agenda actions, row actions, event actions, list actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'agendaListBodyContent': {
-            'default': {
-              'children': [
-                {
-                  'align': 'center',
-                  'children': [
-                    {
-                      'align': 'center',
-                      'children': [
-                        {
-                          'name': 'list',
-                          'size': 'xl',
-                          'type': 'icon',
-                        },
-                        {
-                          'content': '@config.title',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'sm',
-                      'type': 'stack',
-                    },
-                    {
-                      'onSelect': 'SELECT_DAY',
-                      'selected': '@entity.selectedRange',
-                      'type': 'date-range-selector',
-                    },
-                  ],
-                  'direction': 'horizontal',
-                  'gap': 'md',
-                  'justify': 'between',
-                  'type': 'stack',
-                  'wrap': true,
-                },
-                [
-                  'if',
-                  '@config.bodySearch',
-                  {
-                    'children': [
-                      {
-                        'className': 'w-full max-w-md',
-                        'clearable': true,
-                        'event': 'REFETCH_QUERY',
-                        'placeholder': '@config.searchPlaceholder',
-                        'type': 'search-input',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                [
-                  'if',
-                  [
-                    '>',
-                    [
-                      'array/len',
-                      '@config.filters',
-                    ],
-                    0,
-                  ],
-                  {
-                    'children': [
-                      {
-                        'entity': 'CalendarEvent',
-                        'event': 'REFETCH_FILTER',
-                        'filters': '@config.filters',
-                        'look': '@config.filterBarLook',
-                        'type': 'filter-group',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                {
-                  'type': 'divider',
-                },
-                {
-                  'entity': '@payload.data',
-                  'fields': [],
-                  'gap': 'md',
-                  'groupBy': '@config.agendaGroupBy',
-                  'groupFormat': 'date',
-                  'itemActions': [
-                    'array/filter',
-                    '@config.agendaItemActions',
-                    [
-                      'fn',
-                      'action',
-                      [
-                        'or',
-                        [
-                          '=',
-                          [
-                            'array/len',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                          ],
-                          0,
-                        ],
-                        [
-                          'array/includes',
-                          [
-                            'object/get',
-                            '@action',
-                            'roles',
-                            [],
-                          ],
-                          '@config.viewerRole',
-                        ],
-                      ],
-                    ],
-                  ],
-                  'renderItem': [
-                    'fn',
-                    'item',
-                    {
-                      'children': [
-                        {
-                          'align': 'start',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'color': 'muted',
-                                  'content': '@config.timeBinding',
-                                  'format': 'time',
-                                  'type': 'typography',
-                                  'variant': 'overline',
-                                },
-                                {
-                                  'className': 'hidden sm:block',
-                                  'color': 'muted',
-                                  'name': 'clock',
-                                  'size': 'sm',
-                                  'type': 'icon',
-                                },
-                              ],
-                              'className': 'w-14 sm:w-16 shrink-0',
-                              'direction': 'vertical',
-                              'gap': 'xs',
-                              'type': 'stack',
-                            },
-                            {
-                              'className': 'hidden sm:block',
-                              'orientation': 'vertical',
-                              'type': 'divider',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'className': 'min-w-[8rem] flex-1 line-clamp-2 break-words',
-                                      'content': '@config.titleBinding',
-                                      'type': 'typography',
-                                      'variant': 'h4',
-                                      'weight': 'medium',
-                                    },
-                                    {
-                                      'className': 'shrink-0 whitespace-nowrap',
-                                      'label': '@config.badgeBinding',
-                                      'size': 'sm',
-                                      'type': 'badge',
-                                      'variant': 'default',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
-                                  'justify': 'between',
-                                  'type': 'stack',
-                                  'wrap': true,
-                                },
-                                {
-                                  'className': 'truncate',
-                                  'color': 'muted',
-                                  'content': '@config.descriptionBinding',
-                                  'type': 'typography',
-                                  'variant': 'body2',
-                                },
-                              ],
-                              'className': 'flex-1 min-w-0',
-                              'direction': 'vertical',
-                              'gap': 'xs',
-                              'type': 'stack',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'type': 'stack',
-                        },
-                      ],
-                      'look': 'flat-bordered',
-                      'padding': 'md',
-                      'type': 'card',
-                    },
-                  ],
-                  'surface': 'none',
-                  'type': 'data-list',
-                  'variant': 'default',
-                },
-              ],
-              'className': 'w-full p-card-md',
-              'direction': 'vertical',
-              'gap': 'lg',
-              'type': 'stack',
-            },
-            'description': 'Render-ui SExpr for calendarLook=\'agenda-list\' — events grouped by day with overline day headers (Today, Tomorrow, …) and a time marker per event.',
-            'label': 'Agenda list body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
-          'badgeBinding': {
-            'default': '@item.status',
-            'description': 'Per-row binding for the event status/badge slot.',
-            'label': 'Badge binding',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'bodyContent': {
-            'default': {
-              'children': [
-                {
-                  'align': 'center',
-                  'children': [
-                    {
-                      'align': 'center',
-                      'children': [
-                        {
-                          'name': 'calendar',
-                          'size': 'xl',
-                          'type': 'icon',
-                        },
-                        {
-                          'content': '@config.title',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'sm',
-                      'type': 'stack',
-                    },
-                    {
-                      'onSelect': 'SELECT_DAY',
-                      'selected': '@entity.selectedRange',
-                      'type': 'date-range-selector',
-                    },
-                  ],
-                  'direction': 'horizontal',
-                  'gap': 'md',
-                  'justify': 'between',
-                  'type': 'stack',
-                  'wrap': true,
-                },
-                [
-                  'if',
-                  '@config.bodySearch',
-                  {
-                    'children': [
-                      {
-                        'className': 'w-full max-w-md',
-                        'clearable': true,
-                        'event': 'REFETCH_QUERY',
-                        'placeholder': '@config.searchPlaceholder',
-                        'type': 'search-input',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                [
-                  'if',
-                  [
-                    '>',
-                    [
-                      'array/len',
-                      '@config.filters',
-                    ],
-                    0,
-                  ],
-                  {
-                    'children': [
-                      {
-                        'entity': 'CalendarEvent',
-                        'event': 'REFETCH_FILTER',
-                        'filters': '@config.filters',
-                        'look': '@config.filterBarLook',
-                        'type': 'filter-group',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                {
-                  'type': 'divider',
-                },
-                {
-                  'events': '@payload.data',
-                  'onEventClick': '@config.onEventClick',
-                  'renderItem': [
-                    'fn',
-                    'item',
-                    {
-                      'content': '@config.titleBinding',
-                      'type': 'typography',
-                      'variant': 'small',
-                    },
-                  ],
-                  'startField': '@config.startField',
-                  'type': 'calendar-grid',
-                },
-                {
-                  'type': 'divider',
-                },
-                {
-                  'content': 'Upcoming Events',
-                  'type': 'typography',
-                  'variant': 'h4',
-                },
-                {
-                  'entity': '@payload.data',
-                  'fields': '@config.fields',
-                  'itemActions': [
-                    'array/filter',
-                    '@config.agendaItemActions',
-                    [
-                      'fn',
-                      'action',
-                      [
-                        'or',
-                        [
-                          '=',
-                          [
-                            'array/len',
-                            [
-                              'object/get',
-                              '@action',
-                              'roles',
-                              [],
-                            ],
-                          ],
-                          0,
-                        ],
-                        [
-                          'array/includes',
-                          [
-                            'object/get',
-                            '@action',
-                            'roles',
-                            [],
-                          ],
-                          '@config.viewerRole',
-                        ],
-                      ],
-                    ],
-                  ],
-                  'look': '@config.tableLook',
-                  'type': 'data-list',
-                },
-              ],
-              'direction': 'vertical',
-              'gap': 'lg',
-              'type': 'stack',
-            },
-            'description': 'Render-ui SExpr rendered after events load for calendarLook=\'month\' — the month-grid + upcoming-events list. calendarLook=\'agenda-list\' / \'week-timeline\' render agendaListBodyContent / weekTimelineBodyContent instead; all three share this trait\'s state machine, emits, and listens.',
-            'label': 'Body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
-          'bodySearch': {
-            'default': false,
-            'description': 'Embeds a title search box in the toolbar above the calendar body (all three calendarLook trees). Defaults false: std-calendar has never had a search box, so an untouched consumer\'s surface is unchanged; the primary path is composing std-search beside this atom and wiring XSearch.SEARCH -> REFETCH_QUERY. Set true only for a standalone calendar with no page-level search affordance.',
-            'label': 'Show the calendar\'s own search box?',
-            'synonyms': 'inline search, calendar search, built-in search, show search, duplicate search',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'calendarLook': {
-            'default': 'month',
-            'description': 'Layer 3 body layout: default month-grid + upcoming-events list (\'month\'), day-grouped agenda list (\'agenda-list\'), or 7-column week timeline (\'week-timeline\').',
-            'label': 'Calendar look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'month',
-              'agenda-list',
-              'week-timeline',
-            ],
-          },
-          'descriptionBinding': {
-            'default': '@item.description',
-            'description': 'Per-row binding for the event description slot.',
-            'label': 'Description binding',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'fields': {
-            'default': [
-              {
-                'icon': 'calendar',
-                'label': 'Event',
-                'name': 'name',
-                'variant': 'h4',
-              },
-              {
-                'label': 'Time',
-                'name': 'time',
-                'variant': 'badge',
-              },
-              {
-                'format': 'date',
-                'label': 'Date',
-                'name': 'date',
-                'variant': 'caption',
-              },
-              {
-                'label': 'Status',
-                'name': 'status',
-                'variant': 'badge',
-              },
-            ],
-            'description': 'Row field descriptors for the \'Upcoming Events\' data-list under calendarLook=\'month\'. Rebound hosts must override this — it is a literal entity[field.name] lookup, unlike titleBinding/timeBinding/descriptionBinding (expression bindings), so it does not follow a rebind automatically.',
-            'items': {
-              'properties': {
-                'format': {
-                  'name': 'format',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'date',
-                    'currency',
-                    'number',
-                    'boolean',
-                    'percent',
-                  ],
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': true,
-                  'type': 'string',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'h3',
-                    'h4',
-                    'body',
-                    'caption',
-                    'badge',
-                    'small',
-                    'progress',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Upcoming-events columns',
-            'synonyms': 'upcoming events columns, month view fields, event list columns',
-            'tier': 'presentation',
-            'type': '[FieldSpec]',
-          },
-          'filterBarLook': {
-            'default': 'toolbar',
-            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
-            'label': 'Filter bar look',
-            'synonyms': 'filter bar style, facet style, chips, pills',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'toolbar',
-              'chips',
-              'pills',
-              'popover-trigger',
-              'inline-column-header',
-            ],
-          },
-          'filters': {
-            'default': [],
-            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the calendar body (all three calendarLook trees); each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this calendar and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone calendar with no page-level filter affordance.',
-            'items': {
-              'properties': {
-                'field': {
-                  'name': 'field',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'options': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'options',
-                  'required': false,
-                  'type': 'array',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Which filters should appear above the calendar?',
-            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
-            'tier': 'presentation',
-            'type': '[FilterSpec]',
-          },
-          'include': {
-            'default': [],
-            'description': 'Entity relation field names to hydrate on fetch (e.g. a `category : Category` field named `category`), so chip bindings can use dot-paths like @item.category.name. Empty = no hydration, the default.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Which relation fields to hydrate?',
-            'synonyms': 'relation hydration, populate relations, joined fields, hydrate relations',
-            'tier': 'internal',
-            'type': '[string]',
-          },
-          'onEventClick': {
-            'default': '',
-            'description': 'Event emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row. Empty means chips are not clickable.',
-            'label': 'On Event Click',
-            'synonyms': 'open event, event click, select event, chip click',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'searchField': {
-            'default': 'name',
-            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, description) or the search box can never match a row.',
-            'label': 'Which column does the search box match against?',
-            'synonyms': 'search column, search on field, match field, search key',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'searchPlaceholder': {
-            'default': 'Search…',
-            'description': 'Hint text inside the calendar\'s search box (e.g. \'Search events…\').',
-            'label': 'Search box placeholder text',
-            'synonyms': 'search hint, placeholder, search box text, search label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'startField': {
-            'default': 'date',
-            'description': 'Row column holding the timestamp the calendar grid places each chip by. Rebound hosts point this at their own column (e.g. startTime, startsAt, dueAt); the chip\'s LABEL comes from titleBinding, not from here.',
-            'label': 'Start field',
-            'synonyms': 'start column, date column, when field, timestamp field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
-            'label': 'Table look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'timeBinding': {
-            'default': '@item.time',
-            'description': 'Per-row binding for the event time slot.',
-            'label': 'Time binding',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'title': {
-            'default': 'Calendar',
-            'description': 'Header text shown above the calendar body.',
-            'label': 'Title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'titleBinding': {
-            'default': '@item.name',
-            'description': 'Per-row binding for the event title slot.',
-            'label': 'Title binding',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'weekTimelineBodyContent': {
-            'default': {
-              'children': [
-                {
-                  'align': 'center',
-                  'children': [
-                    {
-                      'align': 'center',
-                      'children': [
-                        {
-                          'name': 'calendar',
-                          'size': 'xl',
-                          'type': 'icon',
-                        },
-                        {
-                          'content': '@config.title',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'sm',
-                      'type': 'stack',
-                    },
-                    {
-                      'align': 'center',
-                      'children': [
-                        {
-                          'action': 'CALENDAR_PREV_WEEK',
-                          'icon': 'chevron-left',
-                          'label': 'Previous week',
-                          'type': 'button',
-                          'variant': 'ghost',
-                        },
-                        {
-                          'color': 'muted',
-                          'content': [
-                            'time/format',
-                            '@entity.weekAnchor',
-                            'MMM D, YYYY',
-                          ],
-                          'type': 'typography',
-                          'variant': 'caption',
-                        },
-                        {
-                          'action': 'CALENDAR_NEXT_WEEK',
-                          'icon': 'chevron-right',
-                          'label': 'Next week',
-                          'type': 'button',
-                          'variant': 'ghost',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'xs',
-                      'type': 'stack',
-                    },
-                    {
-                      'onSelect': 'SELECT_DAY',
-                      'selected': '@entity.selectedRange',
-                      'type': 'date-range-selector',
-                    },
-                  ],
-                  'direction': 'horizontal',
-                  'gap': 'md',
-                  'justify': 'between',
-                  'type': 'stack',
-                  'wrap': true,
-                },
-                [
-                  'if',
-                  '@config.bodySearch',
-                  {
-                    'children': [
-                      {
-                        'className': 'w-full max-w-md',
-                        'clearable': true,
-                        'event': 'REFETCH_QUERY',
-                        'placeholder': '@config.searchPlaceholder',
-                        'type': 'search-input',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                [
-                  'if',
-                  [
-                    '>',
-                    [
-                      'array/len',
-                      '@config.filters',
-                    ],
-                    0,
-                  ],
-                  {
-                    'children': [
-                      {
-                        'entity': 'CalendarEvent',
-                        'event': 'REFETCH_FILTER',
-                        'filters': '@config.filters',
-                        'look': '@config.filterBarLook',
-                        'type': 'filter-group',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                  {
-                    'children': [],
-                    'gap': 'none',
-                    'type': 'stack',
-                  },
-                ],
-                {
-                  'type': 'divider',
-                },
-                {
-                  'className': 'w-full',
-                  'dayWindow': 7,
-                  'events': '@payload.data',
-                  'onEventClick': '@config.onEventClick',
-                  'renderItem': [
-                    'fn',
-                    'item',
-                    {
-                      'content': '@config.titleBinding',
-                      'type': 'typography',
-                      'variant': 'small',
-                    },
-                  ],
-                  'startField': '@config.startField',
-                  'swipeLeftEvent': 'CALENDAR_NEXT_WEEK',
-                  'swipeRightEvent': 'CALENDAR_PREV_WEEK',
-                  'type': 'calendar-grid',
-                  'weekStart': '@entity.weekAnchor',
-                },
-              ],
-              'direction': 'vertical',
-              'gap': 'md',
-              'type': 'stack',
-            },
-            'description': 'Render-ui SExpr for calendarLook=\'week-timeline\' — events grouped by weekday in a 7-column timeline window.',
-            'label': 'Week timeline body content tree',
-            'tier': 'internal',
-            'type': 'render-ui',
-          },
+        'name': 'CalendarEventCalendar',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'selectedRange',
+            'weekAnchor',
+          ],
         },
         'effectRow': [
           {
@@ -1199,24 +346,29 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'resource': '@entity.weekAnchor',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'CalendarEvent',
         'emits': [
           {
-            'description': 'Indicates that calendar events have been successfully retrieved.',
             'event': 'CalendarEventLoaded',
+            'description': 'Indicates that calendar events have been successfully retrieved.',
+            'synonyms': 'loaded, fetched, retrieved, populated',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'CalendarEvent',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'name',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'description',
@@ -1225,6 +377,11 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   {
                     'name': 'status',
                     'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
                   },
                   {
                     'name': 'createdAt',
@@ -1251,16 +408,16 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                     'type': 'date',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'CalendarEvent',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'loaded, fetched, retrieved, populated',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a failure to load calendar events.',
             'event': 'CalendarEventLoadFailed',
+            'description': 'Indicates a failure to load calendar events.',
+            'synonyms': 'error, failed, problem, loading issue',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1271,14 +428,12 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'error, failed, problem, loading issue',
-            'tier': 'internal',
           },
           {
-            'definerKnob': 'onEventClick',
-            'description': 'Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries.',
             'event': '@config.onEventClick',
+            'description': 'Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries.',
+            'tier': 'presentation',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'event',
@@ -1293,45 +448,47 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                 'type': '@entity',
               },
             ],
-            'scope': 'external',
-            'tier': 'presentation',
+            'definerKnob': 'onEventClick',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'selectedRange',
-            'weekAnchor',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'CalendarEvent',
-        'name': 'CalendarEventCalendar',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'month-view',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates that calendar events have been successfully retrieved.',
               'key': 'CalendarEventLoaded',
               'name': 'CalendarEvent loaded',
+              'description': 'Indicates that calendar events have been successfully retrieved.',
+              'synonyms': 'loaded, fetched, retrieved, populated',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'CalendarEvent',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'name',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'description',
@@ -1340,6 +497,11 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                     {
                       'name': 'status',
                       'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
                     },
                     {
                       'name': 'createdAt',
@@ -1366,16 +528,16 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                       'type': 'date',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'CalendarEvent',
                 },
               ],
-              'synonyms': 'loaded, fetched, retrieved, populated',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a failure to load calendar events.',
               'key': 'CalendarEventLoadFailed',
               'name': 'CalendarEvent load failed',
+              'description': 'Indicates a failure to load calendar events.',
+              'synonyms': 'error, failed, problem, loading issue',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1386,87 +548,86 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failed, problem, loading issue',
-              'tier': 'internal',
             },
             {
-              'description': 'A day has been chosen within the calendar view.',
               'key': 'SELECT_DAY',
               'name': 'Select Day',
+              'description': 'A day has been chosen within the calendar view.',
+              'synonyms': 'choose, pick, set, highlight',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'value',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'choose, pick, set, highlight',
-              'tier': 'domain',
             },
             {
-              'description': 'Move the week timeline one week earlier.',
               'key': 'CALENDAR_PREV_WEEK',
               'name': 'Calendar Prev Week',
+              'description': 'Move the week timeline one week earlier.',
               'synonyms': 'previous week, back a week, earlier week, last week',
               'tier': 'domain',
             },
             {
-              'description': 'Move the week timeline one week later.',
               'key': 'CALENDAR_NEXT_WEEK',
               'name': 'Calendar Next Week',
+              'description': 'Move the week timeline one week later.',
               'synonyms': 'next week, forward a week, later week, following week',
               'tier': 'domain',
             },
             {
-              'description': 'Triggers a data refresh based on the current query.',
               'key': 'REFETCH_QUERY',
               'name': 'Refetch Query',
+              'description': 'Triggers a data refresh based on the current query.',
+              'synonyms': 'refresh, reload, update, re-query',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'searchTerm',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'refresh, reload, update, re-query',
-              'tier': 'domain',
             },
             {
-              'description': 'Triggers a data refresh based on current filter criteria.',
               'key': 'REFETCH_FILTER',
               'name': 'Refetch Filter',
+              'description': 'Triggers a data refresh based on current filter criteria.',
+              'synonyms': 'refresh, filter, update, reload',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'entity',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'field',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'value',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'query',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'refresh, filter, update, reload',
-              'tier': 'domain',
             },
             {
               'key': 'RETRY',
               'name': 'Retry',
             },
             {
-              'description': 'Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries.',
               'key': '@config.onEventClick',
               'name': '@config.on event click',
+              'description': 'Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries.',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'event',
@@ -1481,37 +642,27 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'type': '@entity',
                 },
               ],
-              'tier': 'presentation',
             },
             {
-              'description': 'A time slot has been chosen for an event.',
               'key': 'SELECT_SLOT',
               'name': 'Select Slot',
+              'description': 'A time slot has been chosen for an event.',
+              'synonyms': 'choose, pick, schedule, book',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'time',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'choose, pick, schedule, book',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'month-view',
-            },
-            {
-              'name': 'error',
             },
           ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1524,11 +675,11 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'fetch',
                   ('CalendarEvent' satisfies _StdCalendarEntityName),
                   {
+                    'include': '@config.include',
                     'emit': {
                       'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
                     },
-                    'include': '@config.include',
                   },
                 ],
                 [
@@ -1540,11 +691,11 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'month-view',
+              'event': 'CalendarEventLoaded',
               'effects': [
                 [
                   'if',
@@ -1578,55 +729,55 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   ],
                 ],
               ],
-              'event': 'CalendarEventLoaded',
-              'from': 'loading',
-              'to': 'month-view',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'CalendarEventLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'gap': 'md',
                     'children': [
                       {
                         'color': 'error',
-                        'name': 'alert-triangle',
                         'size': 'lg',
+                        'name': 'alert-triangle',
                         'type': 'icon',
                       },
                       {
-                        'content': 'Failed to load',
                         'type': 'typography',
+                        'content': 'Failed to load',
                         'variant': 'h3',
                       },
                       {
                         'color': 'muted',
+                        'variant': 'body',
                         'content': '@payload.error',
                         'type': 'typography',
-                        'variant': 'body',
                       },
                       {
-                        'action': 'RETRY',
-                        'icon': 'rotate-ccw',
                         'label': 'Retry',
-                        'type': 'button',
+                        'icon': 'rotate-ccw',
+                        'action': 'RETRY',
                         'variant': 'primary',
+                        'type': 'button',
                       },
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
+                    'align': 'center',
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'py-12',
                   },
                 ],
               ],
-              'event': 'CalendarEventLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'month-view',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1648,11 +799,11 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'month-view',
-              'to': 'loading',
             },
             {
+              'from': 'month-view',
+              'to': 'loading',
+              'event': 'SELECT_DAY',
               'effects': [
                 [
                   'set',
@@ -1667,6 +818,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                       'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
                     },
+                    'include': '@config.include',
                     'filter': [
                       'time/isAfter',
                       [
@@ -1734,15 +886,14 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                         ],
                       ],
                     ],
-                    'include': '@config.include',
                   },
                 ],
               ],
-              'event': 'SELECT_DAY',
-              'from': 'month-view',
-              'to': 'loading',
             },
             {
+              'from': 'month-view',
+              'to': 'loading',
+              'event': 'CALENDAR_PREV_WEEK',
               'effects': [
                 [
                   'set',
@@ -1758,19 +909,19 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'fetch',
                   ('CalendarEvent' satisfies _StdCalendarEntityName),
                   {
+                    'include': '@config.include',
                     'emit': {
                       'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
                     },
-                    'include': '@config.include',
                   },
                 ],
               ],
-              'event': 'CALENDAR_PREV_WEEK',
-              'from': 'month-view',
-              'to': 'loading',
             },
             {
+              'from': 'month-view',
+              'to': 'loading',
+              'event': 'CALENDAR_NEXT_WEEK',
               'effects': [
                 [
                   'set',
@@ -1787,27 +938,23 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   ('CalendarEvent' satisfies _StdCalendarEntityName),
                   {
                     'emit': {
-                      'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
+                      'failure': 'CalendarEventLoadFailed',
                     },
                     'include': '@config.include',
                   },
                 ],
               ],
-              'event': 'CALENDAR_NEXT_WEEK',
-              'from': 'month-view',
-              'to': 'loading',
             },
             {
+              'from': 'month-view',
+              'to': 'loading',
+              'event': 'REFETCH_QUERY',
               'effects': [
                 [
                   'fetch',
                   ('CalendarEvent' satisfies _StdCalendarEntityName),
                   {
-                    'emit': {
-                      'failure': 'CalendarEventLoadFailed',
-                      'success': 'CalendarEventLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -1825,24 +972,24 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                         '@payload.searchTerm',
                       ],
                     ],
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
                     'include': '@config.include',
                   },
                 ],
               ],
-              'event': 'REFETCH_QUERY',
-              'from': 'month-view',
-              'to': 'loading',
             },
             {
+              'from': 'month-view',
+              'to': 'loading',
+              'event': 'REFETCH_FILTER',
               'effects': [
                 [
                   'fetch',
                   ('CalendarEvent' satisfies _StdCalendarEntityName),
                   {
-                    'emit': {
-                      'failure': 'CalendarEventLoadFailed',
-                      'success': 'CalendarEventLoaded',
-                    },
                     'filter': [
                       'or',
                       [
@@ -1861,48 +1008,26 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                       ],
                     ],
                     'include': '@config.include',
+                    'emit': {
+                      'success': 'CalendarEventLoaded',
+                      'failure': 'CalendarEventLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'REFETCH_FILTER',
-              'from': 'month-view',
-              'to': 'loading',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('CalendarEvent' satisfies _StdCalendarEntityName),
-                  {
-                    'emit': {
-                      'failure': 'CalendarEventLoadFailed',
-                      'success': 'CalendarEventLoaded',
-                    },
-                    'include': '@config.include',
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'type': 'skeleton',
-                    'variant': 'card',
-                  },
-                ],
-              ],
+              'from': 'error',
+              'to': 'loading',
               'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
-            },
-            {
               'effects': [
                 [
                   'fetch',
                   ('CalendarEvent' satisfies _StdCalendarEntityName),
                   {
                     'emit': {
-                      'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
+                      'failure': 'CalendarEventLoadFailed',
                     },
                     'include': '@config.include',
                   },
@@ -1911,17 +1036,902 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'render-ui',
                   'main',
                   {
-                    'type': 'skeleton',
                     'variant': 'card',
+                    'type': 'skeleton',
                   },
                 ],
               ],
-              'event': 'RETRY',
+            },
+            {
               'from': 'error',
               'to': 'loading',
+              'event': 'RETRY',
+              'effects': [
+                [
+                  'fetch',
+                  ('CalendarEvent' satisfies _StdCalendarEntityName),
+                  {
+                    'include': '@config.include',
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'variant': 'card',
+                    'type': 'skeleton',
+                  },
+                ],
+              ],
             },
           ],
         },
+        'config': {
+          'include': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Which relation fields to hydrate?',
+            'description': 'Entity relation field names to hydrate on fetch (e.g. a `category : Category` field named `category`), so chip bindings can use dot-paths like @item.category.name. Empty = no hydration, the default.',
+            'synonyms': 'relation hydration, populate relations, joined fields, hydrate relations',
+            'tier': 'internal',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'agendaGroupBy': {
+            'type': 'string',
+            'default': 'date',
+            'label': 'Agenda group-by field',
+            'description': 'Row field the agenda list groups its day sections by. Rebound hosts point this at their own timestamp column (e.g. startTime, scheduledAt).',
+            'synonyms': 'group field, section field, day field',
+            'tier': 'presentation',
+          },
+          'filterBarLook': {
+            'type': 'string',
+            'default': 'toolbar',
+            'label': 'Filter bar look',
+            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
+            'synonyms': 'filter bar style, facet style, chips, pills',
+            'tier': 'presentation',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
+          'bodySearch': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show the calendar\'s own search box?',
+            'description': 'Embeds a title search box in the toolbar above the calendar body (all three calendarLook trees). Defaults false: std-calendar has never had a search box, so an untouched consumer\'s surface is unchanged; the primary path is composing std-search beside this atom and wiring XSearch.SEARCH -> REFETCH_QUERY. Set true only for a standalone calendar with no page-level search affordance.',
+            'synonyms': 'inline search, calendar search, built-in search, show search, duplicate search',
+            'tier': 'presentation',
+          },
+          'title': {
+            'type': 'string',
+            'default': 'Calendar',
+            'label': 'Title',
+            'description': 'Header text shown above the calendar body.',
+            'tier': 'presentation',
+          },
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Table look',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'agendaListBodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'children': [
+                {
+                  'children': [
+                    {
+                      'direction': 'horizontal',
+                      'type': 'stack',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'name': 'list',
+                          'type': 'icon',
+                          'size': 'xl',
+                        },
+                        {
+                          'variant': 'h2',
+                          'type': 'typography',
+                          'content': '@config.title',
+                        },
+                      ],
+                      'gap': 'sm',
+                    },
+                    {
+                      'onSelect': 'SELECT_DAY',
+                      'type': 'date-range-selector',
+                      'selected': '@entity.selectedRange',
+                    },
+                  ],
+                  'justify': 'between',
+                  'direction': 'horizontal',
+                  'align': 'center',
+                  'type': 'stack',
+                  'wrap': true,
+                  'gap': 'md',
+                },
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'children': [
+                      {
+                        'event': 'REFETCH_QUERY',
+                        'className': 'w-full max-w-md',
+                        'placeholder': '@config.searchPlaceholder',
+                        'clearable': true,
+                        'type': 'search-input',
+                      },
+                    ],
+                    'gap': 'sm',
+                    'direction': 'horizontal',
+                    'type': 'stack',
+                  },
+                  {
+                    'type': 'stack',
+                    'children': [],
+                    'gap': 'none',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'children': [
+                      {
+                        'entity': 'CalendarEvent',
+                        'event': 'REFETCH_FILTER',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
+                        'filters': '@config.filters',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'sm',
+                    'direction': 'horizontal',
+                  },
+                  {
+                    'type': 'stack',
+                    'children': [],
+                    'gap': 'none',
+                  },
+                ],
+                {
+                  'type': 'divider',
+                },
+                {
+                  'entity': '@payload.data',
+                  'groupBy': '@config.agendaGroupBy',
+                  'surface': 'none',
+                  'itemActions': [
+                    'array/filter',
+                    '@config.agendaItemActions',
+                    [
+                      'fn',
+                      'action',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@action',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
+                  'fields': [],
+                  'groupFormat': 'date',
+                  'type': 'data-list',
+                  'gap': 'md',
+                  'renderItem': [
+                    'fn',
+                    'item',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'typography',
+                                  'variant': 'overline',
+                                  'format': 'time',
+                                  'content': '@config.timeBinding',
+                                  'color': 'muted',
+                                },
+                                {
+                                  'size': 'sm',
+                                  'className': 'hidden sm:block',
+                                  'type': 'icon',
+                                  'color': 'muted',
+                                  'name': 'clock',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'className': 'w-14 sm:w-16 shrink-0',
+                              'gap': 'xs',
+                              'type': 'stack',
+                            },
+                            {
+                              'orientation': 'vertical',
+                              'className': 'hidden sm:block',
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'wrap': true,
+                                  'children': [
+                                    {
+                                      'content': '@config.titleBinding',
+                                      'type': 'typography',
+                                      'className': 'min-w-[8rem] flex-1 line-clamp-2 break-words',
+                                      'weight': 'medium',
+                                      'variant': 'h4',
+                                    },
+                                    {
+                                      'type': 'badge',
+                                      'label': '@config.badgeBinding',
+                                      'size': 'sm',
+                                      'variant': 'default',
+                                      'className': 'shrink-0 whitespace-nowrap',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': '@config.descriptionBinding',
+                                  'variant': 'body2',
+                                  'className': 'truncate',
+                                  'color': 'muted',
+                                },
+                              ],
+                              'className': 'flex-1 min-w-0',
+                              'gap': 'xs',
+                              'direction': 'vertical',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'align': 'start',
+                        },
+                      ],
+                      'type': 'card',
+                      'look': 'flat-bordered',
+                      'padding': 'md',
+                    },
+                  ],
+                  'variant': 'default',
+                },
+              ],
+              'gap': 'lg',
+              'className': 'w-full p-card-md',
+              'direction': 'vertical',
+              'type': 'stack',
+            },
+            'label': 'Agenda list body content tree',
+            'description': 'Render-ui SExpr for calendarLook=\'agenda-list\' — events grouped by day with overline day headers (Today, Tomorrow, …) and a time marker per event.',
+            'tier': 'internal',
+          },
+          'bodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'gap': 'lg',
+              'children': [
+                {
+                  'gap': 'md',
+                  'direction': 'horizontal',
+                  'align': 'center',
+                  'children': [
+                    {
+                      'gap': 'sm',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'size': 'xl',
+                          'name': 'calendar',
+                          'type': 'icon',
+                        },
+                        {
+                          'content': '@config.title',
+                          'type': 'typography',
+                          'variant': 'h2',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'type': 'stack',
+                    },
+                    {
+                      'selected': '@entity.selectedRange',
+                      'onSelect': 'SELECT_DAY',
+                      'type': 'date-range-selector',
+                    },
+                  ],
+                  'type': 'stack',
+                  'justify': 'between',
+                  'wrap': true,
+                },
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'type': 'stack',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'children': [
+                      {
+                        'clearable': true,
+                        'type': 'search-input',
+                        'event': 'REFETCH_QUERY',
+                        'className': 'w-full max-w-md',
+                        'placeholder': '@config.searchPlaceholder',
+                      },
+                    ],
+                  },
+                  {
+                    'type': 'stack',
+                    'gap': 'none',
+                    'children': [],
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'children': [
+                      {
+                        'type': 'filter-group',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'entity': 'CalendarEvent',
+                        'event': 'REFETCH_FILTER',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                  {
+                    'gap': 'none',
+                    'type': 'stack',
+                    'children': [],
+                  },
+                ],
+                {
+                  'type': 'divider',
+                },
+                {
+                  'onEventClick': '@config.onEventClick',
+                  'renderItem': [
+                    'fn',
+                    'item',
+                    {
+                      'variant': 'small',
+                      'content': '@config.titleBinding',
+                      'type': 'typography',
+                    },
+                  ],
+                  'events': '@payload.data',
+                  'startField': '@config.startField',
+                  'type': 'calendar-grid',
+                },
+                {
+                  'type': 'divider',
+                },
+                {
+                  'variant': 'h4',
+                  'content': 'Upcoming Events',
+                  'type': 'typography',
+                },
+                {
+                  'look': '@config.tableLook',
+                  'fields': '@config.fields',
+                  'itemActions': [
+                    'array/filter',
+                    '@config.agendaItemActions',
+                    [
+                      'fn',
+                      'action',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@action',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
+                  'type': 'data-list',
+                  'entity': '@payload.data',
+                },
+              ],
+              'type': 'stack',
+              'direction': 'vertical',
+            },
+            'label': 'Body content tree',
+            'description': 'Render-ui SExpr rendered after events load for calendarLook=\'month\' — the month-grid + upcoming-events list. calendarLook=\'agenda-list\' / \'week-timeline\' render agendaListBodyContent / weekTimelineBodyContent instead; all three share this trait\'s state machine, emits, and listens.',
+            'tier': 'internal',
+          },
+          'fields': {
+            'type': '[FieldSpec]',
+            'default': [
+              {
+                'name': 'name',
+                'variant': 'h4',
+                'icon': 'calendar',
+                'label': 'Event',
+              },
+              {
+                'label': 'Time',
+                'name': 'time',
+                'variant': 'badge',
+              },
+              {
+                'format': 'date',
+                'variant': 'caption',
+                'label': 'Date',
+                'name': 'date',
+              },
+              {
+                'variant': 'badge',
+                'label': 'Status',
+                'name': 'status',
+              },
+            ],
+            'label': 'Upcoming-events columns',
+            'description': 'Row field descriptors for the \'Upcoming Events\' data-list under calendarLook=\'month\'. Rebound hosts must override this — it is a literal entity[field.name] lookup, unlike titleBinding/timeBinding/descriptionBinding (expression bindings), so it does not follow a rebind automatically.',
+            'synonyms': 'upcoming events columns, month view fields, event list columns',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'format': {
+                  'name': 'format',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': true,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'timeBinding': {
+            'type': 'string',
+            'default': '@item.time',
+            'label': 'Time binding',
+            'description': 'Per-row binding for the event time slot.',
+            'tier': 'presentation',
+          },
+          'startField': {
+            'type': 'string',
+            'default': 'date',
+            'label': 'Start field',
+            'description': 'Row column holding the timestamp the calendar grid places each chip by. Rebound hosts point this at their own column (e.g. startTime, startsAt, dueAt); the chip\'s LABEL comes from titleBinding, not from here.',
+            'synonyms': 'start column, date column, when field, timestamp field',
+            'tier': 'presentation',
+          },
+          'badgeBinding': {
+            'type': 'string',
+            'default': '@item.status',
+            'label': 'Badge binding',
+            'description': 'Per-row binding for the event status/badge slot.',
+            'tier': 'presentation',
+          },
+          'weekTimelineBodyContent': {
+            'type': 'render-ui',
+            'default': {
+              'children': [
+                {
+                  'type': 'stack',
+                  'justify': 'between',
+                  'wrap': true,
+                  'direction': 'horizontal',
+                  'align': 'center',
+                  'gap': 'md',
+                  'children': [
+                    {
+                      'align': 'center',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'size': 'xl',
+                          'name': 'calendar',
+                        },
+                        {
+                          'content': '@config.title',
+                          'type': 'typography',
+                          'variant': 'h2',
+                        },
+                      ],
+                      'gap': 'sm',
+                      'type': 'stack',
+                      'direction': 'horizontal',
+                    },
+                    {
+                      'gap': 'xs',
+                      'children': [
+                        {
+                          'type': 'button',
+                          'action': 'CALENDAR_PREV_WEEK',
+                          'variant': 'ghost',
+                          'label': 'Previous week',
+                          'icon': 'chevron-left',
+                        },
+                        {
+                          'color': 'muted',
+                          'type': 'typography',
+                          'variant': 'caption',
+                          'content': [
+                            'time/format',
+                            '@entity.weekAnchor',
+                            'MMM D, YYYY',
+                          ],
+                        },
+                        {
+                          'label': 'Next week',
+                          'action': 'CALENDAR_NEXT_WEEK',
+                          'variant': 'ghost',
+                          'icon': 'chevron-right',
+                          'type': 'button',
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'horizontal',
+                      'align': 'center',
+                    },
+                    {
+                      'selected': '@entity.selectedRange',
+                      'type': 'date-range-selector',
+                      'onSelect': 'SELECT_DAY',
+                    },
+                  ],
+                },
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'gap': 'sm',
+                    'direction': 'horizontal',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'event': 'REFETCH_QUERY',
+                        'type': 'search-input',
+                        'clearable': true,
+                        'placeholder': '@config.searchPlaceholder',
+                        'className': 'w-full max-w-md',
+                      },
+                    ],
+                  },
+                  {
+                    'children': [],
+                    'type': 'stack',
+                    'gap': 'none',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'type': 'stack',
+                    'gap': 'sm',
+                    'direction': 'horizontal',
+                    'children': [
+                      {
+                        'entity': 'CalendarEvent',
+                        'filters': '@config.filters',
+                        'type': 'filter-group',
+                        'event': 'REFETCH_FILTER',
+                        'look': '@config.filterBarLook',
+                      },
+                    ],
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                {
+                  'type': 'divider',
+                },
+                {
+                  'onEventClick': '@config.onEventClick',
+                  'renderItem': [
+                    'fn',
+                    'item',
+                    {
+                      'variant': 'small',
+                      'content': '@config.titleBinding',
+                      'type': 'typography',
+                    },
+                  ],
+                  'swipeLeftEvent': 'CALENDAR_NEXT_WEEK',
+                  'weekStart': '@entity.weekAnchor',
+                  'className': 'w-full',
+                  'type': 'calendar-grid',
+                  'dayWindow': 7,
+                  'startField': '@config.startField',
+                  'events': '@payload.data',
+                  'swipeRightEvent': 'CALENDAR_PREV_WEEK',
+                },
+              ],
+              'gap': 'md',
+              'direction': 'vertical',
+              'type': 'stack',
+            },
+            'label': 'Week timeline body content tree',
+            'description': 'Render-ui SExpr for calendarLook=\'week-timeline\' — events grouped by weekday in a 7-column timeline window.',
+            'tier': 'internal',
+          },
+          'searchField': {
+            'type': 'string',
+            'default': 'name',
+            'label': 'Which column does the search box match against?',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, description) or the search box can never match a row.',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+          },
+          'descriptionBinding': {
+            'type': 'string',
+            'default': '@item.description',
+            'label': 'Description binding',
+            'description': 'Per-row binding for the event description slot.',
+            'tier': 'presentation',
+          },
+          'filters': {
+            'type': '[FilterSpec]',
+            'default': [],
+            'label': 'Which filters should appear above the calendar?',
+            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the calendar body (all three calendarLook trees); each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this calendar and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone calendar with no page-level filter affordance.',
+            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'options': {
+                  'name': 'options',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'titleBinding': {
+            'type': 'string',
+            'default': '@item.name',
+            'label': 'Title binding',
+            'description': 'Per-row binding for the event title slot.',
+            'tier': 'presentation',
+          },
+          'agendaItemActions': {
+            'type': '[ItemAction]',
+            'default': [],
+            'label': 'Agenda item actions',
+            'description': 'Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions.',
+            'synonyms': 'agenda actions, row actions, event actions, list actions',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'when': {
+                  'name': 'when',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'searchPlaceholder': {
+            'type': 'string',
+            'default': 'Search…',
+            'label': 'Search box placeholder text',
+            'description': 'Hint text inside the calendar\'s search box (e.g. \'Search events…\').',
+            'synonyms': 'search hint, placeholder, search box text, search label',
+            'tier': 'presentation',
+          },
+          'onEventClick': {
+            'type': 'event',
+            'default': '',
+            'label': 'On Event Click',
+            'description': 'Event emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row. Empty means chips are not clickable.',
+            'synonyms': 'open event, event click, select event, chip click',
+            'tier': 'presentation',
+          },
+          'calendarLook': {
+            'type': 'string',
+            'default': 'month',
+            'label': 'Calendar look',
+            'description': 'Layer 3 body layout: default month-grid + upcoming-events list (\'month\'), day-grouped agenda list (\'agenda-list\'), or 7-column week timeline (\'week-timeline\').',
+            'tier': 'presentation',
+            'values': [
+              'month',
+              'agenda-list',
+              'week-timeline',
+            ],
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

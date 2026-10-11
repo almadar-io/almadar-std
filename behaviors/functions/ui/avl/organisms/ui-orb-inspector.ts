@@ -53,21 +53,21 @@ export interface StdUiOrbInspectorSchemaChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiOrbInspectorConfig {
-  defaultTab?: 'inspector' | 'design' | 'prototype' | 'code';
-  /** Default: `false` */
-  editable?: boolean;
-  /** Default: `{"bandCount":1,"bandKind":"connected","cardLabel":"screen","cardWidth":1,"dependencyColumn":"app","dependencyRole":"selected","effectTypes":["Item","Item 2"],"emits":["Item","Item 2"],"enteredBy":["Item","Item 2"],"entityName":"Entity Name","eventSources":[{"event":"Event","label":"Label","path":"Path","patternType":"Pattern Type","payloadFields":[{"name":"Name","required":false,"type":"Type"},{"name":"Name 2","required":true,"type":"Type 2"}],"positionHint":1},{"event":"Event 2","label":"Label 2","path":"Path 2","patternType":"Pattern Type 2","payloadFields":[{"name":"Name","required":false,"type":"Type"},{"name":"Name 2","required":true,"type":"Type 2"}],"positionHint":2}],"fieldCount":1,"flowRenderPieces":1,"flowTraits":1,"focused":false,"fromState":"From State","kind":"trait-card","layer":"Layer","linkedEntity":"Linked Entity","listens":["Item","Item 2"],"orbitalName":"Orbital Name","pageRoutes":["Item","Item 2"],"patterns":[{"pattern":{},"slot":"Slot"},{"pattern":{},"slot":"Slot 2"}],"persistence":"Persistence","sourceSchemaName":"Source Schema Name","stateName":"State Name","stateRole":"initial","status":"idle","toState":"To State","traitCount":1,"traitName":"Trait Name","transitionEvent":"Transition Event","transitions":[{"event":"Event","fromState":"From State","toState":"To State"},{"event":"Event 2","fromState":"From State 2","toState":"To State 2"}],"unitMetric":"Unit Metric","unitStatus":"ok","wireEvents":["Item","Item 2"]}` */
-  node?: EntityRow;
+  selectedPattern?: EntityRow;
   /** Default: `"CLOSE"` */
   onClose?: string;
   /** Default: `"SCHEMA_CHANGE"` */
   onSchemaChange?: string;
-  /** Default: `"TAB_CHANGE"` */
-  onTabChange?: string;
-  schema?: EntityRow;
-  selectedPattern?: EntityRow;
+  defaultTab?: 'inspector' | 'design' | 'prototype' | 'code';
+  /** Default: `{"stateName":"State Name","unitMetric":"Unit Metric","cardWidth":1,"fromState":"From State","listens":["Item","Item 2"],"linkedEntity":"Linked Entity","flowRenderPieces":1,"bandKind":"connected","patterns":[{"slot":"Slot","pattern":{}},{"pattern":{},"slot":"Slot 2"}],"sourceSchemaName":"Source Schema Name","toState":"To State","traitName":"Trait Name","layer":"Layer","pageRoutes":["Item","Item 2"],"effectTypes":["Item","Item 2"],"kind":"trait-card","wireEvents":["Item","Item 2"],"cardLabel":"screen","traitCount":1,"focused":false,"transitions":[{"fromState":"From State","event":"Event","toState":"To State"},{"fromState":"From State 2","event":"Event 2","toState":"To State 2"}],"enteredBy":["Item","Item 2"],"entityName":"Entity Name","emits":["Item","Item 2"],"orbitalName":"Orbital Name","status":"idle","persistence":"Persistence","unitStatus":"ok","flowTraits":1,"dependencyColumn":"app","bandCount":1,"stateRole":"initial","transitionEvent":"Transition Event","dependencyRole":"selected","fieldCount":1,"eventSources":[{"event":"Event","positionHint":1,"patternType":"Pattern Type","path":"Path","label":"Label","payloadFields":[{"type":"Type","name":"Name","required":false},{"type":"Type 2","name":"Name 2","required":true}]},{"positionHint":2,"event":"Event 2","patternType":"Pattern Type 2","path":"Path 2","payloadFields":[{"type":"Type","name":"Name","required":false},{"name":"Name 2","type":"Type 2","required":true}],"label":"Label 2"}]}` */
+  node?: EntityRow;
   /** Default: `"builder"` */
   userType?: 'builder' | 'designer' | 'architect';
+  /** Default: `"TAB_CHANGE"` */
+  onTabChange?: string;
+  /** Default: `false` */
+  editable?: boolean;
+  schema?: EntityRow;
 }
 
 type _StdUiOrbInspectorEntityName = 'OrbInspectorItem';
@@ -127,8 +127,8 @@ export function stdUiOrbInspectorOrbInspectorOrbital(params: StdUiOrbInspectorOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -139,622 +139,180 @@ export function stdUiOrbInspectorOrbInspectorOrbital(params: StdUiOrbInspectorOr
     } as Entity,
     traits: [
       {
+        'name': 'OrbInspectorRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
-        'config': {
-          'defaultTab': {
-            'description': 'Initial tab on mount. Local state still owns the active tab after that — this does not make the component controlled. Enables deep-linking into a specific tab (e.g. from a LayersPanel selection).',
-            'label': 'Default Tab',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'inspector',
-              'design',
-              'prototype',
-              'code',
-            ],
-          },
-          'editable': {
-            'default': false,
-            'description': 'editable prop',
-            'label': 'Editable',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'node': {
-            'default': {
-              'bandCount': 1,
-              'bandKind': 'connected',
-              'cardLabel': 'screen',
-              'cardWidth': 1,
-              'dependencyColumn': 'app',
-              'dependencyRole': 'selected',
-              'effectTypes': [
-                'Item',
-                'Item 2',
-              ],
-              'emits': [
-                'Item',
-                'Item 2',
-              ],
-              'enteredBy': [
-                'Item',
-                'Item 2',
-              ],
-              'entityName': 'Entity Name',
-              'eventSources': [
-                {
-                  'event': 'Event',
-                  'label': 'Label',
-                  'path': 'Path',
-                  'patternType': 'Pattern Type',
-                  'payloadFields': [
-                    {
-                      'name': 'Name',
-                      'required': false,
-                      'type': 'Type',
-                    },
-                    {
-                      'name': 'Name 2',
-                      'required': true,
-                      'type': 'Type 2',
-                    },
-                  ],
-                  'positionHint': 1,
-                },
-                {
-                  'event': 'Event 2',
-                  'label': 'Label 2',
-                  'path': 'Path 2',
-                  'patternType': 'Pattern Type 2',
-                  'payloadFields': [
-                    {
-                      'name': 'Name',
-                      'required': false,
-                      'type': 'Type',
-                    },
-                    {
-                      'name': 'Name 2',
-                      'required': true,
-                      'type': 'Type 2',
-                    },
-                  ],
-                  'positionHint': 2,
-                },
-              ],
-              'fieldCount': 1,
-              'flowRenderPieces': 1,
-              'flowTraits': 1,
-              'focused': false,
-              'fromState': 'From State',
-              'kind': 'trait-card',
-              'layer': 'Layer',
-              'linkedEntity': 'Linked Entity',
-              'listens': [
-                'Item',
-                'Item 2',
-              ],
-              'orbitalName': 'Orbital Name',
-              'pageRoutes': [
-                'Item',
-                'Item 2',
-              ],
-              'patterns': [
-                {
-                  'pattern': {},
-                  'slot': 'Slot',
-                },
-                {
-                  'pattern': {},
-                  'slot': 'Slot 2',
-                },
-              ],
-              'persistence': 'Persistence',
-              'sourceSchemaName': 'Source Schema Name',
-              'stateName': 'State Name',
-              'stateRole': 'initial',
-              'status': 'idle',
-              'toState': 'To State',
-              'traitCount': 1,
-              'traitName': 'Trait Name',
-              'transitionEvent': 'Transition Event',
-              'transitions': [
-                {
-                  'event': 'Event',
-                  'fromState': 'From State',
-                  'toState': 'To State',
-                },
-                {
-                  'event': 'Event 2',
-                  'fromState': 'From State 2',
-                  'toState': 'To State 2',
-                },
-              ],
-              'unitMetric': 'Unit Metric',
-              'unitStatus': 'ok',
-              'wireEvents': [
-                'Item',
-                'Item 2',
-              ],
-            },
-            'description': 'node prop',
-            'label': 'Node',
-            'properties': {
-              '_fullSchema': {
-                'name': '_fullSchema',
-                'required': false,
-                'type': 'SExpr',
-              },
-              'bandCount': {
-                'name': 'bandCount',
-                'required': false,
-                'type': 'number',
-              },
-              'bandKind': {
-                'name': 'bandKind',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'connected',
-                  'standalone',
-                ],
-              },
-              'cardLabel': {
-                'name': 'cardLabel',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'screen',
-                ],
-              },
-              'cardWidth': {
-                'name': 'cardWidth',
-                'required': false,
-                'type': 'number',
-              },
-              'dependencyColumn': {
-                'name': 'dependencyColumn',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'app',
-                  'own',
-                  'io',
-                  'std',
-                  'primitive',
-                  'unknown',
-                  'client',
-                  'host',
-                  'service',
-                  'store',
-                  'external',
-                ],
-              },
-              'dependencyRole': {
-                'name': 'dependencyRole',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'selected',
-                  'upstream',
-                  'downstream',
-                  'both',
-                  'dim',
-                ],
-              },
-              'effectTypes': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'effectTypes',
-                'required': false,
-                'type': 'array',
-              },
-              'emits': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'emits',
-                'required': false,
-                'type': 'array',
-              },
-              'enteredBy': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'enteredBy',
-                'required': false,
-                'type': 'array',
-              },
-              'entityName': {
-                'name': 'entityName',
-                'required': false,
-                'type': 'string',
-              },
-              'eventSources': {
-                'items': {
-                  'properties': {
-                    'event': {
-                      'name': 'event',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'label': {
-                      'name': 'label',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'path': {
-                      'name': 'path',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'patternType': {
-                      'name': 'patternType',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'payloadFields': {
-                      'items': {
-                        'properties': {
-                          'name': {
-                            'name': 'name',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'required': {
-                            'name': 'required',
-                            'required': false,
-                            'type': 'boolean',
-                          },
-                          'type': {
-                            'name': 'type',
-                            'required': true,
-                            'type': 'string',
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'name': 'payloadFields',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'positionHint': {
-                      'name': 'positionHint',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'eventSources',
-                'required': true,
-                'type': 'array',
-              },
-              'fieldCount': {
-                'name': 'fieldCount',
-                'required': false,
-                'type': 'number',
-              },
-              'flowRenderPieces': {
-                'name': 'flowRenderPieces',
-                'required': false,
-                'type': 'number',
-              },
-              'flowTraits': {
-                'name': 'flowTraits',
-                'required': false,
-                'type': 'number',
-              },
-              'focused': {
-                'name': 'focused',
-                'required': false,
-                'type': 'boolean',
-              },
-              'fromState': {
-                'name': 'fromState',
-                'required': false,
-                'type': 'string',
-              },
-              'guard': {
-                'name': 'guard',
-                'required': false,
-                'type': 'SExpr',
-              },
-              'kind': {
-                'name': 'kind',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'trait-card',
-                  'system-orbital',
-                  'system-band',
-                  'dependency',
-                  'dependency-column',
-                ],
-              },
-              'layer': {
-                'name': 'layer',
-                'required': false,
-                'type': 'string',
-              },
-              'linkedEntity': {
-                'name': 'linkedEntity',
-                'required': false,
-                'type': 'string',
-              },
-              'listens': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'listens',
-                'required': false,
-                'type': 'array',
-              },
-              'orbitalName': {
-                'name': 'orbitalName',
-                'required': true,
-                'type': 'string',
-              },
-              'pageRoutes': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'pageRoutes',
-                'required': false,
-                'type': 'array',
-              },
-              'patterns': {
-                'items': {
-                  'properties': {
-                    'pattern': {
-                      'name': 'pattern',
-                      'required': true,
-                      'type': 'SExpr',
-                    },
-                    'slot': {
-                      'name': 'slot',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'patterns',
-                'required': true,
-                'type': 'array',
-              },
-              'persistence': {
-                'name': 'persistence',
-                'required': false,
-                'type': 'string',
-              },
-              'sourceSchemaName': {
-                'name': 'sourceSchemaName',
-                'required': false,
-                'type': 'string',
-              },
-              'stateName': {
-                'name': 'stateName',
-                'required': false,
-                'type': 'string',
-              },
-              'stateRole': {
-                'name': 'stateRole',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'initial',
-                  'terminal',
-                  'hub',
-                  'default',
-                ],
-              },
-              'status': {
-                'name': 'status',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'idle',
-                  'running',
-                  'success',
-                  'error',
-                ],
-              },
-              'toState': {
-                'name': 'toState',
-                'required': false,
-                'type': 'string',
-              },
-              'traitCount': {
-                'name': 'traitCount',
-                'required': false,
-                'type': 'number',
-              },
-              'traitName': {
-                'name': 'traitName',
-                'required': false,
-                'type': 'string',
-              },
-              'transitionEvent': {
-                'name': 'transitionEvent',
-                'required': false,
-                'type': 'string',
-              },
-              'transitions': {
-                'items': {
-                  'properties': {
-                    'event': {
-                      'name': 'event',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'fromState': {
-                      'name': 'fromState',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'toState': {
-                      'name': 'toState',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'transitions',
-                'required': false,
-                'type': 'array',
-              },
-              'unitMetric': {
-                'name': 'unitMetric',
-                'required': false,
-                'type': 'string',
-              },
-              'unitStatus': {
-                'name': 'unitStatus',
-                'required': false,
-                'type': 'string',
-                'values': [
-                  'ok',
-                  'degraded',
-                  'down',
-                  'idle',
-                ],
-              },
-              'wireEvents': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'wireEvents',
-                'required': false,
-                'type': 'array',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'OrbInspectorNode',
-          },
-          'onClose': {
-            'default': 'CLOSE',
-            'description': 'onClose prop',
-            'label': 'On Close',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onSchemaChange': {
-            'default': 'SCHEMA_CHANGE',
-            'description': 'onSchemaChange prop',
-            'label': 'On Schema Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onTabChange': {
-            'default': 'TAB_CHANGE',
+        'linkedEntity': 'OrbInspectorItem',
+        'emits': [
+          {
+            'event': '@config.onTabChange',
             'description': 'Fires whenever the tab-bar selection changes.',
-            'label': 'On Tab Change',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'schema': {
-            'description': 'schema prop',
-            'label': 'Schema',
-            'tier': 'presentation',
-            'type': 'SExpr',
-          },
-          'selectedPattern': {
-            'description': 'In-node pattern selection, when this inspector is rendered OUTSIDE `FlowCanvas` (see `FlowCanvas`\'s `externalInspector` + `onSelectedPatternChange`). `PatternSelectionContext` only reaches descendants of `FlowCanvas`\'s own render tree, so a standalone consumer has no other way to feed pattern-level selection in — pass `FlowCanvas`\'s `onSelectedPatternChange` payload straight through here. When omitted (the inline, built-in-inspector usage), falls back to `PatternSelectionContext`, unchanged.',
-            'label': 'Selected Pattern',
-            'properties': {
-              'elements': {
-                'items': {
-                  'properties': {
-                    'entity': {
-                      'name': 'entity',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'label': {
-                      'name': 'label',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'level': {
-                      'name': 'level',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'node',
-                        'slot',
-                        'field',
-                        'effect',
-                        'trait',
-                        'page',
-                        'orbital',
-                      ],
-                    },
-                    'orbital': {
-                      'name': 'orbital',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'path': {
-                      'name': 'path',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'patternType': {
-                      'name': 'patternType',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'slot': {
-                      'name': 'slot',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'source': {
-                      'name': 'source',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'state': {
-                      'name': 'state',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'trait': {
-                      'name': 'trait',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'transition': {
-                      'name': 'transition',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'elements',
-                'required': false,
-                'type': 'array',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'tab',
+                'type': 'string',
               },
+            ],
+            'definerKnob': 'onTabChange',
+          },
+          {
+            'event': '@config.onSchemaChange',
+            'description': 'onSchemaChange prop',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'schema',
+                'type': 'SExpr',
+              },
+            ],
+            'definerKnob': 'onSchemaChange',
+          },
+          {
+            'event': '@config.onClose',
+            'description': 'onClose prop',
+            'tier': 'essential',
+            'scope': 'external',
+            'definerKnob': 'onClose',
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': '@config.onTabChange',
+              'name': '@config.on tab change',
+              'description': 'Fires whenever the tab-bar selection changes.',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'tab',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': '@config.onSchemaChange',
+              'name': '@config.on schema change',
+              'description': 'onSchemaChange prop',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'schema',
+                  'type': 'SExpr',
+                },
+              ],
+            },
+            {
+              'key': '@config.onClose',
+              'name': '@config.on close',
+              'description': 'onClose prop',
+              'tier': 'essential',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'editable': '@config.editable',
+                    'onClose': '@config.onClose',
+                    'onTabChange': '@config.onTabChange',
+                    'type': 'orb-inspector',
+                    'selectedPattern': '@config.selectedPattern',
+                    'onSchemaChange': '@config.onSchemaChange',
+                    'defaultTab': '@config.defaultTab',
+                    'userType': '@config.userType',
+                    'schema': '@config.schema',
+                    'node': '@config.node',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
+          'selectedPattern': {
+            'type': 'OrbInspectorSelectedPattern',
+            'label': 'Selected Pattern',
+            'description': 'In-node pattern selection, when this inspector is rendered OUTSIDE `FlowCanvas` (see `FlowCanvas`\'s `externalInspector` + `onSelectedPatternChange`). `PatternSelectionContext` only reaches descendants of `FlowCanvas`\'s own render tree, so a standalone consumer has no other way to feed pattern-level selection in — pass `FlowCanvas`\'s `onSelectedPatternChange` payload straight through here. When omitted (the inline, built-in-inspector usage), falls back to `PatternSelectionContext`, unchanged.',
+            'tier': 'presentation',
+            'properties': {
               'focus': {
                 'name': 'focus',
+                'type': 'object',
+                'required': false,
                 'properties': {
-                  'entity': {
-                    'name': 'entity',
-                    'required': false,
-                    'type': 'string',
-                  },
                   'label': {
                     'name': 'label',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
+                  },
+                  'orbital': {
+                    'name': 'orbital',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'transition': {
+                    'name': 'transition',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'path': {
+                    'name': 'path',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'trait': {
+                    'name': 'trait',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'patternType': {
+                    'name': 'patternType',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'state': {
+                    'name': 'state',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'slot': {
+                    'name': 'slot',
+                    'type': 'string',
+                    'required': false,
                   },
                   'level': {
                     'name': 'level',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                     'values': [
                       'node',
                       'slot',
@@ -765,89 +323,370 @@ export function stdUiOrbInspectorOrbInspectorOrbital(params: StdUiOrbInspectorOr
                       'orbital',
                     ],
                   },
-                  'orbital': {
-                    'name': 'orbital',
-                    'required': true,
+                  'entity': {
+                    'name': 'entity',
                     'type': 'string',
-                  },
-                  'path': {
-                    'name': 'path',
                     'required': false,
-                    'type': 'string',
-                  },
-                  'patternType': {
-                    'name': 'patternType',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'slot': {
-                    'name': 'slot',
-                    'required': false,
-                    'type': 'string',
                   },
                   'source': {
                     'name': 'source',
-                    'required': false,
                     'type': 'string',
-                  },
-                  'state': {
-                    'name': 'state',
                     'required': false,
-                    'type': 'string',
-                  },
-                  'trait': {
-                    'name': 'trait',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'transition': {
-                    'name': 'transition',
-                    'required': false,
-                    'type': 'string',
                   },
                 },
-                'required': false,
+              },
+              'rect': {
+                'name': 'rect',
                 'type': 'object',
+                'required': false,
+                'properties': {
+                  'height': {
+                    'name': 'height',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  'top': {
+                    'name': 'top',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  'width': {
+                    'name': 'width',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  'left': {
+                    'name': 'left',
+                    'type': 'number',
+                    'required': true,
+                  },
+                },
+              },
+              'selection': {
+                'name': 'selection',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'offsetInParent': {
+                'name': 'offsetInParent',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'bottom': {
+                    'name': 'bottom',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  'parentWidth': {
+                    'name': 'parentWidth',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  'left': {
+                    'name': 'left',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  'top': {
+                    'name': 'top',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  'parentHeight': {
+                    'name': 'parentHeight',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  'right': {
+                    'name': 'right',
+                    'type': 'number',
+                    'required': true,
+                  },
+                },
+              },
+              'elements': {
+                'name': 'elements',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'orbital': {
+                      'name': 'orbital',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'trait': {
+                      'name': 'trait',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'state': {
+                      'name': 'state',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'source': {
+                      'name': 'source',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'slot': {
+                      'name': 'slot',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'path': {
+                      'name': 'path',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'patternType': {
+                      'name': 'patternType',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'entity': {
+                      'name': 'entity',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'level': {
+                      'name': 'level',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'node',
+                        'slot',
+                        'field',
+                        'effect',
+                        'trait',
+                        'page',
+                        'orbital',
+                      ],
+                    },
+                    'transition': {
+                      'name': 'transition',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
               },
               'nodeData': {
                 'name': 'nodeData',
+                'type': 'object',
+                'required': true,
                 'properties': {
+                  'unitMetric': {
+                    'name': 'unitMetric',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'status': {
+                    'name': 'status',
+                    'type': 'string',
+                    'required': false,
+                    'values': [
+                      'idle',
+                      'running',
+                      'success',
+                      'error',
+                    ],
+                  },
+                  'wireEvents': {
+                    'name': 'wireEvents',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'pageRoutes': {
+                    'name': 'pageRoutes',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'focused': {
+                    'name': 'focused',
+                    'type': 'boolean',
+                    'required': false,
+                  },
                   '_fullSchema': {
                     'name': '_fullSchema',
-                    'required': false,
                     'type': 'SExpr',
-                  },
-                  'bandCount': {
-                    'name': 'bandCount',
                     'required': false,
-                    'type': 'number',
                   },
                   'bandKind': {
                     'name': 'bandKind',
-                    'required': false,
                     'type': 'string',
+                    'required': false,
                     'values': [
                       'connected',
                       'standalone',
                     ],
                   },
-                  'cardLabel': {
-                    'name': 'cardLabel',
-                    'required': false,
+                  'transitionEvent': {
+                    'name': 'transitionEvent',
                     'type': 'string',
-                    'values': [
-                      'screen',
-                    ],
-                  },
-                  'cardWidth': {
-                    'name': 'cardWidth',
                     'required': false,
+                  },
+                  'bandCount': {
+                    'name': 'bandCount',
                     'type': 'number',
+                    'required': false,
+                  },
+                  'linkedEntity': {
+                    'name': 'linkedEntity',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'flowRenderPieces': {
+                    'name': 'flowRenderPieces',
+                    'type': 'number',
+                    'required': false,
+                  },
+                  'emits': {
+                    'name': 'emits',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'sourceSchemaName': {
+                    'name': 'sourceSchemaName',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'fromState': {
+                    'name': 'fromState',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'patterns': {
+                    'name': 'patterns',
+                    'type': 'array',
+                    'required': true,
+                    'items': {
+                      'type': 'object',
+                      'properties': {
+                        'slot': {
+                          'name': 'slot',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'pattern': {
+                          'name': 'pattern',
+                          'type': 'SExpr',
+                          'required': true,
+                        },
+                      },
+                    },
+                  },
+                  'effectTypes': {
+                    'name': 'effectTypes',
+                    'type': 'array',
+                    'required': false,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                  'fieldCount': {
+                    'name': 'fieldCount',
+                    'type': 'number',
+                    'required': false,
+                  },
+                  'guard': {
+                    'name': 'guard',
+                    'type': 'SExpr',
+                    'required': false,
+                  },
+                  'eventSources': {
+                    'name': 'eventSources',
+                    'type': 'array',
+                    'required': true,
+                    'items': {
+                      'type': 'object',
+                      'properties': {
+                        'patternType': {
+                          'name': 'patternType',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'payloadFields': {
+                          'name': 'payloadFields',
+                          'type': 'array',
+                          'required': false,
+                          'items': {
+                            'type': 'object',
+                            'properties': {
+                              'name': {
+                                'name': 'name',
+                                'type': 'string',
+                                'required': true,
+                              },
+                              'type': {
+                                'name': 'type',
+                                'type': 'string',
+                                'required': true,
+                              },
+                              'required': {
+                                'name': 'required',
+                                'type': 'boolean',
+                                'required': false,
+                              },
+                            },
+                          },
+                        },
+                        'path': {
+                          'name': 'path',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'positionHint': {
+                          'name': 'positionHint',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'label': {
+                          'name': 'label',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'event': {
+                          'name': 'event',
+                          'type': 'string',
+                          'required': true,
+                        },
+                      },
+                    },
+                  },
+                  'traitCount': {
+                    'name': 'traitCount',
+                    'type': 'number',
+                    'required': false,
+                  },
+                  'stateName': {
+                    'name': 'stateName',
+                    'type': 'string',
+                    'required': false,
                   },
                   'dependencyColumn': {
                     'name': 'dependencyColumn',
-                    'required': false,
                     'type': 'string',
+                    'required': false,
                     'values': [
                       'app',
                       'own',
@@ -862,141 +701,10 @@ export function stdUiOrbInspectorOrbInspectorOrbital(params: StdUiOrbInspectorOr
                       'external',
                     ],
                   },
-                  'dependencyRole': {
-                    'name': 'dependencyRole',
-                    'required': false,
-                    'type': 'string',
-                    'values': [
-                      'selected',
-                      'upstream',
-                      'downstream',
-                      'both',
-                      'dim',
-                    ],
-                  },
-                  'effectTypes': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'effectTypes',
-                    'required': false,
-                    'type': 'array',
-                  },
-                  'emits': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'emits',
-                    'required': false,
-                    'type': 'array',
-                  },
-                  'enteredBy': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'enteredBy',
-                    'required': false,
-                    'type': 'array',
-                  },
-                  'entityName': {
-                    'name': 'entityName',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'eventSources': {
-                    'items': {
-                      'properties': {
-                        'event': {
-                          'name': 'event',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'label': {
-                          'name': 'label',
-                          'required': false,
-                          'type': 'string',
-                        },
-                        'path': {
-                          'name': 'path',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'patternType': {
-                          'name': 'patternType',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'payloadFields': {
-                          'items': {
-                            'properties': {
-                              'name': {
-                                'name': 'name',
-                                'required': true,
-                                'type': 'string',
-                              },
-                              'required': {
-                                'name': 'required',
-                                'required': false,
-                                'type': 'boolean',
-                              },
-                              'type': {
-                                'name': 'type',
-                                'required': true,
-                                'type': 'string',
-                              },
-                            },
-                            'type': 'object',
-                          },
-                          'name': 'payloadFields',
-                          'required': false,
-                          'type': 'array',
-                        },
-                        'positionHint': {
-                          'name': 'positionHint',
-                          'required': true,
-                          'type': 'number',
-                        },
-                      },
-                      'type': 'object',
-                    },
-                    'name': 'eventSources',
-                    'required': true,
-                    'type': 'array',
-                  },
-                  'fieldCount': {
-                    'name': 'fieldCount',
-                    'required': false,
-                    'type': 'number',
-                  },
-                  'flowRenderPieces': {
-                    'name': 'flowRenderPieces',
-                    'required': false,
-                    'type': 'number',
-                  },
-                  'flowTraits': {
-                    'name': 'flowTraits',
-                    'required': false,
-                    'type': 'number',
-                  },
-                  'focused': {
-                    'name': 'focused',
-                    'required': false,
-                    'type': 'boolean',
-                  },
-                  'fromState': {
-                    'name': 'fromState',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'guard': {
-                    'name': 'guard',
-                    'required': false,
-                    'type': 'SExpr',
-                  },
                   'kind': {
                     'name': 'kind',
-                    'required': false,
                     'type': 'string',
+                    'required': false,
                     'values': [
                       'trait-card',
                       'system-orbital',
@@ -1005,76 +713,45 @@ export function stdUiOrbInspectorOrbInspectorOrbital(params: StdUiOrbInspectorOr
                       'dependency-column',
                     ],
                   },
-                  'layer': {
-                    'name': 'layer',
-                    'required': false,
+                  'entityName': {
+                    'name': 'entityName',
                     'type': 'string',
-                  },
-                  'linkedEntity': {
-                    'name': 'linkedEntity',
                     'required': false,
-                    'type': 'string',
                   },
-                  'listens': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'listens',
-                    'required': false,
+                  'transitions': {
+                    'name': 'transitions',
                     'type': 'array',
-                  },
-                  'orbitalName': {
-                    'name': 'orbitalName',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  'pageRoutes': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'pageRoutes',
                     'required': false,
-                    'type': 'array',
-                  },
-                  'patterns': {
                     'items': {
+                      'type': 'object',
                       'properties': {
-                        'pattern': {
-                          'name': 'pattern',
-                          'required': true,
-                          'type': 'SExpr',
-                        },
-                        'slot': {
-                          'name': 'slot',
-                          'required': true,
+                        'event': {
+                          'name': 'event',
                           'type': 'string',
+                          'required': true,
+                        },
+                        'toState': {
+                          'name': 'toState',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'fromState': {
+                          'name': 'fromState',
+                          'type': 'string',
+                          'required': true,
                         },
                       },
-                      'type': 'object',
                     },
-                    'name': 'patterns',
-                    'required': true,
-                    'type': 'array',
                   },
-                  'persistence': {
-                    'name': 'persistence',
+                  'cardWidth': {
+                    'name': 'cardWidth',
+                    'type': 'number',
                     'required': false,
-                    'type': 'string',
-                  },
-                  'sourceSchemaName': {
-                    'name': 'sourceSchemaName',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'stateName': {
-                    'name': 'stateName',
-                    'required': false,
-                    'type': 'string',
                   },
                   'stateRole': {
                     'name': 'stateRole',
-                    'required': false,
                     'type': 'string',
+                    'required': false,
                     'values': [
                       'initial',
                       'terminal',
@@ -1082,71 +759,18 @@ export function stdUiOrbInspectorOrbInspectorOrbital(params: StdUiOrbInspectorOr
                       'default',
                     ],
                   },
-                  'status': {
-                    'name': 'status',
-                    'required': false,
-                    'type': 'string',
-                    'values': [
-                      'idle',
-                      'running',
-                      'success',
-                      'error',
-                    ],
-                  },
-                  'toState': {
-                    'name': 'toState',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'traitCount': {
-                    'name': 'traitCount',
-                    'required': false,
-                    'type': 'number',
-                  },
-                  'traitName': {
-                    'name': 'traitName',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'transitionEvent': {
-                    'name': 'transitionEvent',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'transitions': {
-                    'items': {
-                      'properties': {
-                        'event': {
-                          'name': 'event',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'fromState': {
-                          'name': 'fromState',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'toState': {
-                          'name': 'toState',
-                          'required': true,
-                          'type': 'string',
-                        },
-                      },
-                      'type': 'object',
-                    },
-                    'name': 'transitions',
-                    'required': false,
+                  'listens': {
+                    'name': 'listens',
                     'type': 'array',
-                  },
-                  'unitMetric': {
-                    'name': 'unitMetric',
                     'required': false,
-                    'type': 'string',
+                    'items': {
+                      'type': 'string',
+                    },
                   },
                   'unitStatus': {
                     'name': 'unitStatus',
-                    'required': false,
                     'type': 'string',
+                    'required': false,
                     'values': [
                       'ok',
                       'degraded',
@@ -1154,240 +778,616 @@ export function stdUiOrbInspectorOrbInspectorOrbital(params: StdUiOrbInspectorOr
                       'idle',
                     ],
                   },
-                  'wireEvents': {
+                  'toState': {
+                    'name': 'toState',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'traitName': {
+                    'name': 'traitName',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'dependencyRole': {
+                    'name': 'dependencyRole',
+                    'type': 'string',
+                    'required': false,
+                    'values': [
+                      'selected',
+                      'upstream',
+                      'downstream',
+                      'both',
+                      'dim',
+                    ],
+                  },
+                  'flowTraits': {
+                    'name': 'flowTraits',
+                    'type': 'number',
+                    'required': false,
+                  },
+                  'orbitalName': {
+                    'name': 'orbitalName',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'persistence': {
+                    'name': 'persistence',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'cardLabel': {
+                    'name': 'cardLabel',
+                    'type': 'string',
+                    'required': false,
+                    'values': [
+                      'screen',
+                    ],
+                  },
+                  'enteredBy': {
+                    'name': 'enteredBy',
+                    'type': 'array',
+                    'required': false,
                     'items': {
                       'type': 'string',
                     },
-                    'name': 'wireEvents',
+                  },
+                  'layer': {
+                    'name': 'layer',
+                    'type': 'string',
                     'required': false,
-                    'type': 'array',
                   },
                 },
-                'required': true,
-                'type': 'object',
-              },
-              'offsetInParent': {
-                'name': 'offsetInParent',
-                'properties': {
-                  'bottom': {
-                    'name': 'bottom',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  'left': {
-                    'name': 'left',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  'parentHeight': {
-                    'name': 'parentHeight',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  'parentWidth': {
-                    'name': 'parentWidth',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  'right': {
-                    'name': 'right',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  'top': {
-                    'name': 'top',
-                    'required': true,
-                    'type': 'number',
-                  },
-                },
-                'required': false,
-                'type': 'object',
-              },
-              'patternId': {
-                'name': 'patternId',
-                'required': false,
-                'type': 'string',
               },
               'patternType': {
                 'name': 'patternType',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
-              'rect': {
-                'name': 'rect',
-                'properties': {
-                  'height': {
-                    'name': 'height',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  'left': {
-                    'name': 'left',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  'top': {
-                    'name': 'top',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  'width': {
-                    'name': 'width',
-                    'required': true,
-                    'type': 'number',
-                  },
-                },
+              'patternId': {
+                'name': 'patternId',
+                'type': 'string',
                 'required': false,
-                'type': 'object',
-              },
-              'selection': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'selection',
-                'required': false,
-                'type': 'array',
               },
               'sourceTrait': {
                 'name': 'sourceTrait',
-                'required': false,
                 'type': 'string',
+                'required': false,
               },
             },
+          },
+          'onClose': {
+            'type': 'event',
+            'default': 'CLOSE',
+            'label': 'On Close',
+            'description': 'onClose prop',
             'tier': 'presentation',
-            'type': 'OrbInspectorSelectedPattern',
+          },
+          'onSchemaChange': {
+            'type': 'event',
+            'default': 'SCHEMA_CHANGE',
+            'label': 'On Schema Change',
+            'description': 'onSchemaChange prop',
+            'tier': 'presentation',
+          },
+          'defaultTab': {
+            'type': 'string',
+            'label': 'Default Tab',
+            'description': 'Initial tab on mount. Local state still owns the active tab after that — this does not make the component controlled. Enables deep-linking into a specific tab (e.g. from a LayersPanel selection).',
+            'tier': 'presentation',
+            'values': [
+              'inspector',
+              'design',
+              'prototype',
+              'code',
+            ],
+          },
+          'node': {
+            'type': 'OrbInspectorNode',
+            'default': {
+              'stateName': 'State Name',
+              'unitMetric': 'Unit Metric',
+              'cardWidth': 1,
+              'fromState': 'From State',
+              'listens': [
+                'Item',
+                'Item 2',
+              ],
+              'linkedEntity': 'Linked Entity',
+              'flowRenderPieces': 1,
+              'bandKind': 'connected',
+              'patterns': [
+                {
+                  'slot': 'Slot',
+                  'pattern': {},
+                },
+                {
+                  'pattern': {},
+                  'slot': 'Slot 2',
+                },
+              ],
+              'sourceSchemaName': 'Source Schema Name',
+              'toState': 'To State',
+              'traitName': 'Trait Name',
+              'layer': 'Layer',
+              'pageRoutes': [
+                'Item',
+                'Item 2',
+              ],
+              'effectTypes': [
+                'Item',
+                'Item 2',
+              ],
+              'kind': 'trait-card',
+              'wireEvents': [
+                'Item',
+                'Item 2',
+              ],
+              'cardLabel': 'screen',
+              'traitCount': 1,
+              'focused': false,
+              'transitions': [
+                {
+                  'fromState': 'From State',
+                  'event': 'Event',
+                  'toState': 'To State',
+                },
+                {
+                  'fromState': 'From State 2',
+                  'event': 'Event 2',
+                  'toState': 'To State 2',
+                },
+              ],
+              'enteredBy': [
+                'Item',
+                'Item 2',
+              ],
+              'entityName': 'Entity Name',
+              'emits': [
+                'Item',
+                'Item 2',
+              ],
+              'orbitalName': 'Orbital Name',
+              'status': 'idle',
+              'persistence': 'Persistence',
+              'unitStatus': 'ok',
+              'flowTraits': 1,
+              'dependencyColumn': 'app',
+              'bandCount': 1,
+              'stateRole': 'initial',
+              'transitionEvent': 'Transition Event',
+              'dependencyRole': 'selected',
+              'fieldCount': 1,
+              'eventSources': [
+                {
+                  'event': 'Event',
+                  'positionHint': 1,
+                  'patternType': 'Pattern Type',
+                  'path': 'Path',
+                  'label': 'Label',
+                  'payloadFields': [
+                    {
+                      'type': 'Type',
+                      'name': 'Name',
+                      'required': false,
+                    },
+                    {
+                      'type': 'Type 2',
+                      'name': 'Name 2',
+                      'required': true,
+                    },
+                  ],
+                },
+                {
+                  'positionHint': 2,
+                  'event': 'Event 2',
+                  'patternType': 'Pattern Type 2',
+                  'path': 'Path 2',
+                  'payloadFields': [
+                    {
+                      'type': 'Type',
+                      'name': 'Name',
+                      'required': false,
+                    },
+                    {
+                      'name': 'Name 2',
+                      'type': 'Type 2',
+                      'required': true,
+                    },
+                  ],
+                  'label': 'Label 2',
+                },
+              ],
+            },
+            'label': 'Node',
+            'description': 'node prop',
+            'tier': 'presentation',
+            'properties': {
+              'traitCount': {
+                'name': 'traitCount',
+                'type': 'number',
+                'required': false,
+              },
+              '_fullSchema': {
+                'name': '_fullSchema',
+                'type': 'SExpr',
+                'required': false,
+              },
+              'unitStatus': {
+                'name': 'unitStatus',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'ok',
+                  'degraded',
+                  'down',
+                  'idle',
+                ],
+              },
+              'wireEvents': {
+                'name': 'wireEvents',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'guard': {
+                'name': 'guard',
+                'type': 'SExpr',
+                'required': false,
+              },
+              'traitName': {
+                'name': 'traitName',
+                'type': 'string',
+                'required': false,
+              },
+              'cardWidth': {
+                'name': 'cardWidth',
+                'type': 'number',
+                'required': false,
+              },
+              'fromState': {
+                'name': 'fromState',
+                'type': 'string',
+                'required': false,
+              },
+              'bandCount': {
+                'name': 'bandCount',
+                'type': 'number',
+                'required': false,
+              },
+              'fieldCount': {
+                'name': 'fieldCount',
+                'type': 'number',
+                'required': false,
+              },
+              'status': {
+                'name': 'status',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'idle',
+                  'running',
+                  'success',
+                  'error',
+                ],
+              },
+              'persistence': {
+                'name': 'persistence',
+                'type': 'string',
+                'required': false,
+              },
+              'entityName': {
+                'name': 'entityName',
+                'type': 'string',
+                'required': false,
+              },
+              'kind': {
+                'name': 'kind',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'trait-card',
+                  'system-orbital',
+                  'system-band',
+                  'dependency',
+                  'dependency-column',
+                ],
+              },
+              'flowRenderPieces': {
+                'name': 'flowRenderPieces',
+                'type': 'number',
+                'required': false,
+              },
+              'stateName': {
+                'name': 'stateName',
+                'type': 'string',
+                'required': false,
+              },
+              'transitions': {
+                'name': 'transitions',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'event': {
+                      'name': 'event',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'fromState': {
+                      'name': 'fromState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'toState': {
+                      'name': 'toState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'patterns': {
+                'name': 'patterns',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'pattern': {
+                      'name': 'pattern',
+                      'type': 'SExpr',
+                      'required': true,
+                    },
+                    'slot': {
+                      'name': 'slot',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'layer': {
+                'name': 'layer',
+                'type': 'string',
+                'required': false,
+              },
+              'dependencyColumn': {
+                'name': 'dependencyColumn',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'app',
+                  'own',
+                  'io',
+                  'std',
+                  'primitive',
+                  'unknown',
+                  'client',
+                  'host',
+                  'service',
+                  'store',
+                  'external',
+                ],
+              },
+              'enteredBy': {
+                'name': 'enteredBy',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'flowTraits': {
+                'name': 'flowTraits',
+                'type': 'number',
+                'required': false,
+              },
+              'pageRoutes': {
+                'name': 'pageRoutes',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'sourceSchemaName': {
+                'name': 'sourceSchemaName',
+                'type': 'string',
+                'required': false,
+              },
+              'effectTypes': {
+                'name': 'effectTypes',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'eventSources': {
+                'name': 'eventSources',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'path': {
+                      'name': 'path',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'label': {
+                      'name': 'label',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'patternType': {
+                      'name': 'patternType',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'payloadFields': {
+                      'name': 'payloadFields',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'object',
+                        'properties': {
+                          'required': {
+                            'name': 'required',
+                            'type': 'boolean',
+                            'required': false,
+                          },
+                          'type': {
+                            'name': 'type',
+                            'type': 'string',
+                            'required': true,
+                          },
+                          'name': {
+                            'name': 'name',
+                            'type': 'string',
+                            'required': true,
+                          },
+                        },
+                      },
+                    },
+                    'event': {
+                      'name': 'event',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'positionHint': {
+                      'name': 'positionHint',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+              'stateRole': {
+                'name': 'stateRole',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'initial',
+                  'terminal',
+                  'hub',
+                  'default',
+                ],
+              },
+              'orbitalName': {
+                'name': 'orbitalName',
+                'type': 'string',
+                'required': true,
+              },
+              'cardLabel': {
+                'name': 'cardLabel',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'screen',
+                ],
+              },
+              'transitionEvent': {
+                'name': 'transitionEvent',
+                'type': 'string',
+                'required': false,
+              },
+              'emits': {
+                'name': 'emits',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'unitMetric': {
+                'name': 'unitMetric',
+                'type': 'string',
+                'required': false,
+              },
+              'listens': {
+                'name': 'listens',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'dependencyRole': {
+                'name': 'dependencyRole',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'selected',
+                  'upstream',
+                  'downstream',
+                  'both',
+                  'dim',
+                ],
+              },
+              'toState': {
+                'name': 'toState',
+                'type': 'string',
+                'required': false,
+              },
+              'linkedEntity': {
+                'name': 'linkedEntity',
+                'type': 'string',
+                'required': false,
+              },
+              'bandKind': {
+                'name': 'bandKind',
+                'type': 'string',
+                'required': false,
+                'values': [
+                  'connected',
+                  'standalone',
+                ],
+              },
+              'focused': {
+                'name': 'focused',
+                'type': 'boolean',
+                'required': false,
+              },
+            },
           },
           'userType': {
-            'default': 'builder',
-            'description': 'Studio persona viewing the inspector. Controls tab visibility (Code is architect-only, Styles is universal) and section visibility (Entity, raw guard, raw effects are architect-only). Default `\'builder\'` matches pre-Phase-2 behavior except for the new Styles tab, which every persona gets.',
-            'label': 'User Type',
-            'tier': 'presentation',
             'type': 'string',
+            'default': 'builder',
+            'label': 'User Type',
+            'description': 'Studio persona viewing the inspector. Controls tab visibility (Code is architect-only, Styles is universal) and section visibility (Entity, raw guard, raw effects are architect-only). Default `\'builder\'` matches pre-Phase-2 behavior except for the new Styles tab, which every persona gets.',
+            'tier': 'presentation',
             'values': [
               'builder',
               'designer',
               'architect',
             ],
           },
-        },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'onTabChange',
+          'onTabChange': {
+            'type': 'event',
+            'default': 'TAB_CHANGE',
+            'label': 'On Tab Change',
             'description': 'Fires whenever the tab-bar selection changes.',
-            'event': '@config.onTabChange',
-            'payloadSchema': [
-              {
-                'name': 'tab',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
+            'tier': 'presentation',
           },
-          {
-            'definerKnob': 'onSchemaChange',
-            'description': 'onSchemaChange prop',
-            'event': '@config.onSchemaChange',
-            'payloadSchema': [
-              {
-                'name': 'schema',
-                'type': 'SExpr',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
+          'editable': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Editable',
+            'description': 'editable prop',
+            'tier': 'presentation',
           },
-          {
-            'definerKnob': 'onClose',
-            'description': 'onClose prop',
-            'event': '@config.onClose',
-            'scope': 'external',
-            'tier': 'essential',
+          'schema': {
+            'type': 'SExpr',
+            'label': 'Schema',
+            'description': 'schema prop',
+            'tier': 'presentation',
           },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
         },
-        'entityRebindable': true,
-        'linkedEntity': 'OrbInspectorItem',
-        'name': 'OrbInspectorRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Fires whenever the tab-bar selection changes.',
-              'key': '@config.onTabChange',
-              'name': '@config.on tab change',
-              'payloadSchema': [
-                {
-                  'name': 'tab',
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'onSchemaChange prop',
-              'key': '@config.onSchemaChange',
-              'name': '@config.on schema change',
-              'payloadSchema': [
-                {
-                  'name': 'schema',
-                  'type': 'SExpr',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'onClose prop',
-              'key': '@config.onClose',
-              'name': '@config.on close',
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'defaultTab': '@config.defaultTab',
-                    'editable': '@config.editable',
-                    'node': '@config.node',
-                    'onClose': '@config.onClose',
-                    'onSchemaChange': '@config.onSchemaChange',
-                    'onTabChange': '@config.onTabChange',
-                    'schema': '@config.schema',
-                    'selectedPattern': '@config.selectedPattern',
-                    'type': 'orb-inspector',
-                    'userType': '@config.userType',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

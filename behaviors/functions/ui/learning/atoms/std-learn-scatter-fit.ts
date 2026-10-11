@@ -59,110 +59,110 @@ export interface StdLearnScatterFitLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnScatterFitConfig {
-  /** Default: `"Add Point"` */
-  addPointLabel?: string;
-  /** Default: `false` */
-  animate?: boolean;
-  /** Default: `false` */
-  autoRun?: boolean;
-  /** Default: `100` */
-  axisXMax?: number;
-  /** Default: `0` */
-  axisXMin?: number;
-  /** Default: `100` */
-  axisYMax?: number;
-  /** Default: `0` */
-  axisYMin?: number;
-  /** Default: `"series-2"` */
-  fitColor?: string;
   /** Default: `"fit"` */
   fitLabel?: string;
-  /** Default: `20` */
-  gridStep?: number;
-  /** Default: `"series-3"` */
-  guessColor?: string;
-  /** Default: `"Guess intercept: "` */
-  guessInterceptCaption?: string;
+  /** Default: `"point(s) loaded"` */
+  narrationLoadedTemplate?: string;
   /** Default: `100` */
-  guessInterceptMax?: number;
-  /** Default: `0` */
-  guessInterceptMin?: number;
-  /** Default: `1` */
-  guessInterceptStep?: number;
-  /** Default: `"your guess"` */
-  guessLabel?: string;
+  axisXMax?: number;
   /** Default: `true` */
-  guessMode?: boolean;
-  /** Default: `"Guess slope: "` */
-  guessSlopeCaption?: string;
-  /** Default: `3` */
-  guessSlopeMax?: number;
+  showTickLabels?: boolean;
+  /** Default: `true` */
+  showAxes?: boolean;
+  /** Default: `"Run"` */
+  runLabel?: string;
   /** Default: `-3` */
   guessSlopeMin?: number;
-  /** Default: `0.05` */
-  guessSlopeStep?: number;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `[{"color":"ink","id":"p0","label":"","radius":5,"x":15,"y":25},{"color":"ink","id":"p1","label":"","radius":5,"x":32,"y":40},{"color":"ink","id":"p2","label":"","radius":5,"x":48,"y":44},{"color":"ink","id":"p3","label":"","radius":5,"x":63,"y":62},{"color":"ink","id":"p4","label":"","radius":5,"x":80,"y":70}]` */
+  /** Default: `"Guess intercept: "` */
+  guessInterceptCaption?: string;
+  /** Default: `[{"y":25,"x":15,"radius":5,"color":"ink","id":"p0","label":""},{"id":"p1","radius":5,"x":32,"y":40,"label":"","color":"ink"},{"y":44,"id":"p2","color":"ink","radius":5,"label":"","x":48},{"color":"ink","x":63,"id":"p3","radius":5,"label":"","y":62},{"x":80,"radius":5,"label":"","color":"ink","y":70,"id":"p4"}]` */
   initialPoints?: EntityRow[];
-  /** Default: `true` */
-  interactive?: boolean;
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `20` */
-  maxPoints?: number;
+  /** Default: `"Scatter Fit"` */
+  title?: string;
+  /** Default: `"point moved"` */
+  narrationMovedTemplate?: string;
+  /** Default: `3` */
+  guessSlopeMax?: number;
+  /** Default: `"Reset"` */
+  resetLabel?: string;
   /** Default: `"point added"` */
   narrationAddedTemplate?: string;
+  /** Default: `0` */
+  axisXMin?: number;
+  /** Default: `true` */
+  guessMode?: boolean;
+  /** Default: `false` */
+  autoRun?: boolean;
+  /** Default: `true` */
+  showGrid?: boolean;
+  /** Default: `"guess updated — score"` */
+  narrationGuessUpdatedTemplate?: string;
+  /** Default: `""` */
+  matchMode?: string;
+  /** Default: `"series-2"` */
+  fitColor?: string;
+  /** Default: `100` */
+  guessInterceptMax?: number;
+  /** Default: `true` */
+  showResiduals?: boolean;
+  /** Default: `"dashed"` */
+  residualDash?: 'dashed' | 'dotted';
+  /** Default: `0` */
+  guessInterceptMin?: number;
+  /** Default: `""` */
+  summary?: string;
   /** Default: `"Auto-adding — tick adds a new point."` */
   narrationAutoAddingTemplate?: string;
   /** Default: `"fit revealed"` */
   narrationFitRevealedTemplate?: string;
-  /** Default: `"guess updated — score"` */
-  narrationGuessUpdatedTemplate?: string;
-  /** Default: `"point(s) loaded"` */
-  narrationLoadedTemplate?: string;
-  /** Default: `" — max points reached"` */
-  narrationMaxReachedSuffix?: string;
-  /** Default: `"point moved"` */
-  narrationMovedTemplate?: string;
-  /** Default: `"Paused — add manually with Add Point."` */
-  narrationPausedTemplate?: string;
-  /** Default: `"ink"` */
-  newPointColor?: string;
-  /** Default: `5` */
-  newPointRadius?: number;
-  /** Default: `"Pause"` */
-  pauseLabel?: string;
-  /** Default: `0.05` */
-  pointMarginPct?: number;
-  /** Default: `"Reset"` */
-  resetLabel?: string;
   /** Default: `"guide"` */
   residualColor?: string;
-  /** Default: `"dashed"` */
-  residualDash?: 'dashed' | 'dotted';
+  /** Default: `"Pause"` */
+  pauseLabel?: string;
+  /** Default: `false` */
+  animate?: boolean;
+  /** Default: `1` */
+  guessInterceptStep?: number;
+  /** Default: `0` */
+  axisYMin?: number;
+  /** Default: `0.05` */
+  guessSlopeStep?: number;
+  /** Default: `0.05` */
+  pointMarginPct?: number;
+  /** Default: `"Paused — add manually with Add Point."` */
+  narrationPausedTemplate?: string;
+  /** Default: `"series-3"` */
+  guessColor?: string;
+  /** Default: `20` */
+  maxPoints?: number;
+  /** Default: `20` */
+  gridStep?: number;
+  /** Default: `400` */
+  height?: number;
+  /** Default: `"your guess"` */
+  guessLabel?: string;
   /** Default: `"Reveal Fit"` */
   revealLabel?: string;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `"Run"` */
-  runLabel?: string;
-  /** Default: `true` */
-  showAxes?: boolean;
-  /** Default: `true` */
-  showGrid?: boolean;
-  /** Default: `true` */
-  showR?: boolean;
-  /** Default: `true` */
-  showResiduals?: boolean;
-  /** Default: `true` */
-  showTickLabels?: boolean;
-  /** Default: `""` */
-  summary?: string;
-  /** Default: `"Scatter Fit"` */
-  title?: string;
+  /** Default: `"ink"` */
+  newPointColor?: string;
   /** Default: `600` */
   width?: number;
+  /** Default: `" — max points reached"` */
+  narrationMaxReachedSuffix?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
+  /** Default: `"Guess slope: "` */
+  guessSlopeCaption?: string;
+  /** Default: `true` */
+  interactive?: boolean;
+  /** Default: `100` */
+  axisYMax?: number;
+  /** Default: `"Add Point"` */
+  addPointLabel?: string;
+  /** Default: `5` */
+  newPointRadius?: number;
+  /** Default: `true` */
+  showR?: boolean;
 }
 
 /**

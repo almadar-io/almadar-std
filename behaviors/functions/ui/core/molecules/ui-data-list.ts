@@ -63,87 +63,87 @@ export interface StdUiDataListDataListLoadedPayload {
  */
 export interface StdUiDataListConfig {
   accepts?: string;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  /** Default: `[]` */
-  columns?: EntityRow[];
-  currentUser?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  dndItemIdField?: string;
-  dndRoot?: boolean;
-  dragGroup?: string;
   dropEvent?: string;
-  emptyAction?: EntityRow;
-  emptyDescription?: string;
+  className?: string;
+  ariaBusy?: boolean;
   emptyIcon?: unknown;
-  emptyMessage?: string;
-  emptyTitle?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  dragGroup?: string;
+  dndRoot?: boolean;
+  ariaExpanded?: boolean;
   enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `[]` */
-  fields?: EntityRow[];
   /** Default: `"none"` */
   gap?: 'none' | 'sm' | 'md' | 'lg';
-  groupBy?: string;
-  groupFormat?: 'date' | 'time' | 'datetime' | 'currency' | 'number' | 'boolean' | 'percent';
-  hasMore?: boolean;
-  infiniteScroll?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `"ITEM_CLICK"` */
-  itemClickEvent?: string;
-  itemEnter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  lang?: string;
-  /** Default: `"LOAD_MORE"` */
-  loadMoreEvent?: string;
-  /** Default: `"LONG_PRESS"` */
-  longPressEvent?: string;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  maxInlineActions?: number;
-  /** Default: `5` */
-  pageSize?: number;
-  positionEvent?: string;
-  /** Default: `{}` */
-  relationsData?: Record<string, TraitConfig>;
-  /** Default: `"REORDER"` */
-  reorderEvent?: string;
-  reorderable?: boolean;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   /** Default: `true` */
   selfFetch?: boolean;
-  senderField?: string;
-  senderLabelField?: string;
   /** Default: `"list"` */
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  sortBy?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   sortDirection?: 'asc' | 'desc';
-  sortable?: boolean;
-  /** Default: `"auto"` */
-  surface?: 'auto' | 'none';
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  emptyAction?: EntityRow;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaDescribedby?: string;
+  senderField?: string;
   /** Default: `[]` */
   swipeLeftActions?: EntityRow[];
   /** Default: `"SWIPE_LEFT"` */
   swipeLeftEvent?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   /** Default: `[]` */
   swipeRightActions?: EntityRow[];
-  /** Default: `"SWIPE_RIGHT"` */
-  swipeRightEvent?: string;
+  lang?: string;
+  sortBy?: string;
+  senderLabelField?: string;
+  /** Default: `[]` */
+  fields?: EntityRow[];
+  emptyDescription?: string;
+  ariaLabelledby?: string;
+  hasMore?: boolean;
+  groupFormat?: 'date' | 'time' | 'datetime' | 'currency' | 'number' | 'boolean' | 'percent';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `"LONG_PRESS"` */
+  longPressEvent?: string;
   tabIndex?: number;
+  positionEvent?: string;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `"LOAD_MORE"` */
+  loadMoreEvent?: string;
+  ariaLabel?: string;
+  sortable?: boolean;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  emptyTitle?: string;
+  currentUser?: string;
+  infiniteScroll?: boolean;
+  groupBy?: string;
+  ariaHidden?: boolean;
+  maxInlineActions?: number;
   /** Default: `"default"` */
   variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `"auto"` */
+  surface?: 'auto' | 'none';
+  /** Default: `"ITEM_CLICK"` */
+  itemClickEvent?: string;
+  itemEnter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  dndItemIdField?: string;
+  emptyMessage?: string;
+  ariaSelected?: boolean;
+  /** Default: `"SWIPE_RIGHT"` */
+  swipeRightEvent?: string;
+  /** Default: `{}` */
+  relationsData?: Record<string, TraitConfig>;
+  reorderable?: boolean;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `"REORDER"` */
+  reorderEvent?: string;
+  /** Default: `[]` */
+  columns?: EntityRow[];
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  /** Default: `5` */
+  pageSize?: number;
   /** Default: `""` */
   viewerRole?: string;
 }

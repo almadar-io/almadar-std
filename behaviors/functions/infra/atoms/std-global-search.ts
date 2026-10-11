@@ -96,10 +96,10 @@ export interface StdGlobalSearchFanOutStepPayload {
  * without modifying its state-machine topology.
  */
 export interface StdGlobalSearchConfig {
-  /** Default: `""` */
-  modules?: string;
   /** Default: `"Search across modules…"` */
   placeholder?: string;
+  /** Default: `""` */
+  modules?: string;
   /** Default: `true` */
   saveHistory?: boolean;
 }
@@ -334,12 +334,12 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
     name: 'GlobalSearchOrbital',
     uses: [
       {
-        'as': 'Typography',
         'from': 'std/behaviors/ui-typography',
+        'as': 'Typography',
       },
       {
-        'as': 'Spinner',
         'from': 'std/behaviors/ui-spinner',
+        'as': 'Spinner',
       },
     ],
     expects: [
@@ -355,134 +355,134 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'personId',
+            'type': 'string',
             'default': '',
             'description': 'Owner of this query — the user who ran it.',
-            'name': 'personId',
             'synonyms': 'user, owner, searcher, account',
-            'type': 'string',
           },
           {
+            'name': 'queryText',
+            'type': 'string',
             'default': '',
             'description': 'The search text the user typed.',
-            'name': 'queryText',
             'synonyms': 'query, search term, keywords, search string',
-            'type': 'string',
           },
           {
+            'name': 'typeFilter',
+            'type': 'string',
             'default': '',
             'description': 'Record-type filter applied to the query; blank = all types.',
-            'name': 'typeFilter',
             'synonyms': 'type, kind, category filter, record type',
-            'type': 'string',
           },
           {
+            'name': 'scopeJson',
+            'type': 'string',
             'default': '',
             'description': 'Serialized scope filters (client/person/date/type) passed through to modules uninterpreted.',
-            'name': 'scopeJson',
             'synonyms': 'filters, scope, search filters, filter json',
-            'type': 'string',
           },
           {
+            'name': 'createdAt',
+            'type': 'number',
             'default': 0,
             'description': 'When the query was run.',
-            'name': 'createdAt',
             'synonyms': 'timestamp, searched at, date',
-            'type': 'number',
           },
           {
+            'name': 'pendingModules',
+            'type': 'array',
             'default': [],
-            'description': 'Scratch: configured module keys still awaiting a fan-out request.',
             'items': {
               'type': 'string',
             },
-            'name': 'pendingModules',
+            'description': 'Scratch: configured module keys still awaiting a fan-out request.',
             'synonyms': 'remaining modules, queue',
-            'type': 'array',
           },
           {
+            'name': 'requestedCount',
+            'type': 'number',
             'default': 0,
             'description': 'How many module requests have been emitted for the current query.',
-            'name': 'requestedCount',
             'synonyms': 'fanned out, requests sent',
-            'type': 'number',
           },
           {
+            'name': 'respondedCount',
+            'type': 'number',
             'default': 0,
             'description': 'How many modules have answered the current query.',
-            'name': 'respondedCount',
             'synonyms': 'answers received, responses',
-            'type': 'number',
           },
           {
+            'name': 'fanOutDone',
+            'type': 'boolean',
             'default': false,
             'description': 'Scratch: true once every configured module has been sent its request.',
-            'name': 'fanOutDone',
             'synonyms': 'fan-out complete, all requested',
-            'type': 'boolean',
           },
           {
+            'name': 'searching',
+            'type': 'boolean',
             'default': false,
             'description': 'True while a query is in flight.',
-            'name': 'searching',
             'synonyms': 'loading, in progress, busy',
-            'type': 'boolean',
           },
           {
+            'name': 'results',
+            'type': 'array',
             'default': [],
-            'description': 'Merged answers, one entry per responding module, grouped by moduleKey.',
             'items': {
+              'type': 'object',
               'properties': {
-                'answeredBy': {
-                  'name': 'answeredBy',
-                  'required': false,
-                  'type': 'string',
-                },
                 'moduleKey': {
                   'name': 'moduleKey',
-                  'required': false,
                   'type': 'string',
-                },
-                'receivedAt': {
-                  'name': 'receivedAt',
                   'required': false,
-                  'type': 'number',
                 },
                 'resultsJson': {
                   'name': 'resultsJson',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
+                },
+                'answeredBy': {
+                  'name': 'answeredBy',
+                  'type': 'string',
+                  'required': false,
+                },
+                'receivedAt': {
+                  'name': 'receivedAt',
+                  'type': 'number',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'results',
+            'description': 'Merged answers, one entry per responding module, grouped by moduleKey.',
             'synonyms': 'grouped results, hits, matches, answers',
-            'type': 'array',
           },
           {
+            'name': 'resultsSummary',
+            'type': 'string',
             'default': '',
             'description': 'Display rendering of the grouped results: one "moduleKey: resultsJson" line per answering module.',
-            'name': 'resultsSummary',
             'synonyms': 'results text, summary, grouped display',
-            'type': 'string',
           },
           {
+            'name': 'savedQueryId',
+            'type': 'string',
             'default': '',
             'description': 'Id of the persisted SearchQuery row for the current query; blank until saved.',
-            'name': 'savedQueryId',
             'synonyms': 'query id, saved search id',
-            'type': 'string',
           },
           {
+            'name': 'lastError',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: last failure shown to the user; blank = none.',
-            'name': 'lastError',
             'synonyms': 'error, failure reason',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -493,36 +493,25 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
     } as Entity,
     traits: [
       {
-        'capabilities': [
-          'discovery',
-          'search',
-        ],
-        'category': 'lifecycle',
-        'config': {
-          'modules': {
-            'default': '',
-            'description': 'Comma-separated module keys to fan each query out to (e.g. "contacts,projects,invoices"). Each key gets one scoped MODULE_SEARCH_REQUESTED; the module owning a key subscribes to it and answers with SEARCH_RESULTS. Empty = no fan-out (the query is still persisted to history).',
-            'label': 'Modules to search',
-            'synonyms': 'search modules, search scope, sources, providers, search providers, indexes, search targets, modules',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'placeholder': {
-            'default': 'Search across modules…',
-            'description': 'Hint text in the search input.',
-            'label': 'Search placeholder',
-            'synonyms': 'placeholder, hint text, input hint',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'saveHistory': {
-            'default': true,
-            'description': 'Persist each query as a SearchQuery row so recent and saved searches survive reloads.',
-            'label': 'Keep recent searches',
-            'synonyms': 'search history, recent searches, saved searches, remember searches, keep history',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
+        'name': 'GlobalSearch',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'fanOutDone',
+            'lastError',
+            'pendingModules',
+            'personId',
+            'queryText',
+            'requestedCount',
+            'respondedCount',
+            'results',
+            'resultsSummary',
+            'savedQueryId',
+            'scopeJson',
+            'searching',
+            'typeFilter',
+          ],
         },
         'effectRow': [
           {
@@ -610,10 +599,18 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
             'resource': '@entity.typeFilter',
           },
         ],
+        'category': 'lifecycle',
+        'capabilities': [
+          'discovery',
+          'search',
+        ],
+        'linkedEntity': 'SearchQuery',
         'emits': [
           {
-            'description': 'The query as submitted — re-broadcast so downstream listeners (recent-searches trays, analytics) can react without intercepting the input',
             'event': 'SEARCH',
+            'description': 'The query as submitted — re-broadcast so downstream listeners (recent-searches trays, analytics) can react without intercepting the input',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'queryText',
@@ -636,12 +633,12 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
           },
           {
-            'description': 'One per configured module key — the module owning that key runs its own search and answers with SEARCH_RESULTS',
             'event': 'MODULE_SEARCH_REQUESTED',
+            'description': 'One per configured module key — the module owning that key runs its own search and answers with SEARCH_RESULTS',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'moduleKey',
@@ -660,12 +657,12 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
           },
           {
-            'description': 'Every requested module has answered; the grouped view is final',
             'event': 'GLOBAL_SEARCH_COMPLETED',
+            'description': 'Every requested module has answered; the grouped view is final',
+            'tier': 'secondary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'queryText',
@@ -680,88 +677,74 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                 'type': 'number',
               },
             ],
-            'scope': 'external',
-            'tier': 'secondary',
           },
           {
-            'description': 'The query persisted to search history',
             'event': 'QUERY_SAVED',
+            'description': 'The query persisted to search history',
+            'tier': 'secondary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'secondary',
           },
           {
-            'description': 'Persisting the query failed — the search itself is unaffected',
             'event': 'QUERY_SAVE_FAILED',
+            'description': 'Persisting the query failed — the search itself is unaffected',
+            'tier': 'secondary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'secondary',
           },
           {
-            'description': 'Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass; `remaining` is the queue length after the last seed/drop',
             'event': 'FAN_OUT_STEP',
+            'description': 'Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass; `remaining` is the queue length after the last seed/drop',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'remaining',
                 'type': 'number',
               },
             ],
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'fanOutDone',
-            'lastError',
-            'pendingModules',
-            'personId',
-            'queryText',
-            'requestedCount',
-            'respondedCount',
-            'results',
-            'resultsSummary',
-            'savedQueryId',
-            'scopeJson',
-            'searching',
-            'typeFilter',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'SearchQuery',
         'listens': [
           {
             'event': 'SEARCH_RESULTS',
+            'triggers': 'SEARCH_RESULTS',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'SEARCH_RESULTS',
           },
         ],
-        'name': 'GlobalSearch',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'searching',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'The query as submitted — re-broadcast so downstream listeners (recent-searches trays, analytics) can react without intercepting the input',
               'key': 'SEARCH',
               'name': 'Search',
+              'description': 'The query as submitted — re-broadcast so downstream listeners (recent-searches trays, analytics) can react without intercepting the input',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'queryText',
@@ -784,19 +767,18 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass; `remaining` is the queue length after the last seed/drop',
               'key': 'FAN_OUT_STEP',
               'name': 'Fan Out Step',
+              'description': 'Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass; `remaining` is the queue length after the last seed/drop',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'remaining',
                   'type': 'number',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'SEARCH_RESULTS',
@@ -813,35 +795,36 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
               ],
             },
             {
-              'description': 'The query persisted to search history',
               'key': 'QUERY_SAVED',
               'name': 'Query Saved',
+              'description': 'The query persisted to search history',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Persisting the query failed — the search itself is unaffected',
               'key': 'QUERY_SAVE_FAILED',
               'name': 'Query Save Failed',
+              'description': 'Persisting the query failed — the search itself is unaffected',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'One per configured module key — the module owning that key runs its own search and answers with SEARCH_RESULTS',
               'key': 'MODULE_SEARCH_REQUESTED',
               'name': 'Module Search Requested',
+              'description': 'One per configured module key — the module owning that key runs its own search and answers with SEARCH_RESULTS',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'moduleKey',
@@ -860,12 +843,12 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Every requested module has answered; the grouped view is final',
               'key': 'GLOBAL_SEARCH_COMPLETED',
               'name': 'Global Search Completed',
+              'description': 'Every requested module has answered; the grouped view is final',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'queryText',
@@ -880,20 +863,13 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   'type': 'number',
                 },
               ],
-              'tier': 'secondary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'searching',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -903,25 +879,25 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'event': 'SEARCH',
-                        'placeholder': '@config.placeholder',
                         'type': 'search-input',
+                        'placeholder': '@config.placeholder',
+                        'event': 'SEARCH',
                       },
                       '@trait.InlineTypographyRender1',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'searching',
+              'event': 'SEARCH',
               'effects': [
                 [
                   'set',
@@ -1039,11 +1015,11 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                     'create',
                     ('SearchQuery' satisfies _StdGlobalSearchEntityName),
                     {
+                      'typeFilter': '@entity.typeFilter',
+                      'scopeJson': '@entity.scopeJson',
                       'createdAt': '@entity.createdAt',
                       'personId': '@entity.personId',
                       'queryText': '@entity.queryText',
-                      'scopeJson': '@entity.scopeJson',
-                      'typeFilter': '@entity.typeFilter',
                     },
                     {
                       'emit': {
@@ -1078,34 +1054,34 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'search-input',
                         'event': 'SEARCH',
                         'placeholder': '@config.placeholder',
-                        'type': 'search-input',
                       },
                       {
                         'align': 'center',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           '@trait.InlineSpinnerRender2',
                           '@trait.InlineTypographyRender3',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SEARCH',
-              'from': 'idle',
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1115,25 +1091,25 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
-                        'event': 'SEARCH',
-                        'placeholder': '@config.placeholder',
                         'type': 'search-input',
+                        'placeholder': '@config.placeholder',
+                        'event': 'SEARCH',
                       },
                       '@trait.InlineTypographyRender4',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'searching',
-              'to': 'idle',
             },
             {
+              'from': 'searching',
+              'to': 'searching',
+              'event': 'SEARCH',
               'effects': [
                 [
                   'set',
@@ -1251,16 +1227,16 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                     'create',
                     ('SearchQuery' satisfies _StdGlobalSearchEntityName),
                     {
-                      'createdAt': '@entity.createdAt',
-                      'personId': '@entity.personId',
                       'queryText': '@entity.queryText',
                       'scopeJson': '@entity.scopeJson',
+                      'createdAt': '@entity.createdAt',
                       'typeFilter': '@entity.typeFilter',
+                      'personId': '@entity.personId',
                     },
                     {
                       'emit': {
-                        'failure': 'QUERY_SAVE_FAILED',
                         'success': 'QUERY_SAVED',
+                        'failure': 'QUERY_SAVE_FAILED',
                       },
                     },
                   ],
@@ -1287,21 +1263,26 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   ],
                 ],
               ],
-              'event': 'SEARCH',
-              'from': 'searching',
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'searching',
+              'event': 'FAN_OUT_STEP',
+              'guard': [
+                '>',
+                '@payload.remaining',
+                0,
+              ],
               'effects': [
                 [
                   'emit',
                   'MODULE_SEARCH_REQUESTED',
                   {
+                    'queryText': '@entity.queryText',
                     'moduleKey': [
                       'array/first',
                       '@entity.pendingModules',
                     ],
-                    'queryText': '@entity.queryText',
                     'scopeJson': '@entity.scopeJson',
                     'typeFilter': '@entity.typeFilter',
                   },
@@ -1362,16 +1343,35 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   ],
                 ],
               ],
-              'event': 'FAN_OUT_STEP',
-              'from': 'searching',
-              'guard': [
-                '>',
-                '@payload.remaining',
-                0,
-              ],
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'searching',
+              'event': 'SEARCH_RESULTS',
+              'guard': [
+                'not',
+                [
+                  'array/some',
+                  '@entity.results',
+                  [
+                    'fn',
+                    'g',
+                    [
+                      '=',
+                      '@g.moduleKey',
+                      [
+                        'str/default',
+                        '@payload.moduleKey',
+                        [
+                          'str/default',
+                          '@event.source.orbital',
+                          '',
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -1394,6 +1394,7 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                         '@event.source.trait',
                         '',
                       ],
+                      'receivedAt': '@now',
                       'moduleKey': [
                         'str/default',
                         '@payload.moduleKey',
@@ -1403,7 +1404,6 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                           '',
                         ],
                       ],
-                      'receivedAt': '@now',
                       'resultsJson': '@payload.resultsJson',
                     },
                   ],
@@ -1441,11 +1441,13 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
-                        'event': 'SEARCH',
                         'placeholder': '@config.placeholder',
                         'type': 'search-input',
+                        'event': 'SEARCH',
                       },
                       [
                         'if',
@@ -1470,6 +1472,8 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                           0,
                         ],
                         {
+                          'gap': 'sm',
+                          'direction': 'vertical',
                           'children': [
                             'array/map',
                             [
@@ -1489,6 +1493,9 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                               'fn',
                               'g',
                               {
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
                                 'children': [
                                   '@trait.InlineTypographyRender5',
                                   {
@@ -1517,19 +1524,14 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                                         '@trait.InlineTypographyRender6',
                                       ],
                                     ],
-                                    'direction': 'vertical',
-                                    'gap': 'xs',
                                     'type': 'stack',
+                                    'gap': 'xs',
+                                    'direction': 'vertical',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'gap': 'sm',
-                                'type': 'stack',
                               },
                             ],
                           ],
-                          'direction': 'vertical',
-                          'gap': 'sm',
                           'type': 'stack',
                         },
                         {
@@ -1566,8 +1568,6 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                         },
                       ],
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
@@ -1593,43 +1593,19 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                       'emit',
                       'GLOBAL_SEARCH_COMPLETED',
                       {
+                        'respondedCount': '@entity.respondedCount',
                         'moduleCount': '@entity.requestedCount',
                         'queryText': '@entity.queryText',
-                        'respondedCount': '@entity.respondedCount',
                       },
                     ],
                   ],
                 ],
               ],
-              'event': 'SEARCH_RESULTS',
-              'from': 'searching',
-              'guard': [
-                'not',
-                [
-                  'array/some',
-                  '@entity.results',
-                  [
-                    'fn',
-                    'g',
-                    [
-                      '=',
-                      '@g.moduleKey',
-                      [
-                        'str/default',
-                        '@payload.moduleKey',
-                        [
-                          'str/default',
-                          '@event.source.orbital',
-                          '',
-                        ],
-                      ],
-                    ],
-                  ],
-                ],
-              ],
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'searching',
+              'event': 'QUERY_SAVED',
               'effects': [
                 [
                   'set',
@@ -1637,11 +1613,11 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   '@payload.id',
                 ],
               ],
-              'event': 'QUERY_SAVED',
-              'from': 'searching',
-              'to': 'searching',
             },
             {
+              'from': 'searching',
+              'to': 'searching',
+              'event': 'QUERY_SAVE_FAILED',
               'effects': [
                 [
                   'set',
@@ -1652,111 +1628,135 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': 'Could not save the search to history',
                     'type': 'alert',
                     'variant': 'warning',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'QUERY_SAVE_FAILED',
-              'from': 'searching',
-              'to': 'searching',
             },
           ],
         },
+        'config': {
+          'placeholder': {
+            'type': 'string',
+            'default': 'Search across modules…',
+            'label': 'Search placeholder',
+            'description': 'Hint text in the search input.',
+            'synonyms': 'placeholder, hint text, input hint',
+            'tier': 'presentation',
+          },
+          'modules': {
+            'type': 'string',
+            'default': '',
+            'label': 'Modules to search',
+            'description': 'Comma-separated module keys to fan each query out to (e.g. "contacts,projects,invoices"). Each key gets one scoped MODULE_SEARCH_REQUESTED; the module owning a key subscribes to it and answers with SEARCH_RESULTS. Empty = no fan-out (the query is still persisted to history).',
+            'synonyms': 'search modules, search scope, sources, providers, search providers, indexes, search targets, modules',
+            'tier': 'internal',
+          },
+          'saveHistory': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Keep recent searches',
+            'description': 'Persist each query as a SearchQuery row so recent and saved searches survive reloads.',
+            'synonyms': 'search history, recent searches, saved searches, remember searches, keep history',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
       makeTraitRef({
-        'config': {
-          'color': {
-            'default': 'muted',
-            'type': 'unknown',
-          },
-          'content': {
-            'default': 'Search across every connected module — results group by module.',
-            'type': 'unknown',
-          },
-          'variant': {
-            'default': 'caption',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'SearchQuery',
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
         'name': 'InlineTypographyRender1',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
-      }),
-      makeTraitRef({
         'linkedEntity': 'SearchQuery',
-        'name': 'InlineSpinnerRender2',
-        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
-      }),
-      makeTraitRef({
         'config': {
           'color': {
-            'default': 'muted',
             'type': 'unknown',
+            'default': 'muted',
           },
           'content': {
-            'default': 'Searching…',
             'type': 'unknown',
-          },
-          'variant': {
-            'default': 'caption',
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'SearchQuery',
-        'name': 'InlineTypographyRender3',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'color': {
-            'default': 'muted',
-            'type': 'unknown',
-          },
-          'content': {
             'default': 'Search across every connected module — results group by module.',
-            'type': 'unknown',
           },
           'variant': {
+            'type': 'unknown',
             'default': 'caption',
-            'type': 'unknown',
           },
         },
+      }),
+      makeTraitRef({
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
+        'name': 'InlineSpinnerRender2',
         'linkedEntity': 'SearchQuery',
+      }),
+      makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
+        'name': 'InlineTypographyRender3',
+        'linkedEntity': 'SearchQuery',
+        'config': {
+          'content': {
+            'type': 'unknown',
+            'default': 'Searching…',
+          },
+          'color': {
+            'type': 'unknown',
+            'default': 'muted',
+          },
+          'variant': {
+            'type': 'unknown',
+            'default': 'caption',
+          },
+        },
+      }),
+      makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
         'name': 'InlineTypographyRender4',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'SearchQuery',
         'config': {
-          'content': {
-            'default': '@g.moduleKey',
-            'type': 'unknown',
-          },
           'variant': {
-            'default': 'h4',
             'type': 'unknown',
+            'default': 'caption',
+          },
+          'color': {
+            'type': 'unknown',
+            'default': 'muted',
+          },
+          'content': {
+            'type': 'unknown',
+            'default': 'Search across every connected module — results group by module.',
           },
         },
-        'linkedEntity': 'SearchQuery',
+      }),
+      makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
         'name': 'InlineTypographyRender5',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'linkedEntity': 'SearchQuery',
         'config': {
           'content': {
-            'default': '@item',
             'type': 'unknown',
+            'default': '@g.moduleKey',
           },
           'variant': {
-            'default': 'body',
             'type': 'unknown',
+            'default': 'h4',
           },
         },
-        'linkedEntity': 'SearchQuery',
-        'name': 'InlineTypographyRender6',
+      }),
+      makeTraitRef({
         'ref': ('Typography.traits.TypographyRender' satisfies _StdGlobalSearchGlobalSearchOrbitalUsesRef),
+        'name': 'InlineTypographyRender6',
+        'linkedEntity': 'SearchQuery',
+        'config': {
+          'content': {
+            'type': 'unknown',
+            'default': '@item',
+          },
+          'variant': {
+            'type': 'unknown',
+            'default': 'body',
+          },
+        },
       }),
     ],
     pages: [

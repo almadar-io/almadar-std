@@ -87,12 +87,12 @@ export interface StdDataImportImportFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDataImportConfig {
-  /** Default: `"{}"` */
-  fieldMappingJson?: string;
   /** Default: `""` */
   sourceName?: string;
   /** Default: `""` */
   targetEntity?: string;
+  /** Default: `"{}"` */
+  fieldMappingJson?: string;
 }
 
 /**
@@ -236,54 +236,54 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'sourceName',
+            'type': 'string',
             'default': '',
             'description': 'Free-form name of the upstream source this run imported from.',
-            'name': 'sourceName',
             'synonyms': 'source, origin, provider name',
-            'type': 'string',
           },
           {
-            'default': 'uploaded',
-            'description': 'Lifecycle position of the import run.',
             'name': 'status',
             'type': 'string',
+            'default': 'uploaded',
             'values': [
               'uploaded',
               'staged',
               'confirmed',
               'failed',
             ],
+            'description': 'Lifecycle position of the import run.',
           },
           {
+            'name': 'rowCount',
+            'type': 'number',
             'default': 0,
             'description': 'Number of rows staged for review.',
-            'name': 'rowCount',
             'synonyms': 'rows, staged count, record count',
-            'type': 'number',
           },
           {
+            'name': 'errorCount',
+            'type': 'number',
             'default': 0,
             'description': 'Number of rows the host parser flagged with errors during staging.',
-            'name': 'errorCount',
             'synonyms': 'errors, failed rows, parse errors',
-            'type': 'number',
           },
           {
+            'name': 'mappingJson',
+            'type': 'string',
             'default': '{}',
             'description': 'Source-column → target-field mapping (JSON string), recorded verbatim from config for provenance; the atom applies it when parsing staged rows on confirm.',
-            'name': 'mappingJson',
             'synonyms': 'field mapping, column mapping, mapping',
-            'type': 'string',
           },
           {
-            'default': 0,
-            'description': 'Run start timestamp.',
             'name': 'createdAt',
             'type': 'number',
+            'default': 0,
+            'description': 'Run start timestamp.',
           },
         ];
         const extras = params.fields ?? [];
@@ -294,74 +294,56 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
     } as Entity,
     auxiliaryEntities: [
       {
+        'name': 'ImportRow',
         'collection': 'import_rows',
+        'persistence': 'persistent',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'batchId',
+            'type': 'string',
             'default': '',
             'description': 'ImportBatch id this staged row belongs to.',
-            'name': 'batchId',
             'synonyms': 'batch, import run, parent batch',
-            'type': 'string',
           },
           {
+            'name': 'rowJson',
+            'type': 'string',
             'default': '{}',
             'description': 'The raw parsed CSV row as a JSON string (source shape, pre-mapping). The consumer maps it into its own entity shape after confirm.',
-            'name': 'rowJson',
             'synonyms': 'row, raw row, staged row, record json',
-            'type': 'string',
           },
           {
-            'default': 'staged',
-            'description': 'staged = awaiting confirm; imported = the consumer persisted it into the target entity; failed = rejected.',
             'name': 'status',
             'type': 'string',
+            'default': 'staged',
             'values': [
               'staged',
               'imported',
               'failed',
             ],
+            'description': 'staged = awaiting confirm; imported = the consumer persisted it into the target entity; failed = rejected.',
           },
         ],
-        'name': 'ImportRow',
-        'persistence': 'persistent',
       },
     ] as EntityRef[],
     traits: [
       {
-        'capabilities': [
-          'import',
-        ],
-        'category': 'lifecycle',
-        'config': {
-          'fieldMappingJson': {
-            'default': '{}',
-            'description': 'JSON object mapping source CSV column names to target field names. Stored verbatim on the batch row (mappingJson); the atom applies it when it parses staged rows into IMPORT_ROWS_PARSED, so the consumer persists already-mapped rows into the target entity.',
-            'label': 'Field mapping (JSON)',
-            'synonyms': 'field mapping, column mapping, map columns, remap fields, csv columns',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'sourceName': {
-            'default': '',
-            'description': 'Free-form name of the upstream source this import pulls from — whatever tool or file export the user names. Recorded on the batch row for provenance and echoed on IMPORT_CONFIRMED.',
-            'label': 'Source name',
-            'synonyms': 'source, origin, import from, provider name, data source',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'targetEntity': {
-            'default': '',
-            'description': 'Name of the consumer organism\'s entity the staged rows land in after confirm. Carried on IMPORT_ROWS_PARSED so the consumer\'s persist half knows where the mapped rows belong — the atom never writes the target entity itself.',
-            'label': 'Target entity',
-            'synonyms': 'destination, import into, target type',
-            'tier': 'domain',
-            'type': 'string',
-          },
+        'name': 'DataImportLifecycle',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'errorCount',
+            'mappingJson',
+            'rowCount',
+            'sourceName',
+            'status',
+          ],
         },
         'effectRow': [
           {
@@ -421,44 +403,52 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'capabilities': [
+          'import',
+        ],
+        'linkedEntity': 'ImportBatch',
         'emits': [
           {
-            'description': 'import_batches persist-create success — rebinds @entity.id to the server-issued id, the fallback for when the host didn\'t mint a client-side batchId on UPLOAD_CSV',
             'event': 'BATCH_CREATED',
+            'description': 'import_batches persist-create success — rebinds @entity.id to the server-issued id, the fallback for when the host didn\'t mint a client-side batchId on UPLOAD_CSV',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'import_rows bulk persist-create success signal — payload carries the persisted rows flat; the atom never reads it (self-loop only)',
             'event': 'ROWS_STAGED',
+            'description': 'import_rows bulk persist-create success signal — payload carries the persisted rows flat; the atom never reads it (self-loop only)',
             'tier': 'secondary',
           },
           {
-            'description': 'Any import_batches / import_rows persist failure — the batch row is updated to failed and IMPORT_FAILED emitted, never a silent swallow; the trait stays put so the user can retry or discard',
             'event': 'IMPORT_PERSIST_FAILED',
+            'description': 'Any import_batches / import_rows persist failure — the batch row is updated to failed and IMPORT_FAILED emitted, never a silent swallow; the trait stays put so the user can retry or discard',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The user confirmed the staged review and the batch row is persisted as confirmed. The atom then fetches the batch\'s staged rows, parses and key-maps them, and emits IMPORT_ROWS_PARSED for the consumer\'s persist half.',
             'event': 'IMPORT_CONFIRMED',
+            'description': 'The user confirmed the staged review and the batch row is persisted as confirmed. The atom then fetches the batch\'s staged rows, parses and key-maps them, and emits IMPORT_ROWS_PARSED for the consumer\'s persist half.',
+            'synonyms': 'import confirmed, commit import, accept staged rows, approve import',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'batchId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'sourceName',
@@ -469,22 +459,20 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                 'type': 'number',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'import confirmed, commit import, accept staged rows, approve import',
-            'tier': 'domain',
           },
           {
-            'description': 'import_rows collection-fetch success on confirm — payload carries every staged row flat; the atom filters to @entity.id by batchId in the IMPORT_ROWS_PARSED arm (self-loop only)',
             'event': 'IMPORT_ROWS_FETCHED',
+            'description': 'import_rows collection-fetch success on confirm — payload carries every staged row flat; the atom filters to @entity.id by batchId in the IMPORT_ROWS_PARSED arm (self-loop only)',
+            'tier': 'secondary',
             'payloadSchema': [
               {
-                'entity': 'ImportRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'batchId',
@@ -504,19 +492,21 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                     ],
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ImportRow',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Confirmed rows parsed and key-mapped: each staged row\'s rowJson was parsed via json/parse and remapped through the batch\'s mappingJson; failed counts rows whose rowJson did not parse to an object (surfaced, never dropped). The consumer persists rows into its own target entity and marks them imported.',
             'event': 'IMPORT_ROWS_PARSED',
+            'description': 'Confirmed rows parsed and key-mapped: each staged row\'s rowJson was parsed via json/parse and remapped through the batch\'s mappingJson; failed counts rows whose rowJson did not parse to an object (surfaced, never dropped). The consumer persists rows into its own target entity and marks them imported.',
+            'synonyms': 'rows parsed, rows mapped, import rows ready',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'batchId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'failed',
@@ -531,13 +521,13 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'rows parsed, rows mapped, import rows ready',
-            'tier': 'domain',
           },
           {
-            'description': 'The run failed (persist failure or empty staging); error carries the detail and the batch row was updated to failed',
             'event': 'IMPORT_FAILED',
+            'description': 'The run failed (persist failure or empty staging); error carries the detail and the batch row was updated to failed',
+            'synonyms': 'import failed, upload failed, staging failed',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'batchId',
@@ -545,39 +535,42 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
               },
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'import failed, upload failed, staging failed',
-            'tier': 'domain',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'errorCount',
-            'mappingJson',
-            'rowCount',
-            'sourceName',
-            'status',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'ImportBatch',
-        'name': 'DataImportLifecycle',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'uploaded',
+            },
+            {
+              'name': 'staged',
+            },
+            {
+              'name': 'confirmed',
+            },
+            {
+              'name': 'failed',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Starts an import run for a CSV file upload, fired by the idle state\'s own upload-drop-zone affordance. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. files carries the picked file(s) (name/size/type/content) but the atom does not read content from it yet — no runtime capability exists to decode/parse it into rows (tracked: R-DATA-IMPORT-PAGES-BLANK-NO-UPLOAD-UI); STAGE_ROWS is the still-open handoff for a future host-side parser to answer with real row data.',
               'key': 'UPLOAD_CSV',
               'name': 'Upload Csv',
+              'description': 'Starts an import run for a CSV file upload, fired by the idle state\'s own upload-drop-zone affordance. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. files carries the picked file(s) (name/size/type/content) but the atom does not read content from it yet — no runtime capability exists to decode/parse it into rows (tracked: R-DATA-IMPORT-PAGES-BLANK-NO-UPLOAD-UI); STAGE_ROWS is the still-open handoff for a future host-side parser to answer with real row data.',
+              'synonyms': 'upload csv, import csv, start import, import file, bulk import',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'batchId',
@@ -589,11 +582,13 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                 },
                 {
                   'name': 'files',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'name',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'size',
@@ -608,88 +603,85 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                       'type': 'string',
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
                 },
               ],
-              'synonyms': 'upload csv, import csv, start import, import file, bulk import',
-              'tier': 'domain',
             },
             {
-              'description': 'import_batches persist-create success — rebinds @entity.id to the server-issued id, the fallback for when the host didn\'t mint a client-side batchId on UPLOAD_CSV',
               'key': 'BATCH_CREATED',
               'name': 'Batch Created',
+              'description': 'import_batches persist-create success — rebinds @entity.id to the server-issued id, the fallback for when the host didn\'t mint a client-side batchId on UPLOAD_CSV',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Host-side CSV parsing finished: rows carries one JSON string per parsed row (raw source shape, pre-mapping); errorCount counts rows the parser flagged. The atom bulk-persists them into import_rows and opens the staged review.',
               'key': 'STAGE_ROWS',
               'name': 'Stage Rows',
+              'description': 'Host-side CSV parsing finished: rows carries one JSON string per parsed row (raw source shape, pre-mapping); errorCount counts rows the parser flagged. The atom bulk-persists them into import_rows and opens the staged review.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'rows',
-                  'required': true,
                   'type': '[string]',
+                  'required': true,
                 },
                 {
                   'name': 'errorCount',
                   'type': 'number',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'Any import_batches / import_rows persist failure — the batch row is updated to failed and IMPORT_FAILED emitted, never a silent swallow; the trait stays put so the user can retry or discard',
               'key': 'IMPORT_PERSIST_FAILED',
               'name': 'Import Persist Failed',
+              'description': 'Any import_batches / import_rows persist failure — the batch row is updated to failed and IMPORT_FAILED emitted, never a silent swallow; the trait stays put so the user can retry or discard',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'The user discarded the staged run before confirm; the batch row stays for provenance.',
               'key': 'DISCARD_IMPORT',
               'name': 'Discard Import',
+              'description': 'The user discarded the staged run before confirm; the batch row stays for provenance.',
               'tier': 'internal',
             },
             {
-              'description': 'import_rows bulk persist-create success signal — payload carries the persisted rows flat; the atom never reads it (self-loop only)',
               'key': 'ROWS_STAGED',
               'name': 'Rows Staged',
+              'description': 'import_rows bulk persist-create success signal — payload carries the persisted rows flat; the atom never reads it (self-loop only)',
               'tier': 'secondary',
             },
             {
-              'description': 'The user approved the staged review; the batch is marked confirmed, IMPORT_CONFIRMED fires, and the atom parses+maps the staged rows into IMPORT_ROWS_PARSED for the consumer\'s persist half.',
               'key': 'CONFIRM_IMPORT',
               'name': 'Confirm Import',
+              'description': 'The user approved the staged review; the batch is marked confirmed, IMPORT_CONFIRMED fires, and the atom parses+maps the staged rows into IMPORT_ROWS_PARSED for the consumer\'s persist half.',
               'synonyms': 'confirm import, approve staged rows, accept import',
               'tier': 'domain',
             },
             {
-              'description': 'import_rows collection-fetch success on confirm — payload carries every staged row flat; the atom filters to @entity.id by batchId in the IMPORT_ROWS_PARSED arm (self-loop only)',
               'key': 'IMPORT_ROWS_FETCHED',
               'name': 'Import Rows Fetched',
+              'description': 'import_rows collection-fetch success on confirm — payload carries every staged row flat; the atom filters to @entity.id by batchId in the IMPORT_ROWS_PARSED arm (self-loop only)',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
-                  'entity': 'ImportRow',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'batchId',
@@ -709,26 +701,27 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                       ],
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'ImportRow',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Returns the atom to idle from a terminal state',
               'key': 'RESET',
               'name': 'Reset',
+              'description': 'Returns the atom to idle from a terminal state',
               'tier': 'internal',
             },
             {
-              'description': 'The user confirmed the staged review and the batch row is persisted as confirmed. The atom then fetches the batch\'s staged rows, parses and key-maps them, and emits IMPORT_ROWS_PARSED for the consumer\'s persist half.',
               'key': 'IMPORT_CONFIRMED',
               'name': 'Import Confirmed',
+              'description': 'The user confirmed the staged review and the batch row is persisted as confirmed. The atom then fetches the batch\'s staged rows, parses and key-maps them, and emits IMPORT_ROWS_PARSED for the consumer\'s persist half.',
+              'synonyms': 'import confirmed, commit import, accept staged rows, approve import',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'batchId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'sourceName',
@@ -739,18 +732,18 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'type': 'number',
                 },
               ],
-              'synonyms': 'import confirmed, commit import, accept staged rows, approve import',
-              'tier': 'domain',
             },
             {
-              'description': 'Confirmed rows parsed and key-mapped: each staged row\'s rowJson was parsed via json/parse and remapped through the batch\'s mappingJson; failed counts rows whose rowJson did not parse to an object (surfaced, never dropped). The consumer persists rows into its own target entity and marks them imported.',
               'key': 'IMPORT_ROWS_PARSED',
               'name': 'Import Rows Parsed',
+              'description': 'Confirmed rows parsed and key-mapped: each staged row\'s rowJson was parsed via json/parse and remapped through the batch\'s mappingJson; failed counts rows whose rowJson did not parse to an object (surfaced, never dropped). The consumer persists rows into its own target entity and marks them imported.',
+              'synonyms': 'rows parsed, rows mapped, import rows ready',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'batchId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'failed',
@@ -765,13 +758,13 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'type': 'string',
                 },
               ],
-              'synonyms': 'rows parsed, rows mapped, import rows ready',
-              'tier': 'domain',
             },
             {
-              'description': 'The run failed (persist failure or empty staging); error carries the detail and the batch row was updated to failed',
               'key': 'IMPORT_FAILED',
               'name': 'Import Failed',
+              'description': 'The run failed (persist failure or empty staging); error carries the detail and the batch row was updated to failed',
+              'synonyms': 'import failed, upload failed, staging failed',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'batchId',
@@ -779,34 +772,17 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                 },
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'import failed, upload failed, staging failed',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'uploaded',
-            },
-            {
-              'name': 'staged',
-            },
-            {
-              'name': 'confirmed',
-            },
-            {
-              'name': 'failed',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -842,37 +818,37 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'typography',
                         'content': [
                           'str/concat',
                           'Import ',
                           '@entity.sourceName',
                         ],
-                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
+                        'label': 'Upload CSV file',
                         'accept': '.csv,text/csv',
+                        'type': 'upload-drop-zone',
+                        'maxFiles': 1,
                         'action': 'UPLOAD_CSV',
                         'description': 'Drop a CSV file here or click to browse',
                         'icon': 'upload',
-                        'label': 'Upload CSV file',
-                        'maxFiles': 1,
-                        'type': 'upload-drop-zone',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'uploaded',
+              'event': 'UPLOAD_CSV',
               'effects': [
                 [
                   'set',
@@ -920,27 +896,27 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'create',
                   ('ImportBatch' satisfies _StdDataImportEntityName),
                   {
-                    'createdAt': '@entity.createdAt',
-                    'errorCount': 0,
-                    'id': '@entity.id',
-                    'mappingJson': '@entity.mappingJson',
-                    'rowCount': 0,
                     'sourceName': '@entity.sourceName',
+                    'id': '@entity.id',
+                    'errorCount': 0,
+                    'createdAt': '@entity.createdAt',
+                    'rowCount': 0,
                     'status': 'uploaded',
+                    'mappingJson': '@entity.mappingJson',
                   },
                   {
                     'emit': {
-                      'failure': 'IMPORT_PERSIST_FAILED',
                       'success': 'BATCH_CREATED',
+                      'failure': 'IMPORT_PERSIST_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'UPLOAD_CSV',
-              'from': 'idle',
-              'to': 'uploaded',
             },
             {
+              'from': 'uploaded',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -978,35 +954,35 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   {
                     'children': [
                       {
+                        'type': 'typography',
                         'content': [
                           'str/concat',
                           'Import ',
                           '@entity.sourceName',
                         ],
-                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
-                        'accept': '.csv,text/csv',
-                        'action': 'UPLOAD_CSV',
-                        'description': 'Drop a CSV file here or click to browse',
                         'icon': 'upload',
-                        'label': 'Upload CSV file',
+                        'action': 'UPLOAD_CSV',
                         'maxFiles': 1,
+                        'label': 'Upload CSV file',
+                        'accept': '.csv,text/csv',
                         'type': 'upload-drop-zone',
+                        'description': 'Drop a CSV file here or click to browse',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'uploaded',
-              'to': 'idle',
             },
             {
+              'from': 'uploaded',
+              'to': 'uploaded',
+              'event': 'BATCH_CREATED',
               'effects': [
                 [
                   'set',
@@ -1017,22 +993,30 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'render-ui',
                   'main',
                   {
+                    'variant': 'info',
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Import started — ',
                       '@entity.sourceName',
                       '. Waiting for the file\'s rows to be staged.',
                     ],
-                    'type': 'alert',
-                    'variant': 'info',
                   },
                 ],
               ],
-              'event': 'BATCH_CREATED',
-              'from': 'uploaded',
-              'to': 'uploaded',
             },
             {
+              'from': 'uploaded',
+              'to': 'staged',
+              'event': 'STAGE_ROWS',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.rows',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'set',
@@ -1067,16 +1051,16 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                       'fn',
                       'r',
                       {
-                        'batchId': '@entity.id',
-                        'rowJson': '@r',
                         'status': 'staged',
+                        'rowJson': '@r',
+                        'batchId': '@entity.id',
                       },
                     ],
                   ],
                   {
                     'emit': {
-                      'failure': 'IMPORT_PERSIST_FAILED',
                       'success': 'ROWS_STAGED',
+                      'failure': 'IMPORT_PERSIST_FAILED',
                     },
                   },
                 ],
@@ -1085,75 +1069,75 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'update',
                   ('ImportBatch' satisfies _StdDataImportEntityName),
                   {
-                    'errorCount': '@entity.errorCount',
-                    'id': '@entity.id',
                     'rowCount': '@entity.rowCount',
                     'status': 'staged',
+                    'id': '@entity.id',
+                    'errorCount': '@entity.errorCount',
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
+                        'variant': 'h3',
+                        'type': 'typography',
                         'content': [
                           'str/concat',
                           'Review staged import — ',
                           '@entity.sourceName',
                         ],
-                        'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
                         'label': 'Rows staged',
-                        'type': 'stat-display',
                         'value': '@entity.rowCount',
+                        'type': 'stat-display',
                       },
                       {
+                        'value': '@entity.errorCount',
                         'label': 'Rows with errors',
                         'type': 'stat-display',
-                        'value': '@entity.errorCount',
                       },
                       {
-                        'children': [
-                          {
-                            'action': 'CONFIRM_IMPORT',
-                            'label': 'Confirm import',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
-                          {
-                            'action': 'DISCARD_IMPORT',
-                            'label': 'Discard',
-                            'type': 'button',
-                            'variant': 'ghost',
-                          },
-                        ],
                         'direction': 'horizontal',
                         'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'variant': 'primary',
+                            'action': 'CONFIRM_IMPORT',
+                            'label': 'Confirm import',
+                          },
+                          {
+                            'type': 'button',
+                            'label': 'Discard',
+                            'variant': 'ghost',
+                            'action': 'DISCARD_IMPORT',
+                          },
+                        ],
                         'type': 'stack',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'STAGE_ROWS',
+            },
+            {
               'from': 'uploaded',
+              'to': 'failed',
+              'event': 'STAGE_ROWS',
               'guard': [
-                '>',
+                '<',
                 [
                   'array/len',
                   '@payload.rows',
                 ],
-                0,
+                1,
               ],
-              'to': 'staged',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -1187,19 +1171,11 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   },
                 ],
               ],
-              'event': 'STAGE_ROWS',
-              'from': 'uploaded',
-              'guard': [
-                '<',
-                [
-                  'array/len',
-                  '@payload.rows',
-                ],
-                1,
-              ],
-              'to': 'failed',
             },
             {
+              'from': 'uploaded',
+              'to': 'uploaded',
+              'event': 'IMPORT_PERSIST_FAILED',
               'effects': [
                 [
                   'set',
@@ -1216,34 +1192,34 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'update',
                   ('ImportBatch' satisfies _StdDataImportEntityName),
                   {
-                    'errorCount': 1,
                     'id': '@entity.id',
                     'status': 'failed',
+                    'errorCount': 1,
                   },
                 ],
                 [
                   'emit',
                   'IMPORT_FAILED',
                   {
-                    'batchId': '@entity.id',
                     'error': '@payload.error',
+                    'batchId': '@entity.id',
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
+                    'message': '@payload.error',
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'IMPORT_PERSIST_FAILED',
-              'from': 'uploaded',
-              'to': 'uploaded',
             },
             {
+              'from': 'uploaded',
+              'to': 'idle',
+              'event': 'DISCARD_IMPORT',
               'effects': [
                 [
                   'set',
@@ -1261,11 +1237,11 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   0,
                 ],
               ],
-              'event': 'DISCARD_IMPORT',
-              'from': 'uploaded',
-              'to': 'idle',
             },
             {
+              'from': 'staged',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1301,6 +1277,8 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'content': [
@@ -1308,35 +1286,33 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                           'Import ',
                           '@entity.sourceName',
                         ],
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                       },
                       {
+                        'icon': 'upload',
                         'accept': '.csv,text/csv',
                         'action': 'UPLOAD_CSV',
-                        'description': 'Drop a CSV file here or click to browse',
-                        'icon': 'upload',
                         'label': 'Upload CSV file',
-                        'maxFiles': 1,
                         'type': 'upload-drop-zone',
+                        'maxFiles': 1,
+                        'description': 'Drop a CSV file here or click to browse',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'staged',
-              'to': 'idle',
             },
             {
-              'event': 'ROWS_STAGED',
               'from': 'staged',
               'to': 'staged',
+              'event': 'ROWS_STAGED',
             },
             {
+              'from': 'staged',
+              'to': 'confirmed',
+              'event': 'CONFIRM_IMPORT',
               'effects': [
                 [
                   'set',
@@ -1348,25 +1324,25 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'update',
                   ('ImportBatch' satisfies _StdDataImportEntityName),
                   {
-                    'id': '@entity.id',
                     'status': 'confirmed',
+                    'id': '@entity.id',
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': 'Import confirmed — staged rows are ready for mapping.',
-                    'type': 'alert',
                     'variant': 'success',
+                    'type': 'alert',
+                    'message': 'Import confirmed — staged rows are ready for mapping.',
                   },
                 ],
                 [
                   'emit',
                   'IMPORT_CONFIRMED',
                   {
-                    'batchId': '@entity.id',
                     'rowCount': '@entity.rowCount',
+                    'batchId': '@entity.id',
                     'sourceName': '@entity.sourceName',
                   },
                 ],
@@ -1381,11 +1357,11 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   },
                 ],
               ],
-              'event': 'CONFIRM_IMPORT',
-              'from': 'staged',
-              'to': 'confirmed',
             },
             {
+              'from': 'staged',
+              'to': 'staged',
+              'event': 'IMPORT_PERSIST_FAILED',
               'effects': [
                 [
                   'set',
@@ -1402,9 +1378,9 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'update',
                   ('ImportBatch' satisfies _StdDataImportEntityName),
                   {
-                    'errorCount': 1,
                     'id': '@entity.id',
                     'status': 'failed',
+                    'errorCount': 1,
                   },
                 ],
                 [
@@ -1419,17 +1395,17 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'render-ui',
                   'main',
                   {
+                    'variant': 'error',
                     'message': '@payload.error',
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'IMPORT_PERSIST_FAILED',
-              'from': 'staged',
-              'to': 'staged',
             },
             {
+              'from': 'staged',
+              'to': 'idle',
+              'event': 'DISCARD_IMPORT',
               'effects': [
                 [
                   'set',
@@ -1452,11 +1428,11 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   null,
                 ],
               ],
-              'event': 'DISCARD_IMPORT',
-              'from': 'staged',
-              'to': 'idle',
             },
             {
+              'from': 'confirmed',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1492,80 +1468,44 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'variant': 'h3',
                         'content': [
                           'str/concat',
                           'Import ',
                           '@entity.sourceName',
                         ],
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
-                        'accept': '.csv,text/csv',
-                        'action': 'UPLOAD_CSV',
+                        'label': 'Upload CSV file',
+                        'type': 'upload-drop-zone',
                         'description': 'Drop a CSV file here or click to browse',
                         'icon': 'upload',
-                        'label': 'Upload CSV file',
                         'maxFiles': 1,
-                        'type': 'upload-drop-zone',
+                        'accept': '.csv,text/csv',
+                        'action': 'UPLOAD_CSV',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'confirmed',
-              'to': 'idle',
             },
             {
+              'from': 'confirmed',
+              'to': 'confirmed',
+              'event': 'IMPORT_ROWS_FETCHED',
               'effects': [
                 [
                   'emit',
                   'IMPORT_ROWS_PARSED',
                   {
                     'batchId': '@entity.id',
-                    'failed': [
-                      'array/len',
-                      [
-                        'array/filter',
-                        '@payload.data',
-                        [
-                          'fn',
-                          'row',
-                          [
-                            'and',
-                            [
-                              '=',
-                              [
-                                'object/get',
-                                '@row',
-                                'batchId',
-                              ],
-                              '@entity.id',
-                            ],
-                            [
-                              'not',
-                              [
-                                'validate/object',
-                                [
-                                  'json/parse',
-                                  [
-                                    'object/get',
-                                    '@row',
-                                    'rowJson',
-                                  ],
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                      ],
-                    ],
+                    'targetEntity': '@config.targetEntity',
                     'rows': [
                       'array/map',
                       [
@@ -1639,15 +1579,51 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                         ],
                       ],
                     ],
-                    'targetEntity': '@config.targetEntity',
+                    'failed': [
+                      'array/len',
+                      [
+                        'array/filter',
+                        '@payload.data',
+                        [
+                          'fn',
+                          'row',
+                          [
+                            'and',
+                            [
+                              '=',
+                              [
+                                'object/get',
+                                '@row',
+                                'batchId',
+                              ],
+                              '@entity.id',
+                            ],
+                            [
+                              'not',
+                              [
+                                'validate/object',
+                                [
+                                  'json/parse',
+                                  [
+                                    'object/get',
+                                    '@row',
+                                    'rowJson',
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
                   },
                 ],
               ],
-              'event': 'IMPORT_ROWS_FETCHED',
-              'from': 'confirmed',
-              'to': 'confirmed',
             },
             {
+              'from': 'confirmed',
+              'to': 'confirmed',
+              'event': 'IMPORT_PERSIST_FAILED',
               'effects': [
                 [
                   'set',
@@ -1664,34 +1640,34 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'update',
                   ('ImportBatch' satisfies _StdDataImportEntityName),
                   {
-                    'errorCount': 1,
-                    'id': '@entity.id',
                     'status': 'failed',
+                    'id': '@entity.id',
+                    'errorCount': 1,
                   },
                 ],
                 [
                   'emit',
                   'IMPORT_FAILED',
                   {
-                    'batchId': '@entity.id',
                     'error': '@payload.error',
+                    'batchId': '@entity.id',
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
                     'variant': 'error',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'IMPORT_PERSIST_FAILED',
-              'from': 'confirmed',
-              'to': 'confirmed',
             },
             {
+              'from': 'confirmed',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -1714,21 +1690,21 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   null,
                 ],
               ],
-              'event': 'RESET',
-              'from': 'confirmed',
-              'to': 'idle',
             },
             {
+              'from': 'confirmed',
+              'to': 'confirmed',
               'event': 'IMPORT_CONFIRMED',
-              'from': 'confirmed',
-              'to': 'confirmed',
             },
             {
+              'from': 'confirmed',
+              'to': 'confirmed',
               'event': 'IMPORT_ROWS_PARSED',
-              'from': 'confirmed',
-              'to': 'confirmed',
             },
             {
+              'from': 'failed',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1764,37 +1740,37 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'variant': 'h3',
                         'content': [
                           'str/concat',
                           'Import ',
                           '@entity.sourceName',
                         ],
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
-                        'accept': '.csv,text/csv',
-                        'action': 'UPLOAD_CSV',
                         'description': 'Drop a CSV file here or click to browse',
+                        'accept': '.csv,text/csv',
                         'icon': 'upload',
-                        'label': 'Upload CSV file',
                         'maxFiles': 1,
                         'type': 'upload-drop-zone',
+                        'label': 'Upload CSV file',
+                        'action': 'UPLOAD_CSV',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'failed',
-              'to': 'idle',
             },
             {
+              'from': 'failed',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -1817,17 +1793,41 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   null,
                 ],
               ],
-              'event': 'RESET',
-              'from': 'failed',
-              'to': 'idle',
             },
             {
-              'event': 'IMPORT_FAILED',
               'from': 'failed',
               'to': 'failed',
+              'event': 'IMPORT_FAILED',
             },
           ],
         },
+        'config': {
+          'sourceName': {
+            'type': 'string',
+            'default': '',
+            'label': 'Source name',
+            'description': 'Free-form name of the upstream source this import pulls from — whatever tool or file export the user names. Recorded on the batch row for provenance and echoed on IMPORT_CONFIRMED.',
+            'synonyms': 'source, origin, import from, provider name, data source',
+            'tier': 'domain',
+          },
+          'targetEntity': {
+            'type': 'string',
+            'default': '',
+            'label': 'Target entity',
+            'description': 'Name of the consumer organism\'s entity the staged rows land in after confirm. Carried on IMPORT_ROWS_PARSED so the consumer\'s persist half knows where the mapped rows belong — the atom never writes the target entity itself.',
+            'synonyms': 'destination, import into, target type',
+            'tier': 'domain',
+          },
+          'fieldMappingJson': {
+            'type': 'string',
+            'default': '{}',
+            'label': 'Field mapping (JSON)',
+            'description': 'JSON object mapping source CSV column names to target field names. Stored verbatim on the batch row (mappingJson); the atom applies it when it parses staged rows into IMPORT_ROWS_PARSED, so the consumer persists already-mapped rows into the target entity.',
+            'synonyms': 'field mapping, column mapping, map columns, remap fields, csv columns',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

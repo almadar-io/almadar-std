@@ -59,10 +59,10 @@ export interface StdChoiceGateChoiceWrongPayload {
  * without modifying its state-machine topology.
  */
 export interface StdChoiceGateConfig {
-  /** Default: `[]` */
-  gates?: EntityRow[];
   /** Default: `0.7` */
   reachX?: number;
+  /** Default: `[]` */
+  gates?: EntityRow[];
   /** Default: `1.2` */
   reachY?: number;
   /** Default: `true` */

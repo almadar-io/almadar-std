@@ -301,28 +301,28 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
     name: 'GalleryItemOrbital',
     uses: [
       {
-        'as': 'Spinner',
         'from': 'std/behaviors/ui-spinner',
+        'as': 'Spinner',
       },
       {
-        'as': 'Typography',
         'from': 'std/behaviors/ui-typography',
+        'as': 'Typography',
       },
       {
-        'as': 'Icon',
         'from': 'std/behaviors/ui-icon',
+        'as': 'Icon',
       },
       {
-        'as': 'Divider',
         'from': 'std/behaviors/ui-divider',
+        'as': 'Divider',
       },
       {
-        'as': 'MediaGallery',
         'from': 'std/behaviors/ui-media-gallery',
+        'as': 'MediaGallery',
       },
       {
-        'as': 'Alert',
         'from': 'std/behaviors/ui-alert',
+        'as': 'Alert',
       },
     ],
     entity: {
@@ -334,44 +334,44 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'A user-friendly identifier for the item.',
             'name': 'name',
+            'type': 'string',
             'required': true,
+            'description': 'A user-friendly identifier for the item.',
             'synonyms': 'title, label, identifier',
-            'type': 'string',
           },
           {
-            'description': 'A brief textual summary of the item\'s content.',
             'name': 'description',
-            'synonyms': 'caption, summary, details, notes',
             'type': 'string',
+            'description': 'A brief textual summary of the item\'s content.',
+            'synonyms': 'caption, summary, details, notes',
           },
           {
-            'default': 'active',
-            'description': 'Indicates the current state of the item.',
             'name': 'status',
-            'synonyms': 'state, condition, flag',
             'type': 'string',
+            'default': 'active',
             'values': [
               'active',
               'inactive',
               'pending',
             ],
+            'description': 'Indicates the current state of the item.',
+            'synonyms': 'state, condition, flag',
           },
           {
             'name': 'createdAt',
             'type': 'string',
           },
           {
+            'name': 'imageUrl',
+            'type': 'image',
             'default': 'https://picsum.photos/seed/gallery/800/600',
             'description': 'The URL pointing to the image resource.',
-            'name': 'imageUrl',
             'synonyms': 'image, src, path',
-            'type': 'image',
           },
         ];
         const extras = params.fields ?? [];
@@ -382,210 +382,112 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
     } as Entity,
     traits: [
       makeTraitRef({
-        'linkedEntity': 'GalleryItem',
-        'name': 'LoadingSpinner',
         'ref': ('Spinner.traits.SpinnerRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+        'name': 'LoadingSpinner',
+        'linkedEntity': 'GalleryItem',
       }),
       makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+        'name': 'LoadingCaption',
+        'linkedEntity': 'GalleryItem',
         'config': {
           'color': {
+            'type': 'unknown',
             'default': 'muted',
-            'type': 'unknown',
-          },
-          'content': {
-            'default': 'Loading gallery…',
-            'type': 'unknown',
           },
           'variant': {
-            'default': 'caption',
             'type': 'unknown',
+            'default': 'caption',
+          },
+          'content': {
+            'type': 'unknown',
+            'default': 'Loading gallery…',
           },
         },
-        'linkedEntity': 'GalleryItem',
-        'name': 'LoadingCaption',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Icon.traits.IconRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+        'name': 'GalleryIcon',
+        'linkedEntity': 'GalleryItem',
         'config': {
           'name': {
-            'default': 'image',
             'type': 'unknown',
+            'default': 'image',
           },
         },
-        'linkedEntity': 'GalleryItem',
-        'name': 'GalleryIcon',
-        'ref': ('Icon.traits.IconRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
       }),
       makeTraitRef({
-        'linkedEntity': 'GalleryItem',
-        'name': 'TitleDivider',
         'ref': ('Divider.traits.DividerRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
-      }),
-      makeTraitRef({
+        'name': 'TitleDivider',
         'linkedEntity': 'GalleryItem',
-        'name': 'MediaGalleryGrid',
-        'ref': ('MediaGallery.traits.MediaGalleryRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('MediaGallery.traits.MediaGalleryRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+        'name': 'MediaGalleryGrid',
+        'linkedEntity': 'GalleryItem',
+      }),
+      makeTraitRef({
+        'ref': ('Alert.traits.AlertRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+        'name': 'ErrorAlert',
+        'linkedEntity': 'GalleryItem',
         'config': {
           'message': {
-            'default': 'Failed to load gallery items',
             'type': 'unknown',
+            'default': 'Failed to load gallery items',
           },
           'variant': {
-            'default': 'error',
             'type': 'unknown',
+            'default': 'error',
           },
         },
-        'linkedEntity': 'GalleryItem',
-        'name': 'ErrorAlert',
-        'ref': ('Alert.traits.AlertRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+        'name': 'ReloadSpinner',
+        'linkedEntity': 'GalleryItem',
         'config': {
           'size': {
-            'default': 'sm',
             'type': 'unknown',
+            'default': 'sm',
           },
         },
-        'linkedEntity': 'GalleryItem',
-        'name': 'ReloadSpinner',
-        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+        'name': 'ReloadCaption',
+        'linkedEntity': 'GalleryItem',
         'config': {
-          'color': {
-            'default': 'muted',
+          'variant': {
             'type': 'unknown',
+            'default': 'caption',
           },
           'content': {
+            'type': 'unknown',
             'default': 'Loading gallery…',
-            'type': 'unknown',
           },
-          'variant': {
-            'default': 'caption',
+          'color': {
             'type': 'unknown',
+            'default': 'muted',
           },
         },
-        'linkedEntity': 'GalleryItem',
-        'name': 'ReloadCaption',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
+        'name': 'RetrySpinner',
+        'linkedEntity': 'GalleryItem',
         'config': {
           'size': {
-            'default': 'sm',
             'type': 'unknown',
+            'default': 'sm',
           },
         },
-        'linkedEntity': 'GalleryItem',
-        'name': 'RetrySpinner',
-        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdGalleryGalleryItemOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'bodySearch': {
-            'default': false,
-            'description': 'Embeds a search box above the gallery grid. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.',
-            'label': 'Show the gallery\'s own search box?',
-            'synonyms': 'inline search, list search, built-in search, show search, duplicate search',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'filterBarLook': {
-            'default': 'toolbar',
-            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
-            'label': 'Filter bar look',
-            'synonyms': 'filter bar style, facet style, chips, pills',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'toolbar',
-              'chips',
-              'pills',
-              'popover-trigger',
-              'inline-column-header',
-            ],
-          },
-          'filters': {
-            'default': [],
-            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the grid; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this gallery and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path. Use this knob only for a standalone gallery with no page-level filter affordance.',
-            'items': {
-              'properties': {
-                'field': {
-                  'name': 'field',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'options': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'options',
-                  'required': false,
-                  'type': 'array',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Which filters should appear above the gallery?',
-            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
-            'tier': 'presentation',
-            'type': '[FilterSpec]',
-          },
-          'imageField': {
-            'default': 'imageUrl',
-            'description': 'Entity field holding the image URL shown in the lightbox for the selected item',
-            'label': 'Image field',
-            'synonyms': 'image url field, thumbnail field, src field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'nameField': {
-            'default': 'name',
-            'description': 'Entity field providing the lightbox alt text and caption for the selected item',
-            'label': 'Name field',
-            'synonyms': 'title field, label field',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'pageSize': {
-            'default': 20,
-            'description': 'Records fetched from the server when REFETCH_PAGE fires (a composed std-pagination driving this trait). The initial load and revisit fetches stay unpaged (whole collection), unchanged from before this knob existed.',
-            'label': 'How many images to fetch per page?',
-            'synonyms': 'fetch limit, records per page, batch size, page limit',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'searchField': {
-            'default': 'name',
-            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, caption) or the search box can never match a row.',
-            'label': 'Which column does the search box match against?',
-            'synonyms': 'search column, search on field, match field, search key',
-            'tier': 'policy',
-            'type': 'string',
-          },
-          'searchPlaceholder': {
-            'default': 'Search…',
-            'description': 'Hint text inside the gallery search box (e.g. \'Search photos…\').',
-            'label': 'Search box placeholder text',
-            'synonyms': 'search hint, placeholder, search box text, search label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'title': {
-            'default': 'Gallery',
-            'description': 'Heading shown above the image gallery',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'GalleryItemGallery',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -609,29 +511,35 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
             'resource': '@entity.id',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'GalleryItem',
         'emits': [
           {
-            'description': 'Signals an item has been selected for viewing.',
             'event': 'VIEW',
+            'description': 'Signals an item has been selected for viewing.',
+            'synonyms': 'select, choose, display',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'GalleryItem',
                 'name': 'row',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'name',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'description',
@@ -655,63 +563,61 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                     'type': 'image',
                   },
                 ],
-                'required': true,
-                'type': 'object',
+                'entity': 'GalleryItem',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'select, choose, display',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a GalleryItem has finished loading.',
             'event': 'GalleryItemLoaded',
-            'payloadSchema': [
-              {
-                'entity': 'GalleryItem',
-                'name': 'data',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'name',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'description',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'status',
-                    'type': 'string',
-                    'values': [
-                      'active',
-                      'inactive',
-                      'pending',
-                    ],
-                  },
-                  {
-                    'name': 'createdAt',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'imageUrl',
-                    'type': 'image',
-                  },
-                ],
-                'type': '[object]',
-              },
-            ],
+            'description': 'Indicates a GalleryItem has finished loading.',
             'synonyms': 'loaded, ready, available',
             'tier': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[object]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                    'values': [
+                      'active',
+                      'inactive',
+                      'pending',
+                    ],
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'imageUrl',
+                    'type': 'image',
+                  },
+                ],
+                'entity': 'GalleryItem',
+              },
+            ],
           },
           {
-            'description': 'Indicates a GalleryItem failed to load.',
             'event': 'GalleryItemLoadFailed',
+            'description': 'Indicates a GalleryItem failed to load.',
+            'synonyms': 'error, failure, problem, load error',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -722,209 +628,13 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure, problem, load error',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'GalleryItem',
-        'name': 'GalleryItemGallery',
-        'scope': 'collection',
         'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Indicates a GalleryItem has finished loading.',
-              'key': 'GalleryItemLoaded',
-              'name': 'GalleryItem loaded',
-              'payloadSchema': [
-                {
-                  'entity': 'GalleryItem',
-                  'name': 'data',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'name',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'description',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'status',
-                      'type': 'string',
-                      'values': [
-                        'active',
-                        'inactive',
-                        'pending',
-                      ],
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'imageUrl',
-                      'type': 'image',
-                    },
-                  ],
-                  'type': '[object]',
-                },
-              ],
-              'synonyms': 'loaded, ready, available',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Indicates a GalleryItem failed to load.',
-              'key': 'GalleryItemLoadFailed',
-              'name': 'GalleryItem load failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'error, failure, problem, load error',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Triggers a gallery refresh based on the current search query.',
-              'key': 'REFETCH_QUERY',
-              'name': 'Refetch Query',
-              'payloadSchema': [
-                {
-                  'name': 'searchTerm',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'refresh, reload, update, re-query',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Triggers a gallery refresh based on current filter criteria.',
-              'key': 'REFETCH_FILTER',
-              'name': 'Refetch Filter',
-              'payloadSchema': [
-                {
-                  'name': 'entity',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'field',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'value',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'query',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'refresh, filter, update, reload',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Triggers a gallery page refresh.',
-              'key': 'REFETCH_PAGE',
-              'name': 'Refetch Page',
-              'payloadSchema': [
-                {
-                  'name': 'page',
-                  'required': true,
-                  'type': 'number',
-                },
-              ],
-              'synonyms': 'reload, refresh, update, paginate',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Signals an item has been selected for viewing.',
-              'key': 'VIEW',
-              'name': 'View',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'GalleryItem',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'name',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'description',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'status',
-                      'type': 'string',
-                      'values': [
-                        'active',
-                        'inactive',
-                        'pending',
-                      ],
-                    },
-                    {
-                      'name': 'createdAt',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'imageUrl',
-                      'type': 'image',
-                    },
-                  ],
-                  'required': true,
-                  'type': 'object',
-                },
-              ],
-              'synonyms': 'select, choose, display',
-              'tier': 'domain',
-            },
-            {
-              'description': 'Indicates the gallery or lightbox has been dismissed.',
-              'key': 'CLOSE',
-              'name': 'Close',
-              'synonyms': 'dismiss, hide, close, cancel',
-              'tier': 'domain',
-            },
-          ],
           'states': [
             {
-              'isInitial': true,
               'name': 'loading',
+              'isInitial': true,
             },
             {
               'name': 'browsing',
@@ -936,8 +646,197 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
               'name': 'error',
             },
           ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'GalleryItemLoaded',
+              'name': 'GalleryItem loaded',
+              'description': 'Indicates a GalleryItem has finished loading.',
+              'synonyms': 'loaded, ready, available',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[object]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'imageUrl',
+                      'type': 'image',
+                    },
+                  ],
+                  'entity': 'GalleryItem',
+                },
+              ],
+            },
+            {
+              'key': 'GalleryItemLoadFailed',
+              'name': 'GalleryItem load failed',
+              'description': 'Indicates a GalleryItem failed to load.',
+              'synonyms': 'error, failure, problem, load error',
+              'tier': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'REFETCH_QUERY',
+              'name': 'Refetch Query',
+              'description': 'Triggers a gallery refresh based on the current search query.',
+              'synonyms': 'refresh, reload, update, re-query',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'searchTerm',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'REFETCH_FILTER',
+              'name': 'Refetch Filter',
+              'description': 'Triggers a gallery refresh based on current filter criteria.',
+              'synonyms': 'refresh, filter, update, reload',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'entity',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'value',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'query',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'REFETCH_PAGE',
+              'name': 'Refetch Page',
+              'description': 'Triggers a gallery page refresh.',
+              'synonyms': 'reload, refresh, update, paginate',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'page',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'description': 'Signals an item has been selected for viewing.',
+              'synonyms': 'select, choose, display',
+              'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'required': true,
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'active',
+                        'inactive',
+                        'pending',
+                      ],
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'imageUrl',
+                      'type': 'image',
+                    },
+                  ],
+                  'entity': 'GalleryItem',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+              'description': 'Indicates the gallery or lightbox has been dismissed.',
+              'synonyms': 'dismiss, hide, close, cancel',
+              'tier': 'domain',
+            },
+          ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -953,41 +852,44 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'className': 'py-12',
                     'align': 'center',
                     'children': [
                       '@trait.LoadingSpinner',
                       '@trait.LoadingCaption',
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'GalleryItemLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
+                        'gap': 'sm',
                         'children': [
                           '@trait.GalleryIcon',
                           {
-                            'content': '@config.title',
                             'type': 'typography',
+                            'content': '@config.title',
                             'variant': 'h3',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
+                        'align': 'center',
                         'type': 'stack',
                       },
                       '@trait.TitleDivider',
@@ -999,13 +901,13 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                             {
                               'className': 'w-full max-w-md',
                               'clearable': true,
-                              'event': 'REFETCH_QUERY',
                               'placeholder': '@config.searchPlaceholder',
+                              'event': 'REFETCH_QUERY',
                               'type': 'search-input',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
+                          'direction': 'horizontal',
                           'type': 'stack',
                         },
                         {
@@ -1025,72 +927,52 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                           0,
                         ],
                         {
+                          'gap': 'sm',
                           'children': [
                             {
-                              'entity': 'GalleryItem',
                               'event': 'REFETCH_FILTER',
-                              'filters': '@config.filters',
                               'look': '@config.filterBarLook',
                               'type': 'filter-group',
+                              'entity': 'GalleryItem',
+                              'filters': '@config.filters',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
-                          'children': [],
                           'gap': 'none',
                           'type': 'stack',
+                          'children': [],
                         },
                       ],
                       '@trait.MediaGalleryGrid',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'GalleryItemLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'GalleryItemLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'box',
                     'children': [
                       '@trait.ErrorAlert',
                     ],
-                    'type': 'box',
                   },
                 ],
               ],
-              'event': 'GalleryItemLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('GalleryItem' satisfies _StdGalleryEntityName),
-                  {
-                    'emit': {
-                      'failure': 'GalleryItemLoadFailed',
-                      'success': 'GalleryItemLoaded',
-                    },
-                  },
-                ],
-              ],
-              'event': 'INIT',
               'from': 'browsing',
               'to': 'loading',
-            },
-            {
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1100,6 +982,25 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                       'failure': 'GalleryItemLoadFailed',
                       'success': 'GalleryItemLoaded',
                     },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'REFETCH_QUERY',
+              'effects': [
+                [
+                  'fetch',
+                  ('GalleryItem' satisfies _StdGalleryEntityName),
+                  {
+                    'offset': 0,
+                    'emit': {
+                      'success': 'GalleryItemLoaded',
+                      'failure': 'GalleryItemLoadFailed',
+                    },
+                    'limit': '@config.pageSize',
                     'filter': [
                       'or',
                       [
@@ -1117,25 +1018,20 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                         '@payload.searchTerm',
                       ],
                     ],
-                    'limit': '@config.pageSize',
-                    'offset': 0,
                   },
                 ],
               ],
-              'event': 'REFETCH_QUERY',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'REFETCH_FILTER',
               'effects': [
                 [
                   'fetch',
                   ('GalleryItem' satisfies _StdGalleryEntityName),
                   {
-                    'emit': {
-                      'failure': 'GalleryItemLoadFailed',
-                      'success': 'GalleryItemLoaded',
-                    },
+                    'offset': 0,
                     'filter': [
                       'or',
                       [
@@ -1154,25 +1050,23 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                       ],
                     ],
                     'limit': '@config.pageSize',
-                    'offset': 0,
+                    'emit': {
+                      'success': 'GalleryItemLoaded',
+                      'failure': 'GalleryItemLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'REFETCH_FILTER',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'REFETCH_PAGE',
               'effects': [
                 [
                   'fetch',
                   ('GalleryItem' satisfies _StdGalleryEntityName),
                   {
-                    'emit': {
-                      'failure': 'GalleryItemLoadFailed',
-                      'success': 'GalleryItemLoaded',
-                    },
-                    'limit': '@config.pageSize',
                     'offset': [
                       '*',
                       [
@@ -1182,54 +1076,62 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                       ],
                       '@config.pageSize',
                     ],
+                    'emit': {
+                      'success': 'GalleryItemLoaded',
+                      'failure': 'GalleryItemLoadFailed',
+                    },
+                    'limit': '@config.pageSize',
                   },
                 ],
               ],
-              'event': 'REFETCH_PAGE',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'GalleryItemLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t refresh the gallery — ',
                       '@payload.error',
                     ],
                     'type': 'alert',
-                    'variant': 'error',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'GalleryItemLoadFailed',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'GalleryItemLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                         'align': 'center',
+                        'type': 'stack',
                         'children': [
                           '@trait.GalleryIcon',
                           {
                             'content': '@config.title',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                       '@trait.TitleDivider',
                       [
@@ -1238,15 +1140,15 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                         {
                           'children': [
                             {
-                              'className': 'w-full max-w-md',
+                              'placeholder': '@config.searchPlaceholder',
                               'clearable': true,
                               'event': 'REFETCH_QUERY',
-                              'placeholder': '@config.searchPlaceholder',
                               'type': 'search-input',
+                              'className': 'w-full max-w-md',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
+                          'direction': 'horizontal',
                           'type': 'stack',
                         },
                         {
@@ -1266,38 +1168,35 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                           0,
                         ],
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'entity': 'GalleryItem',
-                              'event': 'REFETCH_FILTER',
-                              'filters': '@config.filters',
-                              'look': '@config.filterBarLook',
                               'type': 'filter-group',
+                              'event': 'REFETCH_FILTER',
+                              'look': '@config.filterBarLook',
+                              'entity': 'GalleryItem',
+                              'filters': '@config.filters',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
-                          'children': [],
                           'gap': 'none',
+                          'children': [],
                           'type': 'stack',
                         },
                       ],
                       '@trait.MediaGalleryGrid',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'GalleryItemLoaded',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'viewing',
+              'event': 'VIEW',
               'effects': [
                 [
                   'set',
@@ -1311,15 +1210,10 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                     'children': [
                       {
                         'closeAction': 'CLOSE',
-                        'currentIndex': 0,
+                        'type': 'lightbox',
                         'images': [
                           {
                             'alt': [
-                              'object/get',
-                              '@payload.row',
-                              '@config.nameField',
-                            ],
-                            'caption': [
                               'object/get',
                               '@payload.row',
                               '@config.nameField',
@@ -1329,59 +1223,27 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                               '@payload.row',
                               '@config.imageField',
                             ],
+                            'caption': [
+                              'object/get',
+                              '@payload.row',
+                              '@config.nameField',
+                            ],
                           },
                         ],
                         'isOpen': true,
                         'showCounter': true,
-                        'type': 'lightbox',
+                        'currentIndex': 0,
                       },
                     ],
                     'type': 'box',
                   },
                 ],
               ],
-              'event': 'VIEW',
-              'from': 'browsing',
-              'to': 'viewing',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'modal',
-                  null,
-                ],
-                [
-                  'fetch',
-                  ('GalleryItem' satisfies _StdGalleryEntityName),
-                  {
-                    'emit': {
-                      'failure': 'GalleryItemLoadFailed',
-                      'success': 'GalleryItemLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'align': 'center',
-                    'children': [
-                      '@trait.ReloadSpinner',
-                      '@trait.ReloadCaption',
-                    ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
-                  },
-                ],
-              ],
+              'from': 'viewing',
+              'to': 'loading',
               'event': 'INIT',
-              'from': 'viewing',
-              'to': 'loading',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
@@ -1402,31 +1264,36 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       '@trait.ReloadSpinner',
                       '@trait.ReloadCaption',
                     ],
+                    'align': 'center',
                     'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'viewing',
-              'to': 'loading',
             },
             {
+              'from': 'viewing',
+              'to': 'loading',
+              'event': 'CLOSE',
               'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
                 [
                   'fetch',
                   ('GalleryItem' satisfies _StdGalleryEntityName),
                   {
                     'emit': {
-                      'failure': 'GalleryItemLoadFailed',
                       'success': 'GalleryItemLoaded',
+                      'failure': 'GalleryItemLoadFailed',
                     },
                   },
                 ],
@@ -1434,23 +1301,156 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                   'render-ui',
                   'main',
                   {
+                    'className': 'py-12',
+                    'gap': 'md',
+                    'children': [
+                      '@trait.ReloadSpinner',
+                      '@trait.ReloadCaption',
+                    ],
                     'align': 'center',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  ('GalleryItem' satisfies _StdGalleryEntityName),
+                  {
+                    'emit': {
+                      'success': 'GalleryItemLoaded',
+                      'failure': 'GalleryItemLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'className': 'py-12',
                     'children': [
                       '@trait.RetrySpinner',
                     ],
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'title': {
+            'type': 'string',
+            'default': 'Gallery',
+            'label': 'Section title',
+            'description': 'Heading shown above the image gallery',
+            'tier': 'presentation',
+          },
+          'nameField': {
+            'type': 'string',
+            'default': 'name',
+            'label': 'Name field',
+            'description': 'Entity field providing the lightbox alt text and caption for the selected item',
+            'synonyms': 'title field, label field',
+            'tier': 'presentation',
+          },
+          'imageField': {
+            'type': 'string',
+            'default': 'imageUrl',
+            'label': 'Image field',
+            'description': 'Entity field holding the image URL shown in the lightbox for the selected item',
+            'synonyms': 'image url field, thumbnail field, src field',
+            'tier': 'presentation',
+          },
+          'bodySearch': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Show the gallery\'s own search box?',
+            'description': 'Embeds a search box above the gallery grid. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.',
+            'synonyms': 'inline search, list search, built-in search, show search, duplicate search',
+            'tier': 'presentation',
+          },
+          'searchPlaceholder': {
+            'type': 'string',
+            'default': 'Search…',
+            'label': 'Search box placeholder text',
+            'description': 'Hint text inside the gallery search box (e.g. \'Search photos…\').',
+            'synonyms': 'search hint, placeholder, search box text, search label',
+            'tier': 'presentation',
+          },
+          'filters': {
+            'type': '[FilterSpec]',
+            'default': [],
+            'label': 'Which filters should appear above the gallery?',
+            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the grid; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this gallery and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path. Use this knob only for a standalone gallery with no page-level filter affordance.',
+            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'options': {
+                  'name': 'options',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'searchField': {
+            'type': 'string',
+            'default': 'name',
+            'label': 'Which column does the search box match against?',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, caption) or the search box can never match a row.',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+          },
+          'filterBarLook': {
+            'type': 'string',
+            'default': 'toolbar',
+            'label': 'Filter bar look',
+            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
+            'synonyms': 'filter bar style, facet style, chips, pills',
+            'tier': 'presentation',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 20,
+            'label': 'How many images to fetch per page?',
+            'description': 'Records fetched from the server when REFETCH_PAGE fires (a composed std-pagination driving this trait). The initial load and revisit fetches stay unpaged (whole collection), unchanged from before this knob existed.',
+            'synonyms': 'fetch limit, records per page, batch size, page limit',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

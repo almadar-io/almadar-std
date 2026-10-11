@@ -46,14 +46,14 @@ export interface StdPadLockPadGroupCompletedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPadLockConfig {
-  /** Default: `[]` */
-  pads?: EntityRow[];
+  /** Default: `true` */
+  running?: boolean;
   /** Default: `0.7` */
   reachX?: number;
   /** Default: `1.2` */
   reachY?: number;
-  /** Default: `true` */
-  running?: boolean;
+  /** Default: `[]` */
+  pads?: EntityRow[];
 }
 
 /**

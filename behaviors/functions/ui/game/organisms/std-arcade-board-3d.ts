@@ -37,18 +37,18 @@ export type StdArcadeBoard3dListenKey = 'MOVE' | 'RESTART' | 'WANDER';
  * without modifying its state-machine topology.
  */
 export interface StdArcadeBoard3dConfig {
+  /** Default: `[{"maxHealth":1,"health":1,"x":1,"y":1,"team":"player","id":"hero","modelUrl":{"aspect":"1:1","animations":["idle"],"dimension":"2d","variant":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","role":"player","name":"player-unit","style":"vector","category":"unit"},"name":"Hero","unitType":"hero","position":{"y":1,"x":1},"z":0}]` */
+  units?: unknown;
+  /** Default: `true` */
+  running?: unknown;
+  /** Default: `[{"z":0,"y":0,"x":0,"terrain":"grass","id":"t-0-0","passable":true,"modelUrl":{"role":"tile","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","category":"terrain","style":"vector","thumbnailUrl":"","aspect":"1:1","name":"grass","animations":["static"],"variant":"","dimension":"2d"}},{"passable":true,"z":0,"x":0,"modelUrl":{"animations":["static"],"dimension":"2d","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","aspect":"1:1","thumbnailUrl":"","name":"grass","role":"tile","style":"vector","category":"terrain","variant":""},"y":1,"id":"t-0-1","terrain":"grass"},{"x":1,"y":0,"id":"t-1-0","passable":true,"modelUrl":{"role":"tile","style":"vector","dimension":"2d","category":"terrain","aspect":"1:1","variant":"","thumbnailUrl":"","name":"grass","animations":["static"],"url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png"},"terrain":"grass","z":0},{"terrain":"grass","y":1,"z":0,"id":"t-1-1","passable":true,"modelUrl":{"thumbnailUrl":"","role":"tile","variant":"","category":"terrain","name":"grass","dimension":"2d","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","animations":["static"],"aspect":"1:1","style":"vector"},"x":1}]` */
+  tiles?: unknown;
+  /** Default: `9999` */
+  moveBudget?: unknown;
   /** Default: `2` */
   gridHeight?: unknown;
   /** Default: `2` */
   gridWidth?: unknown;
-  /** Default: `9999` */
-  moveBudget?: unknown;
-  /** Default: `true` */
-  running?: unknown;
-  /** Default: `[{"id":"t-0-0","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","variant":""},"passable":true,"terrain":"grass","x":0,"y":0,"z":0},{"id":"t-0-1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","variant":""},"passable":true,"terrain":"grass","x":0,"y":1,"z":0},{"id":"t-1-0","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","variant":""},"passable":true,"terrain":"grass","x":1,"y":0,"z":0},{"id":"t-1-1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"2d","name":"grass","role":"tile","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png","variant":""},"passable":true,"terrain":"grass","x":1,"y":1,"z":0}]` */
-  tiles?: unknown;
-  /** Default: `[{"health":1,"id":"hero","maxHealth":1,"modelUrl":{"animations":["idle"],"aspect":"1:1","category":"unit","dimension":"2d","name":"player-unit","role":"player","style":"vector","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png","variant":""},"name":"Hero","position":{"x":1,"y":1},"team":"player","unitType":"hero","x":1,"y":1,"z":0}]` */
-  units?: unknown;
 }
 
 type _StdArcadeBoard3dEntityName = 'GameState' | 'HeroNavData' | 'ArcadePlayData' | 'FxState' | 'ArcadeFlowData';
@@ -102,20 +102,20 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
     name: 'ArcadeBoard3DFrameOrbital',
     uses: [
       {
-        'as': 'Nav',
         'from': 'std/behaviors/std-hero-nav',
+        'as': 'Nav',
       },
       {
-        'as': 'Play',
         'from': 'std/behaviors/std-arcade-play',
+        'as': 'Play',
       },
       {
-        'as': 'Particles',
         'from': 'std/behaviors/std-fx-particles',
+        'as': 'Particles',
       },
       {
-        'as': 'Gate',
         'from': 'std/behaviors/std-arcade-flow',
+        'as': 'Gate',
       },
     ],
     entity: {
@@ -126,679 +126,679 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'units',
+            'type': 'array',
             'default': [
               {
+                'maxHealth': 1,
+                'x': 1,
+                'z': 0,
+                'y': 1,
+                'team': 'player',
                 'health': 1,
                 'id': 'hero',
-                'maxHealth': 1,
-                'modelUrl': {
-                  'animations': [
-                    'idle',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'unit',
-                  'dimension': '2d',
-                  'name': 'player-unit',
-                  'role': 'player',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
-                  'variant': '',
-                },
                 'name': 'Hero',
                 'position': {
                   'x': 1,
                   'y': 1,
                 },
-                'team': 'player',
+                'modelUrl': {
+                  'dimension': '2d',
+                  'variant': '',
+                  'animations': [
+                    'idle',
+                  ],
+                  'style': 'vector',
+                  'role': 'player',
+                  'category': 'unit',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
+                  'aspect': '1:1',
+                  'thumbnailUrl': '',
+                  'name': 'player-unit',
+                },
                 'unitType': 'hero',
-                'x': 1,
-                'y': 1,
-                'z': 0,
               },
             ],
             'items': {
+              'type': 'object',
               'properties': {
-                'health': {
-                  'name': 'health',
-                  'required': false,
-                  'type': 'number',
-                },
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
+                },
+                'health': {
+                  'name': 'health',
+                  'type': 'number',
+                  'required': false,
                 },
                 'maxHealth': {
                   'name': 'maxHealth',
-                  'required': false,
                   'type': 'number',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
                   'required': false,
-                  'type': 'object',
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': false,
                 },
                 'name': {
                   'name': 'name',
-                  'required': false,
                   'type': 'string',
-                },
-                'position': {
-                  'name': 'position',
-                  'properties': {
-                    'x': {
-                      'name': 'x',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'y': {
-                      'name': 'y',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
                   'required': false,
-                  'type': 'object',
                 },
-                'team': {
-                  'name': 'team',
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
                   'required': false,
-                  'type': 'string',
                 },
                 'unitType': {
                   'name': 'unitType',
-                  'required': false,
                   'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
                   'required': false,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': false,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'units',
-            'type': 'array',
-          },
-          {
-            'default': [
-              {
-                'id': 't-0-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-0-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 1,
-                'z': 0,
-              },
-              {
-                'id': 't-1-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-1-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 1,
-                'z': 0,
-              },
-            ],
-            'items': {
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
                 },
                 'modelUrl': {
                   'name': 'modelUrl',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
                       'required': false,
-                      'type': 'array',
                     },
                     'aspect': {
                       'name': 'aspect',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
                       'required': false,
-                      'type': 'string',
                     },
                     'category': {
                       'name': 'category',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
                       'required': false,
-                      'type': 'string',
                     },
                     'name': {
                       'name': 'name',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
                       'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
                     },
                     'thumbnailUrl': {
                       'name': 'thumbnailUrl',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
                       'required': false,
-                      'type': 'string',
                     },
                     'variant': {
                       'name': 'variant',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
                     },
                   },
-                  'required': false,
-                  'type': 'object',
                 },
-                'passable': {
-                  'name': 'passable',
+                'position': {
+                  'name': 'position',
+                  'type': 'object',
                   'required': false,
-                  'type': 'boolean',
+                  'properties': {
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': false,
+                },
+                'team': {
+                  'name': 'team',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          {
+            'name': 'tiles',
+            'type': 'array',
+            'default': [
+              {
+                'x': 0,
+                'id': 't-0-0',
+                'terrain': 'grass',
+                'modelUrl': {
+                  'category': 'terrain',
+                  'role': 'tile',
+                  'name': 'grass',
+                  'aspect': '1:1',
+                  'animations': [
+                    'static',
+                  ],
+                  'variant': '',
+                  'dimension': '2d',
+                  'thumbnailUrl': '',
+                  'style': 'vector',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                },
+                'passable': true,
+                'z': 0,
+                'y': 0,
+              },
+              {
+                'y': 1,
+                'id': 't-0-1',
+                'passable': true,
+                'z': 0,
+                'terrain': 'grass',
+                'modelUrl': {
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'name': 'grass',
+                  'animations': [
+                    'static',
+                  ],
+                  'style': 'vector',
+                  'category': 'terrain',
+                  'role': 'tile',
+                  'dimension': '2d',
+                  'variant': '',
+                  'aspect': '1:1',
+                  'thumbnailUrl': '',
+                },
+                'x': 0,
+              },
+              {
+                'y': 0,
+                'passable': true,
+                'z': 0,
+                'id': 't-1-0',
+                'x': 1,
+                'terrain': 'grass',
+                'modelUrl': {
+                  'aspect': '1:1',
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'name': 'grass',
+                  'variant': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'animations': [
+                    'static',
+                  ],
+                  'role': 'tile',
+                  'dimension': '2d',
+                },
+              },
+              {
+                'y': 1,
+                'terrain': 'grass',
+                'z': 0,
+                'id': 't-1-1',
+                'passable': true,
+                'modelUrl': {
+                  'name': 'grass',
+                  'style': 'vector',
+                  'variant': '',
+                  'category': 'terrain',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'dimension': '2d',
+                  'animations': [
+                    'static',
+                  ],
+                  'role': 'tile',
+                  'aspect': '1:1',
+                  'thumbnailUrl': '',
+                },
+                'x': 1,
+              },
+            ],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
                 },
                 'terrain': {
                   'name': 'terrain',
-                  'required': false,
                   'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
                   'required': false,
-                  'type': 'number',
                 },
-              },
-              'type': 'object',
-            },
-            'name': 'tiles',
-            'type': 'array',
-          },
-          {
-            'default': 0,
-            'name': 'movesLeft',
-            'type': 'number',
-          },
-          {
-            'default': [],
-            'items': {
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
+                  'type': 'object',
+                  'required': false,
                   'properties': {
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
                     'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
                       'items': {
                         'type': 'string',
                       },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
                     },
                     'aspect': {
                       'name': 'aspect',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
                       'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
                     },
                     'style': {
                       'name': 'style',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
                     },
                     'thumbnailUrl': {
                       'name': 'thumbnailUrl',
-                      'required': false,
                       'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
                       'required': false,
-                      'type': 'string',
                     },
                     'variant': {
                       'name': 'variant',
-                      'required': false,
                       'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
                     },
                   },
+                },
+                'passable': {
+                  'name': 'passable',
+                  'type': 'boolean',
                   'required': false,
-                  'type': 'object',
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
+          },
+          {
+            'name': 'movesLeft',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'features',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
                 },
                 'color': {
                   'name': 'color',
-                  'required': false,
                   'type': 'string',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
                 },
                 'elevation': {
                   'name': 'elevation',
-                  'required': false,
                   'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
                   'required': false,
-                  'type': 'string',
                 },
                 'type': {
                   'name': 'type',
-                  'required': true,
                   'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
                   'required': true,
-                  'type': 'number',
                 },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'object',
                   'required': false,
-                  'type': 'number',
+                  'properties': {
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
                 },
               },
-              'type': 'object',
             },
-            'name': 'features',
-            'type': 'array',
           },
           {
-            'default': [],
-            'items': {
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
             'name': 'machines',
             'type': 'array',
-          },
-          {
-            'default': 0,
-            'name': 'tokens',
-            'type': 'number',
-          },
-          {
-            'default': 0,
-            'name': 'tickets',
-            'type': 'number',
-          },
-          {
-            'default': 0,
-            'name': 'lastRoll',
-            'type': 'number',
-          },
-          {
-            'default': 0,
-            'name': 'playCount',
-            'type': 'number',
-          },
-          {
             'default': [],
             'items': {
+              'type': 'object',
+              'properties': {
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          {
+            'name': 'tokens',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'tickets',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lastRoll',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'playCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'fx',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
               'properties': {
                 'bornAt': {
                   'name': 'bornAt',
-                  'required': false,
                   'type': 'number',
-                },
-                'color': {
-                  'name': 'color',
                   'required': false,
-                  'type': 'string',
                 },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'maxTtl': {
-                  'name': 'maxTtl',
-                  'required': false,
+                'z': {
+                  'name': 'z',
                   'type': 'number',
+                  'required': false,
                 },
                 'message': {
                   'name': 'message',
-                  'required': false,
                   'type': 'string',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
                   'required': false,
-                  'type': 'number',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'ttl': {
-                  'name': 'ttl',
-                  'required': true,
-                  'type': 'number',
                 },
                 'type': {
                   'name': 'type',
-                  'required': true,
                   'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
+                  'required': true,
                 },
                 'x': {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
+                },
+                'maxTtl': {
+                  'name': 'maxTtl',
+                  'type': 'number',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
                 },
                 'y': {
                   'name': 'y',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
                 },
-                'z': {
-                  'name': 'z',
-                  'required': false,
+                'ttl': {
+                  'name': 'ttl',
                   'type': 'number',
+                  'required': true,
+                },
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vz': {
+                  'name': 'vz',
+                  'type': 'number',
+                  'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'fx',
-            'type': 'array',
           },
           {
-            'default': 'none',
             'name': 'result',
             'type': 'string',
+            'default': 'none',
           },
           {
-            'default': '',
             'name': 'selectedUnitId',
             'type': 'string',
+            'default': '',
           },
           {
+            'name': 'validMoves',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
                 'x': {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 'z': {
                   'name': 'z',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'validMoves',
-            'type': 'array',
           },
           {
-            'default': 'observation',
             'name': 'phase',
             'type': 'string',
+            'default': 'observation',
           },
         ];
         const extras = params.fields ?? [];
@@ -809,893 +809,290 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Nav.traits.HeroNav' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
+        'name': 'HeroAuthority',
+        'linkedEntity': 'GameState',
         'config': {
-          'gridHeight': {
-            'default': 2,
-            'type': 'unknown',
-          },
-          'gridWidth': {
-            'default': 2,
-            'type': 'unknown',
-          },
-          'moveBudget': {
-            'default': 9999,
-            'type': 'unknown',
-          },
-          'running': {
-            'default': true,
-            'type': 'unknown',
-          },
-          'tiles': {
-            'default': [
-              {
-                'id': 't-0-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-0-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 1,
-                'z': 0,
-              },
-              {
-                'id': 't-1-0',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 0,
-                'z': 0,
-              },
-              {
-                'id': 't-1-1',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'vector',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 1,
-                'z': 0,
-              },
-            ],
-            'type': 'unknown',
-          },
           'units': {
+            'type': 'unknown',
             'default': [
               {
-                'health': 1,
-                'id': 'hero',
                 'maxHealth': 1,
+                'health': 1,
+                'x': 1,
+                'y': 1,
+                'team': 'player',
+                'id': 'hero',
                 'modelUrl': {
+                  'aspect': '1:1',
                   'animations': [
                     'idle',
                   ],
-                  'aspect': '1:1',
-                  'category': 'unit',
                   'dimension': '2d',
-                  'name': 'player-unit',
-                  'role': 'player',
-                  'style': 'vector',
+                  'variant': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png',
-                  'variant': '',
+                  'role': 'player',
+                  'name': 'player-unit',
+                  'style': 'vector',
+                  'category': 'unit',
                 },
                 'name': 'Hero',
-                'position': {
-                  'x': 1,
-                  'y': 1,
-                },
-                'team': 'player',
                 'unitType': 'hero',
-                'x': 1,
-                'y': 1,
+                'position': {
+                  'y': 1,
+                  'x': 1,
+                },
                 'z': 0,
               },
             ],
+          },
+          'running': {
             'type': 'unknown',
+            'default': true,
+          },
+          'tiles': {
+            'type': 'unknown',
+            'default': [
+              {
+                'z': 0,
+                'y': 0,
+                'x': 0,
+                'terrain': 'grass',
+                'id': 't-0-0',
+                'passable': true,
+                'modelUrl': {
+                  'role': 'tile',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'category': 'terrain',
+                  'style': 'vector',
+                  'thumbnailUrl': '',
+                  'aspect': '1:1',
+                  'name': 'grass',
+                  'animations': [
+                    'static',
+                  ],
+                  'variant': '',
+                  'dimension': '2d',
+                },
+              },
+              {
+                'passable': true,
+                'z': 0,
+                'x': 0,
+                'modelUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'dimension': '2d',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'aspect': '1:1',
+                  'thumbnailUrl': '',
+                  'name': 'grass',
+                  'role': 'tile',
+                  'style': 'vector',
+                  'category': 'terrain',
+                  'variant': '',
+                },
+                'y': 1,
+                'id': 't-0-1',
+                'terrain': 'grass',
+              },
+              {
+                'x': 1,
+                'y': 0,
+                'id': 't-1-0',
+                'passable': true,
+                'modelUrl': {
+                  'role': 'tile',
+                  'style': 'vector',
+                  'dimension': '2d',
+                  'category': 'terrain',
+                  'aspect': '1:1',
+                  'variant': '',
+                  'thumbnailUrl': '',
+                  'name': 'grass',
+                  'animations': [
+                    'static',
+                  ],
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                },
+                'terrain': 'grass',
+                'z': 0,
+              },
+              {
+                'terrain': 'grass',
+                'y': 1,
+                'z': 0,
+                'id': 't-1-1',
+                'passable': true,
+                'modelUrl': {
+                  'thumbnailUrl': '',
+                  'role': 'tile',
+                  'variant': '',
+                  'category': 'terrain',
+                  'name': 'grass',
+                  'dimension': '2d',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png',
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'style': 'vector',
+                },
+                'x': 1,
+              },
+            ],
+          },
+          'moveBudget': {
+            'type': 'unknown',
+            'default': 9999,
+          },
+          'gridHeight': {
+            'type': 'unknown',
+            'default': 2,
+          },
+          'gridWidth': {
+            'type': 'unknown',
+            'default': 2,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'MOVE',
+            'triggers': 'MOVE',
             'source': {
               'kind': 'trait',
               'trait': 'ArcadeIntent',
             },
-            'triggers': 'MOVE',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'ArcadeIntent',
             },
-            'triggers': 'RESTART',
           },
           {
             'event': 'WANDER',
+            'triggers': 'WANDER',
             'source': {
               'kind': 'trait',
               'trait': 'ArcadeIntent',
             },
-            'triggers': 'WANDER',
           },
         ],
-        'name': 'HeroAuthority',
-        'ref': ('Nav.traits.HeroNav' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Play.traits.ArcadePlay' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
+        'name': 'PlayEconomy',
+        'linkedEntity': 'GameState',
         'config': {
-          'machines': {
-            'default': [],
+          'startTokens': {
             'type': 'unknown',
-          },
-          'maxPayout': {
-            'default': 1,
-            'type': 'unknown',
+            'default': 14,
           },
           'minPayout': {
-            'default': 0,
             'type': 'unknown',
+            'default': 0,
           },
           'running': {
+            'type': 'unknown',
             'default': true,
-            'type': 'unknown',
           },
-          'startTokens': {
-            'default': 14,
+          'maxPayout': {
             'type': 'unknown',
+            'default': 1,
+          },
+          'machines': {
+            'type': 'unknown',
+            'default': [],
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'PLAY_MACHINE',
+            'triggers': 'PLAY_MACHINE',
             'source': {
               'kind': 'trait',
               'trait': 'ArcadeIntent',
             },
-            'triggers': 'PLAY_MACHINE',
           },
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'ArcadeIntent',
             },
-            'triggers': 'RESTART',
           },
         ],
-        'name': 'PlayEconomy',
-        'ref': ('Play.traits.ArcadePlay' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Particles.traits.FxParticles' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
+        'name': 'FxDecay',
+        'linkedEntity': 'GameState',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'ArcadeIntent',
             },
-            'triggers': 'RESTART',
           },
           {
             'event': 'BURST',
+            'triggers': 'BURST',
             'source': {
               'kind': 'trait',
               'trait': 'PlayEconomy',
             },
-            'triggers': 'BURST',
           },
         ],
-        'name': 'FxDecay',
-        'ref': ('Particles.traits.FxParticles' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Gate.traits.ArcadeFlow' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
+        'name': 'RoundGate',
+        'linkedEntity': 'GameState',
         'config': {
-          'running': {
-            'default': true,
-            'type': 'unknown',
-          },
           'ticketsToWin': {
-            'default': 5,
             'type': 'unknown',
+            'default': 5,
+          },
+          'running': {
+            'type': 'unknown',
+            'default': true,
           },
         },
-        'linkedEntity': 'GameState',
         'listens': [
           {
             'event': 'RESTART',
+            'triggers': 'RESTART',
             'source': {
               'kind': 'trait',
               'trait': 'ArcadeIntent',
             },
-            'triggers': 'RESTART',
           },
           {
             'event': 'SCORE_CHANGED',
+            'triggers': 'SCORE_CHANGED',
             'source': {
               'kind': 'trait',
               'trait': 'PlayEconomy',
             },
-            'triggers': 'SCORE_CHANGED',
           },
         ],
-        'name': 'RoundGate',
-        'ref': ('Gate.traits.ArcadeFlow' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'assetManifest': {
-            'default': {
-              'effects': {},
-              'features': {},
-              'terrains': {},
-              'units': {},
-            },
-            'description': 'Per-role model manifest resolving tile/unit/feature models by terrain/category key.',
-            'label': 'Asset Manifest',
-            'properties': {
-              'effects': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'effects',
-                'required': false,
-                'type': 'object',
-              },
-              'features': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'features',
-                'required': false,
-                'type': 'object',
-              },
-              'terrains': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'terrains',
-                'required': false,
-                'type': 'object',
-              },
-              'units': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'units',
-                'required': false,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'AssetManifest',
-          },
-          'bgColor': {
-            'default': '#12161d',
-            'description': 'Canvas background color.',
-            'label': 'Bg Color',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'cameraMode': {
-            'default': 'isometric',
-            'description': '3D canvas camera mode.',
-            'label': 'Camera Mode',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'features': {
-            'default': [],
-            'description': 'Arcade machines + decorations rendered on the board (static; matched against machines for playability).',
-            'items': {
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Features',
-            'tier': 'presentation',
-            'type': '[Feature]',
-          },
-          'fxPresets': {
-            'default': [
-              {
-                'color': '#ffd23f',
-                'color2': '#ff6b35',
-                'count': 7,
-                'glow': 0.16,
-                'shape': 'spark',
-                'size': 0.55,
-                'type': 'score',
-                'vy': -0.3,
-              },
-              {
-                'color': '#38bdf8',
-                'color2': '#0c4a6e',
-                'count': 4,
-                'shape': 'puff',
-                'size': 0.4,
-                'type': 'info',
-              },
-            ],
-            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
-            'items': {
-              'properties': {
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'color2': {
-                  'name': 'color2',
-                  'required': false,
-                  'type': 'string',
-                },
-                'count': {
-                  'name': 'count',
-                  'required': false,
-                  'type': 'number',
-                },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
-                },
-                'glow': {
-                  'name': 'glow',
-                  'required': false,
-                  'type': 'number',
-                },
-                'gravity': {
-                  'name': 'gravity',
-                  'required': false,
-                  'type': 'number',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'shape': {
-                  'name': 'shape',
-                  'required': false,
-                  'type': 'string',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Fx Presets',
-            'tier': 'presentation',
-            'type': '[FxPreset]',
-          },
-          'goalText': {
-            'default': 'Collect tickets from the arcade machines to win',
-            'description': 'Static HUD hint describing the win condition.',
-            'label': 'Goal Text',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'gridHeight': {
-            'default': 12,
-            'description': 'Grid row count (matches HeroAuthority.gridHeight).',
-            'label': 'Grid Height',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'gridWidth': {
-            'default': 12,
-            'description': 'Grid column count (matches HeroAuthority.gridWidth).',
-            'label': 'Grid Width',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'howText': {
-            'default': 'Click your kid, then click an adjacent tile to walk; click a machine to play a token',
-            'description': 'Static HUD hint describing the controls.',
-            'label': 'How Text',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'movementRange': {
-            'default': 1,
-            'description': 'Max manhattan distance the hero may step, or reach a machine, per action.',
-            'label': 'Movement Range',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'scale': {
-            'default': 0.45,
-            'description': 'Canvas render scale.',
-            'label': 'Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'ticketsLabel': {
-            'default': 'Tickets',
-            'description': 'HUD label for the tickets-won counter.',
-            'label': 'Tickets Label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'tokensLabel': {
-            'default': 'Tokens',
-            'description': 'HUD label for the remaining-tokens counter.',
-            'label': 'Tokens Label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'unitScale': {
-            'default': 1,
-            'description': 'Unit draw-size multiplier.',
-            'label': 'Unit Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-        },
+        'name': 'ArcadeIntent',
         'effectRow': [
           {
             'kind': 'emit',
@@ -1744,109 +1141,113 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
             'site': 'tick',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'GameState',
         'emits': [
           {
-            'description': 'Hero move intent applied by the hero-nav authority',
             'event': 'MOVE',
+            'description': 'Hero move intent applied by the hero-nav authority',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'y',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Advances neutral NPCs one random step via the hero-nav authority',
             'event': 'WANDER',
+            'description': 'Advances neutral NPCs one random step via the hero-nav authority',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'tick',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Play intent applied by the play-economy authority when a machine is clicked while the hero is adjacent',
             'event': 'PLAY_MACHINE',
+            'description': 'Play intent applied by the play-economy authority when a machine is clicked while the hero is adjacent',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'machineId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'z',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Resets every mechanic (units, tokens/tickets, result) for a new round',
             'event': 'RESTART',
+            'description': 'Resets every mechanic (units, tokens/tickets, result) for a new round',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'tileClickEvent prop',
             'event': 'TILE_CLICK',
+            'description': 'tileClickEvent prop',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'z',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'tileId',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'unitClickEvent prop',
             'event': 'UNIT_CLICK',
+            'description': 'unitClickEvent prop',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'unitId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
@@ -1857,63 +1258,65 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                 'type': 'number',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'featureClickEvent prop',
             'event': 'FEATURE_CLICK',
+            'description': 'featureClickEvent prop',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'featureId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'z',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'Clears the current selection',
             'event': 'CANCEL',
+            'description': 'Clears the current selection',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'GameState',
-        'name': 'ArcadeIntent',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'playing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'unitClickEvent prop',
               'key': 'UNIT_CLICK',
               'name': 'Unit Click',
+              'description': 'unitClickEvent prop',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
@@ -1924,150 +1327,146 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                   'type': 'number',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'tileClickEvent prop',
               'key': 'TILE_CLICK',
               'name': 'Tile Click',
+              'description': 'tileClickEvent prop',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'z',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'tileId',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Clears the current selection',
               'key': 'CANCEL',
               'name': 'Cancel',
+              'description': 'Clears the current selection',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'featureClickEvent prop',
               'key': 'FEATURE_CLICK',
               'name': 'Feature Click',
+              'description': 'featureClickEvent prop',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'featureId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'z',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
               'key': 'PLAY_AGAIN',
               'name': 'Play Again',
             },
             {
-              'description': 'Hero move intent applied by the hero-nav authority',
               'key': 'MOVE',
               'name': 'Move',
+              'description': 'Hero move intent applied by the hero-nav authority',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'unitId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'y',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Advances neutral NPCs one random step via the hero-nav authority',
               'key': 'WANDER',
               'name': 'Wander',
+              'description': 'Advances neutral NPCs one random step via the hero-nav authority',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'tick',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Play intent applied by the play-economy authority when a machine is clicked while the hero is adjacent',
               'key': 'PLAY_MACHINE',
               'name': 'Play Machine',
+              'description': 'Play intent applied by the play-economy authority when a machine is clicked while the hero is adjacent',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'machineId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'z',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'Resets every mechanic (units, tokens/tickets, result) for a new round',
               'key': 'RESTART',
               'name': 'Restart',
+              'description': 'Resets every mechanic (units, tokens/tickets, result) for a new round',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'playing',
             },
           ],
           'transitions': [
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -2093,34 +1492,78 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                   'render-ui',
                   'main',
                   {
-                    'addons': {
-                      'children': [
+                    'hud': {
+                      'stats': [
                         {
-                          'action': 'CANCEL',
-                          'label': 'Cancel',
-                          'type': 'button',
-                          'variant': 'secondary',
+                          'label': '@config.tokensLabel',
+                          'value': '@entity.tokens',
                         },
                         {
-                          'action': 'PLAY_AGAIN',
-                          'label': 'Restart',
-                          'type': 'button',
-                          'variant': 'secondary',
+                          'label': '@config.ticketsLabel',
+                          'value': '@entity.tickets',
+                        },
+                        {
+                          'value': '@entity.result',
+                          'label': 'Result',
+                        },
+                        {
+                          'value': '@config.goalText',
+                          'label': 'Goal',
+                        },
+                        {
+                          'value': '@config.howText',
+                          'label': 'How',
                         },
                       ],
-                      'direction': 'vertical',
-                      'gap': 'sm',
-                      'type': 'stack',
+                      'type': 'game-hud',
                     },
-                    'children': [
+                    'overlay': [
+                      'if',
+                      [
+                        '!=',
+                        '@entity.result',
+                        'none',
+                      ],
                       {
-                        'backgroundColor': '@config.bgColor',
-                        'camera': {
-                          'mode': '@config.cameraMode',
-                          'zoom': '@config.scale',
-                        },
+                        'direction': 'vertical',
                         'children': [
                           {
+                            'stats': [
+                              {
+                                'label': 'Result',
+                                'value': '@entity.result',
+                              },
+                              {
+                                'label': '@config.ticketsLabel',
+                                'value': '@entity.tickets',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                          {
+                            'action': 'PLAY_AGAIN',
+                            'label': 'Play Again',
+                            'variant': 'primary',
+                            'type': 'button',
+                          },
+                        ],
+                        'gap': 'md',
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                      null,
+                    ],
+                    'children': [
+                      {
+                        'featureClickEvent': 'FEATURE_CLICK',
+                        'mode': '3d',
+                        'unitScale': '@config.unitScale',
+                        'unitClickEvent': 'UNIT_CLICK',
+                        'type': 'canvas',
+                        'tileClickEvent': 'TILE_CLICK',
+                        'children': [
+                          {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               'array/map',
                               '@entity.tiles',
@@ -2128,11 +1571,7 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                 'fn',
                                 't',
                                 {
-                                  'asset': [
-                                    'object/get',
-                                    '@t',
-                                    'modelUrl',
-                                  ],
+                                  'type': 'draw-sprite',
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2150,13 +1589,17 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                       'z',
                                     ],
                                   },
-                                  'type': 'draw-sprite',
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'modelUrl',
+                                  ],
                                 },
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                           {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               'array/map',
                               '@entity.features',
@@ -2169,7 +1612,13 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                     '@f',
                                     'assetUrl',
                                   ],
+                                  'type': 'draw-sprite',
                                   'position': {
+                                    'z': [
+                                      'object/get',
+                                      '@f',
+                                      'z',
+                                    ],
                                     'x': [
                                       'object/get',
                                       '@f',
@@ -2180,19 +1629,13 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                       '@f',
                                       'y',
                                     ],
-                                    'z': [
-                                      'object/get',
-                                      '@f',
-                                      'z',
-                                    ],
                                   },
-                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               '@entity.validMoves',
@@ -2200,7 +1643,7 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                 'fn',
                                 'm',
                                 {
-                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'type': 'draw-shape',
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2215,13 +1658,13 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                     'z': 0,
                                   },
                                   'shape': 'cell',
-                                  'type': 'draw-shape',
+                                  'fill': 'rgba(74,222,128,0.4)',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-shape-layer',
                             'items': [
                               'array/map',
                               [
@@ -2245,6 +1688,8 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                 'fn',
                                 'u',
                                 {
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2270,18 +1715,16 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                       'z',
                                     ],
                                   },
-                                  'radiusX': 0.5,
-                                  'radiusY': 0.2,
-                                  'shape': 'ellipse',
                                   'stroke': 'rgba(0,200,255,0.8)',
                                   'strokeWidth': 3,
+                                  'shape': 'ellipse',
                                   'type': 'draw-shape',
                                 },
                               ],
                             ],
-                            'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-sprite-layer',
                             'items': [
                               'array/map',
                               '@entity.units',
@@ -2289,12 +1732,14 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                 'fn',
                                 'u',
                                 {
+                                  'type': 'draw-sprite',
                                   'anchor': 'ground',
                                   'asset': [
                                     'object/get',
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'width': 0.8,
                                   'height': 0.8,
                                   'id': [
                                     'object/get',
@@ -2302,6 +1747,11 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                     'id',
                                   ],
                                   'position': {
+                                    'z': [
+                                      'object/get',
+                                      '@u',
+                                      'z',
+                                    ],
                                     'x': [
                                       'object/get',
                                       [
@@ -2320,18 +1770,10 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                       ],
                                       'y',
                                     ],
-                                    'z': [
-                                      'object/get',
-                                      '@u',
-                                      'z',
-                                    ],
                                   },
-                                  'type': 'draw-sprite',
-                                  'width': 0.8,
                                 },
                               ],
                             ],
-                            'type': 'draw-sprite-layer',
                           },
                           {
                             'items': [
@@ -2341,19 +1783,10 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                 'fn',
                                 'u',
                                 {
+                                  'shape': 'rect',
                                   'fill': 'rgba(0,0,0,0.6)',
-                                  'height': 0.12,
-                                  'offsetY': -0.6,
+                                  'type': 'draw-shape',
                                   'position': {
-                                    'x': [
-                                      'object/get',
-                                      [
-                                        'object/get',
-                                        '@u',
-                                        'position',
-                                      ],
-                                      'x',
-                                    ],
                                     'y': [
                                       'object/get',
                                       [
@@ -2363,15 +1796,24 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                       ],
                                       'y',
                                     ],
+                                    'x': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
+                                      'x',
+                                    ],
                                     'z': [
                                       'object/get',
                                       '@u',
                                       'z',
                                     ],
                                   },
-                                  'shape': 'rect',
-                                  'type': 'draw-shape',
+                                  'offsetY': -0.6,
                                   'width': 0.8,
+                                  'height': 0.12,
                                 },
                               ],
                             ],
@@ -2389,15 +1831,6 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                   'height': 0.12,
                                   'offsetY': -0.6,
                                   'position': {
-                                    'x': [
-                                      'object/get',
-                                      [
-                                        'object/get',
-                                        '@u',
-                                        'position',
-                                      ],
-                                      'x',
-                                    ],
                                     'y': [
                                       'object/get',
                                       [
@@ -2407,6 +1840,15 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                       ],
                                       'y',
                                     ],
+                                    'x': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
+                                      'x',
+                                    ],
                                     'z': [
                                       'object/get',
                                       '@u',
@@ -2414,7 +1856,6 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                     ],
                                   },
                                   'shape': 'rect',
-                                  'type': 'draw-shape',
                                   'width': [
                                     '*',
                                     0.8,
@@ -2432,12 +1873,14 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                       ],
                                     ],
                                   ],
+                                  'type': 'draw-shape',
                                 },
                               ],
                             ],
                             'type': 'draw-shape-layer',
                           },
                           {
+                            'type': 'draw-text-layer',
                             'items': [
                               'array/map',
                               '@entity.units',
@@ -2445,18 +1888,13 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                 'fn',
                                 'u',
                                 {
+                                  'text': [
+                                    'object/get',
+                                    '@u',
+                                    'name',
+                                  ],
                                   'color': '#ffffff',
-                                  'offsetY': -0.85,
                                   'position': {
-                                    'x': [
-                                      'object/get',
-                                      [
-                                        'object/get',
-                                        '@u',
-                                        'position',
-                                      ],
-                                      'x',
-                                    ],
                                     'y': [
                                       'object/get',
                                       [
@@ -2471,108 +1909,98 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                       '@u',
                                       'z',
                                     ],
+                                    'x': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
+                                      'x',
+                                    ],
                                   },
-                                  'text': [
-                                    'object/get',
-                                    '@u',
-                                    'name',
-                                  ],
+                                  'offsetY': -0.85,
                                   'type': 'draw-text',
                                 },
                               ],
                             ],
-                            'type': 'draw-text-layer',
                           },
                           {
-                            'items': '@entity.fx',
+                            'type': 'draw-fx-layer',
                             'presets': '@config.fxPresets',
+                            'items': '@entity.fx',
                             'sprites': [
                               'object/get',
                               '@config.assetManifest',
                               'effects',
                             ],
                             'tickMs': 500,
-                            'type': 'draw-fx-layer',
                           },
                         ],
-                        'featureClickEvent': 'FEATURE_CLICK',
-                        'mode': '3d',
-                        'tileClickEvent': 'TILE_CLICK',
-                        'type': 'canvas',
-                        'unitClickEvent': 'UNIT_CLICK',
-                        'unitScale': '@config.unitScale',
+                        'backgroundColor': '@config.bgColor',
+                        'camera': {
+                          'zoom': '@config.scale',
+                          'mode': '@config.cameraMode',
+                        },
                       },
-                    ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': '@config.tokensLabel',
-                          'value': '@entity.tokens',
-                        },
-                        {
-                          'label': '@config.ticketsLabel',
-                          'value': '@entity.tickets',
-                        },
-                        {
-                          'label': 'Result',
-                          'value': '@entity.result',
-                        },
-                        {
-                          'label': 'Goal',
-                          'value': '@config.goalText',
-                        },
-                        {
-                          'label': 'How',
-                          'value': '@config.howText',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'overlay': [
-                      'if',
-                      [
-                        '!=',
-                        '@entity.result',
-                        'none',
-                      ],
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'stats': [
-                              {
-                                'label': 'Result',
-                                'value': '@entity.result',
-                              },
-                              {
-                                'label': '@config.ticketsLabel',
-                                'value': '@entity.tickets',
-                              },
-                            ],
-                            'type': 'game-hud',
-                          },
-                          {
-                            'action': 'PLAY_AGAIN',
-                            'label': 'Play Again',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
-                        ],
-                        'direction': 'vertical',
-                        'gap': 'md',
-                        'type': 'stack',
-                      },
-                      null,
                     ],
                     'type': 'game-shell',
+                    'addons': {
+                      'direction': 'vertical',
+                      'gap': 'sm',
+                      'children': [
+                        {
+                          'type': 'button',
+                          'action': 'CANCEL',
+                          'variant': 'secondary',
+                          'label': 'Cancel',
+                        },
+                        {
+                          'action': 'PLAY_AGAIN',
+                          'variant': 'secondary',
+                          'type': 'button',
+                          'label': 'Restart',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'playing',
-              'to': 'playing',
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'UNIT_CLICK',
+              'guard': [
+                'and',
+                [
+                  '==',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  '==',
+                  [
+                    'object/get',
+                    [
+                      'array/find',
+                      '@entity.units',
+                      [
+                        'fn',
+                        'u',
+                        [
+                          '==',
+                          '@u.id',
+                          '@payload.unitId',
+                        ],
+                      ],
+                    ],
+                    'team',
+                  ],
+                  'player',
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -2630,15 +2058,15 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                   'position',
                                 ],
                                 {
-                                  'x': [
-                                    'object/get',
-                                    '@t',
-                                    'x',
-                                  ],
                                   'y': [
                                     'object/get',
                                     '@t',
                                     'y',
+                                  ],
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
                                   ],
                                 },
                               ],
@@ -2719,68 +2147,11 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                   ],
                 ],
               ],
-              'event': 'UNIT_CLICK',
-              'from': 'playing',
-              'guard': [
-                'and',
-                [
-                  '==',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  '==',
-                  [
-                    'object/get',
-                    [
-                      'array/find',
-                      '@entity.units',
-                      [
-                        'fn',
-                        'u',
-                        [
-                          '==',
-                          '@u.id',
-                          '@payload.unitId',
-                        ],
-                      ],
-                    ],
-                    'team',
-                  ],
-                  'player',
-                ],
-              ],
-              'to': 'playing',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'MOVE',
-                  {
-                    'unitId': '@entity.selectedUnitId',
-                    'x': '@payload.x',
-                    'y': '@payload.z',
-                  },
-                ],
-                [
-                  'set',
-                  '@entity.selectedUnitId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.phase',
-                  'observation',
-                ],
-              ],
-              'event': 'TILE_CLICK',
               'from': 'playing',
+              'to': 'playing',
+              'event': 'TILE_CLICK',
               'guard': [
                 'and',
                 [
@@ -2924,9 +2295,42 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                   ],
                 ],
               ],
-              'to': 'playing',
+              'effects': [
+                [
+                  'emit',
+                  'MOVE',
+                  {
+                    'unitId': '@entity.selectedUnitId',
+                    'x': '@payload.x',
+                    'y': '@payload.z',
+                  },
+                ],
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'observation',
+                ],
+              ],
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'CANCEL',
+              'guard': [
+                '!=',
+                '@entity.selectedUnitId',
+                '',
+              ],
               'effects': [
                 [
                   'set',
@@ -2944,29 +2348,11 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                   'observation',
                 ],
               ],
-              'event': 'CANCEL',
-              'from': 'playing',
-              'guard': [
-                '!=',
-                '@entity.selectedUnitId',
-                '',
-              ],
-              'to': 'playing',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'PLAY_MACHINE',
-                  {
-                    'machineId': '@payload.featureId',
-                    'x': '@payload.x',
-                    'z': '@payload.z',
-                  },
-                ],
-              ],
-              'event': 'FEATURE_CLICK',
               'from': 'playing',
+              'to': 'playing',
+              'event': 'FEATURE_CLICK',
               'guard': [
                 'and',
                 [
@@ -2996,16 +2382,29 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                       'position',
                     ],
                     {
-                      'x': '@payload.x',
                       'y': '@payload.z',
+                      'x': '@payload.x',
                     },
                   ],
                   '@config.movementRange',
                 ],
               ],
-              'to': 'playing',
+              'effects': [
+                [
+                  'emit',
+                  'PLAY_MACHINE',
+                  {
+                    'z': '@payload.z',
+                    'machineId': '@payload.featureId',
+                    'x': '@payload.x',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'PLAY_AGAIN',
               'effects': [
                 [
                   'emit',
@@ -3030,40 +2429,106 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                   'observation',
                 ],
               ],
-              'event': 'PLAY_AGAIN',
-              'from': 'playing',
-              'to': 'playing',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'renderTick',
+            'interval': 100,
             'effects': [
               [
                 'render-ui',
                 'main',
                 {
+                  'hud': {
+                    'type': 'game-hud',
+                    'stats': [
+                      {
+                        'label': '@config.tokensLabel',
+                        'value': '@entity.tokens',
+                      },
+                      {
+                        'label': '@config.ticketsLabel',
+                        'value': '@entity.tickets',
+                      },
+                      {
+                        'value': '@entity.result',
+                        'label': 'Result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': '@config.goalText',
+                      },
+                      {
+                        'value': '@config.howText',
+                        'label': 'How',
+                      },
+                    ],
+                  },
                   'addons': {
+                    'type': 'stack',
+                    'gap': 'sm',
                     'children': [
                       {
-                        'action': 'CANCEL',
                         'label': 'Cancel',
                         'type': 'button',
                         'variant': 'secondary',
+                        'action': 'CANCEL',
                       },
                       {
-                        'action': 'PLAY_AGAIN',
                         'label': 'Restart',
+                        'action': 'PLAY_AGAIN',
                         'type': 'button',
                         'variant': 'secondary',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
                   },
+                  'overlay': [
+                    'if',
+                    [
+                      '!=',
+                      '@entity.result',
+                      'none',
+                    ],
+                    {
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'game-hud',
+                          'stats': [
+                            {
+                              'value': '@entity.result',
+                              'label': 'Result',
+                            },
+                            {
+                              'value': '@entity.tickets',
+                              'label': '@config.ticketsLabel',
+                            },
+                          ],
+                        },
+                        {
+                          'label': 'Play Again',
+                          'variant': 'primary',
+                          'action': 'PLAY_AGAIN',
+                          'type': 'button',
+                        },
+                      ],
+                      'align': 'center',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                    },
+                    null,
+                  ],
+                  'type': 'game-shell',
                   'children': [
                     {
+                      'unitScale': '@config.unitScale',
+                      'mode': '3d',
+                      'unitClickEvent': 'UNIT_CLICK',
+                      'tileClickEvent': 'TILE_CLICK',
+                      'featureClickEvent': 'FEATURE_CLICK',
                       'backgroundColor': '@config.bgColor',
                       'camera': {
                         'mode': '@config.cameraMode',
@@ -3078,35 +2543,36 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                               'fn',
                               't',
                               {
-                                'asset': [
-                                  'object/get',
-                                  '@t',
-                                  'modelUrl',
-                                ],
                                 'position': {
-                                  'x': [
+                                  'z': [
                                     'object/get',
                                     '@t',
-                                    'x',
+                                    'z',
                                   ],
                                   'y': [
                                     'object/get',
                                     '@t',
                                     'y',
                                   ],
-                                  'z': [
+                                  'x': [
                                     'object/get',
                                     '@t',
-                                    'z',
+                                    'x',
                                   ],
                                 },
                                 'type': 'draw-sprite',
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'modelUrl',
+                                ],
                               },
                             ],
                           ],
                           'type': 'draw-sprite-layer',
                         },
                         {
+                          'type': 'draw-sprite-layer',
                           'items': [
                             'array/map',
                             '@entity.features',
@@ -3114,6 +2580,7 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                               'fn',
                               'f',
                               {
+                                'type': 'draw-sprite',
                                 'asset': [
                                   'object/get',
                                   '@f',
@@ -3136,11 +2603,9 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                     'z',
                                   ],
                                 },
-                                'type': 'draw-sprite',
                               },
                             ],
                           ],
-                          'type': 'draw-sprite-layer',
                         },
                         {
                           'items': [
@@ -3150,28 +2615,29 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                               'fn',
                               'm',
                               {
+                                'type': 'draw-shape',
                                 'fill': 'rgba(74,222,128,0.4)',
                                 'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@m',
-                                    'x',
-                                  ],
+                                  'z': 0,
                                   'y': [
                                     'object/get',
                                     '@m',
                                     'z',
                                   ],
-                                  'z': 0,
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
                                 },
                                 'shape': 'cell',
-                                'type': 'draw-shape',
                               },
                             ],
                           ],
                           'type': 'draw-shape-layer',
                         },
                         {
+                          'type': 'draw-shape-layer',
                           'items': [
                             'array/map',
                             [
@@ -3195,16 +2661,8 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                               'fn',
                               'u',
                               {
+                                'radiusX': 0.5,
                                 'position': {
-                                  'x': [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'x',
-                                  ],
                                   'y': [
                                     'object/get',
                                     [
@@ -3219,17 +2677,24 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                     '@u',
                                     'z',
                                   ],
+                                  'x': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'x',
+                                  ],
                                 },
-                                'radiusX': 0.5,
+                                'stroke': 'rgba(0,200,255,0.8)',
+                                'type': 'draw-shape',
+                                'strokeWidth': 3,
                                 'radiusY': 0.2,
                                 'shape': 'ellipse',
-                                'stroke': 'rgba(0,200,255,0.8)',
-                                'strokeWidth': 3,
-                                'type': 'draw-shape',
                               },
                             ],
                           ],
-                          'type': 'draw-shape-layer',
                         },
                         {
                           'items': [
@@ -3239,28 +2704,19 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                               'fn',
                               'u',
                               {
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
+                                ],
                                 'anchor': 'ground',
                                 'asset': [
                                   'object/get',
                                   '@u',
                                   'modelUrl',
                                 ],
-                                'height': 0.8,
-                                'id': [
-                                  'object/get',
-                                  '@u',
-                                  'id',
-                                ],
+                                'width': 0.8,
                                 'position': {
-                                  'x': [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'x',
-                                  ],
                                   'y': [
                                     'object/get',
                                     [
@@ -3270,20 +2726,30 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                     ],
                                     'y',
                                   ],
+                                  'x': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'x',
+                                  ],
                                   'z': [
                                     'object/get',
                                     '@u',
                                     'z',
                                   ],
                                 },
+                                'height': 0.8,
                                 'type': 'draw-sprite',
-                                'width': 0.8,
                               },
                             ],
                           ],
                           'type': 'draw-sprite-layer',
                         },
                         {
+                          'type': 'draw-shape-layer',
                           'items': [
                             'array/map',
                             '@entity.units',
@@ -3291,19 +2757,9 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                               'fn',
                               'u',
                               {
-                                'fill': 'rgba(0,0,0,0.6)',
-                                'height': 0.12,
+                                'shape': 'rect',
                                 'offsetY': -0.6,
                                 'position': {
-                                  'x': [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'x',
-                                  ],
                                   'y': [
                                     'object/get',
                                     [
@@ -3318,14 +2774,23 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                     '@u',
                                     'z',
                                   ],
+                                  'x': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'x',
+                                  ],
                                 },
-                                'shape': 'rect',
-                                'type': 'draw-shape',
                                 'width': 0.8,
+                                'height': 0.12,
+                                'fill': 'rgba(0,0,0,0.6)',
+                                'type': 'draw-shape',
                               },
                             ],
                           ],
-                          'type': 'draw-shape-layer',
                         },
                         {
                           'items': [
@@ -3335,36 +2800,6 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                               'fn',
                               'u',
                               {
-                                'fill': '#22c55e',
-                                'height': 0.12,
-                                'offsetY': -0.6,
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'y',
-                                  ],
-                                  'z': [
-                                    'object/get',
-                                    '@u',
-                                    'z',
-                                  ],
-                                },
-                                'shape': 'rect',
-                                'type': 'draw-shape',
                                 'width': [
                                   '*',
                                   0.8,
@@ -3382,21 +2817,11 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                     ],
                                   ],
                                 ],
-                              },
-                            ],
-                          ],
-                          'type': 'draw-shape-layer',
-                        },
-                        {
-                          'items': [
-                            'array/map',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              {
-                                'color': '#ffffff',
-                                'offsetY': -0.85,
+                                'offsetY': -0.6,
+                                'height': 0.12,
+                                'fill': '#22c55e',
+                                'shape': 'rect',
+                                'type': 'draw-shape',
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -3422,12 +2847,52 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                                     'z',
                                   ],
                                 },
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'type': 'draw-text',
+                                'position': {
+                                  'z': [
+                                    'object/get',
+                                    '@u',
+                                    'z',
+                                  ],
+                                  'x': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'position',
+                                    ],
+                                    'y',
+                                  ],
+                                },
+                                'offsetY': -0.85,
+                                'color': '#ffffff',
                                 'text': [
                                   'object/get',
                                   '@u',
                                   'name',
                                 ],
-                                'type': 'draw-text',
                               },
                             ],
                           ],
@@ -3435,93 +2900,31 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                         },
                         {
                           'items': '@entity.fx',
-                          'presets': '@config.fxPresets',
                           'sprites': [
                             'object/get',
                             '@config.assetManifest',
                             'effects',
                           ],
                           'tickMs': 500,
+                          'presets': '@config.fxPresets',
                           'type': 'draw-fx-layer',
                         },
                       ],
-                      'featureClickEvent': 'FEATURE_CLICK',
-                      'mode': '3d',
-                      'tileClickEvent': 'TILE_CLICK',
                       'type': 'canvas',
-                      'unitClickEvent': 'UNIT_CLICK',
-                      'unitScale': '@config.unitScale',
                     },
                   ],
-                  'hud': {
-                    'stats': [
-                      {
-                        'label': '@config.tokensLabel',
-                        'value': '@entity.tokens',
-                      },
-                      {
-                        'label': '@config.ticketsLabel',
-                        'value': '@entity.tickets',
-                      },
-                      {
-                        'label': 'Result',
-                        'value': '@entity.result',
-                      },
-                      {
-                        'label': 'Goal',
-                        'value': '@config.goalText',
-                      },
-                      {
-                        'label': 'How',
-                        'value': '@config.howText',
-                      },
-                    ],
-                    'type': 'game-hud',
-                  },
-                  'overlay': [
-                    'if',
-                    [
-                      '!=',
-                      '@entity.result',
-                      'none',
-                    ],
-                    {
-                      'align': 'center',
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'label': 'Result',
-                              'value': '@entity.result',
-                            },
-                            {
-                              'label': '@config.ticketsLabel',
-                              'value': '@entity.tickets',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'action': 'PLAY_AGAIN',
-                          'label': 'Play Again',
-                          'type': 'button',
-                          'variant': 'primary',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
-                    },
-                    null,
-                  ],
-                  'type': 'game-shell',
                 },
               ],
             ],
-            'interval': 100,
-            'name': 'renderTick',
           },
           {
+            'name': 'wanderTick',
+            'interval': 1500,
+            'guard': [
+              '==',
+              '@entity.result',
+              'none',
+            ],
             'effects': [
               [
                 'emit',
@@ -3531,15 +2934,612 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                 },
               ],
             ],
-            'guard': [
-              '==',
-              '@entity.result',
-              'none',
-            ],
-            'interval': 1500,
-            'name': 'wanderTick',
           },
         ],
+        'config': {
+          'cameraMode': {
+            'type': 'string',
+            'default': 'isometric',
+            'label': 'Camera Mode',
+            'description': '3D canvas camera mode.',
+            'tier': 'presentation',
+          },
+          'gridHeight': {
+            'type': 'number',
+            'default': 12,
+            'label': 'Grid Height',
+            'description': 'Grid row count (matches HeroAuthority.gridHeight).',
+            'tier': 'presentation',
+          },
+          'ticketsLabel': {
+            'type': 'string',
+            'default': 'Tickets',
+            'label': 'Tickets Label',
+            'description': 'HUD label for the tickets-won counter.',
+            'tier': 'presentation',
+          },
+          'tokensLabel': {
+            'type': 'string',
+            'default': 'Tokens',
+            'label': 'Tokens Label',
+            'description': 'HUD label for the remaining-tokens counter.',
+            'tier': 'presentation',
+          },
+          'bgColor': {
+            'type': 'string',
+            'default': '#12161d',
+            'label': 'Bg Color',
+            'description': 'Canvas background color.',
+            'tier': 'presentation',
+          },
+          'unitScale': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Unit Scale',
+            'description': 'Unit draw-size multiplier.',
+            'tier': 'presentation',
+          },
+          'features': {
+            'type': '[Feature]',
+            'default': [],
+            'label': 'Features',
+            'description': 'Arcade machines + decorations rendered on the board (static; matched against machines for playability).',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'fxPresets': {
+            'type': '[FxPreset]',
+            'default': [
+              {
+                'color': '#ffd23f',
+                'color2': '#ff6b35',
+                'vy': -0.3,
+                'type': 'score',
+                'shape': 'spark',
+                'count': 7,
+                'size': 0.55,
+                'glow': 0.16,
+              },
+              {
+                'color2': '#0c4a6e',
+                'count': 4,
+                'size': 0.4,
+                'color': '#38bdf8',
+                'type': 'info',
+                'shape': 'puff',
+              },
+            ],
+            'label': 'Fx Presets',
+            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'shape': {
+                  'name': 'shape',
+                  'type': 'string',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
+                },
+                'gravity': {
+                  'name': 'gravity',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'vz': {
+                  'name': 'vz',
+                  'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'glow': {
+                  'name': 'glow',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color2': {
+                  'name': 'color2',
+                  'type': 'string',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'count': {
+                  'name': 'count',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'assetManifest': {
+            'type': 'AssetManifest',
+            'default': {
+              'terrains': {},
+              'features': {},
+              'units': {},
+              'effects': {},
+            },
+            'label': 'Asset Manifest',
+            'description': 'Per-role model manifest resolving tile/unit/feature models by terrain/category key.',
+            'tier': 'presentation',
+            'properties': {
+              'features': {
+                'name': 'features',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'effects': {
+                'name': 'effects',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'units': {
+                'name': 'units',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+              'terrains': {
+                'name': 'terrains',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'name': {
+                      'name': 'name',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'style': {
+                      'name': 'style',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'url': {
+                      'name': 'url',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'animations': {
+                      'name': 'animations',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'string',
+                      },
+                    },
+                    'category': {
+                      'name': 'category',
+                      'type': 'string',
+                      'required': false,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'scale': {
+            'type': 'number',
+            'default': 0.45,
+            'label': 'Scale',
+            'description': 'Canvas render scale.',
+            'tier': 'presentation',
+          },
+          'movementRange': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Movement Range',
+            'description': 'Max manhattan distance the hero may step, or reach a machine, per action.',
+            'tier': 'domain',
+          },
+          'goalText': {
+            'type': 'string',
+            'default': 'Collect tickets from the arcade machines to win',
+            'label': 'Goal Text',
+            'description': 'Static HUD hint describing the win condition.',
+            'tier': 'presentation',
+          },
+          'gridWidth': {
+            'type': 'number',
+            'default': 12,
+            'label': 'Grid Width',
+            'description': 'Grid column count (matches HeroAuthority.gridWidth).',
+            'tier': 'presentation',
+          },
+          'howText': {
+            'type': 'string',
+            'default': 'Click your kid, then click an adjacent tile to walk; click a machine to play a token',
+            'label': 'How Text',
+            'description': 'Static HUD hint describing the controls.',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

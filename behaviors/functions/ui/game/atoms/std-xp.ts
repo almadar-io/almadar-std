@@ -47,22 +47,22 @@ export interface StdXpHealPayload {
  * without modifying its state-machine topology.
  */
 export interface StdXpConfig {
+  /** Default: `25` */
+  xpPerKill?: number;
+  /** Default: `true` */
+  running?: boolean;
   /** Default: `100` */
   baseXpToNext?: number;
-  /** Default: `"player"` */
-  healTeam?: string;
   /** Default: `0` */
   initialEnemies?: number;
   /** Default: `2` */
   levelUpHeal?: number;
-  /** Default: `true` */
-  running?: boolean;
-  /** Default: `0` */
-  startXp?: number;
-  /** Default: `25` */
-  xpPerKill?: number;
   /** Default: `50` */
   xpToNextIncrement?: number;
+  /** Default: `"player"` */
+  healTeam?: string;
+  /** Default: `0` */
+  startXp?: number;
 }
 
 /**

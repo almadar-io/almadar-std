@@ -53,3 +53,104 @@ async function resolveStdDataDirUncached(): Promise<string> {
   }
   return nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url));
 }
+
+export interface SidecarFileRequest {
+  /** npm name of the behavior package that declares the file. */
+  packageName: string;
+  /** `import.meta.url` of the calling module — where the package is resolved from. */
+  fromUrl: string;
+  /** Package-relative declared path, e.g. `dist/knob-embeddings.json`. */
+  relPath: string;
+  /** Env var naming a directory that holds the file by basename (bundled deployments). */
+  overrideEnv: string;
+  /** Module-relative data dir, used when the package cannot be resolved on disk. */
+  dataDir: () => Promise<string>;
+}
+
+type BehaviorPackage = import('@almadar/core/behavior-package').BehaviorPackage;
+type DeclaredFileKey = import('@almadar/core/behavior-package').DeclaredFileKey;
+
+/** The installed package `request` names, or `null` when it is not on disk (a bundle shipped without it). */
+async function installedPackage(request: Pick<SidecarFileRequest, 'packageName' | 'fromUrl'>): Promise<BehaviorPackage | null> {
+  const [nodePath, nodeUrl] = await Promise.all([import('path'), import('url')]);
+  const { findInstalledBehaviorPackage } = await import('@almadar/core/behavior-package');
+  try {
+    return findInstalledBehaviorPackage(request.packageName, nodePath.dirname(nodeUrl.fileURLToPath(request.fromUrl)));
+  } catch {
+    return null;
+  }
+}
+
+/** A package-relative path: through the sidecar cache when `sidecars.lock.json` declares it, else the package's own file. */
+async function fileInPackage(pkg: BehaviorPackage, relPath: string): Promise<string> {
+  const [nodePath, { ensureDeclaredPath }] = await Promise.all([import('path'), import('@almadar/core/behavior-package')]);
+  if (!pkg.lock?.files[relPath]) return nodePath.join(pkg.root, relPath);
+  return ensureDeclaredPath(pkg, relPath);
+}
+
+function requireNode(what: string): void {
+  if (typeof process === 'undefined' || !process.versions?.node) {
+    throw new Error(`${what}: no filesystem to resolve a sidecar file`);
+  }
+}
+
+/**
+ * Absolute path of a declared sidecar file. A path in the package's
+ * `sidecars.lock.json` resolves through the sidecar cache (downloaded and
+ * verified on a miss); any other path is read from the package, and the
+ * caller handles it being absent.
+ */
+export async function resolveSidecarFile(request: SidecarFileRequest): Promise<string> {
+  const nodePath = await import('path');
+  const name = nodePath.basename(request.relPath);
+  const override = (typeof process !== 'undefined' && process.env?.[request.overrideEnv]) || '';
+  if (override) return nodePath.join(override, name);
+  requireNode(request.relPath);
+  const pkg = await installedPackage(request);
+  if (pkg === null) return nodePath.join(await request.dataDir(), name);
+  return fileInPackage(pkg, request.relPath);
+}
+
+export interface DeclaredDataFileRequest extends Omit<SidecarFileRequest, 'relPath'> {
+  /** The `orb` manifest key declaring the file. */
+  key: DeclaredFileKey;
+  /** The file's path inside an override or module-relative data dir (bundled deployments). */
+  dataRel: string;
+}
+
+/**
+ * Absolute path of a file the package declares under `orb.<key>`: the bundle
+ * override dir, else the installed package's declared path (so a workspace
+ * and a published manifest each resolve to their own layout), else the
+ * module-relative data dir of a bundle shipped without its package.
+ */
+export async function resolveDeclaredDataFile(request: DeclaredDataFileRequest): Promise<string> {
+  const nodePath = await import('path');
+  const override = (typeof process !== 'undefined' && process.env?.[request.overrideEnv]) || '';
+  if (override) return nodePath.join(override, request.dataRel);
+  requireNode(`orb.${request.key}`);
+  const pkg = await installedPackage(request);
+  if (pkg === null) return nodePath.join(await request.dataDir(), request.dataRel);
+  return fileInPackage(pkg, pkg.orb[request.key]);
+}
+
+export function resolveStdDeclaredFile(key: DeclaredFileKey, dataRel: string): Promise<string> {
+  return resolveDeclaredDataFile({
+    packageName: '@almadar/std',
+    fromUrl: import.meta.url,
+    key,
+    dataRel,
+    overrideEnv: 'ALMADAR_STD_DATA_DIR',
+    dataDir: resolveStdDataDir,
+  });
+}
+
+export function resolveStdSidecarFile(relPath: string): Promise<string> {
+  return resolveSidecarFile({
+    packageName: '@almadar/std',
+    fromUrl: import.meta.url,
+    relPath,
+    overrideEnv: 'ALMADAR_STD_DATA_DIR',
+    dataDir: resolveStdDataDir,
+  });
+}

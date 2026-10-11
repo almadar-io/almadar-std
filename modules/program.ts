@@ -26,6 +26,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Parse `.lolo` source text into a quoted program.',
     hasSideEffects: true,
     runsOn: 'server',
+    host: 'program',
     returnType: 'sexpr',
     params: [{ name: 'text', type: 'string', description: '`.lolo` source' }, EMIT_OPTIONS],
     example: '["program/read", "@entity.draft", { "emit": { "success": "READ", "failure": "READ_FAILED" } }]',
@@ -36,6 +37,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Format a quoted program as `.lolo` source text.',
     hasSideEffects: true,
     runsOn: 'server',
+    host: 'program',
     returnType: 'string',
     params: [{ name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' }, EMIT_OPTIONS],
     example: '["program/print", "@entity.program", { "emit": { "success": "PRINTED", "failure": "PRINT_FAILED" } }]',
@@ -46,6 +48,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Validate a program (`.orb` IR) at the 0-error / 0-warning bar and write it into the workspace (default `orbitals/<name>.orb`, or the project named by `into`). Success carries `{ behavior, traits, value }` — where the program was written, its traits as values, and the program itself as a behavior value; failure carries the validator errors as data. A `prior` program keeps ids stable across a re-evaluation.',
     hasSideEffects: true,
     runsOn: 'server',
+    host: 'program',
     returnType: 'EvaluatedProgram',
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
@@ -60,6 +63,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Assemble programs into one app program, in the order given: pages, layout, event wiring and the app nav (core `composeAppFromFiles`). Success carries the composed program; it is not validated or written — pass it to `program/eval`.',
     hasSideEffects: true,
     runsOn: 'server',
+    host: 'program',
     returnType: 'sexpr',
     params: [
       { name: 'programs', type: { kind: 'array', of: { kind: 'sexpr' } }, description: 'The programs to assemble, in roster order' },

@@ -39,10 +39,10 @@ export type StdCurveFogEventKey = 'BODY_MOVED' | 'INIT' | 'RESTART';
  * without modifying its state-machine topology.
  */
 export interface StdCurveFogConfig {
-  /** Default: `[]` */
-  regions?: EntityRow[];
   /** Default: `true` */
   running?: boolean;
+  /** Default: `[]` */
+  regions?: EntityRow[];
 }
 
 /**

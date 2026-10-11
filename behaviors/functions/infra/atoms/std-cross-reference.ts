@@ -211,54 +211,54 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'leftId',
+            'type': 'string',
             'default': '',
             'description': 'Identifier for the related entity on the left side.',
-            'name': 'leftId',
             'synonyms': 'sourceId, originId, parentId',
-            'type': 'string',
           },
           {
+            'name': 'rightId',
+            'type': 'string',
             'default': '',
             'description': 'Identifier for the related entity on the right side.',
-            'name': 'rightId',
             'synonyms': 'targetId, relatedId, counterpartId',
-            'type': 'string',
           },
           {
-            'default': '',
             'name': 'createdAt',
             'type': 'string',
+            'default': '',
           },
           {
+            'name': 'filteredLinks',
+            'type': 'array',
             'default': [],
-            'description': 'A list of filtered link specifications.',
             'items': {
+              'type': 'object',
               'properties': {
-                'href': {
-                  'name': 'href',
-                  'required': true,
+                'label': {
+                  'name': 'label',
                   'type': 'string',
+                  'required': true,
                 },
                 'icon': {
                   'name': 'icon',
+                  'type': 'string',
                   'required': false,
-                  'type': 'string',
                 },
-                'label': {
-                  'name': 'label',
-                  'required': true,
+                'href': {
+                  'name': 'href',
                   'type': 'string',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'filteredLinks',
+            'description': 'A list of filtered link specifications.',
             'synonyms': 'links, references, connections',
-            'type': 'array',
           },
         ];
         const extras = params.fields ?? [];
@@ -269,7 +269,15 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'CrossReferenceGate',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'filteredLinks',
+            'leftId',
+          ],
+        },
         'effectRow': [
           {
             'kind': 'emit',
@@ -296,20 +304,23 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
             'resource': '@entity.leftId',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'CrossRefLink',
         'emits': [
           {
-            'description': 'Fired after a junction row is persisted.',
             'event': 'LinkCreated',
+            'description': 'Fired after a junction row is persisted.',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'value',
                 'type': '@entity',
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'LinkRemoved',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -320,18 +331,18 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                 'type': 'boolean',
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'LinksLoaded',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'leftId',
                 'type': 'string',
               },
               {
-                'entity': 'ObjectSpec',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -346,17 +357,17 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ObjectSpec',
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'LinksFetched',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'ObjectSpec',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -371,13 +382,13 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ObjectSpec',
               },
             ],
-            'scope': 'external',
           },
           {
             'event': 'LinkOpFailed',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -388,21 +399,15 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                 'type': 'string',
               },
             ],
-            'scope': 'external',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'filteredLinks',
-            'leftId',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'CrossRefLink',
-        'name': 'CrossReferenceGate',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'LinkRequested',
@@ -448,6 +453,7 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -462,7 +468,6 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
             },
@@ -514,6 +519,7 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                 },
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -528,19 +534,15 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'LinkRequested',
               'effects': [
                 [
                   'persist',
@@ -558,11 +560,11 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                   },
                 ],
               ],
-              'event': 'LinkRequested',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'UnlinkRequested',
               'effects': [
                 [
                   'persist',
@@ -577,11 +579,11 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                   },
                 ],
               ],
-              'event': 'UnlinkRequested',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'FETCH_LINKS_FOR',
               'effects': [
                 [
                   'set',
@@ -593,17 +595,17 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                   ('CrossRefLink' satisfies _StdCrossReferenceEntityName),
                   {
                     'emit': {
-                      'failure': 'LinkOpFailed',
                       'success': 'LinksFetched',
+                      'failure': 'LinkOpFailed',
                     },
                   },
                 ],
               ],
-              'event': 'FETCH_LINKS_FOR',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'LinksFetched',
               'effects': [
                 [
                   'set',
@@ -630,22 +632,21 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                   'emit',
                   'LinksLoaded',
                   {
-                    'data': '@entity.filteredLinks',
                     'leftId': '@entity.leftId',
+                    'data': '@entity.filteredLinks',
                   },
                 ],
               ],
-              'event': 'LinksFetched',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'LinkOpFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': [
                       'str/concat',
                       'Couldn\'t update the link — ',
@@ -653,15 +654,14 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                     ],
                     'type': 'alert',
                     'variant': 'error',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'LinkOpFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -69,48 +69,48 @@ export interface StdLearnGridSimGridResetPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnGridSimConfig {
+  /** Default: `"Step"` */
+  stepLabel?: string;
+  /** Default: `12` */
+  rows?: number;
+  /** Default: `0.5` */
+  diffuseRate?: number;
   /** Default: `false` */
   autoRun?: boolean;
   /** Default: `""` */
-  backgroundColor?: string;
-  /** Default: `26` */
-  cellSize?: number;
-  /** Default: `16` */
-  cols?: number;
-  /** Default: `0.995` */
-  decay?: number;
-  /** Default: `0.5` */
-  diffuseRate?: number;
-  /** Default: `332` */
-  height?: number;
-  /** Default: `"muted"` */
-  lowColor?: string;
-  /** Default: `""` */
   matchMode?: string;
+  /** Default: `"series-2"` */
+  onColor?: string;
   /** Default: `"series-3"` */
   midColor?: string;
   /** Default: `"fill"` */
   offColor?: string;
-  /** Default: `"series-2"` */
-  onColor?: string;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `12` */
-  rows?: number;
-  /** Default: `"life"` */
-  rule?: string;
+  /** Default: `0.995` */
+  decay?: number;
+  /** Default: `"muted"` */
+  lowColor?: string;
   /** Default: `[1,18,32,33,34,88,89,90]` */
   seeds?: number[];
-  /** Default: `"Step"` */
-  stepLabel?: string;
+  /** Default: `"Grid World"` */
+  title?: string;
+  /** Default: `26` */
+  cellSize?: number;
   /** Default: `""` */
   summary?: string;
   /** Default: `"Tap cells to seed the world, then Run — or Step one generation at a time to see the rule at work."` */
   taskText?: string;
-  /** Default: `"Grid World"` */
-  title?: string;
+  /** Default: `332` */
+  height?: number;
+  /** Default: `""` */
+  backgroundColor?: string;
+  /** Default: `"life"` */
+  rule?: string;
+  /** Default: `16` */
+  cols?: number;
   /** Default: `436` */
   width?: number;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
 }
 
 /**

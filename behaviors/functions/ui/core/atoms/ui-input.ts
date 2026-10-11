@@ -46,31 +46,31 @@ export interface StdUiInputActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiInputConfig {
-  /** Default: `"ACTION"` */
-  action?: string;
-  className?: string;
-  clearable?: boolean;
-  disabled?: boolean;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   error?: string;
-  helperText?: string;
-  icon?: unknown;
-  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
-  label?: string;
+  enterDelay?: number;
   leftIcon?: unknown;
-  /** Default: `"CHANGE"` */
-  onChange?: string;
   /** Default: `"CLEAR"` */
   onClear?: string;
-  /** Default: `[]` */
-  options?: EntityRow[];
-  placeholder?: string;
   rightIcon?: unknown;
+  label?: string;
+  /** Default: `"ACTION"` */
+  action?: string;
   /** Default: `3` */
   rows?: number;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `"CHANGE"` */
+  onChange?: string;
+  /** Default: `[]` */
+  options?: EntityRow[];
+  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
+  icon?: unknown;
+  clearable?: boolean;
+  className?: string;
   value?: unknown;
+  helperText?: string;
+  placeholder?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  disabled?: boolean;
 }
 
 /**

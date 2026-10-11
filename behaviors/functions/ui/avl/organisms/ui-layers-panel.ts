@@ -57,9 +57,9 @@ export interface StdUiLayersPanelReorderPayload {
 export interface StdUiLayersPanelConfig {
   /** Default: `"REORDER"` */
   onReorder?: string;
+  schema?: EntityRow;
   /** Default: `"SELECT"` */
   onSelect?: string;
-  schema?: EntityRow;
   selectedId?: string;
 }
 
@@ -120,8 +120,8 @@ export function stdUiLayersPanelLayersPanelOrbital(params: StdUiLayersPanelLayer
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -132,34 +132,11 @@ export function stdUiLayersPanelLayersPanelOrbital(params: StdUiLayersPanelLayer
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'onReorder': {
-            'default': 'REORDER',
-            'description': 'Reorder a node within the tree. Threaded to FileTree\'s `onNodeReorder` seam — presence-gated there, so omitting it just means no dragging.',
-            'label': 'On Reorder',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'onSelect': {
-            'default': 'SELECT',
-            'description': 'onSelect prop',
-            'label': 'On Select',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'schema': {
-            'description': 'schema prop',
-            'label': 'Schema',
-            'tier': 'presentation',
-            'type': 'SExpr',
-          },
-          'selectedId': {
-            'description': 'Currently selected node id (any level of the ID scheme above).',
-            'label': 'Selected Id',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'LayersPanelRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -167,24 +144,27 @@ export function stdUiLayersPanelLayersPanelOrbital(params: StdUiLayersPanelLayer
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'LayersPanelItem',
         'emits': [
           {
-            'definerKnob': 'onSelect',
-            'description': 'onSelect prop',
             'event': '@config.onSelect',
+            'description': 'onSelect prop',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onSelect',
           },
           {
-            'definerKnob': 'onReorder',
-            'description': 'Reorder a node within the tree. Threaded to FileTree\'s `onNodeReorder` seam — presence-gated there, so omitting it just means no dragging.',
             'event': '@config.onReorder',
+            'description': 'Reorder a node within the tree. Threaded to FileTree\'s `onNodeReorder` seam — presence-gated there, so omitting it just means no dragging.',
+            'tier': 'essential',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -199,40 +179,38 @@ export function stdUiLayersPanelLayersPanelOrbital(params: StdUiLayersPanelLayer
                 'type': 'number',
               },
             ],
-            'scope': 'external',
-            'tier': 'essential',
+            'definerKnob': 'onReorder',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'LayersPanelItem',
-        'name': 'LayersPanelRender',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'onSelect prop',
               'key': '@config.onSelect',
               'name': '@config.on select',
+              'description': 'onSelect prop',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
             },
             {
-              'description': 'Reorder a node within the tree. Threaded to FileTree\'s `onNodeReorder` seam — presence-gated there, so omitting it just means no dragging.',
               'key': '@config.onReorder',
               'name': '@config.on reorder',
+              'description': 'Reorder a node within the tree. Threaded to FileTree\'s `onNodeReorder` seam — presence-gated there, so omitting it just means no dragging.',
+              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -247,36 +225,58 @@ export function stdUiLayersPanelLayersPanelOrbital(params: StdUiLayersPanelLayer
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'onReorder': '@config.onReorder',
-                    'onSelect': '@config.onSelect',
                     'schema': '@config.schema',
+                    'onSelect': '@config.onSelect',
                     'selectedId': '@config.selectedId',
+                    'onReorder': '@config.onReorder',
                     'type': 'layers-panel',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'onReorder': {
+            'type': 'event',
+            'default': 'REORDER',
+            'label': 'On Reorder',
+            'description': 'Reorder a node within the tree. Threaded to FileTree\'s `onNodeReorder` seam — presence-gated there, so omitting it just means no dragging.',
+            'tier': 'presentation',
+          },
+          'schema': {
+            'type': 'SExpr',
+            'label': 'Schema',
+            'description': 'schema prop',
+            'tier': 'presentation',
+          },
+          'onSelect': {
+            'type': 'event',
+            'default': 'SELECT',
+            'label': 'On Select',
+            'description': 'onSelect prop',
+            'tier': 'presentation',
+          },
+          'selectedId': {
+            'type': 'string',
+            'label': 'Selected Id',
+            'description': 'Currently selected node id (any level of the ID scheme above).',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

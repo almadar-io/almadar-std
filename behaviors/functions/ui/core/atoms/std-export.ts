@@ -31,12 +31,12 @@ const ALIAS = 'Export';
  * without modifying its state-machine topology.
  */
 export interface StdExportConfig {
-  /** Default: `"OPEN_EXPORT"` */
-  action?: unknown;
-  /** Default: `"download"` */
-  icon?: unknown;
   /** Default: `"@config.buttonLabel"` */
   label?: unknown;
+  /** Default: `"download"` */
+  icon?: unknown;
+  /** Default: `"OPEN_EXPORT"` */
+  action?: unknown;
   /** Default: `"sm"` */
   size?: unknown;
   /** Default: `"ghost"` */
@@ -198,12 +198,12 @@ export function stdExportExportOrbital(params: StdExportExportOrbitalParams = {}
     name: 'ExportOrbital',
     uses: [
       {
-        'as': 'Button',
         'from': 'std/behaviors/ui-button',
+        'as': 'Button',
       },
       {
-        'as': 'Menu',
         'from': 'std/behaviors/ui-menu',
+        'as': 'Menu',
       },
     ],
     entity: {
@@ -213,8 +213,8 @@ export function stdExportExportOrbital(params: StdExportExportOrbitalParams = {}
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -225,153 +225,91 @@ export function stdExportExportOrbital(params: StdExportExportOrbitalParams = {}
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdExportExportOrbitalUsesRef),
+        'name': 'Button1',
+        'linkedEntity': 'ExportPanel',
         'config': {
-          'action': {
-            'default': 'OPEN_EXPORT',
+          'label': {
             'type': 'unknown',
+            'default': '@config.buttonLabel',
           },
           'icon': {
+            'type': 'unknown',
             'default': 'download',
-            'type': 'unknown',
           },
-          'label': {
-            'default': '@config.buttonLabel',
+          'action': {
             'type': 'unknown',
+            'default': 'OPEN_EXPORT',
           },
           'size': {
-            'default': 'sm',
             'type': 'unknown',
+            'default': 'sm',
           },
           'variant': {
-            'default': 'ghost',
             'type': 'unknown',
+            'default': 'ghost',
           },
         },
-        'linkedEntity': 'ExportPanel',
-        'name': 'Button1',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdExportExportOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Menu.traits.MenuRender' satisfies _StdExportExportOrbitalUsesRef),
+        'name': 'Menu1',
+        'linkedEntity': 'ExportPanel',
         'config': {
-          'items': {
-            'default': '@config.formats',
-            'type': 'unknown',
-          },
-          'position': {
-            'default': 'bottom-start',
-            'type': 'unknown',
-          },
           'trigger': {
+            'type': 'unknown',
             'default': [
               '@trait.Button1',
             ],
+          },
+          'items': {
             'type': 'unknown',
+            'default': '@config.formats',
+          },
+          'position': {
+            'type': 'unknown',
+            'default': 'bottom-start',
           },
         },
-        'linkedEntity': 'ExportPanel',
-        'name': 'Menu1',
-        'ref': ('Menu.traits.MenuRender' satisfies _StdExportExportOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
-        'config': {
-          'buttonLabel': {
-            'default': 'Export',
-            'description': 'Text shown on the toolbar button that opens the export popover',
-            'label': 'Button label',
-            'synonyms': 'the text on the export trigger button. user phrases: \'rename export button to X\' / \'set the button label to X\' / \'call the button X\' / \'change export button text to X\' -> X (e.g. \'Download CSV\', \'Download\', \'Export Data\')',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'formats': {
-            'default': [
-              {
-                'event': 'EXPORT_REQUESTED',
-                'format': 'csv',
-                'id': 'csv',
-                'label': 'CSV',
-              },
-              {
-                'event': 'EXPORT_REQUESTED',
-                'format': 'xlsx',
-                'id': 'xlsx',
-                'label': 'XLSX',
-              },
-              {
-                'event': 'EXPORT_REQUESTED',
-                'format': 'pdf',
-                'id': 'pdf',
-                'label': 'PDF',
-              },
-            ],
-            'description': 'Export formats shown to the user in the popover',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'string',
-                },
-                'format': {
-                  'name': 'format',
-                  'required': true,
-                  'type': 'string',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'url': {
-                  'name': 'url',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Available formats',
-            'synonyms': 'list of export format entries (csv / xlsx / pdf / png / json). user phrases: \'only CSV\' -> keep only csv entry; \'add JSON\' -> append json entry; \'no PNG\' -> remove png; \'allow X and Y\' -> set the array to those two',
-            'tier': 'presentation',
-            'type': '[FormatOption]',
-          },
-        },
+        'name': 'ExportMenu',
         'effectRow': [
           {
             'kind': 'render-ui',
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'ExportPanel',
         'emits': [
           {
-            'description': 'Requests export of data in the picked format. itemId is the format id (matches the FormatOption.id/format of the picked entry).',
             'event': 'EXPORT_REQUESTED',
+            'description': 'Requests export of data in the picked format. itemId is the format id (matches the FormatOption.id/format of the picked entry).',
+            'synonyms': 'export, save, download, generate',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'itemId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'label',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'export, save, download, generate',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'ExportPanel',
-        'name': 'ExportMenu',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -382,33 +320,30 @@ export function stdExportExportOrbital(params: StdExportExportOrbitalParams = {}
               'name': 'Open Export',
             },
             {
-              'description': 'Requests export of data in the picked format. itemId is the format id (matches the FormatOption.id/format of the picked entry).',
               'key': 'EXPORT_REQUESTED',
               'name': 'Export Requested',
+              'description': 'Requests export of data in the picked format. itemId is the format id (matches the FormatOption.id/format of the picked entry).',
+              'synonyms': 'export, save, download, generate',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'itemId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'label',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'export, save, download, generate',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
@@ -421,22 +356,87 @@ export function stdExportExportOrbital(params: StdExportExportOrbitalParams = {}
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
               'event': 'OPEN_EXPORT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
-              'event': 'EXPORT_REQUESTED',
               'from': 'idle',
               'to': 'idle',
+              'event': 'EXPORT_REQUESTED',
             },
           ],
         },
+        'config': {
+          'buttonLabel': {
+            'type': 'string',
+            'default': 'Export',
+            'label': 'Button label',
+            'description': 'Text shown on the toolbar button that opens the export popover',
+            'synonyms': 'the text on the export trigger button. user phrases: \'rename export button to X\' / \'set the button label to X\' / \'call the button X\' / \'change export button text to X\' -> X (e.g. \'Download CSV\', \'Download\', \'Export Data\')',
+            'tier': 'presentation',
+          },
+          'formats': {
+            'type': '[FormatOption]',
+            'default': [
+              {
+                'event': 'EXPORT_REQUESTED',
+                'id': 'csv',
+                'label': 'CSV',
+                'format': 'csv',
+              },
+              {
+                'event': 'EXPORT_REQUESTED',
+                'format': 'xlsx',
+                'label': 'XLSX',
+                'id': 'xlsx',
+              },
+              {
+                'label': 'PDF',
+                'format': 'pdf',
+                'event': 'EXPORT_REQUESTED',
+                'id': 'pdf',
+              },
+            ],
+            'label': 'Available formats',
+            'description': 'Export formats shown to the user in the popover',
+            'synonyms': 'list of export format entries (csv / xlsx / pdf / png / json). user phrases: \'only CSV\' -> keep only csv entry; \'add JSON\' -> append json entry; \'no PNG\' -> remove png; \'allow X and Y\' -> set the array to those two',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'format': {
+                  'name': 'format',
+                  'type': 'string',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'string',
+                  'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'url': {
+                  'name': 'url',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

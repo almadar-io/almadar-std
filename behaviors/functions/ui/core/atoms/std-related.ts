@@ -62,14 +62,14 @@ export interface StdRelatedSelectRelatedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRelatedConfig {
-  /** Default: `"name"` */
-  labelField?: string;
-  /** Default: `""` */
-  relationField?: string;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Related"` */
   title?: string;
+  /** Default: `""` */
+  relationField?: string;
+  /** Default: `"name"` */
+  labelField?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**
@@ -213,14 +213,14 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'The identifier or designation for the related item.',
             'name': 'name',
-            'synonyms': 'title, label, identifier',
             'type': 'string',
+            'description': 'The identifier or designation for the related item.',
+            'synonyms': 'title, label, identifier',
           },
         ];
         const extras = params.fields ?? [];
@@ -231,43 +231,11 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'labelField': {
-            'default': 'name',
-            'description': 'Name of the field on the (rebound) related row rendered as the row label and carried as SELECT_RELATED\'s name — set it to `title` (etc.) whenever the bound entity labels rows differently. The rows are mapped through this at render time, because a trait-level `fields {}` rename is declaration-only on the runtime path and every populated row used to render a blank label.',
-            'label': 'Which field labels each related row?',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'relationField': {
-            'default': '',
-            'description': 'RelatedItem field compared against SHOW_RELATED\'s key to scope the fetch to one parent document; empty renders the full unfiltered collection (default).',
-            'label': 'Relation field',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
-            'label': 'Table look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'title': {
-            'default': 'Related',
-            'description': 'Heading shown above the related list.',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'RelatedItemList',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -283,35 +251,40 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
             'resource': '@entity.id',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'RelatedItem',
         'emits': [
           {
-            'description': 'Signals that related items have been successfully loaded.',
             'event': 'RelatedItemLoaded',
+            'description': 'Signals that related items have been successfully loaded.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'RelatedItem',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'name',
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'RelatedItem',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates failure to load related items.',
             'event': 'RelatedItemLoadFailed',
+            'description': 'Indicates failure to load related items.',
+            'synonyms': 'error, failure, problem, unsuccessful',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -322,86 +295,89 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'error, failure, problem, unsuccessful',
-            'tier': 'internal',
           },
           {
-            'description': 'Signals a related item was selected to drive a detail view.',
             'event': 'SELECT_RELATED',
+            'description': 'Signals a related item was selected to drive a detail view.',
+            'synonyms': 'select, choose, open, view',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'name',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'select, choose, open, view',
-            'tier': 'domain',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'RelatedItem',
-        'name': 'RelatedItemList',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'loaded',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Scopes the related fetch to rows whose relationField equals key.',
               'key': 'SHOW_RELATED',
               'name': 'Show Related',
+              'description': 'Scopes the related fetch to rows whose relationField equals key.',
+              'synonyms': 'scope, filter, focus, target',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'key',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'scope, filter, focus, target',
-              'tier': 'domain',
             },
             {
-              'description': 'Signals that related items have been successfully loaded.',
               'key': 'RelatedItemLoaded',
               'name': 'RelatedItem loaded',
+              'description': 'Signals that related items have been successfully loaded.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'RelatedItem',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'name',
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'RelatedItem',
                 },
               ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates failure to load related items.',
               'key': 'RelatedItemLoadFailed',
               'name': 'RelatedItem load failed',
+              'description': 'Indicates failure to load related items.',
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -412,46 +388,35 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, problem, unsuccessful',
-              'tier': 'internal',
             },
             {
-              'description': 'Signals a related item was selected to drive a detail view.',
               'key': 'SELECT_RELATED',
               'name': 'Select Related',
+              'description': 'Signals a related item was selected to drive a detail view.',
+              'synonyms': 'select, choose, open, view',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'name',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'select, choose, open, view',
-              'tier': 'domain',
             },
             {
               'key': 'RETRY',
               'name': 'Retry',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'loaded',
-            },
-            {
-              'name': 'error',
-            },
-          ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -467,36 +432,36 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
                         'type': 'skeleton',
                         'variant': 'header',
                       },
                       {
-                        'rows': 6,
                         'type': 'skeleton',
+                        'rows': 6,
                         'variant': 'list',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'SHOW_RELATED',
               'effects': [
                 [
                   'fetch',
                   ('RelatedItem' satisfies _StdRelatedEntityName),
                   {
                     'emit': {
-                      'failure': 'RelatedItemLoadFailed',
                       'success': 'RelatedItemLoaded',
+                      'failure': 'RelatedItemLoadFailed',
                     },
                     'filter': [
                       'or',
@@ -521,6 +486,9 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'skeleton',
@@ -528,21 +496,18 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SHOW_RELATED',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'loaded',
+              'event': 'RelatedItemLoaded',
               'effects': [
                 [
                   'render-ui',
@@ -550,12 +515,12 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                   {
                     'children': [
                       {
-                        'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'name': 'link',
-                            'size': 'lg',
                             'type': 'icon',
+                            'size': 'lg',
+                            'name': 'link',
                           },
                           {
                             'content': '@config.title',
@@ -563,14 +528,46 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                             'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
+                        'align': 'center',
                         'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'fields': [],
+                        'type': 'data-list',
+                        'renderItem': [
+                          'fn',
+                          'item',
+                          {
+                            'justify': 'between',
+                            'align': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'content': '@item.name',
+                                'variant': 'body',
+                              },
+                              {
+                                'size': 'sm',
+                                'actionPayload': {
+                                  'name': '@item.name',
+                                  'id': '@item.id',
+                                },
+                                'variant': 'ghost',
+                                'type': 'button',
+                                'action': 'SELECT_RELATED',
+                                'label': 'Open',
+                                'icon': 'chevron-right',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'xs',
+                          },
+                        ],
                         'entity': [
                           'array/map',
                           '@payload.data',
@@ -587,95 +584,63 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                             },
                           ],
                         ],
-                        'fields': [],
                         'look': '@config.tableLook',
-                        'renderItem': [
-                          'fn',
-                          'item',
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'content': '@item.name',
-                                'type': 'typography',
-                                'variant': 'body',
-                              },
-                              {
-                                'action': 'SELECT_RELATED',
-                                'actionPayload': {
-                                  'id': '@item.id',
-                                  'name': '@item.name',
-                                },
-                                'icon': 'chevron-right',
-                                'label': 'Open',
-                                'size': 'sm',
-                                'type': 'button',
-                                'variant': 'ghost',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'gap': 'xs',
-                            'justify': 'between',
-                            'type': 'stack',
-                          },
-                        ],
-                        'type': 'data-list',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'RelatedItemLoaded',
-              'from': 'loading',
-              'to': 'loaded',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'RelatedItemLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'className': 'py-8',
                     'align': 'center',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'icon',
                         'color': 'error',
                         'name': 'alert-triangle',
-                        'type': 'icon',
                       },
                       {
-                        'content': 'Failed to load related',
                         'type': 'typography',
                         'variant': 'body',
+                        'content': 'Failed to load related',
                       },
                       {
-                        'color': 'muted',
-                        'content': '@payload.error',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'content': '@payload.error',
+                        'color': 'muted',
+                        'type': 'typography',
                       },
                       {
-                        'action': 'RETRY',
                         'icon': 'rotate-ccw',
-                        'label': 'Retry',
+                        'action': 'RETRY',
                         'type': 'button',
+                        'label': 'Retry',
                         'variant': 'ghost',
                       },
                     ],
-                    'className': 'py-8',
-                    'direction': 'vertical',
-                    'gap': 'sm',
                     'type': 'stack',
+                    'gap': 'sm',
                   },
                 ],
               ],
-              'event': 'RelatedItemLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
+              'from': 'loaded',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -691,28 +656,28 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loaded',
-              'to': 'loading',
             },
             {
+              'from': 'loaded',
+              'to': 'loaded',
+              'event': 'SELECT_RELATED',
               'effects': [
                 [
                   'set',
@@ -720,11 +685,11 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                   '@payload.id',
                 ],
               ],
-              'event': 'SELECT_RELATED',
-              'from': 'loaded',
-              'to': 'loaded',
             },
             {
+              'from': 'loaded',
+              'to': 'loading',
+              'event': 'SHOW_RELATED',
               'effects': [
                 [
                   'fetch',
@@ -757,6 +722,9 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'skeleton',
@@ -764,58 +732,18 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                       },
                       {
                         'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SHOW_RELATED',
-              'from': 'loaded',
-              'to': 'loading',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('RelatedItem' satisfies _StdRelatedEntityName),
-                  {
-                    'emit': {
-                      'failure': 'RelatedItemLoadFailed',
-                      'success': 'RelatedItemLoaded',
-                    },
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      {
-                        'type': 'skeleton',
-                        'variant': 'header',
-                      },
-                      {
-                        'rows': 6,
-                        'type': 'skeleton',
-                        'variant': 'list',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                  },
-                ],
-              ],
+              'from': 'error',
+              'to': 'loading',
               'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
-            },
-            {
               'effects': [
                 [
                   'fetch',
@@ -831,28 +759,28 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
-                        'rows': 6,
                         'type': 'skeleton',
+                        'rows': 6,
                         'variant': 'list',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'RETRY',
-              'from': 'error',
-              'to': 'loading',
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'RETRY',
               'effects': [
                 [
                   'fetch',
@@ -861,6 +789,43 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                     'emit': {
                       'failure': 'RelatedItemLoadFailed',
                       'success': 'RelatedItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'skeleton',
+                        'variant': 'header',
+                      },
+                      {
+                        'variant': 'list',
+                        'type': 'skeleton',
+                        'rows': 6,
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'SHOW_RELATED',
+              'effects': [
+                [
+                  'fetch',
+                  ('RelatedItem' satisfies _StdRelatedEntityName),
+                  {
+                    'emit': {
+                      'success': 'RelatedItemLoaded',
+                      'failure': 'RelatedItemLoadFailed',
                     },
                     'filter': [
                       'or',
@@ -885,29 +850,64 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'skeleton',
                         'variant': 'header',
+                        'type': 'skeleton',
                       },
                       {
-                        'rows': 6,
-                        'type': 'skeleton',
                         'variant': 'list',
+                        'type': 'skeleton',
+                        'rows': 6,
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
-              'event': 'SHOW_RELATED',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'config': {
+          'title': {
+            'type': 'string',
+            'default': 'Related',
+            'label': 'Section title',
+            'description': 'Heading shown above the related list.',
+            'tier': 'presentation',
+          },
+          'relationField': {
+            'type': 'string',
+            'default': '',
+            'label': 'Relation field',
+            'description': 'RelatedItem field compared against SHOW_RELATED\'s key to scope the fetch to one parent document; empty renders the full unfiltered collection (default).',
+            'tier': 'domain',
+          },
+          'labelField': {
+            'type': 'string',
+            'default': 'name',
+            'label': 'Which field labels each related row?',
+            'description': 'Name of the field on the (rebound) related row rendered as the row label and carried as SELECT_RELATED\'s name — set it to `title` (etc.) whenever the bound entity labels rows differently. The rows are mapped through this at render time, because a trait-level `fields {}` rename is declaration-only on the runtime path and every populated row used to render a blank label.',
+            'tier': 'presentation',
+          },
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Table look',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

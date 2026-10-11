@@ -85,10 +85,10 @@ export interface StdAgentSuggestionsSuggestionSaveFailedPayload {
 export interface StdAgentSuggestionsConfig {
   /** Default: `"@config.actions"` */
   allowedActions?: string[];
-  /** Default: `"@config.kinds"` */
-  allowedKinds?: string[];
   /** Default: `"@config.maxPending"` */
   pendingLimit?: number;
+  /** Default: `"@config.kinds"` */
+  allowedKinds?: string[];
 }
 
 type _StdAgentSuggestionsEntityName = 'AgentSuggestionsHost' | 'AgentTurn' | 'AgentSuggestion' | 'AgentSuggestionRun';
@@ -142,8 +142,8 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
     name: 'AgentSuggestionsOrbital',
     uses: [
       {
-        'as': 'Loop',
         'from': 'std/behaviors/std-agent-tool-loop',
+        'as': 'Loop',
       },
     ],
     expects: [
@@ -279,8 +279,8 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -290,228 +290,203 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
       })(),
     } as Entity,
     config: {
-      'acceptLabel': {
-        'default': 'Accept',
-        'label': 'Accept button',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'actions': {
-        'default': [],
-        'description': 'When listed, a proposal carrying any other action, or none, is refused (SUGGESTION_REJECTED). Empty accepts any action.',
-        'items': {
-          'type': 'string',
-        },
-        'label': 'Which actions may a suggestion carry?',
-        'tier': 'domain',
-        'type': '[string]',
-      },
-      'analyzeLabel': {
-        'default': 'Look for suggestions',
-        'description': 'Shown in the empty inbox; asks the agent to look again.',
-        'label': 'Look-again button',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'closeLabel': {
-        'default': 'Close',
-        'label': 'Close button',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'cooldownMinutes': {
-        'default': 60,
-        'description': 'A trigger starts a run only when this long has passed since the person\'s last run. 0 runs on every trigger.',
-        'label': 'Minutes between proactive runs',
-        'tier': 'policy',
-        'type': 'number',
-      },
-      'dismissLabel': {
-        'default': 'Dismiss',
-        'label': 'Dismiss button',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'emptyDescription': {
-        'default': '',
-        'label': 'Empty inbox hint',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'emptyTitle': {
-        'default': 'No suggestions right now',
-        'label': 'Empty inbox title',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'historyHref': {
-        'default': '/agent-suggestions/history',
-        'description': 'The page the inbox links to for accepted and dismissed suggestions; empty hides the link. The history page of an app that imports this orbital is its own page over its retargeted entity.',
-        'label': 'Where past suggestions are listed',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'historyLabel': {
-        'default': 'Past suggestions',
-        'label': 'Past-suggestions link',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'icon': {
-        'default': 'lightbulb',
-        'label': 'Inbox icon',
-        'tier': 'presentation',
-        'type': 'string',
-      },
-      'instructions': {
-        'default': 'You propose next steps to the signed-in person. Look things up with the tools, then call the proposal tool once for each suggestion worth making, with the reason in its body. When a proposal is refused as a duplicate or the pending limit is reached, do not propose again. Propose nothing when nothing is worth suggesting.',
-        'description': 'Standing instructions sent with every proactive run.',
-        'label': 'How should the agent behave?',
-        'tier': 'domain',
-        'type': 'string',
-      },
-      'kinds': {
-        'default': [],
-        'description': 'When listed, a proposal of any other kind is refused (SUGGESTION_REJECTED). Empty accepts any kind.',
-        'items': {
-          'type': 'string',
-        },
-        'label': 'Which kinds may be proposed?',
-        'tier': 'domain',
-        'type': '[string]',
-      },
-      'maxPending': {
-        'default': 5,
-        'description': 'A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending. 0 refuses every proposal.',
-        'label': 'How many suggestions may wait at once?',
-        'tier': 'policy',
-        'type': 'number',
-      },
-      'maxSteps': {
-        'default': 8,
-        'label': 'Model round-trips per run',
-        'tier': 'policy',
-        'type': 'number',
-      },
-      'panelSlot': {
-        'default': 'main',
-        'description': '`main` for the content of a launcher or page; `modal` or `drawer` for an overlay opened with OPEN (a notification bell).',
-        'label': 'Where the inbox renders',
-        'tier': 'presentation',
-        'type': 'slot',
-      },
-      'prompt': {
-        'default': 'Look at what I have been doing and propose what I could do next, one suggestion at a time.',
-        'description': 'The request each proactive run answers.',
-        'label': 'What does the agent look into?',
-        'tier': 'domain',
-        'type': 'string',
-      },
-      'startOpen': {
-        'default': true,
-        'description': 'Off for an overlay that waits for OPEN.',
-        'label': 'Show the inbox as soon as it mounts?',
-        'tier': 'presentation',
-        'type': 'boolean',
-      },
-      'title': {
-        'default': 'Suggestions',
-        'label': 'Inbox heading',
-        'tier': 'presentation',
-        'type': 'string',
-      },
       'tools': {
+        'type': '[AgentTool]',
         'default': [
           {
             'event': 'AgentSuggestionProposer.PROPOSE_SUGGESTION',
           },
         ],
+        'label': 'What may the agent do?',
         'description': 'The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with the proposal input addressed by its local orbital name (`{ event: Suggestions.AgentSuggestionProposer.PROPOSE_SUGGESTION }`), which the agent can never propose without.',
+        'tier': 'domain',
         'items': {
-          'properties': {
-            'AgentToolInput': {
-              'name': 'AgentToolInput',
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': true,
-                  'type': 'EventAddress',
-                },
-              },
-              'type': 'object',
-            },
-            'AgentToolRead': {
-              'name': 'AgentToolRead',
-              'properties': {
-                'read': {
-                  'name': 'read',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'AgentToolScope': {
-              'name': 'AgentToolScope',
-              'properties': {
-                'scope': {
-                  'name': 'scope',
-                  'required': true,
-                  'type': 'string',
-                  'values': [
-                    'declared',
-                  ],
-                },
-              },
-              'type': 'object',
-            },
-          },
           'type': 'union',
           'values': [
             'AgentToolScope',
             'AgentToolInput',
             'AgentToolRead',
           ],
+          'properties': {
+            'AgentToolRead': {
+              'name': 'AgentToolRead',
+              'type': 'object',
+              'properties': {
+                'read': {
+                  'name': 'read',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+            'AgentToolInput': {
+              'name': 'AgentToolInput',
+              'type': 'object',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'type': 'EventAddress',
+                  'required': true,
+                },
+              },
+            },
+            'AgentToolScope': {
+              'name': 'AgentToolScope',
+              'type': 'object',
+              'properties': {
+                'scope': {
+                  'name': 'scope',
+                  'type': 'string',
+                  'required': true,
+                  'values': [
+                    'declared',
+                  ],
+                },
+              },
+            },
+          },
         },
-        'label': 'What may the agent do?',
+      },
+      'icon': {
+        'type': 'string',
+        'default': 'lightbulb',
+        'label': 'Inbox icon',
+        'tier': 'presentation',
+      },
+      'emptyDescription': {
+        'type': 'string',
+        'default': '',
+        'label': 'Empty inbox hint',
+        'tier': 'presentation',
+      },
+      'historyHref': {
+        'type': 'string',
+        'default': '/agent-suggestions/history',
+        'label': 'Where past suggestions are listed',
+        'description': 'The page the inbox links to for accepted and dismissed suggestions; empty hides the link. The history page of an app that imports this orbital is its own page over its retargeted entity.',
+        'tier': 'presentation',
+      },
+      'historyLabel': {
+        'type': 'string',
+        'default': 'Past suggestions',
+        'label': 'Past-suggestions link',
+        'tier': 'presentation',
+      },
+      'instructions': {
+        'type': 'string',
+        'default': 'You propose next steps to the signed-in person. Look things up with the tools, then call the proposal tool once for each suggestion worth making, with the reason in its body. When a proposal is refused as a duplicate or the pending limit is reached, do not propose again. Propose nothing when nothing is worth suggesting.',
+        'label': 'How should the agent behave?',
+        'description': 'Standing instructions sent with every proactive run.',
         'tier': 'domain',
-        'type': '[AgentTool]',
+      },
+      'actions': {
+        'type': '[string]',
+        'default': [],
+        'label': 'Which actions may a suggestion carry?',
+        'description': 'When listed, a proposal carrying any other action, or none, is refused (SUGGESTION_REJECTED). Empty accepts any action.',
+        'tier': 'domain',
+        'items': {
+          'type': 'string',
+        },
+      },
+      'startOpen': {
+        'type': 'boolean',
+        'default': true,
+        'label': 'Show the inbox as soon as it mounts?',
+        'description': 'Off for an overlay that waits for OPEN.',
+        'tier': 'presentation',
+      },
+      'dismissLabel': {
+        'type': 'string',
+        'default': 'Dismiss',
+        'label': 'Dismiss button',
+        'tier': 'presentation',
+      },
+      'maxPending': {
+        'type': 'number',
+        'default': 5,
+        'label': 'How many suggestions may wait at once?',
+        'description': 'A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending. 0 refuses every proposal.',
+        'tier': 'policy',
+      },
+      'emptyTitle': {
+        'type': 'string',
+        'default': 'No suggestions right now',
+        'label': 'Empty inbox title',
+        'tier': 'presentation',
+      },
+      'acceptLabel': {
+        'type': 'string',
+        'default': 'Accept',
+        'label': 'Accept button',
+        'tier': 'presentation',
+      },
+      'maxSteps': {
+        'type': 'number',
+        'default': 8,
+        'label': 'Model round-trips per run',
+        'tier': 'policy',
+      },
+      'title': {
+        'type': 'string',
+        'default': 'Suggestions',
+        'label': 'Inbox heading',
+        'tier': 'presentation',
+      },
+      'panelSlot': {
+        'type': 'slot',
+        'default': 'main',
+        'label': 'Where the inbox renders',
+        'description': '`main` for the content of a launcher or page; `modal` or `drawer` for an overlay opened with OPEN (a notification bell).',
+        'tier': 'presentation',
+      },
+      'prompt': {
+        'type': 'string',
+        'default': 'Look at what I have been doing and propose what I could do next, one suggestion at a time.',
+        'label': 'What does the agent look into?',
+        'description': 'The request each proactive run answers.',
+        'tier': 'domain',
+      },
+      'analyzeLabel': {
+        'type': 'string',
+        'default': 'Look for suggestions',
+        'label': 'Look-again button',
+        'description': 'Shown in the empty inbox; asks the agent to look again.',
+        'tier': 'presentation',
+      },
+      'closeLabel': {
+        'type': 'string',
+        'default': 'Close',
+        'label': 'Close button',
+        'tier': 'presentation',
+      },
+      'kinds': {
+        'type': '[string]',
+        'default': [],
+        'label': 'Which kinds may be proposed?',
+        'description': 'When listed, a proposal of any other kind is refused (SUGGESTION_REJECTED). Empty accepts any kind.',
+        'tier': 'domain',
+        'items': {
+          'type': 'string',
+        },
+      },
+      'cooldownMinutes': {
+        'type': 'number',
+        'default': 60,
+        'label': 'Minutes between proactive runs',
+        'description': 'A trigger starts a run only when this long has passed since the person\'s last run. 0 runs on every trigger.',
+        'tier': 'policy',
       },
     },
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'allowedActions': {
-            'default': '@config.actions',
-            'description': 'When listed, any other action is refused. Empty accepts any.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Which actions may a suggestion carry?',
-            'synonyms': 'allowed actions, commands, events',
-            'tier': 'domain',
-            'type': '[string]',
-          },
-          'allowedKinds': {
-            'default': '@config.kinds',
-            'description': 'When listed, any other kind is refused. Empty accepts any.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Which kinds may be proposed?',
-            'synonyms': 'types, categories, allowed kinds',
-            'tier': 'domain',
-            'type': '[string]',
-          },
-          'pendingLimit': {
-            'default': '@config.maxPending',
-            'description': 'A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending.',
-            'label': 'How many suggestions may wait at once?',
-            'synonyms': 'limit, cap, queue size',
-            'tier': 'policy',
-            'type': 'number',
-          },
+        'name': 'AgentSuggestionProposer',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'pendingProposal',
+          ],
         },
         'effectRow': [
           {
@@ -543,72 +518,76 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
             'resource': '@entity.pendingProposal',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'AgentSuggestion',
         'emits': [
           {
-            'description': 'A suggestion was stored for the person — payload is the created AgentSuggestion row itself.',
             'event': 'SUGGESTION_ADDED',
-            'scope': 'external',
+            'description': 'A suggestion was stored for the person — payload is the created AgentSuggestion row itself.',
             'synonyms': 'proposed, suggested, new suggestion',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
-            'description': 'This signature was already proposed to the person (pending, accepted or dismissed), so nothing was stored.',
             'event': 'SUGGESTION_DUPLICATE',
+            'description': 'This signature was already proposed to the person (pending, accepted or dismissed), so nothing was stored.',
+            'synonyms': 'already proposed, repeat, seen before',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'signature',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'already proposed, repeat, seen before',
-            'tier': 'domain',
           },
           {
-            'description': 'The person already has the most pending suggestions allowed, so nothing was stored.',
             'event': 'SUGGESTION_LIMIT_REACHED',
+            'description': 'The person already has the most pending suggestions allowed, so nothing was stored.',
+            'synonyms': 'too many, queue full, cap',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'maxPending',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'too many, queue full, cap',
-            'tier': 'domain',
           },
           {
-            'description': 'The proposal was refused (a kind or action not allowed, or it could not be checked or stored); the reason says why.',
             'event': 'SUGGESTION_REJECTED',
+            'description': 'The proposal was refused (a kind or action not allowed, or it could not be checked or stored); the reason says why.',
+            'synonyms': 'refused, invalid, not allowed',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'reason',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'refused, invalid, not allowed',
-            'tier': 'domain',
           },
           {
             'event': 'SuggestionsForPropose',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'SuggestionRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'kind',
@@ -660,14 +639,14 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'SuggestionRow',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'SuggestionCheckFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -678,11 +657,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'SuggestionSaveFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -693,41 +672,35 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'pendingProposal',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentSuggestion',
-        'name': 'AgentSuggestionProposer',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Propose something to the signed-in person: a kind, a title, a body that gives the reason, an optional action with its payload, an optional href, and the subject it is about (an id or slug). A proposal whose kind, action and subject were already proposed to this person is refused, whatever became of the first; so is one past the pending limit.',
-              'external': true,
               'key': 'PROPOSE_SUGGESTION',
               'name': 'Propose Suggestion',
+              'description': 'Propose something to the signed-in person: a kind, a title, a body that gives the reason, an optional action with its payload, an optional href, and the subject it is about (an id or slug). A proposal whose kind, action and subject were already proposed to this person is refused, whatever became of the first; so is one past the pending limit.',
+              'synonyms': 'suggest, recommend, propose, offer',
               'payloadSchema': [
                 {
                   'name': 'kind',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'title',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'body',
@@ -743,32 +716,34 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 },
                 {
                   'name': 'subject',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'payload',
                   'type': 'Map<string,scalar>',
                 },
               ],
-              'synonyms': 'suggest, recommend, propose, offer',
+              'external': true,
             },
             {
               'key': 'SuggestionsForPropose',
               'name': 'Suggestions for propose',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'kind',
@@ -820,14 +795,13 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'SuggestionCheckFailed',
               'name': 'Suggestion check failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -838,11 +812,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'SuggestionSaveFailed',
               'name': 'Suggestion save failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -853,92 +827,67 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'A suggestion was stored for the person — payload is the created AgentSuggestion row itself.',
               'key': 'SUGGESTION_ADDED',
               'name': 'Suggestion Added',
+              'description': 'A suggestion was stored for the person — payload is the created AgentSuggestion row itself.',
               'synonyms': 'proposed, suggested, new suggestion',
               'tier': 'domain',
             },
             {
-              'description': 'This signature was already proposed to the person (pending, accepted or dismissed), so nothing was stored.',
               'key': 'SUGGESTION_DUPLICATE',
               'name': 'Suggestion Duplicate',
+              'description': 'This signature was already proposed to the person (pending, accepted or dismissed), so nothing was stored.',
+              'synonyms': 'already proposed, repeat, seen before',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'signature',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'already proposed, repeat, seen before',
-              'tier': 'domain',
             },
             {
-              'description': 'The person already has the most pending suggestions allowed, so nothing was stored.',
               'key': 'SUGGESTION_LIMIT_REACHED',
               'name': 'Suggestion Limit Reached',
+              'description': 'The person already has the most pending suggestions allowed, so nothing was stored.',
+              'synonyms': 'too many, queue full, cap',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'maxPending',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
-              'synonyms': 'too many, queue full, cap',
-              'tier': 'domain',
             },
             {
-              'description': 'The proposal was refused (a kind or action not allowed, or it could not be checked or stored); the reason says why.',
               'key': 'SUGGESTION_REJECTED',
               'name': 'Suggestion Rejected',
+              'description': 'The proposal was refused (a kind or action not allowed, or it could not be checked or stored); the reason says why.',
+              'synonyms': 'refused, invalid, not allowed',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'reason',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'refused, invalid, not allowed',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
             },
           ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'ready',
               'to': 'ready',
+              'event': 'INIT',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'SUGGESTION_REJECTED',
-                  {
-                    'reason': [
-                      'str/concat',
-                      'Unknown kind "',
-                      '@payload.kind',
-                      '". Allowed kinds: ',
-                      [
-                        'str/join',
-                        '@config.allowedKinds',
-                        ', ',
-                      ],
-                    ],
-                  },
-                ],
-              ],
-              'event': 'PROPOSE_SUGGESTION',
               'from': 'ready',
+              'to': 'ready',
+              'event': 'PROPOSE_SUGGESTION',
               'guard': [
                 'and',
                 [
@@ -958,9 +907,6 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   ],
                 ],
               ],
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
                   'emit',
@@ -968,24 +914,23 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   {
                     'reason': [
                       'str/concat',
-                      'Unknown action "',
-                      [
-                        'str/default',
-                        '@payload.action',
-                        '',
-                      ],
-                      '". Allowed actions: ',
+                      'Unknown kind "',
+                      '@payload.kind',
+                      '". Allowed kinds: ',
                       [
                         'str/join',
-                        '@config.allowedActions',
+                        '@config.allowedKinds',
                         ', ',
                       ],
                     ],
                   },
                 ],
               ],
-              'event': 'PROPOSE_SUGGESTION',
+            },
+            {
               'from': 'ready',
+              'to': 'ready',
+              'event': 'PROPOSE_SUGGESTION',
               'guard': [
                 'and',
                 [
@@ -1025,74 +970,34 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   ],
                 ],
               ],
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
-                  'set',
-                  '@entity.pendingProposal',
+                  'emit',
+                  'SUGGESTION_REJECTED',
                   {
-                    'action': [
-                      'str/default',
-                      '@payload.action',
-                      '',
-                    ],
-                    'body': [
-                      'str/default',
-                      '@payload.body',
-                      '',
-                    ],
-                    'href': [
-                      'str/default',
-                      '@payload.href',
-                      '',
-                    ],
-                    'kind': '@payload.kind',
-                    'payload': [
-                      'if',
-                      '@payload.payload',
-                      '@payload.payload',
-                      {},
-                    ],
-                    'signature': [
+                    'reason': [
                       'str/concat',
-                      '@payload.kind',
-                      ':',
+                      'Unknown action "',
                       [
                         'str/default',
                         '@payload.action',
                         '',
                       ],
-                      ':',
-                      '@payload.subject',
-                    ],
-                    'subject': '@payload.subject',
-                    'title': '@payload.title',
-                  },
-                ],
-                [
-                  'fetch',
-                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
-                  {
-                    'emit': {
-                      'failure': 'SuggestionCheckFailed',
-                      'success': 'SuggestionsForPropose',
-                    },
-                    'filter': [
-                      '=',
+                      '". Allowed actions: ',
                       [
-                        'object/get',
-                        '@entity',
-                        'ownerId',
+                        'str/join',
+                        '@config.allowedActions',
+                        ', ',
                       ],
-                      '@user.id',
                     ],
                   },
                 ],
               ],
-              'event': 'PROPOSE_SUGGESTION',
+            },
+            {
               'from': 'ready',
+              'to': 'ready',
+              'event': 'PROPOSE_SUGGESTION',
               'guard': [
                 'and',
                 [
@@ -1132,20 +1037,74 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   ],
                 ],
               ],
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
-                  'emit',
-                  'SUGGESTION_DUPLICATE',
+                  'set',
+                  '@entity.pendingProposal',
                   {
-                    'signature': '@entity.pendingProposal.signature',
+                    'subject': '@payload.subject',
+                    'payload': [
+                      'if',
+                      '@payload.payload',
+                      '@payload.payload',
+                      {},
+                    ],
+                    'action': [
+                      'str/default',
+                      '@payload.action',
+                      '',
+                    ],
+                    'signature': [
+                      'str/concat',
+                      '@payload.kind',
+                      ':',
+                      [
+                        'str/default',
+                        '@payload.action',
+                        '',
+                      ],
+                      ':',
+                      '@payload.subject',
+                    ],
+                    'title': '@payload.title',
+                    'body': [
+                      'str/default',
+                      '@payload.body',
+                      '',
+                    ],
+                    'href': [
+                      'str/default',
+                      '@payload.href',
+                      '',
+                    ],
+                    'kind': '@payload.kind',
+                  },
+                ],
+                [
+                  'fetch',
+                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
+                  {
+                    'emit': {
+                      'success': 'SuggestionsForPropose',
+                      'failure': 'SuggestionCheckFailed',
+                    },
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'ownerId',
+                      ],
+                      '@user.id',
+                    ],
                   },
                 ],
               ],
-              'event': 'SuggestionsForPropose',
+            },
+            {
               'from': 'ready',
+              'to': 'ready',
+              'event': 'SuggestionsForPropose',
               'guard': [
                 'array/some',
                 '@payload.data',
@@ -1159,20 +1118,20 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   ],
                 ],
               ],
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
                   'emit',
-                  'SUGGESTION_LIMIT_REACHED',
+                  'SUGGESTION_DUPLICATE',
                   {
-                    'maxPending': '@config.pendingLimit',
+                    'signature': '@entity.pendingProposal.signature',
                   },
                 ],
               ],
-              'event': 'SuggestionsForPropose',
+            },
+            {
               'from': 'ready',
+              'to': 'ready',
+              'event': 'SuggestionsForPropose',
               'guard': [
                 'and',
                 [
@@ -1209,37 +1168,20 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   '@config.pendingLimit',
                 ],
               ],
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
-                  'persist',
-                  'create',
-                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
+                  'emit',
+                  'SUGGESTION_LIMIT_REACHED',
                   {
-                    'action': '@entity.pendingProposal.action',
-                    'body': '@entity.pendingProposal.body',
-                    'createdAt': '@now',
-                    'href': '@entity.pendingProposal.href',
-                    'kind': '@entity.pendingProposal.kind',
-                    'ownerId': '@user.id',
-                    'payload': '@entity.pendingProposal.payload',
-                    'signature': '@entity.pendingProposal.signature',
-                    'status': 'pending',
-                    'subject': '@entity.pendingProposal.subject',
-                    'title': '@entity.pendingProposal.title',
-                  },
-                  {
-                    'emit': {
-                      'failure': 'SuggestionSaveFailed',
-                      'success': 'SUGGESTION_ADDED',
-                    },
+                    'maxPending': '@config.pendingLimit',
                   },
                 ],
               ],
-              'event': 'SuggestionsForPropose',
+            },
+            {
               'from': 'ready',
+              'to': 'ready',
+              'event': 'SuggestionsForPropose',
               'guard': [
                 'and',
                 [
@@ -1276,9 +1218,37 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   '@config.pendingLimit',
                 ],
               ],
-              'to': 'ready',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
+                  {
+                    'action': '@entity.pendingProposal.action',
+                    'signature': '@entity.pendingProposal.signature',
+                    'createdAt': '@now',
+                    'body': '@entity.pendingProposal.body',
+                    'ownerId': '@user.id',
+                    'payload': '@entity.pendingProposal.payload',
+                    'status': 'pending',
+                    'kind': '@entity.pendingProposal.kind',
+                    'subject': '@entity.pendingProposal.subject',
+                    'href': '@entity.pendingProposal.href',
+                    'title': '@entity.pendingProposal.title',
+                  },
+                  {
+                    'emit': {
+                      'success': 'SUGGESTION_ADDED',
+                      'failure': 'SuggestionSaveFailed',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'SuggestionCheckFailed',
               'effects': [
                 [
                   'emit',
@@ -1295,17 +1265,17 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'render-ui',
                   'toast',
                   {
-                    'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'warning',
+                    'type': 'alert',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'SuggestionCheckFailed',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'SuggestionSaveFailed',
               'effects': [
                 [
                   'emit',
@@ -1322,108 +1292,55 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'render-ui',
                   'toast',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
+                    'message': '@payload.error',
                     'variant': 'warning',
                   },
                 ],
               ],
-              'event': 'SuggestionSaveFailed',
-              'from': 'ready',
-              'to': 'ready',
             },
           ],
         },
+        'config': {
+          'allowedActions': {
+            'type': '[string]',
+            'default': '@config.actions',
+            'label': 'Which actions may a suggestion carry?',
+            'description': 'When listed, any other action is refused. Empty accepts any.',
+            'synonyms': 'allowed actions, commands, events',
+            'tier': 'domain',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'pendingLimit': {
+            'type': 'number',
+            'default': '@config.maxPending',
+            'label': 'How many suggestions may wait at once?',
+            'description': 'A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending.',
+            'synonyms': 'limit, cap, queue size',
+            'tier': 'policy',
+          },
+          'allowedKinds': {
+            'type': '[string]',
+            'default': '@config.kinds',
+            'label': 'Which kinds may be proposed?',
+            'description': 'When listed, any other kind is refused. Empty accepts any.',
+            'synonyms': 'types, categories, allowed kinds',
+            'tier': 'domain',
+            'items': {
+              'type': 'string',
+            },
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'interaction',
-        'config': {
-          'approveLabel': {
-            'default': '@config.acceptLabel',
-            'label': 'Accept button label',
-            'synonyms': 'approve, yes, do it',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'closeButtonLabel': {
-            'default': '@config.closeLabel',
-            'label': 'Close button label',
-            'synonyms': 'back, hide',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'declineLabel': {
-            'default': '@config.dismissLabel',
-            'label': 'Dismiss button label',
-            'synonyms': 'reject, no thanks, hide',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'emptyHeading': {
-            'default': '@config.emptyTitle',
-            'label': 'What shows when nothing is pending?',
-            'synonyms': 'empty state, no suggestions',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'emptyHint': {
-            'default': '@config.emptyDescription',
-            'label': 'Hint under the empty heading',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'heading': {
-            'default': '@config.title',
-            'description': 'Heading at the top of the inbox.',
-            'label': 'Inbox heading',
-            'synonyms': 'panel title, suggestions title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'headingIcon': {
-            'default': '@config.icon',
-            'description': 'Lucide icon name shown beside the heading.',
-            'label': 'Inbox icon',
-            'synonyms': 'header icon',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'historyLink': {
-            'default': '@config.historyHref',
-            'description': 'Where accepted and dismissed suggestions are listed; empty hides the link.',
-            'label': 'Past-suggestions page',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'historyLinkLabel': {
-            'default': '@config.historyLabel',
-            'label': 'Past-suggestions link label',
-            'synonyms': 'history, archive, earlier suggestions',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'inboxSlot': {
-            'default': '@config.panelSlot',
-            'description': '`main` inline; `modal` or `drawer` for an overlay opened with OPEN.',
-            'label': 'Where the inbox renders',
-            'tier': 'internal',
-            'type': 'slot',
-          },
-          'lookAgainLabel': {
-            'default': '@config.analyzeLabel',
-            'description': 'The empty inbox\'s button, which asks the agent to look again.',
-            'label': 'Look-again button label',
-            'synonyms': 'refresh, find suggestions, analyze',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'showOnMount': {
-            'default': '@config.startOpen',
-            'description': 'Off for an overlay that waits for OPEN.',
-            'label': 'Show the inbox as soon as it mounts?',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
+        'name': 'AgentSuggestionInbox',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -1452,23 +1369,28 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.inboxSlot',
+            'resolved': false,
           },
           {
             'kind': 'render-ui',
             'resource': 'toast',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AgentSuggestion',
         'emits': [
           {
-            'description': 'The person accepted a suggestion; the app routes `action` with `payload` (a suggestion with an href has already navigated there).',
             'event': 'SUGGESTION_ACCEPTED',
+            'description': 'The person accepted a suggestion; the app routes `action` with `payload` (a suggestion with an href has already navigated there).',
+            'synonyms': 'accepted, approved, taken up, do it',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'kind',
@@ -1491,18 +1413,18 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 'type': 'Map<string,scalar>',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'accepted, approved, taken up, do it',
-            'tier': 'domain',
           },
           {
-            'description': 'The person dismissed a suggestion; its signature is never proposed to them again.',
             'event': 'SUGGESTION_DISMISSED',
+            'description': 'The person dismissed a suggestion; its signature is never proposed to them again.',
+            'synonyms': 'dismissed, rejected, declined, no thanks',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'kind',
@@ -1517,33 +1439,32 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'dismissed, rejected, declined, no thanks',
-            'tier': 'domain',
           },
           {
-            'description': 'The person asked the agent to look for suggestions again.',
             'event': 'SUGGESTIONS_ANALYZE_REQUESTED',
-            'scope': 'external',
+            'description': 'The person asked the agent to look for suggestions again.',
             'synonyms': 'look again, refresh suggestions, analyze',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
             'event': 'SuggestionsLoaded',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'SuggestionRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'kind',
@@ -1595,14 +1516,14 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'SuggestionRow',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'SuggestionsLoadFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1613,11 +1534,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'SuggestionResolveFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1628,25 +1549,25 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'SuggestionForAccept',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'SuggestionRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'kind',
@@ -1698,28 +1619,28 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'SuggestionRow',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'SuggestionForDismiss',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'SuggestionRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'kind',
@@ -1771,26 +1692,25 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'SuggestionRow',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
-            'description': 'Fired after a suggestion is stored as accepted',
             'event': 'SuggestionAccepted',
-            'payloadEntity': 'SuggestionRow',
+            'description': 'Fired after a suggestion is stored as accepted',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'ownerId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'kind',
@@ -1842,23 +1762,23 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 'type': 'number',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
+            'payloadEntity': 'SuggestionRow',
           },
           {
-            'description': 'Fired after a suggestion is stored as dismissed',
             'event': 'SuggestionDismissed',
-            'payloadEntity': 'SuggestionRow',
+            'description': 'Fired after a suggestion is stored as dismissed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'ownerId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'kind',
@@ -1910,80 +1830,82 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 'type': 'number',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
+            'payloadEntity': 'SuggestionRow',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentSuggestion',
         'listens': [
           {
             'event': 'SUGGESTION_ADDED',
+            'triggers': 'REFRESH',
             'source': {
               'kind': 'trait',
               'trait': ('AgentSuggestionProposer' satisfies _StdAgentSuggestionsListenTraitName),
             },
-            'triggers': 'REFRESH',
           },
           {
             'event': 'SUGGESTION_RUN_DONE',
+            'triggers': 'REFRESH',
             'source': {
               'kind': 'trait',
               'trait': ('AgentSuggestionRunner' satisfies _StdAgentSuggestionsListenTraitName),
             },
-            'triggers': 'REFRESH',
           },
           {
             'event': 'SUGGESTION_RUN_FAILED',
+            'triggers': 'REFRESH',
             'source': {
               'kind': 'trait',
               'trait': ('AgentSuggestionRunner' satisfies _StdAgentSuggestionsListenTraitName),
             },
-            'triggers': 'REFRESH',
           },
           {
             'event': 'SUGGESTIONS_OPEN_REQUESTED',
+            'triggers': 'OPEN',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'OPEN',
           },
         ],
-        'name': 'AgentSuggestionInbox',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Show the suggestions inbox. SUGGESTIONS_OPEN_REQUESTED from any trait arrives here.',
               'key': 'OPEN',
               'name': 'Open',
+              'description': 'Show the suggestions inbox. SUGGESTIONS_OPEN_REQUESTED from any trait arrives here.',
               'synonyms': 'show suggestions, open bell, view suggestions',
               'tier': 'presentation',
             },
             {
               'key': 'SuggestionsLoaded',
               'name': 'Suggestions loaded',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'kind',
@@ -2035,14 +1957,13 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'SuggestionsLoadFailed',
               'name': 'Suggestions load failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2053,11 +1974,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'SuggestionResolveFailed',
               'name': 'Suggestion resolve failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2068,48 +1989,49 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'Reload the pending suggestions.',
               'key': 'REFRESH',
               'name': 'Refresh',
+              'description': 'Reload the pending suggestions.',
             },
             {
-              'description': 'Ask the agent to look for suggestions again.',
               'key': 'ANALYZE',
               'name': 'Analyze',
+              'description': 'Ask the agent to look for suggestions again.',
               'tier': 'presentation',
             },
             {
-              'description': 'Accept this suggestion.',
               'key': 'ACCEPT',
               'name': 'Accept',
+              'description': 'Accept this suggestion.',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'presentation',
             },
             {
               'key': 'SuggestionForAccept',
               'name': 'Suggestion for accept',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'kind',
@@ -2161,25 +2083,23 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'SuggestionAccepted',
               'name': 'Suggestion accepted',
-              'payloadEntity': 'SuggestionRow',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ownerId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'kind',
@@ -2231,37 +2151,39 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'type': 'number',
                 },
               ],
-              'tier': 'internal',
+              'payloadEntity': 'SuggestionRow',
             },
             {
-              'description': 'Dismiss this suggestion.',
               'key': 'DISMISS',
               'name': 'Dismiss',
+              'description': 'Dismiss this suggestion.',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'presentation',
             },
             {
               'key': 'SuggestionForDismiss',
               'name': 'Suggestion for dismiss',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'kind',
@@ -2313,25 +2235,23 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'SuggestionDismissed',
               'name': 'Suggestion dismissed',
-              'payloadEntity': 'SuggestionRow',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ownerId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'kind',
@@ -2383,24 +2303,26 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'type': 'number',
                 },
               ],
-              'tier': 'internal',
+              'payloadEntity': 'SuggestionRow',
             },
             {
-              'description': 'Hide the suggestions inbox.',
               'key': 'CLOSE',
               'name': 'Close',
+              'description': 'Hide the suggestions inbox.',
               'synonyms': 'close, hide, dismiss panel',
               'tier': 'presentation',
             },
             {
-              'description': 'The person accepted a suggestion; the app routes `action` with `payload` (a suggestion with an href has already navigated there).',
               'key': 'SUGGESTION_ACCEPTED',
               'name': 'Suggestion Accepted',
+              'description': 'The person accepted a suggestion; the app routes `action` with `payload` (a suggestion with an href has already navigated there).',
+              'synonyms': 'accepted, approved, taken up, do it',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'kind',
@@ -2423,18 +2345,18 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'type': 'Map<string,scalar>',
                 },
               ],
-              'synonyms': 'accepted, approved, taken up, do it',
-              'tier': 'domain',
             },
             {
-              'description': 'The person dismissed a suggestion; its signature is never proposed to them again.',
               'key': 'SUGGESTION_DISMISSED',
               'name': 'Suggestion Dismissed',
+              'description': 'The person dismissed a suggestion; its signature is never proposed to them again.',
+              'synonyms': 'dismissed, rejected, declined, no thanks',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'kind',
@@ -2449,36 +2371,29 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'type': 'string',
                 },
               ],
-              'synonyms': 'dismissed, rejected, declined, no thanks',
-              'tier': 'domain',
             },
             {
-              'description': 'The person asked the agent to look for suggestions again.',
               'key': 'SUGGESTIONS_ANALYZE_REQUESTED',
               'name': 'Suggestions Analyze Requested',
+              'description': 'The person asked the agent to look for suggestions again.',
               'synonyms': 'look again, refresh suggestions, analyze',
               'tier': 'domain',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'closed',
-            },
-            {
-              'name': 'open',
-            },
-          ],
           'transitions': [
             {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'INIT',
+              'guard': '@config.showOnMount',
               'effects': [
                 [
                   'fetch',
                   ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
                   {
                     'emit': {
-                      'failure': 'SuggestionsLoadFailed',
                       'success': 'SuggestionsLoaded',
+                      'failure': 'SuggestionsLoadFailed',
                     },
                     'filter': [
                       '=',
@@ -2492,12 +2407,15 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'closed',
-              'guard': '@config.showOnMount',
-              'to': 'open',
             },
             {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                '@config.showOnMount',
+              ],
               'effects': [
                 [
                   'render-ui',
@@ -2505,41 +2423,38 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   null,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'closed',
-              'guard': [
-                'not',
-                '@config.showOnMount',
-              ],
-              'to': 'closed',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
-                  {
-                    'emit': {
-                      'failure': 'SuggestionsLoadFailed',
-                      'success': 'SuggestionsLoaded',
-                    },
-                    'filter': [
-                      '=',
-                      [
-                        'object/get',
-                        '@entity',
-                        'ownerId',
-                      ],
-                      '@user.id',
-                    ],
-                  },
-                ],
-              ],
+              'from': 'closed',
+              'to': 'open',
               'event': 'OPEN',
-              'from': 'closed',
-              'to': 'open',
+              'effects': [
+                [
+                  'fetch',
+                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
+                  {
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'ownerId',
+                      ],
+                      '@user.id',
+                    ],
+                    'emit': {
+                      'success': 'SuggestionsLoaded',
+                      'failure': 'SuggestionsLoadFailed',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'INIT',
+              'guard': '@config.showOnMount',
               'effects': [
                 [
                   'render-ui',
@@ -2550,10 +2465,6 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'fetch',
                   ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
                   {
-                    'emit': {
-                      'failure': 'SuggestionsLoadFailed',
-                      'success': 'SuggestionsLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -2563,15 +2474,22 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                       ],
                       '@user.id',
                     ],
+                    'emit': {
+                      'success': 'SuggestionsLoaded',
+                      'failure': 'SuggestionsLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'open',
-              'guard': '@config.showOnMount',
-              'to': 'open',
             },
             {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                '@config.showOnMount',
+              ],
               'effects': [
                 [
                   'render-ui',
@@ -2579,41 +2497,41 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   null,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'open',
-              'guard': [
-                'not',
-                '@config.showOnMount',
-              ],
-              'to': 'closed',
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'SuggestionsLoaded',
               'effects': [
                 [
                   'render-ui',
                   '@config.inboxSlot',
                   {
+                    'className': 'max-h-[60vh] overflow-y-auto',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
+                        'direction': 'horizontal',
+                        'justify': 'between',
                         'children': [
                           {
-                            'align': 'center',
                             'children': [
                               {
-                                'name': '@config.headingIcon',
                                 'size': 'lg',
+                                'name': '@config.headingIcon',
                                 'type': 'icon',
                               },
                               {
+                                'variant': 'h3',
                                 'content': '@config.heading',
                                 'type': 'typography',
-                                'variant': 'h3',
                               },
                             ],
+                            'align': 'center',
+                            'type': 'stack',
                             'direction': 'horizontal',
                             'gap': 'sm',
-                            'type': 'stack',
                           },
                           [
                             'if',
@@ -2626,30 +2544,49 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                               ],
                             ],
                             {
-                              'action': 'CLOSE',
                               'icon': 'x',
                               'label': '@config.closeButtonLabel',
+                              'action': 'CLOSE',
                               'type': 'button',
                               'variant': 'ghost',
                             },
                             null,
                           ],
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
                         'type': 'stack',
+                        'align': 'center',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'emptyTitle': '@config.emptyHeading',
+                        'type': 'data-list',
+                        'fields': [
+                          {
+                            'label': 'Kind',
+                            'variant': 'badge',
+                            'name': 'kind',
+                          },
+                          {
+                            'label': 'Suggestion',
+                            'variant': 'h4',
+                            'name': 'title',
+                          },
+                          {
+                            'variant': 'body',
+                            'name': 'body',
+                            'label': 'Why',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'variant': 'card',
+                        'emptyDescription': '@config.emptyHint',
                         'emptyAction': {
                           'event': 'ANALYZE',
                           'label': '@config.lookAgainLabel',
                         },
-                        'emptyDescription': '@config.emptyHint',
-                        'emptyTitle': '@config.emptyHeading',
                         'entity': [
                           'array/sort',
                           [
@@ -2668,40 +2605,20 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                           'createdAt',
                           'desc',
                         ],
-                        'fields': [
-                          {
-                            'label': 'Kind',
-                            'name': 'kind',
-                            'variant': 'badge',
-                          },
-                          {
-                            'label': 'Suggestion',
-                            'name': 'title',
-                            'variant': 'h4',
-                          },
-                          {
-                            'label': 'Why',
-                            'name': 'body',
-                            'variant': 'body',
-                          },
-                        ],
-                        'gap': 'sm',
                         'itemActions': [
                           {
                             'event': 'ACCEPT',
                             'icon': 'check',
-                            'label': '@config.approveLabel',
                             'variant': 'primary',
+                            'label': '@config.approveLabel',
                           },
                           {
                             'event': 'DISMISS',
-                            'icon': 'x',
                             'label': '@config.declineLabel',
+                            'icon': 'x',
                             'variant': 'ghost',
                           },
                         ],
-                        'type': 'data-list',
-                        'variant': 'card',
                       },
                       [
                         'if',
@@ -2714,43 +2631,24 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                           ],
                         ],
                         {
-                          'href': '@config.historyLink',
+                          'type': 'button',
                           'label': '@config.historyLinkLabel',
                           'size': 'sm',
-                          'type': 'button',
                           'variant': 'ghost',
+                          'href': '@config.historyLink',
                         },
                         null,
                       ],
                     ],
-                    'className': 'max-h-[60vh] overflow-y-auto',
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'SuggestionsLoaded',
-              'from': 'open',
-              'to': 'open',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'toast',
-                  {
-                    'message': '@payload.error',
-                    'type': 'alert',
-                    'variant': 'error',
-                  },
-                ],
-              ],
+              'from': 'open',
+              'to': 'open',
               'event': 'SuggestionsLoadFailed',
-              'from': 'open',
-              'to': 'open',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
@@ -2762,45 +2660,61 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   },
                 ],
               ],
+            },
+            {
+              'from': 'open',
+              'to': 'open',
               'event': 'SuggestionResolveFailed',
-              'from': 'open',
-              'to': 'open',
-            },
-            {
               'effects': [
                 [
-                  'fetch',
-                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
+                  'render-ui',
+                  'toast',
                   {
-                    'emit': {
-                      'failure': 'SuggestionsLoadFailed',
-                      'success': 'SuggestionsLoaded',
-                    },
-                    'filter': [
-                      '=',
-                      [
-                        'object/get',
-                        '@entity',
-                        'ownerId',
-                      ],
-                      '@user.id',
-                    ],
+                    'variant': 'error',
+                    'message': '@payload.error',
+                    'type': 'alert',
                   },
                 ],
               ],
+            },
+            {
+              'from': 'open',
+              'to': 'open',
               'event': 'REFRESH',
-              'from': 'open',
-              'to': 'open',
+              'effects': [
+                [
+                  'fetch',
+                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
+                  {
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'ownerId',
+                      ],
+                      '@user.id',
+                    ],
+                    'emit': {
+                      'failure': 'SuggestionsLoadFailed',
+                      'success': 'SuggestionsLoaded',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'OPEN',
               'effects': [
                 [
                   'fetch',
                   ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
                   {
                     'emit': {
-                      'failure': 'SuggestionsLoadFailed',
                       'success': 'SuggestionsLoaded',
+                      'failure': 'SuggestionsLoadFailed',
                     },
                     'filter': [
                       '=',
@@ -2814,11 +2728,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   },
                 ],
               ],
-              'event': 'OPEN',
-              'from': 'open',
-              'to': 'open',
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'ANALYZE',
               'effects': [
                 [
                   'emit',
@@ -2826,11 +2740,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   {},
                 ],
               ],
-              'event': 'ANALYZE',
-              'from': 'open',
-              'to': 'open',
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'ACCEPT',
               'effects': [
                 [
                   'fetch',
@@ -2852,118 +2766,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   },
                 ],
               ],
-              'event': 'ACCEPT',
-              'from': 'open',
-              'to': 'open',
             },
             {
-              'effects': [
-                [
-                  'persist',
-                  'update',
-                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
-                  {
-                    'action': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'action',
-                    ],
-                    'body': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'body',
-                    ],
-                    'createdAt': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'createdAt',
-                    ],
-                    'href': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'href',
-                    ],
-                    'id': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'id',
-                    ],
-                    'kind': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'kind',
-                    ],
-                    'ownerId': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'ownerId',
-                    ],
-                    'payload': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'payload',
-                    ],
-                    'resolvedAt': '@now',
-                    'signature': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'signature',
-                    ],
-                    'status': 'accepted',
-                    'subject': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'subject',
-                    ],
-                    'title': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'title',
-                    ],
-                  },
-                  {
-                    'emit': {
-                      'failure': 'SuggestionResolveFailed',
-                      'success': 'SuggestionAccepted',
-                    },
-                  },
-                ],
-              ],
-              'event': 'SuggestionForAccept',
               'from': 'open',
+              'to': 'open',
+              'event': 'SuggestionForAccept',
               'guard': [
                 'and',
                 [
@@ -2987,44 +2794,116 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'pending',
                 ],
               ],
-              'to': 'open',
-            },
-            {
               'effects': [
                 [
-                  'emit',
-                  'SUGGESTION_ACCEPTED',
-                  {
-                    'action': '@payload.action',
-                    'href': '@payload.href',
-                    'id': '@payload.id',
-                    'kind': '@payload.kind',
-                    'payload': '@payload.payload',
-                    'subject': '@payload.subject',
-                  },
-                ],
-                [
-                  'fetch',
+                  'persist',
+                  'update',
                   ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
                   {
-                    'emit': {
-                      'failure': 'SuggestionsLoadFailed',
-                      'success': 'SuggestionsLoaded',
-                    },
-                    'filter': [
-                      '=',
+                    'href': [
+                      'object/get',
                       [
-                        'object/get',
-                        '@entity',
-                        'ownerId',
+                        'array/first',
+                        '@payload.data',
                       ],
-                      '@user.id',
+                      'href',
                     ],
+                    'body': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'body',
+                    ],
+                    'kind': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'kind',
+                    ],
+                    'signature': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'signature',
+                    ],
+                    'status': 'accepted',
+                    'createdAt': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'createdAt',
+                    ],
+                    'payload': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'payload',
+                    ],
+                    'id': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'id',
+                    ],
+                    'subject': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'subject',
+                    ],
+                    'title': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'title',
+                    ],
+                    'resolvedAt': '@now',
+                    'ownerId': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'ownerId',
+                    ],
+                    'action': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'action',
+                    ],
+                  },
+                  {
+                    'emit': {
+                      'success': 'SuggestionAccepted',
+                      'failure': 'SuggestionResolveFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'SuggestionAccepted',
+            },
+            {
               'from': 'open',
+              'to': 'open',
+              'event': 'SuggestionAccepted',
               'guard': [
                 '=',
                 [
@@ -3034,20 +2913,67 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 ],
                 '',
               ],
-              'to': 'open',
-            },
-            {
               'effects': [
                 [
                   'emit',
                   'SUGGESTION_ACCEPTED',
                   {
                     'action': '@payload.action',
-                    'href': '@payload.href',
-                    'id': '@payload.id',
                     'kind': '@payload.kind',
                     'payload': '@payload.payload',
+                    'id': '@payload.id',
                     'subject': '@payload.subject',
+                    'href': '@payload.href',
+                  },
+                ],
+                [
+                  'fetch',
+                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
+                  {
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'ownerId',
+                      ],
+                      '@user.id',
+                    ],
+                    'emit': {
+                      'success': 'SuggestionsLoaded',
+                      'failure': 'SuggestionsLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'open',
+              'event': 'SuggestionAccepted',
+              'guard': [
+                'not',
+                [
+                  '=',
+                  [
+                    'str/default',
+                    '@payload.href',
+                    '',
+                  ],
+                  '',
+                ],
+              ],
+              'effects': [
+                [
+                  'emit',
+                  'SUGGESTION_ACCEPTED',
+                  {
+                    'id': '@payload.id',
+                    'action': '@payload.action',
+                    'subject': '@payload.subject',
+                    'payload': '@payload.payload',
+                    'kind': '@payload.kind',
+                    'href': '@payload.href',
                   },
                 ],
                 [
@@ -3074,23 +3000,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   '@payload.href',
                 ],
               ],
-              'event': 'SuggestionAccepted',
-              'from': 'open',
-              'guard': [
-                'not',
-                [
-                  '=',
-                  [
-                    'str/default',
-                    '@payload.href',
-                    '',
-                  ],
-                  '',
-                ],
-              ],
-              'to': 'open',
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'DISMISS',
               'effects': [
                 [
                   'fetch',
@@ -3112,118 +3026,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   },
                 ],
               ],
-              'event': 'DISMISS',
-              'from': 'open',
-              'to': 'open',
             },
             {
-              'effects': [
-                [
-                  'persist',
-                  'update',
-                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
-                  {
-                    'action': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'action',
-                    ],
-                    'body': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'body',
-                    ],
-                    'createdAt': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'createdAt',
-                    ],
-                    'href': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'href',
-                    ],
-                    'id': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'id',
-                    ],
-                    'kind': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'kind',
-                    ],
-                    'ownerId': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'ownerId',
-                    ],
-                    'payload': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'payload',
-                    ],
-                    'resolvedAt': '@now',
-                    'signature': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'signature',
-                    ],
-                    'status': 'dismissed',
-                    'subject': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'subject',
-                    ],
-                    'title': [
-                      'object/get',
-                      [
-                        'array/first',
-                        '@payload.data',
-                      ],
-                      'title',
-                    ],
-                  },
-                  {
-                    'emit': {
-                      'failure': 'SuggestionResolveFailed',
-                      'success': 'SuggestionDismissed',
-                    },
-                  },
-                ],
-              ],
-              'event': 'SuggestionForDismiss',
               'from': 'open',
+              'to': 'open',
+              'event': 'SuggestionForDismiss',
               'guard': [
                 'and',
                 [
@@ -3247,17 +3054,124 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'pending',
                 ],
               ],
-              'to': 'open',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
+                  {
+                    'signature': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'signature',
+                    ],
+                    'subject': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'subject',
+                    ],
+                    'kind': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'kind',
+                    ],
+                    'action': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'action',
+                    ],
+                    'payload': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'payload',
+                    ],
+                    'createdAt': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'createdAt',
+                    ],
+                    'id': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'id',
+                    ],
+                    'body': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'body',
+                    ],
+                    'status': 'dismissed',
+                    'href': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'href',
+                    ],
+                    'ownerId': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'ownerId',
+                    ],
+                    'resolvedAt': '@now',
+                    'title': [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'title',
+                    ],
+                  },
+                  {
+                    'emit': {
+                      'success': 'SuggestionDismissed',
+                      'failure': 'SuggestionResolveFailed',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'open',
+              'to': 'open',
+              'event': 'SuggestionDismissed',
               'effects': [
                 [
                   'emit',
                   'SUGGESTION_DISMISSED',
                   {
-                    'action': '@payload.action',
-                    'id': '@payload.id',
                     'kind': '@payload.kind',
+                    'id': '@payload.id',
+                    'action': '@payload.action',
                     'subject': '@payload.subject',
                   },
                 ],
@@ -3265,10 +3179,6 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'fetch',
                   ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
                   {
-                    'emit': {
-                      'failure': 'SuggestionsLoadFailed',
-                      'success': 'SuggestionsLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -3278,14 +3188,18 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                       ],
                       '@user.id',
                     ],
+                    'emit': {
+                      'success': 'SuggestionsLoaded',
+                      'failure': 'SuggestionsLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'SuggestionDismissed',
-              'from': 'open',
-              'to': 'open',
             },
             {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
               'effects': [
                 [
                   'render-ui',
@@ -3293,24 +3207,105 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   null,
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'open',
-              'to': 'closed',
             },
           ],
         },
+        'config': {
+          'closeButtonLabel': {
+            'type': 'string',
+            'default': '@config.closeLabel',
+            'label': 'Close button label',
+            'synonyms': 'back, hide',
+            'tier': 'presentation',
+          },
+          'heading': {
+            'type': 'string',
+            'default': '@config.title',
+            'label': 'Inbox heading',
+            'description': 'Heading at the top of the inbox.',
+            'synonyms': 'panel title, suggestions title',
+            'tier': 'presentation',
+          },
+          'approveLabel': {
+            'type': 'string',
+            'default': '@config.acceptLabel',
+            'label': 'Accept button label',
+            'synonyms': 'approve, yes, do it',
+            'tier': 'presentation',
+          },
+          'lookAgainLabel': {
+            'type': 'string',
+            'default': '@config.analyzeLabel',
+            'label': 'Look-again button label',
+            'description': 'The empty inbox\'s button, which asks the agent to look again.',
+            'synonyms': 'refresh, find suggestions, analyze',
+            'tier': 'presentation',
+          },
+          'emptyHint': {
+            'type': 'string',
+            'default': '@config.emptyDescription',
+            'label': 'Hint under the empty heading',
+            'tier': 'presentation',
+          },
+          'historyLinkLabel': {
+            'type': 'string',
+            'default': '@config.historyLabel',
+            'label': 'Past-suggestions link label',
+            'synonyms': 'history, archive, earlier suggestions',
+            'tier': 'presentation',
+          },
+          'inboxSlot': {
+            'type': 'slot',
+            'default': '@config.panelSlot',
+            'label': 'Where the inbox renders',
+            'description': '`main` inline; `modal` or `drawer` for an overlay opened with OPEN.',
+            'tier': 'internal',
+          },
+          'declineLabel': {
+            'type': 'string',
+            'default': '@config.dismissLabel',
+            'label': 'Dismiss button label',
+            'synonyms': 'reject, no thanks, hide',
+            'tier': 'presentation',
+          },
+          'emptyHeading': {
+            'type': 'string',
+            'default': '@config.emptyTitle',
+            'label': 'What shows when nothing is pending?',
+            'synonyms': 'empty state, no suggestions',
+            'tier': 'presentation',
+          },
+          'headingIcon': {
+            'type': 'string',
+            'default': '@config.icon',
+            'label': 'Inbox icon',
+            'description': 'Lucide icon name shown beside the heading.',
+            'synonyms': 'header icon',
+            'tier': 'presentation',
+          },
+          'showOnMount': {
+            'type': 'boolean',
+            'default': '@config.startOpen',
+            'label': 'Show the inbox as soon as it mounts?',
+            'description': 'Off for an overlay that waits for OPEN.',
+            'tier': 'presentation',
+          },
+          'historyLink': {
+            'type': 'string',
+            'default': '@config.historyHref',
+            'label': 'Past-suggestions page',
+            'description': 'Where accepted and dismissed suggestions are listed; empty hides the link.',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
       {
-        'category': 'lifecycle',
-        'config': {
-          'gapMinutes': {
-            'default': '@config.cooldownMinutes',
-            'description': 'A trigger starts a run only when this long has passed since the person\'s last run.',
-            'label': 'Minutes between proactive runs',
-            'synonyms': 'throttle, rate limit, interval, frequency',
-            'tier': 'policy',
-            'type': 'number',
-          },
+        'name': 'AgentSuggestionTrigger',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -3326,44 +3321,48 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
             'resource': 'toast',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'AgentSuggestionRun',
         'emits': [
           {
-            'description': 'A trigger arrived and the cooldown has passed, so the agent is asked to look.',
             'event': 'SUGGESTION_RUN_ALLOWED',
-            'scope': 'external',
+            'description': 'A trigger arrived and the cooldown has passed, so the agent is asked to look.',
             'synonyms': 'run allowed, cooldown passed',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
             'event': 'RunsForTrigger',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'RunRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ranAt',
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'RunRow',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'RunsLoadFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -3374,70 +3373,67 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentSuggestionRun',
         'listens': [
           {
             'event': 'SUGGESTIONS_TRIGGERED',
+            'triggers': 'TRIGGERED',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'TRIGGERED',
           },
         ],
-        'name': 'AgentSuggestionTrigger',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Something happened that is a reason to look for suggestions. SUGGESTIONS_TRIGGERED from any trait arrives here; an app routes its own events with `listens { Source.EVENT -> TRIGGERED }` on a re-bound AgentSuggestionTrigger.',
               'key': 'TRIGGERED',
               'name': 'Triggered',
+              'description': 'Something happened that is a reason to look for suggestions. SUGGESTIONS_TRIGGERED from any trait arrives here; an app routes its own events with `listens { Source.EVENT -> TRIGGERED }` on a re-bound AgentSuggestionTrigger.',
               'synonyms': 'trigger, start analysis, look for suggestions',
               'tier': 'domain',
             },
             {
               'key': 'RunsForTrigger',
               'name': 'Runs for trigger',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ranAt',
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'RunsLoadFailed',
               'name': 'Runs load failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -3448,29 +3444,25 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'A trigger arrived and the cooldown has passed, so the agent is asked to look.',
               'key': 'SUGGESTION_RUN_ALLOWED',
               'name': 'Suggestion Run Allowed',
+              'description': 'A trigger arrived and the cooldown has passed, so the agent is asked to look.',
               'synonyms': 'run allowed, cooldown passed',
               'tier': 'domain',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
-            },
-          ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'ready',
               'to': 'ready',
+              'event': 'INIT',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'TRIGGERED',
               'effects': [
                 [
                   'fetch',
@@ -3492,20 +3484,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   },
                 ],
               ],
-              'event': 'TRIGGERED',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'SUGGESTION_RUN_ALLOWED',
-                  {},
-                ],
-              ],
-              'event': 'RunsForTrigger',
               'from': 'ready',
+              'to': 'ready',
+              'event': 'RunsForTrigger',
               'guard': [
                 '>=',
                 [
@@ -3535,11 +3518,18 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   60000,
                 ],
               ],
-              'to': 'ready',
+              'effects': [
+                [
+                  'emit',
+                  'SUGGESTION_RUN_ALLOWED',
+                  {},
+                ],
+              ],
             },
             {
-              'event': 'RunsForTrigger',
               'from': 'ready',
+              'to': 'ready',
+              'event': 'RunsForTrigger',
               'guard': [
                 '<',
                 [
@@ -3569,38 +3559,43 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   60000,
                 ],
               ],
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'RunsLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'message': '@payload.error',
                     'type': 'alert',
                     'variant': 'warning',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'RunsLoadFailed',
-              'from': 'ready',
-              'to': 'ready',
             },
           ],
         },
+        'config': {
+          'gapMinutes': {
+            'type': 'number',
+            'default': '@config.cooldownMinutes',
+            'label': 'Minutes between proactive runs',
+            'description': 'A trigger starts a run only when this long has passed since the person\'s last run.',
+            'synonyms': 'throttle, rate limit, interval, frequency',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'lifecycle',
-        'config': {
-          'request': {
-            'default': '@config.prompt',
-            'description': 'The request each proactive run answers.',
-            'label': 'What does the agent look into?',
-            'synonyms': 'task, goal, question, brief',
-            'tier': 'domain',
-            'type': 'string',
-          },
+        'name': 'AgentSuggestionRunner',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -3624,14 +3619,20 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
             'resource': 'toast',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'AgentSuggestionRun',
         'emits': [
           {
-            'description': 'The agent was asked to look for suggestions.',
             'event': 'SUGGESTION_RUN_STARTED',
+            'description': 'The agent was asked to look for suggestions.',
+            'synonyms': 'analysis started, looking',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'AgentChatMessage',
                 'name': 'messages',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'role',
@@ -3643,63 +3644,61 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'AgentChatMessage',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'analysis started, looking',
-            'tier': 'domain',
           },
           {
-            'description': 'The agent finished looking; any suggestions it made are in the inbox.',
             'event': 'SUGGESTION_RUN_DONE',
-            'scope': 'external',
+            'description': 'The agent finished looking; any suggestions it made are in the inbox.',
             'synonyms': 'analysis done, finished',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
-            'description': 'The agent could not finish looking (no toast; the inbox simply has nothing new).',
             'event': 'SUGGESTION_RUN_FAILED',
+            'description': 'The agent could not finish looking (no toast; the inbox simply has nothing new).',
+            'synonyms': 'analysis failed, error',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'analysis failed, error',
-            'tier': 'domain',
           },
           {
-            'description': 'Fired after a run is recorded',
             'event': 'RunRecorded',
-            'payloadEntity': 'RunRow',
+            'description': 'Fired after a run is recorded',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'ownerId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'ranAt',
                 'type': 'number',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
+            'payloadEntity': 'RunRow',
           },
           {
             'event': 'RunRecordFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -3710,88 +3709,91 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentSuggestionRun',
         'listens': [
           {
             'event': 'SUGGESTION_RUN_ALLOWED',
+            'triggers': 'START',
             'source': {
               'kind': 'trait',
               'trait': ('AgentSuggestionTrigger' satisfies _StdAgentSuggestionsListenTraitName),
             },
-            'triggers': 'START',
           },
           {
             'event': 'SUGGESTIONS_ANALYZE_REQUESTED',
+            'triggers': 'START',
             'source': {
               'kind': 'trait',
               'trait': ('AgentSuggestionInbox' satisfies _StdAgentSuggestionsListenTraitName),
             },
-            'triggers': 'START',
           },
           {
             'event': 'PROACTIVE_REPLIED',
+            'triggers': 'LOOP_REPLIED',
             'source': {
               'kind': 'trait',
               'trait': ('AgentSuggestionLoop' satisfies _StdAgentSuggestionsListenTraitName),
             },
-            'triggers': 'LOOP_REPLIED',
           },
           {
             'event': 'PROACTIVE_FAILED',
+            'triggers': 'LOOP_FAILED',
             'source': {
               'kind': 'trait',
               'trait': ('AgentSuggestionLoop' satisfies _StdAgentSuggestionsListenTraitName),
             },
-            'triggers': 'LOOP_FAILED',
           },
         ],
-        'name': 'AgentSuggestionRunner',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+            {
+              'name': 'starting',
+            },
+            {
+              'name': 'analyzing',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Ask the agent to look for suggestions now.',
               'key': 'START',
               'name': 'Start',
+              'description': 'Ask the agent to look for suggestions now.',
             },
             {
               'key': 'RunRecorded',
               'name': 'Run recorded',
-              'payloadEntity': 'RunRow',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ownerId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ranAt',
                   'type': 'number',
                 },
               ],
-              'tier': 'internal',
+              'payloadEntity': 'RunRow',
             },
             {
               'key': 'RunRecordFailed',
               'name': 'Run record failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -3802,12 +3804,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The agent answered.',
               'key': 'LOOP_REPLIED',
               'name': 'Loop Replied',
+              'description': 'The agent answered.',
               'payloadSchema': [
                 {
                   'name': 'reply',
@@ -3816,9 +3817,9 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
               ],
             },
             {
-              'description': 'The agent could not answer.',
               'key': 'LOOP_FAILED',
               'name': 'Loop Failed',
+              'description': 'The agent could not answer.',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -3827,13 +3828,16 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
               ],
             },
             {
-              'description': 'The agent was asked to look for suggestions.',
               'key': 'SUGGESTION_RUN_STARTED',
               'name': 'Suggestion Run Started',
+              'description': 'The agent was asked to look for suggestions.',
+              'synonyms': 'analysis started, looking',
+              'tier': 'domain',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChatMessage',
                   'name': 'messages',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'role',
@@ -3845,57 +3849,45 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'AgentChatMessage',
                 },
               ],
-              'synonyms': 'analysis started, looking',
-              'tier': 'domain',
             },
             {
-              'description': 'The agent finished looking; any suggestions it made are in the inbox.',
               'key': 'SUGGESTION_RUN_DONE',
               'name': 'Suggestion Run Done',
+              'description': 'The agent finished looking; any suggestions it made are in the inbox.',
               'synonyms': 'analysis done, finished',
               'tier': 'domain',
             },
             {
-              'description': 'The agent could not finish looking (no toast; the inbox simply has nothing new).',
               'key': 'SUGGESTION_RUN_FAILED',
               'name': 'Suggestion Run Failed',
+              'description': 'The agent could not finish looking (no toast; the inbox simply has nothing new).',
+              'synonyms': 'analysis failed, error',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'error',
                   'type': 'string',
                 },
               ],
-              'synonyms': 'analysis failed, error',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
-            },
-            {
-              'name': 'starting',
-            },
-            {
-              'name': 'analyzing',
             },
           ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'ready',
               'to': 'ready',
+              'event': 'INIT',
             },
             {
+              'from': 'ready',
+              'to': 'starting',
+              'event': 'START',
               'effects': [
                 [
                   'persist',
@@ -3907,22 +3899,22 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   },
                   {
                     'emit': {
-                      'failure': 'RunRecordFailed',
                       'success': 'RunRecorded',
+                      'failure': 'RunRecordFailed',
                     },
                   },
                 ],
               ],
-              'event': 'START',
-              'from': 'ready',
-              'to': 'starting',
             },
             {
-              'event': 'INIT',
               'from': 'starting',
               'to': 'ready',
+              'event': 'INIT',
             },
             {
+              'from': 'starting',
+              'to': 'analyzing',
+              'event': 'RunRecorded',
               'effects': [
                 [
                   'emit',
@@ -3937,11 +3929,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   },
                 ],
               ],
-              'event': 'RunRecorded',
-              'from': 'starting',
-              'to': 'analyzing',
             },
             {
+              'from': 'starting',
+              'to': 'ready',
+              'event': 'RunRecordFailed',
               'effects': [
                 [
                   'emit',
@@ -3954,22 +3946,22 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   'render-ui',
                   'toast',
                   {
-                    'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'warning',
+                    'type': 'alert',
+                    'message': '@payload.error',
                   },
                 ],
               ],
-              'event': 'RunRecordFailed',
-              'from': 'starting',
-              'to': 'ready',
             },
             {
-              'event': 'INIT',
               'from': 'analyzing',
               'to': 'ready',
+              'event': 'INIT',
             },
             {
+              'from': 'analyzing',
+              'to': 'ready',
+              'event': 'LOOP_REPLIED',
               'effects': [
                 [
                   'emit',
@@ -3977,11 +3969,11 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   {},
                 ],
               ],
-              'event': 'LOOP_REPLIED',
-              'from': 'analyzing',
-              'to': 'ready',
             },
             {
+              'from': 'analyzing',
+              'to': 'ready',
+              'event': 'LOOP_FAILED',
               'effects': [
                 [
                   'emit',
@@ -3991,52 +3983,60 @@ export function stdAgentSuggestionsAgentSuggestionsOrbital(params: StdAgentSugge
                   },
                 ],
               ],
-              'event': 'LOOP_FAILED',
-              'from': 'analyzing',
-              'to': 'ready',
             },
           ],
         },
+        'config': {
+          'request': {
+            'type': 'string',
+            'default': '@config.prompt',
+            'label': 'What does the agent look into?',
+            'description': 'The request each proactive run answers.',
+            'synonyms': 'task, goal, question, brief',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
       makeTraitRef({
+        'ref': ('Loop.traits.AgentToolLoop' satisfies _StdAgentSuggestionsAgentSuggestionsOrbitalUsesRef),
+        'name': 'AgentSuggestionLoop',
         'config': {
           'cancelKey': {
+            'type': 'unknown',
             'default': 'agent-suggestions',
-            'type': 'unknown',
-          },
-          'instructions': {
-            'default': '@config.instructions',
-            'type': 'unknown',
-          },
-          'maxSteps': {
-            'default': '@config.maxSteps',
-            'type': 'unknown',
           },
           'quiet': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
+          },
+          'instructions': {
+            'type': 'unknown',
+            'default': '@config.instructions',
+          },
+          'maxSteps': {
+            'type': 'unknown',
+            'default': '@config.maxSteps',
           },
           'tools': {
-            'default': '@config.tools',
             'type': 'unknown',
+            'default': '@config.tools',
           },
         },
         'events': {
-          'ASSISTANT_REPLIED': 'PROACTIVE_REPLIED',
           'ASSISTANT_REPLY_FAILED': 'PROACTIVE_FAILED',
+          'ASSISTANT_REPLIED': 'PROACTIVE_REPLIED',
         },
         'listens': [
           {
             'event': 'SUGGESTION_RUN_STARTED',
+            'triggers': 'CONVERSE',
             'source': {
               'kind': 'trait',
               'trait': 'AgentSuggestionRunner',
             },
-            'triggers': 'CONVERSE',
           },
         ],
-        'name': 'AgentSuggestionLoop',
-        'ref': ('Loop.traits.AgentToolLoop' satisfies _StdAgentSuggestionsAgentSuggestionsOrbitalUsesRef),
       }),
     ],
     pages: [
@@ -4249,159 +4249,159 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Whom this is proposed to (the real @user). The binding organism scopes @read/@create/@update to it.',
             'name': 'ownerId',
-            'required': true,
-            'synonyms': 'user, owner, account',
             'type': 'string',
+            'required': true,
+            'description': 'Whom this is proposed to (the real @user). The binding organism scopes @read/@create/@update to it.',
+            'synonyms': 'user, owner, account',
           },
           {
+            'name': 'kind',
+            'type': 'string',
             'default': '',
             'description': 'What sort of suggestion this is; the app\'s own vocabulary.',
-            'name': 'kind',
             'synonyms': 'type, category',
-            'type': 'string',
           },
           {
+            'name': 'title',
+            'type': 'string',
             'default': '',
             'description': 'The suggestion in a line.',
-            'name': 'title',
             'synonyms': 'headline, name',
-            'type': 'string',
           },
           {
+            'name': 'body',
+            'type': 'string',
             'default': '',
             'description': 'Why the agent proposes it.',
-            'name': 'body',
             'synonyms': 'reasoning, reason, description, explanation',
-            'type': 'string',
           },
           {
+            'name': 'action',
+            'type': 'string',
             'default': '',
             'description': 'What accepting it does: a name the app routes from SUGGESTION_ACCEPTED.',
-            'name': 'action',
             'synonyms': 'event, command',
-            'type': 'string',
           },
           {
+            'name': 'href',
+            'type': 'string',
             'default': '',
             'description': 'A page accepting it opens; empty for none.',
-            'name': 'href',
             'synonyms': 'link, url, route',
-            'type': 'string',
           },
           {
+            'name': 'payload',
+            'type': 'object',
             'default': {},
-            'description': 'What the action needs.',
             'items': {
               'type': 'scalar',
             },
-            'name': 'payload',
+            'description': 'What the action needs.',
             'synonyms': 'params, arguments, data',
-            'type': 'object',
           },
           {
+            'name': 'subject',
+            'type': 'string',
             'default': '',
             'description': 'What the suggestion is about (an id or slug).',
-            'name': 'subject',
             'synonyms': 'target, topic',
-            'type': 'string',
           },
           {
+            'name': 'signature',
+            'type': 'string',
             'default': '',
             'description': 'kind:action:subject. One signature is proposed to a person at most once, whatever became of it.',
-            'name': 'signature',
             'synonyms': 'dedup key, fingerprint',
-            'type': 'string',
           },
           {
-            'default': 'pending',
-            'description': 'Where the suggestion stands.',
             'name': 'status',
             'type': 'string',
+            'default': 'pending',
             'values': [
               'pending',
               'accepted',
               'dismissed',
             ],
+            'description': 'Where the suggestion stands.',
           },
           {
+            'name': 'createdAt',
+            'type': 'number',
             'default': 0,
             'description': 'When it was proposed (ms).',
-            'name': 'createdAt',
             'synonyms': 'time, timestamp',
-            'type': 'number',
           },
           {
-            'default': 0,
-            'description': 'When it was accepted or dismissed (ms).',
             'name': 'resolvedAt',
             'type': 'number',
+            'default': 0,
+            'description': 'When it was accepted or dismissed (ms).',
           },
           {
-            'default': {
-              'action': '',
-              'body': '',
-              'href': '',
-              'kind': '',
-              'payload': {},
-              'signature': '',
-              'subject': '',
-              'title': '',
-            },
-            'description': 'The proposal being checked for a duplicate.',
-            'intrinsic': true,
             'name': 'pendingProposal',
+            'type': 'object',
+            'default': {
+              'href': '',
+              'payload': {},
+              'action': '',
+              'kind': '',
+              'signature': '',
+              'title': '',
+              'subject': '',
+              'body': '',
+            },
             'properties': {
-              'action': {
-                'name': 'action',
-                'required': false,
+              'signature': {
+                'name': 'signature',
                 'type': 'string',
-              },
-              'body': {
-                'name': 'body',
                 'required': false,
-                'type': 'string',
-              },
-              'href': {
-                'name': 'href',
-                'required': false,
-                'type': 'string',
               },
               'kind': {
                 'name': 'kind',
-                'required': false,
                 'type': 'string',
-              },
-              'payload': {
-                'items': {
-                  'type': 'scalar',
-                },
-                'name': 'payload',
                 'required': false,
-                'type': 'object',
               },
-              'signature': {
-                'name': 'signature',
-                'required': false,
+              'action': {
+                'name': 'action',
                 'type': 'string',
+                'required': false,
               },
               'subject': {
                 'name': 'subject',
-                'required': false,
                 'type': 'string',
+                'required': false,
+              },
+              'payload': {
+                'name': 'payload',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'scalar',
+                },
+              },
+              'body': {
+                'name': 'body',
+                'type': 'string',
+                'required': false,
               },
               'title': {
                 'name': 'title',
-                'required': false,
                 'type': 'string',
+                'required': false,
+              },
+              'href': {
+                'name': 'href',
+                'type': 'string',
+                'required': false,
               },
             },
-            'type': 'object',
+            'intrinsic': true,
+            'description': 'The proposal being checked for a duplicate.',
           },
         ];
         const extras = params.fields ?? [];
@@ -4412,42 +4412,39 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
     } as Entity,
     auxiliaryEntities: [
       {
+        'name': 'AgentSuggestionRun',
         'collection': 'agentSuggestionRuns',
+        'persistence': 'persistent',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Whose run this was (the real @user). The binding organism scopes @read/@create to it.',
             'name': 'ownerId',
-            'required': true,
-            'synonyms': 'user, owner, account',
             'type': 'string',
+            'required': true,
+            'description': 'Whose run this was (the real @user). The binding organism scopes @read/@create to it.',
+            'synonyms': 'user, owner, account',
           },
           {
+            'name': 'ranAt',
+            'type': 'number',
             'default': 0,
             'description': 'When the agent was last asked to look (ms).',
-            'name': 'ranAt',
             'synonyms': 'time, started',
-            'type': 'number',
           },
         ],
-        'name': 'AgentSuggestionRun',
-        'persistence': 'persistent',
       },
     ] as EntityRef[],
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'emptyHeading': {
-            'default': 'Nothing suggested yet',
-            'label': 'What shows when nothing was ever suggested?',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'AgentSuggestionHistory',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -4459,23 +4456,27 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AgentSuggestion',
         'emits': [
           {
             'event': 'SuggestionsLoaded',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'SuggestionRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'kind',
@@ -4527,14 +4528,14 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'SuggestionRow',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'SuggestionsLoadFailed',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -4545,19 +4546,15 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentSuggestion',
-        'name': 'AgentSuggestionHistory',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -4566,20 +4563,21 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
             {
               'key': 'SuggestionsLoaded',
               'name': 'Suggestions loaded',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'SuggestionRow',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'kind',
@@ -4631,14 +4629,14 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'SuggestionRow',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'SuggestionsLoadFailed',
               'name': 'Suggestions load failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -4649,26 +4647,18 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'browsing',
             },
           ],
           'transitions': [
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('AgentSuggestion' satisfies _StdAgentSuggestionsEntityName),
                   {
-                    'emit': {
-                      'failure': 'SuggestionsLoadFailed',
-                      'success': 'SuggestionsLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -4678,63 +4668,67 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
                       ],
                       '@user.id',
                     ],
+                    'emit': {
+                      'failure': 'SuggestionsLoadFailed',
+                      'success': 'SuggestionsLoaded',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'rows': 6,
                     'type': 'skeleton',
                     'variant': 'list',
+                    'rows': 6,
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'SuggestionsLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
                     'emptyTitle': '@config.emptyHeading',
+                    'type': 'data-list',
+                    'fields': [
+                      {
+                        'name': 'status',
+                        'variant': 'badge',
+                        'label': 'Status',
+                      },
+                      {
+                        'variant': 'h4',
+                        'name': 'title',
+                        'label': 'Suggestion',
+                      },
+                      {
+                        'label': 'Why',
+                        'variant': 'body',
+                        'name': 'body',
+                      },
+                    ],
                     'entity': [
                       'array/sort',
                       '@payload.data',
                       'createdAt',
                       'desc',
                     ],
-                    'fields': [
-                      {
-                        'label': 'Status',
-                        'name': 'status',
-                        'variant': 'badge',
-                      },
-                      {
-                        'label': 'Suggestion',
-                        'name': 'title',
-                        'variant': 'h4',
-                      },
-                      {
-                        'label': 'Why',
-                        'name': 'body',
-                        'variant': 'body',
-                      },
-                    ],
                     'gap': 'sm',
-                    'type': 'data-list',
                     'variant': 'card',
                   },
                 ],
               ],
-              'event': 'SuggestionsLoaded',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'SuggestionsLoadFailed',
               'effects': [
                 [
                   'render-ui',
@@ -4746,12 +4740,18 @@ export function stdAgentSuggestionsAgentSuggestionRecordsOrbital(params: StdAgen
                   },
                 ],
               ],
-              'event': 'SuggestionsLoadFailed',
-              'from': 'browsing',
-              'to': 'browsing',
             },
           ],
         },
+        'config': {
+          'emptyHeading': {
+            'type': 'string',
+            'default': 'Nothing suggested yet',
+            'label': 'What shows when nothing was ever suggested?',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

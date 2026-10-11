@@ -286,28 +286,28 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
     name: 'ModQueueItemOrbital',
     uses: [
       {
-        'as': 'Spinner',
         'from': 'std/behaviors/ui-spinner',
+        'as': 'Spinner',
       },
       {
-        'as': 'Typography',
         'from': 'std/behaviors/ui-typography',
+        'as': 'Typography',
       },
       {
-        'as': 'Icon',
         'from': 'std/behaviors/ui-icon',
+        'as': 'Icon',
       },
       {
-        'as': 'Button',
         'from': 'std/behaviors/ui-button',
+        'as': 'Button',
       },
       {
-        'as': 'Divider',
         'from': 'std/behaviors/ui-divider',
+        'as': 'Divider',
       },
       {
-        'as': 'Alert',
         'from': 'std/behaviors/ui-alert',
+        'as': 'Alert',
       },
     ],
     entity: {
@@ -318,27 +318,25 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Unique identifier for the item being moderated.',
             'name': 'targetId',
+            'type': 'string',
             'required': true,
+            'description': 'Unique identifier for the item being moderated.',
             'synonyms': 'item id, reference id, identifier',
-            'type': 'string',
           },
           {
-            'description': 'Specifies the kind of item being moderated.',
             'name': 'targetType',
-            'required': true,
-            'synonyms': 'item type, content type, object type',
             'type': 'string',
+            'required': true,
+            'description': 'Specifies the kind of item being moderated.',
+            'synonyms': 'item type, content type, object type',
           },
           {
-            'description': 'The justification for flagging the content.',
             'name': 'reason',
-            'synonyms': 'flag reason, justification, cause',
             'type': 'string',
             'values': [
               'spam',
@@ -348,53 +346,55 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               'nsfw',
               'other',
             ],
+            'description': 'The justification for flagging the content.',
+            'synonyms': 'flag reason, justification, cause',
           },
           {
-            'description': 'The number of times this item has been flagged.',
             'name': 'flagCount',
-            'synonyms': 'flags, flag_count, count',
             'type': 'number',
+            'description': 'The number of times this item has been flagged.',
+            'synonyms': 'flags, flag_count, count',
           },
           {
-            'default': 'pending',
-            'description': 'Current state of the moderation item.',
             'name': 'status',
-            'synonyms': 'state, condition, stage',
             'type': 'string',
+            'default': 'pending',
             'values': [
               'pending',
               'approved',
               'rejected',
               'escalated',
             ],
+            'description': 'Current state of the moderation item.',
+            'synonyms': 'state, condition, stage',
           },
           {
-            'description': 'The user who performed the review action.',
             'name': 'reviewedBy',
+            'type': 'string',
+            'description': 'The user who performed the review action.',
             'synonyms': 'reviewer, reviewerId, assignedTo',
-            'type': 'string',
           },
           {
-            'description': 'Timestamp indicating when the item was last reviewed.',
             'name': 'reviewedAt',
-            'synonyms': 'review date, review time, last reviewed',
             'type': 'datetime',
+            'description': 'Timestamp indicating when the item was last reviewed.',
+            'synonyms': 'review date, review time, last reviewed',
           },
           {
-            'description': 'Free-text comments or observations related to the item.',
             'name': 'notes',
-            'synonyms': 'comment, remark, observation, details',
             'type': 'string',
+            'description': 'Free-text comments or observations related to the item.',
+            'synonyms': 'comment, remark, observation, details',
           },
           {
+            'name': 'seedRow',
+            'type': 'object',
             'default': {},
-            'description': 'The row an edit-mode modal pre-fills from when its payload carries no row (a scalar-only action event still opens a fully seeded form).',
-            'intrinsic': true,
             'items': {
               'type': 'scalar',
             },
-            'name': 'seedRow',
-            'type': 'object',
+            'intrinsic': true,
+            'description': 'The row an edit-mode modal pre-fills from when its payload carries no row (a scalar-only action event still opens a fully seeded form).',
           },
         ];
         const extras = params.fields ?? [];
@@ -405,230 +405,111 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
     } as Entity,
     traits: [
       makeTraitRef({
-        'linkedEntity': 'ModQueueItem',
-        'name': 'LoadingSpinner',
         'ref': ('Spinner.traits.SpinnerRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
+        'name': 'LoadingSpinner',
+        'linkedEntity': 'ModQueueItem',
       }),
       makeTraitRef({
+        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
+        'name': 'ErrorSpinner',
+        'linkedEntity': 'ModQueueItem',
         'config': {
           'size': {
-            'default': 'sm',
             'type': 'unknown',
+            'default': 'sm',
           },
         },
-        'linkedEntity': 'ModQueueItem',
-        'name': 'ErrorSpinner',
-        'ref': ('Spinner.traits.SpinnerRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
+        'name': 'LoadingText',
+        'linkedEntity': 'ModQueueItem',
         'config': {
-          'color': {
-            'default': 'muted',
+          'variant': {
             'type': 'unknown',
+            'default': 'caption',
           },
           'content': {
+            'type': 'unknown',
             'default': 'Loading moderation queue…',
-            'type': 'unknown',
           },
-          'variant': {
-            'default': 'caption',
+          'color': {
             'type': 'unknown',
+            'default': 'muted',
           },
         },
-        'linkedEntity': 'ModQueueItem',
-        'name': 'LoadingText',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Icon.traits.IconRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
+        'name': 'ShieldAlertIcon',
+        'linkedEntity': 'ModQueueItem',
         'config': {
           'name': {
-            'default': 'shield-alert',
             'type': 'unknown',
+            'default': 'shield-alert',
           },
         },
-        'linkedEntity': 'ModQueueItem',
-        'name': 'ShieldAlertIcon',
-        'ref': ('Icon.traits.IconRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Typography.traits.TypographyRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
+        'name': 'ModQueueTitle',
+        'linkedEntity': 'ModQueueItem',
         'config': {
           'content': {
-            'default': '@config.title',
             'type': 'unknown',
+            'default': '@config.title',
           },
           'variant': {
-            'default': 'h3',
             'type': 'unknown',
+            'default': 'h3',
           },
         },
-        'linkedEntity': 'ModQueueItem',
-        'name': 'ModQueueTitle',
-        'ref': ('Typography.traits.TypographyRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
+        'name': 'CloseButton',
+        'linkedEntity': 'ModQueueItem',
         'config': {
-          'action': {
-            'default': 'CLOSE',
+          'label': {
             'type': 'unknown',
+            'default': 'Close',
+          },
+          'action': {
+            'type': 'unknown',
+            'default': 'CLOSE',
           },
           'icon': {
+            'type': 'unknown',
             'default': 'x',
-            'type': 'unknown',
-          },
-          'label': {
-            'default': 'Close',
-            'type': 'unknown',
           },
           'variant': {
-            'default': 'ghost',
             'type': 'unknown',
+            'default': 'ghost',
           },
         },
-        'linkedEntity': 'ModQueueItem',
-        'name': 'CloseButton',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
       }),
       makeTraitRef({
-        'linkedEntity': 'ModQueueItem',
-        'name': 'ModQueueDivider',
         'ref': ('Divider.traits.DividerRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
+        'name': 'ModQueueDivider',
+        'linkedEntity': 'ModQueueItem',
       }),
       makeTraitRef({
+        'ref': ('Alert.traits.AlertRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
+        'name': 'ErrorAlert',
+        'linkedEntity': 'ModQueueItem',
         'config': {
           'message': {
-            'default': '@payload.error',
             'type': 'unknown',
+            'default': '@payload.error',
           },
           'variant': {
-            'default': 'error',
             'type': 'unknown',
+            'default': 'error',
           },
         },
-        'linkedEntity': 'ModQueueItem',
-        'name': 'ErrorAlert',
-        'ref': ('Alert.traits.AlertRender' satisfies _StdModQueueModQueueItemOrbitalUsesRef),
       }),
       {
-        'capabilities': [
-          'moderation',
-        ],
-        'category': 'interaction',
-        'config': {
-          'autoEscalateThreshold': {
-            'default': 5,
-            'description': 'Flag count after which an item is auto-escalated to senior review',
-            'label': 'Auto-escalate at',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'enabled': {
-            'default': false,
-            'description': 'Send submissions to a review queue before they go live. Off by default.',
-            'label': 'Enable moderation queue',
-            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
-          'itemActions': {
-            'default': [
-              {
-                'event': 'APPROVE',
-                'icon': 'check',
-                'label': 'Approve',
-                'variant': 'primary',
-              },
-              {
-                'event': 'REJECT',
-                'icon': 'x',
-                'label': 'Reject',
-                'variant': 'danger',
-              },
-              {
-                'event': 'ESCALATE',
-                'icon': 'alert-triangle',
-                'label': 'Escalate',
-                'variant': 'secondary',
-              },
-            ],
-            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
-            'items': {
-              'properties': {
-                'event': {
-                  'name': 'event',
-                  'required': false,
-                  'type': 'event',
-                },
-                'icon': {
-                  'name': 'icon',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-                'roles': {
-                  'items': {
-                    'type': 'string',
-                  },
-                  'name': 'roles',
-                  'required': false,
-                  'type': 'array',
-                },
-                'variant': {
-                  'name': 'variant',
-                  'required': false,
-                  'type': 'string',
-                },
-                'when': {
-                  'name': 'when',
-                  'required': false,
-                  'type': 'SExpr',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Row actions',
-            'tier': 'presentation',
-            'type': '[ItemAction]',
-          },
-          'reviewSlot': {
-            'default': 'modal',
-            'description': 'UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host\'s main content; summoned via OPEN, cleared via CLOSE.',
-            'label': 'Review slot',
-            'tier': 'internal',
-            'type': 'slot',
-          },
-          'tableLook': {
-            'default': 'dense',
-            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
-            'label': 'Table look',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'dense',
-              'spacious',
-              'striped',
-              'borderless',
-              'card-rows',
-            ],
-          },
-          'title': {
-            'default': 'Moderation Queue',
-            'description': 'Heading shown above the moderation queue',
-            'label': 'Section title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'viewerRole': {
-            'default': '',
-            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
-            'label': 'Viewer\'s role',
-            'tier': 'policy',
-            'type': 'string',
-          },
-        },
+        'name': 'ModQueueItemReview',
         'effectRow': [
           {
             'kind': 'fetch',
@@ -640,8 +521,8 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.reviewSlot',
+            'resolved': false,
           },
           {
             'kind': 'render-ui',
@@ -652,111 +533,41 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
             'resource': '@entity.id',
           },
         ],
+        'category': 'interaction',
+        'capabilities': [
+          'moderation',
+        ],
+        'linkedEntity': 'ModQueueItem',
         'emits': [
           {
-            'description': 'Signals that a moderation item has been approved.',
             'event': 'APPROVE',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'entity': 'ModQueueItem',
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'targetId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'targetType',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'reason',
-                    'type': 'string',
-                    'values': [
-                      'spam',
-                      'abuse',
-                      'off-topic',
-                      'misinformation',
-                      'nsfw',
-                      'other',
-                    ],
-                  },
-                  {
-                    'name': 'flagCount',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'status',
-                    'type': 'string',
-                    'values': [
-                      'pending',
-                      'approved',
-                      'rejected',
-                      'escalated',
-                    ],
-                  },
-                  {
-                    'name': 'reviewedBy',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'reviewedAt',
-                    'type': 'datetime',
-                  },
-                  {
-                    'name': 'notes',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'seedRow',
-                    'type': 'Map<string,scalar>',
-                  },
-                ],
-                'type': 'object',
-              },
-            ],
+            'description': 'Signals that a moderation item has been approved.',
             'synonyms': 'accept, confirm, pass',
             'tier': 'domain',
-          },
-          {
-            'description': 'Signals that a moderation item has been rejected.',
-            'event': 'REJECT',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'ModQueueItem',
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetType',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'reason',
@@ -801,39 +612,39 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     'type': 'Map<string,scalar>',
                   },
                 ],
-                'type': 'object',
+                'entity': 'ModQueueItem',
               },
             ],
+          },
+          {
+            'event': 'REJECT',
+            'description': 'Signals that a moderation item has been rejected.',
             'synonyms': 'deny, dismiss, decline',
             'tier': 'domain',
-          },
-          {
-            'description': 'Signals a flagged item requires further review.',
-            'event': 'ESCALATE',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
-                'entity': 'ModQueueItem',
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetType',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'reason',
@@ -878,40 +689,117 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     'type': 'Map<string,scalar>',
                   },
                 ],
-                'type': 'object',
+                'entity': 'ModQueueItem',
               },
             ],
-            'synonyms': 'flag, defer, elevate',
-            'tier': 'presentation',
           },
           {
-            'description': 'Dismisses the moderation queue overlay.',
+            'event': 'ESCALATE',
+            'description': 'Signals a flagged item requires further review.',
+            'synonyms': 'flag, defer, elevate',
+            'tier': 'presentation',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row',
+                'type': 'object',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'targetId',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'targetType',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'reason',
+                    'type': 'string',
+                    'values': [
+                      'spam',
+                      'abuse',
+                      'off-topic',
+                      'misinformation',
+                      'nsfw',
+                      'other',
+                    ],
+                  },
+                  {
+                    'name': 'flagCount',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                    'values': [
+                      'pending',
+                      'approved',
+                      'rejected',
+                      'escalated',
+                    ],
+                  },
+                  {
+                    'name': 'reviewedBy',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'reviewedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'notes',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'seedRow',
+                    'type': 'Map<string,scalar>',
+                  },
+                ],
+                'entity': 'ModQueueItem',
+              },
+            ],
+          },
+          {
             'event': 'CLOSE',
+            'description': 'Dismisses the moderation queue overlay.',
             'synonyms': 'dismiss, hide, cancel, done',
             'tier': 'domain',
           },
           {
-            'description': 'A new moderation item is ready for review.',
             'event': 'ModQueueItemLoaded',
+            'description': 'A new moderation item is ready for review.',
+            'synonyms': 'loaded, fetched, available, ready',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'ModQueueItem',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetType',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'reason',
@@ -956,15 +844,15 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     'type': 'Map<string,scalar>',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'ModQueueItem',
               },
             ],
-            'synonyms': 'loaded, fetched, available, ready',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates failure to load moderation queue items.',
             'event': 'ModQueueItemLoadFailed',
+            'description': 'Indicates failure to load moderation queue items.',
+            'synonyms': 'error, failure, problem, failed',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -975,28 +863,28 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure, problem, failed',
-            'tier': 'internal',
           },
           {
-            'description': 'Signals a moderation queue item has been reviewed and a verdict recorded.',
             'event': 'ModQueueItemReviewed',
-            'payloadEntity': 'ModQueueItem',
+            'description': 'Signals a moderation queue item has been reviewed and a verdict recorded.',
+            'synonyms': 'reviewed, processed, judged, completed',
+            'tier': 'domain',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'targetId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'targetType',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'reason',
@@ -1041,13 +929,13 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 'type': 'Map<string,scalar>',
               },
             ],
-            'scope': 'internal',
-            'synonyms': 'reviewed, processed, judged, completed',
-            'tier': 'domain',
+            'payloadEntity': 'ModQueueItem',
           },
           {
-            'description': 'Indicates a failure to load or process a moderation queue item.',
             'event': 'ModQueueItemReviewFailed',
+            'description': 'Indicates a failure to load or process a moderation queue item.',
+            'synonyms': 'error, failure, problem, issue',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -1058,42 +946,54 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 'type': 'string',
               },
             ],
-            'synonyms': 'error, failure, problem, issue',
-            'tier': 'internal',
           },
         ],
-        'linkedEntity': 'ModQueueItem',
-        'name': 'ModQueueItemReview',
-        'scope': 'collection',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'loading',
+            },
+            {
+              'name': 'reviewing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'A new moderation item is ready for review.',
               'key': 'ModQueueItemLoaded',
               'name': 'ModQueueItem loaded',
+              'description': 'A new moderation item is ready for review.',
+              'synonyms': 'loaded, fetched, available, ready',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'ModQueueItem',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'targetId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'targetType',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'reason',
@@ -1138,16 +1038,16 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                       'type': 'Map<string,scalar>',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'ModQueueItem',
                 },
               ],
-              'synonyms': 'loaded, fetched, available, ready',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates failure to load moderation queue items.',
               'key': 'ModQueueItemLoadFailed',
               'name': 'ModQueueItem load failed',
+              'description': 'Indicates failure to load moderation queue items.',
+              'synonyms': 'error, failure, problem, failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1158,36 +1058,35 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, problem, failed',
-              'tier': 'internal',
             },
             {
-              'description': 'Summons the moderation queue (host nav/affordance requests it).',
               'key': 'OPEN',
               'name': 'Open',
+              'description': 'Summons the moderation queue (host nav/affordance requests it).',
               'synonyms': 'open, show, review, view queue, moderation queue',
               'tier': 'domain',
             },
             {
-              'description': 'Signals a moderation queue item has been reviewed and a verdict recorded.',
               'key': 'ModQueueItemReviewed',
               'name': 'ModQueueItem reviewed',
-              'payloadEntity': 'ModQueueItem',
+              'description': 'Signals a moderation queue item has been reviewed and a verdict recorded.',
+              'synonyms': 'reviewed, processed, judged, completed',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'targetId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'targetType',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'reason',
@@ -1232,13 +1131,14 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   'type': 'Map<string,scalar>',
                 },
               ],
-              'synonyms': 'reviewed, processed, judged, completed',
-              'tier': 'domain',
+              'payloadEntity': 'ModQueueItem',
             },
             {
-              'description': 'Indicates a failure to load or process a moderation queue item.',
               'key': 'ModQueueItemReviewFailed',
               'name': 'ModQueueItem review failed',
+              'description': 'Indicates a failure to load or process a moderation queue item.',
+              'synonyms': 'error, failure, problem, issue',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1249,200 +1149,122 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   'type': 'string',
                 },
               ],
-              'synonyms': 'error, failure, problem, issue',
-              'tier': 'internal',
             },
             {
-              'description': 'Dismisses the moderation queue overlay.',
               'key': 'CLOSE',
               'name': 'Close',
+              'description': 'Dismisses the moderation queue overlay.',
               'synonyms': 'dismiss, hide, cancel, done',
               'tier': 'domain',
             },
             {
-              'description': 'Signals that a moderation item has been approved.',
               'key': 'APPROVE',
               'name': 'Approve',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'ModQueueItem',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'targetId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'targetType',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'reason',
-                      'type': 'string',
-                      'values': [
-                        'spam',
-                        'abuse',
-                        'off-topic',
-                        'misinformation',
-                        'nsfw',
-                        'other',
-                      ],
-                    },
-                    {
-                      'name': 'flagCount',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'status',
-                      'type': 'string',
-                      'values': [
-                        'pending',
-                        'approved',
-                        'rejected',
-                        'escalated',
-                      ],
-                    },
-                    {
-                      'name': 'reviewedBy',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'reviewedAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'notes',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'seedRow',
-                      'type': 'Map<string,scalar>',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
+              'description': 'Signals that a moderation item has been approved.',
               'synonyms': 'accept, confirm, pass',
               'tier': 'domain',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'targetId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'targetType',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'reason',
+                      'type': 'string',
+                      'values': [
+                        'spam',
+                        'abuse',
+                        'off-topic',
+                        'misinformation',
+                        'nsfw',
+                        'other',
+                      ],
+                    },
+                    {
+                      'name': 'flagCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'pending',
+                        'approved',
+                        'rejected',
+                        'escalated',
+                      ],
+                    },
+                    {
+                      'name': 'reviewedBy',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'notes',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'seedRow',
+                      'type': 'Map<string,scalar>',
+                    },
+                  ],
+                  'entity': 'ModQueueItem',
+                },
+              ],
             },
             {
-              'description': 'Signals that a moderation item has been rejected.',
               'key': 'REJECT',
               'name': 'Reject',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'entity': 'ModQueueItem',
-                  'name': 'row',
-                  'properties': [
-                    {
-                      'name': 'id',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'targetId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'targetType',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'reason',
-                      'type': 'string',
-                      'values': [
-                        'spam',
-                        'abuse',
-                        'off-topic',
-                        'misinformation',
-                        'nsfw',
-                        'other',
-                      ],
-                    },
-                    {
-                      'name': 'flagCount',
-                      'type': 'number',
-                    },
-                    {
-                      'name': 'status',
-                      'type': 'string',
-                      'values': [
-                        'pending',
-                        'approved',
-                        'rejected',
-                        'escalated',
-                      ],
-                    },
-                    {
-                      'name': 'reviewedBy',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'reviewedAt',
-                      'type': 'datetime',
-                    },
-                    {
-                      'name': 'notes',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'seedRow',
-                      'type': 'Map<string,scalar>',
-                    },
-                  ],
-                  'type': 'object',
-                },
-              ],
+              'description': 'Signals that a moderation item has been rejected.',
               'synonyms': 'deny, dismiss, decline',
               'tier': 'domain',
-            },
-            {
-              'description': 'Signals a flagged item requires further review.',
-              'key': 'ESCALATE',
-              'name': 'Escalate',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
-                  'entity': 'ModQueueItem',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'targetId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'targetType',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'reason',
@@ -1487,52 +1309,116 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                       'type': 'Map<string,scalar>',
                     },
                   ],
-                  'type': 'object',
+                  'entity': 'ModQueueItem',
                 },
               ],
+            },
+            {
+              'key': 'ESCALATE',
+              'name': 'Escalate',
+              'description': 'Signals a flagged item requires further review.',
               'synonyms': 'flag, defer, elevate',
               'tier': 'presentation',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'loading',
-            },
-            {
-              'name': 'reviewing',
-            },
-            {
-              'name': 'error',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'object',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'targetId',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'targetType',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    {
+                      'name': 'reason',
+                      'type': 'string',
+                      'values': [
+                        'spam',
+                        'abuse',
+                        'off-topic',
+                        'misinformation',
+                        'nsfw',
+                        'other',
+                      ],
+                    },
+                    {
+                      'name': 'flagCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                      'values': [
+                        'pending',
+                        'approved',
+                        'rejected',
+                        'escalated',
+                      ],
+                    },
+                    {
+                      'name': 'reviewedBy',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'notes',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'seedRow',
+                      'type': 'Map<string,scalar>',
+                    },
+                  ],
+                  'entity': 'ModQueueItem',
+                },
+              ],
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('ModQueueItem' satisfies _StdModQueueEntityName),
                   {
                     'emit': {
-                      'failure': 'ModQueueItemLoadFailed',
                       'success': 'ModQueueItemLoaded',
+                      'failure': 'ModQueueItemLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
               'event': 'ModQueueItemLoaded',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ModQueueItemLoadFailed',
               'effects': [
                 [
                   'render-ui',
@@ -1549,11 +1435,12 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                 ],
               ],
-              'event': 'ModQueueItemLoadFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'loading',
+              'event': 'OPEN',
+              'guard': '@config.enabled',
               'effects': [
                 [
                   'fetch',
@@ -1569,24 +1456,23 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   'render-ui',
                   '@config.reviewSlot',
                   {
+                    'type': 'stack',
+                    'className': 'py-12',
                     'align': 'center',
+                    'gap': 'md',
                     'children': [
                       '@trait.LoadingSpinner',
                       '@trait.LoadingText',
                     ],
-                    'className': 'py-12',
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'OPEN',
-              'from': 'idle',
-              'guard': '@config.enabled',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
@@ -1598,17 +1484,53 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   ('ModQueueItem' satisfies _StdModQueueEntityName),
                   {
                     'emit': {
-                      'failure': 'ModQueueItemLoadFailed',
                       'success': 'ModQueueItemLoaded',
+                      'failure': 'ModQueueItemLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'idle',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'ModQueueItemLoaded',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  [
+                    'array/filter',
+                    '@payload.data',
+                    [
+                      'fn',
+                      'row',
+                      [
+                        'and',
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@row',
+                            'status',
+                          ],
+                          'pending',
+                        ],
+                        [
+                          '>=',
+                          [
+                            'object/get',
+                            '@row',
+                            'flagCount',
+                          ],
+                          '@config.autoEscalateThreshold',
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'set',
@@ -1655,8 +1577,8 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   'update',
                   ('ModQueueItem' satisfies _StdModQueueEntityName),
                   {
-                    'id': '@entity.id',
                     'status': 'escalated',
+                    'id': '@entity.id',
                   },
                   {
                     'emit': {
@@ -1666,47 +1588,11 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                 ],
               ],
-              'event': 'ModQueueItemLoaded',
-              'from': 'loading',
-              'guard': [
-                '>',
-                [
-                  'array/len',
-                  [
-                    'array/filter',
-                    '@payload.data',
-                    [
-                      'fn',
-                      'row',
-                      [
-                        'and',
-                        [
-                          '=',
-                          [
-                            'object/get',
-                            '@row',
-                            'status',
-                          ],
-                          'pending',
-                        ],
-                        [
-                          '>=',
-                          [
-                            'object/get',
-                            '@row',
-                            'flagCount',
-                          ],
-                          '@config.autoEscalateThreshold',
-                        ],
-                      ],
-                    ],
-                  ],
-                ],
-                0,
-              ],
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'ModQueueItemReviewed',
               'effects': [
                 [
                   'fetch',
@@ -1719,127 +1605,28 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                 ],
               ],
-              'event': 'ModQueueItemReviewed',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'ModQueueItemReviewFailed',
               'effects': [
                 [
                   'render-ui',
                   '@config.reviewSlot',
                   {
+                    'type': 'stack',
                     'children': [
                       '@trait.ErrorAlert',
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'ModQueueItemReviewFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  '@config.reviewSlot',
-                  {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'children': [
-                          {
-                            'align': 'center',
-                            'children': [
-                              '@trait.ShieldAlertIcon',
-                              '@trait.ModQueueTitle',
-                            ],
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
-                          },
-                          '@trait.CloseButton',
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'between',
-                        'type': 'stack',
-                      },
-                      '@trait.ModQueueDivider',
-                      {
-                        'cols': 1,
-                        'entity': '@payload.data',
-                        'fields': [
-                          {
-                            'label': 'Type',
-                            'name': 'targetType',
-                            'variant': 'badge',
-                          },
-                          {
-                            'label': 'Reason',
-                            'name': 'reason',
-                            'variant': 'caption',
-                          },
-                          {
-                            'label': 'Flags',
-                            'name': 'flagCount',
-                            'variant': 'caption',
-                          },
-                          {
-                            'label': 'Status',
-                            'name': 'status',
-                            'variant': 'badge',
-                          },
-                        ],
-                        'gap': 'sm',
-                        'itemActions': [
-                          'array/filter',
-                          '@config.itemActions',
-                          [
-                            'fn',
-                            'action',
-                            [
-                              'or',
-                              [
-                                '=',
-                                [
-                                  'array/len',
-                                  [
-                                    'object/get',
-                                    '@action',
-                                    'roles',
-                                    [],
-                                  ],
-                                ],
-                                0,
-                              ],
-                              [
-                                'array/includes',
-                                [
-                                  'object/get',
-                                  '@action',
-                                  'roles',
-                                  [],
-                                ],
-                                '@config.viewerRole',
-                              ],
-                            ],
-                          ],
-                        ],
-                        'look': '@config.tableLook',
-                        'type': 'data-grid',
-                      },
-                    ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'ModQueueItemLoaded',
               'from': 'loading',
+              'to': 'reviewing',
+              'event': 'ModQueueItemLoaded',
               'guard': [
                 '=',
                 [
@@ -1876,48 +1663,125 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 ],
                 0,
               ],
-              'to': 'reviewing',
-            },
-            {
               'effects': [
                 [
                   'render-ui',
                   '@config.reviewSlot',
                   {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'children': [
+                              '@trait.ShieldAlertIcon',
+                              '@trait.ModQueueTitle',
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                          },
+                          '@trait.CloseButton',
+                        ],
+                        'align': 'center',
+                      },
+                      '@trait.ModQueueDivider',
+                      {
+                        'type': 'data-grid',
+                        'cols': 1,
+                        'entity': '@payload.data',
+                        'gap': 'sm',
+                        'itemActions': [
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
+                        ],
+                        'look': '@config.tableLook',
+                        'fields': [
+                          {
+                            'label': 'Type',
+                            'name': 'targetType',
+                            'variant': 'badge',
+                          },
+                          {
+                            'variant': 'caption',
+                            'name': 'reason',
+                            'label': 'Reason',
+                          },
+                          {
+                            'name': 'flagCount',
+                            'variant': 'caption',
+                            'label': 'Flags',
+                          },
+                          {
+                            'name': 'status',
+                            'label': 'Status',
+                            'variant': 'badge',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'ModQueueItemLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  {
+                    'type': 'stack',
                     'children': [
                       '@trait.ErrorAlert',
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'ModQueueItemLoadFailed',
-              'from': 'loading',
-              'to': 'error',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  '@config.reviewSlot',
-                  null,
-                ],
-                [
-                  'fetch',
-                  ('ModQueueItem' satisfies _StdModQueueEntityName),
-                  {
-                    'emit': {
-                      'failure': 'ModQueueItemLoadFailed',
-                      'success': 'ModQueueItemLoaded',
-                    },
-                  },
-                ],
-              ],
-              'event': 'CLOSE',
               'from': 'loading',
               'to': 'idle',
-            },
-            {
+              'event': 'CLOSE',
               'effects': [
                 [
                   'render-ui',
@@ -1929,39 +1793,61 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   ('ModQueueItem' satisfies _StdModQueueEntityName),
                   {
                     'emit': {
-                      'failure': 'ModQueueItemLoadFailed',
                       'success': 'ModQueueItemLoaded',
+                      'failure': 'ModQueueItemLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'INIT',
+            },
+            {
               'from': 'reviewing',
               'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('ModQueueItem' satisfies _StdModQueueEntityName),
+                  {
+                    'emit': {
+                      'success': 'ModQueueItemLoaded',
+                      'failure': 'ModQueueItemLoadFailed',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'reviewing',
+              'to': 'reviewing',
+              'event': 'APPROVE',
               'effects': [
                 [
                   'persist',
                   'update',
                   ('ModQueueItem' satisfies _StdModQueueEntityName),
                   {
-                    'id': '@payload.row.id',
                     'status': 'approved',
+                    'id': '@payload.row.id',
                   },
                   {
                     'emit': {
-                      'failure': 'ModQueueItemReviewFailed',
                       'success': 'ModQueueItemReviewed',
+                      'failure': 'ModQueueItemReviewFailed',
                     },
                   },
                 ],
               ],
-              'event': 'APPROVE',
-              'from': 'reviewing',
-              'to': 'reviewing',
             },
             {
+              'from': 'reviewing',
+              'to': 'reviewing',
+              'event': 'REJECT',
               'effects': [
                 [
                   'persist',
@@ -1979,11 +1865,11 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                 ],
               ],
-              'event': 'REJECT',
-              'from': 'reviewing',
-              'to': 'reviewing',
             },
             {
+              'from': 'reviewing',
+              'to': 'reviewing',
+              'event': 'ESCALATE',
               'effects': [
                 [
                   'persist',
@@ -2001,67 +1887,45 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                 ],
               ],
-              'event': 'ESCALATE',
-              'from': 'reviewing',
-              'to': 'reviewing',
             },
             {
+              'from': 'reviewing',
+              'to': 'loading',
+              'event': 'ModQueueItemReviewed',
               'effects': [
                 [
                   'fetch',
                   ('ModQueueItem' satisfies _StdModQueueEntityName),
                   {
                     'emit': {
-                      'failure': 'ModQueueItemLoadFailed',
                       'success': 'ModQueueItemLoaded',
+                      'failure': 'ModQueueItemLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ModQueueItemReviewed',
-              'from': 'reviewing',
-              'to': 'loading',
             },
             {
+              'from': 'reviewing',
+              'to': 'reviewing',
+              'event': 'ModQueueItemReviewFailed',
               'effects': [
                 [
                   'render-ui',
                   '@config.reviewSlot',
                   {
+                    'type': 'stack',
                     'children': [
                       '@trait.ErrorAlert',
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'ModQueueItemReviewFailed',
-              'from': 'reviewing',
-              'to': 'reviewing',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  '@config.reviewSlot',
-                  null,
-                ],
-                [
-                  'fetch',
-                  ('ModQueueItem' satisfies _StdModQueueEntityName),
-                  {
-                    'emit': {
-                      'failure': 'ModQueueItemLoadFailed',
-                      'success': 'ModQueueItemLoaded',
-                    },
-                  },
-                ],
-              ],
-              'event': 'CLOSE',
               'from': 'reviewing',
               'to': 'idle',
-            },
-            {
+              'event': 'CLOSE',
               'effects': [
                 [
                   'render-ui',
@@ -2079,11 +1943,33 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                 ],
               ],
-              'event': 'INIT',
+            },
+            {
               'from': 'error',
               'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+                [
+                  'fetch',
+                  ('ModQueueItem' satisfies _StdModQueueEntityName),
+                  {
+                    'emit': {
+                      'failure': 'ModQueueItemLoadFailed',
+                      'success': 'ModQueueItemLoaded',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'OPEN',
               'effects': [
                 [
                   'fetch',
@@ -2099,18 +1985,18 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   'render-ui',
                   '@config.reviewSlot',
                   {
+                    'type': 'stack',
                     'children': [
                       '@trait.ErrorSpinner',
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'OPEN',
-              'from': 'error',
-              'to': 'loading',
             },
             {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'CLOSE',
               'effects': [
                 [
                   'render-ui',
@@ -2128,12 +2014,126 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                 ],
               ],
-              'event': 'CLOSE',
-              'from': 'error',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'title': {
+            'type': 'string',
+            'default': 'Moderation Queue',
+            'label': 'Section title',
+            'description': 'Heading shown above the moderation queue',
+            'tier': 'presentation',
+          },
+          'autoEscalateThreshold': {
+            'type': 'number',
+            'default': 5,
+            'label': 'Auto-escalate at',
+            'description': 'Flag count after which an item is auto-escalated to senior review',
+            'tier': 'policy',
+          },
+          'viewerRole': {
+            'type': 'string',
+            'default': '',
+            'label': 'Viewer\'s role',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'tier': 'policy',
+          },
+          'tableLook': {
+            'type': 'string',
+            'default': 'dense',
+            'label': 'Table look',
+            'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
+            'tier': 'presentation',
+            'values': [
+              'dense',
+              'spacious',
+              'striped',
+              'borderless',
+              'card-rows',
+            ],
+          },
+          'reviewSlot': {
+            'type': 'slot',
+            'default': 'modal',
+            'label': 'Review slot',
+            'description': 'UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host\'s main content; summoned via OPEN, cleared via CLOSE.',
+            'tier': 'internal',
+          },
+          'itemActions': {
+            'type': '[ItemAction]',
+            'default': [
+              {
+                'event': 'APPROVE',
+                'label': 'Approve',
+                'variant': 'primary',
+                'icon': 'check',
+              },
+              {
+                'label': 'Reject',
+                'variant': 'danger',
+                'event': 'REJECT',
+                'icon': 'x',
+              },
+              {
+                'variant': 'secondary',
+                'label': 'Escalate',
+                'event': 'ESCALATE',
+                'icon': 'alert-triangle',
+              },
+            ],
+            'label': 'Row actions',
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'when': {
+                  'name': 'when',
+                  'type': 'SExpr',
+                  'required': false,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
+                },
+                'variant': {
+                  'name': 'variant',
+                  'type': 'string',
+                  'required': false,
+                },
+                'event': {
+                  'name': 'event',
+                  'type': 'event',
+                  'required': false,
+                },
+                'roles': {
+                  'name': 'roles',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'enabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Enable moderation queue',
+            'description': 'Send submissions to a review queue before they go live. Off by default.',
+            'synonyms': 'enable, turn on, enforce, require, activate, apply, switch on, moderation, moderation queue, content review queue, flag for review, content moderation, review flagged content, abuse review, spam queue, report queue',
+            'tier': 'policy',
+          },
+        },
+        'scope': 'collection',
       } satisfies Trait,
     ],
     pages: [

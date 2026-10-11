@@ -60,41 +60,41 @@ export interface StdUiSelectValueChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSelectConfig {
-  /** Default: `"ACTION"` */
-  action?: string;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  clearable?: boolean;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
   error?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
   /** Default: `[]` */
   groups?: EntityRow[];
-  label?: string;
-  lang?: string;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaSelected?: boolean;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  ariaLabel?: string;
+  searchable?: boolean;
+  value?: string;
   multiple?: boolean;
-  /** Default: `"CHANGE"` */
-  onChange?: string;
+  ariaDescribedby?: string;
+  ariaBusy?: boolean;
+  /** Default: `"ACTION"` */
+  action?: string;
+  tabIndex?: number;
   /** Default: `"VALUE_CHANGE"` */
   onValueChange?: string;
+  /** Default: `"CHANGE"` */
+  onChange?: string;
+  className?: string;
+  placeholder?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaExpanded?: boolean;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  enterDelay?: number;
+  ariaLabelledby?: string;
+  ariaHidden?: boolean;
+  lang?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  clearable?: boolean;
+  label?: string;
   /** Default: `[]` */
   options?: EntityRow[];
-  placeholder?: string;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  searchable?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
-  value?: string;
 }
 
 /**

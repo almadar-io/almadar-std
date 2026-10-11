@@ -30,12 +30,19 @@ const ALIAS = 'UiCarousel';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCarouselEventKey = 'INIT' | 'SLIDE_CHANGE';
+export type StdUiCarouselEventKey = 'INIT' | 'LOAD_MORE' | 'SLIDE_CHANGE';
 
 /**
  * Payload shape for the `SLIDE_CHANGE` event.
  */
 export interface StdUiCarouselSlideChangePayload {
+  index: number;
+}
+
+/**
+ * Payload shape for the `LOAD_MORE` event.
+ */
+export interface StdUiCarouselLoadMorePayload {
   index: number;
 }
 
@@ -46,39 +53,51 @@ export interface StdUiCarouselSlideChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCarouselConfig {
-  ariaBusy?: boolean;
+  slideChangePayload?: unknown;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
   ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
+  className?: string;
+  /** Default: `[{"title":"Title","image":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png","id":"Id"},{"id":"Id 2","image":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png","title":"Title 2"}]` */
+  items?: EntityRow[];
   ariaSelected?: boolean;
   /** Default: `false` */
   autoPlay?: boolean;
-  /** Default: `5000` */
-  autoPlayInterval?: number;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
   enterDelay?: number;
-  /** Default: `[{"id":"Id","image":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png","title":"Title"},{"id":"Id 2","image":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png","title":"Title 2"}]` */
-  items?: EntityRow[];
+  /** Default: `false` */
+  fullHeight?: boolean;
+  ariaBusy?: boolean;
   lang?: string;
   /** Default: `false` */
+  isLoadingMore?: boolean;
+  /** Default: `false` */
   loop?: boolean;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  /** Default: `false` */
+  hasMore?: boolean;
+  ariaDescribedby?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"LOAD_MORE"` */
+  loadMoreEvent?: string;
   /** Default: `true` */
   showArrows?: boolean;
-  /** Default: `true` */
-  showDots?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaLabelledby?: string;
+  ariaLabel?: string;
+  /** Default: `5000` */
+  autoPlayInterval?: number;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  tabIndex?: number;
+  /** Default: `2` */
+  loadMoreAhead?: number;
   /** Default: `"SLIDE_CHANGE"` */
   slideChangeEvent?: string;
-  slideChangePayload?: unknown;
-  tabIndex?: number;
+  ariaHidden?: boolean;
+  ariaExpanded?: boolean;
+  /** Default: `true` */
+  showDots?: boolean;
 }
 
 /**

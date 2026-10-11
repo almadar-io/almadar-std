@@ -99,52 +99,52 @@ export interface StdUiSegmentRendererResetCodePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSegmentRendererConfig {
+  userProgress?: EntityRow;
+  /** Default: `"NOTE"` */
+  noteEvent?: string;
+  /** Default: `"RUN_CODE"` */
+  runCodeEvent?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  ariaPressed?: 'true' | 'false' | 'mixed';
   /** Default: `"ACTIVATION_SAVE"` */
   activationSaveEvent?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `[]` */
+  annotations?: EntityRow[];
+  ariaSelected?: boolean;
+  ariaLabel?: string;
+  runningCode?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  noteLabel?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   /** Default: `"ANNOTATION"` */
   annotationEvent?: string;
   /** Default: `[]` */
-  annotations?: EntityRow[];
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  segments?: EntityRow[];
   ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  className?: string;
+  tabIndex?: number;
+  containerClassName?: string;
+  enterDelay?: number;
+  ariaBusy?: boolean;
   ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"ASK"` */
   askEvent?: string;
-  askLabel?: string;
+  lang?: string;
+  /** Default: `{"item":{"stderr":"Stderr","testResults":[{"actualOutput":"Actual Output","passed":false,"input":"Input","expectedOutput":"Expected Output"},{"passed":true,"input":"Input 2","expectedOutput":"Expected Output 2","actualOutput":"Actual Output 2"}],"stdout":"Stdout","exitCode":1}}` */
+  codeOutputs?: Record<string, TraitConfig>;
+  lesson?: string;
   /** Default: `"BLOOM_ANSWER"` */
   bloomAnswerEvent?: string;
-  className?: string;
-  /** Default: `{"item":{"exitCode":1,"stderr":"Stderr","stdout":"Stdout","testResults":[{"actualOutput":"Actual Output","expectedOutput":"Expected Output","input":"Input","passed":false},{"actualOutput":"Actual Output 2","expectedOutput":"Expected Output 2","input":"Input 2","passed":true}]}}` */
-  codeOutputs?: Record<string, TraitConfig>;
-  containerClassName?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  lang?: string;
-  lesson?: string;
-  /** Default: `"NOTE"` */
-  noteEvent?: string;
-  noteLabel?: string;
+  ariaHidden?: boolean;
   /** Default: `"REFLECTION_SAVE"` */
   reflectionSaveEvent?: string;
+  askLabel?: string;
   /** Default: `"RESET_CODE"` */
   resetCodeEvent?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `"RUN_CODE"` */
-  runCodeEvent?: string;
-  runningCode?: string;
-  /** Default: `[]` */
-  segments?: EntityRow[];
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
-  userProgress?: EntityRow;
+  ariaExpanded?: boolean;
 }
 
 type _StdUiSegmentRendererEntityName = 'SegmentRendererItem';
@@ -204,8 +204,8 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -216,36 +216,461 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
-        'config': {
-          'activationSaveEvent': {
-            'default': 'ACTIVATION_SAVE',
-            'description': 'Event emitted when the activation prompt is saved or skipped (as `UI:<activationSaveEvent>`)',
-            'label': 'Activation Save Event',
-            'tier': 'presentation',
-            'type': 'event',
+        'name': 'SegmentRendererRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
           },
-          'annotationEvent': {
-            'default': 'ANNOTATION',
+        ],
+        'category': 'interaction',
+        'linkedEntity': 'SegmentRendererItem',
+        'emits': [
+          {
+            'event': '@config.activationSaveEvent',
+            'description': 'Event emitted when the activation prompt is saved or skipped (as `UI:<activationSaveEvent>`)',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'response',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+            'definerKnob': 'activationSaveEvent',
+          },
+          {
+            'event': '@config.reflectionSaveEvent',
+            'description': 'Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'index',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'note',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+            'definerKnob': 'reflectionSaveEvent',
+          },
+          {
+            'event': '@config.bloomAnswerEvent',
+            'description': 'Event emitted on the first reveal of a Bloom question (as `UI:<bloomAnswerEvent>`)',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'index',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'level',
+                'type': 'string',
+                'values': [
+                  'remember',
+                  'understand',
+                  'apply',
+                  'analyze',
+                  'evaluate',
+                  'create',
+                ],
+                'required': true,
+              },
+            ],
+            'definerKnob': 'bloomAnswerEvent',
+          },
+          {
+            'event': '@config.askEvent',
+            'description': 'Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'selectedText',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+            'definerKnob': 'askEvent',
+          },
+          {
+            'event': '@config.noteEvent',
+            'description': 'Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'selectedText',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+            'definerKnob': 'noteEvent',
+          },
+          {
+            'event': '@config.annotationEvent',
             'description': 'Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)',
-            'label': 'Annotation Event',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'annotationId',
+                'type': 'string',
+              },
+            ],
+            'definerKnob': 'annotationEvent',
+          },
+          {
+            'event': '@config.runCodeEvent',
+            'description': 'Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'code',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'language',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'runId',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+            'definerKnob': 'runCodeEvent',
+          },
+          {
+            'event': '@config.resetCodeEvent',
+            'description': 'Event a runnable code block emits on Reset (`{ runId }`).',
+            'tier': 'essential',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'runId',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+            'definerKnob': 'resetCodeEvent',
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': '@config.activationSaveEvent',
+              'name': '@config.activation save event',
+              'description': 'Event emitted when the activation prompt is saved or skipped (as `UI:<activationSaveEvent>`)',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'response',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': '@config.reflectionSaveEvent',
+              'name': '@config.reflection save event',
+              'description': 'Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'index',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'note',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': '@config.bloomAnswerEvent',
+              'name': '@config.bloom answer event',
+              'description': 'Event emitted on the first reveal of a Bloom question (as `UI:<bloomAnswerEvent>`)',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'index',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'level',
+                  'type': 'string',
+                  'values': [
+                    'remember',
+                    'understand',
+                    'apply',
+                    'analyze',
+                    'evaluate',
+                    'create',
+                  ],
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': '@config.askEvent',
+              'name': '@config.ask event',
+              'description': 'Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'selectedText',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': '@config.noteEvent',
+              'name': '@config.note event',
+              'description': 'Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'selectedText',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': '@config.annotationEvent',
+              'name': '@config.annotation event',
+              'description': 'Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'annotationId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': '@config.runCodeEvent',
+              'name': '@config.run code event',
+              'description': 'Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'code',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'language',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'runId',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': '@config.resetCodeEvent',
+              'name': '@config.reset code event',
+              'description': 'Event a runnable code block emits on Reset (`{ runId }`).',
+              'tier': 'essential',
+              'payloadSchema': [
+                {
+                  'name': 'runId',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'lang': '@config.lang',
+                    'className': '@config.className',
+                    'codeOutputs': '@config.codeOutputs',
+                    'aria-live': '@config.ariaLive',
+                    'type': 'segment-renderer',
+                    'noteEvent': '@config.noteEvent',
+                    'runningCode': '@config.runningCode',
+                    'lesson': '@config.lesson',
+                    'resetCodeEvent': '@config.resetCodeEvent',
+                    'aria-label': '@config.ariaLabel',
+                    'aria-pressed': '@config.ariaPressed',
+                    'annotations': '@config.annotations',
+                    'containerClassName': '@config.containerClassName',
+                    'aria-describedby': '@config.ariaDescribedby',
+                    'userProgress': '@config.userProgress',
+                    'annotationEvent': '@config.annotationEvent',
+                    'aria-busy': '@config.ariaBusy',
+                    'enterDelay': '@config.enterDelay',
+                    'aria-current': '@config.ariaCurrent',
+                    'bloomAnswerEvent': '@config.bloomAnswerEvent',
+                    'aria-expanded': '@config.ariaExpanded',
+                    'aria-selected': '@config.ariaSelected',
+                    'aria-hidden': '@config.ariaHidden',
+                    'askEvent': '@config.askEvent',
+                    'aria-labelledby': '@config.ariaLabelledby',
+                    'activationSaveEvent': '@config.activationSaveEvent',
+                    'segments': '@config.segments',
+                    'reflectionSaveEvent': '@config.reflectionSaveEvent',
+                    'role': '@config.role',
+                    'askLabel': '@config.askLabel',
+                    'runCodeEvent': '@config.runCodeEvent',
+                    'enter': '@config.enter',
+                    'dir': '@config.dir',
+                    'noteLabel': '@config.noteLabel',
+                    'skeleton': '@config.skeleton',
+                    'tabIndex': '@config.tabIndex',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
+          'userProgress': {
+            'type': 'SegmentRendererUserProgress',
+            'label': 'User Progress',
+            'description': 'User progress for restoring activation/reflection state',
             'tier': 'presentation',
+            'properties': {
+              'bloomAnswered': {
+                'name': 'bloomAnswered',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'boolean',
+                },
+              },
+              'activationResponse': {
+                'name': 'activationResponse',
+                'type': 'string',
+                'required': false,
+              },
+              'reflectionNotes': {
+                'name': 'reflectionNotes',
+                'type': 'array',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+            },
+          },
+          'noteEvent': {
             'type': 'event',
+            'default': 'NOTE',
+            'label': 'Note Event',
+            'description': 'Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)',
+            'tier': 'presentation',
+          },
+          'runCodeEvent': {
+            'type': 'event',
+            'default': 'RUN_CODE',
+            'label': 'Run Code Event',
+            'description': 'Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.',
+            'tier': 'presentation',
+          },
+          'dir': {
+            'type': 'string',
+            'label': 'Dir',
+            'description': 'Text direction of this element\'s content.',
+            'tier': 'presentation',
+            'values': [
+              'ltr',
+              'rtl',
+              'auto',
+            ],
+          },
+          'ariaPressed': {
+            'type': 'string',
+            'label': 'Aria-pressed',
+            'description': 'Toggle-button state.',
+            'synonyms': 'aria-pressed',
+            'tier': 'presentation',
+            'values': [
+              'true',
+              'false',
+              'mixed',
+            ],
+          },
+          'activationSaveEvent': {
+            'type': 'event',
+            'default': 'ACTIVATION_SAVE',
+            'label': 'Activation Save Event',
+            'description': 'Event emitted when the activation prompt is saved or skipped (as `UI:<activationSaveEvent>`)',
+            'tier': 'presentation',
+          },
+          'ariaLive': {
+            'type': 'string',
+            'label': 'Aria-live',
+            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
+            'synonyms': 'aria-live',
+            'tier': 'presentation',
+            'values': [
+              'off',
+              'polite',
+              'assertive',
+            ],
           },
           'annotations': {
+            'type': '[SegmentRendererAnnotationsItem]',
             'default': [],
+            'label': 'Annotations',
             'description': 'Passages to highlight. Each `text` is matched exactly against the markdown segments, first segment whose source contains it, first occurrence inside one rendered text node (outside code); one that spans formatting is not highlighted.',
+            'tier': 'presentation',
             'items': {
+              'type': 'object',
               'properties': {
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 'kind': {
                   'name': 'kind',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                   'values': [
                     'question',
                     'note',
@@ -253,29 +678,57 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
                 },
                 'text': {
                   'name': 'text',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'label': 'Annotations',
-            'tier': 'presentation',
-            'type': '[SegmentRendererAnnotationsItem]',
           },
-          'ariaBusy': {
-            'description': 'This region is updating; assistive technology waits before announcing it.',
-            'label': 'Aria-busy',
-            'synonyms': 'aria-busy',
-            'tier': 'presentation',
+          'ariaSelected': {
             'type': 'boolean',
+            'label': 'Aria-selected',
+            'description': 'Whether this item is selected (tabs, options, grid cells).',
+            'synonyms': 'aria-selected',
+            'tier': 'presentation',
+          },
+          'ariaLabel': {
+            'type': 'string',
+            'label': 'Aria-label',
+            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
+            'synonyms': 'aria-label',
+            'tier': 'presentation',
+          },
+          'runningCode': {
+            'type': 'string',
+            'label': 'Running Code',
+            'description': 'The runId the program is currently running.',
+            'tier': 'presentation',
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'noteLabel': {
+            'type': 'string',
+            'label': 'Note Label',
+            'description': 'Note action label (default: translated)',
+            'tier': 'presentation',
           },
           'ariaCurrent': {
-            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
+            'type': 'string',
             'label': 'Aria-current',
+            'description': 'Marks the current item in a set: the current page, step, location, date or time.',
             'synonyms': 'aria-current',
             'tier': 'presentation',
-            'type': 'string',
             'values': [
               'page',
               'step',
@@ -286,255 +739,245 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
               'false',
             ],
           },
+          'annotationEvent': {
+            'type': 'event',
+            'default': 'ANNOTATION',
+            'label': 'Annotation Event',
+            'description': 'Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)',
+            'tier': 'presentation',
+          },
+          'segments': {
+            'type': '[SegmentRendererSegmentsItem]',
+            'default': [],
+            'label': 'Segments',
+            'description': 'Parsed lesson segments (see `parseLessonSegments`). Ignored when `lesson` is given.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'union',
+              'values': [
+                'SegmentRendererSegmentsItemMarkdown',
+                'SegmentRendererSegmentsItemCode',
+                'SegmentRendererSegmentsItemQuiz',
+                'SegmentRendererSegmentsItemActivate',
+                'SegmentRendererSegmentsItemConnect',
+                'SegmentRendererSegmentsItemReflect',
+                'SegmentRendererSegmentsItemBloom',
+                'SegmentRendererSegmentsItemVisualization',
+              ],
+              'properties': {
+                'SegmentRendererSegmentsItemCode': {
+                  'name': 'SegmentRendererSegmentsItemCode',
+                  'type': 'object',
+                  'properties': {
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'code',
+                      ],
+                    },
+                    'language': {
+                      'name': 'language',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'runnable': {
+                      'name': 'runnable',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                  },
+                },
+                'SegmentRendererSegmentsItemQuiz': {
+                  'name': 'SegmentRendererSegmentsItemQuiz',
+                  'type': 'object',
+                  'properties': {
+                    'question': {
+                      'name': 'question',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'answer': {
+                      'name': 'answer',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'quiz',
+                      ],
+                    },
+                  },
+                },
+                'SegmentRendererSegmentsItemMarkdown': {
+                  'name': 'SegmentRendererSegmentsItemMarkdown',
+                  'type': 'object',
+                  'properties': {
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'markdown',
+                      ],
+                    },
+                  },
+                },
+                'SegmentRendererSegmentsItemConnect': {
+                  'name': 'SegmentRendererSegmentsItemConnect',
+                  'type': 'object',
+                  'properties': {
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'connect',
+                      ],
+                    },
+                  },
+                },
+                'SegmentRendererSegmentsItemReflect': {
+                  'name': 'SegmentRendererSegmentsItemReflect',
+                  'type': 'object',
+                  'properties': {
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'reflect',
+                      ],
+                    },
+                    'prompt': {
+                      'name': 'prompt',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+                'SegmentRendererSegmentsItemBloom': {
+                  'name': 'SegmentRendererSegmentsItemBloom',
+                  'type': 'object',
+                  'properties': {
+                    'answer': {
+                      'name': 'answer',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'question': {
+                      'name': 'question',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'bloom',
+                      ],
+                    },
+                    'level': {
+                      'name': 'level',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'remember',
+                        'understand',
+                        'apply',
+                        'analyze',
+                        'evaluate',
+                        'create',
+                      ],
+                    },
+                  },
+                },
+                'SegmentRendererSegmentsItemVisualization': {
+                  'name': 'SegmentRendererSegmentsItemVisualization',
+                  'type': 'object',
+                  'properties': {
+                    'visualizationType': {
+                      'name': 'visualizationType',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'algorithms',
+                        'math',
+                        'physics',
+                        'biology',
+                        'chemistry',
+                        'probability',
+                      ],
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'visualization',
+                      ],
+                    },
+                  },
+                },
+                'SegmentRendererSegmentsItemActivate': {
+                  'name': 'SegmentRendererSegmentsItemActivate',
+                  'type': 'object',
+                  'properties': {
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'activate',
+                      ],
+                    },
+                    'question': {
+                      'name': 'question',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+            },
+          },
           'ariaDescribedby': {
-            'description': 'Id of the element whose text describes this one (help text, error).',
+            'type': 'string',
             'label': 'Aria-describedby',
+            'description': 'Id of the element whose text describes this one (help text, error).',
             'synonyms': 'aria-describedby',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaExpanded': {
-            'description': 'Whether the element it controls is expanded.',
-            'label': 'Aria-expanded',
-            'synonyms': 'aria-expanded',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaHidden': {
-            'description': 'Hide from assistive technology (decorative content only).',
-            'label': 'Aria-hidden',
-            'synonyms': 'aria-hidden',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'ariaLabel': {
-            'description': 'Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control).',
-            'label': 'Aria-label',
-            'synonyms': 'aria-label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLabelledby': {
-            'description': 'Id of the element whose text names this one.',
-            'label': 'Aria-labelledby',
-            'synonyms': 'aria-labelledby',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ariaLive': {
-            'description': 'Announce changes to this region: polite waits for a pause, assertive interrupts.',
-            'label': 'Aria-live',
-            'synonyms': 'aria-live',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'off',
-              'polite',
-              'assertive',
-            ],
-          },
-          'ariaPressed': {
-            'description': 'Toggle-button state.',
-            'label': 'Aria-pressed',
-            'synonyms': 'aria-pressed',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'true',
-              'false',
-              'mixed',
-            ],
-          },
-          'ariaSelected': {
-            'description': 'Whether this item is selected (tabs, options, grid cells).',
-            'label': 'Aria-selected',
-            'synonyms': 'aria-selected',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'askEvent': {
-            'default': 'ASK',
-            'description': 'Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)',
-            'label': 'Ask Event',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'askLabel': {
-            'description': 'Ask action label (default: translated)',
-            'label': 'Ask Label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'bloomAnswerEvent': {
-            'default': 'BLOOM_ANSWER',
-            'description': 'Event emitted on the first reveal of a Bloom question (as `UI:<bloomAnswerEvent>`)',
-            'label': 'Bloom Answer Event',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'className': {
-            'description': 'Additional CSS classes for the root container',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'codeOutputs': {
-            'default': {
-              'item': {
-                'exitCode': 1,
-                'stderr': 'Stderr',
-                'stdout': 'Stdout',
-                'testResults': [
-                  {
-                    'actualOutput': 'Actual Output',
-                    'expectedOutput': 'Expected Output',
-                    'input': 'Input',
-                    'passed': false,
-                  },
-                  {
-                    'actualOutput': 'Actual Output 2',
-                    'expectedOutput': 'Expected Output 2',
-                    'input': 'Input 2',
-                    'passed': true,
-                  },
-                ],
-              },
-            },
-            'description': 'The program\'s run results, keyed by segment runId.',
-            'items': {
-              'properties': {
-                'exitCode': {
-                  'name': 'exitCode',
-                  'required': true,
-                  'type': 'number',
-                },
-                'stderr': {
-                  'name': 'stderr',
-                  'required': true,
-                  'type': 'string',
-                },
-                'stdout': {
-                  'name': 'stdout',
-                  'required': true,
-                  'type': 'string',
-                },
-                'testResults': {
-                  'items': {
-                    'properties': {
-                      'actualOutput': {
-                        'name': 'actualOutput',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      'expectedOutput': {
-                        'name': 'expectedOutput',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      'input': {
-                        'name': 'input',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      'passed': {
-                        'name': 'passed',
-                        'required': true,
-                        'type': 'boolean',
-                      },
-                    },
-                    'type': 'object',
-                  },
-                  'name': 'testResults',
-                  'required': true,
-                  'type': 'array',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Code Outputs',
-            'tier': 'presentation',
-            'type': 'Map<string,SegmentRendererCodeOutputsValue>',
-          },
-          'containerClassName': {
-            'description': 'CSS classes for the outer wrapping div',
-            'label': 'Container Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'dir': {
-            'description': 'Text direction of this element\'s content.',
-            'label': 'Dir',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'ltr',
-              'rtl',
-              'auto',
-            ],
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'lang': {
-            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
-            'label': 'Lang',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'lesson': {
-            'description': 'Raw lesson markdown with learning tags; parsed with `parseLessonSegments` and rendered',
-            'label': 'Lesson',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'noteEvent': {
-            'default': 'NOTE',
-            'description': 'Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)',
-            'label': 'Note Event',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'noteLabel': {
-            'description': 'Note action label (default: translated)',
-            'label': 'Note Label',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'reflectionSaveEvent': {
-            'default': 'REFLECTION_SAVE',
-            'description': 'Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)',
-            'label': 'Reflection Save Event',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'resetCodeEvent': {
-            'default': 'RESET_CODE',
-            'description': 'Event a runnable code block emits on Reset (`{ runId }`).',
-            'label': 'Reset Code Event',
-            'tier': 'presentation',
-            'type': 'event',
           },
           'role': {
-            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
-            'label': 'Role',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Role',
+            'description': 'WAI-ARIA role when the element\'s native semantics don\'t describe it.',
+            'tier': 'presentation',
             'values': [
               'alert',
               'alertdialog',
@@ -619,244 +1062,49 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
               'treeitem',
             ],
           },
-          'runCodeEvent': {
-            'default': 'RUN_CODE',
-            'description': 'Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.',
-            'label': 'Run Code Event',
-            'tier': 'presentation',
-            'type': 'event',
-          },
-          'runningCode': {
-            'description': 'The runId the program is currently running.',
-            'label': 'Running Code',
-            'tier': 'presentation',
+          'className': {
             'type': 'string',
-          },
-          'segments': {
-            'default': [],
-            'description': 'Parsed lesson segments (see `parseLessonSegments`). Ignored when `lesson` is given.',
-            'items': {
-              'properties': {
-                'SegmentRendererSegmentsItemActivate': {
-                  'name': 'SegmentRendererSegmentsItemActivate',
-                  'properties': {
-                    'question': {
-                      'name': 'question',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'activate',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SegmentRendererSegmentsItemBloom': {
-                  'name': 'SegmentRendererSegmentsItemBloom',
-                  'properties': {
-                    'answer': {
-                      'name': 'answer',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'level': {
-                      'name': 'level',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'remember',
-                        'understand',
-                        'apply',
-                        'analyze',
-                        'evaluate',
-                        'create',
-                      ],
-                    },
-                    'question': {
-                      'name': 'question',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'bloom',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SegmentRendererSegmentsItemCode': {
-                  'name': 'SegmentRendererSegmentsItemCode',
-                  'properties': {
-                    'content': {
-                      'name': 'content',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'language': {
-                      'name': 'language',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'runnable': {
-                      'name': 'runnable',
-                      'required': false,
-                      'type': 'boolean',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'code',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SegmentRendererSegmentsItemConnect': {
-                  'name': 'SegmentRendererSegmentsItemConnect',
-                  'properties': {
-                    'content': {
-                      'name': 'content',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'connect',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SegmentRendererSegmentsItemMarkdown': {
-                  'name': 'SegmentRendererSegmentsItemMarkdown',
-                  'properties': {
-                    'content': {
-                      'name': 'content',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'markdown',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SegmentRendererSegmentsItemQuiz': {
-                  'name': 'SegmentRendererSegmentsItemQuiz',
-                  'properties': {
-                    'answer': {
-                      'name': 'answer',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'question': {
-                      'name': 'question',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'quiz',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SegmentRendererSegmentsItemReflect': {
-                  'name': 'SegmentRendererSegmentsItemReflect',
-                  'properties': {
-                    'prompt': {
-                      'name': 'prompt',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'reflect',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'SegmentRendererSegmentsItemVisualization': {
-                  'name': 'SegmentRendererSegmentsItemVisualization',
-                  'properties': {
-                    'description': {
-                      'name': 'description',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'visualization',
-                      ],
-                    },
-                    'visualizationType': {
-                      'name': 'visualizationType',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'algorithms',
-                        'math',
-                        'physics',
-                        'biology',
-                        'chemistry',
-                        'probability',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-              },
-              'type': 'union',
-              'values': [
-                'SegmentRendererSegmentsItemMarkdown',
-                'SegmentRendererSegmentsItemCode',
-                'SegmentRendererSegmentsItemQuiz',
-                'SegmentRendererSegmentsItemActivate',
-                'SegmentRendererSegmentsItemConnect',
-                'SegmentRendererSegmentsItemReflect',
-                'SegmentRendererSegmentsItemBloom',
-                'SegmentRendererSegmentsItemVisualization',
-              ],
-            },
-            'label': 'Segments',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes for the root container',
             'tier': 'presentation',
-            'type': '[SegmentRendererSegmentsItem]',
+          },
+          'tabIndex': {
+            'type': 'number',
+            'label': 'Tab Index',
+            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
+            'tier': 'presentation',
+          },
+          'containerClassName': {
+            'type': 'string',
+            'label': 'Container Class Name',
+            'description': 'CSS classes for the outer wrapping div',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
+          },
+          'ariaBusy': {
+            'type': 'boolean',
+            'label': 'Aria-busy',
+            'description': 'This region is updating; assistive technology waits before announcing it.',
+            'synonyms': 'aria-busy',
+            'tier': 'presentation',
+          },
+          'ariaLabelledby': {
+            'type': 'string',
+            'label': 'Aria-labelledby',
+            'description': 'Id of the element whose text names this one.',
+            'synonyms': 'aria-labelledby',
+            'tier': 'presentation',
           },
           'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
             'values': [
               'header',
               'table',
@@ -870,393 +1118,145 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
               'none',
             ],
           },
-          'tabIndex': {
-            'description': '0 puts the element in the Tab order; -1 makes it focusable only programmatically.',
-            'label': 'Tab Index',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'userProgress': {
-            'description': 'User progress for restoring activation/reflection state',
-            'label': 'User Progress',
-            'properties': {
-              'activationResponse': {
-                'name': 'activationResponse',
-                'required': false,
-                'type': 'string',
-              },
-              'bloomAnswered': {
-                'items': {
-                  'type': 'boolean',
-                },
-                'name': 'bloomAnswered',
-                'required': false,
-                'type': 'object',
-              },
-              'reflectionNotes': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'reflectionNotes',
-                'required': false,
-                'type': 'array',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'SegmentRendererUserProgress',
-          },
-        },
-        'effectRow': [
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'emits': [
-          {
-            'definerKnob': 'activationSaveEvent',
-            'description': 'Event emitted when the activation prompt is saved or skipped (as `UI:<activationSaveEvent>`)',
-            'event': '@config.activationSaveEvent',
-            'payloadSchema': [
-              {
-                'name': 'response',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'definerKnob': 'reflectionSaveEvent',
-            'description': 'Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)',
-            'event': '@config.reflectionSaveEvent',
-            'payloadSchema': [
-              {
-                'name': 'index',
-                'required': true,
-                'type': 'number',
-              },
-              {
-                'name': 'note',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'definerKnob': 'bloomAnswerEvent',
-            'description': 'Event emitted on the first reveal of a Bloom question (as `UI:<bloomAnswerEvent>`)',
-            'event': '@config.bloomAnswerEvent',
-            'payloadSchema': [
-              {
-                'name': 'index',
-                'required': true,
-                'type': 'number',
-              },
-              {
-                'name': 'level',
-                'required': true,
-                'type': 'string',
-                'values': [
-                  'remember',
-                  'understand',
-                  'apply',
-                  'analyze',
-                  'evaluate',
-                  'create',
-                ],
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'definerKnob': 'askEvent',
+          'askEvent': {
+            'type': 'event',
+            'default': 'ASK',
+            'label': 'Ask Event',
             'description': 'Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)',
-            'event': '@config.askEvent',
-            'payloadSchema': [
-              {
-                'name': 'selectedText',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
+            'tier': 'presentation',
           },
-          {
-            'definerKnob': 'noteEvent',
-            'description': 'Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)',
-            'event': '@config.noteEvent',
-            'payloadSchema': [
-              {
-                'name': 'selectedText',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
+          'lang': {
+            'type': 'string',
+            'label': 'Lang',
+            'description': 'Language of this element\'s content (BCP 47, e.g. ar, sl, en).',
+            'tier': 'presentation',
           },
-          {
-            'definerKnob': 'annotationEvent',
-            'description': 'Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)',
-            'event': '@config.annotationEvent',
-            'payloadSchema': [
-              {
-                'name': 'annotationId',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'definerKnob': 'runCodeEvent',
-            'description': 'Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.',
-            'event': '@config.runCodeEvent',
-            'payloadSchema': [
-              {
-                'name': 'code',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'language',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'runId',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-          {
-            'definerKnob': 'resetCodeEvent',
-            'description': 'Event a runnable code block emits on Reset (`{ runId }`).',
-            'event': '@config.resetCodeEvent',
-            'payloadSchema': [
-              {
-                'name': 'runId',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'essential',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'SegmentRendererItem',
-        'name': 'SegmentRendererRender',
-        'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': 'Event emitted when the activation prompt is saved or skipped (as `UI:<activationSaveEvent>`)',
-              'key': '@config.activationSaveEvent',
-              'name': '@config.activation save event',
-              'payloadSchema': [
-                {
-                  'name': 'response',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)',
-              'key': '@config.reflectionSaveEvent',
-              'name': '@config.reflection save event',
-              'payloadSchema': [
-                {
-                  'name': 'index',
-                  'required': true,
-                  'type': 'number',
-                },
-                {
-                  'name': 'note',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'Event emitted on the first reveal of a Bloom question (as `UI:<bloomAnswerEvent>`)',
-              'key': '@config.bloomAnswerEvent',
-              'name': '@config.bloom answer event',
-              'payloadSchema': [
-                {
-                  'name': 'index',
-                  'required': true,
-                  'type': 'number',
-                },
-                {
-                  'name': 'level',
-                  'required': true,
-                  'type': 'string',
-                  'values': [
-                    'remember',
-                    'understand',
-                    'apply',
-                    'analyze',
-                    'evaluate',
-                    'create',
-                  ],
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'Event emitted when the reader picks Ask on selected text (as `UI:<askEvent>`)',
-              'key': '@config.askEvent',
-              'name': '@config.ask event',
-              'payloadSchema': [
-                {
-                  'name': 'selectedText',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'Event emitted when the reader picks Note on selected text (as `UI:<noteEvent>`)',
-              'key': '@config.noteEvent',
-              'name': '@config.note event',
-              'payloadSchema': [
-                {
-                  'name': 'selectedText',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'Event emitted when a highlighted passage is clicked (as `UI:<annotationEvent>`)',
-              'key': '@config.annotationEvent',
-              'name': '@config.annotation event',
-              'payloadSchema': [
-                {
-                  'name': 'annotationId',
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'Event a runnable code block emits on Run (`{ code, language, runId }`, runId = the segment index). Omit to render runnable blocks read-only.',
-              'key': '@config.runCodeEvent',
-              'name': '@config.run code event',
-              'payloadSchema': [
-                {
-                  'name': 'code',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'language',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'runId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-            {
-              'description': 'Event a runnable code block emits on Reset (`{ runId }`).',
-              'key': '@config.resetCodeEvent',
-              'name': '@config.reset code event',
-              'payloadSchema': [
-                {
-                  'name': 'runId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
+          'codeOutputs': {
+            'type': 'Map<string,SegmentRendererCodeOutputsValue>',
+            'default': {
+              'item': {
+                'stderr': 'Stderr',
+                'testResults': [
                   {
-                    'activationSaveEvent': '@config.activationSaveEvent',
-                    'annotationEvent': '@config.annotationEvent',
-                    'annotations': '@config.annotations',
-                    'aria-busy': '@config.ariaBusy',
-                    'aria-current': '@config.ariaCurrent',
-                    'aria-describedby': '@config.ariaDescribedby',
-                    'aria-expanded': '@config.ariaExpanded',
-                    'aria-hidden': '@config.ariaHidden',
-                    'aria-label': '@config.ariaLabel',
-                    'aria-labelledby': '@config.ariaLabelledby',
-                    'aria-live': '@config.ariaLive',
-                    'aria-pressed': '@config.ariaPressed',
-                    'aria-selected': '@config.ariaSelected',
-                    'askEvent': '@config.askEvent',
-                    'askLabel': '@config.askLabel',
-                    'bloomAnswerEvent': '@config.bloomAnswerEvent',
-                    'className': '@config.className',
-                    'codeOutputs': '@config.codeOutputs',
-                    'containerClassName': '@config.containerClassName',
-                    'dir': '@config.dir',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'lang': '@config.lang',
-                    'lesson': '@config.lesson',
-                    'noteEvent': '@config.noteEvent',
-                    'noteLabel': '@config.noteLabel',
-                    'reflectionSaveEvent': '@config.reflectionSaveEvent',
-                    'resetCodeEvent': '@config.resetCodeEvent',
-                    'role': '@config.role',
-                    'runCodeEvent': '@config.runCodeEvent',
-                    'runningCode': '@config.runningCode',
-                    'segments': '@config.segments',
-                    'skeleton': '@config.skeleton',
-                    'tabIndex': '@config.tabIndex',
-                    'type': 'segment-renderer',
-                    'userProgress': '@config.userProgress',
+                    'actualOutput': 'Actual Output',
+                    'passed': false,
+                    'input': 'Input',
+                    'expectedOutput': 'Expected Output',
+                  },
+                  {
+                    'passed': true,
+                    'input': 'Input 2',
+                    'expectedOutput': 'Expected Output 2',
+                    'actualOutput': 'Actual Output 2',
                   },
                 ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
+                'stdout': 'Stdout',
+                'exitCode': 1,
+              },
             },
-          ],
+            'label': 'Code Outputs',
+            'description': 'The program\'s run results, keyed by segment runId.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'stdout': {
+                  'name': 'stdout',
+                  'type': 'string',
+                  'required': true,
+                },
+                'exitCode': {
+                  'name': 'exitCode',
+                  'type': 'number',
+                  'required': true,
+                },
+                'stderr': {
+                  'name': 'stderr',
+                  'type': 'string',
+                  'required': true,
+                },
+                'testResults': {
+                  'name': 'testResults',
+                  'type': 'array',
+                  'required': true,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'input': {
+                        'name': 'input',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'expectedOutput': {
+                        'name': 'expectedOutput',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'passed': {
+                        'name': 'passed',
+                        'type': 'boolean',
+                        'required': true,
+                      },
+                      'actualOutput': {
+                        'name': 'actualOutput',
+                        'type': 'string',
+                        'required': true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'lesson': {
+            'type': 'string',
+            'label': 'Lesson',
+            'description': 'Raw lesson markdown with learning tags; parsed with `parseLessonSegments` and rendered',
+            'tier': 'presentation',
+          },
+          'bloomAnswerEvent': {
+            'type': 'event',
+            'default': 'BLOOM_ANSWER',
+            'label': 'Bloom Answer Event',
+            'description': 'Event emitted on the first reveal of a Bloom question (as `UI:<bloomAnswerEvent>`)',
+            'tier': 'presentation',
+          },
+          'ariaHidden': {
+            'type': 'boolean',
+            'label': 'Aria-hidden',
+            'description': 'Hide from assistive technology (decorative content only).',
+            'synonyms': 'aria-hidden',
+            'tier': 'presentation',
+          },
+          'reflectionSaveEvent': {
+            'type': 'event',
+            'default': 'REFLECTION_SAVE',
+            'label': 'Reflection Save Event',
+            'description': 'Event emitted when a reflection note is saved (as `UI:<reflectionSaveEvent>`)',
+            'tier': 'presentation',
+          },
+          'askLabel': {
+            'type': 'string',
+            'label': 'Ask Label',
+            'description': 'Ask action label (default: translated)',
+            'tier': 'presentation',
+          },
+          'resetCodeEvent': {
+            'type': 'event',
+            'default': 'RESET_CODE',
+            'label': 'Reset Code Event',
+            'description': 'Event a runnable code block emits on Reset (`{ runId }`).',
+            'tier': 'presentation',
+          },
+          'ariaExpanded': {
+            'type': 'boolean',
+            'label': 'Aria-expanded',
+            'description': 'Whether the element it controls is expanded.',
+            'synonyms': 'aria-expanded',
+            'tier': 'presentation',
+          },
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

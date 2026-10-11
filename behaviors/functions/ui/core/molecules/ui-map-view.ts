@@ -61,50 +61,50 @@ export interface StdUiMapViewMapClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiMapViewConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
   ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  /** Default: `51.505` */
-  centerLat?: number;
-  /** Default: `-0.09` */
-  centerLng?: number;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  /** Default: `"400px"` */
-  height?: string;
-  lang?: string;
-  /** Default: `"MAP_CLICK"` */
-  mapClickEvent?: string;
-  /** Default: `"MARKER_CLICK"` */
-  markerClickEvent?: string;
-  /** Default: `[]` */
-  markers?: EntityRow[];
-  /** Default: `"MAP_CLICK"` */
-  onMapClick?: string;
-  /** Default: `"MARKER_CLICK"` */
-  onMarkerClick?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `[]` */
-  routes?: EntityRow[];
-  /** Default: `true` */
-  showAttribution?: boolean;
-  /** Default: `false` */
-  showClickedPin?: boolean;
+  ariaLabelledby?: string;
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"auto"` */
   surface?: 'auto' | 'none';
-  tabIndex?: number;
+  /** Default: `false` */
+  showClickedPin?: boolean;
+  ariaSelected?: boolean;
+  enterDelay?: number;
+  ariaHidden?: boolean;
+  /** Default: `"MARKER_CLICK"` */
+  onMarkerClick?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  className?: string;
+  /** Default: `[]` */
+  routes?: EntityRow[];
+  ariaDescribedby?: string;
+  ariaExpanded?: boolean;
+  /** Default: `"400px"` */
+  height?: string;
+  /** Default: `-0.09` */
+  centerLng?: number;
+  ariaBusy?: boolean;
+  /** Default: `[]` */
+  markers?: EntityRow[];
+  lang?: string;
+  /** Default: `true` */
+  showAttribution?: boolean;
   /** Default: `13` */
   zoom?: number;
+  /** Default: `"MARKER_CLICK"` */
+  markerClickEvent?: string;
+  /** Default: `51.505` */
+  centerLat?: number;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  /** Default: `"MAP_CLICK"` */
+  onMapClick?: string;
+  ariaLabel?: string;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  tabIndex?: number;
+  /** Default: `"MAP_CLICK"` */
+  mapClickEvent?: string;
 }
 
 /**

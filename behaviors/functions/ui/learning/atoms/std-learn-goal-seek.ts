@@ -72,70 +72,70 @@ export interface StdLearnGoalSeekLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnGoalSeekConfig {
-  /** Default: `"Check"` */
-  checkLabel?: string;
-  /** Default: `"sine"` */
-  curveKind?: string;
-  /** Default: `"Tune the two sliders until your curve matches the target curve, then press Check."` */
-  goalText?: string;
-  /** Default: `1` */
-  gridStep?: number;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `"series-2"` */
-  learnerColor?: string;
-  /** Default: `"Yours"` */
-  learnerLabel?: string;
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `1` */
-  paramADefault?: number;
-  /** Default: `"A"` */
-  paramALabel?: string;
-  /** Default: `5` */
-  paramAMax?: number;
-  /** Default: `-5` */
-  paramAMin?: number;
+  /** Default: `600` */
+  width?: number;
   /** Default: `0.1` */
-  paramAStep?: number;
-  /** Default: `1` */
-  paramBDefault?: number;
-  /** Default: `"B"` */
-  paramBLabel?: string;
-  /** Default: `5` */
-  paramBMax?: number;
+  paramBStep?: number;
   /** Default: `-5` */
   paramBMin?: number;
   /** Default: `0.1` */
-  paramBStep?: number;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `true` */
-  showAxes?: boolean;
-  /** Default: `true` */
-  showGrid?: boolean;
-  /** Default: `true` */
-  showLiveDistance?: boolean;
-  /** Default: `""` */
-  summary?: string;
-  /** Default: `2.5` */
-  targetA?: number;
-  /** Default: `1.5` */
-  targetB?: number;
-  /** Default: `"guide"` */
-  targetColor?: string;
-  /** Default: `"Target"` */
-  targetLabel?: string;
+  paramAStep?: number;
   /** Default: `"Goal Seek"` */
   title?: string;
-  /** Default: `0.35` */
-  tolerance?: number;
-  /** Default: `600` */
-  width?: number;
-  /** Default: `10` */
-  xMax?: number;
+  /** Default: `"Yours"` */
+  learnerLabel?: string;
+  /** Default: `-5` */
+  paramAMin?: number;
+  /** Default: `"B"` */
+  paramBLabel?: string;
+  /** Default: `true` */
+  showLiveDistance?: boolean;
+  /** Default: `1` */
+  paramADefault?: number;
+  /** Default: `"Target"` */
+  targetLabel?: string;
+  /** Default: `1` */
+  paramBDefault?: number;
+  /** Default: `"guide"` */
+  targetColor?: string;
+  /** Default: `""` */
+  matchMode?: string;
   /** Default: `0` */
   xMin?: number;
+  /** Default: `"series-2"` */
+  learnerColor?: string;
+  /** Default: `true` */
+  showAxes?: boolean;
+  /** Default: `1.5` */
+  targetB?: number;
+  /** Default: `"Check"` */
+  checkLabel?: string;
+  /** Default: `0.35` */
+  tolerance?: number;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `1` */
+  gridStep?: number;
+  /** Default: `"Tune the two sliders until your curve matches the target curve, then press Check."` */
+  goalText?: string;
+  /** Default: `"A"` */
+  paramALabel?: string;
+  /** Default: `"sine"` */
+  curveKind?: string;
+  /** Default: `5` */
+  paramBMax?: number;
+  /** Default: `10` */
+  xMax?: number;
+  /** Default: `5` */
+  paramAMax?: number;
+  /** Default: `true` */
+  showGrid?: boolean;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
+  /** Default: `400` */
+  height?: number;
+  /** Default: `2.5` */
+  targetA?: number;
 }
 
 /**

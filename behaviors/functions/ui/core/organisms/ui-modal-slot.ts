@@ -39,17 +39,17 @@ export type StdUiModalSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModalSlotConfig {
-  children?: PatternValue;
   className?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
   isLoading?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  sourceTrait?: string;
+  error?: EntityRow;
   title?: string;
+  children?: PatternValue;
+  enterDelay?: number;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  sourceTrait?: string;
 }
 
 type _StdUiModalSlotEntityName = 'ModalSlotItem';
@@ -116,8 +116,8 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -128,92 +128,88 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
     } as Entity,
     traits: [
       {
+        'name': 'ModalSlotRender',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ModalSlotItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'category': 'interaction',
-        'config': {
-          'children': {
-            'description': 'Content to display in the modal',
-            'label': 'Children',
-            'tier': 'presentation',
-            'type': 'node',
-          },
-          'className': {
-            'description': 'Custom class name',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'enter': {
-            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
-            'label': 'Enter',
-            'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'none',
-              'fade',
-              'rise',
-              'scale',
-              'slide',
-            ],
-          },
-          'enterDelay': {
-            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
-            'label': 'Enter Delay',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'error': {
-            'description': 'Error state',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
+        'linkedEntity': 'ModalSlotItem',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
             },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  ('ModalSlotItem' satisfies _StdUiModalSlotEntityName),
+                  {},
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': '@config.title',
+                    'children': '@config.children',
+                    'className': '@config.className',
+                    'error': '@config.error',
+                    'enter': '@config.enter',
+                    'size': '@config.size',
+                    'isLoading': '@config.isLoading',
+                    'skeleton': '@config.skeleton',
+                    'enterDelay': '@config.enterDelay',
+                    'type': 'modal-slot',
+                    'entity': 'ModalSlotItem',
+                    'sourceTrait': '@config.sourceTrait',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'config': {
+          'className': {
+            'type': 'string',
+            'label': 'Class Name',
+            'description': 'Custom class name',
             'tier': 'presentation',
-            'type': 'ModalSlotError',
           },
           'isLoading': {
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
             'type': 'boolean',
-          },
-          'size': {
-            'default': 'md',
-            'description': 'Modal size',
-            'label': 'Size',
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
-            'type': 'string',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-              'xl',
-              'full',
-            ],
           },
           'skeleton': {
-            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
-            'label': 'Skeleton',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Skeleton',
+            'description': 'Skeleton shown while this element\'s server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`.',
+            'tier': 'presentation',
             'values': [
               'header',
               'table',
@@ -227,83 +223,87 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
               'none',
             ],
           },
-          'sourceTrait': {
-            'description': 'Source trait name for qualified event emission',
-            'label': 'Source Trait',
-            'tier': 'presentation',
+          'size': {
             'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Modal size',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+              'xl',
+              'full',
+            ],
+          },
+          'error': {
+            'type': 'ModalSlotError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'title': {
-            'description': 'Override modal title (extracted from children if not provided)',
-            'label': 'Title',
-            'tier': 'presentation',
             'type': 'string',
+            'label': 'Title',
+            'description': 'Override modal title (extracted from children if not provided)',
+            'tier': 'presentation',
+          },
+          'children': {
+            'type': 'node',
+            'label': 'Children',
+            'description': 'Content to display in the modal',
+            'tier': 'presentation',
+          },
+          'enterDelay': {
+            'type': 'number',
+            'label': 'Enter Delay',
+            'description': 'Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating.',
+            'tier': 'presentation',
+          },
+          'enter': {
+            'type': 'string',
+            'label': 'Enter',
+            'description': 'How this element animates in when it mounts (theme-styled); overrides the theme\'s default slot entry. `none` opts out.',
+            'tier': 'presentation',
+            'values': [
+              'none',
+              'fade',
+              'rise',
+              'scale',
+              'slide',
+            ],
+          },
+          'sourceTrait': {
+            'type': 'string',
+            'label': 'Source Trait',
+            'description': 'Source trait name for qualified event emission',
+            'tier': 'presentation',
           },
         },
-        'effectRow': [
-          {
-            'kind': 'fetch',
-            'resource': 'ModalSlotItem',
-          },
-          {
-            'kind': 'render-ui',
-            'resource': 'main',
-          },
-        ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'ModalSlotItem',
-        'name': 'ModalSlotRender',
         'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'fetch',
-                  ('ModalSlotItem' satisfies _StdUiModalSlotEntityName),
-                  {},
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': '@config.children',
-                    'className': '@config.className',
-                    'enter': '@config.enter',
-                    'enterDelay': '@config.enterDelay',
-                    'entity': 'ModalSlotItem',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'size': '@config.size',
-                    'skeleton': '@config.skeleton',
-                    'sourceTrait': '@config.sourceTrait',
-                    'title': '@config.title',
-                    'type': 'modal-slot',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
-            },
-          ],
-        },
       } satisfies Trait,
     ],
     pages: [

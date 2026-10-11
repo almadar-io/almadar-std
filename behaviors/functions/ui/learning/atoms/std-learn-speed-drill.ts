@@ -73,24 +73,24 @@ export interface StdLearnSpeedDrillLearnRoundCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdLearnSpeedDrillConfig {
-  /** Default: `10` */
-  basePoints?: number;
-  /** Default: `[{"correctIndex":1,"options":["54","56","63","48"],"prompt":"7 × 8"},{"correctIndex":0,"options":["54","56","45","63"],"prompt":"9 × 6"},{"correctIndex":2,"options":["124","132","144","148"],"prompt":"12 × 12"}]` */
-  items?: EntityRow[];
-  /** Default: `""` */
-  matchMode?: string;
-  /** Default: `"Next"` */
-  nextLabel?: string;
   /** Default: `"Try Again"` */
   retryLabel?: string;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
+  /** Default: `[{"prompt":"7 × 8","options":["54","56","63","48"],"correctIndex":1},{"correctIndex":0,"options":["54","56","45","63"],"prompt":"9 × 6"},{"prompt":"12 × 12","options":["124","132","144","148"],"correctIndex":2}]` */
+  items?: EntityRow[];
+  /** Default: `10` */
+  basePoints?: number;
+  /** Default: `"Next"` */
+  nextLabel?: string;
   /** Default: `10` */
   speedBonus?: number;
   /** Default: `""` */
-  summary?: string;
+  matchMode?: string;
   /** Default: `6` */
   timeLimit?: number;
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
   /** Default: `"Speed Drill"` */
   title?: string;
 }

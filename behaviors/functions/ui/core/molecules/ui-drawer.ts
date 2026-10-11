@@ -46,47 +46,47 @@ export interface StdUiDrawerOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
   ariaSelected?: boolean;
-  children?: PatternValue;
-  className?: string;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  ariaLabelledby?: string;
   /** Default: `"CLOSE"` */
-  closeEvent?: string;
+  onClose?: string;
   /** Default: `true` */
   closeOnEscape?: boolean;
-  /** Default: `true` */
-  closeOnOverlayClick?: boolean;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  title?: PatternValue;
   /** Default: `false` */
   contained?: boolean;
   dir?: 'ltr' | 'rtl' | 'auto';
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  footer?: PatternValue;
-  /** Default: `true` */
-  isOpen?: boolean;
-  lang?: string;
   /** Default: `"CLOSE"` */
-  onClose?: string;
-  /** Default: `"EXITED"` */
-  onExited?: string;
+  closeEvent?: string;
+  tabIndex?: number;
+  children?: PatternValue;
+  ariaBusy?: boolean;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   /** Default: `"right"` */
   position?: 'left' | 'right';
+  footer?: PatternValue;
+  lang?: string;
+  ariaLabel?: string;
+  /** Default: `true` */
+  closeOnOverlayClick?: boolean;
   role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  ariaPressed?: 'true' | 'false' | 'mixed';
   /** Default: `true` */
   showCloseButton?: boolean;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  tabIndex?: number;
-  title?: PatternValue;
+  className?: string;
+  ariaDescribedby?: string;
+  /** Default: `true` */
+  isOpen?: boolean;
+  enterDelay?: number;
+  ariaExpanded?: boolean;
+  ariaHidden?: boolean;
   /** Default: `"md"` */
   width?: string;
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  /** Default: `"EXITED"` */
+  onExited?: string;
 }
 
 /**

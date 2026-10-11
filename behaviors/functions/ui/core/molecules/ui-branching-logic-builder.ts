@@ -46,36 +46,36 @@ export interface StdUiBranchingLogicBuilderRulesChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBranchingLogicBuilderConfig {
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
   ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
   enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  lang?: string;
+  tabIndex?: number;
   /** Default: `"RULES_CHANGE"` */
   onRulesChange?: string;
-  /** Default: `[{"id":"Id","label":"Label","optionValues":["Item","Item 2"]},{"id":"Id 2","label":"Label 2","optionValues":["Item","Item 2"]}]` */
-  questions?: EntityRow[];
-  /** Default: `false` */
-  readOnly?: boolean;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  /** Default: `[{"id":"Id","operator":"equals","sourceQuestionId":"Source Question Id","targetQuestionId":"Target Question Id","value":"Value"},{"id":"Id 2","operator":"not-equals","sourceQuestionId":"Source Question Id 2","targetQuestionId":"Target Question Id 2","value":"Value 2"}]` */
-  rules?: EntityRow[];
-  /** Default: `"RULES_CHANGE"` */
-  rulesChangeEvent?: string;
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
   /** Default: `"auto"` */
   surface?: 'auto' | 'none';
-  tabIndex?: number;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  dir?: 'ltr' | 'rtl' | 'auto';
+  lang?: string;
+  ariaHidden?: boolean;
+  className?: string;
+  enterDelay?: number;
+  /** Default: `[{"label":"Label","id":"Id","optionValues":["Item","Item 2"]},{"label":"Label 2","optionValues":["Item","Item 2"],"id":"Id 2"}]` */
+  questions?: EntityRow[];
+  /** Default: `[{"targetQuestionId":"Target Question Id","sourceQuestionId":"Source Question Id","value":"Value","operator":"equals","id":"Id"},{"value":"Value 2","sourceQuestionId":"Source Question Id 2","targetQuestionId":"Target Question Id 2","operator":"not-equals","id":"Id 2"}]` */
+  rules?: EntityRow[];
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  ariaSelected?: boolean;
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaExpanded?: boolean;
+  ariaLabelledby?: string;
+  /** Default: `"RULES_CHANGE"` */
+  rulesChangeEvent?: string;
+  /** Default: `false` */
+  readOnly?: boolean;
+  ariaBusy?: boolean;
 }
 
 /**

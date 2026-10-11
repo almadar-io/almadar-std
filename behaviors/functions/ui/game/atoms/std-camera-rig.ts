@@ -48,28 +48,28 @@ export interface StdCameraRigCameraMovedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCameraRigConfig {
-  /** Default: `{"xMax":1000000,"xMin":-1000000,"yMax":1000000,"yMin":-1000000}` */
+  /** Default: `true` */
+  running?: boolean;
+  /** Default: `{"yMin":-1000000,"yMax":1000000,"xMin":-1000000,"xMax":1000000}` */
   bounds?: EntityRow;
   /** Default: `0` */
-  deadzoneX?: number;
+  lead?: number;
+  /** Default: `1` */
+  zoom?: number;
+  /** Default: `0.1` */
+  stiffness?: number;
   /** Default: `0` */
   deadzoneY?: number;
+  /** Default: `{"x":0,"y":0}` */
+  start?: EntityRow;
   /** Default: `0` */
-  lead?: number;
+  deadzoneX?: number;
+  /** Default: `0.1` */
+  shakeDecay?: number;
   /** Default: `3` */
   maxZoom?: number;
   /** Default: `0.5` */
   minZoom?: number;
-  /** Default: `true` */
-  running?: boolean;
-  /** Default: `0.1` */
-  shakeDecay?: number;
-  /** Default: `{"x":0,"y":0}` */
-  start?: EntityRow;
-  /** Default: `0.1` */
-  stiffness?: number;
-  /** Default: `1` */
-  zoom?: number;
 }
 
 /**

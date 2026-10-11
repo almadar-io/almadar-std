@@ -205,67 +205,67 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': '',
             'name': 'text',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'category',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 0,
             'name': 'confidence',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
             'name': 'reasoning',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'errorMessage',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': {},
             'name': 'request',
+            'type': 'object',
+            'default': {},
             'properties': {
-              'accepted': {
-                'items': {
-                  'type': 'scalar',
-                },
-                'name': 'accepted',
-                'required': true,
-                'type': 'array',
-              },
-              'candidate': {
-                'name': 'candidate',
-                'required': true,
-                'type': 'scalar',
-              },
               'categories': {
+                'name': 'categories',
+                'type': 'array',
+                'required': true,
                 'items': {
                   'type': 'string',
                 },
-                'name': 'categories',
+              },
+              'candidate': {
+                'name': 'candidate',
+                'type': 'scalar',
                 'required': true,
+              },
+              'accepted': {
+                'name': 'accepted',
                 'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'scalar',
+                },
               },
               'key': {
                 'name': 'key',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
             },
-            'type': 'object',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'classifying',
@@ -281,26 +281,7 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'categories': {
-            'default': [],
-            'description': 'Closed set of category labels the LLM must choose from',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Categories',
-            'tier': 'domain',
-            'type': '[string]',
-          },
-          'model': {
-            'default': '',
-            'description': 'Model override forwarded to the classify call',
-            'label': 'Model',
-            'tier': 'infra',
-            'type': 'string',
-          },
-        },
+        'name': 'ClassifyRun',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -347,82 +328,93 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
             'resource': '@entity.text',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'ClassifierVerdict',
         'emits': [
           {
-            'description': 'Raw llm.classify service result, flattened onto the payload by the call-service effect executor',
             'event': 'CLASSIFIED_RAW',
+            'description': 'Raw llm.classify service result, flattened onto the payload by the call-service effect executor',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'category',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'confidence',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'reasoning',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'call-service classify failure signal',
             'event': 'CLASSIFY_CALL_FAILED',
+            'description': 'call-service classify failure signal',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Structured LLM verdict — closed-set category with confidence and reasoning',
             'event': 'CLASSIFIED',
+            'description': 'Structured LLM verdict — closed-set category with confidence and reasoning',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'category',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'confidence',
-                'required': true,
                 'type': 'float',
+                'required': true,
               },
               {
                 'name': 'reasoning',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
           {
-            'description': 'The classify service call failed; this rung never abstains, only answers or fails',
             'event': 'CLASSIFY_FAILED',
+            'description': 'The classify service call failed; this rung never abstains, only answers or fails',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'ClassifierVerdict',
-        'name': 'ClassifyRun',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'classifying',
+            },
+            {
+              'name': 'done',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -434,128 +426,119 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
               'payloadSchema': [
                 {
                   'name': 'text',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'request',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'candidate',
-                      'required': true,
                       'type': 'scalar',
+                      'required': true,
                     },
                     {
                       'name': 'key',
-                      'required': true,
                       'type': 'scalar',
+                      'required': true,
                     },
                     {
                       'name': 'accepted',
-                      'required': true,
                       'type': '[scalar]',
+                      'required': true,
                     },
                     {
                       'name': 'categories',
-                      'required': true,
                       'type': '[string]',
+                      'required': true,
                     },
                   ],
-                  'type': 'object',
                 },
               ],
             },
             {
-              'description': 'Raw llm.classify service result, flattened onto the payload by the call-service effect executor',
               'key': 'CLASSIFIED_RAW',
               'name': 'Classified Raw',
+              'description': 'Raw llm.classify service result, flattened onto the payload by the call-service effect executor',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'category',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'confidence',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'reasoning',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'call-service classify failure signal',
               'key': 'CLASSIFY_CALL_FAILED',
               'name': 'Classify Call Failed',
+              'description': 'call-service classify failure signal',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
               'key': 'RESET',
               'name': 'Reset',
             },
             {
-              'description': 'Structured LLM verdict — closed-set category with confidence and reasoning',
               'key': 'CLASSIFIED',
               'name': 'Classified',
+              'description': 'Structured LLM verdict — closed-set category with confidence and reasoning',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'category',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'confidence',
-                  'required': true,
                   'type': 'float',
+                  'required': true,
                 },
                 {
                   'name': 'reasoning',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'The classify service call failed; this rung never abstains, only answers or fails',
               'key': 'CLASSIFY_FAILED',
               'name': 'Classify Failed',
+              'description': 'The classify service call failed; this rung never abstains, only answers or fails',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'classifying',
-            },
-            {
-              'name': 'done',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -593,11 +576,11 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'classifying',
+              'event': 'CLASSIFY',
               'effects': [
                 [
                   'set',
@@ -619,23 +602,23 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
                   'llm',
                   'classify',
                   {
+                    'text': '@payload.text',
                     'categories': '@config.categories',
                     'model': '@config.model',
-                    'text': '@payload.text',
                   },
                   {
                     'emit': {
-                      'failure': 'CLASSIFY_CALL_FAILED',
                       'success': 'CLASSIFIED_RAW',
+                      'failure': 'CLASSIFY_CALL_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'CLASSIFY',
-              'from': 'idle',
-              'to': 'classifying',
             },
             {
+              'from': 'classifying',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -673,11 +656,11 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'classifying',
-              'to': 'idle',
             },
             {
+              'from': 'classifying',
+              'to': 'done',
+              'event': 'CLASSIFIED_RAW',
               'effects': [
                 [
                   'set',
@@ -703,17 +686,17 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
                   'emit',
                   'CLASSIFIED',
                   {
-                    'category': '@entity.category',
                     'confidence': '@entity.confidence',
                     'reasoning': '@entity.reasoning',
+                    'category': '@entity.category',
                   },
                 ],
               ],
-              'event': 'CLASSIFIED_RAW',
-              'from': 'classifying',
-              'to': 'done',
             },
             {
+              'from': 'classifying',
+              'to': 'done',
+              'event': 'CLASSIFY_CALL_FAILED',
               'effects': [
                 [
                   'set',
@@ -751,22 +734,22 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'variant': 'error',
                     'message': [
                       'str/concat',
                       'Couldn\'t classify — ',
                       '@payload.error',
                     ],
+                    'dismissible': true,
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'CLASSIFY_CALL_FAILED',
-              'from': 'classifying',
-              'to': 'done',
             },
             {
+              'from': 'done',
+              'to': 'done',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -774,11 +757,11 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
                   'done',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'done',
-              'to': 'done',
             },
             {
+              'from': 'done',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -816,12 +799,29 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'done',
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'categories': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Categories',
+            'description': 'Closed set of category labels the LLM must choose from',
+            'tier': 'domain',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'model': {
+            'type': 'string',
+            'default': '',
+            'label': 'Model',
+            'description': 'Model override forwarded to the classify call',
+            'tier': 'infra',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

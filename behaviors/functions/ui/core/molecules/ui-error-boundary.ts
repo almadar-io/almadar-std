@@ -39,11 +39,11 @@ export type StdUiErrorBoundaryEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiErrorBoundaryConfig {
-  children?: PatternValue;
-  className?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
   skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  enterDelay?: number;
+  className?: string;
+  children?: PatternValue;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
 }
 
 /**

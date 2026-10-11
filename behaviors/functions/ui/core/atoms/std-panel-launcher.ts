@@ -41,15 +41,15 @@ export type StdPanelLauncherEventKey = 'CLOSE' | 'INIT' | 'OPEN';
 export interface StdPanelLauncherConfig {
   /** Default: `"Close panel"` */
   closeLabel?: string;
-  contentTrait?: TraitFieldRef;
-  /** Default: `"message-circle"` */
-  icon?: unknown;
   /** Default: `"Open panel"` */
   label?: string;
   /** Default: `"dock"` */
   panelSlot?: unknown;
   /** Default: `"Panel"` */
   title?: string;
+  /** Default: `"message-circle"` */
+  icon?: unknown;
+  contentTrait?: TraitFieldRef;
 }
 
 /**

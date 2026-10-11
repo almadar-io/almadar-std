@@ -58,26 +58,26 @@ export interface StdLearnScenarioScenarioRestartedPayload {
 export interface StdLearnScenarioConfig {
   /** Default: `""` */
   matchMode?: string;
-  /** Default: `"Budget"` */
-  metricALabel?: string;
-  /** Default: `100` */
-  metricAStart?: number;
   /** Default: `"Support"` */
   metricBLabel?: string;
-  /** Default: `50` */
-  metricBStart?: number;
-  /** Default: `[{"choices":[{"deltaA":-60,"deltaB":10,"label":"Build a levee now","next":"levee","note":"Fast protection, most of the budget gone."},{"deltaA":-25,"deltaB":-5,"label":"Restore the upstream wetlands","next":"wetlands","note":"Cheaper and greener, but slower to work."}],"id":"start","situation":"Your town's river floods every spring. The council asks you to lead the response."},{"choices":[{"deltaA":-30,"deltaB":-10,"label":"Raise the levee again","next":"end-lock-in","note":"Costs keep compounding."},{"deltaA":-20,"deltaB":15,"label":"Add wetlands as a second line","next":"end-hybrid","note":"Late, but it eases the pressure."}],"id":"levee","situation":"The levee holds the first spring, but silt builds up and the river rises higher each year."},{"choices":[{"deltaA":-15,"deltaB":25,"label":"Expand the wetland corridor","next":"end-green","note":"The town rallies behind the project."},{"deltaA":10,"deltaB":5,"label":"Bank the savings","next":"end-thrifty","note":"Prudent, though the corridor stays small."}],"id":"wetlands","situation":"Two springs pass; the wetlands now absorb most floods, and wildlife is returning."},{"choices":[],"id":"end-lock-in","situation":"You are locked into an arms race with the river: protected, but at ever-growing cost."},{"choices":[],"id":"end-hybrid","situation":"The hybrid defense works: the levee buys time and the wetlands cut the peak floods."},{"choices":[],"id":"end-green","situation":"The restored river corridor protects the town and becomes its most loved public space."},{"choices":[],"id":"end-thrifty","situation":"The town stays safe in normal years, with savings in reserve for a bigger flood."}]` */
-  nodes?: EntityRow[];
-  /** Default: `"Play Again"` */
-  restartLabel?: string;
-  /** Default: `"config"` */
-  rosterSource?: 'config' | 'event';
-  /** Default: `"start"` */
-  startId?: string;
-  /** Default: `""` */
-  summary?: string;
   /** Default: `"Decision Scenario"` */
   title?: string;
+  /** Default: `"start"` */
+  startId?: string;
+  /** Default: `100` */
+  metricAStart?: number;
+  /** Default: `"Play Again"` */
+  restartLabel?: string;
+  /** Default: `[{"choices":[{"next":"levee","label":"Build a levee now","note":"Fast protection, most of the budget gone.","deltaA":-60,"deltaB":10},{"deltaA":-25,"note":"Cheaper and greener, but slower to work.","label":"Restore the upstream wetlands","deltaB":-5,"next":"wetlands"}],"situation":"Your town's river floods every spring. The council asks you to lead the response.","id":"start"},{"choices":[{"deltaB":-10,"deltaA":-30,"next":"end-lock-in","label":"Raise the levee again","note":"Costs keep compounding."},{"deltaA":-20,"deltaB":15,"label":"Add wetlands as a second line","next":"end-hybrid","note":"Late, but it eases the pressure."}],"id":"levee","situation":"The levee holds the first spring, but silt builds up and the river rises higher each year."},{"id":"wetlands","situation":"Two springs pass; the wetlands now absorb most floods, and wildlife is returning.","choices":[{"deltaA":-15,"note":"The town rallies behind the project.","deltaB":25,"next":"end-green","label":"Expand the wetland corridor"},{"next":"end-thrifty","note":"Prudent, though the corridor stays small.","label":"Bank the savings","deltaA":10,"deltaB":5}]},{"situation":"You are locked into an arms race with the river: protected, but at ever-growing cost.","choices":[],"id":"end-lock-in"},{"id":"end-hybrid","choices":[],"situation":"The hybrid defense works: the levee buys time and the wetlands cut the peak floods."},{"choices":[],"id":"end-green","situation":"The restored river corridor protects the town and becomes its most loved public space."},{"choices":[],"situation":"The town stays safe in normal years, with savings in reserve for a bigger flood.","id":"end-thrifty"}]` */
+  nodes?: EntityRow[];
+  /** Default: `""` */
+  summary?: string;
+  /** Default: `"Budget"` */
+  metricALabel?: string;
+  /** Default: `"config"` */
+  rosterSource?: 'config' | 'event';
+  /** Default: `50` */
+  metricBStart?: number;
 }
 
 /**

@@ -190,19 +190,19 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': '',
             'name': 'prompt',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'response',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'done',
@@ -217,7 +217,7 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'CompletionGeneration',
         'effectRow': [
           {
             'kind': 'emit',
@@ -239,14 +239,16 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'Completion',
         'emits': [
           {
             'event': 'COMPLETED',
             'payloadSchema': [
               {
                 'name': 'response',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
           },
@@ -255,16 +257,25 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
             'payloadSchema': [
               {
                 'name': 'result',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
           },
         ],
-        'linkedEntity': 'Completion',
-        'name': 'CompletionGeneration',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'generating',
+            },
+            {
+              'name': 'done',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -276,8 +287,8 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
               'payloadSchema': [
                 {
                   'name': 'prompt',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
@@ -287,8 +298,8 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
               'payloadSchema': [
                 {
                   'name': 'result',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
@@ -306,26 +317,17 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
               'payloadSchema': [
                 {
                   'name': 'response',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'generating',
-            },
-            {
-              'name': 'done',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -343,11 +345,11 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'generating',
+              'event': 'GENERATE',
               'effects': [
                 [
                   'set',
@@ -359,17 +361,17 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
                   '@entity.prompt',
                   {
                     'emit': {
-                      'failure': 'GENERATION_FAILED',
                       'success': 'GENERATED',
+                      'failure': 'GENERATION_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'GENERATE',
-              'from': 'idle',
-              'to': 'generating',
             },
             {
+              'from': 'generating',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -387,11 +389,11 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'generating',
-              'to': 'idle',
             },
             {
+              'from': 'generating',
+              'to': 'done',
+              'event': 'GENERATED',
               'effects': [
                 [
                   'set',
@@ -411,11 +413,11 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
                   },
                 ],
               ],
-              'event': 'GENERATED',
-              'from': 'generating',
-              'to': 'done',
             },
             {
+              'from': 'generating',
+              'to': 'done',
+              'event': 'GENERATION_FAILED',
               'effects': [
                 [
                   'set',
@@ -428,11 +430,11 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
                   'done',
                 ],
               ],
-              'event': 'GENERATION_FAILED',
-              'from': 'generating',
-              'to': 'done',
             },
             {
+              'from': 'done',
+              'to': 'done',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -440,11 +442,11 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
                   'done',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'done',
-              'to': 'done',
             },
             {
+              'from': 'done',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -462,35 +464,41 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'done',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'lifecycle',
+        'name': 'CompletionReady',
         'effectRow': [
           {
             'kind': 'set',
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
         'linkedEntity': 'Completion',
         'listens': [
           {
             'event': 'COMPLETED',
+            'triggers': 'COMPLETED',
             'source': {
               'kind': 'trait',
               'trait': ('CompletionGeneration' satisfies _StdAgentCompletionListenTraitName),
             },
-            'triggers': 'COMPLETED',
           },
         ],
-        'name': 'CompletionReady',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'waiting',
+              'isInitial': true,
+            },
+            {
+              'name': 'ready',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -505,17 +513,11 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
               'name': 'Reset',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'waiting',
-            },
-            {
-              'name': 'ready',
-            },
-          ],
           'transitions': [
             {
+              'from': 'waiting',
+              'to': 'waiting',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -523,23 +525,11 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'waiting',
-              'to': 'waiting',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.status',
-                  'done',
-                ],
-              ],
+              'from': 'waiting',
+              'to': 'ready',
               'event': 'COMPLETED',
-              'from': 'waiting',
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -547,11 +537,23 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
                   'done',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'done',
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'waiting',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -559,12 +561,10 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'ready',
-              'to': 'waiting',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

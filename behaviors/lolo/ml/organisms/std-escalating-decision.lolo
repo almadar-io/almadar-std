@@ -115,9 +115,14 @@ orbital EscalatingDecisionOrbital {
         (set @entity.status dispatched)
       RESET -> idle
         (set @entity.status idle)
+        (emit RUNGS_RESET {})
     }
 
     emits {
+      RUNGS_RESET {
+      }
+        @description "The ladder was reset; every rung returns to idle so the next DECIDE runs the whole chain again."
+        @tier "secondary"
       RUN_EXACT {
         candidate : scalar!
         key : scalar!
@@ -141,12 +146,14 @@ orbital EscalatingDecisionOrbital {
 
   trait ExactRung :: r DecisionRequest = Rung0.traits.ExactCheckRun -> ExactCheck {
     listens {
+      LadderEntry.RUNGS_RESET -> RESET
       LadderEntry.RUN_EXACT -> CHECK
     }
   }
 
   trait LookupRung :: e scalar r DecisionRequest = Rung1.traits.LookupRun -> KeyLookup {
     listens {
+      LadderEntry.RUNGS_RESET -> RESET
       ExactRung.EXACT_UNMATCHED -> LOOKUP
         with { candidate: ?candidate, accepted: (object/get ?request "accepted"), request: ?request }
     }
@@ -154,6 +161,7 @@ orbital EscalatingDecisionOrbital {
 
   trait SimilarityRung = Rung3.traits.SimilarityRun -> SimilarityComparison {
     listens {
+      LadderEntry.RUNGS_RESET -> RESET
       LookupRung.KEY_MISS -> COMPARE
         with { query: (str/concat ?candidate), candidates: (object/get ?request "categories"), request: ?request }
     }
@@ -161,6 +169,7 @@ orbital EscalatingDecisionOrbital {
 
   trait InferRung = Rung4.traits.InferenceRun -> Inference {
     listens {
+      LadderEntry.RUNGS_RESET -> RESET
       SimilarityRung.SIMILARITY_ABSTAINED -> INFER
         with { input: ?request, request: ?request }
     }
@@ -168,6 +177,7 @@ orbital EscalatingDecisionOrbital {
 
   trait ClassifyRung = Rung5.traits.ClassifyRun -> ClassifierVerdict {
     listens {
+      LadderEntry.RUNGS_RESET -> RESET
       InferRung.INFER_ABSTAINED -> CLASSIFY
         with { text: (str/concat (object/get ?request "candidate")), request: ?request }
     }

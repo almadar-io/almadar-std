@@ -39,22 +39,22 @@ export type StdUiEdgeDecorationEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiEdgeDecorationConfig {
-  className?: string;
-  /** Default: `"primary"` */
-  color?: string;
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
   enterDelay?: number;
-  /** Default: `0.15` */
-  opacity?: number;
-  /** Default: `"both"` */
-  side?: 'left' | 'right' | 'both';
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
-  /** Default: `0.5` */
-  strokeWidth?: number;
-  /** Default: `"arch"` */
-  variant?: 'arch' | 'vine' | 'lattice';
   /** Default: `15` */
   width?: number;
+  /** Default: `0.5` */
+  strokeWidth?: number;
+  /** Default: `"primary"` */
+  color?: string;
+  /** Default: `"arch"` */
+  variant?: 'arch' | 'vine' | 'lattice';
+  className?: string;
+  /** Default: `"both"` */
+  side?: 'left' | 'right' | 'both';
+  /** Default: `0.15` */
+  opacity?: number;
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
 }
 
 /**

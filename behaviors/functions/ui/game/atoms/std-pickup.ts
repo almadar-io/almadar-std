@@ -60,10 +60,10 @@ export interface StdPickupCollectPayload {
 export interface StdPickupConfig {
   /** Default: `[]` */
   features?: EntityRow[];
-  /** Default: `0.7` */
-  reachX?: number;
   /** Default: `1.2` */
   reachY?: number;
+  /** Default: `0.7` */
+  reachX?: number;
   /** Default: `true` */
   running?: boolean;
 }

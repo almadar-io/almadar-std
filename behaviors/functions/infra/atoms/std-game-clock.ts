@@ -179,22 +179,22 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'elapsedMs',
+            'type': 'number',
             'default': 0,
             'description': 'Total milliseconds elapsed since the clock started.',
-            'name': 'elapsedMs',
             'synonyms': 'elapsed, time, ms, total time',
-            'type': 'number',
           },
           {
+            'name': 'running',
+            'type': 'boolean',
             'default': true,
             'description': 'Whether the clock is currently ticking.',
-            'name': 'running',
             'synonyms': 'active, playing, started',
-            'type': 'boolean',
           },
         ];
         const extras = params.fields ?? [];
@@ -205,17 +205,7 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
     } as Entity,
     traits: [
       {
-        'category': 'game-core',
-        'config': {
-          'autoStart': {
-            'default': true,
-            'description': 'When true the clock begins ticking immediately on INIT without waiting for a RESUME event.',
-            'label': 'Auto-start clock',
-            'synonyms': 'start on init, auto-run, begin immediately',
-            'tier': 'domain',
-            'type': 'boolean',
-          },
-        },
+        'name': 'GameClock',
         'effectRow': [
           {
             'kind': 'emit',
@@ -236,25 +226,33 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
             'site': 'tick',
           },
         ],
+        'category': 'game-core',
+        'linkedEntity': 'GameClockRecord',
         'emits': [
           {
-            'description': 'Fires every clock tick while running; consumers use elapsedMs to drive animations and game logic.',
             'event': 'GameClockTicked',
+            'description': 'Fires every clock tick while running; consumers use elapsedMs to drive animations and game logic.',
+            'synonyms': 'clock-tick, time-advance, tick, frame, elapsed',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'elapsedMs',
                 'type': 'number',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'clock-tick, time-advance, tick, frame, elapsed',
-            'tier': 'domain',
           },
         ],
-        'linkedEntity': 'GameClockRecord',
-        'name': 'GameClock',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'running',
+              'isInitial': true,
+            },
+            {
+              'name': 'paused',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -263,52 +261,36 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
             {
               'key': 'PAUSE',
               'name': 'Pause',
+              'listened': true,
             },
             {
               'key': 'RESUME',
               'name': 'Resume',
+              'listened': true,
             },
             {
-              'description': 'Fires every clock tick while running; consumers use elapsedMs to drive animations and game logic.',
               'key': 'GameClockTicked',
               'name': 'Game clock ticked',
+              'description': 'Fires every clock tick while running; consumers use elapsedMs to drive animations and game logic.',
+              'synonyms': 'clock-tick, time-advance, tick, frame, elapsed',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'elapsedMs',
                   'type': 'number',
                 },
               ],
-              'synonyms': 'clock-tick, time-advance, tick, frame, elapsed',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'running',
-            },
-            {
-              'name': 'paused',
             },
           ],
           'transitions': [
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.running',
-                  false,
-                ],
-              ],
-              'event': 'INIT',
               'from': 'running',
+              'to': 'paused',
+              'event': 'INIT',
               'guard': [
                 'not',
                 '@config.autoStart',
               ],
-              'to': 'paused',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -316,16 +298,32 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
                   false,
                 ],
               ],
-              'event': 'PAUSE',
-              'from': 'running',
-              'to': 'paused',
             },
             {
-              'event': 'RESUME',
+              'from': 'running',
+              'to': 'paused',
+              'event': 'PAUSE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.running',
+                  false,
+                ],
+              ],
+            },
+            {
               'from': 'running',
               'to': 'running',
+              'event': 'RESUME',
             },
             {
+              'from': 'paused',
+              'to': 'paused',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                '@config.autoStart',
+              ],
               'effects': [
                 [
                   'set',
@@ -333,95 +331,11 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
                   false,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'paused',
-              'guard': [
-                'not',
-                '@config.autoStart',
-              ],
-              'to': 'paused',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.running',
-                  false,
-                ],
-              ],
-              'event': 'INIT',
               'from': 'paused',
-              'guard': [
-                'not',
-                '@config.autoStart',
-              ],
-              'to': 'paused',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.running',
-                  false,
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'paused',
-              'guard': [
-                'not',
-                '@config.autoStart',
-              ],
-              'to': 'paused',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.running',
-                  false,
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'paused',
-              'guard': [
-                'not',
-                '@config.autoStart',
-              ],
-              'to': 'paused',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.running',
-                  false,
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'paused',
-              'guard': [
-                'not',
-                '@config.autoStart',
-              ],
-              'to': 'paused',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.running',
-                  false,
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'paused',
-              'guard': [
-                'not',
-                '@config.autoStart',
-              ],
-              'to': 'paused',
-            },
-            {
+              'to': 'running',
+              'event': 'RESUME',
               'effects': [
                 [
                   'set',
@@ -429,19 +343,23 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
                   true,
                 ],
               ],
-              'event': 'RESUME',
-              'from': 'paused',
-              'to': 'running',
             },
             {
-              'event': 'PAUSE',
               'from': 'paused',
               'to': 'paused',
+              'event': 'PAUSE',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'clockTick',
+            'interval': 100,
+            'guard': [
+              '==',
+              '@entity.running',
+              true,
+            ],
             'effects': [
               [
                 'set',
@@ -460,15 +378,19 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
                 },
               ],
             ],
-            'guard': [
-              '==',
-              '@entity.running',
-              true,
-            ],
-            'interval': 100,
-            'name': 'clockTick',
           },
         ],
+        'config': {
+          'autoStart': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Auto-start clock',
+            'description': 'When true the clock begins ticking immediately on INIT without waiting for a RESUME event.',
+            'synonyms': 'start on init, auto-run, begin immediately',
+            'tier': 'domain',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

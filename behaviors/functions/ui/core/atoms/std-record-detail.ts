@@ -103,84 +103,84 @@ export interface StdRecordDetailTitleCommittedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRecordDetailConfig {
-  /** Default: `[{"event":"EDIT","label":"Edit","variant":"secondary"},{"event":"DELETE","label":"Delete","variant":"danger"}]` */
+  /** Default: `[]` */
+  totals?: EntityRow[];
+  /** Default: `[{"header":"Name","variant":"h4","key":"name"},{"header":"Description","variant":"body","key":"description"},{"header":"Status","key":"status","variant":"badge"},{"key":"createdAt","header":"Created","format":"date"}]` */
+  fields?: EntityRow[];
+  /** Default: `""` */
+  threadField?: string;
+  /** Default: `"Start writing…"` */
+  placeholder?: string;
+  /** Default: `[{"variant":"secondary","event":"EDIT","label":"Edit"},{"label":"Delete","variant":"danger","event":"DELETE"}]` */
   actions?: EntityRow[];
+  /** Default: `"Edit"` */
+  editLabel?: string;
+  /** Default: `""` */
+  longitudeField?: string;
+  /** Default: `true` */
+  showActions?: boolean;
+  /** Default: `""` */
+  viewerRole?: string;
+  /** Default: `""` */
+  iconField?: string;
+  /** Default: `{"variant":"detail","type":"skeleton"}` */
+  loadingContent?: unknown;
+  /** Default: `""` */
+  stageField?: string;
+  /** Default: `"name"` */
+  titleField?: string;
+  /** Default: `3` */
+  maxInlineActions?: number;
+  /** Default: `[]` */
+  titleFields?: string[];
+  /** Default: `[]` */
+  stages?: EntityRow[];
+  /** Default: `"content"` */
+  contentField?: string;
+  /** Default: `""` */
+  latitudeField?: string;
+  /** Default: `""` */
+  closeEvent?: string;
   /** Default: `true` */
   allowEdit?: boolean;
   /** Default: `"Saves as you type"` */
   autosaveHint?: string;
-  /** Default: `""` */
-  avatarField?: string;
-  /** Default: `{"children":[{"actions":["if","@config.showActions",["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],[]],"avatarField":"@config.avatarField","closeEvent":"@config.closeEvent","coverField":"@config.coverField","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","latitudeField":"@config.latitudeField","lineItemColumns":"@config.lineItemColumns","lineItems":["object/get","@entity.loadedRow","@config.lineItemsField"],"longitudeField":"@config.longitudeField","look":"@config.recordLook","maxInlineActions":"@config.maxInlineActions","mediaField":"@config.mediaField","sections":"@config.sections","showActions":"@config.showActions","stageField":"@config.stageField","stages":"@config.stages","subtitle":"@entity.description","tabs":"@config.tabs","thread":["object/get","@entity.loadedRow","@config.threadField"],"title":"@entity.name","totals":"@config.totals","type":"detail-panel"}],"direction":"vertical","gap":"lg","type":"stack"}` */
-  bodyContent?: unknown;
-  /** Default: `""` */
-  closeEvent?: string;
-  /** Default: `"content"` */
-  contentField?: string;
-  /** Default: `""` */
-  coverField?: string;
-  /** Default: `"panel"` */
-  detailLook?: 'panel' | 'slide-over' | 'page' | 'document';
-  /** Default: `{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"className":"w-full","coverImage":"@entity.coverUrl","editEvent":["if","@config.allowEdit","EDIT_CONTENT",null],"editLabel":"@config.editLabel","icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":["if","@config.allowEdit","TITLE_COMMITTED",null],"type":"document-panel","value":"@entity.content"}` */
-  documentBodyContent?: unknown;
-  /** Default: `{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"autosaveHint":"@config.autosaveHint","className":"w-full","contentChangeEvent":"CONTENT_CHANGE","coverImage":"@entity.coverUrl","doneEvent":"DONE_EDITING","doneLabel":"@config.doneLabel","editing":true,"icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
-  documentEditingContent?: unknown;
-  /** Default: `"Done"` */
-  doneLabel?: string;
-  /** Default: `"Edit"` */
-  editLabel?: string;
-  /** Default: `[{"header":"Name","key":"name","variant":"h4"},{"header":"Description","key":"description","variant":"body"},{"header":"Status","key":"status","variant":"badge"},{"format":"date","header":"Created","key":"createdAt"}]` */
-  fields?: EntityRow[];
-  /** Default: `""` */
-  iconField?: string;
-  /** Default: `[]` */
-  include?: string[];
-  /** Default: `""` */
-  latitudeField?: string;
-  /** Default: `[]` */
-  lineItemColumns?: EntityRow[];
-  /** Default: `""` */
-  lineItemsField?: string;
-  /** Default: `{"type":"skeleton","variant":"detail"}` */
-  loadingContent?: unknown;
-  /** Default: `""` */
-  longitudeField?: string;
-  /** Default: `3` */
-  maxInlineActions?: number;
-  /** Default: `""` */
-  mediaField?: string;
-  /** Default: `"init"` */
-  openOn?: 'init' | 'event';
-  /** Default: `{"children":[{"actions":["if","@config.showActions",["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],[]],"avatarField":"@config.avatarField","closeEvent":"@config.closeEvent","coverField":"@config.coverField","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","latitudeField":"@config.latitudeField","lineItemColumns":"@config.lineItemColumns","lineItems":["object/get","@entity.loadedRow","@config.lineItemsField"],"longitudeField":"@config.longitudeField","look":"@config.recordLook","maxInlineActions":"@config.maxInlineActions","mediaField":"@config.mediaField","sections":"@config.sections","showActions":"@config.showActions","stageField":"@config.stageField","stages":"@config.stages","subtitle":"@entity.description","tabs":"@config.tabs","thread":["object/get","@entity.loadedRow","@config.threadField"],"title":"@entity.name","totals":"@config.totals","type":"detail-panel"}],"className":"w-full max-w-4xl","direction":"vertical","gap":"lg","type":"stack"}` */
-  pageBodyContent?: unknown;
-  /** Default: `"Start writing…"` */
-  placeholder?: string;
+  /** Default: `"description"` */
+  subtitleField?: string;
   /** Default: `"panel"` */
   recordLook?: 'panel' | 'profile' | 'showcase' | 'workflow' | 'map' | 'ledger' | 'conversation' | 'workspace';
   /** Default: `[]` */
-  sections?: EntityRow[];
-  /** Default: `true` */
-  showActions?: boolean;
-  /** Default: `{"children":[{"actions":["if","@config.showActions",["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],[]],"avatarField":"@config.avatarField","closeEvent":"@config.closeEvent","coverField":"@config.coverField","entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","latitudeField":"@config.latitudeField","lineItemColumns":"@config.lineItemColumns","lineItems":["object/get","@entity.loadedRow","@config.lineItemsField"],"longitudeField":"@config.longitudeField","look":"@config.recordLook","maxInlineActions":"@config.maxInlineActions","mediaField":"@config.mediaField","sections":"@config.sections","showActions":"@config.showActions","slideOver":true,"stageField":"@config.stageField","stages":"@config.stages","subtitle":"@entity.description","tabs":"@config.tabs","thread":["object/get","@entity.loadedRow","@config.threadField"],"title":"@entity.name","totals":"@config.totals","type":"detail-panel"}],"direction":"vertical","gap":"none","type":"stack"}` */
-  slideOverBodyContent?: unknown;
-  /** Default: `""` */
-  stageField?: string;
-  /** Default: `[]` */
-  stages?: EntityRow[];
-  /** Default: `"description"` */
-  subtitleField?: string;
-  /** Default: `[]` */
   tabs?: EntityRow[];
   /** Default: `""` */
-  threadField?: string;
-  /** Default: `"name"` */
-  titleField?: string;
-  /** Default: `[]` */
-  titleFields?: string[];
-  /** Default: `[]` */
-  totals?: EntityRow[];
+  lineItemsField?: string;
+  /** Default: `"init"` */
+  openOn?: 'init' | 'event';
   /** Default: `""` */
-  viewerRole?: string;
+  mediaField?: string;
+  /** Default: `{"titleCommitEvent":"TITLE_COMMITTED","editing":true,"coverImage":"@entity.coverUrl","maxInlineActions":"@config.maxInlineActions","icon":"@entity.iconName","className":"w-full","id":"@entity.id","type":"document-panel","contentChangeEvent":"CONTENT_CHANGE","doneLabel":"@config.doneLabel","title":"@entity.name","doneEvent":"DONE_EDITING","subtitle":"@entity.description","autosaveHint":"@config.autosaveHint","placeholder":"@config.placeholder","actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"value":"@entity.content"}` */
+  documentEditingContent?: unknown;
+  /** Default: `"Done"` */
+  doneLabel?: string;
+  /** Default: `[]` */
+  sections?: EntityRow[];
+  /** Default: `[]` */
+  include?: string[];
+  /** Default: `[]` */
+  lineItemColumns?: EntityRow[];
+  /** Default: `""` */
+  avatarField?: string;
+  /** Default: `""` */
+  coverField?: string;
+  /** Default: `{"className":"w-full","title":"@entity.name","titleCommitEvent":["if","@config.allowEdit","TITLE_COMMITTED",null],"placeholder":"@config.placeholder","editLabel":"@config.editLabel","maxInlineActions":"@config.maxInlineActions","editEvent":["if","@config.allowEdit","EDIT_CONTENT",null],"value":"@entity.content","icon":"@entity.iconName","coverImage":"@entity.coverUrl","type":"document-panel","actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"id":"@entity.id","subtitle":"@entity.description"}` */
+  documentBodyContent?: unknown;
+  /** Default: `{"type":"stack","gap":"none","children":[{"entity":"@entity.loadedRow","totals":"@config.totals","longitudeField":"@config.longitudeField","fields":"@config.fields","stages":"@config.stages","sections":"@config.sections","subtitle":"@entity.description","thread":["object/get","@entity.loadedRow","@config.threadField"],"title":"@entity.name","type":"detail-panel","slideOver":true,"mediaField":"@config.mediaField","showActions":"@config.showActions","stageField":"@config.stageField","closeEvent":"@config.closeEvent","latitudeField":"@config.latitudeField","actions":["if","@config.showActions",["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],[]],"lineItemColumns":"@config.lineItemColumns","initialData":"@entity.loadedRow","tabs":"@config.tabs","avatarField":"@config.avatarField","maxInlineActions":"@config.maxInlineActions","look":"@config.recordLook","lineItems":["object/get","@entity.loadedRow","@config.lineItemsField"],"coverField":"@config.coverField"}],"direction":"vertical"}` */
+  slideOverBodyContent?: unknown;
+  /** Default: `{"gap":"lg","type":"stack","children":[{"type":"detail-panel","longitudeField":"@config.longitudeField","sections":"@config.sections","lineItems":["object/get","@entity.loadedRow","@config.lineItemsField"],"stages":"@config.stages","closeEvent":"@config.closeEvent","thread":["object/get","@entity.loadedRow","@config.threadField"],"fields":"@config.fields","lineItemColumns":"@config.lineItemColumns","entity":"@entity.loadedRow","latitudeField":"@config.latitudeField","coverField":"@config.coverField","stageField":"@config.stageField","mediaField":"@config.mediaField","title":"@entity.name","initialData":"@entity.loadedRow","showActions":"@config.showActions","look":"@config.recordLook","totals":"@config.totals","tabs":"@config.tabs","subtitle":"@entity.description","maxInlineActions":"@config.maxInlineActions","avatarField":"@config.avatarField","actions":["if","@config.showActions",["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],[]]}],"direction":"vertical"}` */
+  bodyContent?: unknown;
+  /** Default: `"panel"` */
+  detailLook?: 'panel' | 'slide-over' | 'page' | 'document';
+  /** Default: `{"direction":"vertical","gap":"lg","type":"stack","className":"w-full max-w-4xl","children":[{"latitudeField":"@config.latitudeField","closeEvent":"@config.closeEvent","entity":"@entity.loadedRow","totals":"@config.totals","actions":["if","@config.showActions",["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],[]],"stageField":"@config.stageField","lineItemColumns":"@config.lineItemColumns","thread":["object/get","@entity.loadedRow","@config.threadField"],"fields":"@config.fields","showActions":"@config.showActions","look":"@config.recordLook","stages":"@config.stages","sections":"@config.sections","maxInlineActions":"@config.maxInlineActions","avatarField":"@config.avatarField","mediaField":"@config.mediaField","longitudeField":"@config.longitudeField","initialData":"@entity.loadedRow","type":"detail-panel","tabs":"@config.tabs","lineItems":["object/get","@entity.loadedRow","@config.lineItemsField"],"title":"@entity.name","subtitle":"@entity.description","coverField":"@config.coverField"}]}` */
+  pageBodyContent?: unknown;
 }
 
 /**

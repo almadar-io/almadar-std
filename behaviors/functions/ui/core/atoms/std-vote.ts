@@ -212,34 +212,34 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Identifier for the item being voted on.',
             'name': 'targetId',
+            'type': 'string',
             'required': true,
+            'description': 'Identifier for the item being voted on.',
             'synonyms': 'reference, item, subject',
-            'type': 'string',
           },
           {
-            'description': 'Unique identifier of the user casting the vote.',
             'name': 'voterId',
-            'required': true,
-            'synonyms': 'user, author, participant',
             'type': 'string',
+            'required': true,
+            'description': 'Unique identifier of the user casting the vote.',
+            'synonyms': 'user, author, participant',
           },
           {
-            'default': 'none',
-            'description': 'Indicates the vote\'s direction.',
             'name': 'direction',
-            'synonyms': 'vote, sentiment, choice',
             'type': 'string',
+            'default': 'none',
             'values': [
               'up',
               'down',
               'none',
             ],
+            'description': 'Indicates the vote\'s direction.',
+            'synonyms': 'vote, sentiment, choice',
           },
           {
             'name': 'createdAt',
@@ -254,7 +254,15 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
     } as Entity,
     traits: [
       {
-        'category': 'interaction',
+        'name': 'VoteCast',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'direction',
+            'targetId',
+          ],
+        },
         'effectRow': [
           {
             'kind': 'fetch',
@@ -277,15 +285,19 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
             'resource': '@entity.targetId',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'Vote',
         'emits': [
           {
-            'description': 'Signals a vote has been successfully recorded.',
             'event': 'VOTE',
+            'description': 'Signals a vote has been successfully recorded.',
+            'synonyms': 'voted, submitted, confirmed',
+            'tier': 'domain',
             'payloadSchema': [
               {
                 'name': 'targetId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'next',
@@ -298,35 +310,35 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
               },
               {
                 'name': 'data',
-                'required': true,
                 'type': '@entity',
+                'required': true,
               },
             ],
-            'synonyms': 'voted, submitted, confirmed',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a vote has been successfully retrieved.',
             'event': 'VoteLoaded',
+            'description': 'Indicates a vote has been successfully retrieved.',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'internal',
             'payloadSchema': [
               {
-                'entity': 'Vote',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'targetId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'voterId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'direction',
@@ -342,15 +354,15 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'Vote',
               },
             ],
-            'synonyms': 'loaded, fetched, retrieved',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates that loading a vote failed.',
             'event': 'VoteLoadFailed',
+            'description': 'Indicates that loading a vote failed.',
+            'synonyms': 'load error, failed load, fetch failure',
+            'tier': 'internal',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -361,25 +373,25 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                 'type': 'string',
               },
             ],
-            'synonyms': 'load error, failed load, fetch failure',
-            'tier': 'internal',
           },
           {
-            'description': 'Indicates a vote has been successfully recorded.',
             'event': 'VoteCasted',
+            'description': 'Indicates a vote has been successfully recorded.',
+            'synonyms': 'voted, vote-submitted, vote-changed',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'value',
                 'type': '@entity',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'voted, vote-submitted, vote-changed',
-            'tier': 'domain',
           },
           {
-            'description': 'Indicates a vote submission failed, likely due to a constraint.',
             'event': 'VoteCastFailed',
+            'description': 'Indicates a vote submission failed, likely due to a constraint.',
+            'synonyms': 'failed, rejected, error',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -390,50 +402,54 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                 'type': 'string',
               },
             ],
-            'synonyms': 'failed, rejected, error',
-            'tier': 'presentation',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'direction',
-            'targetId',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'Vote',
-        'name': 'VoteCast',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'idle',
+            },
+            {
+              'name': 'voting',
+            },
+            {
+              'name': 'error',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Indicates a vote has been successfully retrieved.',
               'key': 'VoteLoaded',
               'name': 'Vote loaded',
+              'description': 'Indicates a vote has been successfully retrieved.',
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'Vote',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'targetId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'voterId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'direction',
@@ -449,16 +465,16 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'Vote',
                 },
               ],
-              'synonyms': 'loaded, fetched, retrieved',
-              'tier': 'internal',
             },
             {
-              'description': 'Indicates that loading a vote failed.',
               'key': 'VoteLoadFailed',
               'name': 'Vote load failed',
+              'description': 'Indicates that loading a vote failed.',
+              'synonyms': 'load error, failed load, fetch failure',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -469,18 +485,18 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   'type': 'string',
                 },
               ],
-              'synonyms': 'load error, failed load, fetch failure',
-              'tier': 'internal',
             },
             {
-              'description': 'Signals a vote has been successfully recorded.',
               'key': 'VOTE',
               'name': 'Vote',
+              'description': 'Signals a vote has been successfully recorded.',
+              'synonyms': 'voted, submitted, confirmed',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'targetId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'next',
@@ -493,44 +509,44 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                 },
                 {
                   'name': 'data',
-                  'required': true,
                   'type': '@entity',
+                  'required': true,
                 },
               ],
-              'synonyms': 'voted, submitted, confirmed',
-              'tier': 'domain',
             },
             {
-              'description': 'Rebinds the trait to a new target and refetches the vote row scoped to it.',
               'key': 'SET_VOTE_TARGET',
               'name': 'Set Vote Target',
+              'description': 'Rebinds the trait to a new target and refetches the vote row scoped to it.',
+              'synonyms': 'retarget, rebind target, scope to item, set target, change target',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'targetId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'retarget, rebind target, scope to item, set target, change target',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a vote has been successfully recorded.',
               'key': 'VoteCasted',
               'name': 'Vote casted',
+              'description': 'Indicates a vote has been successfully recorded.',
+              'synonyms': 'voted, vote-submitted, vote-changed',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': '@entity',
                 },
               ],
-              'synonyms': 'voted, vote-submitted, vote-changed',
-              'tier': 'domain',
             },
             {
-              'description': 'Indicates a vote submission failed, likely due to a constraint.',
               'key': 'VoteCastFailed',
               'name': 'Vote cast failed',
+              'description': 'Indicates a vote submission failed, likely due to a constraint.',
+              'synonyms': 'failed, rejected, error',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -541,27 +557,13 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   'type': 'string',
                 },
               ],
-              'synonyms': 'failed, rejected, error',
-              'tier': 'presentation',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'idle',
-            },
-            {
-              'name': 'voting',
-            },
-            {
-              'name': 'error',
             },
           ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -582,30 +584,30 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'idle',
+              'event': 'VoteLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'count': 0,
-                    'label': 'Vote',
                     'onVote': 'VOTE',
+                    'label': 'Vote',
                     'type': 'vote-stack',
+                    'count': 0,
                     'userVote': '@entity.direction',
                     'variant': 'vertical',
                   },
                 ],
               ],
-              'event': 'VoteLoaded',
-              'from': 'loading',
-              'to': 'idle',
             },
             {
+              'from': 'loading',
+              'to': 'idle',
+              'event': 'VoteLoadFailed',
               'effects': [
                 [
                   'render-ui',
@@ -617,11 +619,11 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   },
                 ],
               ],
-              'event': 'VoteLoadFailed',
-              'from': 'loading',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -637,16 +639,24 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   'render-ui',
                   'main',
                   {
-                    'type': 'skeleton',
                     'variant': 'card',
+                    'type': 'skeleton',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'loading',
             },
             {
+              'from': 'idle',
+              'to': 'voting',
+              'event': 'VOTE',
+              'guard': [
+                'not',
+                [
+                  '=',
+                  '@payload.next',
+                  '@entity.direction',
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -676,19 +686,16 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   },
                 ],
               ],
-              'event': 'VOTE',
-              'from': 'idle',
-              'guard': [
-                'not',
-                [
-                  '=',
-                  '@payload.next',
-                  '@entity.direction',
-                ],
-              ],
-              'to': 'voting',
             },
             {
+              'from': 'idle',
+              'to': 'voting',
+              'event': 'VOTE',
+              'guard': [
+                '=',
+                '@payload.next',
+                '@entity.direction',
+              ],
               'effects': [
                 [
                   'set',
@@ -712,8 +719,8 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   ],
                   {
                     'emit': {
-                      'failure': 'VoteCastFailed',
                       'success': 'VoteCasted',
+                      'failure': 'VoteCastFailed',
                     },
                   },
                 ],
@@ -722,34 +729,29 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   'main',
                   {
                     'align': 'center',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
                         'content': 'Clearing your vote…',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
                       },
                     ],
                     'className': 'py-12',
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'VOTE',
-              'from': 'idle',
-              'guard': [
-                '=',
-                '@payload.next',
-                '@entity.direction',
-              ],
-              'to': 'voting',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'SET_VOTE_TARGET',
               'effects': [
                 [
                   'set',
@@ -761,8 +763,8 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   ('Vote' satisfies _StdVoteEntityName),
                   {
                     'emit': {
-                      'failure': 'VoteLoadFailed',
                       'success': 'VoteLoaded',
+                      'failure': 'VoteLoadFailed',
                     },
                     'filter': [
                       '=',
@@ -772,54 +774,54 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   },
                 ],
               ],
-              'event': 'SET_VOTE_TARGET',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'VoteLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'count': 0,
+                    'variant': 'vertical',
+                    'type': 'vote-stack',
                     'label': 'Vote',
                     'onVote': 'VOTE',
-                    'type': 'vote-stack',
+                    'count': 0,
                     'userVote': '@entity.direction',
-                    'variant': 'vertical',
                   },
                 ],
               ],
-              'event': 'VoteLoaded',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'VoteLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
                     'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'error',
+                    'type': 'alert',
                   },
                 ],
               ],
-              'event': 'VoteLoadFailed',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'voting',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('Vote' satisfies _StdVoteEntityName),
                   {
                     'emit': {
-                      'failure': 'VoteLoadFailed',
                       'success': 'VoteLoaded',
+                      'failure': 'VoteLoadFailed',
                     },
                   },
                 ],
@@ -827,51 +829,51 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   'render-ui',
                   'main',
                   {
-                    'type': 'skeleton',
                     'variant': 'card',
+                    'type': 'skeleton',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'voting',
-              'to': 'loading',
             },
             {
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'count': 0,
-                    'label': 'Vote',
-                    'onVote': 'VOTE',
-                    'type': 'vote-stack',
-                    'userVote': '@entity.direction',
-                    'variant': 'vertical',
-                  },
-                ],
-              ],
-              'event': 'VoteCasted',
               'from': 'voting',
               'to': 'idle',
-            },
-            {
+              'event': 'VoteCasted',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'message': '@payload.error',
-                    'type': 'alert',
-                    'variant': 'error',
+                    'onVote': 'VOTE',
+                    'userVote': '@entity.direction',
+                    'type': 'vote-stack',
+                    'label': 'Vote',
+                    'variant': 'vertical',
+                    'count': 0,
                   },
                 ],
               ],
-              'event': 'VoteCastFailed',
+            },
+            {
               'from': 'voting',
               'to': 'error',
+              'event': 'VoteCastFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'alert',
+                    'message': '@payload.error',
+                    'variant': 'error',
+                  },
+                ],
+              ],
             },
             {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -892,12 +894,10 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'error',
-              'to': 'loading',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

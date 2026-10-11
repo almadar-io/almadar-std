@@ -28,6 +28,12 @@ orbital CarouselOrbital {
           loop: @config.loop
           slideChangeEvent: @config.slideChangeEvent
           slideChangePayload: @config.slideChangePayload
+          orientation: @config.orientation
+          fullHeight: @config.fullHeight
+          loadMoreEvent: @config.loadMoreEvent
+          loadMoreAhead: @config.loadMoreAhead
+          hasMore: @config.hasMore
+          isLoadingMore: @config.isLoadingMore
           className: @config.className
           enter: @config.enter
           enterDelay: @config.enterDelay
@@ -55,6 +61,11 @@ orbital CarouselOrbital {
         index : number!
       }
         @description "Declarative event name for slide change"
+        @tier "essential"
+      @config.loadMoreEvent -> external {
+        index : number!
+      }
+        @description "Emitted when the viewer is `loadMoreAhead` slides from the end and `hasMore` is set."
         @tier "essential"
     }
 
@@ -90,6 +101,30 @@ orbital CarouselOrbital {
       slideChangePayload : @payload @config.slideChangeEvent
         @label "Slide Change Payload"
         @description "Payload to include with the slide change event"
+        @tier "presentation"
+      orientation : "horizontal" | "vertical" = horizontal
+        @label "Orientation"
+        @description "Scroll direction: a row of slides, or a column (a vertical feed)."
+        @tier "presentation"
+      fullHeight : boolean = false
+        @label "Full Height"
+        @description "Each slide fills the carousel's height (pair with `orientation: vertical` for one card per screen)."
+        @tier "presentation"
+      loadMoreEvent : event = "LOAD_MORE"
+        @label "Load More Event"
+        @description "Emitted when the viewer is `loadMoreAhead` slides from the end and `hasMore` is set."
+        @tier "presentation"
+      loadMoreAhead : number = 2
+        @label "Load More Ahead"
+        @description "How many slides before the end to ask for more (default 2)."
+        @tier "presentation"
+      hasMore : boolean = false
+        @label "Has More"
+        @description "More slides can be loaded."
+        @tier "presentation"
+      isLoadingMore : boolean = false
+        @label "Is Loading More"
+        @description "A load is in flight; no further request until it lands."
         @tier "presentation"
       className : string
         @label "Class Name"

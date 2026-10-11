@@ -86,32 +86,32 @@ export function stdPlatformerPuzzlePlatformerPuzzleOrbital(params: StdPlatformer
     name: 'PlatformerPuzzleOrbital',
     uses: [
       {
-        'as': 'Body',
         'from': 'std/behaviors/std-platformer-body',
+        'as': 'Body',
       },
       {
-        'as': 'Pickup',
         'from': 'std/behaviors/std-pickup',
+        'as': 'Pickup',
       },
       {
-        'as': 'Gate',
         'from': 'std/behaviors/std-objective-flow',
+        'as': 'Gate',
       },
       {
-        'as': 'Choice',
         'from': 'std/behaviors/std-choice-gate',
+        'as': 'Choice',
       },
       {
-        'as': 'Particles',
         'from': 'std/behaviors/std-fx-particles',
+        'as': 'Particles',
       },
       {
-        'as': 'Narrative',
         'from': 'std/behaviors/std-fx-narrative',
+        'as': 'Narrative',
       },
       {
-        'as': 'Tutorial',
         'from': 'std/behaviors/std-tutorial-overlay',
+        'as': 'Tutorial',
       },
     ],
     entity: {
@@ -122,416 +122,416 @@ export function stdPlatformerPuzzlePlatformerPuzzleOrbital(params: StdPlatformer
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'body',
+            'type': 'object',
             'default': {
-              'facingRight': true,
-              'grounded': false,
-              'height': 1,
-              'vx': 0,
-              'vy': 0,
               'width': 1,
+              'vx': 0,
               'x': 0,
               'y': 0,
+              'vy': 0,
+              'facingRight': true,
+              'height': 1,
+              'grounded': false,
             },
-            'name': 'body',
             'properties': {
-              'facingRight': {
-                'name': 'facingRight',
-                'required': false,
-                'type': 'boolean',
-              },
-              'grounded': {
-                'name': 'grounded',
-                'required': false,
-                'type': 'boolean',
-              },
-              'height': {
-                'name': 'height',
+              'y': {
+                'name': 'y',
+                'type': 'number',
                 'required': true,
-                'type': 'number',
-              },
-              'vx': {
-                'name': 'vx',
-                'required': false,
-                'type': 'number',
               },
               'vy': {
                 'name': 'vy',
+                'type': 'number',
                 'required': false,
-                'type': 'number',
               },
-              'width': {
-                'name': 'width',
-                'required': true,
+              'height': {
+                'name': 'height',
                 'type': 'number',
+                'required': true,
+              },
+              'grounded': {
+                'name': 'grounded',
+                'type': 'boolean',
+                'required': false,
               },
               'x': {
                 'name': 'x',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
-              'y': {
-                'name': 'y',
-                'required': true,
+              'width': {
+                'name': 'width',
                 'type': 'number',
+                'required': true,
+              },
+              'vx': {
+                'name': 'vx',
+                'type': 'number',
+                'required': false,
+              },
+              'facingRight': {
+                'name': 'facingRight',
+                'type': 'boolean',
+                'required': false,
               },
             },
-            'type': 'object',
           },
           {
-            'default': false,
             'name': 'fell',
             'type': 'boolean',
+            'default': false,
           },
           {
-            'default': '',
             'name': 'hazardId',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'goalId',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': false,
             'name': 'skating',
             'type': 'boolean',
+            'default': false,
           },
           {
+            'name': 'curveMods',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
                 'a': {
                   'name': 'a',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 'b': {
                   'name': 'b',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
                 },
                 'h': {
                   'name': 'h',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 'k': {
                   'name': 'k',
-                  'required': true,
                   'type': 'number',
-                },
-                'x0': {
-                  'name': 'x0',
                   'required': true,
-                  'type': 'number',
                 },
                 'x1': {
                   'name': 'x1',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
+                },
+                'x0': {
+                  'name': 'x0',
+                  'type': 'number',
+                  'required': true,
                 },
               },
-              'type': 'object',
             },
-            'name': 'curveMods',
-            'type': 'array',
           },
           {
-            'default': {},
             'name': 'tuning',
+            'type': 'object',
+            'default': {},
             'properties': {
+              'moveSpeed': {
+                'name': 'moveSpeed',
+                'type': 'number',
+                'required': false,
+              },
               'gravity': {
                 'name': 'gravity',
-                'required': false,
                 'type': 'number',
+                'required': false,
               },
               'jumpStrength': {
                 'name': 'jumpStrength',
-                'required': false,
                 'type': 'number',
-              },
-              'moveSpeed': {
-                'name': 'moveSpeed',
                 'required': false,
-                'type': 'number',
               },
             },
-            'type': 'object',
           },
           {
+            'name': 'pickups',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'object',
               'properties': {
                 'collected': {
                   'name': 'collected',
-                  'required': false,
                   'type': 'boolean',
-                },
-                'glyph': {
-                  'name': 'glyph',
                   'required': false,
-                  'type': 'string',
                 },
-                'id': {
-                  'name': 'id',
-                  'required': true,
+                'message': {
+                  'name': 'message',
                   'type': 'string',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
                 },
                 'kind': {
                   'name': 'kind',
+                  'type': 'string',
                   'required': true,
-                  'type': 'string',
-                },
-                'message': {
-                  'name': 'message',
-                  'required': false,
-                  'type': 'string',
                 },
                 'x': {
                   'name': 'x',
-                  'required': true,
                   'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
                   'required': true,
-                  'type': 'number',
                 },
-              },
-              'type': 'object',
-            },
-            'name': 'pickups',
-            'type': 'array',
-          },
-          {
-            'default': false,
-            'name': 'pickupCompleted',
-            'type': 'boolean',
-          },
-          {
-            'default': 0,
-            'name': 'total',
-            'type': 'number',
-          },
-          {
-            'default': [],
-            'items': {
-              'properties': {
-                'chosen': {
-                  'name': 'chosen',
-                  'required': false,
+                'glyph': {
+                  'name': 'glyph',
                   'type': 'string',
-                },
-                'hint': {
-                  'name': 'hint',
                   'required': false,
-                  'type': 'string',
                 },
                 'id': {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
+              },
+            },
+          },
+          {
+            'name': 'pickupCompleted',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'total',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'choices',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
                 'options': {
+                  'name': 'options',
+                  'type': 'array',
+                  'required': true,
                   'items': {
+                    'type': 'object',
                     'properties': {
-                      'correct': {
-                        'name': 'correct',
+                      'label': {
+                        'name': 'label',
+                        'type': 'string',
                         'required': true,
-                        'type': 'boolean',
                       },
                       'dx': {
                         'name': 'dx',
-                        'required': true,
                         'type': 'number',
+                        'required': true,
+                      },
+                      'correct': {
+                        'name': 'correct',
+                        'type': 'boolean',
+                        'required': true,
                       },
                       'id': {
                         'name': 'id',
-                        'required': true,
                         'type': 'string',
-                      },
-                      'label': {
-                        'name': 'label',
                         'required': true,
-                        'type': 'string',
                       },
                     },
-                    'type': 'object',
                   },
-                  'name': 'options',
-                  'required': true,
-                  'type': 'array',
-                },
-                'solved': {
-                  'name': 'solved',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
                 },
                 'y': {
                   'name': 'y',
+                  'type': 'number',
                   'required': true,
-                  'type': 'number',
                 },
-              },
-              'type': 'object',
-            },
-            'name': 'choices',
-            'type': 'array',
-          },
-          {
-            'default': 'none',
-            'name': 'result',
-            'type': 'string',
-          },
-          {
-            'default': [],
-            'items': {
-              'properties': {
-                'animation': {
-                  'name': 'animation',
-                  'required': false,
+                'chosen': {
+                  'name': 'chosen',
                   'type': 'string',
-                },
-                'bornAt': {
-                  'name': 'bornAt',
                   'required': false,
-                  'type': 'number',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'effect': {
-                  'name': 'effect',
-                  'required': false,
-                  'type': 'string',
                 },
                 'id': {
                   'name': 'id',
+                  'type': 'string',
                   'required': true,
+                },
+                'solved': {
+                  'name': 'solved',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'hint': {
+                  'name': 'hint',
                   'type': 'string',
-                },
-                'maxTtl': {
-                  'name': 'maxTtl',
                   'required': false,
-                  'type': 'number',
-                },
-                'message': {
-                  'name': 'message',
-                  'required': false,
-                  'type': 'string',
-                },
-                'particleCount': {
-                  'name': 'particleCount',
-                  'required': false,
-                  'type': 'number',
-                },
-                'size': {
-                  'name': 'size',
-                  'required': false,
-                  'type': 'number',
-                },
-                'space': {
-                  'name': 'space',
-                  'required': false,
-                  'type': 'string',
-                },
-                'ttl': {
-                  'name': 'ttl',
-                  'required': true,
-                  'type': 'number',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'vx': {
-                  'name': 'vx',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vy': {
-                  'name': 'vy',
-                  'required': false,
-                  'type': 'number',
-                },
-                'vz': {
-                  'name': 'vz',
-                  'required': false,
-                  'type': 'number',
                 },
                 'x': {
                   'name': 'x',
+                  'type': 'number',
                   'required': true,
-                  'type': 'number',
                 },
-                'y': {
-                  'name': 'y',
-                  'required': false,
+              },
+            },
+          },
+          {
+            'name': 'result',
+            'type': 'string',
+            'default': 'none',
+          },
+          {
+            'name': 'fx',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+              'properties': {
+                'vz': {
+                  'name': 'vz',
                   'type': 'number',
+                  'required': false,
+                },
+                'vx': {
+                  'name': 'vx',
+                  'type': 'number',
+                  'required': false,
                 },
                 'z': {
                   'name': 'z',
-                  'required': false,
                   'type': 'number',
+                  'required': false,
+                },
+                'message': {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'effect': {
+                  'name': 'effect',
+                  'type': 'string',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'animation': {
+                  'name': 'animation',
+                  'type': 'string',
+                  'required': false,
+                },
+                'size': {
+                  'name': 'size',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'vy': {
+                  'name': 'vy',
+                  'type': 'number',
+                  'required': false,
+                },
+                'bornAt': {
+                  'name': 'bornAt',
+                  'type': 'number',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': false,
+                },
+                'maxTtl': {
+                  'name': 'maxTtl',
+                  'type': 'number',
+                  'required': false,
+                },
+                'space': {
+                  'name': 'space',
+                  'type': 'string',
+                  'required': false,
+                },
+                'ttl': {
+                  'name': 'ttl',
+                  'type': 'number',
+                  'required': true,
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'type': 'number',
+                  'required': false,
                 },
               },
-              'type': 'object',
             },
-            'name': 'fx',
-            'type': 'array',
           },
           {
-            'default': 0,
             'name': 'narrativeSeq',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
             'name': 'lastNarrative',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 0,
             'name': 'step',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': false,
             'name': 'done',
             'type': 'boolean',
+            'default': false,
           },
           {
-            'default': 0,
             'name': 'score',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 3,
             'name': 'lives',
             'type': 'number',
+            'default': 3,
           },
           {
-            'default': 1,
             'name': 'objectivesLeft',
             'type': 'number',
+            'default': 1,
           },
           {
-            'default': false,
             'name': 'celebrated',
             'type': 'boolean',
+            'default': false,
           },
         ];
         const extras = params.fields ?? [];
@@ -542,189 +542,191 @@ export function stdPlatformerPuzzlePlatformerPuzzleOrbital(params: StdPlatformer
     } as Entity,
     traits: [
       makeTraitRef({
+        'ref': ('Body.traits.PlatformerBody' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
+        'name': 'PlatformerPuzzleBody',
+        'linkedEntity': 'PlatformerPuzzleData',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
         'events': {
+          'CURVE_MOD_CLEAR': 'CURVE_MOD_CLEAR',
+          'STEER': 'STEER',
           'BODY_FELL': 'BODY_FELL',
-          'BODY_GOAL': 'BODY_GOAL',
-          'BODY_HAZARD': 'BODY_HAZARD',
+          'SET_TUNING': 'SET_TUNING',
+          'BODY_MOVED': 'BODY_MOVED',
+          'BODY_SKATE_START': 'BODY_SKATE_START',
+          'JUMP': 'JUMP',
           'BODY_JUMPED': 'BODY_JUMPED',
           'BODY_LANDED': 'BODY_LANDED',
-          'BODY_MOVED': 'BODY_MOVED',
-          'BODY_SKATE_END': 'BODY_SKATE_END',
-          'BODY_SKATE_START': 'BODY_SKATE_START',
-          'CURVE_MOD_ADD': 'CURVE_MOD_ADD',
-          'CURVE_MOD_CLEAR': 'CURVE_MOD_CLEAR',
-          'JUMP': 'JUMP',
           'PLACE': 'PLACE',
-          'SET_TUNING': 'SET_TUNING',
-          'STEER': 'STEER',
+          'BODY_SKATE_END': 'BODY_SKATE_END',
+          'BODY_GOAL': 'BODY_GOAL',
+          'CURVE_MOD_ADD': 'CURVE_MOD_ADD',
+          'BODY_HAZARD': 'BODY_HAZARD',
         },
-        'linkedEntity': 'PlatformerPuzzleData',
-        'name': 'PlatformerPuzzleBody',
-        'ref': ('Body.traits.PlatformerBody' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
       }),
       makeTraitRef({
-        'config': {
-          'running': {
-            'default': true,
-            'type': 'unknown',
-          },
-        },
-        'events': {
-          'BODY_MOVED': 'BODY_MOVED',
-        },
-        'linkedEntity': 'PlatformerPuzzleData',
-        'listens': [
-          {
-            'event': 'BODY_MOVED',
-            'source': {
-              'kind': 'trait',
-              'trait': 'PlatformerPuzzleBody',
-            },
-            'triggers': 'BODY_MOVED',
-          },
-        ],
-        'name': 'PlatformerPuzzlePickup',
         'ref': ('Pickup.traits.Pickup' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'running': {
-            'default': true,
-            'type': 'unknown',
-          },
-        },
-        'events': {
-          'GAME_END': 'GAME_END',
-          'PROGRESS': 'PROGRESS',
-        },
+        'name': 'PlatformerPuzzlePickup',
         'linkedEntity': 'PlatformerPuzzleData',
-        'name': 'PlatformerPuzzleObjective',
-        'ref': ('Gate.traits.ObjectiveFlow' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
-      }),
-      makeTraitRef({
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
         'events': {
           'BODY_MOVED': 'BODY_MOVED',
         },
-        'linkedEntity': 'PlatformerPuzzleData',
         'listens': [
           {
             'event': 'BODY_MOVED',
+            'triggers': 'BODY_MOVED',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerPuzzleBody',
             },
-            'triggers': 'BODY_MOVED',
           },
         ],
-        'name': 'PlatformerPuzzleChoice',
-        'ref': ('Choice.traits.ChoiceGate' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Gate.traits.ObjectiveFlow' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
+        'name': 'PlatformerPuzzleObjective',
+        'linkedEntity': 'PlatformerPuzzleData',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
+          },
+        },
+        'events': {
+          'PROGRESS': 'PROGRESS',
+          'GAME_END': 'GAME_END',
+        },
+      }),
+      makeTraitRef({
+        'ref': ('Choice.traits.ChoiceGate' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
+        'name': 'PlatformerPuzzleChoice',
+        'linkedEntity': 'PlatformerPuzzleData',
+        'config': {
+          'running': {
+            'type': 'unknown',
+            'default': true,
+          },
+        },
+        'events': {
+          'BODY_MOVED': 'BODY_MOVED',
+        },
+        'listens': [
+          {
+            'event': 'BODY_MOVED',
+            'triggers': 'BODY_MOVED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerPuzzleBody',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': ('Particles.traits.FxParticles' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
+        'name': 'PlatformerPuzzleFx',
+        'linkedEntity': 'PlatformerPuzzleData',
+        'config': {
+          'running': {
+            'type': 'unknown',
+            'default': true,
           },
         },
         'events': {
           'BURST': 'BURST',
         },
-        'linkedEntity': 'PlatformerPuzzleData',
         'listens': [
           {
             'event': 'BURST',
+            'triggers': 'BURST',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerPuzzleNarrative',
             },
-            'triggers': 'BURST',
           },
         ],
-        'name': 'PlatformerPuzzleFx',
-        'ref': ('Particles.traits.FxParticles' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Narrative.traits.FxNarrative' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
+        'name': 'PlatformerPuzzleNarrative',
+        'linkedEntity': 'PlatformerPuzzleData',
         'config': {
           'running': {
-            'default': true,
             'type': 'unknown',
+            'default': true,
           },
         },
         'events': {
-          'BURST': 'BURST',
           'NARRATE': 'NARRATE',
+          'BURST': 'BURST',
         },
-        'linkedEntity': 'PlatformerPuzzleData',
-        'name': 'PlatformerPuzzleNarrative',
-        'ref': ('Narrative.traits.FxNarrative' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Tutorial.traits.TutorialOverlay' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
+        'name': 'PlatformerPuzzleTutorial',
+        'linkedEntity': 'PlatformerPuzzleData',
         'config': {
           'autoShow': {
-            'default': false,
             'type': 'unknown',
+            'default': false,
           },
           'previewTrait': {
-            'default': '@trait.PlatformerPuzzleNoopPreview',
             'type': 'unknown',
+            'default': '@trait.PlatformerPuzzleNoopPreview',
           },
         },
         'events': {
-          'SHOW': 'SHOW',
           'TUTORIAL_DONE': 'TUTORIAL_DONE',
+          'SHOW': 'SHOW',
         },
-        'linkedEntity': 'PlatformerPuzzleData',
         'listens': [
           {
             'event': 'SHOW',
+            'triggers': 'SHOW',
             'source': {
               'kind': 'trait',
               'trait': 'PlatformerPuzzleNarrative',
             },
-            'triggers': 'SHOW',
           },
         ],
-        'name': 'PlatformerPuzzleTutorial',
-        'ref': ('Tutorial.traits.TutorialOverlay' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
       }),
       {
-        'category': 'interaction',
+        'name': 'PlatformerPuzzleNoopPreview',
         'effectRow': [
           {
             'kind': 'render-ui',
             'resource': 'overlay',
           },
         ],
+        'category': 'interaction',
         'linkedEntity': 'PlatformerPuzzleData',
-        'name': 'PlatformerPuzzleNoopPreview',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
@@ -732,12 +734,10 @@ export function stdPlatformerPuzzlePlatformerPuzzleOrbital(params: StdPlatformer
                   null,
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -146,6 +146,9 @@ export type ReturnSemantics =
 /** Where an effect executes: a client host delegates `server` effects, a server ships `client` effects back, `any` runs wherever it is dispatched. */
 export type RunsOn = 'client' | 'server' | 'any';
 
+/** A host outside the runtime that executes an effect. */
+export type EffectHost = 'program';
+
 export interface OperatorMeta {
   /** Operator category */
   category: OperatorCategory;
@@ -170,6 +173,8 @@ export interface OperatorMeta {
   returnSemantics?: ReturnSemantics;
   /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
   runsOn?: RunsOn;
+  /** The host that executes this effect: `program` = the shared program host (`@almadar/integrations/program` `runProgramEffect`), on both execution paths. Absent for effects the runtime executes itself. */
+  host?: EffectHost;
 }
 
 // ============================================================================

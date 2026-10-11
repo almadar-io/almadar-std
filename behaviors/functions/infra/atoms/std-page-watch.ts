@@ -63,16 +63,16 @@ export interface StdPageWatchItemPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPageWatchConfig {
-  /** Default: `{}` */
-  fields?: Record<string, TraitConfig>;
-  /** Default: `"PageWatch.ITEM_FOUND"` */
-  itemEvent?: string;
   /** Default: `".item"` */
   itemSelector?: string;
-  /** Default: `"https://example.com/*"` */
-  match?: string;
   /** Default: `"main"` */
   statusSlot?: unknown;
+  /** Default: `{}` */
+  fields?: Record<string, TraitConfig>;
+  /** Default: `"https://example.com/*"` */
+  match?: string;
+  /** Default: `"PageWatch.ITEM_FOUND"` */
+  itemEvent?: string;
 }
 
 /**
@@ -203,37 +203,37 @@ export function stdPageWatchPageWatchOrbital(params: StdPageWatchPageWatchOrbita
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
+            'name': 'watchId',
+            'type': 'string',
             'default': '',
             'description': 'Id of the attached watch',
-            'name': 'watchId',
             'synonyms': 'watch id, subscription',
-            'type': 'string',
           },
           {
+            'name': 'found',
+            'type': 'number',
             'default': 0,
             'description': 'How many elements have been reported',
-            'name': 'found',
             'synonyms': 'count, items seen, reported',
-            'type': 'number',
           },
           {
+            'name': 'errorMessage',
+            'type': 'string',
             'default': '',
             'description': 'Why the watch could not be attached; blank = none',
-            'name': 'errorMessage',
             'synonyms': 'error, failure reason',
-            'type': 'string',
           },
           {
-            'default': 'starting',
-            'description': 'Whether the watch is attached',
             'name': 'status',
-            'synonyms': 'state, watching, connected',
             'type': 'string',
+            'default': 'starting',
             'values': [
               'starting',
               'watching',
               'failed',
             ],
+            'description': 'Whether the watch is attached',
+            'synonyms': 'state, watching, connected',
           },
         ];
         const extras = params.fields ?? [];
@@ -244,78 +244,7 @@ export function stdPageWatchPageWatchOrbital(params: StdPageWatchPageWatchOrbita
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
-        'config': {
-          'fields': {
-            'default': {},
-            'description': 'Field name to how to read it from each element: `selector` (a descendant; absent reads the element itself), `attr` (an attribute; absent reads the text) , `resolve` (the value is a URL: return it absolute), `template` (compose the value from other fields, `{name}` per field; empty when any is empty) and `required` (leave the element out until this field reads non-empty — a placeholder is reported once it fills in)',
-            'items': {
-              'properties': {
-                'attr': {
-                  'name': 'attr',
-                  'required': false,
-                  'type': 'string',
-                },
-                'required': {
-                  'name': 'required',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'resolve': {
-                  'name': 'resolve',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'selector': {
-                  'name': 'selector',
-                  'required': false,
-                  'type': 'string',
-                },
-                'template': {
-                  'name': 'template',
-                  'required': false,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Fields',
-            'synonyms': 'columns, properties, extract, read',
-            'tier': 'domain',
-            'type': 'Map<string,PageField>',
-          },
-          'itemEvent': {
-            'default': 'PageWatch.ITEM_FOUND',
-            'description': 'The declared input each element arrives as; it follows the trait when a composer renames it',
-            'label': 'Item input',
-            'tier': 'internal',
-            'type': 'event',
-          },
-          'itemSelector': {
-            'default': '.item',
-            'description': 'CSS selector of the elements to report',
-            'label': 'Item selector',
-            'synonyms': 'selector, element, card, tile, row',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'match': {
-            'default': 'https://example.com/*',
-            'description': 'URL match pattern of the tabs to watch, in Chrome match-pattern syntax (`<scheme>://<host>/<path>` with `*` wildcards)',
-            'label': 'Pages',
-            'synonyms': 'site, url pattern, pages, domain',
-            'tier': 'domain',
-            'type': 'string',
-          },
-          'statusSlot': {
-            'default': 'main',
-            'description': 'Where the atom shows its one-line status; an organism running it in the background sends it to `system`',
-            'label': 'Status slot',
-            'synonyms': 'status area, slot',
-            'tier': 'presentation',
-            'type': 'slot',
-          },
-        },
+        'name': 'PageWatch',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -327,8 +256,8 @@ export function stdPageWatchPageWatchOrbital(params: StdPageWatchPageWatchOrbita
           },
           {
             'kind': 'render-ui',
-            'resolved': false,
             'resource': '@config.statusSlot',
+            'resolved': false,
           },
           {
             'kind': 'set',
@@ -347,175 +276,177 @@ export function stdPageWatchPageWatchOrbital(params: StdPageWatchPageWatchOrbita
             'resource': '@entity.watchId',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'PageWatchRecord',
         'emits': [
           {
-            'description': 'The watch is attached',
             'event': 'WATCHING',
+            'description': 'The watch is attached',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'watchId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'The watch could not be attached (no page service, or no access to the pages)',
             'event': 'WATCH_FAILED',
+            'description': 'The watch could not be attached (no page service, or no access to the pages)',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
           {
-            'description': 'One matching element, reported once, with the fields read from it',
             'event': 'ITEM',
+            'description': 'One matching element, reported once, with the fields read from it',
+            'synonyms': 'element found, item seen, new item',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'tab',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'elementId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'url',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'fields',
                 'type': 'Map<string,string>',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'element found, item seen, new item',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'PageWatchRecord',
-        'name': 'PageWatch',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'active',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'The watch is attached',
               'key': 'WATCHING',
               'name': 'Watching',
+              'description': 'The watch is attached',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'watchId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'The watch could not be attached (no page service, or no access to the pages)',
               'key': 'WATCH_FAILED',
               'name': 'Watch Failed',
+              'description': 'The watch could not be attached (no page service, or no access to the pages)',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'One matching element, delivered by the page service',
-              'external': true,
               'key': 'ITEM_FOUND',
               'name': 'Item Found',
+              'description': 'One matching element, delivered by the page service',
               'payloadSchema': [
                 {
                   'name': 'tab',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'elementId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'url',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'fields',
                   'type': 'Map<string,string>',
                 },
               ],
+              'external': true,
             },
             {
-              'description': 'One matching element, reported once, with the fields read from it',
               'key': 'ITEM',
               'name': 'Item',
+              'description': 'One matching element, reported once, with the fields read from it',
+              'synonyms': 'element found, item seen, new item',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'tab',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'elementId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'url',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'fields',
                   'type': 'Map<string,string>',
                 },
               ],
-              'synonyms': 'element found, item seen, new item',
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'active',
             },
           ],
           'transitions': [
             {
+              'from': 'active',
+              'to': 'active',
+              'event': 'INIT',
               'effects': [
                 [
                   'call-service',
                   'page',
                   'watch',
                   {
-                    'event': '@config.itemEvent',
+                    'selector': '@config.itemSelector',
                     'fields': '@config.fields',
                     'match': '@config.match',
-                    'selector': '@config.itemSelector',
+                    'event': '@config.itemEvent',
                   },
                   {
                     'emit': {
-                      'failure': 'WATCH_FAILED',
                       'success': 'WATCHING',
+                      'failure': 'WATCH_FAILED',
                     },
                   },
                 ],
@@ -523,18 +454,18 @@ export function stdPageWatchPageWatchOrbital(params: StdPageWatchPageWatchOrbita
                   'render-ui',
                   '@config.statusSlot',
                   {
-                    'content': 'Connecting to the pages…',
-                    'role': 'status',
                     'type': 'typography',
+                    'role': 'status',
+                    'content': 'Connecting to the pages…',
                     'variant': 'body',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'active',
-              'to': 'active',
             },
             {
+              'from': 'active',
+              'to': 'active',
+              'event': 'WATCHING',
               'effects': [
                 [
                   'set',
@@ -550,22 +481,22 @@ export function stdPageWatchPageWatchOrbital(params: StdPageWatchPageWatchOrbita
                   'render-ui',
                   '@config.statusSlot',
                   {
+                    'variant': 'body',
+                    'type': 'typography',
+                    'role': 'status',
                     'content': [
                       'str/concat',
                       'Watching ',
                       '@config.match',
                     ],
-                    'role': 'status',
-                    'type': 'typography',
-                    'variant': 'body',
                   },
                 ],
               ],
-              'event': 'WATCHING',
-              'from': 'active',
-              'to': 'active',
             },
             {
+              'from': 'active',
+              'to': 'active',
+              'event': 'WATCH_FAILED',
               'effects': [
                 [
                   'set',
@@ -581,22 +512,22 @@ export function stdPageWatchPageWatchOrbital(params: StdPageWatchPageWatchOrbita
                   'render-ui',
                   '@config.statusSlot',
                   {
+                    'variant': 'body',
+                    'role': 'status',
+                    'type': 'typography',
                     'content': [
                       'str/concat',
                       'Can\'t watch these pages: ',
                       '@payload.error',
                     ],
-                    'role': 'status',
-                    'type': 'typography',
-                    'variant': 'body',
                   },
                 ],
               ],
-              'event': 'WATCH_FAILED',
-              'from': 'active',
-              'to': 'active',
             },
             {
+              'from': 'active',
+              'to': 'active',
+              'event': 'ITEM_FOUND',
               'effects': [
                 [
                   'set',
@@ -611,19 +542,88 @@ export function stdPageWatchPageWatchOrbital(params: StdPageWatchPageWatchOrbita
                   'emit',
                   'ITEM',
                   {
-                    'elementId': '@payload.elementId',
-                    'fields': '@payload.fields',
                     'tab': '@payload.tab',
+                    'fields': '@payload.fields',
+                    'elementId': '@payload.elementId',
                     'url': '@payload.url',
                   },
                 ],
               ],
-              'event': 'ITEM_FOUND',
-              'from': 'active',
-              'to': 'active',
             },
           ],
         },
+        'config': {
+          'itemSelector': {
+            'type': 'string',
+            'default': '.item',
+            'label': 'Item selector',
+            'description': 'CSS selector of the elements to report',
+            'synonyms': 'selector, element, card, tile, row',
+            'tier': 'domain',
+          },
+          'statusSlot': {
+            'type': 'slot',
+            'default': 'main',
+            'label': 'Status slot',
+            'description': 'Where the atom shows its one-line status; an organism running it in the background sends it to `system`',
+            'synonyms': 'status area, slot',
+            'tier': 'presentation',
+          },
+          'fields': {
+            'type': 'Map<string,PageField>',
+            'default': {},
+            'label': 'Fields',
+            'description': 'Field name to how to read it from each element: `selector` (a descendant; absent reads the element itself), `attr` (an attribute; absent reads the text) , `resolve` (the value is a URL: return it absolute), `template` (compose the value from other fields, `{name}` per field; empty when any is empty) and `required` (leave the element out until this field reads non-empty — a placeholder is reported once it fills in)',
+            'synonyms': 'columns, properties, extract, read',
+            'tier': 'domain',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'resolve': {
+                  'name': 'resolve',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'template': {
+                  'name': 'template',
+                  'type': 'string',
+                  'required': false,
+                },
+                'selector': {
+                  'name': 'selector',
+                  'type': 'string',
+                  'required': false,
+                },
+                'required': {
+                  'name': 'required',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'attr': {
+                  'name': 'attr',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'match': {
+            'type': 'string',
+            'default': 'https://example.com/*',
+            'label': 'Pages',
+            'description': 'URL match pattern of the tabs to watch, in Chrome match-pattern syntax (`<scheme>://<host>/<path>` with `*` wildcards)',
+            'synonyms': 'site, url pattern, pages, domain',
+            'tier': 'domain',
+          },
+          'itemEvent': {
+            'type': 'event',
+            'default': 'PageWatch.ITEM_FOUND',
+            'label': 'Item input',
+            'description': 'The declared input each element arrives as; it follows the trait when a composer renames it',
+            'tier': 'internal',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

@@ -31,16 +31,16 @@ const ALIAS = 'Import';
  * without modifying its state-machine topology.
  */
 export interface StdImportConfig {
-  /** Default: `"OPEN_IMPORT"` */
-  action?: unknown;
   /** Default: `"upload"` */
   icon?: unknown;
+  /** Default: `"ghost"` */
+  variant?: unknown;
+  /** Default: `"OPEN_IMPORT"` */
+  action?: unknown;
   /** Default: `"@config.buttonLabel"` */
   label?: unknown;
   /** Default: `"sm"` */
   size?: unknown;
-  /** Default: `"ghost"` */
-  variant?: unknown;
 }
 
 /**

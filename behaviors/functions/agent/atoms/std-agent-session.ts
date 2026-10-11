@@ -165,47 +165,47 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it.',
             'name': 'ownerId',
-            'required': true,
-            'synonyms': 'user, owner, account',
             'type': 'string',
+            'required': true,
+            'description': 'Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it.',
+            'synonyms': 'user, owner, account',
           },
           {
-            'default': 'user',
-            'description': 'Who said it.',
             'name': 'role',
-            'synonyms': 'speaker, author',
             'type': 'string',
+            'default': 'user',
             'values': [
               'user',
               'assistant',
             ],
+            'description': 'Who said it.',
+            'synonyms': 'speaker, author',
           },
           {
-            'description': 'What was said.',
             'name': 'content',
-            'required': true,
-            'synonyms': 'text, message, body',
             'type': 'string',
+            'required': true,
+            'description': 'What was said.',
+            'synonyms': 'text, message, body',
           },
           {
+            'name': 'createdAt',
+            'type': 'number',
             'default': 0,
             'description': 'When it was said (ms).',
-            'name': 'createdAt',
             'synonyms': 'time, timestamp',
-            'type': 'number',
           },
           {
+            'name': 'chatId',
+            'type': 'string',
             'default': '',
             'description': 'The conversation this message belongs to (an AgentChat id).',
-            'name': 'chatId',
             'synonyms': 'conversation, thread, session',
-            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -216,264 +216,19 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
     } as Entity,
     auxiliaryEntities: [
       {
+        'name': 'AgentConversationView',
+        'persistence': 'runtime',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'entries',
+            'type': 'array',
             'default': [],
-            'description': 'The conversation as shown: messages with the assistant\'s steps between them.',
             'items': {
-              'properties': {
-                'AgentErrorEntry': {
-                  'name': 'AgentErrorEntry',
-                  'properties': {
-                    'message': {
-                      'name': 'message',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'error',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'AgentLlmResponseActivity': {
-                  'name': 'AgentLlmResponseActivity',
-                  'properties': {
-                    'content': {
-                      'name': 'content',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'llm': {
-                      'name': 'llm',
-                      'properties': {
-                        'attempt': {
-                          'name': 'attempt',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'cachedPromptTokens': {
-                          'name': 'cachedPromptTokens',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'completionTokens': {
-                          'name': 'completionTokens',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'costUSD': {
-                          'name': 'costUSD',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'durationMs': {
-                          'name': 'durationMs',
-                          'required': true,
-                          'type': 'number',
-                        },
-                        'model': {
-                          'name': 'model',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'promptTokens': {
-                          'name': 'promptTokens',
-                          'required': false,
-                          'type': 'number',
-                        },
-                        'provider': {
-                          'name': 'provider',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'service': {
-                          'name': 'service',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'systemPrompt': {
-                          'name': 'systemPrompt',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'toolCallsJson': {
-                          'name': 'toolCallsJson',
-                          'required': false,
-                          'type': 'string',
-                        },
-                        'userPrompt': {
-                          'name': 'userPrompt',
-                          'required': true,
-                          'type': 'string',
-                        },
-                      },
-                      'required': false,
-                      'type': 'object',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'llm_response',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'AgentMessageEntry': {
-                  'name': 'AgentMessageEntry',
-                  'properties': {
-                    'content': {
-                      'name': 'content',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'user',
-                        'assistant',
-                      ],
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'message',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'AgentToolCallActivity': {
-                  'name': 'AgentToolCallActivity',
-                  'properties': {
-                    'argsText': {
-                      'name': 'argsText',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'isExecuting': {
-                      'name': 'isExecuting',
-                      'required': false,
-                      'type': 'boolean',
-                    },
-                    'kind': {
-                      'name': 'kind',
-                      'required': false,
-                      'type': 'string',
-                      'values': [
-                        'input',
-                        'read',
-                        'invalid',
-                      ],
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'tool': {
-                      'name': 'tool',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'tool_call',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'AgentToolResultActivity': {
-                  'name': 'AgentToolResultActivity',
-                  'properties': {
-                    'detail': {
-                      'name': 'detail',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'kind': {
-                      'name': 'kind',
-                      'required': false,
-                      'type': 'string',
-                      'values': [
-                        'input',
-                        'read',
-                        'invalid',
-                      ],
-                    },
-                    'resultText': {
-                      'name': 'resultText',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'rows': {
-                      'name': 'rows',
-                      'required': false,
-                      'type': 'number',
-                    },
-                    'success': {
-                      'name': 'success',
-                      'required': true,
-                      'type': 'boolean',
-                    },
-                    'timestamp': {
-                      'name': 'timestamp',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'tool': {
-                      'name': 'tool',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': true,
-                      'type': 'string',
-                      'values': [
-                        'tool_result',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-              },
               'type': 'union',
               'values': [
                 'AgentMessageEntry',
@@ -482,100 +237,350 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                 'AgentLlmResponseActivity',
                 'AgentErrorEntry',
               ],
-            },
-            'name': 'entries',
-            'type': 'array',
-          },
-          {
-            'default': false,
-            'description': 'The assistant is answering.',
-            'name': 'working',
-            'type': 'boolean',
-          },
-          {
-            'default': '',
-            'description': 'The ephemeral conversation\'s own instructions (empty: the assistant\'s configured ones).',
-            'name': 'chatInstructions',
-            'type': 'string',
-          },
-          {
-            'default': [],
-            'description': 'The ephemeral conversation\'s own tools (empty: none).',
-            'items': {
               'properties': {
-                'AgentToolInput': {
-                  'name': 'AgentToolInput',
-                  'properties': {
-                    'event': {
-                      'name': 'event',
-                      'required': true,
-                      'type': 'EventAddress',
-                    },
-                  },
+                'AgentToolCallActivity': {
+                  'name': 'AgentToolCallActivity',
                   'type': 'object',
-                },
-                'AgentToolRead': {
-                  'name': 'AgentToolRead',
                   'properties': {
-                    'read': {
-                      'name': 'read',
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
                       'required': true,
-                      'type': 'string',
                     },
-                  },
-                  'type': 'object',
-                },
-                'AgentToolScope': {
-                  'name': 'AgentToolScope',
-                  'properties': {
-                    'scope': {
-                      'name': 'scope',
-                      'required': true,
+                    'type': {
+                      'name': 'type',
                       'type': 'string',
+                      'required': true,
                       'values': [
-                        'declared',
+                        'tool_call',
+                      ],
+                    },
+                    'kind': {
+                      'name': 'kind',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'input',
+                        'read',
+                        'invalid',
+                      ],
+                    },
+                    'isExecuting': {
+                      'name': 'isExecuting',
+                      'type': 'boolean',
+                      'required': false,
+                    },
+                    'argsText': {
+                      'name': 'argsText',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'tool': {
+                      'name': 'tool',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+                'AgentMessageEntry': {
+                  'name': 'AgentMessageEntry',
+                  'type': 'object',
+                  'properties': {
+                    'role': {
+                      'name': 'role',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'message',
                       ],
                     },
                   },
+                },
+                'AgentErrorEntry': {
+                  'name': 'AgentErrorEntry',
                   'type': 'object',
+                  'properties': {
+                    'message': {
+                      'name': 'message',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'error',
+                      ],
+                    },
+                  },
+                },
+                'AgentToolResultActivity': {
+                  'name': 'AgentToolResultActivity',
+                  'type': 'object',
+                  'properties': {
+                    'kind': {
+                      'name': 'kind',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'input',
+                        'read',
+                        'invalid',
+                      ],
+                    },
+                    'detail': {
+                      'name': 'detail',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'rows': {
+                      'name': 'rows',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'resultText': {
+                      'name': 'resultText',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'tool_result',
+                      ],
+                    },
+                    'tool': {
+                      'name': 'tool',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'success': {
+                      'name': 'success',
+                      'type': 'boolean',
+                      'required': true,
+                    },
+                  },
+                },
+                'AgentLlmResponseActivity': {
+                  'name': 'AgentLlmResponseActivity',
+                  'type': 'object',
+                  'properties': {
+                    'llm': {
+                      'name': 'llm',
+                      'type': 'object',
+                      'required': false,
+                      'properties': {
+                        'systemPrompt': {
+                          'name': 'systemPrompt',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'model': {
+                          'name': 'model',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'completionTokens': {
+                          'name': 'completionTokens',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'service': {
+                          'name': 'service',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'cachedPromptTokens': {
+                          'name': 'cachedPromptTokens',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'promptTokens': {
+                          'name': 'promptTokens',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'toolCallsJson': {
+                          'name': 'toolCallsJson',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'provider': {
+                          'name': 'provider',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'attempt': {
+                          'name': 'attempt',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'durationMs': {
+                          'name': 'durationMs',
+                          'type': 'number',
+                          'required': true,
+                        },
+                        'costUSD': {
+                          'name': 'costUSD',
+                          'type': 'number',
+                          'required': false,
+                        },
+                        'userPrompt': {
+                          'name': 'userPrompt',
+                          'type': 'string',
+                          'required': true,
+                        },
+                      },
+                    },
+                    'content': {
+                      'name': 'content',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'timestamp': {
+                      'name': 'timestamp',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'llm_response',
+                      ],
+                    },
+                  },
                 },
               },
+            },
+            'description': 'The conversation as shown: messages with the assistant\'s steps between them.',
+          },
+          {
+            'name': 'working',
+            'type': 'boolean',
+            'default': false,
+            'description': 'The assistant is answering.',
+          },
+          {
+            'name': 'chatInstructions',
+            'type': 'string',
+            'default': '',
+            'description': 'The ephemeral conversation\'s own instructions (empty: the assistant\'s configured ones).',
+          },
+          {
+            'name': 'chatTools',
+            'type': 'array',
+            'default': [],
+            'items': {
               'type': 'union',
               'values': [
                 'AgentToolScope',
                 'AgentToolInput',
                 'AgentToolRead',
               ],
+              'properties': {
+                'AgentToolScope': {
+                  'name': 'AgentToolScope',
+                  'type': 'object',
+                  'properties': {
+                    'scope': {
+                      'name': 'scope',
+                      'type': 'string',
+                      'required': true,
+                      'values': [
+                        'declared',
+                      ],
+                    },
+                  },
+                },
+                'AgentToolInput': {
+                  'name': 'AgentToolInput',
+                  'type': 'object',
+                  'properties': {
+                    'event': {
+                      'name': 'event',
+                      'type': 'EventAddress',
+                      'required': true,
+                    },
+                  },
+                },
+                'AgentToolRead': {
+                  'name': 'AgentToolRead',
+                  'type': 'object',
+                  'properties': {
+                    'read': {
+                      'name': 'read',
+                      'type': 'string',
+                      'required': true,
+                    },
+                  },
+                },
+              },
             },
-            'name': 'chatTools',
-            'type': 'array',
+            'description': 'The ephemeral conversation\'s own tools (empty: none).',
           },
           {
-            'default': '',
-            'description': 'The ephemeral conversation\'s header title.',
             'name': 'chatTitle',
             'type': 'string',
+            'default': '',
+            'description': 'The ephemeral conversation\'s header title.',
           },
           {
-            'default': '',
-            'description': 'The ephemeral conversation\'s header subtitle.',
             'name': 'chatSubtitle',
             'type': 'string',
+            'default': '',
+            'description': 'The ephemeral conversation\'s header subtitle.',
           },
           {
-            'default': '',
-            'description': 'The ephemeral conversation\'s header avatar image.',
             'name': 'chatAvatar',
             'type': 'string',
+            'default': '',
+            'description': 'The ephemeral conversation\'s header avatar image.',
           },
         ],
-        'name': 'AgentConversationView',
-        'persistence': 'runtime',
       },
     ] as EntityRef[],
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'AgentThread',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
+        },
         'effectRow': [
           {
             'kind': 'emit',
@@ -602,74 +607,86 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
             'resource': 'toast',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'AgentMessage',
         'emits': [
           {
-            'description': 'The conversation could not be loaded or a message could not be stored.',
             'event': 'ASSISTANT_THREAD_FAILED',
+            'description': 'The conversation could not be loaded or a message could not be stored.',
+            'synonyms': 'failed, error',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'failed, error',
-            'tier': 'domain',
           },
           {
-            'description': 'The current conversation to answer, oldest first; the last turn is the request.',
             'event': 'CONVERSE',
+            'description': 'The current conversation to answer, oldest first; the last turn is the request.',
+            'synonyms': 'ask, converse, request',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'AgentChatMessage',
                 'name': 'messages',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'role',
-                    'required': true,
                     'type': 'string',
+                    'values': [
+                      'user',
+                      'assistant',
+                    ],
+                    'required': true,
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'AgentChatMessage',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'ask, converse, request',
-            'tier': 'domain',
           },
           {
-            'description': 'The current conversation\'s messages finished loading (empty for a new conversation).',
             'event': 'AgentMessagesLoaded',
+            'description': 'The current conversation\'s messages finished loading (empty for a new conversation).',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'AgentMessage',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'role',
                     'type': 'string',
+                    'values': [
+                      'user',
+                      'assistant',
+                    ],
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'createdAt',
@@ -680,15 +697,15 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentMessage',
               },
             ],
-            'scope': 'external',
-            'tier': 'internal',
           },
           {
-            'description': 'The conversation could not be loaded.',
             'event': 'AgentMessagesLoadFailed',
+            'description': 'The conversation could not be loaded.',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -699,34 +716,38 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'internal',
           },
           {
             'event': 'AgentConversationLoaded',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AgentMessage',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'role',
                     'type': 'string',
+                    'values': [
+                      'user',
+                      'assistant',
+                    ],
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'createdAt',
@@ -737,35 +758,38 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentMessage',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
-            'description': 'A message persisted — payload is the created AgentMessage row itself.',
             'event': 'AgentMessageSaved',
-            'payloadEntity': 'AgentMessage',
+            'description': 'A message persisted — payload is the created AgentMessage row itself.',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'ownerId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'role',
                 'type': 'string',
+                'values': [
+                  'user',
+                  'assistant',
+                ],
               },
               {
                 'name': 'content',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'createdAt',
@@ -776,12 +800,13 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
+            'payloadEntity': 'AgentMessage',
           },
           {
-            'description': 'The message could not be stored.',
             'event': 'AgentMessageSaveFailed',
+            'description': 'The message could not be stored.',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -792,51 +817,47 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentMessage',
         'listens': [
           {
             'event': 'ASSISTANT_CHAT_OPENED',
+            'triggers': 'OPEN_CHAT',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'OPEN_CHAT',
           },
           {
             'event': 'ASSISTANT_SEND_IN_CHAT',
+            'triggers': 'SEND_IN_CHAT',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'SEND_IN_CHAT',
           },
           {
             'event': 'ASSISTANT_REPLY_IN_CHAT',
+            'triggers': 'REPLY_IN_CHAT',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'REPLY_IN_CHAT',
           },
         ],
-        'name': 'AgentThread',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Load a conversation\'s messages (none for a new one).',
               'key': 'OPEN_CHAT',
               'name': 'Open Chat',
+              'description': 'Load a conversation\'s messages (none for a new one).',
               'payloadSchema': [
                 {
                   'name': 'chatId',
@@ -845,47 +866,51 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               ],
             },
             {
-              'description': 'Store the user\'s message in this conversation and ask the assistant.',
               'key': 'SEND_IN_CHAT',
               'name': 'Send In Chat',
+              'description': 'Store the user\'s message in this conversation and ask the assistant.',
+              'synonyms': 'ask, message, chat',
               'payloadSchema': [
                 {
                   'name': 'chatId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'message',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'ask, message, chat',
             },
             {
-              'description': 'A message persisted — payload is the created AgentMessage row itself.',
               'key': 'AgentMessageSaved',
               'name': 'AgentMessage saved',
-              'payloadEntity': 'AgentMessage',
+              'description': 'A message persisted — payload is the created AgentMessage row itself.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ownerId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'role',
                   'type': 'string',
+                  'values': [
+                    'user',
+                    'assistant',
+                  ],
                 },
                 {
                   'name': 'content',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'createdAt',
@@ -896,34 +921,39 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
+              'payloadEntity': 'AgentMessage',
             },
             {
               'key': 'AgentConversationLoaded',
               'name': 'Agent conversation loaded',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentMessage',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'role',
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'createdAt',
@@ -934,15 +964,14 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentMessage',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'Store the assistant\'s answer in this conversation.',
               'key': 'REPLY_IN_CHAT',
               'name': 'Reply In Chat',
+              'description': 'Store the assistant\'s answer in this conversation.',
               'payloadSchema': [
                 {
                   'name': 'chatId',
@@ -950,15 +979,16 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                 },
                 {
                   'name': 'reply',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
             {
-              'description': 'The conversation could not be loaded.',
               'key': 'AgentMessagesLoadFailed',
               'name': 'AgentMessage s load failed',
+              'description': 'The conversation could not be loaded.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -969,12 +999,12 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The message could not be stored.',
               'key': 'AgentMessageSaveFailed',
               'name': 'AgentMessage save failed',
+              'description': 'The message could not be stored.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -985,76 +1015,84 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The conversation could not be loaded or a message could not be stored.',
               'key': 'ASSISTANT_THREAD_FAILED',
               'name': 'Assistant Thread Failed',
+              'description': 'The conversation could not be loaded or a message could not be stored.',
+              'synonyms': 'failed, error',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'failed, error',
-              'tier': 'domain',
             },
             {
-              'description': 'The current conversation to answer, oldest first; the last turn is the request.',
               'key': 'CONVERSE',
               'name': 'Converse',
+              'description': 'The current conversation to answer, oldest first; the last turn is the request.',
+              'synonyms': 'ask, converse, request',
+              'tier': 'domain',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChatMessage',
                   'name': 'messages',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'role',
-                      'required': true,
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'AgentChatMessage',
                 },
               ],
-              'synonyms': 'ask, converse, request',
-              'tier': 'domain',
             },
             {
-              'description': 'The current conversation\'s messages finished loading (empty for a new conversation).',
               'key': 'AgentMessagesLoaded',
               'name': 'AgentMessage s loaded',
+              'description': 'The current conversation\'s messages finished loading (empty for a new conversation).',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentMessage',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'role',
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'createdAt',
@@ -1065,36 +1103,21 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentMessage',
                 },
               ],
-              'tier': 'internal',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
             },
           ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'ready',
               'to': 'ready',
+              'event': 'INIT',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'AgentMessagesLoaded',
-                  {
-                    'data': [],
-                  },
-                ],
-              ],
-              'event': 'OPEN_CHAT',
               'from': 'ready',
+              'to': 'ready',
+              'event': 'OPEN_CHAT',
               'guard': [
                 '=',
                 [
@@ -1104,9 +1127,32 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                 ],
                 '',
               ],
-              'to': 'ready',
+              'effects': [
+                [
+                  'emit',
+                  'AgentMessagesLoaded',
+                  {
+                    'data': [],
+                  },
+                ],
+              ],
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'OPEN_CHAT',
+              'guard': [
+                'not',
+                [
+                  '=',
+                  [
+                    'str/default',
+                    '@payload.chatId',
+                    '',
+                  ],
+                  '',
+                ],
+              ],
               'effects': [
                 [
                   'fetch',
@@ -1128,45 +1174,11 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   },
                 ],
               ],
-              'event': 'OPEN_CHAT',
-              'from': 'ready',
-              'guard': [
-                'not',
-                [
-                  '=',
-                  [
-                    'str/default',
-                    '@payload.chatId',
-                    '',
-                  ],
-                  '',
-                ],
-              ],
-              'to': 'ready',
             },
             {
-              'effects': [
-                [
-                  'persist',
-                  'create',
-                  ('AgentMessage' satisfies _StdAgentSessionEntityName),
-                  {
-                    'chatId': '@payload.chatId',
-                    'content': '@payload.message',
-                    'createdAt': '@now',
-                    'ownerId': '@user.id',
-                    'role': 'user',
-                  },
-                  {
-                    'emit': {
-                      'failure': 'AgentMessageSaveFailed',
-                      'success': 'AgentMessageSaved',
-                    },
-                  },
-                ],
-              ],
-              'event': 'SEND_IN_CHAT',
               'from': 'ready',
+              'to': 'ready',
+              'event': 'SEND_IN_CHAT',
               'guard': [
                 'not',
                 [
@@ -1179,18 +1191,36 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   '',
                 ],
               ],
-              'to': 'ready',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('AgentMessage' satisfies _StdAgentSessionEntityName),
+                  {
+                    'chatId': '@payload.chatId',
+                    'ownerId': '@user.id',
+                    'content': '@payload.message',
+                    'createdAt': '@now',
+                    'role': 'user',
+                  },
+                  {
+                    'emit': {
+                      'success': 'AgentMessageSaved',
+                      'failure': 'AgentMessageSaveFailed',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'AgentMessageSaved',
               'effects': [
                 [
                   'fetch',
                   ('AgentMessage' satisfies _StdAgentSessionEntityName),
                   {
-                    'emit': {
-                      'failure': 'AgentMessagesLoadFailed',
-                      'success': 'AgentConversationLoaded',
-                    },
                     'filter': [
                       '=',
                       [
@@ -1200,14 +1230,18 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                       ],
                       '@payload.chatId',
                     ],
+                    'emit': {
+                      'success': 'AgentConversationLoaded',
+                      'failure': 'AgentMessagesLoadFailed',
+                    },
                   },
                 ],
               ],
-              'event': 'AgentMessageSaved',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'AgentConversationLoaded',
               'effects': [
                 [
                   'emit',
@@ -1225,61 +1259,38 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                         'fn',
                         'item',
                         {
-                          'content': '@item.content',
                           'role': '@item.role',
+                          'content': '@item.content',
                         },
                       ],
                     ],
                   },
                 ],
               ],
-              'event': 'AgentConversationLoaded',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'REPLY_IN_CHAT',
               'effects': [
                 [
                   'persist',
                   'create',
                   ('AgentMessage' satisfies _StdAgentSessionEntityName),
                   {
-                    'chatId': '@payload.chatId',
-                    'content': '@payload.reply',
-                    'createdAt': '@now',
                     'ownerId': '@user.id',
+                    'content': '@payload.reply',
+                    'chatId': '@payload.chatId',
+                    'createdAt': '@now',
                     'role': 'assistant',
                   },
                 ],
               ],
-              'event': 'REPLY_IN_CHAT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
-              'effects': [
-                [
-                  'emit',
-                  'ASSISTANT_THREAD_FAILED',
-                  {
-                    'error': '@payload.error',
-                  },
-                ],
-                [
-                  'render-ui',
-                  'toast',
-                  {
-                    'message': '@payload.error',
-                    'type': 'alert',
-                    'variant': 'error',
-                  },
-                ],
-              ],
+              'from': 'ready',
+              'to': 'ready',
               'event': 'AgentMessagesLoadFailed',
-              'from': 'ready',
-              'to': 'ready',
-            },
-            {
               'effects': [
                 [
                   'emit',
@@ -1298,108 +1309,48 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   },
                 ],
               ],
-              'event': 'AgentMessageSaveFailed',
+            },
+            {
               'from': 'ready',
               'to': 'ready',
+              'event': 'AgentMessageSaveFailed',
+              'effects': [
+                [
+                  'emit',
+                  'ASSISTANT_THREAD_FAILED',
+                  {
+                    'error': '@payload.error',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'interaction',
-        'config': {
-          'backLabel': {
-            'default': 'Back',
-            'label': 'Back to the conversation',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'chatsEmptyTitle': {
-            'default': 'No conversations yet',
-            'label': 'Empty conversation list',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'chatsLabel': {
-            'default': 'Conversations',
-            'description': 'Shows the person\'s past conversations in place of the chat; picking one reopens it.',
-            'label': 'Past conversations button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'emptyTitle': {
-            'default': 'Ask me to do something in this app',
-            'label': 'Empty conversation title',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'ephemeral': {
-            'default': false,
-            'description': 'A self-contained conversation: it runs under the instructions, tools, greeting and header the app starts it with (ASSISTANT_CHAT_START), is never stored among the person\'s conversations or remembered, shows no conversation, past-chat or memory buttons, and ignores the assistant\'s own replies.',
-            'label': 'Ephemeral conversation?',
-            'synonyms': 'private, one-off, scoped chat, own persona, not saved',
-            'tier': 'domain',
-            'type': 'boolean',
-          },
-          'links': {
-            'default': [
-              {
-                'href': '/agent-session/chats',
-                'label': 'All conversations',
-              },
-            ],
-            'description': 'Related pages (e.g. the run history).',
-            'items': {
-              'properties': {
-                'href': {
-                  'name': 'href',
-                  'required': true,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': true,
-                  'type': 'string',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Links above the conversation',
-            'tier': 'presentation',
-            'type': '[AgentLink]',
-          },
-          'memoryEmptyTitle': {
-            'default': 'Nothing remembered yet',
-            'label': 'Empty memory list',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'memoryLabel': {
-            'default': 'What I remember',
-            'description': 'Shows what the assistant remembers for this person in place of the chat.',
-            'label': 'Memory button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'newChatLabel': {
-            'default': 'New conversation',
-            'description': 'Starts a fresh conversation; earlier ones stay in the conversation list.',
-            'label': 'New conversation button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'placeholder': {
-            'default': 'Ask the assistant…',
-            'label': 'Message placeholder',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'untitledLabel': {
-            'default': 'New conversation',
-            'label': 'Title of a conversation with no messages yet',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'AgentConversation',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'chatAvatar',
+            'chatInstructions',
+            'chatSubtitle',
+            'chatTitle',
+            'chatTools',
+            'entries',
+            'working',
+          ],
         },
         'effectRow': [
           {
@@ -1463,48 +1414,57 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
             'resource': '@entity.working',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AgentConversationView',
         'emits': [
           {
-            'description': 'This conversation view opened; the assistant thread loads the current conversation into it.',
             'event': 'ASSISTANT_HISTORY_REQUESTED',
-            'scope': 'external',
+            'description': 'This conversation view opened; the assistant thread loads the current conversation into it.',
             'synonyms': 'load history, restore conversation',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
-            'description': 'The user started a new conversation.',
             'event': 'ASSISTANT_NEW_CHAT',
-            'scope': 'external',
+            'description': 'The user started a new conversation.',
             'synonyms': 'new chat, new conversation, start over',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
-            'description': 'Start a new conversation.',
             'event': 'NEW_CHAT_CLICKED',
+            'description': 'Start a new conversation.',
             'synonyms': 'new chat, start over, clear',
             'tier': 'presentation',
           },
           {
-            'description': 'An ephemeral conversation asked something: the whole conversation so far (greeting included), and its own `instructions` and `tools`. Nothing is stored or remembered; the assistant answers under exactly these.',
             'event': 'ASSISTANT_EPHEMERAL_SEND',
+            'description': 'An ephemeral conversation asked something: the whole conversation so far (greeting included), and its own `instructions` and `tools`. Nothing is stored or remembered; the assistant answers under exactly these.',
+            'synonyms': 'ask privately, scoped ask',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'AgentChatMessage',
                 'name': 'messages',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'role',
-                    'required': true,
                     'type': 'string',
+                    'values': [
+                      'user',
+                      'assistant',
+                    ],
+                    'required': true,
                   },
                   {
                     'name': 'content',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'AgentChatMessage',
               },
               {
                 'name': 'instructions',
@@ -1516,82 +1476,81 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               },
               {
                 'name': 'ephemeral',
-                'required': true,
                 'type': 'boolean',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'ask privately, scoped ask',
-            'tier': 'domain',
           },
           {
-            'description': 'The user asked something; AgentThread stores it and asks the assistant.',
             'event': 'ASSISTANT_SEND',
+            'description': 'The user asked something; AgentThread stores it and asks the assistant.',
+            'synonyms': 'ask, send, submit',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'message',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'ask, send, submit',
-            'tier': 'domain',
           },
           {
-            'description': 'The user opened the conversation list; the conversation keeper sends the person\'s conversations.',
             'event': 'ASSISTANT_CHATS_REQUESTED',
-            'scope': 'external',
+            'description': 'The user opened the conversation list; the conversation keeper sends the person\'s conversations.',
             'synonyms': 'conversations, history, past chats',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
-            'description': 'The user picked a past conversation to reopen.',
             'event': 'ASSISTANT_CHAT_SELECTED',
+            'description': 'The user picked a past conversation to reopen.',
+            'synonyms': 'open conversation, reopen chat',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'chatId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'open conversation, reopen chat',
-            'tier': 'domain',
           },
           {
-            'description': 'The user opened what the assistant remembers; the assistant\'s memory sends it.',
             'event': 'ASSISTANT_MEMORIES_REQUESTED',
-            'scope': 'external',
+            'description': 'The user opened what the assistant remembers; the assistant\'s memory sends it.',
             'synonyms': 'memories, what I remember',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
-            'description': 'Show past conversations.',
             'event': 'OPEN_CHATS_CLICKED',
+            'description': 'Show past conversations.',
             'tier': 'presentation',
           },
           {
-            'description': 'Show what the assistant remembers.',
             'event': 'OPEN_MEMORY_CLICKED',
+            'description': 'Show what the assistant remembers.',
             'tier': 'presentation',
           },
           {
-            'description': 'Reopen the picked conversation.',
             'event': 'CHAT_PICKED',
+            'description': 'Reopen the picked conversation.',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'row',
+                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'title',
@@ -1602,150 +1561,143 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                     'type': 'number',
                   },
                 ],
-                'type': 'object',
               },
             ],
-            'tier': 'presentation',
           },
           {
-            'description': 'Send the typed message.',
             'event': 'ASK',
+            'description': 'Send the typed message.',
+            'synonyms': 'send, ask, submit',
+            'tier': 'presentation',
             'payloadSchema': [
               {
                 'name': 'message',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'synonyms': 'send, ask, submit',
-            'tier': 'presentation',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'chatAvatar',
-            'chatInstructions',
-            'chatSubtitle',
-            'chatTitle',
-            'chatTools',
-            'entries',
-            'working',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentConversationView',
         'listens': [
           {
             'event': 'AgentMessagesLoaded',
+            'triggers': 'THREAD_LOADED',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'THREAD_LOADED',
           },
           {
             'event': 'ASSISTANT_THREAD_FAILED',
+            'triggers': 'REPLY_FAILED',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'REPLY_FAILED',
           },
           {
             'event': 'ASSISTANT_STEP',
+            'triggers': 'STEP',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'STEP',
           },
           {
             'event': 'ASSISTANT_REPLIED',
+            'triggers': 'REPLIED',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'REPLIED',
           },
           {
             'event': 'ASSISTANT_REPLY_FAILED',
+            'triggers': 'REPLY_FAILED',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'REPLY_FAILED',
           },
           {
             'event': 'ASSISTANT_CHATS_LOADED',
+            'triggers': 'CHATS_LISTED',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'CHATS_LISTED',
           },
           {
             'event': 'ASSISTANT_MEMORIES_LOADED',
+            'triggers': 'MEMORIES_LISTED',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'MEMORIES_LISTED',
           },
           {
             'event': 'ASSISTANT_CHAT_START',
+            'triggers': 'START_CHAT',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'START_CHAT',
           },
         ],
-        'name': 'AgentConversation',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Show the stored conversation.',
               'key': 'THREAD_LOADED',
               'name': 'Thread Loaded',
+              'description': 'Show the stored conversation.',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'role',
-                      'required': true,
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'createdAt',
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
             },
             {
-              'description': 'Send the typed message.',
               'key': 'ASK',
               'name': 'Ask',
+              'description': 'Send the typed message.',
+              'synonyms': 'send, ask, submit',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'message',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'send, ask, submit',
-              'tier': 'presentation',
             },
             {
-              'description': 'Start an ephemeral conversation (only on an AgentConversation whose `ephemeral` knob is on): it opens with `greeting` as the assistant\'s first message under a header of `title`, `subtitle` and `avatar` (an image URL), and every ask runs under `instructions` (empty: the assistant\'s configured ones) and exactly `tools` (absent or `[]`: none). Ignored while it is answering.',
               'key': 'START_CHAT',
               'name': 'Start Chat',
+              'description': 'Start an ephemeral conversation (only on an AgentConversation whose `ephemeral` knob is on): it opens with `greeting` as the assistant\'s first message under a header of `title`, `subtitle` and `avatar` (an image URL), and every ask runs under `instructions` (empty: the assistant\'s configured ones) and exactly `tools` (absent or `[]`: none). Ignored while it is answering.',
+              'synonyms': 'open private chat, begin scoped conversation',
               'payloadSchema': [
                 {
                   'name': 'greeting',
@@ -1772,30 +1724,29 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'type': 'string',
                 },
               ],
-              'synonyms': 'open private chat, begin scoped conversation',
             },
             {
-              'description': 'One step the assistant just took, shown as it happens.',
               'key': 'STEP',
               'name': 'Step',
+              'description': 'One step the assistant just took, shown as it happens.',
+              'synonyms': 'progress, activity, working',
               'payloadSchema': [
                 {
                   'name': 'activity',
-                  'required': true,
                   'type': 'AgentActivity',
+                  'required': true,
                 },
               ],
-              'synonyms': 'progress, activity, working',
             },
             {
-              'description': 'The assistant answered.',
               'key': 'REPLIED',
               'name': 'Replied',
+              'description': 'The assistant answered.',
               'payloadSchema': [
                 {
                   'name': 'reply',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ephemeral',
@@ -1804,30 +1755,31 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               ],
             },
             {
-              'description': 'Start a new conversation.',
               'key': 'NEW_CHAT_CLICKED',
               'name': 'New Chat Clicked',
+              'description': 'Start a new conversation.',
               'synonyms': 'new chat, start over, clear',
               'tier': 'presentation',
             },
             {
-              'description': 'Show past conversations.',
               'key': 'OPEN_CHATS_CLICKED',
               'name': 'Open Chats Clicked',
+              'description': 'Show past conversations.',
               'tier': 'presentation',
             },
             {
-              'description': 'Show the person\'s conversations to pick from.',
               'key': 'CHATS_LISTED',
               'name': 'Chats Listed',
+              'description': 'Show the person\'s conversations to pick from.',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'title',
@@ -1838,27 +1790,28 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
             },
             {
-              'description': 'Reopen the picked conversation.',
               'key': 'CHAT_PICKED',
               'name': 'Chat Picked',
+              'description': 'Reopen the picked conversation.',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'title',
@@ -1869,58 +1822,56 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                       'type': 'number',
                     },
                   ],
-                  'type': 'object',
                 },
               ],
-              'tier': 'presentation',
             },
             {
-              'description': 'Show what the assistant remembers.',
               'key': 'OPEN_MEMORY_CLICKED',
               'name': 'Open Memory Clicked',
+              'description': 'Show what the assistant remembers.',
               'tier': 'presentation',
             },
             {
-              'description': 'Show what the assistant remembers.',
               'key': 'MEMORIES_LISTED',
               'name': 'Memories Listed',
+              'description': 'Show what the assistant remembers.',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'createdAt',
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
             },
             {
-              'description': 'Back to the conversation.',
               'key': 'BACK_TO_CHAT',
               'name': 'Back To Chat',
+              'description': 'Back to the conversation.',
             },
             {
-              'description': 'The assistant could not answer.',
               'key': 'REPLY_FAILED',
               'name': 'Reply Failed',
+              'description': 'The assistant could not answer.',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ephemeral',
@@ -1929,41 +1880,47 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               ],
             },
             {
-              'description': 'This conversation view opened; the assistant thread loads the current conversation into it.',
               'key': 'ASSISTANT_HISTORY_REQUESTED',
               'name': 'Assistant History Requested',
+              'description': 'This conversation view opened; the assistant thread loads the current conversation into it.',
               'synonyms': 'load history, restore conversation',
               'tier': 'domain',
             },
             {
-              'description': 'The user started a new conversation.',
               'key': 'ASSISTANT_NEW_CHAT',
               'name': 'Assistant New Chat',
+              'description': 'The user started a new conversation.',
               'synonyms': 'new chat, new conversation, start over',
               'tier': 'domain',
             },
             {
-              'description': 'An ephemeral conversation asked something: the whole conversation so far (greeting included), and its own `instructions` and `tools`. Nothing is stored or remembered; the assistant answers under exactly these.',
               'key': 'ASSISTANT_EPHEMERAL_SEND',
               'name': 'Assistant Ephemeral Send',
+              'description': 'An ephemeral conversation asked something: the whole conversation so far (greeting included), and its own `instructions` and `tools`. Nothing is stored or remembered; the assistant answers under exactly these.',
+              'synonyms': 'ask privately, scoped ask',
+              'tier': 'domain',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChatMessage',
                   'name': 'messages',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'role',
-                      'required': true,
                       'type': 'string',
+                      'values': [
+                        'user',
+                        'assistant',
+                      ],
+                      'required': true,
                     },
                     {
                       'name': 'content',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'AgentChatMessage',
                 },
                 {
                   'name': 'instructions',
@@ -1975,64 +1932,63 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                 },
                 {
                   'name': 'ephemeral',
-                  'required': true,
                   'type': 'boolean',
+                  'required': true,
                 },
               ],
-              'synonyms': 'ask privately, scoped ask',
-              'tier': 'domain',
             },
             {
-              'description': 'The user asked something; AgentThread stores it and asks the assistant.',
               'key': 'ASSISTANT_SEND',
               'name': 'Assistant Send',
+              'description': 'The user asked something; AgentThread stores it and asks the assistant.',
+              'synonyms': 'ask, send, submit',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'message',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'ask, send, submit',
-              'tier': 'domain',
             },
             {
-              'description': 'The user opened the conversation list; the conversation keeper sends the person\'s conversations.',
               'key': 'ASSISTANT_CHATS_REQUESTED',
               'name': 'Assistant Chats Requested',
+              'description': 'The user opened the conversation list; the conversation keeper sends the person\'s conversations.',
               'synonyms': 'conversations, history, past chats',
               'tier': 'domain',
             },
             {
-              'description': 'The user picked a past conversation to reopen.',
               'key': 'ASSISTANT_CHAT_SELECTED',
               'name': 'Assistant Chat Selected',
+              'description': 'The user picked a past conversation to reopen.',
+              'synonyms': 'open conversation, reopen chat',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'chatId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'open conversation, reopen chat',
-              'tier': 'domain',
             },
             {
-              'description': 'The user opened what the assistant remembers; the assistant\'s memory sends it.',
               'key': 'ASSISTANT_MEMORIES_REQUESTED',
               'name': 'Assistant Memories Requested',
+              'description': 'The user opened what the assistant remembers; the assistant\'s memory sends it.',
               'synonyms': 'memories, what I remember',
               'tier': 'domain',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-          ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': [
+                'not',
+                '@config.ephemeral',
+              ],
               'effects': [
                 [
                   'emit',
@@ -2043,14 +1999,25 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'render-ui',
                   'main',
                   {
+                    'className': 'h-full min-h-0 flex-1',
                     'children': [
                       [
                         'if',
                         '@config.ephemeral',
                         {
+                          'type': 'stack',
                           'align': 'center',
                           'children': [
                             {
+                              'size': 'md',
+                              'type': 'avatar',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
                               'className': [
                                 'if',
                                 [
@@ -2061,22 +2028,13 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 'hidden',
                                 '',
                               ],
-                              'name': '@entity.chatTitle',
-                              'size': 'md',
-                              'src': [
-                                'object/get',
-                                '@entity',
-                                'chatAvatar',
-                                '',
-                              ],
-                              'type': 'avatar',
                             },
                             {
                               'children': [
                                 {
                                   'content': '@entity.chatTitle',
-                                  'type': 'typography',
                                   'variant': 'h4',
+                                  'type': 'typography',
                                 },
                                 {
                                   'content': '@entity.chatSubtitle',
@@ -2085,45 +2043,47 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 },
                               ],
                               'direction': 'vertical',
-                              'gap': 'none',
                               'type': 'stack',
+                              'gap': 'none',
                             },
                           ],
                           'className': 'shrink-0',
-                          'direction': 'horizontal',
                           'gap': 'sm',
-                          'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
-                          'align': 'center',
                           'children': [
                             {
-                              'action': 'NEW_CHAT_CLICKED',
-                              'aria-label': '@config.newChatLabel',
-                              'icon': 'message-square-plus',
-                              'label': '@config.newChatLabel',
-                              'size': 'sm',
                               'type': 'button',
+                              'size': 'sm',
+                              'action': 'NEW_CHAT_CLICKED',
+                              'icon': 'message-square-plus',
                               'variant': 'secondary',
+                              'aria-label': '@config.newChatLabel',
+                              'label': '@config.newChatLabel',
                             },
                             {
+                              'type': 'stack',
+                              'gap': 'none',
+                              'direction': 'horizontal',
+                              'className': 'shrink-0',
                               'align': 'center',
                               'children': [
                                 {
-                                  'action': 'OPEN_CHATS_CLICKED',
-                                  'aria-label': '@config.chatsLabel',
-                                  'label': '@config.chatsLabel',
-                                  'size': 'sm',
-                                  'type': 'button',
                                   'variant': 'ghost',
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'label': '@config.chatsLabel',
+                                  'type': 'button',
+                                  'size': 'sm',
+                                  'aria-label': '@config.chatsLabel',
                                 },
                                 {
                                   'action': 'OPEN_MEMORY_CLICKED',
-                                  'aria-label': '@config.memoryLabel',
-                                  'label': '@config.memoryLabel',
-                                  'size': 'sm',
                                   'type': 'button',
+                                  'label': '@config.memoryLabel',
+                                  'aria-label': '@config.memoryLabel',
                                   'variant': 'ghost',
+                                  'size': 'sm',
                                 },
                                 {
                                   'children': [
@@ -2134,76 +2094,77 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'item',
                                       {
                                         'href': '@item.href',
-                                        'label': '@item.label',
-                                        'size': 'sm',
                                         'type': 'button',
                                         'variant': 'ghost',
+                                        'size': 'sm',
+                                        'label': '@item.label',
                                       },
                                     ],
                                   ],
-                                  'direction': 'horizontal',
-                                  'gap': 'xs',
                                   'type': 'stack',
+                                  'gap': 'xs',
+                                  'direction': 'horizontal',
                                 },
                               ],
-                              'className': 'shrink-0',
-                              'direction': 'horizontal',
-                              'gap': 'none',
-                              'type': 'stack',
                             },
                           ],
                           'className': 'shrink-0',
                           'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'between',
                           'type': 'stack',
                           'wrap': true,
+                          'gap': 'sm',
+                          'justify': 'between',
+                          'align': 'center',
                         },
                       ],
                       {
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
+                        'type': 'agent-chat-feed',
+                        'idPrefix': 'agent-conversation',
                         'activities': '@entity.entries',
                         'className': 'flex-1',
                         'emptyTitle': '@config.emptyTitle',
-                        'idPrefix': 'agent-conversation',
-                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
-                        'type': 'agent-chat-feed',
                         'working': '@entity.working',
                       },
                       {
-                        'placeholder': '@config.placeholder',
-                        'sendEvent': 'ASK',
                         'type': 'chat-bar',
+                        'sendEvent': 'ASK',
+                        'placeholder': '@config.placeholder',
                       },
                     ],
-                    'className': 'h-full min-h-0 flex-1',
                     'direction': 'vertical',
                     'gap': 'sm',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'guard': [
-                'not',
-                '@config.ephemeral',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'guard': '@config.ephemeral',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       [
                         'if',
                         '@config.ephemeral',
                         {
-                          'align': 'center',
                           'children': [
                             {
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
                               'className': [
                                 'if',
                                 [
@@ -2214,50 +2175,42 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 'hidden',
                                 '',
                               ],
-                              'name': '@entity.chatTitle',
-                              'size': 'md',
-                              'src': [
-                                'object/get',
-                                '@entity',
-                                'chatAvatar',
-                                '',
-                              ],
                               'type': 'avatar',
                             },
                             {
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'gap': 'none',
                               'children': [
                                 {
+                                  'variant': 'h4',
                                   'content': '@entity.chatTitle',
                                   'type': 'typography',
-                                  'variant': 'h4',
                                 },
                                 {
-                                  'content': '@entity.chatSubtitle',
                                   'type': 'typography',
+                                  'content': '@entity.chatSubtitle',
                                   'variant': 'caption',
                                 },
                               ],
-                              'direction': 'vertical',
-                              'gap': 'none',
-                              'type': 'stack',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'direction': 'horizontal',
+                          'className': 'shrink-0',
+                          'gap': 'sm',
+                          'align': 'center',
                         },
                         {
-                          'align': 'center',
                           'children': [
                             {
-                              'action': 'NEW_CHAT_CLICKED',
-                              'aria-label': '@config.newChatLabel',
-                              'icon': 'message-square-plus',
-                              'label': '@config.newChatLabel',
                               'size': 'sm',
                               'type': 'button',
+                              'label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'aria-label': '@config.newChatLabel',
                               'variant': 'secondary',
+                              'action': 'NEW_CHAT_CLICKED',
                             },
                             {
                               'align': 'center',
@@ -2265,20 +2218,23 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 {
                                   'action': 'OPEN_CHATS_CLICKED',
                                   'aria-label': '@config.chatsLabel',
-                                  'label': '@config.chatsLabel',
-                                  'size': 'sm',
                                   'type': 'button',
+                                  'size': 'sm',
+                                  'label': '@config.chatsLabel',
                                   'variant': 'ghost',
                                 },
                                 {
+                                  'variant': 'ghost',
+                                  'label': '@config.memoryLabel',
                                   'action': 'OPEN_MEMORY_CLICKED',
                                   'aria-label': '@config.memoryLabel',
-                                  'label': '@config.memoryLabel',
                                   'size': 'sm',
                                   'type': 'button',
-                                  'variant': 'ghost',
                                 },
                                 {
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'children': [
                                     'array/map',
                                     '@config.links',
@@ -2286,61 +2242,61 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'fn',
                                       'item',
                                       {
-                                        'href': '@item.href',
                                         'label': '@item.label',
-                                        'size': 'sm',
                                         'type': 'button',
                                         'variant': 'ghost',
+                                        'href': '@item.href',
+                                        'size': 'sm',
                                       },
                                     ],
                                   ],
-                                  'direction': 'horizontal',
-                                  'gap': 'xs',
-                                  'type': 'stack',
                                 },
                               ],
-                              'className': 'shrink-0',
                               'direction': 'horizontal',
-                              'gap': 'none',
                               'type': 'stack',
+                              'gap': 'none',
+                              'className': 'shrink-0',
                             },
                           ],
                           'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'justify': 'between',
                           'type': 'stack',
+                          'align': 'center',
                           'wrap': true,
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                         },
                       ],
                       {
-                        'activities': '@entity.entries',
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                         'className': 'flex-1',
+                        'activities': '@entity.entries',
+                        'working': '@entity.working',
                         'emptyTitle': '@config.emptyTitle',
                         'idPrefix': 'agent-conversation',
-                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                         'type': 'agent-chat-feed',
-                        'working': '@entity.working',
                       },
                       {
+                        'type': 'chat-bar',
                         'placeholder': '@config.placeholder',
                         'sendEvent': 'ASK',
-                        'type': 'chat-bar',
                       },
                     ],
                     'className': 'h-full min-h-0 flex-1',
-                    'direction': 'vertical',
                     'gap': 'sm',
-                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'guard': '@config.ephemeral',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'THREAD_LOADED',
+              'guard': [
+                'not',
+                '@config.ephemeral',
+              ],
               'effects': [
                 [
                   'set',
@@ -2357,10 +2313,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                       'fn',
                       'item',
                       {
-                        'content': '@item.content',
-                        'role': '@item.role',
                         'timestamp': '@item.createdAt',
+                        'role': '@item.role',
                         'type': 'message',
+                        'content': '@item.content',
                       },
                     ],
                   ],
@@ -2369,14 +2325,25 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'render-ui',
                   'main',
                   {
+                    'gap': 'sm',
+                    'type': 'stack',
                     'children': [
                       [
                         'if',
                         '@config.ephemeral',
                         {
-                          'align': 'center',
+                          'gap': 'sm',
                           'children': [
                             {
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
                               'className': [
                                 'if',
                                 [
@@ -2387,69 +2354,60 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 'hidden',
                                 '',
                               ],
-                              'name': '@entity.chatTitle',
-                              'size': 'md',
-                              'src': [
-                                'object/get',
-                                '@entity',
-                                'chatAvatar',
-                                '',
-                              ],
-                              'type': 'avatar',
                             },
                             {
                               'children': [
                                 {
-                                  'content': '@entity.chatTitle',
                                   'type': 'typography',
+                                  'content': '@entity.chatTitle',
                                   'variant': 'h4',
                                 },
                                 {
-                                  'content': '@entity.chatSubtitle',
-                                  'type': 'typography',
                                   'variant': 'caption',
+                                  'type': 'typography',
+                                  'content': '@entity.chatSubtitle',
                                 },
                               ],
-                              'direction': 'vertical',
-                              'gap': 'none',
                               'type': 'stack',
+                              'gap': 'none',
+                              'direction': 'vertical',
                             },
                           ],
-                          'className': 'shrink-0',
                           'direction': 'horizontal',
-                          'gap': 'sm',
+                          'align': 'center',
                           'type': 'stack',
+                          'className': 'shrink-0',
                         },
                         {
-                          'align': 'center',
+                          'gap': 'sm',
                           'children': [
                             {
-                              'action': 'NEW_CHAT_CLICKED',
-                              'aria-label': '@config.newChatLabel',
+                              'type': 'button',
                               'icon': 'message-square-plus',
                               'label': '@config.newChatLabel',
                               'size': 'sm',
-                              'type': 'button',
+                              'aria-label': '@config.newChatLabel',
                               'variant': 'secondary',
+                              'action': 'NEW_CHAT_CLICKED',
                             },
                             {
                               'align': 'center',
                               'children': [
                                 {
-                                  'action': 'OPEN_CHATS_CLICKED',
                                   'aria-label': '@config.chatsLabel',
-                                  'label': '@config.chatsLabel',
                                   'size': 'sm',
+                                  'label': '@config.chatsLabel',
+                                  'action': 'OPEN_CHATS_CLICKED',
                                   'type': 'button',
                                   'variant': 'ghost',
                                 },
                                 {
-                                  'action': 'OPEN_MEMORY_CLICKED',
-                                  'aria-label': '@config.memoryLabel',
                                   'label': '@config.memoryLabel',
-                                  'size': 'sm',
                                   'type': 'button',
+                                  'size': 'sm',
                                   'variant': 'ghost',
+                                  'aria-label': '@config.memoryLabel',
+                                  'action': 'OPEN_MEMORY_CLICKED',
                                 },
                                 {
                                   'children': [
@@ -2460,10 +2418,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'item',
                                       {
                                         'href': '@item.href',
+                                        'variant': 'ghost',
+                                        'type': 'button',
                                         'label': '@item.label',
                                         'size': 'sm',
-                                        'type': 'button',
-                                        'variant': 'ghost',
                                       },
                                     ],
                                   ],
@@ -2479,21 +2437,21 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                             },
                           ],
                           'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'between',
-                          'type': 'stack',
                           'wrap': true,
+                          'type': 'stack',
+                          'align': 'center',
+                          'justify': 'between',
+                          'direction': 'horizontal',
                         },
                       ],
                       {
-                        'activities': '@entity.entries',
-                        'className': 'flex-1',
                         'emptyTitle': '@config.emptyTitle',
-                        'idPrefix': 'agent-conversation',
+                        'activities': '@entity.entries',
                         'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                         'type': 'agent-chat-feed',
                         'working': '@entity.working',
+                        'idPrefix': 'agent-conversation',
+                        'className': 'flex-1',
                       },
                       {
                         'placeholder': '@config.placeholder',
@@ -2503,192 +2461,14 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                     ],
                     'className': 'h-full min-h-0 flex-1',
                     'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'THREAD_LOADED',
-              'from': 'idle',
-              'guard': [
-                'not',
-                '@config.ephemeral',
-              ],
-              'to': 'idle',
             },
             {
-              'effects': [
-                [
-                  'set',
-                  '@entity.entries',
-                  [
-                    'array/append',
-                    '@entity.entries',
-                    {
-                      'content': '@payload.message',
-                      'role': 'user',
-                      'timestamp': '@now',
-                      'type': 'message',
-                    },
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.working',
-                  true,
-                ],
-                [
-                  'emit',
-                  'ASSISTANT_SEND',
-                  {
-                    'message': '@payload.message',
-                  },
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'children': [
-                      [
-                        'if',
-                        '@config.ephemeral',
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'className': [
-                                'if',
-                                [
-                                  '=',
-                                  '@entity.chatAvatar',
-                                  '',
-                                ],
-                                'hidden',
-                                '',
-                              ],
-                              'name': '@entity.chatTitle',
-                              'size': 'md',
-                              'src': [
-                                'object/get',
-                                '@entity',
-                                'chatAvatar',
-                                '',
-                              ],
-                              'type': 'avatar',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'content': '@entity.chatTitle',
-                                  'type': 'typography',
-                                  'variant': 'h4',
-                                },
-                                {
-                                  'content': '@entity.chatSubtitle',
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                },
-                              ],
-                              'direction': 'vertical',
-                              'gap': 'none',
-                              'type': 'stack',
-                            },
-                          ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
-                        },
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'action': 'NEW_CHAT_CLICKED',
-                              'aria-label': '@config.newChatLabel',
-                              'icon': 'message-square-plus',
-                              'label': '@config.newChatLabel',
-                              'size': 'sm',
-                              'type': 'button',
-                              'variant': 'secondary',
-                            },
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'action': 'OPEN_CHATS_CLICKED',
-                                  'aria-label': '@config.chatsLabel',
-                                  'label': '@config.chatsLabel',
-                                  'size': 'sm',
-                                  'type': 'button',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'action': 'OPEN_MEMORY_CLICKED',
-                                  'aria-label': '@config.memoryLabel',
-                                  'label': '@config.memoryLabel',
-                                  'size': 'sm',
-                                  'type': 'button',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'children': [
-                                    'array/map',
-                                    '@config.links',
-                                    [
-                                      'fn',
-                                      'item',
-                                      {
-                                        'href': '@item.href',
-                                        'label': '@item.label',
-                                        'size': 'sm',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                  ],
-                                  'direction': 'horizontal',
-                                  'gap': 'xs',
-                                  'type': 'stack',
-                                },
-                              ],
-                              'className': 'shrink-0',
-                              'direction': 'horizontal',
-                              'gap': 'none',
-                              'type': 'stack',
-                            },
-                          ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'between',
-                          'type': 'stack',
-                          'wrap': true,
-                        },
-                      ],
-                      {
-                        'activities': '@entity.entries',
-                        'className': 'flex-1',
-                        'emptyTitle': '@config.emptyTitle',
-                        'idPrefix': 'agent-conversation',
-                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
-                        'type': 'agent-chat-feed',
-                        'working': '@entity.working',
-                      },
-                      {
-                        'placeholder': '@config.placeholder',
-                        'sendEvent': 'ASK',
-                        'type': 'chat-bar',
-                      },
-                    ],
-                    'className': 'h-full min-h-0 flex-1',
-                    'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
-                  },
-                ],
-              ],
-              'event': 'ASK',
               'from': 'idle',
+              'to': 'idle',
+              'event': 'ASK',
               'guard': [
                 'and',
                 [
@@ -2712,9 +2492,201 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   ],
                 ],
               ],
-              'to': 'idle',
+              'effects': [
+                [
+                  'set',
+                  '@entity.entries',
+                  [
+                    'array/append',
+                    '@entity.entries',
+                    {
+                      'timestamp': '@now',
+                      'type': 'message',
+                      'role': 'user',
+                      'content': '@payload.message',
+                    },
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.working',
+                  true,
+                ],
+                [
+                  'emit',
+                  'ASSISTANT_SEND',
+                  {
+                    'message': '@payload.message',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'className': 'h-full min-h-0 flex-1',
+                    'type': 'stack',
+                    'gap': 'sm',
+                    'children': [
+                      [
+                        'if',
+                        '@config.ephemeral',
+                        {
+                          'className': 'shrink-0',
+                          'children': [
+                            {
+                              'name': '@entity.chatTitle',
+                              'className': [
+                                'if',
+                                [
+                                  '=',
+                                  '@entity.chatAvatar',
+                                  '',
+                                ],
+                                'hidden',
+                                '',
+                              ],
+                              'type': 'avatar',
+                              'size': 'md',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                            },
+                            {
+                              'children': [
+                                {
+                                  'content': '@entity.chatTitle',
+                                  'variant': 'h4',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': '@entity.chatSubtitle',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'none',
+                              'direction': 'vertical',
+                            },
+                          ],
+                          'align': 'center',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'gap': 'sm',
+                          'align': 'center',
+                          'type': 'stack',
+                          'wrap': true,
+                          'direction': 'horizontal',
+                          'justify': 'between',
+                          'children': [
+                            {
+                              'icon': 'message-square-plus',
+                              'size': 'sm',
+                              'action': 'NEW_CHAT_CLICKED',
+                              'variant': 'secondary',
+                              'aria-label': '@config.newChatLabel',
+                              'label': '@config.newChatLabel',
+                              'type': 'button',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'size': 'sm',
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'variant': 'ghost',
+                                  'type': 'button',
+                                  'aria-label': '@config.chatsLabel',
+                                  'label': '@config.chatsLabel',
+                                },
+                                {
+                                  'type': 'button',
+                                  'size': 'sm',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
+                                  'variant': 'ghost',
+                                  'action': 'OPEN_MEMORY_CLICKED',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    'array/map',
+                                    '@config.links',
+                                    [
+                                      'fn',
+                                      'item',
+                                      {
+                                        'label': '@item.label',
+                                        'size': 'sm',
+                                        'type': 'button',
+                                        'href': '@item.href',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                  ],
+                                  'gap': 'xs',
+                                },
+                              ],
+                              'gap': 'none',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'className': 'shrink-0',
+                            },
+                          ],
+                          'className': 'shrink-0',
+                        },
+                      ],
+                      {
+                        'emptyTitle': '@config.emptyTitle',
+                        'working': '@entity.working',
+                        'type': 'agent-chat-feed',
+                        'idPrefix': 'agent-conversation',
+                        'className': 'flex-1',
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
+                        'activities': '@entity.entries',
+                      },
+                      {
+                        'placeholder': '@config.placeholder',
+                        'sendEvent': 'ASK',
+                        'type': 'chat-bar',
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ASK',
+              'guard': [
+                'and',
+                '@config.ephemeral',
+                [
+                  'not',
+                  '@entity.working',
+                ],
+                [
+                  'not',
+                  [
+                    '=',
+                    [
+                      'str/default',
+                      '@payload.message',
+                      '',
+                    ],
+                    '',
+                  ],
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -2724,9 +2696,9 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                     '@entity.entries',
                     {
                       'content': '@payload.message',
+                      'type': 'message',
                       'role': 'user',
                       'timestamp': '@now',
-                      'type': 'message',
                     },
                   ],
                 ],
@@ -2739,8 +2711,8 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'emit',
                   'ASSISTANT_EPHEMERAL_SEND',
                   {
-                    'ephemeral': true,
                     'instructions': '@entity.chatInstructions',
+                    'ephemeral': true,
                     'messages': [
                       'array/map',
                       [
@@ -2772,14 +2744,28 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       [
                         'if',
                         '@config.ephemeral',
                         {
+                          'className': 'shrink-0',
+                          'type': 'stack',
                           'align': 'center',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                           'children': [
                             {
+                              'type': 'avatar',
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
                               'className': [
                                 'if',
                                 [
@@ -2790,22 +2776,15 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 'hidden',
                                 '',
                               ],
-                              'name': '@entity.chatTitle',
-                              'size': 'md',
-                              'src': [
-                                'object/get',
-                                '@entity',
-                                'chatAvatar',
-                                '',
-                              ],
-                              'type': 'avatar',
                             },
                             {
+                              'direction': 'vertical',
+                              'gap': 'none',
                               'children': [
                                 {
                                   'content': '@entity.chatTitle',
-                                  'type': 'typography',
                                   'variant': 'h4',
+                                  'type': 'typography',
                                 },
                                 {
                                   'content': '@entity.chatSubtitle',
@@ -2813,48 +2792,50 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                   'variant': 'caption',
                                 },
                               ],
-                              'direction': 'vertical',
-                              'gap': 'none',
                               'type': 'stack',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
-                          'align': 'center',
+                          'direction': 'horizontal',
+                          'className': 'shrink-0',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'wrap': true,
                           'children': [
                             {
-                              'action': 'NEW_CHAT_CLICKED',
-                              'aria-label': '@config.newChatLabel',
-                              'icon': 'message-square-plus',
-                              'label': '@config.newChatLabel',
-                              'size': 'sm',
-                              'type': 'button',
                               'variant': 'secondary',
+                              'action': 'NEW_CHAT_CLICKED',
+                              'type': 'button',
+                              'icon': 'message-square-plus',
+                              'aria-label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'label': '@config.newChatLabel',
                             },
                             {
                               'align': 'center',
+                              'type': 'stack',
+                              'gap': 'none',
+                              'className': 'shrink-0',
                               'children': [
                                 {
-                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'variant': 'ghost',
+                                  'type': 'button',
                                   'aria-label': '@config.chatsLabel',
                                   'label': '@config.chatsLabel',
+                                  'action': 'OPEN_CHATS_CLICKED',
                                   'size': 'sm',
-                                  'type': 'button',
-                                  'variant': 'ghost',
                                 },
                                 {
-                                  'action': 'OPEN_MEMORY_CLICKED',
+                                  'type': 'button',
+                                  'size': 'sm',
                                   'aria-label': '@config.memoryLabel',
                                   'label': '@config.memoryLabel',
-                                  'size': 'sm',
-                                  'type': 'button',
+                                  'action': 'OPEN_MEMORY_CLICKED',
                                   'variant': 'ghost',
                                 },
                                 {
+                                  'gap': 'xs',
                                   'children': [
                                     'array/map',
                                     '@config.links',
@@ -2862,57 +2843,51 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'fn',
                                       'item',
                                       {
-                                        'href': '@item.href',
-                                        'label': '@item.label',
                                         'size': 'sm',
+                                        'label': '@item.label',
+                                        'href': '@item.href',
                                         'type': 'button',
                                         'variant': 'ghost',
                                       },
                                     ],
                                   ],
-                                  'direction': 'horizontal',
-                                  'gap': 'xs',
                                   'type': 'stack',
+                                  'direction': 'horizontal',
                                 },
                               ],
-                              'className': 'shrink-0',
                               'direction': 'horizontal',
-                              'gap': 'none',
-                              'type': 'stack',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
+                          'align': 'center',
                           'justify': 'between',
-                          'type': 'stack',
-                          'wrap': true,
                         },
                       ],
                       {
+                        'working': '@entity.working',
                         'activities': '@entity.entries',
                         'className': 'flex-1',
                         'emptyTitle': '@config.emptyTitle',
-                        'idPrefix': 'agent-conversation',
                         'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                         'type': 'agent-chat-feed',
-                        'working': '@entity.working',
+                        'idPrefix': 'agent-conversation',
                       },
                       {
                         'placeholder': '@config.placeholder',
-                        'sendEvent': 'ASK',
                         'type': 'chat-bar',
+                        'sendEvent': 'ASK',
                       },
                     ],
-                    'className': 'h-full min-h-0 flex-1',
-                    'direction': 'vertical',
-                    'gap': 'sm',
                     'type': 'stack',
+                    'gap': 'sm',
+                    'className': 'h-full min-h-0 flex-1',
                   },
                 ],
               ],
-              'event': 'ASK',
+            },
+            {
               'from': 'idle',
+              'to': 'idle',
+              'event': 'START_CHAT',
               'guard': [
                 'and',
                 '@config.ephemeral',
@@ -2920,22 +2895,7 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'not',
                   '@entity.working',
                 ],
-                [
-                  'not',
-                  [
-                    '=',
-                    [
-                      'str/default',
-                      '@payload.message',
-                      '',
-                    ],
-                    '',
-                  ],
-                ],
               ],
-              'to': 'idle',
-            },
-            {
               'effects': [
                 [
                   'set',
@@ -2954,10 +2914,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                     [],
                     [
                       {
-                        'content': '@payload.greeting',
                         'role': 'assistant',
-                        'timestamp': '@now',
                         'type': 'message',
+                        'content': '@payload.greeting',
+                        'timestamp': '@now',
                       },
                     ],
                   ],
@@ -3012,14 +2972,20 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'render-ui',
                   'main',
                   {
+                    'gap': 'sm',
                     'children': [
                       [
                         'if',
                         '@config.ephemeral',
                         {
-                          'align': 'center',
                           'children': [
                             {
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
                               'className': [
                                 'if',
                                 [
@@ -3030,71 +2996,72 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 'hidden',
                                 '',
                               ],
-                              'name': '@entity.chatTitle',
                               'size': 'md',
-                              'src': [
-                                'object/get',
-                                '@entity',
-                                'chatAvatar',
-                                '',
-                              ],
+                              'name': '@entity.chatTitle',
                               'type': 'avatar',
                             },
                             {
+                              'direction': 'vertical',
                               'children': [
                                 {
+                                  'variant': 'h4',
                                   'content': '@entity.chatTitle',
                                   'type': 'typography',
-                                  'variant': 'h4',
                                 },
                                 {
                                   'content': '@entity.chatSubtitle',
-                                  'type': 'typography',
                                   'variant': 'caption',
+                                  'type': 'typography',
                                 },
                               ],
-                              'direction': 'vertical',
-                              'gap': 'none',
                               'type': 'stack',
+                              'gap': 'none',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
+                          'align': 'center',
                           'gap': 'sm',
+                          'direction': 'horizontal',
                           'type': 'stack',
+                          'className': 'shrink-0',
                         },
                         {
-                          'align': 'center',
+                          'className': 'shrink-0',
+                          'justify': 'between',
                           'children': [
                             {
                               'action': 'NEW_CHAT_CLICKED',
-                              'aria-label': '@config.newChatLabel',
-                              'icon': 'message-square-plus',
-                              'label': '@config.newChatLabel',
                               'size': 'sm',
                               'type': 'button',
+                              'label': '@config.newChatLabel',
+                              'aria-label': '@config.newChatLabel',
                               'variant': 'secondary',
+                              'icon': 'message-square-plus',
                             },
                             {
                               'align': 'center',
+                              'gap': 'none',
+                              'type': 'stack',
                               'children': [
                                 {
-                                  'action': 'OPEN_CHATS_CLICKED',
-                                  'aria-label': '@config.chatsLabel',
-                                  'label': '@config.chatsLabel',
                                   'size': 'sm',
-                                  'type': 'button',
                                   'variant': 'ghost',
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'type': 'button',
+                                  'label': '@config.chatsLabel',
+                                  'aria-label': '@config.chatsLabel',
                                 },
                                 {
                                   'action': 'OPEN_MEMORY_CLICKED',
-                                  'aria-label': '@config.memoryLabel',
-                                  'label': '@config.memoryLabel',
-                                  'size': 'sm',
-                                  'type': 'button',
                                   'variant': 'ghost',
+                                  'type': 'button',
+                                  'aria-label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'label': '@config.memoryLabel',
                                 },
                                 {
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'children': [
                                     'array/map',
                                     '@config.links',
@@ -3102,68 +3069,57 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'fn',
                                       'item',
                                       {
-                                        'href': '@item.href',
-                                        'label': '@item.label',
-                                        'size': 'sm',
-                                        'type': 'button',
                                         'variant': 'ghost',
+                                        'label': '@item.label',
+                                        'href': '@item.href',
+                                        'type': 'button',
+                                        'size': 'sm',
                                       },
                                     ],
                                   ],
-                                  'direction': 'horizontal',
-                                  'gap': 'xs',
-                                  'type': 'stack',
                                 },
                               ],
                               'className': 'shrink-0',
                               'direction': 'horizontal',
-                              'gap': 'none',
-                              'type': 'stack',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'between',
-                          'type': 'stack',
                           'wrap': true,
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'align': 'center',
                         },
                       ],
                       {
-                        'activities': '@entity.entries',
-                        'className': 'flex-1',
-                        'emptyTitle': '@config.emptyTitle',
-                        'idPrefix': 'agent-conversation',
-                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                         'type': 'agent-chat-feed',
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
+                        'activities': '@entity.entries',
                         'working': '@entity.working',
+                        'idPrefix': 'agent-conversation',
+                        'emptyTitle': '@config.emptyTitle',
+                        'className': 'flex-1',
                       },
                       {
-                        'placeholder': '@config.placeholder',
                         'sendEvent': 'ASK',
                         'type': 'chat-bar',
+                        'placeholder': '@config.placeholder',
                       },
                     ],
+                    'type': 'stack',
                     'className': 'h-full min-h-0 flex-1',
                     'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'START_CHAT',
-              'from': 'idle',
-              'guard': [
-                'and',
-                '@config.ephemeral',
-                [
-                  'not',
-                  '@entity.working',
-                ],
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'STEP',
+              'guard': [
+                'not',
+                '@config.ephemeral',
+              ],
               'effects': [
                 [
                   'set',
@@ -3178,14 +3134,19 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       [
                         'if',
                         '@config.ephemeral',
                         {
                           'align': 'center',
+                          'className': 'shrink-0',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                           'children': [
                             {
+                              'type': 'avatar',
                               'className': [
                                 'if',
                                 [
@@ -3196,71 +3157,73 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 'hidden',
                                 '',
                               ],
-                              'name': '@entity.chatTitle',
                               'size': 'md',
+                              'name': '@entity.chatTitle',
                               'src': [
                                 'object/get',
                                 '@entity',
                                 'chatAvatar',
                                 '',
                               ],
-                              'type': 'avatar',
                             },
                             {
+                              'gap': 'none',
                               'children': [
                                 {
-                                  'content': '@entity.chatTitle',
                                   'type': 'typography',
                                   'variant': 'h4',
+                                  'content': '@entity.chatTitle',
                                 },
                                 {
-                                  'content': '@entity.chatSubtitle',
-                                  'type': 'typography',
                                   'variant': 'caption',
+                                  'type': 'typography',
+                                  'content': '@entity.chatSubtitle',
                                 },
                               ],
                               'direction': 'vertical',
-                              'gap': 'none',
                               'type': 'stack',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
                         },
                         {
-                          'align': 'center',
+                          'type': 'stack',
+                          'wrap': true,
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'action': 'NEW_CHAT_CLICKED',
+                              'variant': 'secondary',
                               'aria-label': '@config.newChatLabel',
-                              'icon': 'message-square-plus',
+                              'type': 'button',
                               'label': '@config.newChatLabel',
                               'size': 'sm',
-                              'type': 'button',
-                              'variant': 'secondary',
+                              'icon': 'message-square-plus',
                             },
                             {
                               'align': 'center',
+                              'className': 'shrink-0',
                               'children': [
                                 {
                                   'action': 'OPEN_CHATS_CLICKED',
+                                  'variant': 'ghost',
                                   'aria-label': '@config.chatsLabel',
                                   'label': '@config.chatsLabel',
-                                  'size': 'sm',
                                   'type': 'button',
-                                  'variant': 'ghost',
+                                  'size': 'sm',
                                 },
                                 {
-                                  'action': 'OPEN_MEMORY_CLICKED',
-                                  'aria-label': '@config.memoryLabel',
                                   'label': '@config.memoryLabel',
-                                  'size': 'sm',
-                                  'type': 'button',
                                   'variant': 'ghost',
+                                  'aria-label': '@config.memoryLabel',
+                                  'type': 'button',
+                                  'size': 'sm',
+                                  'action': 'OPEN_MEMORY_CLICKED',
                                 },
                                 {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'xs',
                                   'children': [
                                     'array/map',
                                     '@config.links',
@@ -3268,64 +3231,63 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'fn',
                                       'item',
                                       {
+                                        'variant': 'ghost',
+                                        'size': 'sm',
                                         'href': '@item.href',
                                         'label': '@item.label',
-                                        'size': 'sm',
                                         'type': 'button',
-                                        'variant': 'ghost',
                                       },
                                     ],
                                   ],
-                                  'direction': 'horizontal',
-                                  'gap': 'xs',
-                                  'type': 'stack',
                                 },
                               ],
-                              'className': 'shrink-0',
                               'direction': 'horizontal',
                               'gap': 'none',
                               'type': 'stack',
                             },
                           ],
+                          'align': 'center',
                           'className': 'shrink-0',
-                          'direction': 'horizontal',
                           'gap': 'sm',
                           'justify': 'between',
-                          'type': 'stack',
-                          'wrap': true,
                         },
                       ],
                       {
-                        'activities': '@entity.entries',
-                        'className': 'flex-1',
-                        'emptyTitle': '@config.emptyTitle',
-                        'idPrefix': 'agent-conversation',
-                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                         'type': 'agent-chat-feed',
+                        'emptyTitle': '@config.emptyTitle',
+                        'className': 'flex-1',
                         'working': '@entity.working',
+                        'idPrefix': 'agent-conversation',
+                        'activities': '@entity.entries',
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                       },
                       {
-                        'placeholder': '@config.placeholder',
-                        'sendEvent': 'ASK',
                         'type': 'chat-bar',
+                        'sendEvent': 'ASK',
+                        'placeholder': '@config.placeholder',
                       },
                     ],
-                    'className': 'h-full min-h-0 flex-1',
-                    'direction': 'vertical',
-                    'gap': 'sm',
                     'type': 'stack',
+                    'className': 'h-full min-h-0 flex-1',
+                    'gap': 'sm',
                   },
                 ],
               ],
-              'event': 'STEP',
-              'from': 'idle',
-              'guard': [
-                'not',
-                '@config.ephemeral',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'REPLIED',
+              'guard': [
+                '=',
+                [
+                  'if',
+                  '@payload.ephemeral',
+                  true,
+                  false,
+                ],
+                '@config.ephemeral',
+              ],
               'effects': [
                 [
                   'set',
@@ -3334,10 +3296,10 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                     'array/append',
                     '@entity.entries',
                     {
-                      'content': '@payload.reply',
                       'role': 'assistant',
-                      'timestamp': '@now',
                       'type': 'message',
+                      'timestamp': '@now',
+                      'content': '@payload.reply',
                     },
                   ],
                 ],
@@ -3350,14 +3312,24 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'render-ui',
                   'main',
                   {
+                    'className': 'h-full min-h-0 flex-1',
+                    'gap': 'sm',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       [
                         'if',
                         '@config.ephemeral',
                         {
-                          'align': 'center',
                           'children': [
                             {
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'size': 'md',
                               'className': [
                                 'if',
                                 [
@@ -3369,70 +3341,70 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 '',
                               ],
                               'name': '@entity.chatTitle',
-                              'size': 'md',
-                              'src': [
-                                'object/get',
-                                '@entity',
-                                'chatAvatar',
-                                '',
-                              ],
                               'type': 'avatar',
                             },
                             {
+                              'direction': 'vertical',
+                              'type': 'stack',
                               'children': [
                                 {
-                                  'content': '@entity.chatTitle',
-                                  'type': 'typography',
                                   'variant': 'h4',
+                                  'type': 'typography',
+                                  'content': '@entity.chatTitle',
                                 },
                                 {
-                                  'content': '@entity.chatSubtitle',
                                   'type': 'typography',
                                   'variant': 'caption',
+                                  'content': '@entity.chatSubtitle',
                                 },
                               ],
-                              'direction': 'vertical',
                               'gap': 'none',
-                              'type': 'stack',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
                           'gap': 'sm',
+                          'className': 'shrink-0',
+                          'align': 'center',
                           'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
-                          'align': 'center',
+                          'direction': 'horizontal',
+                          'className': 'shrink-0',
+                          'gap': 'sm',
+                          'wrap': true,
+                          'justify': 'between',
+                          'type': 'stack',
                           'children': [
                             {
-                              'action': 'NEW_CHAT_CLICKED',
-                              'aria-label': '@config.newChatLabel',
                               'icon': 'message-square-plus',
+                              'aria-label': '@config.newChatLabel',
                               'label': '@config.newChatLabel',
+                              'variant': 'secondary',
                               'size': 'sm',
                               'type': 'button',
-                              'variant': 'secondary',
+                              'action': 'NEW_CHAT_CLICKED',
                             },
                             {
-                              'align': 'center',
+                              'gap': 'none',
                               'children': [
                                 {
                                   'action': 'OPEN_CHATS_CLICKED',
+                                  'size': 'sm',
                                   'aria-label': '@config.chatsLabel',
+                                  'variant': 'ghost',
                                   'label': '@config.chatsLabel',
-                                  'size': 'sm',
                                   'type': 'button',
-                                  'variant': 'ghost',
                                 },
                                 {
+                                  'type': 'button',
                                   'action': 'OPEN_MEMORY_CLICKED',
-                                  'aria-label': '@config.memoryLabel',
-                                  'label': '@config.memoryLabel',
-                                  'size': 'sm',
-                                  'type': 'button',
                                   'variant': 'ghost',
+                                  'aria-label': '@config.memoryLabel',
+                                  'size': 'sm',
+                                  'label': '@config.memoryLabel',
                                 },
                                 {
+                                  'type': 'stack',
                                   'children': [
                                     'array/map',
                                     '@config.links',
@@ -3440,70 +3412,54 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'fn',
                                       'item',
                                       {
-                                        'href': '@item.href',
-                                        'label': '@item.label',
-                                        'size': 'sm',
-                                        'type': 'button',
                                         'variant': 'ghost',
+                                        'size': 'sm',
+                                        'label': '@item.label',
+                                        'href': '@item.href',
+                                        'type': 'button',
                                       },
                                     ],
                                   ],
                                   'direction': 'horizontal',
                                   'gap': 'xs',
-                                  'type': 'stack',
                                 },
                               ],
                               'className': 'shrink-0',
                               'direction': 'horizontal',
-                              'gap': 'none',
+                              'align': 'center',
                               'type': 'stack',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'between',
-                          'type': 'stack',
-                          'wrap': true,
+                          'align': 'center',
                         },
                       ],
                       {
-                        'activities': '@entity.entries',
                         'className': 'flex-1',
-                        'emptyTitle': '@config.emptyTitle',
                         'idPrefix': 'agent-conversation',
-                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
+                        'emptyTitle': '@config.emptyTitle',
                         'type': 'agent-chat-feed',
+                        'activities': '@entity.entries',
                         'working': '@entity.working',
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                       },
                       {
-                        'placeholder': '@config.placeholder',
                         'sendEvent': 'ASK',
+                        'placeholder': '@config.placeholder',
                         'type': 'chat-bar',
                       },
                     ],
-                    'className': 'h-full min-h-0 flex-1',
-                    'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'REPLIED',
-              'from': 'idle',
-              'guard': [
-                '=',
-                [
-                  'if',
-                  '@payload.ephemeral',
-                  true,
-                  false,
-                ],
-                '@config.ephemeral',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'NEW_CHAT_CLICKED',
+              'guard': [
+                'not',
+                '@entity.working',
+              ],
               'effects': [
                 [
                   'set',
@@ -3524,9 +3480,20 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                         'if',
                         '@config.ephemeral',
                         {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'align': 'center',
                           'children': [
                             {
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'type': 'avatar',
+                              'name': '@entity.chatTitle',
                               'className': [
                                 'if',
                                 [
@@ -3537,71 +3504,66 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 'hidden',
                                 '',
                               ],
-                              'name': '@entity.chatTitle',
                               'size': 'md',
-                              'src': [
-                                'object/get',
-                                '@entity',
-                                'chatAvatar',
-                                '',
-                              ],
-                              'type': 'avatar',
                             },
                             {
                               'children': [
                                 {
-                                  'content': '@entity.chatTitle',
                                   'type': 'typography',
                                   'variant': 'h4',
+                                  'content': '@entity.chatTitle',
                                 },
                                 {
-                                  'content': '@entity.chatSubtitle',
                                   'type': 'typography',
+                                  'content': '@entity.chatSubtitle',
                                   'variant': 'caption',
                                 },
                               ],
-                              'direction': 'vertical',
-                              'gap': 'none',
                               'type': 'stack',
+                              'gap': 'none',
+                              'direction': 'vertical',
                             },
                           ],
                           'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
+                          'wrap': true,
+                          'direction': 'horizontal',
+                          'justify': 'between',
                           'align': 'center',
+                          'gap': 'sm',
                           'children': [
                             {
-                              'action': 'NEW_CHAT_CLICKED',
-                              'aria-label': '@config.newChatLabel',
-                              'icon': 'message-square-plus',
-                              'label': '@config.newChatLabel',
-                              'size': 'sm',
                               'type': 'button',
                               'variant': 'secondary',
+                              'label': '@config.newChatLabel',
+                              'aria-label': '@config.newChatLabel',
+                              'size': 'sm',
+                              'action': 'NEW_CHAT_CLICKED',
+                              'icon': 'message-square-plus',
                             },
                             {
-                              'align': 'center',
+                              'direction': 'horizontal',
                               'children': [
                                 {
-                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'size': 'sm',
                                   'aria-label': '@config.chatsLabel',
                                   'label': '@config.chatsLabel',
-                                  'size': 'sm',
                                   'type': 'button',
+                                  'action': 'OPEN_CHATS_CLICKED',
                                   'variant': 'ghost',
                                 },
                                 {
+                                  'type': 'button',
                                   'action': 'OPEN_MEMORY_CLICKED',
-                                  'aria-label': '@config.memoryLabel',
-                                  'label': '@config.memoryLabel',
                                   'size': 'sm',
-                                  'type': 'button',
+                                  'label': '@config.memoryLabel',
+                                  'aria-label': '@config.memoryLabel',
                                   'variant': 'ghost',
                                 },
                                 {
+                                  'gap': 'xs',
+                                  'type': 'stack',
                                   'children': [
                                     'array/map',
                                     '@config.links',
@@ -3609,64 +3571,54 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'fn',
                                       'item',
                                       {
-                                        'href': '@item.href',
-                                        'label': '@item.label',
                                         'size': 'sm',
+                                        'label': '@item.label',
                                         'type': 'button',
                                         'variant': 'ghost',
+                                        'href': '@item.href',
                                       },
                                     ],
                                   ],
                                   'direction': 'horizontal',
-                                  'gap': 'xs',
-                                  'type': 'stack',
                                 },
                               ],
-                              'className': 'shrink-0',
-                              'direction': 'horizontal',
                               'gap': 'none',
+                              'className': 'shrink-0',
+                              'align': 'center',
                               'type': 'stack',
                             },
                           ],
                           'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'between',
                           'type': 'stack',
-                          'wrap': true,
                         },
                       ],
                       {
-                        'activities': '@entity.entries',
                         'className': 'flex-1',
-                        'emptyTitle': '@config.emptyTitle',
-                        'idPrefix': 'agent-conversation',
-                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                         'type': 'agent-chat-feed',
+                        'activities': '@entity.entries',
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                         'working': '@entity.working',
+                        'idPrefix': 'agent-conversation',
+                        'emptyTitle': '@config.emptyTitle',
                       },
                       {
                         'placeholder': '@config.placeholder',
-                        'sendEvent': 'ASK',
                         'type': 'chat-bar',
+                        'sendEvent': 'ASK',
                       },
                     ],
-                    'className': 'h-full min-h-0 flex-1',
                     'direction': 'vertical',
+                    'className': 'h-full min-h-0 flex-1',
                     'gap': 'sm',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'NEW_CHAT_CLICKED',
-              'from': 'idle',
-              'guard': [
-                'not',
-                '@entity.working',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'OPEN_CHATS_CLICKED',
               'effects': [
                 [
                   'emit',
@@ -3674,52 +3626,58 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   {},
                 ],
               ],
-              'event': 'OPEN_CHATS_CLICKED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CHATS_LISTED',
+              'guard': [
+                'not',
+                '@config.ephemeral',
+              ],
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
+                        'className': 'shrink-0',
                         'children': [
                           {
-                            'action': 'BACK_TO_CHAT',
-                            'aria-label': '@config.backLabel',
-                            'icon': 'arrow-left',
                             'label': '@config.backLabel',
-                            'size': 'sm',
+                            'icon': 'arrow-left',
+                            'aria-label': '@config.backLabel',
+                            'action': 'BACK_TO_CHAT',
                             'type': 'button',
                             'variant': 'ghost',
+                            'size': 'sm',
                           },
                           {
-                            'content': '@config.chatsLabel',
-                            'type': 'typography',
                             'variant': 'h4',
+                            'type': 'typography',
+                            'content': '@config.chatsLabel',
                           },
                         ],
-                        'className': 'shrink-0',
                         'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'align': 'center',
+                        'gap': 'sm',
                       },
                       {
-                        'emptyMessage': '@config.chatsEmptyTitle',
-                        'entity': '@payload.data',
                         'fields': [],
                         'gap': 'none',
-                        'itemClickEvent': 'CHAT_PICKED',
+                        'emptyMessage': '@config.chatsEmptyTitle',
+                        'type': 'data-list',
                         'renderItem': [
                           'fn',
                           'item',
                           {
                             'children': [
                               {
+                                'variant': 'body',
+                                'type': 'typography',
                                 'className': 'truncate',
                                 'content': [
                                   'if',
@@ -3735,15 +3693,13 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                   '@config.untitledLabel',
                                   '@item.title',
                                 ],
-                                'type': 'typography',
-                                'variant': 'body',
                               },
                               {
-                                'color': 'muted',
-                                'content': '@item.lastActiveAt',
-                                'format': 'date',
                                 'type': 'typography',
+                                'content': '@item.lastActiveAt',
+                                'color': 'muted',
                                 'variant': 'caption',
+                                'format': 'date',
                               },
                             ],
                             'direction': 'vertical',
@@ -3751,26 +3707,26 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                             'type': 'stack',
                           },
                         ],
-                        'type': 'data-list',
                         'variant': 'compact',
+                        'itemClickEvent': 'CHAT_PICKED',
+                        'entity': '@payload.data',
                       },
                     ],
-                    'className': 'h-full min-h-0 flex-1 overflow-y-auto',
-                    'direction': 'vertical',
                     'gap': 'sm',
                     'type': 'stack',
+                    'className': 'h-full min-h-0 flex-1 overflow-y-auto',
                   },
                 ],
               ],
-              'event': 'CHATS_LISTED',
-              'from': 'idle',
-              'guard': [
-                'not',
-                '@config.ephemeral',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CHAT_PICKED',
+              'guard': [
+                'not',
+                '@entity.working',
+              ],
               'effects': [
                 [
                   'emit',
@@ -3783,14 +3739,27 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'sm',
+                    'className': 'h-full min-h-0 flex-1',
                     'children': [
                       [
                         'if',
                         '@config.ephemeral',
                         {
-                          'align': 'center',
+                          'direction': 'horizontal',
                           'children': [
                             {
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
+                              'size': 'md',
+                              'type': 'avatar',
+                              'name': '@entity.chatTitle',
                               'className': [
                                 'if',
                                 [
@@ -3801,71 +3770,70 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 'hidden',
                                 '',
                               ],
-                              'name': '@entity.chatTitle',
-                              'size': 'md',
-                              'src': [
-                                'object/get',
-                                '@entity',
-                                'chatAvatar',
-                                '',
-                              ],
-                              'type': 'avatar',
                             },
                             {
-                              'children': [
-                                {
-                                  'content': '@entity.chatTitle',
-                                  'type': 'typography',
-                                  'variant': 'h4',
-                                },
-                                {
-                                  'content': '@entity.chatSubtitle',
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                },
-                              ],
                               'direction': 'vertical',
                               'gap': 'none',
                               'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'typography',
+                                  'content': '@entity.chatTitle',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'content': '@entity.chatSubtitle',
+                                  'type': 'typography',
+                                },
+                              ],
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
                           'gap': 'sm',
                           'type': 'stack',
+                          'align': 'center',
+                          'className': 'shrink-0',
                         },
                         {
                           'align': 'center',
+                          'className': 'shrink-0',
+                          'justify': 'between',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'wrap': true,
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'action': 'NEW_CHAT_CLICKED',
                               'aria-label': '@config.newChatLabel',
-                              'icon': 'message-square-plus',
-                              'label': '@config.newChatLabel',
-                              'size': 'sm',
                               'type': 'button',
+                              'label': '@config.newChatLabel',
+                              'icon': 'message-square-plus',
+                              'action': 'NEW_CHAT_CLICKED',
+                              'size': 'sm',
                               'variant': 'secondary',
                             },
                             {
-                              'align': 'center',
+                              'gap': 'none',
                               'children': [
                                 {
-                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'type': 'button',
+                                  'size': 'sm',
                                   'aria-label': '@config.chatsLabel',
+                                  'variant': 'ghost',
                                   'label': '@config.chatsLabel',
-                                  'size': 'sm',
-                                  'type': 'button',
-                                  'variant': 'ghost',
+                                  'action': 'OPEN_CHATS_CLICKED',
                                 },
                                 {
+                                  'size': 'sm',
                                   'action': 'OPEN_MEMORY_CLICKED',
-                                  'aria-label': '@config.memoryLabel',
-                                  'label': '@config.memoryLabel',
-                                  'size': 'sm',
-                                  'type': 'button',
                                   'variant': 'ghost',
+                                  'label': '@config.memoryLabel',
+                                  'aria-label': '@config.memoryLabel',
+                                  'type': 'button',
                                 },
                                 {
+                                  'gap': 'xs',
+                                  'type': 'stack',
                                   'children': [
                                     'array/map',
                                     '@config.links',
@@ -3873,64 +3841,48 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'fn',
                                       'item',
                                       {
-                                        'href': '@item.href',
                                         'label': '@item.label',
+                                        'variant': 'ghost',
                                         'size': 'sm',
                                         'type': 'button',
-                                        'variant': 'ghost',
+                                        'href': '@item.href',
                                       },
                                     ],
                                   ],
                                   'direction': 'horizontal',
-                                  'gap': 'xs',
-                                  'type': 'stack',
                                 },
                               ],
                               'className': 'shrink-0',
                               'direction': 'horizontal',
-                              'gap': 'none',
                               'type': 'stack',
+                              'align': 'center',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'between',
-                          'type': 'stack',
-                          'wrap': true,
                         },
                       ],
                       {
-                        'activities': '@entity.entries',
-                        'className': 'flex-1',
                         'emptyTitle': '@config.emptyTitle',
-                        'idPrefix': 'agent-conversation',
                         'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
-                        'type': 'agent-chat-feed',
+                        'activities': '@entity.entries',
+                        'idPrefix': 'agent-conversation',
                         'working': '@entity.working',
+                        'className': 'flex-1',
+                        'type': 'agent-chat-feed',
                       },
                       {
+                        'type': 'chat-bar',
                         'placeholder': '@config.placeholder',
                         'sendEvent': 'ASK',
-                        'type': 'chat-bar',
                       },
                     ],
-                    'className': 'h-full min-h-0 flex-1',
-                    'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'CHAT_PICKED',
-              'from': 'idle',
-              'guard': [
-                'not',
-                '@entity.working',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'OPEN_MEMORY_CLICKED',
               'effects': [
                 [
                   'emit',
@@ -3938,100 +3890,108 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   {},
                 ],
               ],
-              'event': 'OPEN_MEMORY_CLICKED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'MEMORIES_LISTED',
+              'guard': [
+                'not',
+                '@config.ephemeral',
+              ],
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'className': 'h-full min-h-0 flex-1 overflow-y-auto',
+                    'gap': 'sm',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
+                            'type': 'button',
                             'action': 'BACK_TO_CHAT',
                             'aria-label': '@config.backLabel',
                             'icon': 'arrow-left',
                             'label': '@config.backLabel',
-                            'size': 'sm',
-                            'type': 'button',
                             'variant': 'ghost',
+                            'size': 'sm',
                           },
                           {
-                            'content': '@config.memoryLabel',
                             'type': 'typography',
                             'variant': 'h4',
+                            'content': '@config.memoryLabel',
                           },
                         ],
-                        'className': 'shrink-0',
                         'direction': 'horizontal',
+                        'align': 'center',
                         'gap': 'sm',
+                        'className': 'shrink-0',
                         'type': 'stack',
                       },
                       {
-                        'emptyMessage': '@config.memoryEmptyTitle',
-                        'entity': '@payload.data',
                         'fields': [],
+                        'emptyMessage': '@config.memoryEmptyTitle',
+                        'type': 'data-list',
                         'gap': 'sm',
                         'renderItem': [
                           'fn',
                           'item',
                           {
+                            'gap': 'none',
+                            'direction': 'vertical',
                             'children': [
                               {
-                                'content': '@item.content',
-                                'type': 'typography',
                                 'variant': 'body',
+                                'type': 'typography',
+                                'content': '@item.content',
                               },
                               {
-                                'color': 'muted',
-                                'content': '@item.createdAt',
                                 'format': 'date',
                                 'type': 'typography',
+                                'color': 'muted',
+                                'content': '@item.createdAt',
                                 'variant': 'caption',
                               },
                             ],
-                            'direction': 'vertical',
-                            'gap': 'none',
                             'type': 'stack',
                           },
                         ],
-                        'type': 'data-list',
+                        'entity': '@payload.data',
                       },
                     ],
-                    'className': 'h-full min-h-0 flex-1 overflow-y-auto',
-                    'direction': 'vertical',
-                    'gap': 'sm',
                     'type': 'stack',
                   },
                 ],
               ],
-              'event': 'MEMORIES_LISTED',
-              'from': 'idle',
-              'guard': [
-                'not',
-                '@config.ephemeral',
-              ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'BACK_TO_CHAT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'gap': 'sm',
+                    'type': 'stack',
                     'children': [
                       [
                         'if',
                         '@config.ephemeral',
                         {
-                          'align': 'center',
+                          'type': 'stack',
                           'children': [
                             {
+                              'src': [
+                                'object/get',
+                                '@entity',
+                                'chatAvatar',
+                                '',
+                              ],
                               'className': [
                                 'if',
                                 [
@@ -4042,71 +4002,69 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 'hidden',
                                 '',
                               ],
+                              'type': 'avatar',
                               'name': '@entity.chatTitle',
                               'size': 'md',
-                              'src': [
-                                'object/get',
-                                '@entity',
-                                'chatAvatar',
-                                '',
-                              ],
-                              'type': 'avatar',
                             },
                             {
+                              'direction': 'vertical',
                               'children': [
                                 {
-                                  'content': '@entity.chatTitle',
                                   'type': 'typography',
+                                  'content': '@entity.chatTitle',
                                   'variant': 'h4',
                                 },
                                 {
+                                  'variant': 'caption',
                                   'content': '@entity.chatSubtitle',
                                   'type': 'typography',
-                                  'variant': 'caption',
                                 },
                               ],
-                              'direction': 'vertical',
                               'gap': 'none',
                               'type': 'stack',
                             },
                           ],
-                          'className': 'shrink-0',
                           'direction': 'horizontal',
+                          'align': 'center',
+                          'className': 'shrink-0',
                           'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
+                          'direction': 'horizontal',
+                          'className': 'shrink-0',
+                          'type': 'stack',
+                          'gap': 'sm',
                           'align': 'center',
                           'children': [
                             {
-                              'action': 'NEW_CHAT_CLICKED',
-                              'aria-label': '@config.newChatLabel',
-                              'icon': 'message-square-plus',
-                              'label': '@config.newChatLabel',
                               'size': 'sm',
+                              'icon': 'message-square-plus',
+                              'aria-label': '@config.newChatLabel',
                               'type': 'button',
+                              'action': 'NEW_CHAT_CLICKED',
+                              'label': '@config.newChatLabel',
                               'variant': 'secondary',
                             },
                             {
-                              'align': 'center',
                               'children': [
                                 {
-                                  'action': 'OPEN_CHATS_CLICKED',
-                                  'aria-label': '@config.chatsLabel',
-                                  'label': '@config.chatsLabel',
-                                  'size': 'sm',
-                                  'type': 'button',
                                   'variant': 'ghost',
+                                  'size': 'sm',
+                                  'action': 'OPEN_CHATS_CLICKED',
+                                  'label': '@config.chatsLabel',
+                                  'type': 'button',
+                                  'aria-label': '@config.chatsLabel',
                                 },
                                 {
+                                  'size': 'sm',
                                   'action': 'OPEN_MEMORY_CLICKED',
                                   'aria-label': '@config.memoryLabel',
                                   'label': '@config.memoryLabel',
-                                  'size': 'sm',
                                   'type': 'button',
                                   'variant': 'ghost',
                                 },
                                 {
+                                  'type': 'stack',
                                   'children': [
                                     'array/map',
                                     '@config.links',
@@ -4114,60 +4072,64 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'fn',
                                       'item',
                                       {
-                                        'href': '@item.href',
                                         'label': '@item.label',
                                         'size': 'sm',
-                                        'type': 'button',
                                         'variant': 'ghost',
+                                        'href': '@item.href',
+                                        'type': 'button',
                                       },
                                     ],
                                   ],
                                   'direction': 'horizontal',
                                   'gap': 'xs',
-                                  'type': 'stack',
                                 },
                               ],
-                              'className': 'shrink-0',
-                              'direction': 'horizontal',
-                              'gap': 'none',
                               'type': 'stack',
+                              'className': 'shrink-0',
+                              'align': 'center',
+                              'gap': 'none',
+                              'direction': 'horizontal',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'between',
-                          'type': 'stack',
                           'wrap': true,
+                          'justify': 'between',
                         },
                       ],
                       {
-                        'activities': '@entity.entries',
-                        'className': 'flex-1',
-                        'emptyTitle': '@config.emptyTitle',
-                        'idPrefix': 'agent-conversation',
-                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
-                        'type': 'agent-chat-feed',
                         'working': '@entity.working',
+                        'type': 'agent-chat-feed',
+                        'activities': '@entity.entries',
+                        'idPrefix': 'agent-conversation',
+                        'emptyTitle': '@config.emptyTitle',
+                        'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
+                        'className': 'flex-1',
                       },
                       {
-                        'placeholder': '@config.placeholder',
                         'sendEvent': 'ASK',
+                        'placeholder': '@config.placeholder',
                         'type': 'chat-bar',
                       },
                     ],
-                    'className': 'h-full min-h-0 flex-1',
                     'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
+                    'className': 'h-full min-h-0 flex-1',
                   },
                 ],
               ],
-              'event': 'BACK_TO_CHAT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'REPLY_FAILED',
+              'guard': [
+                '=',
+                [
+                  'if',
+                  '@payload.ephemeral',
+                  true,
+                  false,
+                ],
+                '@config.ephemeral',
+              ],
               'effects': [
                 [
                   'set',
@@ -4176,9 +4138,9 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                     'array/append',
                     '@entity.entries',
                     {
-                      'message': '@payload.error',
-                      'timestamp': '@now',
                       'type': 'error',
+                      'timestamp': '@now',
+                      'message': '@payload.error',
                     },
                   ],
                 ],
@@ -4191,14 +4153,21 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'render-ui',
                   'main',
                   {
+                    'className': 'h-full min-h-0 flex-1',
                     'children': [
                       [
                         'if',
                         '@config.ephemeral',
                         {
+                          'type': 'stack',
                           'align': 'center',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'className': 'shrink-0',
                           'children': [
                             {
+                              'name': '@entity.chatTitle',
+                              'size': 'md',
                               'className': [
                                 'if',
                                 [
@@ -4209,17 +4178,16 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 'hidden',
                                 '',
                               ],
-                              'name': '@entity.chatTitle',
-                              'size': 'md',
+                              'type': 'avatar',
                               'src': [
                                 'object/get',
                                 '@entity',
                                 'chatAvatar',
                                 '',
                               ],
-                              'type': 'avatar',
                             },
                             {
+                              'type': 'stack',
                               'children': [
                                 {
                                   'content': '@entity.chatTitle',
@@ -4228,52 +4196,51 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                 },
                                 {
                                   'content': '@entity.chatSubtitle',
-                                  'type': 'typography',
                                   'variant': 'caption',
+                                  'type': 'typography',
                                 },
                               ],
-                              'direction': 'vertical',
                               'gap': 'none',
-                              'type': 'stack',
+                              'direction': 'vertical',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
-                          'align': 'center',
+                          'justify': 'between',
+                          'direction': 'horizontal',
+                          'className': 'shrink-0',
                           'children': [
                             {
-                              'action': 'NEW_CHAT_CLICKED',
-                              'aria-label': '@config.newChatLabel',
+                              'variant': 'secondary',
                               'icon': 'message-square-plus',
+                              'aria-label': '@config.newChatLabel',
+                              'type': 'button',
                               'label': '@config.newChatLabel',
                               'size': 'sm',
-                              'type': 'button',
-                              'variant': 'secondary',
+                              'action': 'NEW_CHAT_CLICKED',
                             },
                             {
-                              'align': 'center',
                               'children': [
                                 {
-                                  'action': 'OPEN_CHATS_CLICKED',
-                                  'aria-label': '@config.chatsLabel',
-                                  'label': '@config.chatsLabel',
                                   'size': 'sm',
-                                  'type': 'button',
                                   'variant': 'ghost',
+                                  'label': '@config.chatsLabel',
+                                  'type': 'button',
+                                  'aria-label': '@config.chatsLabel',
+                                  'action': 'OPEN_CHATS_CLICKED',
                                 },
                                 {
                                   'action': 'OPEN_MEMORY_CLICKED',
-                                  'aria-label': '@config.memoryLabel',
-                                  'label': '@config.memoryLabel',
                                   'size': 'sm',
                                   'type': 'button',
                                   'variant': 'ghost',
+                                  'aria-label': '@config.memoryLabel',
+                                  'label': '@config.memoryLabel',
                                 },
                                 {
+                                  'gap': 'xs',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'children': [
                                     'array/map',
                                     '@config.links',
@@ -4281,71 +4248,148 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                                       'fn',
                                       'item',
                                       {
-                                        'href': '@item.href',
+                                        'variant': 'ghost',
                                         'label': '@item.label',
                                         'size': 'sm',
                                         'type': 'button',
-                                        'variant': 'ghost',
+                                        'href': '@item.href',
                                       },
                                     ],
                                   ],
-                                  'direction': 'horizontal',
-                                  'gap': 'xs',
-                                  'type': 'stack',
                                 },
                               ],
-                              'className': 'shrink-0',
                               'direction': 'horizontal',
-                              'gap': 'none',
+                              'align': 'center',
+                              'className': 'shrink-0',
                               'type': 'stack',
+                              'gap': 'none',
                             },
                           ],
-                          'className': 'shrink-0',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'between',
-                          'type': 'stack',
+                          'align': 'center',
                           'wrap': true,
+                          'type': 'stack',
+                          'gap': 'sm',
                         },
                       ],
                       {
-                        'activities': '@entity.entries',
-                        'className': 'flex-1',
-                        'emptyTitle': '@config.emptyTitle',
                         'idPrefix': 'agent-conversation',
                         'rawLlmPreferenceKey': 'agent-conversation-raw-llm',
                         'type': 'agent-chat-feed',
+                        'className': 'flex-1',
                         'working': '@entity.working',
+                        'emptyTitle': '@config.emptyTitle',
+                        'activities': '@entity.entries',
                       },
                       {
-                        'placeholder': '@config.placeholder',
                         'sendEvent': 'ASK',
                         'type': 'chat-bar',
+                        'placeholder': '@config.placeholder',
                       },
                     ],
-                    'className': 'h-full min-h-0 flex-1',
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'sm',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'REPLY_FAILED',
-              'from': 'idle',
-              'guard': [
-                '=',
-                [
-                  'if',
-                  '@payload.ephemeral',
-                  true,
-                  false,
-                ],
-                '@config.ephemeral',
-              ],
-              'to': 'idle',
             },
           ],
         },
+        'config': {
+          'chatsLabel': {
+            'type': 'string',
+            'default': 'Conversations',
+            'label': 'Past conversations button',
+            'description': 'Shows the person\'s past conversations in place of the chat; picking one reopens it.',
+            'tier': 'presentation',
+          },
+          'backLabel': {
+            'type': 'string',
+            'default': 'Back',
+            'label': 'Back to the conversation',
+            'tier': 'presentation',
+          },
+          'ephemeral': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Ephemeral conversation?',
+            'description': 'A self-contained conversation: it runs under the instructions, tools, greeting and header the app starts it with (ASSISTANT_CHAT_START), is never stored among the person\'s conversations or remembered, shows no conversation, past-chat or memory buttons, and ignores the assistant\'s own replies.',
+            'synonyms': 'private, one-off, scoped chat, own persona, not saved',
+            'tier': 'domain',
+          },
+          'chatsEmptyTitle': {
+            'type': 'string',
+            'default': 'No conversations yet',
+            'label': 'Empty conversation list',
+            'tier': 'presentation',
+          },
+          'placeholder': {
+            'type': 'string',
+            'default': 'Ask the assistant…',
+            'label': 'Message placeholder',
+            'tier': 'presentation',
+          },
+          'untitledLabel': {
+            'type': 'string',
+            'default': 'New conversation',
+            'label': 'Title of a conversation with no messages yet',
+            'tier': 'presentation',
+          },
+          'links': {
+            'type': '[AgentLink]',
+            'default': [
+              {
+                'href': '/agent-session/chats',
+                'label': 'All conversations',
+              },
+            ],
+            'label': 'Links above the conversation',
+            'description': 'Related pages (e.g. the run history).',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
+                'href': {
+                  'name': 'href',
+                  'type': 'string',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'newChatLabel': {
+            'type': 'string',
+            'default': 'New conversation',
+            'label': 'New conversation button',
+            'description': 'Starts a fresh conversation; earlier ones stay in the conversation list.',
+            'tier': 'presentation',
+          },
+          'memoryEmptyTitle': {
+            'type': 'string',
+            'default': 'Nothing remembered yet',
+            'label': 'Empty memory list',
+            'tier': 'presentation',
+          },
+          'memoryLabel': {
+            'type': 'string',
+            'default': 'What I remember',
+            'label': 'Memory button',
+            'description': 'Shows what the assistant remembers for this person in place of the chat.',
+            'tier': 'presentation',
+          },
+          'emptyTitle': {
+            'type': 'string',
+            'default': 'Ask me to do something in this app',
+            'label': 'Empty conversation title',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [
@@ -4529,48 +4573,48 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Whose conversation this is (the real @user). The binding organism scopes @read to it.',
             'name': 'ownerId',
-            'required': true,
-            'synonyms': 'user, owner, account',
             'type': 'string',
+            'required': true,
+            'description': 'Whose conversation this is (the real @user). The binding organism scopes @read to it.',
+            'synonyms': 'user, owner, account',
           },
           {
+            'name': 'title',
+            'type': 'string',
             'default': '',
             'description': 'The conversation\'s first request, shown in the conversation list; empty until the first message.',
-            'name': 'title',
             'synonyms': 'name, subject, topic',
-            'type': 'string',
           },
           {
+            'name': 'startedAt',
+            'type': 'number',
             'default': 0,
             'description': 'When the conversation started (ms).',
-            'name': 'startedAt',
             'synonyms': 'created, opened',
-            'type': 'number',
           },
           {
+            'name': 'lastActiveAt',
+            'type': 'number',
             'default': 0,
             'description': 'When the conversation was last used (ms). The most recent one is the current conversation.',
-            'name': 'lastActiveAt',
             'synonyms': 'last used, updated, recent',
-            'type': 'number',
           },
           {
-            'default': '',
-            'intrinsic': true,
             'name': 'pendingMessage',
             'type': 'string',
-          },
-          {
             'default': '',
             'intrinsic': true,
+          },
+          {
             'name': 'pendingReply',
             'type': 'string',
+            'default': '',
+            'intrinsic': true,
           },
         ];
         const extras = params.fields ?? [];
@@ -4581,7 +4625,15 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
     } as Entity,
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'AgentChatKeeper',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [
+            'pendingMessage',
+            'pendingReply',
+          ],
+        },
         'effectRow': [
           {
             'kind': 'emit',
@@ -4628,40 +4680,44 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
             'resource': '@entity.pendingReply',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'AgentChat',
         'emits': [
           {
-            'description': 'This conversation is now the current one (empty for none yet); AgentThread loads its messages.',
             'event': 'ASSISTANT_CHAT_OPENED',
+            'description': 'This conversation is now the current one (empty for none yet); AgentThread loads its messages.',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'chatId',
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'internal',
           },
           {
-            'description': 'The user\'s message, placed in the current conversation.',
             'event': 'ASSISTANT_SEND_IN_CHAT',
+            'description': 'The user\'s message, placed in the current conversation.',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'chatId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'message',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'internal',
           },
           {
-            'description': 'The assistant\'s answer, placed in the current conversation.',
             'event': 'ASSISTANT_REPLY_IN_CHAT',
+            'description': 'The assistant\'s answer, placed in the current conversation.',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'chatId',
@@ -4669,45 +4725,47 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
               },
               {
                 'name': 'reply',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'internal',
           },
           {
-            'description': 'A conversation was started, used or reopened; the conversation list refreshes.',
             'event': 'ASSISTANT_CHATS_CHANGED',
-            'scope': 'external',
+            'description': 'A conversation was started, used or reopened; the conversation list refreshes.',
             'synonyms': 'conversations changed, history changed',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
-            'description': 'A conversation could not be loaded or stored.',
             'event': 'ASSISTANT_THREAD_FAILED',
+            'description': 'A conversation could not be loaded or stored.',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'domain',
           },
           {
-            'description': 'The person\'s conversations, most recently used first.',
             'event': 'ASSISTANT_CHATS_LOADED',
+            'description': 'The person\'s conversations, most recently used first.',
+            'synonyms': 'conversations, history',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'AgentChatRow',
                 'name': 'data',
+                'type': '[object]',
+                'required': true,
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'title',
@@ -4718,30 +4776,28 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                     'type': 'number',
                   },
                 ],
-                'required': true,
-                'type': '[object]',
+                'entity': 'AgentChatRow',
               },
             ],
-            'scope': 'external',
-            'synonyms': 'conversations, history',
-            'tier': 'domain',
           },
           {
             'event': 'ChatsForList',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AgentChat',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'title',
@@ -4764,28 +4820,28 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentChat',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'ChatsForHistory',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AgentChat',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'title',
@@ -4808,28 +4864,28 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentChat',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'ChatsForSend',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AgentChat',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'title',
@@ -4852,28 +4908,28 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentChat',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'ChatsForReply',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AgentChat',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'title',
@@ -4896,28 +4952,28 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentChat',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
             'event': 'ChatsForSelect',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
-                'entity': 'AgentChat',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'title',
@@ -4940,26 +4996,25 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentChat',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
           },
           {
-            'description': 'The current conversation exists and is marked active — payload is the AgentChat row.',
             'event': 'ChatReadyForSend',
-            'payloadEntity': 'AgentChat',
+            'description': 'The current conversation exists and is marked active — payload is the AgentChat row.',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'ownerId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'title',
@@ -4982,23 +5037,23 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
+            'payloadEntity': 'AgentChat',
           },
           {
-            'description': 'A new conversation started — payload is the AgentChat row.',
             'event': 'NewChatStarted',
-            'payloadEntity': 'AgentChat',
+            'description': 'A new conversation started — payload is the AgentChat row.',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'ownerId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'title',
@@ -5021,23 +5076,23 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
+            'payloadEntity': 'AgentChat',
           },
           {
-            'description': 'A past conversation was reopened — payload is the AgentChat row.',
             'event': 'ChatSelected',
-            'payloadEntity': 'AgentChat',
+            'description': 'A past conversation was reopened — payload is the AgentChat row.',
+            'tier': 'internal',
+            'scope': 'internal',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'ownerId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'title',
@@ -5060,11 +5115,12 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                 'type': 'string',
               },
             ],
-            'scope': 'internal',
-            'tier': 'internal',
+            'payloadEntity': 'AgentChat',
           },
           {
             'event': 'AgentChatsLoadFailed',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -5075,93 +5131,87 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [
-            'pendingMessage',
-            'pendingReply',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentChat',
         'listens': [
           {
             'event': 'ASSISTANT_SEND',
+            'triggers': 'SEND',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'SEND',
           },
           {
             'event': 'ASSISTANT_HISTORY_REQUESTED',
+            'triggers': 'LOAD_HISTORY',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'LOAD_HISTORY',
           },
           {
             'event': 'ASSISTANT_NEW_CHAT',
+            'triggers': 'NEW_CHAT',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'NEW_CHAT',
           },
           {
             'event': 'ASSISTANT_CHAT_SELECTED',
+            'triggers': 'SELECT_CHAT',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'SELECT_CHAT',
           },
           {
             'event': 'ASSISTANT_REPLIED',
+            'triggers': 'REPLIED',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'REPLIED',
           },
           {
             'event': 'ASSISTANT_CHATS_REQUESTED',
+            'triggers': 'LIST_CHATS',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'LIST_CHATS',
           },
         ],
-        'name': 'AgentChatKeeper',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'A conversation view opened; open the current conversation.',
               'key': 'LOAD_HISTORY',
               'name': 'Load History',
+              'description': 'A conversation view opened; open the current conversation.',
             },
             {
               'key': 'ChatsForHistory',
               'name': 'Chats for history',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChat',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'title',
@@ -5184,40 +5234,40 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentChat',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The user asked something; place it in the current conversation.',
               'key': 'SEND',
               'name': 'Send',
+              'description': 'The user asked something; place it in the current conversation.',
               'payloadSchema': [
                 {
                   'name': 'message',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
             {
               'key': 'ChatsForSend',
               'name': 'Chats for send',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChat',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'title',
@@ -5240,26 +5290,25 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentChat',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The current conversation exists and is marked active — payload is the AgentChat row.',
               'key': 'ChatReadyForSend',
               'name': 'Chat ready for send',
-              'payloadEntity': 'AgentChat',
+              'description': 'The current conversation exists and is marked active — payload is the AgentChat row.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ownerId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'title',
@@ -5282,17 +5331,17 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
+              'payloadEntity': 'AgentChat',
             },
             {
-              'description': 'The assistant answered; place the answer in the current conversation.',
               'key': 'REPLIED',
               'name': 'Replied',
+              'description': 'The assistant answered; place the answer in the current conversation.',
               'payloadSchema': [
                 {
                   'name': 'reply',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ephemeral',
@@ -5303,20 +5352,21 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
             {
               'key': 'ChatsForReply',
               'name': 'Chats for reply',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChat',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'title',
@@ -5339,31 +5389,30 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentChat',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'Start a new conversation; the previous one stays in the list.',
               'key': 'NEW_CHAT',
               'name': 'New Chat',
+              'description': 'Start a new conversation; the previous one stays in the list.',
             },
             {
-              'description': 'A new conversation started — payload is the AgentChat row.',
               'key': 'NewChatStarted',
               'name': 'New chat started',
-              'payloadEntity': 'AgentChat',
+              'description': 'A new conversation started — payload is the AgentChat row.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ownerId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'title',
@@ -5386,37 +5435,38 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
+              'payloadEntity': 'AgentChat',
             },
             {
-              'description': 'Reopen a past conversation and make it the current one.',
               'key': 'SELECT_CHAT',
               'name': 'Select Chat',
+              'description': 'Reopen a past conversation and make it the current one.',
               'payloadSchema': [
                 {
                   'name': 'chatId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
             {
               'key': 'ChatsForSelect',
               'name': 'Chats for select',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChat',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'title',
@@ -5439,26 +5489,25 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentChat',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'A past conversation was reopened — payload is the AgentChat row.',
               'key': 'ChatSelected',
               'name': 'Chat selected',
-              'payloadEntity': 'AgentChat',
+              'description': 'A past conversation was reopened — payload is the AgentChat row.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'ownerId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'title',
@@ -5481,30 +5530,31 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
+              'payloadEntity': 'AgentChat',
             },
             {
-              'description': 'Send the person\'s conversations to the conversation list.',
               'key': 'LIST_CHATS',
               'name': 'List Chats',
+              'description': 'Send the person\'s conversations to the conversation list.',
             },
             {
               'key': 'ChatsForList',
               'name': 'Chats for list',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChat',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'title',
@@ -5527,14 +5577,14 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentChat',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'AgentChatsLoadFailed',
               'name': 'AgentChat s load failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -5545,42 +5595,42 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'This conversation is now the current one (empty for none yet); AgentThread loads its messages.',
               'key': 'ASSISTANT_CHAT_OPENED',
               'name': 'Assistant Chat Opened',
+              'description': 'This conversation is now the current one (empty for none yet); AgentThread loads its messages.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'chatId',
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The user\'s message, placed in the current conversation.',
               'key': 'ASSISTANT_SEND_IN_CHAT',
               'name': 'Assistant Send In Chat',
+              'description': 'The user\'s message, placed in the current conversation.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'chatId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'message',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'The assistant\'s answer, placed in the current conversation.',
               'key': 'ASSISTANT_REPLY_IN_CHAT',
               'name': 'Assistant Reply In Chat',
+              'description': 'The assistant\'s answer, placed in the current conversation.',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'chatId',
@@ -5588,45 +5638,47 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                 },
                 {
                   'name': 'reply',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'A conversation was started, used or reopened; the conversation list refreshes.',
               'key': 'ASSISTANT_CHATS_CHANGED',
               'name': 'Assistant Chats Changed',
+              'description': 'A conversation was started, used or reopened; the conversation list refreshes.',
               'synonyms': 'conversations changed, history changed',
               'tier': 'domain',
             },
             {
-              'description': 'A conversation could not be loaded or stored.',
               'key': 'ASSISTANT_THREAD_FAILED',
               'name': 'Assistant Thread Failed',
+              'description': 'A conversation could not be loaded or stored.',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'domain',
             },
             {
-              'description': 'The person\'s conversations, most recently used first.',
               'key': 'ASSISTANT_CHATS_LOADED',
               'name': 'Assistant Chats Loaded',
+              'description': 'The person\'s conversations, most recently used first.',
+              'synonyms': 'conversations, history',
+              'tier': 'domain',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChatRow',
                   'name': 'data',
+                  'type': '[object]',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'title',
@@ -5637,44 +5689,38 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                       'type': 'number',
                     },
                   ],
-                  'required': true,
-                  'type': '[object]',
+                  'entity': 'AgentChatRow',
                 },
               ],
-              'synonyms': 'conversations, history',
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'ready',
             },
           ],
           'transitions': [
             {
-              'event': 'INIT',
               'from': 'ready',
               'to': 'ready',
+              'event': 'INIT',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'LOAD_HISTORY',
               'effects': [
                 [
                   'fetch',
                   ('AgentChat' satisfies _StdAgentSessionEntityName),
                   {
                     'emit': {
-                      'failure': 'AgentChatsLoadFailed',
                       'success': 'ChatsForHistory',
+                      'failure': 'AgentChatsLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'LOAD_HISTORY',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'ChatsForHistory',
               'effects': [
                 [
                   'emit',
@@ -5708,11 +5754,23 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   },
                 ],
               ],
-              'event': 'ChatsForHistory',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'SEND',
+              'guard': [
+                'not',
+                [
+                  '=',
+                  [
+                    'str/default',
+                    '@payload.message',
+                    '',
+                  ],
+                  '',
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -5730,44 +5788,11 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   },
                 ],
               ],
-              'event': 'SEND',
-              'from': 'ready',
-              'guard': [
-                'not',
-                [
-                  '=',
-                  [
-                    'str/default',
-                    '@payload.message',
-                    '',
-                  ],
-                  '',
-                ],
-              ],
-              'to': 'ready',
             },
             {
-              'effects': [
-                [
-                  'persist',
-                  'create',
-                  ('AgentChat' satisfies _StdAgentSessionEntityName),
-                  {
-                    'lastActiveAt': '@now',
-                    'ownerId': '@user.id',
-                    'startedAt': '@now',
-                    'title': '@entity.pendingMessage',
-                  },
-                  {
-                    'emit': {
-                      'failure': 'AgentChatsLoadFailed',
-                      'success': 'ChatReadyForSend',
-                    },
-                  },
-                ],
-              ],
-              'event': 'ChatsForSend',
               'from': 'ready',
+              'to': 'ready',
+              'event': 'ChatsForSend',
               'guard': [
                 '=',
                 [
@@ -5776,55 +5801,44 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                 ],
                 0,
               ],
-              'to': 'ready',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('AgentChat' satisfies _StdAgentSessionEntityName),
+                  {
+                    'lastActiveAt': '@now',
+                    'startedAt': '@now',
+                    'ownerId': '@user.id',
+                    'title': '@entity.pendingMessage',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ChatReadyForSend',
+                      'failure': 'AgentChatsLoadFailed',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'ChatsForSend',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'persist',
                   'update',
                   ('AgentChat' satisfies _StdAgentSessionEntityName),
                   {
-                    'id': [
-                      'object/get',
-                      [
-                        'array/first',
-                        [
-                          'array/sort',
-                          '@payload.data',
-                          'lastActiveAt',
-                          'desc',
-                        ],
-                      ],
-                      'id',
-                    ],
-                    'lastActiveAt': '@now',
-                    'ownerId': [
-                      'object/get',
-                      [
-                        'array/first',
-                        [
-                          'array/sort',
-                          '@payload.data',
-                          'lastActiveAt',
-                          'desc',
-                        ],
-                      ],
-                      'ownerId',
-                    ],
-                    'startedAt': [
-                      'object/get',
-                      [
-                        'array/first',
-                        [
-                          'array/sort',
-                          '@payload.data',
-                          'lastActiveAt',
-                          'desc',
-                        ],
-                      ],
-                      'startedAt',
-                    ],
                     'title': [
                       'if',
                       [
@@ -5863,28 +5877,60 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                         'title',
                       ],
                     ],
+                    'ownerId': [
+                      'object/get',
+                      [
+                        'array/first',
+                        [
+                          'array/sort',
+                          '@payload.data',
+                          'lastActiveAt',
+                          'desc',
+                        ],
+                      ],
+                      'ownerId',
+                    ],
+                    'lastActiveAt': '@now',
+                    'id': [
+                      'object/get',
+                      [
+                        'array/first',
+                        [
+                          'array/sort',
+                          '@payload.data',
+                          'lastActiveAt',
+                          'desc',
+                        ],
+                      ],
+                      'id',
+                    ],
+                    'startedAt': [
+                      'object/get',
+                      [
+                        'array/first',
+                        [
+                          'array/sort',
+                          '@payload.data',
+                          'lastActiveAt',
+                          'desc',
+                        ],
+                      ],
+                      'startedAt',
+                    ],
                   },
                   {
                     'emit': {
-                      'failure': 'AgentChatsLoadFailed',
                       'success': 'ChatReadyForSend',
+                      'failure': 'AgentChatsLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ChatsForSend',
-              'from': 'ready',
-              'guard': [
-                '>',
-                [
-                  'array/len',
-                  '@payload.data',
-                ],
-                0,
-              ],
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'ChatReadyForSend',
               'effects': [
                 [
                   'emit',
@@ -5900,11 +5946,15 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   {},
                 ],
               ],
-              'event': 'ChatReadyForSend',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'REPLIED',
+              'guard': [
+                'not',
+                '@payload.ephemeral',
+              ],
               'effects': [
                 [
                   'set',
@@ -5922,15 +5972,11 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   },
                 ],
               ],
-              'event': 'REPLIED',
-              'from': 'ready',
-              'guard': [
-                'not',
-                '@payload.ephemeral',
-              ],
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'ChatsForReply',
               'effects': [
                 [
                   'emit',
@@ -5965,35 +6011,35 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   },
                 ],
               ],
-              'event': 'ChatsForReply',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'NEW_CHAT',
               'effects': [
                 [
                   'persist',
                   'create',
                   ('AgentChat' satisfies _StdAgentSessionEntityName),
                   {
-                    'lastActiveAt': '@now',
                     'ownerId': '@user.id',
-                    'startedAt': '@now',
                     'title': '',
+                    'lastActiveAt': '@now',
+                    'startedAt': '@now',
                   },
                   {
                     'emit': {
-                      'failure': 'AgentChatsLoadFailed',
                       'success': 'NewChatStarted',
+                      'failure': 'AgentChatsLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'NEW_CHAT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'NewChatStarted',
               'effects': [
                 [
                   'emit',
@@ -6008,20 +6054,16 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   {},
                 ],
               ],
-              'event': 'NewChatStarted',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'SELECT_CHAT',
               'effects': [
                 [
                   'fetch',
                   ('AgentChat' satisfies _StdAgentSessionEntityName),
                   {
-                    'emit': {
-                      'failure': 'AgentChatsLoadFailed',
-                      'success': 'ChatsForSelect',
-                    },
                     'filter': [
                       '=',
                       [
@@ -6031,14 +6073,26 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                       ],
                       '@payload.chatId',
                     ],
+                    'emit': {
+                      'failure': 'AgentChatsLoadFailed',
+                      'success': 'ChatsForSelect',
+                    },
                   },
                 ],
               ],
-              'event': 'SELECT_CHAT',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'ChatsForSelect',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'persist',
@@ -6081,25 +6135,17 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   },
                   {
                     'emit': {
-                      'failure': 'AgentChatsLoadFailed',
                       'success': 'ChatSelected',
+                      'failure': 'AgentChatsLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'ChatsForSelect',
-              'from': 'ready',
-              'guard': [
-                '>',
-                [
-                  'array/len',
-                  '@payload.data',
-                ],
-                0,
-              ],
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'ChatSelected',
               'effects': [
                 [
                   'emit',
@@ -6114,28 +6160,28 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   {},
                 ],
               ],
-              'event': 'ChatSelected',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'LIST_CHATS',
               'effects': [
                 [
                   'fetch',
                   ('AgentChat' satisfies _StdAgentSessionEntityName),
                   {
                     'emit': {
-                      'failure': 'AgentChatsLoadFailed',
                       'success': 'ChatsForList',
+                      'failure': 'AgentChatsLoadFailed',
                     },
                   },
                 ],
               ],
-              'event': 'LIST_CHATS',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'ChatsForList',
               'effects': [
                 [
                   'emit',
@@ -6154,19 +6200,19 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                         'item',
                         {
                           'id': '@item.id',
-                          'lastActiveAt': '@item.lastActiveAt',
                           'title': '@item.title',
+                          'lastActiveAt': '@item.lastActiveAt',
                         },
                       ],
                     ],
                   },
                 ],
               ],
-              'event': 'ChatsForList',
-              'from': 'ready',
-              'to': 'ready',
             },
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'AgentChatsLoadFailed',
               'effects': [
                 [
                   'emit',
@@ -6180,33 +6226,22 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   'toast',
                   {
                     'message': '@payload.error',
-                    'type': 'alert',
                     'variant': 'error',
+                    'type': 'alert',
                   },
                 ],
               ],
-              'event': 'AgentChatsLoadFailed',
-              'from': 'ready',
-              'to': 'ready',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'interaction',
-        'config': {
-          'newChatLabel': {
-            'default': 'New conversation',
-            'label': 'New conversation button',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'untitledLabel': {
-            'default': 'New conversation',
-            'label': 'Name of a conversation with no messages yet',
-            'tier': 'presentation',
-            'type': 'string',
-          },
+        'name': 'AgentChatList',
+        'entityRebindable': true,
+        'entityContract': {
+          'requires': [],
+          'provides': [],
         },
         'effectRow': [
           {
@@ -6226,44 +6261,48 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
             'resource': 'main',
           },
         ],
+        'category': 'interaction',
+        'linkedEntity': 'AgentChat',
         'emits': [
           {
-            'description': 'The user reopened a past conversation.',
             'event': 'ASSISTANT_CHAT_SELECTED',
+            'description': 'The user reopened a past conversation.',
+            'synonyms': 'open conversation, switch conversation',
+            'tier': 'domain',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'chatId',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'synonyms': 'open conversation, switch conversation',
-            'tier': 'domain',
           },
           {
-            'description': 'The user started a new conversation.',
             'event': 'ASSISTANT_NEW_CHAT',
-            'scope': 'external',
+            'description': 'The user started a new conversation.',
             'synonyms': 'new chat, new conversation, start over',
             'tier': 'domain',
+            'scope': 'external',
           },
           {
             'event': 'AgentChatsLoaded',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
-                'entity': 'AgentChat',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'ownerId',
-                    'required': true,
                     'type': 'string',
+                    'required': true,
                   },
                   {
                     'name': 'title',
@@ -6286,14 +6325,14 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'AgentChat',
               },
             ],
-            'scope': 'external',
-            'tier': 'internal',
           },
           {
             'event': 'AgentChatsLoadFailed',
+            'tier': 'internal',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'error',
@@ -6304,28 +6343,27 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                 'type': 'string',
               },
             ],
-            'scope': 'external',
-            'tier': 'internal',
           },
         ],
-        'entityContract': {
-          'provides': [],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'AgentChat',
         'listens': [
           {
             'event': 'ASSISTANT_CHATS_CHANGED',
+            'triggers': 'CHATS_CHANGED',
             'source': {
               'kind': 'any',
             },
-            'triggers': 'CHATS_CHANGED',
           },
         ],
-        'name': 'AgentChatList',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'browsing',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -6334,20 +6372,21 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
             {
               'key': 'AgentChatsLoaded',
               'name': 'AgentChat s loaded',
+              'tier': 'internal',
               'payloadSchema': [
                 {
-                  'entity': 'AgentChat',
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'title',
@@ -6370,14 +6409,14 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'entity': 'AgentChat',
                 },
               ],
-              'tier': 'internal',
             },
             {
               'key': 'AgentChatsLoadFailed',
               'name': 'AgentChat s load failed',
+              'tier': 'internal',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -6388,36 +6427,37 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   'type': 'string',
                 },
               ],
-              'tier': 'internal',
             },
             {
-              'description': 'A conversation was started, used or reopened.',
               'key': 'CHATS_CHANGED',
               'name': 'Chats Changed',
+              'description': 'A conversation was started, used or reopened.',
             },
             {
-              'description': 'Reopen this conversation.',
               'key': 'OPEN_CHAT',
               'name': 'Open Chat',
+              'description': 'Reopen this conversation.',
+              'synonyms': 'open, select, switch',
+              'tier': 'presentation',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
-                  'entity': 'AgentChat',
                   'name': 'row',
+                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'ownerId',
-                      'required': true,
                       'type': 'string',
+                      'required': true,
                     },
                     {
                       'name': 'title',
@@ -6440,59 +6480,51 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                       'type': 'string',
                     },
                   ],
-                  'type': 'object',
+                  'entity': 'AgentChat',
                 },
               ],
-              'synonyms': 'open, select, switch',
-              'tier': 'presentation',
             },
             {
-              'description': 'Start a new conversation.',
               'key': 'NEW_CHAT_CLICKED',
               'name': 'New Chat Clicked',
+              'description': 'Start a new conversation.',
               'tier': 'presentation',
             },
             {
-              'description': 'The user reopened a past conversation.',
               'key': 'ASSISTANT_CHAT_SELECTED',
               'name': 'Assistant Chat Selected',
+              'description': 'The user reopened a past conversation.',
+              'synonyms': 'open conversation, switch conversation',
+              'tier': 'domain',
               'payloadSchema': [
                 {
                   'name': 'chatId',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'synonyms': 'open conversation, switch conversation',
-              'tier': 'domain',
             },
             {
-              'description': 'The user started a new conversation.',
               'key': 'ASSISTANT_NEW_CHAT',
               'name': 'Assistant New Chat',
+              'description': 'The user started a new conversation.',
               'synonyms': 'new chat, new conversation, start over',
               'tier': 'domain',
             },
           ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'loading',
-            },
-            {
-              'name': 'browsing',
-            },
-          ],
           'transitions': [
             {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('AgentChat' satisfies _StdAgentSessionEntityName),
                   {
                     'emit': {
-                      'failure': 'AgentChatsLoadFailed',
                       'success': 'AgentChatsLoaded',
+                      'failure': 'AgentChatsLoadFailed',
                     },
                   },
                 ],
@@ -6501,46 +6533,50 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   'main',
                   {
                     'rows': 4,
-                    'type': 'skeleton',
                     'variant': 'list',
+                    'type': 'skeleton',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'loading',
-              'to': 'loading',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'AgentChatsLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
-                        'action': 'NEW_CHAT_CLICKED',
                         'aria-label': '@config.newChatLabel',
-                        'className': 'w-full',
                         'icon': 'message-square-plus',
-                        'label': '@config.newChatLabel',
-                        'type': 'button',
                         'variant': 'secondary',
+                        'className': 'w-full',
+                        'label': '@config.newChatLabel',
+                        'action': 'NEW_CHAT_CLICKED',
+                        'type': 'button',
                       },
                       {
                         'emptyDescription': 'Your conversations with the assistant appear here.',
+                        'type': 'data-list',
                         'emptyIcon': 'messages-square',
-                        'emptyTitle': 'No conversations yet',
+                        'itemClickEvent': 'OPEN_CHAT',
                         'entity': [
                           'array/sort',
                           '@payload.data',
                           'lastActiveAt',
                           'desc',
                         ],
-                        'itemClickEvent': 'OPEN_CHAT',
+                        'emptyTitle': 'No conversations yet',
                         'renderItem': [
                           'fn',
                           'item',
                           {
+                            'direction': 'vertical',
+                            'type': 'stack',
                             'children': [
                               {
                                 'className': 'truncate',
@@ -6558,56 +6594,52 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                                   '@config.untitledLabel',
                                   '@item.title',
                                 ],
-                                'type': 'typography',
                                 'variant': 'body',
+                                'type': 'typography',
                               },
                             ],
-                            'direction': 'vertical',
                             'gap': 'none',
-                            'type': 'stack',
                           },
                         ],
-                        'type': 'data-list',
                         'variant': 'compact',
                       },
                     ],
                     'className': 'h-full min-h-0 overflow-y-auto',
                     'direction': 'vertical',
                     'gap': 'sm',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'AgentChatsLoaded',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'AgentChatsLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'variant': 'error',
                     'message': '@payload.error',
                     'title': 'Couldn\'t load your conversations',
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'AgentChatsLoadFailed',
-              'from': 'loading',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
                   ('AgentChat' satisfies _StdAgentSessionEntityName),
                   {
                     'emit': {
-                      'failure': 'AgentChatsLoadFailed',
                       'success': 'AgentChatsLoaded',
+                      'failure': 'AgentChatsLoadFailed',
                     },
                   },
                 ],
@@ -6615,67 +6647,65 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   'render-ui',
                   'main',
                   {
-                    'rows': 4,
                     'type': 'skeleton',
+                    'rows': 4,
                     'variant': 'list',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'browsing',
-              'to': 'loading',
             },
             {
-              'effects': [
-                [
-                  'fetch',
-                  ('AgentChat' satisfies _StdAgentSessionEntityName),
-                  {
-                    'emit': {
-                      'failure': 'AgentChatsLoadFailed',
-                      'success': 'AgentChatsLoaded',
-                    },
-                  },
-                ],
-              ],
+              'from': 'browsing',
+              'to': 'browsing',
               'event': 'CHATS_CHANGED',
-              'from': 'browsing',
-              'to': 'browsing',
+              'effects': [
+                [
+                  'fetch',
+                  ('AgentChat' satisfies _StdAgentSessionEntityName),
+                  {
+                    'emit': {
+                      'failure': 'AgentChatsLoadFailed',
+                      'success': 'AgentChatsLoaded',
+                    },
+                  },
+                ],
+              ],
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'AgentChatsLoaded',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'sm',
+                    'className': 'h-full min-h-0 overflow-y-auto',
                     'children': [
                       {
-                        'action': 'NEW_CHAT_CLICKED',
-                        'aria-label': '@config.newChatLabel',
-                        'className': 'w-full',
                         'icon': 'message-square-plus',
+                        'aria-label': '@config.newChatLabel',
                         'label': '@config.newChatLabel',
                         'type': 'button',
+                        'action': 'NEW_CHAT_CLICKED',
                         'variant': 'secondary',
+                        'className': 'w-full',
                       },
                       {
                         'emptyDescription': 'Your conversations with the assistant appear here.',
-                        'emptyIcon': 'messages-square',
                         'emptyTitle': 'No conversations yet',
-                        'entity': [
-                          'array/sort',
-                          '@payload.data',
-                          'lastActiveAt',
-                          'desc',
-                        ],
-                        'itemClickEvent': 'OPEN_CHAT',
+                        'variant': 'compact',
                         'renderItem': [
                           'fn',
                           'item',
                           {
+                            'direction': 'vertical',
+                            'type': 'stack',
+                            'gap': 'none',
                             'children': [
                               {
-                                'className': 'truncate',
                                 'content': [
                                   'if',
                                   [
@@ -6690,48 +6720,50 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                                   '@config.untitledLabel',
                                   '@item.title',
                                 ],
+                                'className': 'truncate',
                                 'type': 'typography',
                                 'variant': 'body',
                               },
                             ],
-                            'direction': 'vertical',
-                            'gap': 'none',
-                            'type': 'stack',
                           },
                         ],
+                        'itemClickEvent': 'OPEN_CHAT',
+                        'emptyIcon': 'messages-square',
                         'type': 'data-list',
-                        'variant': 'compact',
+                        'entity': [
+                          'array/sort',
+                          '@payload.data',
+                          'lastActiveAt',
+                          'desc',
+                        ],
                       },
                     ],
-                    'className': 'h-full min-h-0 overflow-y-auto',
                     'direction': 'vertical',
-                    'gap': 'sm',
-                    'type': 'stack',
                   },
                 ],
               ],
-              'event': 'AgentChatsLoaded',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'AgentChatsLoadFailed',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'variant': 'error',
                     'message': '@payload.error',
                     'title': 'Couldn\'t load your conversations',
                     'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'AgentChatsLoadFailed',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'OPEN_CHAT',
               'effects': [
                 [
                   'emit',
@@ -6741,11 +6773,11 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   },
                 ],
               ],
-              'event': 'OPEN_CHAT',
-              'from': 'browsing',
-              'to': 'browsing',
             },
             {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'NEW_CHAT_CLICKED',
               'effects': [
                 [
                   'emit',
@@ -6753,12 +6785,24 @@ export function stdAgentSessionAgentChatsOrbital(params: StdAgentSessionAgentCha
                   {},
                 ],
               ],
-              'event': 'NEW_CHAT_CLICKED',
-              'from': 'browsing',
-              'to': 'browsing',
             },
           ],
         },
+        'config': {
+          'untitledLabel': {
+            'type': 'string',
+            'default': 'New conversation',
+            'label': 'Name of a conversation with no messages yet',
+            'tier': 'presentation',
+          },
+          'newChatLabel': {
+            'type': 'string',
+            'default': 'New conversation',
+            'label': 'New conversation button',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

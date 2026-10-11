@@ -48,10 +48,10 @@ export interface StdAreaFillAreaFilledPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAreaFillConfig {
-  /** Default: `[]` */
-  fills?: EntityRow[];
   /** Default: `true` */
   running?: boolean;
+  /** Default: `[]` */
+  fills?: EntityRow[];
 }
 
 /**

@@ -46,6 +46,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors.',
     hasSideEffects: true,
     runsOn: 'server',
+    host: 'program',
     returnType: 'CatalogEntry[]',
     params: [
       { name: 'scope', type: { kind: 'object', fields: { paths: { kind: 'array', of: 'string' }, exposure: { kind: 'array', of: 'string' } } }, description: 'Registry folders and an optional exposure filter' },
@@ -59,6 +60,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Describe a trait value (its knobs, the events it emits and listens to, its transition events, and the shipped knob embedding vectors), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages).',
     hasSideEffects: true,
     runsOn: 'server',
+    host: 'program',
     returnType: 'any',
     params: [
       { name: 'value', type: 'any', description: 'A trait value, an orbital value, or { behavior }' },
@@ -72,12 +74,27 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'The behavior a trait value, an orbital value or `{ behavior }` names, as a quoted program.',
     hasSideEffects: true,
     runsOn: 'server',
+    host: 'program',
     returnType: 'sexpr',
     params: [
       { name: 'value', type: 'any', description: 'A trait value, an orbital value, or { behavior }' },
       { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
     example: '["behavior/source", "@entity.widget", { "emit": { "success": "SOURCED", "failure": "SOURCE_FAILED" } }]',
+  },
+  'behavior/resolve': {
+    module: 'behavior', category: 'std-behavior',
+    minArity: 1, maxArity: 2,
+    description: 'The behavior a trait value, an orbital value or `{ behavior }` names, resolved: every import and composed trait inlined, as a quoted program.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: 'sexpr',
+    params: [
+      { name: 'value', type: 'any', description: 'A trait value, an orbital value, or { behavior }' },
+      { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+    ],
+    example: '["behavior/resolve", "@entity.app", { "emit": { "success": "RESOLVED", "failure": "RESOLVE_FAILED" } }]',
   },
 };
 

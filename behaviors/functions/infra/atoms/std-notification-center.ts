@@ -282,8 +282,8 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
     name: 'NotificationCenterOrbital',
     uses: [
       {
-        'as': 'Button',
         'from': 'std/behaviors/ui-button',
+        'as': 'Button',
       },
     ],
     expects: [
@@ -299,29 +299,27 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
-            'description': 'Owner of this preference row — rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot.',
             'name': 'personId',
-            'required': true,
-            'synonyms': 'user, owner, account',
             'type': 'string',
+            'required': true,
+            'description': 'Owner of this preference row — rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot.',
+            'synonyms': 'user, owner, account',
           },
           {
+            'name': 'eventKey',
+            'type': 'string',
             'default': '',
             'description': 'Event key this preference applies to (matches a listener\'s eventKey); blank = all events.',
-            'name': 'eventKey',
             'synonyms': 'event, trigger, subscription, topic',
-            'type': 'string',
           },
           {
-            'default': 'in_app',
-            'description': 'Channel override for this user.',
             'name': 'channel',
-            'synonyms': 'preferred channel, delivery method',
             'type': 'string',
+            'default': 'in_app',
             'values': [
               'in_app',
               'email',
@@ -330,39 +328,41 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
               'sms',
               'webhook',
             ],
+            'description': 'Channel override for this user.',
+            'synonyms': 'preferred channel, delivery method',
           },
           {
-            'default': 'instant',
-            'description': 'Delivery mode: instant (default), digest (deferred to the drain cycle), or off (muted).',
             'name': 'mode',
-            'synonyms': 'delivery mode, frequency, cadence, mute, defer',
             'type': 'string',
+            'default': 'instant',
             'values': [
               'instant',
               'digest',
               'off',
             ],
+            'description': 'Delivery mode: instant (default), digest (deferred to the drain cycle), or off (muted).',
+            'synonyms': 'delivery mode, frequency, cadence, mute, defer',
           },
           {
+            'name': 'quietHours',
+            'type': 'string',
             'default': '',
             'description': 'Per-user quiet-hours window as "HH:MM-HH:MM" (e.g. 22:00-07:00); blank = disabled.',
-            'name': 'quietHours',
             'synonyms': 'do not disturb, quiet window, night mode',
-            'type': 'string',
           },
           {
+            'name': 'createdAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when this preference row was created.',
-            'name': 'createdAt',
             'synonyms': 'creation time, created',
-            'type': 'number',
           },
           {
+            'name': 'updatedAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when this preference row was last updated.',
-            'name': 'updatedAt',
             'synonyms': 'modified, last updated',
-            'type': 'number',
           },
         ];
         const extras = params.fields ?? [];
@@ -373,170 +373,170 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
     } as Entity,
     auxiliaryEntities: [
       {
+        'name': 'PushSubscription',
         'collection': 'pushSubscriptions',
+        'persistence': 'persistent',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'userId',
+            'type': 'string',
             'default': '',
             'description': 'Owner of this browser push subscription. Owner-scoped access predicates belong to the binding organism\'s [identity] roster, as with NotificationPreference.',
-            'name': 'userId',
             'synonyms': 'user, owner, account',
-            'type': 'string',
           },
           {
+            'name': 'endpoint',
+            'type': 'string',
             'default': '',
             'description': 'Push service endpoint URL for this subscription.',
-            'name': 'endpoint',
             'synonyms': 'push url, subscription endpoint',
-            'type': 'string',
           },
           {
+            'name': 'p256dh',
+            'type': 'string',
             'default': '',
             'description': 'Client public key (p256dh) of the subscription.',
-            'name': 'p256dh',
             'synonyms': 'public key',
-            'type': 'string',
           },
           {
+            'name': 'auth',
+            'type': 'string',
             'default': '',
             'description': 'Auth secret of the subscription.',
-            'name': 'auth',
             'synonyms': 'auth secret',
-            'type': 'string',
           },
           {
+            'name': 'createdAt',
+            'type': 'number',
             'default': 0,
             'description': 'When this subscription was captured.',
-            'name': 'createdAt',
             'synonyms': 'subscribed at, created',
-            'type': 'number',
           },
           {
+            'name': 'lastError',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: last subscribe-flow failure shown to the user; blank = none.',
-            'name': 'lastError',
             'synonyms': 'subscribe error, failure reason',
-            'type': 'string',
           },
         ],
-        'name': 'PushSubscription',
-        'persistence': 'persistent',
       },
       {
+        'name': 'NotificationRecord',
         'collection': 'notifications',
+        'persistence': 'persistent',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'recipient',
+            'type': 'string',
             'default': '',
             'description': 'The identifier of the entity receiving the notification.',
-            'name': 'recipient',
             'synonyms': 'user, target, receiver, destination',
-            'type': 'string',
           },
           {
+            'name': 'channel',
+            'type': 'string',
             'default': 'in-app',
             'description': 'The delivery method for the notification (e.g., email, SMS, in-app).',
-            'name': 'channel',
             'synonyms': 'delivery, medium, type',
-            'type': 'string',
           },
           {
+            'name': 'message',
+            'type': 'string',
             'default': '',
             'description': 'The content of the notification message.',
-            'name': 'message',
             'synonyms': 'text, content, body',
-            'type': 'string',
           },
           {
+            'name': 'severity',
+            'type': 'string',
             'default': 'info',
             'description': 'Indicates the importance or urgency level of the notification.',
-            'name': 'severity',
             'synonyms': 'priority, level, importance',
-            'type': 'string',
           },
           {
+            'name': 'dispatched',
+            'type': 'boolean',
             'default': false,
             'description': 'Indicates whether the notification has been successfully sent.',
-            'name': 'dispatched',
             'synonyms': 'sent, delivered, status',
-            'type': 'boolean',
           },
           {
+            'name': 'error',
+            'type': 'string',
             'default': '',
             'description': 'Suppression reason or delivery failure detail when dispatched is false.',
-            'name': 'error',
             'synonyms': 'error message, failure reason, dispatch error',
-            'type': 'string',
           },
           {
+            'name': 'recordedAt',
+            'type': 'number',
             'default': 0,
             'description': 'Timestamp indicating when the notification record was created.',
-            'name': 'recordedAt',
             'synonyms': 'creation time, timestamp, date, when',
-            'type': 'number',
           },
         ],
-        'name': 'NotificationRecord',
-        'persistence': 'persistent',
       },
       {
+        'name': 'DigestRunView',
+        'persistence': 'runtime',
         'fields': [
           {
             'name': 'id',
-            'required': true,
             'type': 'string',
+            'required': true,
           },
           {
+            'name': 'headId',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: id of the audit row the drain loop is currently delivering.',
-            'name': 'headId',
             'synonyms': 'current id, cursor',
-            'type': 'string',
           },
           {
+            'name': 'headRecipient',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: recipient of the row being delivered.',
-            'name': 'headRecipient',
             'synonyms': 'current recipient',
-            'type': 'string',
           },
           {
+            'name': 'headMessage',
+            'type': 'string',
             'default': '',
             'description': 'Scratch: message of the row being delivered.',
-            'name': 'headMessage',
             'synonyms': 'current message',
-            'type': 'string',
           },
           {
+            'name': 'drainedCount',
+            'type': 'number',
             'default': 0,
             'description': 'Number of rows delivered in the current drain cycle.',
-            'name': 'drainedCount',
             'synonyms': 'delivered count, processed',
-            'type': 'number',
           },
           {
+            'name': 'lastError',
+            'type': 'string',
             'default': '',
             'description': 'Last drain failure; blank = none.',
-            'name': 'lastError',
             'synonyms': 'drain error, failure',
-            'type': 'string',
           },
         ],
-        'name': 'DigestRunView',
-        'persistence': 'runtime',
       },
     ] as EntityRef[],
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'PushSubscriber',
         'effectRow': [
           {
             'kind': 'browser/push-subscribe',
@@ -554,10 +554,13 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             'resource': '@entity.lastError',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'PushSubscription',
         'emits': [
           {
-            'description': 'browser/push-subscribe resolved; the subscription credentials arrive flat on the payload',
             'event': 'PUSH_SUBSCRIBED',
+            'description': 'browser/push-subscribe resolved; the subscription credentials arrive flat on the payload',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'endpoint',
@@ -572,58 +575,61 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                 'type': 'string',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Push API unavailable, permission denied, or the host has no VAPID key',
             'event': 'PUSH_SUBSCRIBE_FAILED',
+            'description': 'Push API unavailable, permission denied, or the host has no VAPID key',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Subscription row persisted for the current user',
             'event': 'PUSH_SAVED',
+            'description': 'Subscription row persisted for the current user',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Persisting the subscription row failed',
             'event': 'PUSH_SAVE_FAILED',
+            'description': 'Persisting the subscription row failed',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
         ],
-        'linkedEntity': 'PushSubscription',
-        'name': 'PushSubscriber',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'SUBSCRIBE_PUSH',
               'name': 'Subscribe Push',
             },
             {
-              'description': 'browser/push-subscribe resolved; the subscription credentials arrive flat on the payload',
               'key': 'PUSH_SUBSCRIBED',
               'name': 'Push Subscribed',
+              'description': 'browser/push-subscribe resolved; the subscription credentials arrive flat on the payload',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'endpoint',
@@ -638,72 +644,68 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   'type': 'string',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Subscription row persisted for the current user',
               'key': 'PUSH_SAVED',
               'name': 'Push Saved',
+              'description': 'Subscription row persisted for the current user',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Push API unavailable, permission denied, or the host has no VAPID key',
               'key': 'PUSH_SUBSCRIBE_FAILED',
               'name': 'Push Subscribe Failed',
+              'description': 'Push API unavailable, permission denied, or the host has no VAPID key',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Persisting the subscription row failed',
               'key': 'PUSH_SAVE_FAILED',
               'name': 'Push Save Failed',
+              'description': 'Persisting the subscription row failed',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'SUBSCRIBE_PUSH',
               'effects': [
                 [
                   'browser/push-subscribe',
                   {
                     'emit': {
-                      'failure': 'PUSH_SUBSCRIBE_FAILED',
                       'success': 'PUSH_SUBSCRIBED',
+                      'failure': 'PUSH_SUBSCRIBE_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'SUBSCRIBE_PUSH',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PUSH_SUBSCRIBED',
               'effects': [
                 [
                   'set',
@@ -715,25 +717,25 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   'create',
                   ('PushSubscription' satisfies _StdNotificationCenterEntityName),
                   {
-                    'auth': '@payload.auth',
                     'createdAt': '@now',
+                    'auth': '@payload.auth',
+                    'userId': '@user.id',
                     'endpoint': '@payload.endpoint',
                     'p256dh': '@payload.p256dh',
-                    'userId': '@user.id',
                   },
                   {
                     'emit': {
-                      'failure': 'PUSH_SAVE_FAILED',
                       'success': 'PUSH_SAVED',
+                      'failure': 'PUSH_SAVE_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'PUSH_SUBSCRIBED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PUSH_SAVED',
               'effects': [
                 [
                   'render-ui',
@@ -746,11 +748,11 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   },
                 ],
               ],
-              'event': 'PUSH_SAVED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PUSH_SUBSCRIBE_FAILED',
               'effects': [
                 [
                   'set',
@@ -761,18 +763,18 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'variant': 'warning',
                     'message': 'Could not enable push notifications',
                     'type': 'alert',
-                    'variant': 'warning',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'PUSH_SUBSCRIBE_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PUSH_SAVE_FAILED',
               'effects': [
                 [
                   'set',
@@ -783,52 +785,50 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': 'Could not save the push subscription',
-                    'type': 'alert',
                     'variant': 'warning',
+                    'type': 'alert',
+                    'dismissible': true,
                   },
                 ],
               ],
-              'event': 'PUSH_SAVE_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdNotificationCenterNotificationCenterOrbitalUsesRef),
+        'name': 'PreferenceEditorButtonSubscribe',
+        'linkedEntity': 'NotificationPreference',
         'config': {
           'action': {
-            'default': 'OPEN_SUBSCRIBE',
             'type': 'unknown',
+            'default': 'OPEN_SUBSCRIBE',
           },
           'label': {
-            'default': 'Enable push notifications',
             'type': 'unknown',
+            'default': 'Enable push notifications',
           },
         },
-        'linkedEntity': 'NotificationPreference',
-        'name': 'PreferenceEditorButtonSubscribe',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdNotificationCenterNotificationCenterOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Button.traits.ButtonRender' satisfies _StdNotificationCenterNotificationCenterOrbitalUsesRef),
+        'name': 'PreferenceEditorButtonDigest',
+        'linkedEntity': 'NotificationPreference',
         'config': {
-          'action': {
-            'default': 'OPEN_DIGEST',
-            'type': 'unknown',
-          },
           'label': {
-            'default': 'View notification digest',
             'type': 'unknown',
+            'default': 'View notification digest',
+          },
+          'action': {
+            'type': 'unknown',
+            'default': 'OPEN_DIGEST',
           },
         },
-        'linkedEntity': 'NotificationPreference',
-        'name': 'PreferenceEditorButtonDigest',
-        'ref': ('Button.traits.ButtonRender' satisfies _StdNotificationCenterNotificationCenterOrbitalUsesRef),
       }),
       {
-        'category': 'lifecycle',
+        'name': 'PreferenceEditor',
         'effectRow': [
           {
             'kind': 'fetch',
@@ -855,48 +855,53 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             'resource': 'toast',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'NotificationPreference',
         'emits': [
           {
-            'description': 'Preference row persisted',
             'event': 'PREFERENCE_SAVED',
+            'description': 'Preference row persisted',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Preference row removed',
             'event': 'PREFERENCE_DELETED',
+            'description': 'Preference row removed',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Preference persist failed',
             'event': 'PREFERENCE_SAVE_FAILED',
+            'description': 'Preference persist failed',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
         ],
-        'linkedEntity': 'NotificationPreference',
-        'name': 'PreferenceEditor',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -969,53 +974,50 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
               ],
             },
             {
-              'description': 'Preference row persisted',
               'key': 'PREFERENCE_SAVED',
               'name': 'Preference Saved',
+              'description': 'Preference row persisted',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Preference row removed',
               'key': 'PREFERENCE_DELETED',
               'name': 'Preference Deleted',
+              'description': 'Preference row removed',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Preference persist failed',
               'key': 'PREFERENCE_SAVE_FAILED',
               'name': 'Preference Save Failed',
+              'description': 'Preference persist failed',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -1025,56 +1027,56 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       '@trait.PreferenceEditorButtonSubscribe',
                       '@trait.PreferenceEditorButtonDigest',
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'OPEN_SUBSCRIBE',
               'effects': [
                 [
                   'navigate',
                   '/notifications/subscribe',
                 ],
               ],
-              'event': 'OPEN_SUBSCRIBE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'OPEN_DIGEST',
               'effects': [
                 [
                   'navigate',
                   '/notifications/digest',
                 ],
               ],
-              'event': 'OPEN_DIGEST',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'SAVE_PREFERENCE',
               'effects': [
                 [
                   'persist',
                   'create',
                   ('NotificationPreference' satisfies _StdNotificationCenterEntityName),
                   {
+                    'quietHours': '@payload.quietHours',
+                    'personId': '@user.id',
                     'channel': '@payload.channel',
-                    'createdAt': '@now',
                     'eventKey': '@payload.eventKey',
                     'mode': '@payload.mode',
-                    'personId': '@user.id',
-                    'quietHours': '@payload.quietHours',
                     'updatedAt': '@now',
+                    'createdAt': '@now',
                   },
                   {
                     'emit': {
@@ -1084,11 +1086,11 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   },
                 ],
               ],
-              'event': 'SAVE_PREFERENCE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'UPDATE_PREFERENCE',
               'effects': [
                 [
                   'persist',
@@ -1097,24 +1099,24 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   {
                     'channel': '@payload.channel',
                     'eventKey': '@payload.eventKey',
-                    'id': '@payload.id',
+                    'updatedAt': '@now',
                     'mode': '@payload.mode',
                     'quietHours': '@payload.quietHours',
-                    'updatedAt': '@now',
+                    'id': '@payload.id',
                   },
                   {
                     'emit': {
-                      'failure': 'PREFERENCE_SAVE_FAILED',
                       'success': 'PREFERENCE_SAVED',
+                      'failure': 'PREFERENCE_SAVE_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'UPDATE_PREFERENCE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DELETE_PREFERENCE',
               'effects': [
                 [
                   'persist',
@@ -1123,17 +1125,17 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   '@payload.id',
                   {
                     'emit': {
-                      'failure': 'PREFERENCE_SAVE_FAILED',
                       'success': 'PREFERENCE_DELETED',
+                      'failure': 'PREFERENCE_SAVE_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'DELETE_PREFERENCE',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PREFERENCE_SAVED',
               'effects': [
                 [
                   'render-ui',
@@ -1146,28 +1148,28 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   },
                 ],
               ],
-              'event': 'PREFERENCE_SAVED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PREFERENCE_DELETED',
               'effects': [
                 [
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
                     'message': 'Notification preference removed',
                     'type': 'alert',
+                    'dismissible': true,
                     'variant': 'info',
                   },
                 ],
               ],
-              'event': 'PREFERENCE_DELETED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'PREFERENCE_SAVE_FAILED',
               'effects': [
                 [
                   'render-ui',
@@ -1180,41 +1182,13 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   },
                 ],
               ],
-              'event': 'PREFERENCE_SAVE_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       {
-        'category': 'lifecycle',
-        'config': {
-          'digestEnabled': {
-            'default': false,
-            'description': 'Drain suppressed notifications (digest-deferred and quiet-hours audit rows) on the hourly cycle. Off by default.',
-            'label': 'Deliver digests',
-            'synonyms': 'enable digest, digest mode, batch notifications, daily summary, drain suppressed',
-            'tier': 'infra',
-            'type': 'boolean',
-          },
-          'digestSubject': {
-            'default': 'Notification digest',
-            'description': 'Subject line for drained digest deliveries.',
-            'label': 'Digest email subject',
-            'synonyms': 'digest title, summary subject, email subject',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'minAgeHours': {
-            'default': 1,
-            'description': 'Only drain audit rows at least this many hours old, so quiet-hours suppressions are not redelivered inside their window.',
-            'label': 'Minimum age (hours)',
-            'synonyms': 'delay, drain delay, hold for, batch window',
-            'tier': 'infra',
-            'type': 'number',
-          },
-        },
+        'name': 'DigestDrain',
         'effectRow': [
           {
             'kind': 'call-service',
@@ -1262,14 +1236,17 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             'site': 'tick',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'DigestRunView',
         'emits': [
           {
-            'description': 'Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first',
             'event': 'DIGEST_ROWS_LOADED',
+            'description': 'Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first',
+            'tier': 'secondary',
             'payloadSchema': [
               {
-                'entity': 'NotifRow',
                 'name': 'data',
+                'type': '[object]',
                 'properties': [
                   {
                     'name': 'id',
@@ -1304,65 +1281,72 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                     'type': 'number',
                   },
                 ],
-                'type': '[object]',
+                'entity': 'NotifRow',
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'email.send result for the current digest row',
             'event': 'DIGEST_ITEM_SENT',
+            'description': 'email.send result for the current digest row',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'status',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Current row marked dispatched; drives the next loop pass',
             'event': 'DIGEST_STEPPED',
+            'description': 'Current row marked dispatched; drives the next loop pass',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'id',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
           {
-            'description': 'Digest scan / delivery / persist failed — the cycle stops until the next tick',
             'event': 'DIGEST_FAILED',
+            'description': 'Digest scan / delivery / persist failed — the cycle stops until the next tick',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'error',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'tier': 'secondary',
           },
         ],
-        'linkedEntity': 'DigestRunView',
-        'name': 'DigestDrain',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'draining',
+            },
+          ],
           'events': [
             {
-              'description': 'Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first',
               'key': 'DIGEST_ROWS_LOADED',
               'name': 'Digest Rows Loaded',
+              'description': 'Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'type': '[object]',
                   'properties': [
                     {
                       'name': 'id',
@@ -1397,67 +1381,71 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                       'type': 'number',
                     },
                   ],
-                  'type': '[object]',
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Digest scan / delivery / persist failed — the cycle stops until the next tick',
               'key': 'DIGEST_FAILED',
               'name': 'Digest Failed',
+              'description': 'Digest scan / delivery / persist failed — the cycle stops until the next tick',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'email.send result for the current digest row',
               'key': 'DIGEST_ITEM_SENT',
               'name': 'Digest Item Sent',
+              'description': 'email.send result for the current digest row',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'status',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
             },
             {
-              'description': 'Current row marked dispatched; drives the next loop pass',
               'key': 'DIGEST_STEPPED',
               'name': 'Digest Stepped',
+              'description': 'Current row marked dispatched; drives the next loop pass',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'id',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'secondary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'draining',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'draining',
+              'event': 'DIGEST_ROWS_LOADED',
+              'guard': [
+                'and',
+                '@config.digestEnabled',
+                [
+                  '>',
+                  [
+                    'array/len',
+                    '@payload.data',
+                  ],
+                  0,
+                ],
+              ],
               'effects': [
                 [
                   'set',
@@ -1500,10 +1488,10 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   'email',
                   'send',
                   {
+                    'to': '@entity.headRecipient',
                     'body': '@entity.headMessage',
                     'from': '',
                     'subject': '@config.digestSubject',
-                    'to': '@entity.headRecipient',
                   },
                   {
                     'emit': {
@@ -1513,25 +1501,11 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   },
                 ],
               ],
-              'event': 'DIGEST_ROWS_LOADED',
-              'from': 'idle',
-              'guard': [
-                'and',
-                '@config.digestEnabled',
-                [
-                  '>',
-                  [
-                    'array/len',
-                    '@payload.data',
-                  ],
-                  0,
-                ],
-              ],
-              'to': 'draining',
             },
             {
-              'event': 'DIGEST_ROWS_LOADED',
               'from': 'idle',
+              'to': 'idle',
+              'event': 'DIGEST_ROWS_LOADED',
               'guard': [
                 '=',
                 [
@@ -1540,9 +1514,11 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                 ],
                 0,
               ],
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DIGEST_FAILED',
               'effects': [
                 [
                   'set',
@@ -1553,22 +1529,22 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   'render-ui',
                   'toast',
                   {
+                    'variant': 'error',
                     'dismissible': true,
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Couldn\'t send the notification digest — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
-                    'variant': 'error',
                   },
                 ],
               ],
-              'event': 'DIGEST_FAILED',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'draining',
+              'to': 'draining',
+              'event': 'DIGEST_ITEM_SENT',
               'effects': [
                 [
                   'set',
@@ -1595,11 +1571,11 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   },
                 ],
               ],
-              'event': 'DIGEST_ITEM_SENT',
-              'from': 'draining',
-              'to': 'draining',
             },
             {
+              'from': 'draining',
+              'to': 'draining',
+              'event': 'DIGEST_STEPPED',
               'effects': [
                 [
                   'fetch',
@@ -1662,11 +1638,19 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   },
                 ],
               ],
-              'event': 'DIGEST_STEPPED',
-              'from': 'draining',
-              'to': 'draining',
             },
             {
+              'from': 'draining',
+              'to': 'draining',
+              'event': 'DIGEST_ROWS_LOADED',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  '@payload.data',
+                ],
+                0,
+              ],
               'effects': [
                 [
                   'set',
@@ -1711,32 +1695,22 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   {
                     'body': '@entity.headMessage',
                     'from': '',
-                    'subject': '@config.digestSubject',
                     'to': '@entity.headRecipient',
+                    'subject': '@config.digestSubject',
                   },
                   {
                     'emit': {
-                      'failure': 'DIGEST_FAILED',
                       'success': 'DIGEST_ITEM_SENT',
+                      'failure': 'DIGEST_FAILED',
                     },
                   },
                 ],
               ],
-              'event': 'DIGEST_ROWS_LOADED',
-              'from': 'draining',
-              'guard': [
-                '>',
-                [
-                  'array/len',
-                  '@payload.data',
-                ],
-                0,
-              ],
-              'to': 'draining',
             },
             {
-              'event': 'DIGEST_ROWS_LOADED',
               'from': 'draining',
+              'to': 'idle',
+              'event': 'DIGEST_ROWS_LOADED',
               'guard': [
                 '=',
                 [
@@ -1745,9 +1719,11 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                 ],
                 0,
               ],
-              'to': 'idle',
             },
             {
+              'from': 'draining',
+              'to': 'idle',
+              'event': 'DIGEST_FAILED',
               'effects': [
                 [
                   'set',
@@ -1758,25 +1734,24 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   'render-ui',
                   'toast',
                   {
-                    'dismissible': true,
+                    'type': 'alert',
                     'message': [
                       'str/concat',
                       'Couldn\'t send the notification digest — ',
                       '@payload.error',
                     ],
-                    'type': 'alert',
+                    'dismissible': true,
                     'variant': 'error',
                   },
                 ],
               ],
-              'event': 'DIGEST_FAILED',
-              'from': 'draining',
-              'to': 'idle',
             },
           ],
         },
         'ticks': [
           {
+            'name': 'digestCycle',
+            'interval': '0 * * * *',
             'effects': [
               [
                 'fetch',
@@ -1839,11 +1814,36 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                 },
               ],
             ],
-            'interval': '0 * * * *',
-            'name': 'digestCycle',
             'runsInBackground': true,
           },
         ],
+        'config': {
+          'minAgeHours': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Minimum age (hours)',
+            'description': 'Only drain audit rows at least this many hours old, so quiet-hours suppressions are not redelivered inside their window.',
+            'synonyms': 'delay, drain delay, hold for, batch window',
+            'tier': 'infra',
+          },
+          'digestEnabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Deliver digests',
+            'description': 'Drain suppressed notifications (digest-deferred and quiet-hours audit rows) on the hourly cycle. Off by default.',
+            'synonyms': 'enable digest, digest mode, batch notifications, daily summary, drain suppressed',
+            'tier': 'infra',
+          },
+          'digestSubject': {
+            'type': 'string',
+            'default': 'Notification digest',
+            'label': 'Digest email subject',
+            'description': 'Subject line for drained digest deliveries.',
+            'synonyms': 'digest title, summary subject, email subject',
+            'tier': 'presentation',
+          },
+        },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

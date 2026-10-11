@@ -92,24 +92,24 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
     name: 'EscalatingDecisionOrbital',
     uses: [
       {
-        'as': 'Rung0',
         'from': 'std/behaviors/std-ml-exact-check',
+        'as': 'Rung0',
       },
       {
-        'as': 'Rung1',
         'from': 'std/behaviors/std-ml-lookup',
+        'as': 'Rung1',
       },
       {
-        'as': 'Rung3',
         'from': 'std/behaviors/std-ml-similarity',
+        'as': 'Rung3',
       },
       {
-        'as': 'Rung4',
         'from': 'std/behaviors/std-ml-infer',
+        'as': 'Rung4',
       },
       {
-        'as': 'Rung5',
         'from': 'std/behaviors/std-ml-classify',
+        'as': 'Rung5',
       },
     ],
     entity: {
@@ -118,9 +118,9 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'dispatched',
@@ -135,31 +135,33 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
     } as Entity,
     auxiliaryEntities: [
       {
+        'name': 'LadderVerdict',
+        'persistence': 'runtime',
         'fields': [
           {
-            'default': '',
             'name': 'rung',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 0,
             'name': 'confidence',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
             'name': 'reasoning',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'failReason',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'decided',
@@ -167,151 +169,151 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
             ],
           },
         ],
-        'name': 'LadderVerdict',
-        'persistence': 'runtime',
       },
       {
-        'fields': [
-          {
-            'default': false,
-            'name': 'matched',
-            'type': 'boolean',
-          },
-          {
-            'default': 'idle',
-            'name': 'status',
-            'type': 'string',
-            'values': [
-              'idle',
-              'checked',
-            ],
-          },
-        ],
         'name': 'ExactCheck',
         'persistence': 'runtime',
-      },
-      {
         'fields': [
           {
-            'default': false,
             'name': 'matched',
             'type': 'boolean',
+            'default': false,
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'checked',
             ],
           },
         ],
-        'name': 'KeyLookup',
-        'persistence': 'runtime',
       },
       {
+        'name': 'KeyLookup',
+        'persistence': 'runtime',
         'fields': [
           {
-            'default': '',
-            'name': 'query',
-            'type': 'string',
+            'name': 'matched',
+            'type': 'boolean',
+            'default': false,
           },
           {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+            'values': [
+              'idle',
+              'checked',
+            ],
+          },
+        ],
+      },
+      {
+        'name': 'SimilarityComparison',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'query',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'candidates',
+            'type': 'array',
             'default': [],
             'items': {
               'type': 'string',
             },
-            'name': 'candidates',
-            'type': 'array',
           },
           {
+            'name': 'embeddings',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'array',
               'items': {
                 'type': 'number',
               },
-              'type': 'array',
             },
-            'name': 'embeddings',
-            'type': 'array',
           },
           {
+            'name': 'queryVector',
+            'type': 'array',
             'default': [],
             'items': {
               'type': 'number',
             },
-            'name': 'queryVector',
-            'type': 'array',
           },
           {
+            'name': 'candidateVectors',
+            'type': 'array',
             'default': [],
             'items': {
+              'type': 'array',
               'items': {
                 'type': 'number',
               },
-              'type': 'array',
             },
-            'name': 'candidateVectors',
-            'type': 'array',
           },
           {
-            'default': 0,
             'name': 'matchIndex',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'matchScore',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': 0,
             'name': 'matchMargin',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
             'name': 'reason',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': {},
             'name': 'request',
+            'type': 'object',
+            'default': {},
             'properties': {
               'accepted': {
+                'name': 'accepted',
+                'type': 'array',
+                'required': true,
                 'items': {
                   'type': 'scalar',
                 },
-                'name': 'accepted',
-                'required': true,
-                'type': 'array',
-              },
-              'candidate': {
-                'name': 'candidate',
-                'required': true,
-                'type': 'scalar',
               },
               'categories': {
+                'name': 'categories',
+                'type': 'array',
+                'required': true,
                 'items': {
                   'type': 'string',
                 },
-                'name': 'categories',
-                'required': true,
-                'type': 'array',
               },
               'key': {
                 'name': 'key',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
+              },
+              'candidate': {
+                'name': 'candidate',
+                'type': 'scalar',
+                'required': true,
               },
             },
-            'type': 'object',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'embedding',
@@ -319,202 +321,202 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
             ],
           },
         ],
-        'name': 'SimilarityComparison',
-        'persistence': 'runtime',
       },
       {
+        'name': 'Inference',
+        'persistence': 'runtime',
         'fields': [
           {
-            'default': {},
             'name': 'input',
+            'type': 'object',
+            'default': {},
             'properties': {
               'accepted': {
+                'name': 'accepted',
+                'type': 'array',
+                'required': true,
                 'items': {
                   'type': 'scalar',
                 },
-                'name': 'accepted',
-                'required': true,
-                'type': 'array',
-              },
-              'candidate': {
-                'name': 'candidate',
-                'required': true,
-                'type': 'scalar',
               },
               'categories': {
+                'name': 'categories',
+                'type': 'array',
+                'required': true,
                 'items': {
                   'type': 'string',
                 },
-                'name': 'categories',
+              },
+              'candidate': {
+                'name': 'candidate',
+                'type': 'scalar',
                 'required': true,
-                'type': 'array',
               },
               'key': {
                 'name': 'key',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
             },
-            'type': 'object',
           },
           {
+            'name': 'output',
+            'type': 'array',
             'default': [],
             'items': {
               'type': 'number',
             },
-            'name': 'output',
-            'type': 'array',
           },
           {
-            'default': 0,
             'name': 'confidence',
             'type': 'number',
+            'default': 0,
           },
           {
+            'name': 'violations',
+            'type': 'array',
             'default': [],
             'items': {
-              'properties': {
-                'ContractNotATensor': {
-                  'name': 'ContractNotATensor',
-                  'properties': {
-                    'actualType': {
-                      'name': 'actualType',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': false,
-                      'type': 'string',
-                      'values': [
-                        'not_a_tensor',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'ContractRangeViolation': {
-                  'name': 'ContractRangeViolation',
-                  'properties': {
-                    'actualMax': {
-                      'name': 'actualMax',
-                      'required': false,
-                      'type': 'number',
-                    },
-                    'actualMin': {
-                      'name': 'actualMin',
-                      'required': false,
-                      'type': 'number',
-                    },
-                    'dim': {
-                      'name': 'dim',
-                      'required': false,
-                      'type': 'number',
-                    },
-                    'max': {
-                      'name': 'max',
-                      'required': false,
-                      'type': 'number',
-                    },
-                    'min': {
-                      'name': 'min',
-                      'required': false,
-                      'type': 'number',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': false,
-                      'type': 'string',
-                      'values': [
-                        'range_violation',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-                'ContractShapeMismatch': {
-                  'name': 'ContractShapeMismatch',
-                  'properties': {
-                    'actual': {
-                      'items': {
-                        'type': 'number',
-                      },
-                      'name': 'actual',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'expected': {
-                      'items': {
-                        'type': 'number',
-                      },
-                      'name': 'expected',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'type': {
-                      'name': 'type',
-                      'required': false,
-                      'type': 'string',
-                      'values': [
-                        'shape_mismatch',
-                      ],
-                    },
-                  },
-                  'type': 'object',
-                },
-              },
               'type': 'union',
               'values': [
                 'ContractShapeMismatch',
                 'ContractRangeViolation',
                 'ContractNotATensor',
               ],
+              'properties': {
+                'ContractRangeViolation': {
+                  'name': 'ContractRangeViolation',
+                  'type': 'object',
+                  'properties': {
+                    'actualMax': {
+                      'name': 'actualMax',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'range_violation',
+                      ],
+                    },
+                    'max': {
+                      'name': 'max',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'dim': {
+                      'name': 'dim',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'min': {
+                      'name': 'min',
+                      'type': 'number',
+                      'required': false,
+                    },
+                    'actualMin': {
+                      'name': 'actualMin',
+                      'type': 'number',
+                      'required': false,
+                    },
+                  },
+                },
+                'ContractNotATensor': {
+                  'name': 'ContractNotATensor',
+                  'type': 'object',
+                  'properties': {
+                    'actualType': {
+                      'name': 'actualType',
+                      'type': 'string',
+                      'required': false,
+                    },
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'not_a_tensor',
+                      ],
+                    },
+                  },
+                },
+                'ContractShapeMismatch': {
+                  'name': 'ContractShapeMismatch',
+                  'type': 'object',
+                  'properties': {
+                    'type': {
+                      'name': 'type',
+                      'type': 'string',
+                      'required': false,
+                      'values': [
+                        'shape_mismatch',
+                      ],
+                    },
+                    'actual': {
+                      'name': 'actual',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'number',
+                      },
+                    },
+                    'expected': {
+                      'name': 'expected',
+                      'type': 'array',
+                      'required': false,
+                      'items': {
+                        'type': 'number',
+                      },
+                    },
+                  },
+                },
+              },
             },
-            'name': 'violations',
-            'type': 'array',
           },
           {
-            'default': '',
             'name': 'reason',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': {},
             'name': 'request',
+            'type': 'object',
+            'default': {},
             'properties': {
-              'accepted': {
-                'items': {
-                  'type': 'scalar',
-                },
-                'name': 'accepted',
-                'required': true,
-                'type': 'array',
-              },
-              'candidate': {
-                'name': 'candidate',
-                'required': true,
+              'key': {
+                'name': 'key',
                 'type': 'scalar',
+                'required': true,
               },
               'categories': {
+                'name': 'categories',
+                'type': 'array',
+                'required': true,
                 'items': {
                   'type': 'string',
                 },
-                'name': 'categories',
-                'required': true,
-                'type': 'array',
               },
-              'key': {
-                'name': 'key',
-                'required': true,
+              'candidate': {
+                'name': 'candidate',
                 'type': 'scalar',
+                'required': true,
+              },
+              'accepted': {
+                'name': 'accepted',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'scalar',
+                },
               },
             },
-            'type': 'object',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'inferring',
@@ -522,73 +524,73 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
             ],
           },
         ],
-        'name': 'Inference',
-        'persistence': 'runtime',
       },
       {
+        'name': 'ClassifierVerdict',
+        'persistence': 'runtime',
         'fields': [
           {
-            'default': '',
             'name': 'text',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'category',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': 0,
             'name': 'confidence',
             'type': 'number',
+            'default': 0,
           },
           {
-            'default': '',
             'name': 'reasoning',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': '',
             'name': 'errorMessage',
             'type': 'string',
+            'default': '',
           },
           {
-            'default': {},
             'name': 'request',
+            'type': 'object',
+            'default': {},
             'properties': {
-              'accepted': {
-                'items': {
-                  'type': 'scalar',
-                },
-                'name': 'accepted',
-                'required': true,
-                'type': 'array',
-              },
               'candidate': {
                 'name': 'candidate',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
               'categories': {
+                'name': 'categories',
+                'type': 'array',
+                'required': true,
                 'items': {
                   'type': 'string',
                 },
-                'name': 'categories',
-                'required': true,
-                'type': 'array',
               },
               'key': {
                 'name': 'key',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
+              },
+              'accepted': {
+                'name': 'accepted',
+                'type': 'array',
+                'required': true,
+                'items': {
+                  'type': 'scalar',
+                },
               },
             },
-            'type': 'object',
           },
           {
-            'default': 'idle',
             'name': 'status',
             'type': 'string',
+            'default': 'idle',
             'values': [
               'idle',
               'classifying',
@@ -596,13 +598,11 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
             ],
           },
         ],
-        'name': 'ClassifierVerdict',
-        'persistence': 'runtime',
       },
     ] as EntityRef[],
     traits: [
       {
-        'category': 'lifecycle',
+        'name': 'LadderEntry',
         'effectRow': [
           {
             'kind': 'emit',
@@ -613,150 +613,152 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'LadderRequest',
         'emits': [
           {
-            'description': 'Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs.',
             'event': 'RUN_EXACT',
+            'description': 'Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs.',
+            'tier': 'secondary',
             'payloadSchema': [
               {
                 'name': 'candidate',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
               {
                 'name': 'key',
-                'required': true,
                 'type': 'scalar',
+                'required': true,
               },
               {
                 'name': 'request',
+                'type': 'object',
+                'required': true,
                 'properties': [
                   {
                     'name': 'candidate',
-                    'required': true,
                     'type': 'scalar',
+                    'required': true,
                   },
                   {
                     'name': 'key',
-                    'required': true,
                     'type': 'scalar',
+                    'required': true,
                   },
                   {
                     'name': 'accepted',
-                    'required': true,
                     'type': '[scalar]',
+                    'required': true,
                   },
                   {
                     'name': 'categories',
-                    'required': true,
                     'type': '[string]',
+                    'required': true,
                   },
                 ],
-                'required': true,
-                'type': 'object',
               },
             ],
-            'tier': 'secondary',
           },
         ],
-        'linkedEntity': 'LadderRequest',
-        'name': 'LadderEntry',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'dispatched',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
-              'description': 'Public entry point — decide the candidate, falling through the ladder until a rung can prove the answer. accepted is R1\'s table; categories is R3\'s comparison set (R5\'s closed label set is the ClassifyRung categories knob, a design-time decision rather than a per-request one).',
               'key': 'DECIDE',
               'name': 'Decide',
+              'description': 'Public entry point — decide the candidate, falling through the ladder until a rung can prove the answer. accepted is R1\'s table; categories is R3\'s comparison set (R5\'s closed label set is the ClassifyRung categories knob, a design-time decision rather than a per-request one).',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'candidate',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'key',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'accepted',
-                  'required': true,
                   'type': '[scalar]',
+                  'required': true,
                 },
                 {
                   'name': 'categories',
-                  'required': true,
                   'type': '[string]',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
               'key': 'RESET',
               'name': 'Reset',
             },
             {
-              'description': 'Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs.',
               'key': 'RUN_EXACT',
               'name': 'Run Exact',
+              'description': 'Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs.',
+              'tier': 'secondary',
               'payloadSchema': [
                 {
                   'name': 'candidate',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'key',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
                 {
                   'name': 'request',
+                  'type': 'object',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'candidate',
-                      'required': true,
                       'type': 'scalar',
+                      'required': true,
                     },
                     {
                       'name': 'key',
-                      'required': true,
                       'type': 'scalar',
+                      'required': true,
                     },
                     {
                       'name': 'accepted',
-                      'required': true,
                       'type': '[scalar]',
+                      'required': true,
                     },
                     {
                       'name': 'categories',
-                      'required': true,
                       'type': '[string]',
+                      'required': true,
                     },
                   ],
-                  'required': true,
-                  'type': 'object',
                 },
               ],
-              'tier': 'secondary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'dispatched',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -764,11 +766,11 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'dispatched',
+              'event': 'DECIDE',
               'effects': [
                 [
                   'set',
@@ -779,17 +781,17 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'emit',
                   'RUN_EXACT',
                   {
+                    'request': '@payload',
                     'candidate': '@payload.candidate',
                     'key': '@payload.key',
-                    'request': '@payload',
                   },
                 ],
               ],
-              'event': 'DECIDE',
-              'from': 'idle',
-              'to': 'dispatched',
             },
             {
+              'from': 'dispatched',
+              'to': 'dispatched',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -797,11 +799,11 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'dispatched',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'dispatched',
-              'to': 'dispatched',
             },
             {
+              'from': 'dispatched',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -809,91 +811,92 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'dispatched',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
       makeTraitRef({
+        'ref': ('Rung0.traits.ExactCheckRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
+        'name': 'ExactRung',
         'linkedEntity': 'ExactCheck',
         'listens': [
           {
             'event': 'RUN_EXACT',
+            'triggers': 'CHECK',
             'source': {
               'kind': 'trait',
               'trait': 'LadderEntry',
             },
-            'triggers': 'CHECK',
           },
         ],
-        'name': 'ExactRung',
-        'ref': ('Rung0.traits.ExactCheckRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
         'typeArgs': {
           'r': 'DecisionRequest',
         },
       }),
       makeTraitRef({
+        'ref': ('Rung1.traits.LookupRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
+        'name': 'LookupRung',
         'linkedEntity': 'KeyLookup',
         'listens': [
           {
             'event': 'EXACT_UNMATCHED',
+            'triggers': 'LOOKUP',
             'payloadMapping': {
+              'request': '@payload.request',
               'accepted': [
                 'object/get',
                 '@payload.request',
                 'accepted',
               ],
               'candidate': '@payload.candidate',
-              'request': '@payload.request',
             },
             'source': {
               'kind': 'trait',
               'trait': 'ExactRung',
             },
-            'triggers': 'LOOKUP',
           },
         ],
-        'name': 'LookupRung',
-        'ref': ('Rung1.traits.LookupRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
         'typeArgs': {
           'e': 'scalar',
           'r': 'DecisionRequest',
         },
       }),
       makeTraitRef({
+        'ref': ('Rung3.traits.SimilarityRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
+        'name': 'SimilarityRung',
         'linkedEntity': 'SimilarityComparison',
         'listens': [
           {
             'event': 'KEY_MISS',
+            'triggers': 'COMPARE',
             'payloadMapping': {
-              'candidates': [
-                'object/get',
-                '@payload.request',
-                'categories',
-              ],
               'query': [
                 'str/concat',
                 '@payload.candidate',
               ],
               'request': '@payload.request',
+              'candidates': [
+                'object/get',
+                '@payload.request',
+                'categories',
+              ],
             },
             'source': {
               'kind': 'trait',
               'trait': 'LookupRung',
             },
-            'triggers': 'COMPARE',
           },
         ],
-        'name': 'SimilarityRung',
-        'ref': ('Rung3.traits.SimilarityRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Rung4.traits.InferenceRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
+        'name': 'InferRung',
         'linkedEntity': 'Inference',
         'listens': [
           {
             'event': 'SIMILARITY_ABSTAINED',
+            'triggers': 'INFER',
             'payloadMapping': {
               'input': '@payload.request',
               'request': '@payload.request',
@@ -902,17 +905,17 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'kind': 'trait',
               'trait': 'SimilarityRung',
             },
-            'triggers': 'INFER',
           },
         ],
-        'name': 'InferRung',
-        'ref': ('Rung4.traits.InferenceRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
       }),
       makeTraitRef({
+        'ref': ('Rung5.traits.ClassifyRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
+        'name': 'ClassifyRung',
         'linkedEntity': 'ClassifierVerdict',
         'listens': [
           {
             'event': 'INFER_ABSTAINED',
+            'triggers': 'CLASSIFY',
             'payloadMapping': {
               'request': '@payload.request',
               'text': [
@@ -928,14 +931,11 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'kind': 'trait',
               'trait': 'InferRung',
             },
-            'triggers': 'CLASSIFY',
           },
         ],
-        'name': 'ClassifyRung',
-        'ref': ('Rung5.traits.ClassifyRun' satisfies _StdEscalatingDecisionEscalatingDecisionOrbitalUsesRef),
       }),
       {
-        'category': 'lifecycle',
+        'name': 'LadderVerdictSink',
         'effectRow': [
           {
             'kind': 'emit',
@@ -966,23 +966,29 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
             'resource': '@entity.status',
           },
         ],
+        'category': 'lifecycle',
+        'linkedEntity': 'LadderVerdict',
         'emits': [
           {
-            'description': 'The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative.',
             'event': 'DECIDED',
+            'description': 'The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative.',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'rung',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
               {
                 'name': 'confidence',
-                'required': true,
                 'type': 'number',
+                'required': true,
               },
               {
                 'name': 'matched',
+                'type': 'union',
+                'required': true,
                 'properties': [
                   {
                     'name': 'scalar',
@@ -993,36 +999,32 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                     'type': '[float]',
                   },
                 ],
-                'required': true,
-                'type': 'union',
               },
               {
                 'name': 'reasoning',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
           {
-            'description': 'Even the generative floor (R5) could not answer — the classify service call itself failed.',
             'event': 'DECISION_FAILED',
+            'description': 'Even the generative floor (R5) could not answer — the classify service call itself failed.',
+            'tier': 'primary',
+            'scope': 'external',
             'payloadSchema': [
               {
                 'name': 'reason',
-                'required': true,
                 'type': 'string',
+                'required': true,
               },
             ],
-            'scope': 'external',
-            'tier': 'primary',
           },
         ],
-        'linkedEntity': 'LadderVerdict',
         'listens': [
           {
             'event': 'EXACT_MATCHED',
+            'triggers': 'FROM_EXACT',
             'payloadMapping': {
               'key': '@payload.key',
             },
@@ -1030,10 +1032,10 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'kind': 'trait',
               'trait': ('ExactRung' satisfies _StdEscalatingDecisionListenTraitName),
             },
-            'triggers': 'FROM_EXACT',
           },
           {
             'event': 'KEY_HIT',
+            'triggers': 'FROM_LOOKUP',
             'payloadMapping': {
               'entry': '@payload.entry',
             },
@@ -1041,10 +1043,10 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'kind': 'trait',
               'trait': ('LookupRung' satisfies _StdEscalatingDecisionListenTraitName),
             },
-            'triggers': 'FROM_LOOKUP',
           },
           {
             'event': 'SIMILARITY_MATCHED',
+            'triggers': 'FROM_SIMILARITY',
             'payloadMapping': {
               'index': '@payload.index',
               'score': '@payload.score',
@@ -1053,35 +1055,35 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'kind': 'trait',
               'trait': ('SimilarityRung' satisfies _StdEscalatingDecisionListenTraitName),
             },
-            'triggers': 'FROM_SIMILARITY',
           },
           {
             'event': 'INFERRED',
+            'triggers': 'FROM_INFER',
             'payloadMapping': {
-              'confidence': '@payload.confidence',
               'output': '@payload.output',
+              'confidence': '@payload.confidence',
             },
             'source': {
               'kind': 'trait',
               'trait': ('InferRung' satisfies _StdEscalatingDecisionListenTraitName),
             },
-            'triggers': 'FROM_INFER',
           },
           {
             'event': 'CLASSIFIED',
+            'triggers': 'FROM_CLASSIFY',
             'payloadMapping': {
-              'category': '@payload.category',
-              'confidence': '@payload.confidence',
               'reasoning': '@payload.reasoning',
+              'confidence': '@payload.confidence',
+              'category': '@payload.category',
             },
             'source': {
               'kind': 'trait',
               'trait': ('ClassifyRung' satisfies _StdEscalatingDecisionListenTraitName),
             },
-            'triggers': 'FROM_CLASSIFY',
           },
           {
             'event': 'CLASSIFY_FAILED',
+            'triggers': 'FROM_CLASSIFY_FAILURE',
             'payloadMapping': {
               'error': '@payload.error',
             },
@@ -1089,12 +1091,21 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'kind': 'trait',
               'trait': ('ClassifyRung' satisfies _StdEscalatingDecisionListenTraitName),
             },
-            'triggers': 'FROM_CLASSIFY_FAILURE',
           },
         ],
-        'name': 'LadderVerdictSink',
-        'scope': 'instance',
         'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'decided',
+            },
+            {
+              'name': 'failed',
+            },
+          ],
           'events': [
             {
               'key': 'INIT',
@@ -1106,8 +1117,8 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'payloadSchema': [
                 {
                   'name': 'key',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
               ],
             },
@@ -1117,8 +1128,8 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'payloadSchema': [
                 {
                   'name': 'entry',
-                  'required': true,
                   'type': 'scalar',
+                  'required': true,
                 },
               ],
             },
@@ -1128,13 +1139,13 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'payloadSchema': [
                 {
                   'name': 'index',
-                  'required': true,
                   'type': 'int',
+                  'required': true,
                 },
                 {
                   'name': 'score',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
             },
@@ -1144,13 +1155,13 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'payloadSchema': [
                 {
                   'name': 'output',
-                  'required': true,
                   'type': '[float]',
+                  'required': true,
                 },
                 {
                   'name': 'confidence',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
               ],
             },
@@ -1160,18 +1171,18 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'payloadSchema': [
                 {
                   'name': 'category',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'confidence',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'reasoning',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
@@ -1181,8 +1192,8 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'payloadSchema': [
                 {
                   'name': 'error',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
             },
@@ -1191,22 +1202,25 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               'name': 'Reset',
             },
             {
-              'description': 'The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative.',
               'key': 'DECIDED',
               'name': 'Decided',
+              'description': 'The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative.',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'rung',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
                 {
                   'name': 'confidence',
-                  'required': true,
                   'type': 'number',
+                  'required': true,
                 },
                 {
                   'name': 'matched',
+                  'type': 'union',
+                  'required': true,
                   'properties': [
                     {
                       'name': 'scalar',
@@ -1217,45 +1231,33 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                       'type': '[float]',
                     },
                   ],
-                  'required': true,
-                  'type': 'union',
                 },
                 {
                   'name': 'reasoning',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
             },
             {
-              'description': 'Even the generative floor (R5) could not answer — the classify service call itself failed.',
               'key': 'DECISION_FAILED',
               'name': 'Decision Failed',
+              'description': 'Even the generative floor (R5) could not answer — the classify service call itself failed.',
+              'tier': 'primary',
               'payloadSchema': [
                 {
                   'name': 'reason',
-                  'required': true,
                   'type': 'string',
+                  'required': true,
                 },
               ],
-              'tier': 'primary',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'idle',
-            },
-            {
-              'name': 'decided',
-            },
-            {
-              'name': 'failed',
             },
           ],
           'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1283,11 +1285,11 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'idle',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'idle',
-              'to': 'idle',
             },
             {
+              'from': 'idle',
+              'to': 'decided',
+              'event': 'FROM_EXACT',
               'effects': [
                 [
                   'set',
@@ -1314,17 +1316,17 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'DECIDED',
                   {
                     'confidence': 1,
-                    'matched': '@payload.key',
-                    'reasoning': '',
                     'rung': 'R0',
+                    'reasoning': '',
+                    'matched': '@payload.key',
                   },
                 ],
               ],
-              'event': 'FROM_EXACT',
-              'from': 'idle',
-              'to': 'decided',
             },
             {
+              'from': 'idle',
+              'to': 'decided',
+              'event': 'FROM_LOOKUP',
               'effects': [
                 [
                   'set',
@@ -1351,17 +1353,17 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'DECIDED',
                   {
                     'confidence': 1,
-                    'matched': '@payload.entry',
-                    'reasoning': '',
                     'rung': 'R1',
+                    'reasoning': '',
+                    'matched': '@payload.entry',
                   },
                 ],
               ],
-              'event': 'FROM_LOOKUP',
-              'from': 'idle',
-              'to': 'decided',
             },
             {
+              'from': 'idle',
+              'to': 'decided',
+              'event': 'FROM_SIMILARITY',
               'effects': [
                 [
                   'set',
@@ -1387,18 +1389,18 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'emit',
                   'DECIDED',
                   {
-                    'confidence': '@payload.score',
-                    'matched': '@payload.index',
                     'reasoning': '',
                     'rung': 'R3',
+                    'confidence': '@payload.score',
+                    'matched': '@payload.index',
                   },
                 ],
               ],
-              'event': 'FROM_SIMILARITY',
-              'from': 'idle',
-              'to': 'decided',
             },
             {
+              'from': 'idle',
+              'to': 'decided',
+              'event': 'FROM_INFER',
               'effects': [
                 [
                   'set',
@@ -1424,18 +1426,18 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'emit',
                   'DECIDED',
                   {
+                    'rung': 'R4',
                     'confidence': '@payload.confidence',
                     'matched': '@payload.output',
                     'reasoning': '',
-                    'rung': 'R4',
                   },
                 ],
               ],
-              'event': 'FROM_INFER',
-              'from': 'idle',
-              'to': 'decided',
             },
             {
+              'from': 'idle',
+              'to': 'decided',
+              'event': 'FROM_CLASSIFY',
               'effects': [
                 [
                   'set',
@@ -1461,18 +1463,18 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'emit',
                   'DECIDED',
                   {
-                    'confidence': '@payload.confidence',
                     'matched': '@payload.category',
                     'reasoning': '@payload.reasoning',
                     'rung': 'R5',
+                    'confidence': '@payload.confidence',
                   },
                 ],
               ],
-              'event': 'FROM_CLASSIFY',
-              'from': 'idle',
-              'to': 'decided',
             },
             {
+              'from': 'idle',
+              'to': 'failed',
+              'event': 'FROM_CLASSIFY_FAILURE',
               'effects': [
                 [
                   'set',
@@ -1492,11 +1494,11 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   },
                 ],
               ],
-              'event': 'FROM_CLASSIFY_FAILURE',
-              'from': 'idle',
-              'to': 'failed',
             },
             {
+              'from': 'decided',
+              'to': 'decided',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1504,11 +1506,11 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'decided',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'decided',
-              'to': 'decided',
             },
             {
+              'from': 'decided',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -1536,11 +1538,11 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'decided',
-              'to': 'idle',
             },
             {
+              'from': 'failed',
+              'to': 'failed',
+              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -1548,11 +1550,11 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'failed',
                 ],
               ],
-              'event': 'INIT',
-              'from': 'failed',
-              'to': 'failed',
             },
             {
+              'from': 'failed',
+              'to': 'idle',
+              'event': 'RESET',
               'effects': [
                 [
                   'set',
@@ -1580,12 +1582,10 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                   'idle',
                 ],
               ],
-              'event': 'RESET',
-              'from': 'failed',
-              'to': 'idle',
             },
           ],
         },
+        'scope': 'instance',
       } satisfies Trait,
     ],
     pages: [

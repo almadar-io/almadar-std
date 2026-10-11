@@ -53,55 +53,55 @@ export interface StdUiAlgoGraphCanvasNodeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiAlgoGraphCanvasConfig {
-  /** Default: `false` */
-  animate?: boolean;
-  ariaBusy?: boolean;
-  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
-  ariaDescribedby?: string;
-  ariaExpanded?: boolean;
-  ariaHidden?: boolean;
-  ariaLabel?: string;
-  ariaLabelledby?: string;
-  ariaLive?: 'off' | 'polite' | 'assertive';
-  ariaPressed?: 'true' | 'false' | 'mixed';
-  ariaSelected?: boolean;
-  backgroundColor?: string;
-  className?: string;
-  dir?: 'ltr' | 'rtl' | 'auto';
-  /** Default: `[]` */
-  edges?: EntityRow[];
-  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
-  enterDelay?: number;
-  error?: EntityRow;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `false` */
-  interactive?: boolean;
-  isLoading?: boolean;
-  /** Default: `{"item":"INIT"}` */
-  keyMap?: Record<string, TraitConfig>;
-  /** Default: `{"item":"INIT"}` */
-  keyUpMap?: Record<string, TraitConfig>;
-  lang?: string;
-  /** Default: `"manual"` */
-  layout?: 'manual' | 'tree' | 'layered' | 'circle';
-  /** Default: `[]` */
-  nodes?: EntityRow[];
-  /** Default: `"NODE_CLICK"` */
-  onNodeClick?: string;
-  /** Default: `"SHAPE_CLICK"` */
-  onShapeClick?: string;
-  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
-  root?: string;
-  /** Default: `[]` */
-  series?: string[];
   /** Default: `[]` */
   shapes?: EntityRow[];
-  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `"SHAPE_CLICK"` */
+  onShapeClick?: string;
+  lang?: string;
+  /** Default: `[]` */
+  nodes?: EntityRow[];
+  backgroundColor?: string;
+  enterDelay?: number;
+  ariaDescribedby?: string;
+  role?: 'alert' | 'alertdialog' | 'application' | 'article' | 'banner' | 'blockquote' | 'button' | 'caption' | 'cell' | 'checkbox' | 'code' | 'columnheader' | 'combobox' | 'complementary' | 'contentinfo' | 'definition' | 'deletion' | 'dialog' | 'document' | 'emphasis' | 'feed' | 'figure' | 'form' | 'generic' | 'grid' | 'gridcell' | 'group' | 'heading' | 'img' | 'insertion' | 'link' | 'list' | 'listbox' | 'listitem' | 'log' | 'main' | 'marquee' | 'math' | 'menu' | 'menubar' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio' | 'meter' | 'navigation' | 'none' | 'note' | 'option' | 'paragraph' | 'presentation' | 'progressbar' | 'radio' | 'radiogroup' | 'region' | 'row' | 'rowgroup' | 'rowheader' | 'scrollbar' | 'search' | 'searchbox' | 'separator' | 'slider' | 'spinbutton' | 'status' | 'strong' | 'subscript' | 'superscript' | 'switch' | 'tab' | 'table' | 'tablist' | 'tabpanel' | 'term' | 'textbox' | 'time' | 'timer' | 'toolbar' | 'tooltip' | 'tree' | 'treegrid' | 'treeitem';
+  isLoading?: boolean;
+  /** Default: `"NODE_CLICK"` */
+  onNodeClick?: string;
+  ariaExpanded?: boolean;
   tabIndex?: number;
-  title?: string;
+  root?: string;
+  enter?: 'none' | 'fade' | 'rise' | 'scale' | 'slide';
+  dir?: 'ltr' | 'rtl' | 'auto';
   /** Default: `600` */
   width?: number;
+  /** Default: `{"item":"INIT"}` */
+  keyMap?: Record<string, TraitConfig>;
+  ariaLabelledby?: string;
+  ariaSelected?: boolean;
+  ariaLabel?: string;
+  /** Default: `[]` */
+  series?: string[];
+  ariaPressed?: 'true' | 'false' | 'mixed';
+  ariaCurrent?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  skeleton?: 'header' | 'table' | 'list' | 'grid' | 'detail' | 'stats' | 'form' | 'card' | 'text' | 'none';
+  /** Default: `{"item":"INIT"}` */
+  keyUpMap?: Record<string, TraitConfig>;
+  error?: EntityRow;
+  ariaLive?: 'off' | 'polite' | 'assertive';
+  /** Default: `false` */
+  interactive?: boolean;
+  /** Default: `"manual"` */
+  layout?: 'manual' | 'tree' | 'layered' | 'circle';
+  title?: string;
+  ariaBusy?: boolean;
+  /** Default: `[]` */
+  edges?: EntityRow[];
+  /** Default: `400` */
+  height?: number;
+  ariaHidden?: boolean;
+  /** Default: `false` */
+  animate?: boolean;
+  className?: string;
 }
 
 /**
