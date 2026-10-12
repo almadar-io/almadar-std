@@ -38,18 +38,18 @@
             "default": [
               {
                 "code": "en",
-                "href": "/",
-                "label": "English"
+                "label": "English",
+                "href": "/"
               },
               {
                 "code": "ar",
-                "href": "/ar/",
-                "label": "العربية"
+                "label": "العربية",
+                "href": "/ar/"
               },
               {
                 "code": "sl",
-                "href": "/sl/",
-                "label": "Slovenščina"
+                "label": "Slovenščina",
+                "href": "/sl/"
               }
             ],
             "label": "Languages",
@@ -58,6 +58,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
                 "code": {
                   "name": "code",
                   "required": true,
@@ -65,11 +70,6 @@
                 },
                 "href": {
                   "name": "href",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
                   "required": true,
                   "type": "string"
                 }
@@ -81,6 +81,8 @@
             "key": "pickerContent",
             "type": "render-ui",
             "default": {
+              "type": "menu",
+              "position": "bottom-end",
               "className": [
                 "if",
                 [
@@ -94,6 +96,16 @@
                 "hidden",
                 ""
               ],
+              "trigger": {
+                "type": "button",
+                "variant": "ghost",
+                "size": "sm",
+                "icon": "globe",
+                "label": [
+                  "str/upper",
+                  "@config.currentLanguage"
+                ]
+              },
               "items": [
                 "array/map",
                 "@config.languages",
@@ -101,6 +113,18 @@
                   "fn",
                   "entry",
                   {
+                    "id": [
+                      "object/get",
+                      "@entry",
+                      "code",
+                      ""
+                    ],
+                    "label": [
+                      "object/get",
+                      "@entry",
+                      "label",
+                      ""
+                    ],
                     "href": [
                       "object/get",
                       "@entry",
@@ -121,34 +145,10 @@
                       ],
                       "check",
                       ""
-                    ],
-                    "id": [
-                      "object/get",
-                      "@entry",
-                      "code",
-                      ""
-                    ],
-                    "label": [
-                      "object/get",
-                      "@entry",
-                      "label",
-                      ""
                     ]
                   }
                 ]
-              ],
-              "position": "bottom-end",
-              "trigger": {
-                "icon": "globe",
-                "label": [
-                  "str/upper",
-                  "@config.currentLanguage"
-                ],
-                "size": "sm",
-                "type": "button",
-                "variant": "ghost"
-              },
-              "type": "menu"
+              ]
             },
             "label": "Picker body",
             "tier": "internal"

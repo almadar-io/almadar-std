@@ -14,8 +14,6 @@ export default defineConfig({
     'behaviors/embeddings.ts',
     'behaviors/factory-signatures.ts',
     'behaviors/knob-embeddings.ts',
-    'behaviors/functions/index.ts',
-    'factory-runtime/index.ts',
   ],
   format: ['esm'],
   // The DTS type-check dominates build time but the runtime (interpreter / runtime-verify)
@@ -26,7 +24,6 @@ export default defineConfig({
   dts: !process.env.ALMADAR_FAST_OVERLAY,
   clean: !process.env.ALMADAR_FAST_OVERLAY,
   sourcemap: false,
-  // Shared generated functions land in one chunk instead of being inlined into every entry.
   splitting: true,
   treeshake: true,
   // The data sidecars (registry .orb tree + JSON catalogs) are copied by the shared

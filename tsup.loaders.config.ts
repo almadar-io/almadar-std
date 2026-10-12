@@ -2,10 +2,8 @@ import { defineConfig } from 'tsup';
 
 /**
  * The behavior loaders alone (index / embeddings / factory signatures / data
- * dir), built in seconds for the dev loop (G-CROSS-142). The generated
- * factories under `behaviors/functions/` stay external: the loaders import
- * them at runtime from the last full build, so a loader edit never rebuilds
- * the factory corpus, and the `.lolo` data is never built in dev.
+ * dir), built in seconds for the dev loop (G-CROSS-142); the `.lolo` data is
+ * never built in dev.
  */
 export default defineConfig({
   entry: [
@@ -23,5 +21,5 @@ export default defineConfig({
   clean: false,
   splitting: false,
   sourcemap: false,
-  external: [/\/functions\/index\.js$/, /^\.\/data-dir\.js$/, /^\.\/exports-reader\.js$/],
+  external: [/^\.\/data-dir\.js$/, /^\.\/exports-reader\.js$/],
 });

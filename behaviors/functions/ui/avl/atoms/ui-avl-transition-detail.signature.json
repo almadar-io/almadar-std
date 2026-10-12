@@ -70,14 +70,14 @@
                 "type": "object",
                 "items": {
                   "properties": {
-                    "body": {
-                      "name": "body",
-                      "required": true,
-                      "type": "string"
-                    },
                     "title": {
                       "name": "title",
                       "required": false,
+                      "type": "string"
+                    },
+                    "body": {
+                      "name": "body",
+                      "required": true,
                       "type": "string"
                     }
                   },
@@ -90,14 +90,14 @@
                 "type": "object",
                 "items": {
                   "properties": {
-                    "body": {
-                      "name": "body",
-                      "required": true,
-                      "type": "string"
-                    },
                     "title": {
                       "name": "title",
                       "required": false,
+                      "type": "string"
+                    },
+                    "body": {
+                      "name": "body",
+                      "required": true,
                       "type": "string"
                     }
                   },
@@ -110,14 +110,14 @@
                 "type": "object",
                 "items": {
                   "properties": {
-                    "body": {
-                      "name": "body",
-                      "required": true,
-                      "type": "string"
-                    },
                     "title": {
                       "name": "title",
                       "required": false,
+                      "type": "string"
+                    },
+                    "body": {
+                      "name": "body",
+                      "required": true,
                       "type": "string"
                     }
                   },
@@ -181,130 +181,41 @@
                 "name": "step",
                 "required": true,
                 "properties": {
-                  "from": {
-                    "name": "from",
+                  "payload": {
+                    "name": "payload",
                     "required": true,
-                    "type": "string"
+                    "type": "object"
                   },
-                  "trait": {
-                    "name": "trait",
+                  "event": {
+                    "name": "event",
                     "required": true,
-                    "type": "string"
+                    "type": "event"
                   },
                   "result": {
                     "name": "result",
                     "required": true,
                     "properties": {
-                      "trait": {
-                        "name": "trait",
+                      "event": {
+                        "name": "event",
                         "required": true,
                         "type": "string"
-                      },
-                      "transitionFired": {
-                        "name": "transitionFired",
-                        "required": true,
-                        "type": "boolean"
-                      },
-                      "firedArm": {
-                        "name": "firedArm",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "guard": {
-                        "name": "guard",
-                        "required": true,
-                        "type": "string",
-                        "values": [
-                          "pass",
-                          "fail",
-                          "none"
-                        ]
                       },
                       "state": {
                         "name": "state",
                         "required": true,
                         "properties": {
-                          "before": {
-                            "name": "before",
+                          "after": {
+                            "name": "after",
                             "required": false,
                             "type": "string"
                           },
-                          "after": {
-                            "name": "after",
+                          "before": {
+                            "name": "before",
                             "required": false,
                             "type": "string"
                           }
                         },
                         "type": "object"
-                      },
-                      "guards": {
-                        "name": "guards",
-                        "required": false,
-                        "type": "array",
-                        "items": {
-                          "properties": {
-                            "guard": {
-                              "name": "guard",
-                              "required": true,
-                              "type": "SExpr"
-                            },
-                            "error": {
-                              "name": "error",
-                              "required": false,
-                              "type": "string"
-                            },
-                            "passed": {
-                              "name": "passed",
-                              "required": true,
-                              "type": "boolean"
-                            },
-                            "arm": {
-                              "name": "arm",
-                              "required": true,
-                              "type": "number"
-                            },
-                            "trace": {
-                              "name": "trace",
-                              "required": true,
-                              "type": "array",
-                              "items": {
-                                "properties": {
-                                  "error": {
-                                    "name": "error",
-                                    "required": false,
-                                    "type": "string"
-                                  },
-                                  "kind": {
-                                    "name": "kind",
-                                    "required": true,
-                                    "type": "string",
-                                    "values": [
-                                      "enter",
-                                      "exit",
-                                      "iter",
-                                      "skip"
-                                    ]
-                                  },
-                                  "path": {
-                                    "name": "path",
-                                    "required": true,
-                                    "type": "array",
-                                    "items": {
-                                      "type": "string"
-                                    }
-                                  }
-                                },
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "type": "object"
-                        }
-                      },
-                      "event": {
-                        "name": "event",
-                        "required": true,
-                        "type": "string"
                       },
                       "effects": {
                         "name": "effects",
@@ -312,6 +223,16 @@
                         "type": "array",
                         "items": {
                           "properties": {
+                            "type": {
+                              "name": "type",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "entityName": {
+                              "name": "entityName",
+                              "required": false,
+                              "type": "string"
+                            },
                             "action": {
                               "name": "action",
                               "required": false,
@@ -323,23 +244,25 @@
                                 "batch"
                               ]
                             },
-                            "entityName": {
-                              "name": "entityName",
+                            "outcome": {
+                              "name": "outcome",
+                              "required": false,
+                              "type": "string",
+                              "values": [
+                                "success",
+                                "denied",
+                                "failed"
+                              ]
+                            },
+                            "resultId": {
+                              "name": "resultId",
                               "required": false,
                               "type": "string"
                             },
-                            "durationMs": {
-                              "name": "durationMs",
+                            "error": {
+                              "name": "error",
                               "required": false,
-                              "type": "number"
-                            },
-                            "args": {
-                              "name": "args",
-                              "required": true,
-                              "type": "array",
-                              "items": {
-                                "type": "SExpr"
-                              }
+                              "type": "string"
                             },
                             "status": {
                               "name": "status",
@@ -351,30 +274,10 @@
                                 "skipped"
                               ]
                             },
-                            "resultId": {
-                              "name": "resultId",
+                            "durationMs": {
+                              "name": "durationMs",
                               "required": false,
-                              "type": "string"
-                            },
-                            "type": {
-                              "name": "type",
-                              "required": true,
-                              "type": "string"
-                            },
-                            "error": {
-                              "name": "error",
-                              "required": false,
-                              "type": "string"
-                            },
-                            "outcome": {
-                              "name": "outcome",
-                              "required": false,
-                              "type": "string",
-                              "values": [
-                                "success",
-                                "denied",
-                                "failed"
-                              ]
+                              "type": "number"
                             },
                             "evalTrace": {
                               "name": "evalTrace",
@@ -382,17 +285,6 @@
                               "type": "array",
                               "items": {
                                 "properties": {
-                                  "kind": {
-                                    "name": "kind",
-                                    "required": true,
-                                    "type": "string",
-                                    "values": [
-                                      "enter",
-                                      "exit",
-                                      "iter",
-                                      "skip"
-                                    ]
-                                  },
                                   "path": {
                                     "name": "path",
                                     "required": true,
@@ -405,14 +297,122 @@
                                     "name": "error",
                                     "required": false,
                                     "type": "string"
+                                  },
+                                  "kind": {
+                                    "name": "kind",
+                                    "required": true,
+                                    "type": "string",
+                                    "values": [
+                                      "enter",
+                                      "exit",
+                                      "iter",
+                                      "skip"
+                                    ]
                                   }
                                 },
                                 "type": "object"
+                              }
+                            },
+                            "args": {
+                              "name": "args",
+                              "required": true,
+                              "type": "array",
+                              "items": {
+                                "type": "SExpr"
                               }
                             }
                           },
                           "type": "object"
                         }
+                      },
+                      "guards": {
+                        "name": "guards",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "error": {
+                              "name": "error",
+                              "required": false,
+                              "type": "string"
+                            },
+                            "trace": {
+                              "name": "trace",
+                              "required": true,
+                              "type": "array",
+                              "items": {
+                                "properties": {
+                                  "path": {
+                                    "name": "path",
+                                    "required": true,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "kind": {
+                                    "name": "kind",
+                                    "required": true,
+                                    "type": "string",
+                                    "values": [
+                                      "enter",
+                                      "exit",
+                                      "iter",
+                                      "skip"
+                                    ]
+                                  },
+                                  "error": {
+                                    "name": "error",
+                                    "required": false,
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "guard": {
+                              "name": "guard",
+                              "required": true,
+                              "type": "SExpr"
+                            },
+                            "passed": {
+                              "name": "passed",
+                              "required": true,
+                              "type": "boolean"
+                            },
+                            "arm": {
+                              "name": "arm",
+                              "required": true,
+                              "type": "number"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "trait": {
+                        "name": "trait",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "transitionFired": {
+                        "name": "transitionFired",
+                        "required": true,
+                        "type": "boolean"
+                      },
+                      "guard": {
+                        "name": "guard",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "pass",
+                          "fail",
+                          "none"
+                        ]
+                      },
+                      "firedArm": {
+                        "name": "firedArm",
+                        "required": false,
+                        "type": "number"
                       },
                       "emitted": {
                         "name": "emitted",
@@ -420,15 +420,15 @@
                         "type": "array",
                         "items": {
                           "properties": {
-                            "type": {
-                              "name": "type",
-                              "required": true,
-                              "type": "string"
-                            },
                             "timestamp": {
                               "name": "timestamp",
                               "required": true,
                               "type": "number"
+                            },
+                            "type": {
+                              "name": "type",
+                              "required": true,
+                              "type": "string"
                             }
                           },
                           "type": "object"
@@ -437,20 +437,20 @@
                     },
                     "type": "object"
                   },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
                   "orbital": {
                     "name": "orbital",
                     "required": true,
                     "type": "string"
                   },
-                  "event": {
-                    "name": "event",
+                  "trait": {
+                    "name": "trait",
                     "required": true,
-                    "type": "event"
-                  },
-                  "payload": {
-                    "name": "payload",
-                    "required": true,
-                    "type": "object"
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -459,32 +459,12 @@
                 "name": "guard",
                 "required": false,
                 "properties": {
-                  "arm": {
-                    "name": "arm",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "error": {
-                    "name": "error",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "guard": {
-                    "name": "guard",
-                    "required": true,
-                    "type": "SExpr"
-                  },
                   "trace": {
                     "name": "trace",
                     "required": true,
                     "type": "array",
                     "items": {
                       "properties": {
-                        "error": {
-                          "name": "error",
-                          "required": false,
-                          "type": "string"
-                        },
                         "kind": {
                           "name": "kind",
                           "required": true,
@@ -503,6 +483,11 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "error": {
+                          "name": "error",
+                          "required": false,
+                          "type": "string"
                         }
                       },
                       "type": "object"
@@ -512,6 +497,21 @@
                     "name": "passed",
                     "required": true,
                     "type": "boolean"
+                  },
+                  "arm": {
+                    "name": "arm",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "guard": {
+                    "name": "guard",
+                    "required": true,
+                    "type": "SExpr"
+                  },
+                  "error": {
+                    "name": "error",
+                    "required": false,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -522,31 +522,20 @@
                 "type": "array",
                 "items": {
                   "properties": {
-                    "entityName": {
-                      "name": "entityName",
+                    "outcome": {
+                      "name": "outcome",
                       "required": false,
-                      "type": "string"
-                    },
-                    "error": {
-                      "name": "error",
-                      "required": false,
-                      "type": "string"
+                      "type": "string",
+                      "values": [
+                        "success",
+                        "denied",
+                        "failed"
+                      ]
                     },
                     "resultId": {
                       "name": "resultId",
                       "required": false,
                       "type": "string"
-                    },
-                    "action": {
-                      "name": "action",
-                      "required": false,
-                      "type": "string",
-                      "values": [
-                        "create",
-                        "update",
-                        "delete",
-                        "batch"
-                      ]
                     },
                     "status": {
                       "name": "status",
@@ -558,33 +547,12 @@
                         "skipped"
                       ]
                     },
-                    "outcome": {
-                      "name": "outcome",
-                      "required": false,
-                      "type": "string",
-                      "values": [
-                        "success",
-                        "denied",
-                        "failed"
-                      ]
-                    },
                     "evalTrace": {
                       "name": "evalTrace",
                       "required": false,
                       "type": "array",
                       "items": {
                         "properties": {
-                          "kind": {
-                            "name": "kind",
-                            "required": true,
-                            "type": "string",
-                            "values": [
-                              "enter",
-                              "exit",
-                              "iter",
-                              "skip"
-                            ]
-                          },
                           "error": {
                             "name": "error",
                             "required": false,
@@ -597,10 +565,32 @@
                             "items": {
                               "type": "string"
                             }
+                          },
+                          "kind": {
+                            "name": "kind",
+                            "required": true,
+                            "type": "string",
+                            "values": [
+                              "enter",
+                              "exit",
+                              "iter",
+                              "skip"
+                            ]
                           }
                         },
                         "type": "object"
                       }
+                    },
+                    "action": {
+                      "name": "action",
+                      "required": false,
+                      "type": "string",
+                      "values": [
+                        "create",
+                        "update",
+                        "delete",
+                        "batch"
+                      ]
                     },
                     "type": {
                       "name": "type",
@@ -612,6 +602,11 @@
                       "required": false,
                       "type": "number"
                     },
+                    "error": {
+                      "name": "error",
+                      "required": false,
+                      "type": "string"
+                    },
                     "args": {
                       "name": "args",
                       "required": true,
@@ -619,6 +614,11 @@
                       "items": {
                         "type": "SExpr"
                       }
+                    },
+                    "entityName": {
+                      "name": "entityName",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -640,21 +640,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "event"
-                },
-                "payload": {
-                  "name": "payload",
-                  "required": true,
-                  "type": "object"
-                },
-                "trait": {
-                  "name": "trait",
-                  "required": true,
-                  "type": "string"
-                },
                 "result": {
                   "name": "result",
                   "required": true,
@@ -679,75 +664,6 @@
                         "type": "object"
                       }
                     },
-                    "guards": {
-                      "name": "guards",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "properties": {
-                          "arm": {
-                            "name": "arm",
-                            "required": true,
-                            "type": "number"
-                          },
-                          "guard": {
-                            "name": "guard",
-                            "required": true,
-                            "type": "SExpr"
-                          },
-                          "trace": {
-                            "name": "trace",
-                            "required": true,
-                            "type": "array",
-                            "items": {
-                              "properties": {
-                                "kind": {
-                                  "name": "kind",
-                                  "required": true,
-                                  "type": "string",
-                                  "values": [
-                                    "enter",
-                                    "exit",
-                                    "iter",
-                                    "skip"
-                                  ]
-                                },
-                                "error": {
-                                  "name": "error",
-                                  "required": false,
-                                  "type": "string"
-                                },
-                                "path": {
-                                  "name": "path",
-                                  "required": true,
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                }
-                              },
-                              "type": "object"
-                            }
-                          },
-                          "passed": {
-                            "name": "passed",
-                            "required": true,
-                            "type": "boolean"
-                          },
-                          "error": {
-                            "name": "error",
-                            "required": false,
-                            "type": "string"
-                          }
-                        },
-                        "type": "object"
-                      }
-                    },
-                    "event": {
-                      "name": "event",
-                      "required": true,
-                      "type": "string"
-                    },
                     "guard": {
                       "name": "guard",
                       "required": true,
@@ -757,6 +673,21 @@
                         "fail",
                         "none"
                       ]
+                    },
+                    "event": {
+                      "name": "event",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "transitionFired": {
+                      "name": "transitionFired",
+                      "required": true,
+                      "type": "boolean"
+                    },
+                    "trait": {
+                      "name": "trait",
+                      "required": true,
+                      "type": "string"
                     },
                     "state": {
                       "name": "state",
@@ -775,26 +706,21 @@
                       },
                       "type": "object"
                     },
-                    "trait": {
-                      "name": "trait",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "firedArm": {
-                      "name": "firedArm",
-                      "required": false,
-                      "type": "number"
-                    },
                     "effects": {
                       "name": "effects",
                       "required": true,
                       "type": "array",
                       "items": {
                         "properties": {
-                          "entityName": {
-                            "name": "entityName",
+                          "outcome": {
+                            "name": "outcome",
                             "required": false,
-                            "type": "string"
+                            "type": "string",
+                            "values": [
+                              "success",
+                              "denied",
+                              "failed"
+                            ]
                           },
                           "action": {
                             "name": "action",
@@ -812,6 +738,16 @@
                             "required": true,
                             "type": "string"
                           },
+                          "status": {
+                            "name": "status",
+                            "required": true,
+                            "type": "string",
+                            "values": [
+                              "executed",
+                              "failed",
+                              "skipped"
+                            ]
+                          },
                           "args": {
                             "name": "args",
                             "required": true,
@@ -825,27 +761,20 @@
                             "required": false,
                             "type": "number"
                           },
-                          "status": {
-                            "name": "status",
-                            "required": true,
-                            "type": "string",
-                            "values": [
-                              "executed",
-                              "failed",
-                              "skipped"
-                            ]
-                          },
-                          "error": {
-                            "name": "error",
-                            "required": false,
-                            "type": "string"
-                          },
                           "evalTrace": {
                             "name": "evalTrace",
                             "required": false,
                             "type": "array",
                             "items": {
                               "properties": {
+                                "path": {
+                                  "name": "path",
+                                  "required": true,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
                                 "kind": {
                                   "name": "kind",
                                   "required": true,
@@ -861,6 +790,61 @@
                                   "name": "error",
                                   "required": false,
                                   "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          },
+                          "resultId": {
+                            "name": "resultId",
+                            "required": false,
+                            "type": "string"
+                          },
+                          "error": {
+                            "name": "error",
+                            "required": false,
+                            "type": "string"
+                          },
+                          "entityName": {
+                            "name": "entityName",
+                            "required": false,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "firedArm": {
+                      "name": "firedArm",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "guards": {
+                      "name": "guards",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "arm": {
+                            "name": "arm",
+                            "required": true,
+                            "type": "number"
+                          },
+                          "error": {
+                            "name": "error",
+                            "required": false,
+                            "type": "string"
+                          },
+                          "trace": {
+                            "name": "trace",
+                            "required": true,
+                            "type": "array",
+                            "items": {
+                              "properties": {
+                                "error": {
+                                  "name": "error",
+                                  "required": false,
+                                  "type": "string"
                                 },
                                 "path": {
                                   "name": "path",
@@ -869,37 +853,58 @@
                                   "items": {
                                     "type": "string"
                                   }
+                                },
+                                "kind": {
+                                  "name": "kind",
+                                  "required": true,
+                                  "type": "string",
+                                  "values": [
+                                    "enter",
+                                    "exit",
+                                    "iter",
+                                    "skip"
+                                  ]
                                 }
                               },
                               "type": "object"
                             }
                           },
-                          "outcome": {
-                            "name": "outcome",
-                            "required": false,
-                            "type": "string",
-                            "values": [
-                              "success",
-                              "denied",
-                              "failed"
-                            ]
+                          "guard": {
+                            "name": "guard",
+                            "required": true,
+                            "type": "SExpr"
                           },
-                          "resultId": {
-                            "name": "resultId",
-                            "required": false,
-                            "type": "string"
+                          "passed": {
+                            "name": "passed",
+                            "required": true,
+                            "type": "boolean"
                           }
                         },
                         "type": "object"
                       }
-                    },
-                    "transitionFired": {
-                      "name": "transitionFired",
-                      "required": true,
-                      "type": "boolean"
                     }
                   },
                   "type": "object"
+                },
+                "trait": {
+                  "name": "trait",
+                  "required": true,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "event"
+                },
+                "orbital": {
+                  "name": "orbital",
+                  "required": true,
+                  "type": "string"
                 },
                 "roles": {
                   "name": "roles",
@@ -909,15 +914,10 @@
                     "type": "string"
                   }
                 },
-                "orbital": {
-                  "name": "orbital",
+                "payload": {
+                  "name": "payload",
                   "required": true,
-                  "type": "string"
-                },
-                "from": {
-                  "name": "from",
-                  "required": true,
-                  "type": "string"
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -989,21 +989,6 @@
             "description": "The transition to explain.",
             "tier": "presentation",
             "properties": {
-              "from": {
-                "name": "from",
-                "required": true,
-                "type": "string"
-              },
-              "to": {
-                "name": "to",
-                "required": true,
-                "type": "string"
-              },
-              "event": {
-                "name": "event",
-                "required": true,
-                "type": "string"
-              },
               "effects": {
                 "name": "effects",
                 "required": true,
@@ -1027,15 +1012,30 @@
                   "type": "object"
                 }
               },
-              "index": {
-                "name": "index",
+              "from": {
+                "name": "from",
                 "required": true,
-                "type": "number"
+                "type": "string"
+              },
+              "event": {
+                "name": "event",
+                "required": true,
+                "type": "string"
+              },
+              "to": {
+                "name": "to",
+                "required": true,
+                "type": "string"
               },
               "guard": {
                 "name": "guard",
                 "required": false,
                 "type": "SExpr"
+              },
+              "index": {
+                "name": "index",
+                "required": true,
+                "type": "number"
               }
             }
           },

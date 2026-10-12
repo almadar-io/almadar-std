@@ -163,26 +163,26 @@
             "type": "[LearnDerivationCandidate]",
             "default": [
               {
-                "deriveNegationMode": "same",
-                "deriveSide": "right",
                 "key": "FORWARD",
                 "label": "Forward Rule",
-                "matchNegationMode": "same",
                 "matchSide": "left",
-                "noMatchFeedback": "No matching premises yet for the forward rule.",
+                "matchNegationMode": "same",
+                "deriveSide": "right",
+                "deriveNegationMode": "same",
                 "resultBadgeLabel": "DERIVED",
-                "resultBadgeVariant": "success"
+                "resultBadgeVariant": "success",
+                "noMatchFeedback": "No matching premises yet for the forward rule."
               },
               {
-                "deriveNegationMode": "invert",
-                "deriveSide": "left",
                 "key": "BACKWARD",
                 "label": "Backward Rule",
-                "matchNegationMode": "opposite",
                 "matchSide": "right",
-                "noMatchFeedback": "No matching premises yet for the backward rule.",
+                "matchNegationMode": "opposite",
+                "deriveSide": "left",
+                "deriveNegationMode": "invert",
                 "resultBadgeLabel": "DERIVED",
-                "resultBadgeVariant": "success"
+                "resultBadgeVariant": "success",
+                "noMatchFeedback": "No matching premises yet for the backward rule."
               }
             ],
             "label": "Candidates",
@@ -191,6 +191,11 @@
             "tier": "domain",
             "items": {
               "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
                 "deriveNegationMode": {
                   "name": "deriveNegationMode",
                   "required": true,
@@ -198,6 +203,25 @@
                   "values": [
                     "same",
                     "invert"
+                  ]
+                },
+                "resultBadgeVariant": {
+                  "name": "resultBadgeVariant",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "matchSide": {
+                  "name": "matchSide",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "right"
                   ]
                 },
                 "deriveSide": {
@@ -209,16 +233,6 @@
                     "right"
                   ]
                 },
-                "key": {
-                  "name": "key",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "matchNegationMode": {
                   "name": "matchNegationMode",
                   "required": true,
@@ -228,27 +242,13 @@
                     "opposite"
                   ]
                 },
-                "matchSide": {
-                  "name": "matchSide",
-                  "required": true,
-                  "type": "string",
-                  "values": [
-                    "left",
-                    "right"
-                  ]
-                },
-                "noMatchFeedback": {
-                  "name": "noMatchFeedback",
-                  "required": false,
-                  "type": "string"
-                },
                 "resultBadgeLabel": {
                   "name": "resultBadgeLabel",
                   "required": false,
                   "type": "string"
                 },
-                "resultBadgeVariant": {
-                  "name": "resultBadgeVariant",
+                "noMatchFeedback": {
+                  "name": "noMatchFeedback",
                   "required": false,
                   "type": "string"
                 }
@@ -318,24 +318,24 @@
             "type": "[LearnDerivationLine]",
             "default": [
               {
-                "badgeLabel": "GIVEN",
-                "badgeVariant": "neutral",
                 "id": "given-a",
-                "kind": "fact",
                 "label": "A",
+                "kind": "fact",
+                "subject": "A",
                 "negated": false,
-                "subject": "A"
+                "badgeLabel": "GIVEN",
+                "badgeVariant": "neutral"
               },
               {
-                "badgeLabel": "RULE",
-                "badgeVariant": "info",
                 "id": "given-a-implies-b",
-                "kind": "link",
                 "label": "A → B",
-                "leftNegated": false,
+                "kind": "link",
                 "leftSubject": "A",
+                "leftNegated": false,
+                "rightSubject": "B",
                 "rightNegated": false,
-                "rightSubject": "B"
+                "badgeLabel": "RULE",
+                "badgeVariant": "info"
               }
             ],
             "label": "Premises",
@@ -344,30 +344,6 @@
             "tier": "domain",
             "items": {
               "properties": {
-                "badgeLabel": {
-                  "name": "badgeLabel",
-                  "required": false,
-                  "type": "string"
-                },
-                "badgeVariant": {
-                  "name": "badgeVariant",
-                  "required": false,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "kind": {
-                  "name": "kind",
-                  "required": true,
-                  "type": "string",
-                  "values": [
-                    "fact",
-                    "link"
-                  ]
-                },
                 "label": {
                   "name": "label",
                   "required": true,
@@ -378,15 +354,24 @@
                   "required": false,
                   "type": "boolean"
                 },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "fact",
+                    "link"
+                  ]
+                },
+                "subject": {
+                  "name": "subject",
+                  "required": false,
+                  "type": "string"
+                },
                 "leftSubject": {
                   "name": "leftSubject",
                   "required": false,
                   "type": "string"
-                },
-                "negated": {
-                  "name": "negated",
-                  "required": false,
-                  "type": "boolean"
                 },
                 "rightNegated": {
                   "name": "rightNegated",
@@ -398,8 +383,23 @@
                   "required": false,
                   "type": "string"
                 },
-                "subject": {
-                  "name": "subject",
+                "negated": {
+                  "name": "negated",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "badgeLabel": {
+                  "name": "badgeLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "badgeVariant": {
+                  "name": "badgeVariant",
                   "required": false,
                   "type": "string"
                 }

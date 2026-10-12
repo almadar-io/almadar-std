@@ -13,11 +13,10 @@ describe('getAllBehaviorNames', () => {
     expect(names.every(n => typeof n === 'string')).toBe(true);
   });
 
-  it('names follow std-* convention', () => {
-    const names = getAllBehaviorNames();
-    for (const name of names) {
-      expect(name).toMatch(/^std-/);
-    }
+  it('names are exactly the behaviors the registry index lists', async () => {
+    const { getBehaviorRegistry } = await import('../behaviors/query');
+    const indexed = Object.keys(await getBehaviorRegistry()).sort();
+    expect(getAllBehaviorNames()).toEqual(indexed);
   });
 });
 

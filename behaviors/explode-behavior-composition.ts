@@ -15,17 +15,14 @@
  * scopes it as human tooling.
  *
  * Implementation notes:
- * - Reads behaviors via the bundled `./functions/index.js` factories (same
- *   approach as `exports-reader.ts`). No filesystem access, no coupling
- *   to sibling packages — just calling functions that already exist in
- *   this package.
+ * - Reads the behavior's program from the package registry (`loadGoldenOrb`).
  * - `TraitReference.from` is backfilled from the orbital's `uses:` header
  *   when the call-site omitted it but the `ref:` uses an imported alias.
  *
  * @packageDocumentation
  */
 
-import * as behaviorFns from './functions/index.js';
+import { loadGoldenOrb } from './exports-reader.js';
 import type { OrbitalDefinition, UseDeclaration } from '@almadar/core/types';
 import type { Trait, TraitRef, TraitReference } from '@almadar/core/types';
 import { isInlineTrait } from '@almadar/core/types';
@@ -99,34 +96,6 @@ function syntheticLeafReference(
 }
 
 // ============================================================================
-// Behavior name → factory function
-// ============================================================================
-
-function fnNameToBehaviorName(fnName: string): string | null {
-  if (fnName.includes('Entity') || fnName.includes('Trait') || fnName.includes('Page')) return null;
-  if (
-    ['connect', 'compose', 'pipe', 'makeEntity', 'makePage', 'makeOrbital', 'makeSchema',
-      'makeTraitRef', 'makePageRef', 'makeOrbitalWithUses', 'makeAtomOrbital',
-      'mergeOrbitals', 'wire', 'extractTrait', 'ensureIdField', 'plural'].includes(fnName)
-  ) return null;
-  const withDashes = fnName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-  if (!withDashes.startsWith('std-')) return null;
-  return withDashes;
-}
-
-function findFactory(behaviorName: string): ((params: { entityName: string }) => unknown) | null {
-  const fns = behaviorFns as Record<string, unknown>;
-  for (const [fnName, fn] of Object.entries(fns)) {
-    if (typeof fn !== 'function') continue;
-    const mapped = fnNameToBehaviorName(fnName);
-    if (mapped === behaviorName) {
-      return fn as (params: { entityName: string }) => unknown;
-    }
-  }
-  return null;
-}
-
-// ============================================================================
 // Public API
 // ============================================================================
 
@@ -146,47 +115,36 @@ function findFactory(behaviorName: string): ((params: { entityName: string }) =>
  *
  * @param behaviorName - Registry name of the behavior (`"std-cart"`,
  *   `"std-browse"`, etc.).
- * @throws When the behavior isn't exported from `@almadar/std`.
+ * @throws When `@almadar/std` ships no behavior by that name.
  */
 export function explodeBehaviorComposition(behaviorName: string): TraitReference[] {
-  const factory = findFactory(behaviorName);
-  if (!factory) {
-    throw new Error(
-      `explodeBehaviorComposition: behavior "${behaviorName}" is not exported from @almadar/std.`,
-    );
+  const program = loadGoldenOrb(behaviorName);
+  if (!program) {
+    throw new Error(`explodeBehaviorComposition: "${behaviorName}" is not a behavior @almadar/std ships.`);
   }
 
-  let result: unknown;
-  try {
-    result = factory({ entityName: behaviorName.replace(/^std-/, '') });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new Error(
-      `explodeBehaviorComposition: factory for "${behaviorName}" threw when called with default params: ${message}`,
-    );
-  }
-
-  const orbital = result as OrbitalDefinition;
-  const uses = aliasToFromMap(orbital.uses);
   const refs: TraitReference[] = [];
-
-  for (const entry of orbital.traits) {
-    if (!isTraitReferenceObject(entry)) continue;
-    const ref: TraitReference = { ...entry };
-    if (ref.from === undefined) {
-      const alias = extractAlias(ref.ref);
-      const mapped = alias !== null ? uses.get(alias) : undefined;
-      if (mapped !== undefined) {
-        ref.from = mapped;
+  for (const orbital of program.orbitals) {
+    const uses = aliasToFromMap(orbital.uses);
+    for (const entry of orbital.traits) {
+      if (!isTraitReferenceObject(entry)) continue;
+      const ref: TraitReference = { ...entry };
+      if (ref.from === undefined) {
+        const alias = extractAlias(ref.ref);
+        const mapped = alias !== null ? uses.get(alias) : undefined;
+        if (mapped !== undefined) {
+          ref.from = mapped;
+        }
       }
+      refs.push(ref);
     }
-    refs.push(ref);
   }
 
-  if (refs.length === 0) {
-    const inline = findAtomInlineTrait(orbital);
+  const first = program.orbitals[0];
+  if (refs.length === 0 && first !== undefined) {
+    const inline = findAtomInlineTrait(first);
     if (inline !== undefined) {
-      return [syntheticLeafReference(behaviorName, orbital, inline)];
+      return [syntheticLeafReference(behaviorName, first, inline)];
     }
   }
 

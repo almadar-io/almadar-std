@@ -36,7 +36,7 @@ describe('explodeBehaviorComposition', () => {
   describe('unknown behavior', () => {
     it('throws with a descriptive message', () => {
       expect(() => explodeBehaviorComposition('std-does-not-exist')).toThrow(
-        /not exported from @almadar\/std/,
+        /is not a behavior @almadar\/std ships/,
       );
     });
   });

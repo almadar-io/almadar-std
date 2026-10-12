@@ -51,8 +51,15 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "md",
+              "className": "w-full",
               "children": [
                 {
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "gap": "md",
                   "align": "center",
                   "children": [
                     [
@@ -70,6 +77,11 @@
                           "if",
                           "@config.showArrows",
                           {
+                            "type": "button",
+                            "variant": "ghost",
+                            "size": "lg",
+                            "icon": "@config.prevIcon",
+                            "aria-label": "Previous slide",
                             "action": "GO_TO",
                             "actionPayload": {
                               "index": [
@@ -96,7 +108,6 @@
                                 ]
                               ]
                             },
-                            "aria-label": "Previous slide",
                             "disabled": [
                               "and",
                               [
@@ -109,17 +120,16 @@
                                 "@entity.slideIndex",
                                 0
                               ]
-                            ],
-                            "icon": "@config.prevIcon",
-                            "size": "lg",
-                            "type": "button",
-                            "variant": "ghost"
+                            ]
                           },
                           null
                         ]
                       ]
                     ],
                     {
+                      "type": "center",
+                      "className": "flex-1 min-w-0",
+                      "minHeight": "@config.stageMinHeight",
                       "children": [
                         "array/map",
                         [
@@ -129,21 +139,18 @@
                           "fn",
                           "i",
                           {
+                            "type": "box",
+                            "className": "w-full",
                             "children": [
                               [
                                 "array/nth",
                                 "@config.slides",
                                 "@i"
                               ]
-                            ],
-                            "className": "w-full",
-                            "type": "box"
+                            ]
                           }
                         ]
-                      ],
-                      "className": "flex-1 min-w-0",
-                      "minHeight": "@config.stageMinHeight",
-                      "type": "center"
+                      ]
                     },
                     [
                       "array/map",
@@ -160,6 +167,11 @@
                           "if",
                           "@config.showArrows",
                           {
+                            "type": "button",
+                            "variant": "ghost",
+                            "size": "lg",
+                            "icon": "@config.nextIcon",
+                            "aria-label": "Next slide",
                             "action": "GO_TO",
                             "actionPayload": {
                               "index": [
@@ -190,7 +202,6 @@
                                 ]
                               ]
                             },
-                            "aria-label": "Next slide",
                             "disabled": [
                               "and",
                               [
@@ -207,26 +218,23 @@
                                   1
                                 ]
                               ]
-                            ],
-                            "icon": "@config.nextIcon",
-                            "size": "lg",
-                            "type": "button",
-                            "variant": "ghost"
+                            ]
                           },
                           null
                         ]
                       ]
                     ]
-                  ],
-                  "direction": "horizontal",
-                  "gap": "md",
-                  "type": "stack"
+                  ]
                 },
                 [
                   "if",
                   "@config.showProgress",
                   {
+                    "type": "stack",
+                    "direction": "horizontal",
+                    "gap": "md",
                     "align": "center",
+                    "justify": "center",
                     "children": [
                       "array/map",
                       [
@@ -239,16 +247,21 @@
                         "fn",
                         "n",
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "align": "center",
                           "children": [
                             {
+                              "type": "progress-dots",
                               "count": "@n",
                               "currentIndex": "@entity.slideIndex",
                               "onDotClick": "GO_TO",
-                              "size": "sm",
-                              "type": "progress-dots"
+                              "size": "sm"
                             },
                             {
+                              "type": "typography",
+                              "variant": "caption",
                               "color": "muted",
                               "content": [
                                 "str/concat",
@@ -260,29 +273,16 @@
                                 ],
                                 " / ",
                                 "@n"
-                              ],
-                              "type": "typography",
-                              "variant": "caption"
+                              ]
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
+                          ]
                         }
                       ]
-                    ],
-                    "direction": "horizontal",
-                    "gap": "md",
-                    "justify": "center",
-                    "type": "stack"
+                    ]
                   },
                   null
                 ]
-              ],
-              "className": "w-full",
-              "direction": "vertical",
-              "gap": "md",
-              "type": "stack"
+              ]
             },
             "label": "Body content tree",
             "description": "Render-ui tree for the deck. Default: slide centred between previous/next arrows, dot strip and counter below. A realization overrides this to restyle (full-bleed, bottom bar, no chrome) while keeping the same cursor, keys and emits.",

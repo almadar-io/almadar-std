@@ -508,119 +508,100 @@
             "key": "tourContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "md",
               "children": [
                 {
+                  "type": "animated-reveal",
+                  "trigger": "scroll",
                   "animation": "none",
-                  "children": [
-                    {
-                      "animateChanges": true,
-                      "children": [
-                        [
-                          "if",
-                          "@config.desktopFrame",
-                          {
-                            "children": [
-                              {
-                                "align": "center",
-                                "aria-hidden": true,
-                                "children": [
-                                  {
-                                    "className": "w-2.5 h-2.5 rounded-full bg-error",
-                                    "type": "box"
-                                  },
-                                  {
-                                    "className": "w-2.5 h-2.5 rounded-full bg-warning",
-                                    "type": "box"
-                                  },
-                                  {
-                                    "className": "w-2.5 h-2.5 rounded-full bg-success",
-                                    "type": "box"
-                                  }
-                                ],
-                                "className": "px-3 py-2 bg-muted border-b border-border",
-                                "direction": "horizontal",
-                                "gap": "xs",
-                                "type": "stack"
-                              },
-                              {
-                                "children": [
-                                  {
-                                    "children": [
-                                      "@config.demo"
-                                    ],
-                                    "className": "w-[1280px] h-[800px] overflow-hidden bg-background",
-                                    "type": "box"
-                                  }
-                                ],
-                                "type": "scaled-diagram"
-                              }
-                            ],
-                            "direction": "vertical",
-                            "gap": "none",
-                            "type": "stack"
-                          },
-                          {
-                            "children": [
-                              "@config.demo"
-                            ],
-                            "padding": "md",
-                            "type": "card"
-                          }
-                        ]
-                      ],
-                      "className": [
-                        "if",
-                        "@config.desktopFrame",
-                        "rounded-container overflow-hidden border border-border shadow-elevation-popover bg-background",
-                        "rounded-container"
-                      ],
-                      "data-theme": "@config.demoTheme",
-                      "type": "box"
-                    }
-                  ],
-                  "enterEvent": "TOUR_SHOWN",
-                  "leaveEvent": "TOUR_HIDDEN",
+                  "threshold": 0.4,
                   "revealEvent": [
                     "if",
                     "@config.playWhenVisible",
                     "TOUR_VISIBLE",
                     ""
                   ],
-                  "threshold": 0.4,
-                  "trigger": "scroll",
-                  "type": "animated-reveal"
+                  "enterEvent": "TOUR_SHOWN",
+                  "leaveEvent": "TOUR_HIDDEN",
+                  "children": [
+                    {
+                      "type": "box",
+                      "data-theme": "@config.demoTheme",
+                      "animateChanges": true,
+                      "className": [
+                        "if",
+                        "@config.desktopFrame",
+                        "rounded-container overflow-hidden border border-border shadow-elevation-popover bg-background",
+                        "rounded-container"
+                      ],
+                      "children": [
+                        [
+                          "if",
+                          "@config.desktopFrame",
+                          {
+                            "type": "stack",
+                            "direction": "vertical",
+                            "gap": "none",
+                            "children": [
+                              {
+                                "type": "stack",
+                                "direction": "horizontal",
+                                "gap": "xs",
+                                "align": "center",
+                                "className": "px-3 py-2 bg-muted border-b border-border",
+                                "aria-hidden": true,
+                                "children": [
+                                  {
+                                    "type": "box",
+                                    "className": "w-2.5 h-2.5 rounded-full bg-error"
+                                  },
+                                  {
+                                    "type": "box",
+                                    "className": "w-2.5 h-2.5 rounded-full bg-warning"
+                                  },
+                                  {
+                                    "type": "box",
+                                    "className": "w-2.5 h-2.5 rounded-full bg-success"
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "scaled-diagram",
+                                "children": [
+                                  {
+                                    "type": "box",
+                                    "className": "w-[1280px] h-[800px] overflow-hidden bg-background",
+                                    "children": [
+                                      "@config.demo"
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "type": "card",
+                            "padding": "md",
+                            "children": [
+                              "@config.demo"
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ]
                 },
                 {
+                  "type": "box",
                   "animateChanges": true,
                   "children": [
                     {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm",
                       "align": "start",
-                      "children": [
-                        {
-                          "color": "primary",
-                          "name": "message-square-text",
-                          "size": "md",
-                          "type": "icon"
-                        },
-                        {
-                          "content": [
-                            "if",
-                            [
-                              "<",
-                              "@entity.shown",
-                              0
-                            ],
-                            "@config.introCaption",
-                            [
-                              "array/nth",
-                              "@config.captions",
-                              "@entity.shown"
-                            ]
-                          ],
-                          "type": "typography",
-                          "variant": "body"
-                        }
-                      ],
                       "className": [
                         "if",
                         [
@@ -639,18 +620,37 @@
                         "hidden",
                         ""
                       ],
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "type": "stack"
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "message-square-text",
+                          "size": "md",
+                          "color": "primary"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": [
+                            "if",
+                            [
+                              "<",
+                              "@entity.shown",
+                              0
+                            ],
+                            "@config.introCaption",
+                            [
+                              "array/nth",
+                              "@config.captions",
+                              "@entity.shown"
+                            ]
+                          ]
+                        }
+                      ]
                     }
-                  ],
-                  "type": "box"
+                  ]
                 },
                 "@trait.TourTransport"
-              ],
-              "direction": "vertical",
-              "gap": "md",
-              "type": "stack"
+              ]
             },
             "label": "Tour layout",
             "tier": "internal"

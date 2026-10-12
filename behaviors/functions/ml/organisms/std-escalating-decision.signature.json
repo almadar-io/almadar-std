@@ -21,10 +21,17 @@
       {
         "name": "LadderEntry",
         "emittedEvents": [
+          "RUNGS_RESET",
           "RUN_EXACT"
         ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "RUNGS_RESET",
+            "direction": "emit",
+            "description": "The ladder was reset; every rung returns to idle so the next DECIDE runs the whole chain again.",
+            "tier": "secondary"
+          },
           {
             "name": "RUN_EXACT",
             "direction": "emit",
@@ -58,6 +65,10 @@
         "effectRow": [
           {
             "kind": "emit",
+            "resource": "RUNGS_RESET"
+          },
+          {
+            "kind": "emit",
             "resource": "RUN_EXACT"
           },
           {
@@ -70,6 +81,7 @@
         "name": "ExactRung",
         "emittedEvents": [],
         "listenedEvents": [
+          "RUNGS_RESET",
           "RUN_EXACT"
         ],
         "overridableConfigKeys": [
@@ -112,6 +124,7 @@
         "name": "LookupRung",
         "emittedEvents": [],
         "listenedEvents": [
+          "RUNGS_RESET",
           "EXACT_UNMATCHED"
         ],
         "overridableConfigKeys": [
@@ -146,6 +159,7 @@
         "name": "SimilarityRung",
         "emittedEvents": [],
         "listenedEvents": [
+          "RUNGS_RESET",
           "KEY_MISS"
         ],
         "overridableConfigKeys": [
@@ -182,6 +196,7 @@
         "name": "InferRung",
         "emittedEvents": [],
         "listenedEvents": [
+          "RUNGS_RESET",
           "SIMILARITY_ABSTAINED"
         ],
         "overridableConfigKeys": [
@@ -211,32 +226,32 @@
             "description": "Declared shape and per-dimension ranges the model output must satisfy; a failing check abstains with reason contract violation. Omit shape to assert ranges only — an empty shape [] asserts a SCALAR output, it does not mean unconstrained",
             "tier": "domain",
             "properties": {
-              "ranges": {
-                "name": "ranges",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "max": {
-                      "name": "max",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "min": {
-                      "name": "min",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
               "shape": {
                 "name": "shape",
                 "required": false,
                 "type": "array",
                 "items": {
                   "type": "number"
+                }
+              },
+              "ranges": {
+                "name": "ranges",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "min": {
+                      "name": "min",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "max": {
+                      "name": "max",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
                 }
               }
             }
@@ -258,6 +273,7 @@
         "name": "ClassifyRung",
         "emittedEvents": [],
         "listenedEvents": [
+          "RUNGS_RESET",
           "INFER_ABSTAINED"
         ],
         "overridableConfigKeys": [
@@ -409,6 +425,7 @@
     "emittedEvents": [
       "DECIDED",
       "DECISION_FAILED",
+      "RUNGS_RESET",
       "RUN_EXACT"
     ],
     "listenedEvents": [
@@ -420,6 +437,7 @@
       "INFER_ABSTAINED",
       "KEY_HIT",
       "KEY_MISS",
+      "RUNGS_RESET",
       "RUN_EXACT",
       "SIMILARITY_ABSTAINED",
       "SIMILARITY_MATCHED"

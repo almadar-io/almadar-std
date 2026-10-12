@@ -190,16 +190,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": false,
-                  "type": "event"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "roles": {
                   "name": "roles",
                   "required": false,
@@ -213,10 +203,20 @@
                   "required": false,
                   "type": "string"
                 },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
                 "when": {
                   "name": "when",
                   "required": false,
                   "type": "SExpr"
+                },
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
                 }
               },
               "type": "object"
@@ -287,13 +287,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "hint": {
-                  "name": "hint",
+                "placeholder": {
+                  "name": "placeholder",
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "hint": {
+                  "name": "hint",
                   "required": false,
                   "type": "string"
                 },
@@ -302,8 +302,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "placeholder": {
-                  "name": "placeholder",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 }
@@ -430,8 +430,8 @@
         "ref": "Confirmation.traits.ConfirmActionConfirmation",
         "linkedEntity": "SignatureSession",
         "eventRenames": {
-          "CONFIRM": "CONFIRM_DELETE",
-          "REQUEST": "DELETE"
+          "REQUEST": "DELETE",
+          "CONFIRM": "CONFIRM_DELETE"
         },
         "transitionEvents": [
           "CANCEL",
@@ -536,11 +536,19 @@
       },
       {
         "name": "EnvelopeSendDialog",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "SEND_ENVELOPE"
+        ],
         "listenedEvents": [
           "SEND_FOR_SIGNATURE"
         ],
         "events": [
+          {
+            "name": "SEND_ENVELOPE",
+            "direction": "emit",
+            "description": "The document was dropped; EnvelopeDispatcher sends it.",
+            "tier": "domain"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -550,13 +558,6 @@
             "direction": "listen",
             "description": "A request's send step was opened.",
             "synonyms": "open send, start send",
-            "tier": "presentation"
-          },
-          {
-            "name": "SEND_ENVELOPE",
-            "direction": "listen",
-            "description": "The document was dropped; the request is being dispatched.",
-            "synonyms": "send, dispatch",
             "tier": "presentation"
           },
           {
@@ -593,6 +594,7 @@
           "ENVELOPE_STAMP_FAILED"
         ],
         "listenedEvents": [
+          "SEND_ENVELOPE",
           "CHECK_ENVELOPE_STATUS"
         ],
         "events": [
@@ -706,6 +708,7 @@
       "ENVELOPE_STATUS_LOADED",
       "REQUEST_DELETE",
       "RESEND_REQUEST",
+      "SEND_ENVELOPE",
       "SEND_FOR_SIGNATURE",
       "SESSION_CREATED",
       "SESSION_DELETED",
@@ -720,6 +723,7 @@
       "REQUEST_DELETE",
       "RESEND_REQUEST",
       "SAVE",
+      "SEND_ENVELOPE",
       "SEND_FOR_SIGNATURE",
       "SESSION_CREATED",
       "SESSION_DELETED",

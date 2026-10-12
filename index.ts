@@ -87,7 +87,7 @@ export {
   getCoreOperators,
 } from './modules/index.js';
 
-// Standard Behaviors (functions-based)
+// Standard Behaviors (programs read from the package registry)
 export {
   // Types
   type BehaviorTrait,
@@ -135,9 +135,6 @@ export {
   type KnobEmbeddingsManifest,
   getKnobEmbeddings,
 } from './behaviors/index.js';
-
-// All behavior functions
-export * from './behaviors/functions/index.js';
 
 // Phase 5.3: human-authoring primitive for decomposing a behavior's
 // composition into its flat TraitReference list. Not exposed to the agent/LLM.

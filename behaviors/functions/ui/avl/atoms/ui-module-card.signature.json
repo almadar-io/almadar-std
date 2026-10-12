@@ -60,14 +60,14 @@
                   "type": "object",
                   "items": {
                     "properties": {
-                      "body": {
-                        "name": "body",
-                        "required": true,
-                        "type": "string"
-                      },
                       "title": {
                         "name": "title",
                         "required": false,
+                        "type": "string"
+                      },
+                      "body": {
+                        "name": "body",
+                        "required": true,
                         "type": "string"
                       }
                     },
@@ -201,183 +201,183 @@
             "key": "data",
             "type": "ModuleCardData",
             "default": {
+              "orbitalName": "OrderOrbital",
               "entityName": "Order",
-              "externalLinks": [
-                {
-                  "direction": "in",
-                  "eventName": "PAYMENT_OK",
-                  "targetOrbital": "PaymentOrbital",
-                  "traitName": "OrderFlow"
-                }
-              ],
+              "persistence": "persistent",
               "fields": [
                 {
-                  "hasDefault": false,
                   "name": "customer",
+                  "type": "string",
                   "required": true,
-                  "type": "string"
+                  "hasDefault": false
                 },
                 {
-                  "hasDefault": true,
                   "name": "qty",
+                  "type": "number",
                   "required": true,
-                  "type": "number"
+                  "hasDefault": true
                 },
                 {
-                  "hasDefault": true,
                   "name": "status",
+                  "type": "string",
                   "required": false,
-                  "type": "string"
+                  "hasDefault": true
                 }
               ],
-              "orbitalName": "OrderOrbital",
+              "traits": [
+                {
+                  "name": "OrderFlow",
+                  "stateCount": 5,
+                  "eventCount": 7,
+                  "transitionCount": 7,
+                  "emits": [
+                    "ORDER_SAVED"
+                  ],
+                  "listens": [
+                    "PAYMENT_OK"
+                  ]
+                }
+              ],
               "pages": [
                 {
                   "name": "Orders",
                   "route": "/orders"
                 }
               ],
-              "persistence": "persistent",
               "traitDetails": {
                 "OrderFlow": {
-                  "emittedEvents": [
-                    "ORDER_SAVED"
-                  ],
-                  "linkedEntity": "Order",
-                  "listenedEvents": [
-                    "PAYMENT_OK"
-                  ],
                   "name": "OrderFlow",
+                  "linkedEntity": "Order",
                   "states": [
                     {
+                      "name": "browsing",
                       "isInitial": true,
-                      "isTerminal": false,
-                      "name": "browsing"
+                      "isTerminal": false
                     },
                     {
+                      "name": "editing",
                       "isInitial": false,
-                      "isTerminal": false,
-                      "name": "editing"
+                      "isTerminal": false
                     },
                     {
+                      "name": "saving",
                       "isInitial": false,
-                      "isTerminal": false,
-                      "name": "saving"
+                      "isTerminal": false
                     },
                     {
+                      "name": "confirmed",
                       "isInitial": false,
-                      "isTerminal": true,
-                      "name": "confirmed"
+                      "isTerminal": true
                     },
                     {
+                      "name": "failed",
                       "isInitial": false,
-                      "isTerminal": false,
-                      "name": "failed"
+                      "isTerminal": false
                     }
                   ],
                   "transitions": [
                     {
-                      "effects": [
-                        {
-                          "args": [],
-                          "type": "render-ui"
-                        }
-                      ],
-                      "event": "EDIT",
                       "from": "browsing",
-                      "index": 0,
-                      "to": "editing"
-                    },
-                    {
+                      "to": "editing",
+                      "event": "EDIT",
                       "effects": [
                         {
-                          "args": [],
-                          "type": "persist"
-                        },
-                        {
-                          "args": [],
-                          "type": "notify"
+                          "type": "render-ui",
+                          "args": []
                         }
                       ],
+                      "index": 0
+                    },
+                    {
+                      "from": "editing",
+                      "to": "saving",
                       "event": "SAVE",
-                      "from": "editing",
-                      "index": 1,
-                      "to": "saving"
-                    },
-                    {
                       "effects": [
                         {
-                          "args": [],
-                          "type": "emit"
+                          "type": "persist",
+                          "args": []
                         },
                         {
-                          "args": [],
-                          "type": "render-ui"
+                          "type": "notify",
+                          "args": []
                         }
                       ],
+                      "index": 1
+                    },
+                    {
+                      "from": "saving",
+                      "to": "confirmed",
                       "event": "SAVED",
-                      "from": "saving",
-                      "index": 2,
-                      "to": "confirmed"
-                    },
-                    {
                       "effects": [
                         {
-                          "args": [],
-                          "type": "notify"
+                          "type": "emit",
+                          "args": []
+                        },
+                        {
+                          "type": "render-ui",
+                          "args": []
                         }
                       ],
+                      "index": 2
+                    },
+                    {
+                      "from": "saving",
+                      "to": "failed",
                       "event": "SAVE_FAILED",
-                      "from": "saving",
-                      "index": 3,
-                      "to": "failed"
+                      "effects": [
+                        {
+                          "type": "notify",
+                          "args": []
+                        }
+                      ],
+                      "index": 3
                     },
                     {
-                      "effects": [],
-                      "event": "RETRY",
                       "from": "failed",
-                      "index": 4,
-                      "to": "editing"
+                      "to": "editing",
+                      "event": "RETRY",
+                      "effects": [],
+                      "index": 4
                     },
                     {
-                      "effects": [
-                        {
-                          "args": [],
-                          "type": "render-ui"
-                        }
-                      ],
-                      "event": "CANCEL",
                       "from": "editing",
-                      "index": 5,
-                      "to": "browsing"
-                    },
-                    {
+                      "to": "browsing",
+                      "event": "CANCEL",
                       "effects": [
                         {
-                          "args": [],
-                          "type": "navigate"
+                          "type": "render-ui",
+                          "args": []
                         }
                       ],
-                      "event": "DONE",
+                      "index": 5
+                    },
+                    {
                       "from": "confirmed",
-                      "index": 6,
-                      "to": "browsing"
+                      "to": "browsing",
+                      "event": "DONE",
+                      "effects": [
+                        {
+                          "type": "navigate",
+                          "args": []
+                        }
+                      ],
+                      "index": 6
                     }
+                  ],
+                  "emittedEvents": [
+                    "ORDER_SAVED"
+                  ],
+                  "listenedEvents": [
+                    "PAYMENT_OK"
                   ]
                 }
               },
-              "traits": [
+              "externalLinks": [
                 {
-                  "emits": [
-                    "ORDER_SAVED"
-                  ],
-                  "eventCount": 7,
-                  "listens": [
-                    "PAYMENT_OK"
-                  ],
-                  "name": "OrderFlow",
-                  "stateCount": 5,
-                  "transitionCount": 7
+                  "targetOrbital": "PaymentOrbital",
+                  "eventName": "PAYMENT_OK",
+                  "direction": "in",
+                  "traitName": "OrderFlow"
                 }
               ]
             },
@@ -396,11 +396,6 @@
                 "type": "array",
                 "items": {
                   "properties": {
-                    "direction": {
-                      "name": "direction",
-                      "required": true,
-                      "type": "string"
-                    },
                     "eventName": {
                       "name": "eventName",
                       "required": true,
@@ -415,6 +410,11 @@
                       "name": "traitName",
                       "required": true,
                       "type": "string"
+                    },
+                    "direction": {
+                      "name": "direction",
+                      "required": true,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -426,6 +426,11 @@
                 "type": "array",
                 "items": {
                   "properties": {
+                    "required": {
+                      "name": "required",
+                      "required": true,
+                      "type": "boolean"
+                    },
                     "hasDefault": {
                       "name": "hasDefault",
                       "required": true,
@@ -436,15 +441,56 @@
                       "required": true,
                       "type": "string"
                     },
-                    "required": {
-                      "name": "required",
-                      "required": true,
-                      "type": "boolean"
-                    },
                     "type": {
                       "name": "type",
                       "required": true,
                       "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "traits": {
+                "name": "traits",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "listens": {
+                      "name": "listens",
+                      "required": true,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "transitionCount": {
+                      "name": "transitionCount",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "eventCount": {
+                      "name": "eventCount",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "stateCount": {
+                      "name": "stateCount",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "emits": {
+                      "name": "emits",
+                      "required": true,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   },
                   "type": "object"
@@ -455,82 +501,21 @@
                 "required": true,
                 "type": "string"
               },
-              "pages": {
-                "name": "pages",
-                "required": true,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "name": {
-                      "name": "name",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "route": {
-                      "name": "route",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
               "traitDetails": {
                 "name": "traitDetails",
                 "required": true,
                 "type": "object",
                 "items": {
                   "properties": {
-                    "emittedEvents": {
-                      "name": "emittedEvents",
-                      "required": true,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
                     "linkedEntity": {
                       "name": "linkedEntity",
                       "required": true,
                       "type": "string"
                     },
-                    "listenedEvents": {
-                      "name": "listenedEvents",
-                      "required": true,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
                     "name": {
                       "name": "name",
                       "required": true,
                       "type": "string"
-                    },
-                    "states": {
-                      "name": "states",
-                      "required": true,
-                      "type": "array",
-                      "items": {
-                        "properties": {
-                          "isInitial": {
-                            "name": "isInitial",
-                            "required": false,
-                            "type": "boolean"
-                          },
-                          "isTerminal": {
-                            "name": "isTerminal",
-                            "required": false,
-                            "type": "boolean"
-                          },
-                          "name": {
-                            "name": "name",
-                            "required": true,
-                            "type": "string"
-                          }
-                        },
-                        "type": "object"
-                      }
                     },
                     "transitions": {
                       "name": "transitions",
@@ -538,6 +523,31 @@
                       "type": "array",
                       "items": {
                         "properties": {
+                          "index": {
+                            "name": "index",
+                            "required": true,
+                            "type": "number"
+                          },
+                          "guard": {
+                            "name": "guard",
+                            "required": false,
+                            "type": "SExpr"
+                          },
+                          "from": {
+                            "name": "from",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "event": {
+                            "name": "event",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "to": {
+                            "name": "to",
+                            "required": true,
+                            "type": "string"
+                          },
                           "effects": {
                             "name": "effects",
                             "required": true,
@@ -560,81 +570,71 @@
                               },
                               "type": "object"
                             }
-                          },
-                          "event": {
-                            "name": "event",
-                            "required": true,
-                            "type": "string"
-                          },
-                          "from": {
-                            "name": "from",
-                            "required": true,
-                            "type": "string"
-                          },
-                          "guard": {
-                            "name": "guard",
-                            "required": false,
-                            "type": "SExpr"
-                          },
-                          "index": {
-                            "name": "index",
-                            "required": true,
-                            "type": "number"
-                          },
-                          "to": {
-                            "name": "to",
-                            "required": true,
-                            "type": "string"
                           }
                         },
                         "type": "object"
+                      }
+                    },
+                    "listenedEvents": {
+                      "name": "listenedEvents",
+                      "required": true,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "states": {
+                      "name": "states",
+                      "required": true,
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "isTerminal": {
+                            "name": "isTerminal",
+                            "required": false,
+                            "type": "boolean"
+                          },
+                          "name": {
+                            "name": "name",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "isInitial": {
+                            "name": "isInitial",
+                            "required": false,
+                            "type": "boolean"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "emittedEvents": {
+                      "name": "emittedEvents",
+                      "required": true,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
                       }
                     }
                   },
                   "type": "object"
                 }
               },
-              "traits": {
-                "name": "traits",
+              "pages": {
+                "name": "pages",
                 "required": true,
                 "type": "array",
                 "items": {
                   "properties": {
-                    "emits": {
-                      "name": "emits",
+                    "route": {
+                      "name": "route",
                       "required": true,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "eventCount": {
-                      "name": "eventCount",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "listens": {
-                      "name": "listens",
-                      "required": true,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
+                      "type": "string"
                     },
                     "name": {
                       "name": "name",
                       "required": true,
                       "type": "string"
-                    },
-                    "stateCount": {
-                      "name": "stateCount",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "transitionCount": {
-                      "name": "transitionCount",
-                      "required": true,
-                      "type": "number"
                     }
                   },
                   "type": "object"

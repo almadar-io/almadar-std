@@ -39,9 +39,138 @@
             "description": "activity prop",
             "tier": "presentation",
             "properties": {
+              "AgentActivityRowActivityLlmResponse": {
+                "name": "AgentActivityRowActivityLlmResponse",
+                "properties": {
+                  "llm": {
+                    "name": "llm",
+                    "required": false,
+                    "properties": {
+                      "toolCallsJson": {
+                        "name": "toolCallsJson",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "costUSD": {
+                        "name": "costUSD",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "completionTokens": {
+                        "name": "completionTokens",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "promptTokens": {
+                        "name": "promptTokens",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "userPrompt": {
+                        "name": "userPrompt",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "service": {
+                        "name": "service",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "model": {
+                        "name": "model",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "attempt": {
+                        "name": "attempt",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "provider": {
+                        "name": "provider",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "systemPrompt": {
+                        "name": "systemPrompt",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "durationMs": {
+                        "name": "durationMs",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "cachedPromptTokens": {
+                        "name": "cachedPromptTokens",
+                        "required": false,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "llm_response"
+                    ]
+                  },
+                  "content": {
+                    "name": "content",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
               "AgentActivityRowActivityAnalysis": {
                 "name": "AgentActivityRowActivityAnalysis",
                 "properties": {
+                  "organism": {
+                    "name": "organism",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "renames": {
+                    "name": "renames",
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                      "properties": {
+                        "to": {
+                          "name": "to",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "from": {
+                          "name": "from",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "analysis"
+                    ]
+                  },
+                  "organismReason": {
+                    "name": "organismReason",
+                    "required": false,
+                    "type": "string"
+                  },
                   "complexity": {
                     "name": "complexity",
                     "required": false,
@@ -67,31 +196,67 @@
                       "type": "string"
                     }
                   },
-                  "organism": {
-                    "name": "organism",
+                  "timestamp": {
+                    "name": "timestamp",
                     "required": true,
-                    "type": "string"
-                  },
-                  "organismReason": {
-                    "name": "organismReason",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "renames": {
-                    "name": "renames",
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivitySchemaDiff": {
+                "name": "AgentActivityRowActivitySchemaDiff",
+                "properties": {
+                  "hunks": {
+                    "name": "hunks",
                     "required": true,
                     "type": "array",
                     "items": {
                       "properties": {
-                        "from": {
-                          "name": "from",
+                        "newLines": {
+                          "name": "newLines",
                           "required": true,
-                          "type": "string"
+                          "type": "number"
                         },
-                        "to": {
-                          "name": "to",
+                        "oldStart": {
+                          "name": "oldStart",
                           "required": true,
-                          "type": "string"
+                          "type": "number"
+                        },
+                        "lines": {
+                          "name": "lines",
+                          "required": true,
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "content": {
+                                "name": "content",
+                                "required": true,
+                                "type": "string"
+                              },
+                              "type": {
+                                "name": "type",
+                                "required": true,
+                                "type": "string",
+                                "values": [
+                                  "add",
+                                  "remove",
+                                  "context"
+                                ]
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "newStart": {
+                          "name": "newStart",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "oldLines": {
+                          "name": "oldLines",
+                          "required": true,
+                          "type": "number"
                         }
                       },
                       "type": "object"
@@ -102,156 +267,17 @@
                     "required": true,
                     "type": "number"
                   },
-                  "type": {
-                    "name": "type",
-                    "required": true,
-                    "type": "string",
-                    "values": [
-                      "analysis"
-                    ]
-                  }
-                },
-                "type": "object"
-              },
-              "AgentActivityRowActivityCancelled": {
-                "name": "AgentActivityRowActivityCancelled",
-                "properties": {
-                  "message": {
-                    "name": "message",
+                  "filePath": {
+                    "name": "filePath",
                     "required": true,
                     "type": "string"
-                  },
-                  "timestamp": {
-                    "name": "timestamp",
-                    "required": true,
-                    "type": "number"
                   },
                   "type": {
                     "name": "type",
                     "required": true,
                     "type": "string",
                     "values": [
-                      "cancelled"
-                    ]
-                  }
-                },
-                "type": "object"
-              },
-              "AgentActivityRowActivityClarificationQuestion": {
-                "name": "AgentActivityRowActivityClarificationQuestion",
-                "properties": {
-                  "candidates": {
-                    "name": "candidates",
-                    "required": true,
-                    "type": "array",
-                    "items": {
-                      "properties": {
-                        "description": {
-                          "name": "description",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "id": {
-                          "name": "id",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "label": {
-                          "name": "label",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "whyThisFits": {
-                          "name": "whyThisFits",
-                          "required": true,
-                          "type": "string"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  },
-                  "level": {
-                    "name": "level",
-                    "required": true,
-                    "type": "string",
-                    "values": [
-                      "organism",
-                      "molecule",
-                      "atom_trait"
-                    ]
-                  },
-                  "question": {
-                    "name": "question",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "scope": {
-                    "name": "scope",
-                    "required": true,
-                    "properties": {
-                      "orbitalName": {
-                        "name": "orbitalName",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "traitName": {
-                        "name": "traitName",
-                        "required": false,
-                        "type": "string"
-                      }
-                    },
-                    "type": "object"
-                  },
-                  "skipDefault": {
-                    "name": "skipDefault",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "timestamp": {
-                    "name": "timestamp",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "type": {
-                    "name": "type",
-                    "required": true,
-                    "type": "string",
-                    "values": [
-                      "clarification_question"
-                    ]
-                  }
-                },
-                "type": "object"
-              },
-              "AgentActivityRowActivityCoordinatorDecision": {
-                "name": "AgentActivityRowActivityCoordinatorDecision",
-                "properties": {
-                  "organism": {
-                    "name": "organism",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "priorOrganism": {
-                    "name": "priorOrganism",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "reason": {
-                    "name": "reason",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "timestamp": {
-                    "name": "timestamp",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "type": {
-                    "name": "type",
-                    "required": true,
-                    "type": "string",
-                    "values": [
-                      "coordinator_decision"
+                      "schema_diff"
                     ]
                   }
                 },
@@ -260,13 +286,13 @@
               "AgentActivityRowActivityDone": {
                 "name": "AgentActivityRowActivityDone",
                 "properties": {
-                  "orbitalCount": {
-                    "name": "orbitalCount",
+                  "timestamp": {
+                    "name": "timestamp",
                     "required": true,
                     "type": "number"
                   },
-                  "timestamp": {
-                    "name": "timestamp",
+                  "orbitalCount": {
+                    "name": "orbitalCount",
                     "required": true,
                     "type": "number"
                   },
@@ -281,17 +307,66 @@
                 },
                 "type": "object"
               },
+              "AgentActivityRowActivityToolResult": {
+                "name": "AgentActivityRowActivityToolResult",
+                "properties": {
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "input",
+                      "read",
+                      "invalid"
+                    ]
+                  },
+                  "rows": {
+                    "name": "rows",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "detail": {
+                    "name": "detail",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "success": {
+                    "name": "success",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  "tool": {
+                    "name": "tool",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "resultText": {
+                    "name": "resultText",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "tool_result"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
               "AgentActivityRowActivityError": {
                 "name": "AgentActivityRowActivityError",
                 "properties": {
                   "code": {
                     "name": "code",
                     "required": false,
-                    "type": "string"
-                  },
-                  "message": {
-                    "name": "message",
-                    "required": true,
                     "type": "string"
                   },
                   "timestamp": {
@@ -306,34 +381,18 @@
                     "values": [
                       "error"
                     ]
+                  },
+                  "message": {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
                   }
                 },
                 "type": "object"
               },
-              "AgentActivityRowActivityFileOperation": {
-                "name": "AgentActivityRowActivityFileOperation",
+              "AgentActivityRowActivityCancelled": {
+                "name": "AgentActivityRowActivityCancelled",
                 "properties": {
-                  "operation": {
-                    "name": "operation",
-                    "required": true,
-                    "type": "string",
-                    "values": [
-                      "ls",
-                      "read_file",
-                      "write_file",
-                      "edit_file"
-                    ]
-                  },
-                  "path": {
-                    "name": "path",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "success": {
-                    "name": "success",
-                    "required": false,
-                    "type": "boolean"
-                  },
                   "timestamp": {
                     "name": "timestamp",
                     "required": true,
@@ -344,90 +403,28 @@
                     "required": true,
                     "type": "string",
                     "values": [
-                      "file_operation"
+                      "cancelled"
                     ]
+                  },
+                  "message": {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
                   }
                 },
                 "type": "object"
               },
-              "AgentActivityRowActivityLlmResponse": {
-                "name": "AgentActivityRowActivityLlmResponse",
+              "AgentActivityRowActivityOrbitalDone": {
+                "name": "AgentActivityRowActivityOrbitalDone",
                 "properties": {
-                  "content": {
-                    "name": "content",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "llm": {
-                    "name": "llm",
-                    "required": false,
-                    "properties": {
-                      "attempt": {
-                        "name": "attempt",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "cachedPromptTokens": {
-                        "name": "cachedPromptTokens",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "completionTokens": {
-                        "name": "completionTokens",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "costUSD": {
-                        "name": "costUSD",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "durationMs": {
-                        "name": "durationMs",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "model": {
-                        "name": "model",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "promptTokens": {
-                        "name": "promptTokens",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "provider": {
-                        "name": "provider",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "service": {
-                        "name": "service",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "systemPrompt": {
-                        "name": "systemPrompt",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "toolCallsJson": {
-                        "name": "toolCallsJson",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "userPrompt": {
-                        "name": "userPrompt",
-                        "required": true,
-                        "type": "string"
-                      }
-                    },
-                    "type": "object"
-                  },
                   "timestamp": {
                     "name": "timestamp",
                     "required": true,
+                    "type": "number"
+                  },
+                  "traitCount": {
+                    "name": "traitCount",
+                    "required": false,
                     "type": "number"
                   },
                   "type": {
@@ -435,7 +432,133 @@
                     "required": true,
                     "type": "string",
                     "values": [
-                      "llm_response"
+                      "orbital_done"
+                    ]
+                  },
+                  "transitionCount": {
+                    "name": "transitionCount",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "orbitalName": {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityPendingQuestion": {
+                "name": "AgentActivityRowActivityPendingQuestion",
+                "properties": {
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "pending_question"
+                    ]
+                  },
+                  "question": {
+                    "name": "question",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "orbitalName": {
+                    "name": "orbitalName",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "questionId": {
+                    "name": "questionId",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityPlanCommitted": {
+                "name": "AgentActivityRowActivityPlanCommitted",
+                "properties": {
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "orbitals": {
+                    "name": "orbitals",
+                    "required": true,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "plan_committed"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivitySchemaChange": {
+                "name": "AgentActivityRowActivitySchemaChange",
+                "properties": {
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "schema_change"
+                    ]
+                  },
+                  "traitName": {
+                    "name": "traitName",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "orbitalName": {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "transitionEvent": {
+                    "name": "transitionEvent",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "changeKind": {
+                    "name": "changeKind",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "orbital-added",
+                      "orbital-removed",
+                      "entity-fields-changed",
+                      "trait-added",
+                      "trait-removed",
+                      "trait-config-changed",
+                      "state-machine-changed",
+                      "guard-changed",
+                      "effect-changed",
+                      "render-ui-changed",
+                      "event-wiring-changed",
+                      "page-changed",
+                      "theme-changed",
+                      "behavior-composed"
                     ]
                   }
                 },
@@ -449,10 +572,13 @@
                     "required": true,
                     "type": "string"
                   },
-                  "isStreaming": {
-                    "name": "isStreaming",
-                    "required": false,
-                    "type": "boolean"
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "message"
+                    ]
                   },
                   "role": {
                     "name": "role",
@@ -464,28 +590,73 @@
                       "system"
                     ]
                   },
+                  "isStreaming": {
+                    "name": "isStreaming",
+                    "required": false,
+                    "type": "boolean"
+                  },
                   "timestamp": {
                     "name": "timestamp",
                     "required": true,
                     "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "AgentActivityRowActivityFileOperation": {
+                "name": "AgentActivityRowActivityFileOperation",
+                "properties": {
+                  "success": {
+                    "name": "success",
+                    "required": false,
+                    "type": "boolean"
                   },
                   "type": {
                     "name": "type",
                     "required": true,
                     "type": "string",
                     "values": [
-                      "message"
+                      "file_operation"
                     ]
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "operation": {
+                    "name": "operation",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "ls",
+                      "read_file",
+                      "write_file",
+                      "edit_file"
+                    ]
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
                   }
                 },
                 "type": "object"
               },
-              "AgentActivityRowActivityOrbitalDone": {
-                "name": "AgentActivityRowActivityOrbitalDone",
+              "AgentActivityRowActivityCoordinatorDecision": {
+                "name": "AgentActivityRowActivityCoordinatorDecision",
                 "properties": {
-                  "orbitalName": {
-                    "name": "orbitalName",
+                  "type": {
+                    "name": "type",
                     "required": true,
+                    "type": "string",
+                    "values": [
+                      "coordinator_decision"
+                    ]
+                  },
+                  "priorOrganism": {
+                    "name": "priorOrganism",
+                    "required": false,
                     "type": "string"
                   },
                   "timestamp": {
@@ -493,23 +664,15 @@
                     "required": true,
                     "type": "number"
                   },
-                  "traitCount": {
-                    "name": "traitCount",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "transitionCount": {
-                    "name": "transitionCount",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "type": {
-                    "name": "type",
+                  "organism": {
+                    "name": "organism",
                     "required": true,
-                    "type": "string",
-                    "values": [
-                      "orbital_done"
-                    ]
+                    "type": "string"
+                  },
+                  "reason": {
+                    "name": "reason",
+                    "required": true,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -538,197 +701,88 @@
                 },
                 "type": "object"
               },
-              "AgentActivityRowActivityPendingQuestion": {
-                "name": "AgentActivityRowActivityPendingQuestion",
+              "AgentActivityRowActivityClarificationQuestion": {
+                "name": "AgentActivityRowActivityClarificationQuestion",
                 "properties": {
-                  "orbitalName": {
-                    "name": "orbitalName",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "question": {
-                    "name": "question",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "questionId": {
-                    "name": "questionId",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "timestamp": {
-                    "name": "timestamp",
-                    "required": true,
-                    "type": "number"
-                  },
                   "type": {
                     "name": "type",
                     "required": true,
                     "type": "string",
                     "values": [
-                      "pending_question"
-                    ]
-                  }
-                },
-                "type": "object"
-              },
-              "AgentActivityRowActivityPlanCommitted": {
-                "name": "AgentActivityRowActivityPlanCommitted",
-                "properties": {
-                  "orbitals": {
-                    "name": "orbitals",
-                    "required": true,
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "timestamp": {
-                    "name": "timestamp",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "type": {
-                    "name": "type",
-                    "required": true,
-                    "type": "string",
-                    "values": [
-                      "plan_committed"
-                    ]
-                  }
-                },
-                "type": "object"
-              },
-              "AgentActivityRowActivitySchemaChange": {
-                "name": "AgentActivityRowActivitySchemaChange",
-                "properties": {
-                  "changeKind": {
-                    "name": "changeKind",
-                    "required": true,
-                    "type": "string",
-                    "values": [
-                      "orbital-added",
-                      "orbital-removed",
-                      "entity-fields-changed",
-                      "trait-added",
-                      "trait-removed",
-                      "trait-config-changed",
-                      "state-machine-changed",
-                      "guard-changed",
-                      "effect-changed",
-                      "render-ui-changed",
-                      "event-wiring-changed",
-                      "page-changed",
-                      "theme-changed",
-                      "behavior-composed"
+                      "clarification_question"
                     ]
                   },
-                  "orbitalName": {
-                    "name": "orbitalName",
+                  "skipDefault": {
+                    "name": "skipDefault",
                     "required": true,
                     "type": "string"
                   },
-                  "timestamp": {
-                    "name": "timestamp",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "traitName": {
-                    "name": "traitName",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "transitionEvent": {
-                    "name": "transitionEvent",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "type": {
-                    "name": "type",
-                    "required": true,
-                    "type": "string",
-                    "values": [
-                      "schema_change"
-                    ]
-                  }
-                },
-                "type": "object"
-              },
-              "AgentActivityRowActivitySchemaDiff": {
-                "name": "AgentActivityRowActivitySchemaDiff",
-                "properties": {
-                  "filePath": {
-                    "name": "filePath",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "hunks": {
-                    "name": "hunks",
+                  "candidates": {
+                    "name": "candidates",
                     "required": true,
                     "type": "array",
                     "items": {
                       "properties": {
-                        "lines": {
-                          "name": "lines",
+                        "whyThisFits": {
+                          "name": "whyThisFits",
                           "required": true,
-                          "type": "array",
-                          "items": {
-                            "properties": {
-                              "content": {
-                                "name": "content",
-                                "required": true,
-                                "type": "string"
-                              },
-                              "type": {
-                                "name": "type",
-                                "required": true,
-                                "type": "string",
-                                "values": [
-                                  "add",
-                                  "remove",
-                                  "context"
-                                ]
-                              }
-                            },
-                            "type": "object"
-                          }
+                          "type": "string"
                         },
-                        "newLines": {
-                          "name": "newLines",
+                        "label": {
+                          "name": "label",
                           "required": true,
-                          "type": "number"
+                          "type": "string"
                         },
-                        "newStart": {
-                          "name": "newStart",
+                        "id": {
+                          "name": "id",
                           "required": true,
-                          "type": "number"
+                          "type": "string"
                         },
-                        "oldLines": {
-                          "name": "oldLines",
+                        "description": {
+                          "name": "description",
                           "required": true,
-                          "type": "number"
-                        },
-                        "oldStart": {
-                          "name": "oldStart",
-                          "required": true,
-                          "type": "number"
+                          "type": "string"
                         }
                       },
                       "type": "object"
                     }
                   },
+                  "scope": {
+                    "name": "scope",
+                    "required": true,
+                    "properties": {
+                      "orbitalName": {
+                        "name": "orbitalName",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "traitName": {
+                        "name": "traitName",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "timestamp": {
                     "name": "timestamp",
                     "required": true,
                     "type": "number"
                   },
-                  "type": {
-                    "name": "type",
+                  "level": {
+                    "name": "level",
                     "required": true,
                     "type": "string",
                     "values": [
-                      "schema_diff"
+                      "organism",
+                      "molecule",
+                      "atom_trait"
                     ]
+                  },
+                  "question": {
+                    "name": "question",
+                    "required": true,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -736,15 +790,15 @@
               "AgentActivityRowActivityToolCall": {
                 "name": "AgentActivityRowActivityToolCall",
                 "properties": {
-                  "argsText": {
-                    "name": "argsText",
+                  "tool": {
+                    "name": "tool",
                     "required": true,
                     "type": "string"
                   },
-                  "isExecuting": {
-                    "name": "isExecuting",
-                    "required": false,
-                    "type": "boolean"
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": true,
+                    "type": "number"
                   },
                   "kind": {
                     "name": "kind",
@@ -756,13 +810,8 @@
                       "invalid"
                     ]
                   },
-                  "timestamp": {
-                    "name": "timestamp",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "tool": {
-                    "name": "tool",
+                  "argsText": {
+                    "name": "argsText",
                     "required": true,
                     "type": "string"
                   },
@@ -773,60 +822,11 @@
                     "values": [
                       "tool_call"
                     ]
-                  }
-                },
-                "type": "object"
-              },
-              "AgentActivityRowActivityToolResult": {
-                "name": "AgentActivityRowActivityToolResult",
-                "properties": {
-                  "detail": {
-                    "name": "detail",
+                  },
+                  "isExecuting": {
+                    "name": "isExecuting",
                     "required": false,
-                    "type": "string"
-                  },
-                  "kind": {
-                    "name": "kind",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "input",
-                      "read",
-                      "invalid"
-                    ]
-                  },
-                  "resultText": {
-                    "name": "resultText",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "rows": {
-                    "name": "rows",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "success": {
-                    "name": "success",
-                    "required": true,
                     "type": "boolean"
-                  },
-                  "timestamp": {
-                    "name": "timestamp",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "tool": {
-                    "name": "tool",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "type": {
-                    "name": "type",
-                    "required": true,
-                    "type": "string",
-                    "values": [
-                      "tool_result"
-                    ]
                   }
                 },
                 "type": "object"
@@ -837,8 +837,8 @@
             "key": "facts",
             "type": "AgentActivityRowFacts",
             "default": {
-              "readyCount": 1,
-              "settled": false
+              "settled": false,
+              "readyCount": 1
             },
             "label": "Facts",
             "description": "What the row knows from its list (`activityRowFacts`).",

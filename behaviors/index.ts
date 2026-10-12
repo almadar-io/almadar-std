@@ -1,13 +1,7 @@
 /**
  * Standard Behaviors
  *
- * Pure functions that return OrbitalDefinitions.
- * Every behavior is a function: call it with params → get a complete .orb program.
- *
- * Hierarchy:
- * - Atoms: self-contained, irreducible state machines
- * - Molecules: compose atoms via extractTrait + shared event bus
- * - Organisms: compose atoms/molecules via connect/compose/pipe
+ * The package's behavior programs (read from its registry) and the queries over its index.
  *
  * @packageDocumentation
  */
@@ -82,5 +76,3 @@ export { getFactorySignatureCatalog } from './factory-signatures.js';
 export { getKnobEmbeddings } from './knob-embeddings.js';
 export type { KnobEmbeddingsManifest } from './knob-embeddings.js';
 
-// All behavior functions (atoms, molecules, organisms)
-export * from './functions/index.js';

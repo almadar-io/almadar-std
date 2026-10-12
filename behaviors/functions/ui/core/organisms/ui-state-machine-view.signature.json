@@ -56,20 +56,20 @@
             "key": "annotations",
             "type": "StateMachineViewAnnotations",
             "default": {
-              "effects": {
-                "persist": {
-                  "body": "Saves the order."
-                }
-              },
               "states": {
                 "pending": {
-                  "body": "Every order starts here.",
-                  "title": "Unpaid"
+                  "title": "Unpaid",
+                  "body": "Every order starts here."
                 }
               },
               "transitions": {
                 "PAY": {
                   "body": "Only fires when the amount is positive."
+                }
+              },
+              "effects": {
+                "persist": {
+                  "body": "Saves the order."
                 }
               }
             },
@@ -77,40 +77,40 @@
             "description": "Author explanations shown in a popover on hover: a note per state name, per transition event and per effect type.",
             "tier": "presentation",
             "properties": {
-              "effects": {
-                "name": "effects",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "body": {
-                      "name": "body",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "title": {
-                      "name": "title",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
               "states": {
                 "name": "states",
                 "required": false,
                 "type": "object",
                 "items": {
                   "properties": {
+                    "title": {
+                      "name": "title",
+                      "required": false,
+                      "type": "string"
+                    },
                     "body": {
                       "name": "body",
                       "required": true,
                       "type": "string"
-                    },
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
                     "title": {
                       "name": "title",
                       "required": false,
+                      "type": "string"
+                    },
+                    "body": {
+                      "name": "body",
+                      "required": true,
                       "type": "string"
                     }
                   },
@@ -123,14 +123,14 @@
                 "type": "object",
                 "items": {
                   "properties": {
-                    "body": {
-                      "name": "body",
-                      "required": true,
-                      "type": "string"
-                    },
                     "title": {
                       "name": "title",
                       "required": false,
+                      "type": "string"
+                    },
+                    "body": {
+                      "name": "body",
+                      "required": true,
                       "type": "string"
                     }
                   },
@@ -318,13 +318,13 @@
                 "required": true,
                 "type": "string"
               },
-              "name": {
-                "name": "name",
+              "stack": {
+                "name": "stack",
                 "required": false,
                 "type": "string"
               },
-              "stack": {
-                "name": "stack",
+              "name": {
+                "name": "name",
                 "required": false,
                 "type": "string"
               }
@@ -519,18 +519,63 @@
             "synonyms": "trait",
             "tier": "presentation",
             "properties": {
-              "emittedEvents": {
-                "name": "emittedEvents",
+              "transitions": {
+                "name": "transitions",
                 "required": true,
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "properties": {
+                    "to": {
+                      "name": "to",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "event": {
+                      "name": "event",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "effects": {
+                      "name": "effects",
+                      "required": true,
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "type": {
+                            "name": "type",
+                            "required": true,
+                            "type": "string"
+                          },
+                          "args": {
+                            "name": "args",
+                            "required": true,
+                            "type": "array",
+                            "items": {
+                              "type": "SExpr"
+                            }
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "from": {
+                      "name": "from",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "index": {
+                      "name": "index",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "guard": {
+                      "name": "guard",
+                      "required": false,
+                      "type": "SExpr"
+                    }
+                  },
+                  "type": "object"
                 }
-              },
-              "linkedEntity": {
-                "name": "linkedEntity",
-                "required": true,
-                "type": "string"
               },
               "listenedEvents": {
                 "name": "listenedEvents",
@@ -540,10 +585,13 @@
                   "type": "string"
                 }
               },
-              "name": {
-                "name": "name",
+              "emittedEvents": {
+                "name": "emittedEvents",
                 "required": true,
-                "type": "string"
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               },
               "states": {
                 "name": "states",
@@ -556,77 +604,29 @@
                       "required": false,
                       "type": "boolean"
                     },
-                    "isTerminal": {
-                      "name": "isTerminal",
-                      "required": false,
-                      "type": "boolean"
-                    },
                     "name": {
                       "name": "name",
                       "required": true,
                       "type": "string"
+                    },
+                    "isTerminal": {
+                      "name": "isTerminal",
+                      "required": false,
+                      "type": "boolean"
                     }
                   },
                   "type": "object"
                 }
               },
-              "transitions": {
-                "name": "transitions",
+              "name": {
+                "name": "name",
                 "required": true,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "effects": {
-                      "name": "effects",
-                      "required": true,
-                      "type": "array",
-                      "items": {
-                        "properties": {
-                          "args": {
-                            "name": "args",
-                            "required": true,
-                            "type": "array",
-                            "items": {
-                              "type": "SExpr"
-                            }
-                          },
-                          "type": {
-                            "name": "type",
-                            "required": true,
-                            "type": "string"
-                          }
-                        },
-                        "type": "object"
-                      }
-                    },
-                    "event": {
-                      "name": "event",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "from": {
-                      "name": "from",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "guard": {
-                      "name": "guard",
-                      "required": false,
-                      "type": "SExpr"
-                    },
-                    "index": {
-                      "name": "index",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "to": {
-                      "name": "to",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
+                "type": "string"
+              },
+              "linkedEntity": {
+                "name": "linkedEntity",
+                "required": true,
+                "type": "string"
               }
             }
           },

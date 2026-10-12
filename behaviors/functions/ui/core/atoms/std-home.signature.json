@@ -33,8 +33,8 @@
             "key": "backdropContent",
             "type": "render-ui",
             "default": {
-              "className": "hidden",
-              "type": "box"
+              "type": "box",
+              "className": "hidden"
             },
             "label": "Backdrop",
             "description": "A scene behind the whole block, such as an animated canvas; it fills the block, never takes clicks, and the copy stays on top. Empty by default.",
@@ -77,6 +77,9 @@
             "key": "copyContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
               "align": [
                 "if",
                 [
@@ -89,25 +92,14 @@
               ],
               "children": [
                 {
-                  "label": "@config.eyebrow",
-                  "size": "md",
                   "type": "badge",
-                  "variant": "primary"
+                  "label": "@config.eyebrow",
+                  "variant": "primary",
+                  "size": "md"
                 },
                 {
-                  "align": [
-                    "if",
-                    [
-                      "==",
-                      "@config.alignment",
-                      "center"
-                    ],
-                    "center",
-                    "left"
-                  ],
-                  "className": "tracking-tight text-balance",
-                  "content": "@config.headline",
                   "type": "typography",
+                  "content": "@config.headline",
                   "variant": [
                     "if",
                     [
@@ -118,9 +110,33 @@
                     "h1",
                     "h2"
                   ],
-                  "weight": "bold"
+                  "weight": "bold",
+                  "align": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "left"
+                  ],
+                  "className": "tracking-tight text-balance"
                 },
                 {
+                  "type": "typography",
+                  "content": "@config.lede",
+                  "variant": "large",
+                  "color": [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "header"
+                    ],
+                    "primary",
+                    "muted"
+                  ],
                   "align": [
                     "if",
                     [
@@ -140,65 +156,22 @@
                     ],
                     "hidden",
                     "max-w-2xl text-pretty"
-                  ],
-                  "color": [
+                  ]
+                },
+                {
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "wrap": true,
+                  "justify": [
                     "if",
                     [
                       "==",
-                      "@config.look",
-                      "header"
+                      "@config.alignment",
+                      "center"
                     ],
-                    "primary",
-                    "muted"
-                  ],
-                  "content": "@config.lede",
-                  "type": "typography",
-                  "variant": "large"
-                },
-                {
-                  "children": [
-                    {
-                      "action": "HERO_PRIMARY",
-                      "actionPayload": {
-                        "href": "@config.primaryHref"
-                      },
-                      "className": [
-                        "if",
-                        [
-                          "==",
-                          "@config.primaryLabel",
-                          ""
-                        ],
-                        "hidden",
-                        ""
-                      ],
-                      "href": "@config.primaryHref",
-                      "label": "@config.primaryLabel",
-                      "size": "lg",
-                      "type": "button",
-                      "variant": "primary"
-                    },
-                    {
-                      "action": "HERO_SECONDARY",
-                      "actionPayload": {
-                        "href": "@config.secondaryHref"
-                      },
-                      "className": [
-                        "if",
-                        [
-                          "==",
-                          "@config.secondaryLabel",
-                          ""
-                        ],
-                        "hidden",
-                        ""
-                      ],
-                      "href": "@config.secondaryHref",
-                      "label": "@config.secondaryLabel",
-                      "size": "lg",
-                      "type": "button",
-                      "variant": "secondary"
-                    }
+                    "center",
+                    "start"
                   ],
                   "className": [
                     "if",
@@ -219,31 +192,54 @@
                     ],
                     "pt-2"
                   ],
-                  "direction": "horizontal",
-                  "gap": "md",
-                  "justify": [
-                    "if",
-                    [
-                      "==",
-                      "@config.alignment",
-                      "center"
-                    ],
-                    "center",
-                    "start"
-                  ],
-                  "type": "stack",
-                  "wrap": true
-                },
-                {
                   "children": [
                     {
-                      "code": "@config.command",
-                      "language": "bash",
-                      "showCopyButton": true,
-                      "showLanguageBadge": false,
-                      "type": "code-block"
+                      "type": "button",
+                      "label": "@config.primaryLabel",
+                      "href": "@config.primaryHref",
+                      "variant": "primary",
+                      "size": "lg",
+                      "action": "HERO_PRIMARY",
+                      "actionPayload": {
+                        "href": "@config.primaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.primaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": "button",
+                      "label": "@config.secondaryLabel",
+                      "href": "@config.secondaryHref",
+                      "variant": "secondary",
+                      "size": "lg",
+                      "action": "HERO_SECONDARY",
+                      "actionPayload": {
+                        "href": "@config.secondaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.secondaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ]
                     }
-                  ],
+                  ]
+                },
+                {
+                  "type": "box",
+                  "fullWidth": true,
                   "className": [
                     "if",
                     [
@@ -254,13 +250,17 @@
                     "hidden",
                     "max-w-xl"
                   ],
-                  "fullWidth": true,
-                  "type": "box"
+                  "children": [
+                    {
+                      "type": "code-block",
+                      "code": "@config.command",
+                      "language": "bash",
+                      "showLanguageBadge": false,
+                      "showCopyButton": true
+                    }
+                  ]
                 }
-              ],
-              "direction": "vertical",
-              "gap": "lg",
-              "type": "stack"
+              ]
             },
             "label": "Copy block",
             "tier": "internal"
@@ -357,9 +357,11 @@
             "key": "illustrationContent",
             "type": "render-ui",
             "default": {
-              "alt": "",
-              "animate": true,
+              "type": "animated-graphic",
+              "svgContent": "@config.illustration",
               "animation": "draw",
+              "animate": true,
+              "width": "100%",
               "height": [
                 "if",
                 [
@@ -370,9 +372,7 @@
                 200,
                 380
               ],
-              "svgContent": "@config.illustration",
-              "type": "animated-graphic",
-              "width": "100%"
+              "alt": ""
             },
             "label": "Illustration block",
             "tier": "internal"
@@ -411,12 +411,12 @@
             "key": "mediaContent",
             "type": "render-ui",
             "default": {
-              "alt": "@config.mediaAlt",
-              "bordered": true,
-              "loading": "eager",
-              "rounded": "xl",
+              "type": "image",
               "src": "@config.mediaSrc",
-              "type": "image"
+              "alt": "@config.mediaAlt",
+              "rounded": "xl",
+              "bordered": true,
+              "loading": "eager"
             },
             "label": "Media block",
             "tier": "internal"
@@ -478,6 +478,26 @@
             "key": "sideContent",
             "type": "render-ui",
             "default": {
+              "type": "box",
+              "paddingY": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "hero"
+                ],
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
+              ],
               "bg": [
                 "if",
                 [
@@ -514,13 +534,44 @@
                   ]
                 ]
               ],
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "edgeTop": "@config.edgeTop",
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "texture": "@config.texture",
+              "fullWidth": true,
+              "position": "relative",
+              "overflow": "hidden",
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
               "children": [
                 {
+                  "type": "box",
+                  "position": "absolute",
+                  "className": "inset-0 pointer-events-none",
                   "aria-hidden": true,
                   "children": [
                     {
+                      "type": "image",
+                      "src": "@config.backgroundSrc",
                       "alt": "",
-                      "className": "h-full",
                       "fit": "cover",
                       "position": "@config.backgroundPosition",
                       "priority": [
@@ -528,10 +579,10 @@
                         "@config.look",
                         "hero"
                       ],
-                      "src": "@config.backgroundSrc",
-                      "type": "image"
+                      "className": "h-full"
                     },
                     {
+                      "type": "box",
                       "className": [
                         "if",
                         [
@@ -541,72 +592,24 @@
                         ],
                         "band-scrim",
                         "hidden"
-                      ],
-                      "type": "box"
+                      ]
                     },
                     "@config.backdropContent"
-                  ],
-                  "className": "inset-0 pointer-events-none",
-                  "position": "absolute",
-                  "type": "box"
+                  ]
                 },
                 {
+                  "type": "box",
+                  "position": "relative",
+                  "fullWidth": true,
                   "children": [
                     {
+                      "type": "container",
+                      "size": "xl",
+                      "maxWidth": "xl",
+                      "padding": "lg",
                       "children": [
                         {
-                          "bg": [
-                            "if",
-                            [
-                              "and",
-                              [
-                                "==",
-                                "@config.look",
-                                "banner"
-                              ],
-                              [
-                                "==",
-                                "@config.surface",
-                                "plain"
-                              ]
-                            ],
-                            "muted",
-                            "transparent"
-                          ],
-                          "border": [
-                            "and",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            [
-                              "==",
-                              "@config.surface",
-                              "plain"
-                            ]
-                          ],
-                          "children": [
-                            {
-                              "align": "center",
-                              "children": [
-                                "@config.copyContent",
-                                [
-                                  "if",
-                                  [
-                                    "==",
-                                    "@config.illustration",
-                                    ""
-                                  ],
-                                  "@config.mediaContent",
-                                  "@config.illustrationContent"
-                                ]
-                              ],
-                              "gap": "xl",
-                              "ratio": "1:1",
-                              "type": "split"
-                            }
-                          ],
+                          "type": "box",
                           "padding": [
                             "if",
                             [
@@ -627,35 +630,73 @@
                             "2xl",
                             "none"
                           ],
-                          "type": "box"
+                          "border": [
+                            "and",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            [
+                              "==",
+                              "@config.surface",
+                              "plain"
+                            ]
+                          ],
+                          "bg": [
+                            "if",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@config.look",
+                                "banner"
+                              ],
+                              [
+                                "==",
+                                "@config.surface",
+                                "plain"
+                              ]
+                            ],
+                            "muted",
+                            "transparent"
+                          ],
+                          "children": [
+                            {
+                              "type": "split",
+                              "ratio": "1:1",
+                              "gap": "xl",
+                              "align": "center",
+                              "children": [
+                                "@config.copyContent",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
+                              ]
+                            }
+                          ]
                         }
-                      ],
-                      "maxWidth": "xl",
-                      "padding": "lg",
-                      "size": "xl",
-                      "type": "container"
+                      ]
                     }
-                  ],
-                  "fullWidth": true,
-                  "position": "relative",
-                  "type": "box"
+                  ]
                 }
-              ],
-              "className": [
-                "if",
-                [
-                  "==",
-                  "@config.height",
-                  "tall"
-                ],
-                "flex min-h-[80vh] items-center",
-                ""
-              ],
-              "edgeBottom": "@config.edgeBottom",
-              "edgeColor": "@config.edgeColor",
-              "edgeTop": "@config.edgeTop",
-              "fullWidth": true,
-              "overflow": "hidden",
+              ]
+            },
+            "label": "Side-by-side body",
+            "tier": "internal"
+          },
+          {
+            "key": "stackedContent",
+            "type": "render-ui",
+            "default": {
+              "type": "box",
               "paddingY": [
                 "if",
                 [
@@ -675,27 +716,6 @@
                   "lg"
                 ]
               ],
-              "position": "relative",
-              "rounded": [
-                "if",
-                [
-                  "==",
-                  "@config.look",
-                  "header"
-                ],
-                "2xl",
-                "none"
-              ],
-              "texture": "@config.texture",
-              "type": "box"
-            },
-            "label": "Side-by-side body",
-            "tier": "internal"
-          },
-          {
-            "key": "stackedContent",
-            "type": "render-ui",
-            "default": {
               "bg": [
                 "if",
                 [
@@ -732,13 +752,44 @@
                   ]
                 ]
               ],
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "edgeTop": "@config.edgeTop",
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "texture": "@config.texture",
+              "fullWidth": true,
+              "position": "relative",
+              "overflow": "hidden",
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
               "children": [
                 {
+                  "type": "box",
+                  "position": "absolute",
+                  "className": "inset-0 pointer-events-none",
                   "aria-hidden": true,
                   "children": [
                     {
+                      "type": "image",
+                      "src": "@config.backgroundSrc",
                       "alt": "",
-                      "className": "h-full",
                       "fit": "cover",
                       "position": "@config.backgroundPosition",
                       "priority": [
@@ -746,10 +797,10 @@
                         "@config.look",
                         "hero"
                       ],
-                      "src": "@config.backgroundSrc",
-                      "type": "image"
+                      "className": "h-full"
                     },
                     {
+                      "type": "box",
                       "className": [
                         "if",
                         [
@@ -759,20 +810,57 @@
                         ],
                         "band-scrim",
                         "hidden"
-                      ],
-                      "type": "box"
+                      ]
                     },
                     "@config.backdropContent"
-                  ],
-                  "className": "inset-0 pointer-events-none",
-                  "position": "absolute",
-                  "type": "box"
+                  ]
                 },
                 {
+                  "type": "box",
+                  "position": "relative",
+                  "fullWidth": true,
                   "children": [
                     {
+                      "type": "container",
+                      "size": "xl",
+                      "maxWidth": "xl",
+                      "padding": "lg",
                       "children": [
                         {
+                          "type": "box",
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "border": [
+                            "and",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            [
+                              "==",
+                              "@config.surface",
+                              "plain"
+                            ]
+                          ],
                           "bg": [
                             "if",
                             [
@@ -791,21 +879,11 @@
                             "muted",
                             "transparent"
                           ],
-                          "border": [
-                            "and",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            [
-                              "==",
-                              "@config.surface",
-                              "plain"
-                            ]
-                          ],
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "2xl",
                               "align": [
                                 "if",
                                 [
@@ -828,93 +906,15 @@
                                   "@config.mediaContent",
                                   "@config.illustrationContent"
                                 ]
-                              ],
-                              "direction": "vertical",
-                              "gap": "2xl",
-                              "type": "stack"
+                              ]
                             }
-                          ],
-                          "padding": [
-                            "if",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            "xl",
-                            "none"
-                          ],
-                          "rounded": [
-                            "if",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            "2xl",
-                            "none"
-                          ],
-                          "type": "box"
+                          ]
                         }
-                      ],
-                      "maxWidth": "xl",
-                      "padding": "lg",
-                      "size": "xl",
-                      "type": "container"
+                      ]
                     }
-                  ],
-                  "fullWidth": true,
-                  "position": "relative",
-                  "type": "box"
+                  ]
                 }
-              ],
-              "className": [
-                "if",
-                [
-                  "==",
-                  "@config.height",
-                  "tall"
-                ],
-                "flex min-h-[80vh] items-center",
-                ""
-              ],
-              "edgeBottom": "@config.edgeBottom",
-              "edgeColor": "@config.edgeColor",
-              "edgeTop": "@config.edgeTop",
-              "fullWidth": true,
-              "overflow": "hidden",
-              "paddingY": [
-                "if",
-                [
-                  "==",
-                  "@config.look",
-                  "hero"
-                ],
-                "2xl",
-                [
-                  "if",
-                  [
-                    "==",
-                    "@config.look",
-                    "banner"
-                  ],
-                  "xl",
-                  "lg"
-                ]
-              ],
-              "position": "relative",
-              "rounded": [
-                "if",
-                [
-                  "==",
-                  "@config.look",
-                  "header"
-                ],
-                "2xl",
-                "none"
-              ],
-              "texture": "@config.texture",
-              "type": "box"
+              ]
             },
             "label": "Stacked body",
             "tier": "internal"
@@ -979,8 +979,8 @@
             "key": "backdropContent",
             "type": "render-ui",
             "default": {
-              "className": "hidden",
-              "type": "box"
+              "type": "box",
+              "className": "hidden"
             },
             "label": "Backdrop",
             "description": "A scene behind the whole block, such as an animated canvas; it fills the block, never takes clicks, and the copy stays on top. Empty by default.",
@@ -1023,6 +1023,9 @@
             "key": "copyContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
               "align": [
                 "if",
                 [
@@ -1035,25 +1038,14 @@
               ],
               "children": [
                 {
-                  "label": "@config.eyebrow",
-                  "size": "md",
                   "type": "badge",
-                  "variant": "primary"
+                  "label": "@config.eyebrow",
+                  "variant": "primary",
+                  "size": "md"
                 },
                 {
-                  "align": [
-                    "if",
-                    [
-                      "==",
-                      "@config.alignment",
-                      "center"
-                    ],
-                    "center",
-                    "left"
-                  ],
-                  "className": "tracking-tight text-balance",
-                  "content": "@config.headline",
                   "type": "typography",
+                  "content": "@config.headline",
                   "variant": [
                     "if",
                     [
@@ -1064,9 +1056,33 @@
                     "h1",
                     "h2"
                   ],
-                  "weight": "bold"
+                  "weight": "bold",
+                  "align": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "left"
+                  ],
+                  "className": "tracking-tight text-balance"
                 },
                 {
+                  "type": "typography",
+                  "content": "@config.lede",
+                  "variant": "large",
+                  "color": [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "header"
+                    ],
+                    "primary",
+                    "muted"
+                  ],
                   "align": [
                     "if",
                     [
@@ -1086,65 +1102,22 @@
                     ],
                     "hidden",
                     "max-w-2xl text-pretty"
-                  ],
-                  "color": [
+                  ]
+                },
+                {
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "wrap": true,
+                  "justify": [
                     "if",
                     [
                       "==",
-                      "@config.look",
-                      "header"
+                      "@config.alignment",
+                      "center"
                     ],
-                    "primary",
-                    "muted"
-                  ],
-                  "content": "@config.lede",
-                  "type": "typography",
-                  "variant": "large"
-                },
-                {
-                  "children": [
-                    {
-                      "action": "HERO_PRIMARY",
-                      "actionPayload": {
-                        "href": "@config.primaryHref"
-                      },
-                      "className": [
-                        "if",
-                        [
-                          "==",
-                          "@config.primaryLabel",
-                          ""
-                        ],
-                        "hidden",
-                        ""
-                      ],
-                      "href": "@config.primaryHref",
-                      "label": "@config.primaryLabel",
-                      "size": "lg",
-                      "type": "button",
-                      "variant": "primary"
-                    },
-                    {
-                      "action": "HERO_SECONDARY",
-                      "actionPayload": {
-                        "href": "@config.secondaryHref"
-                      },
-                      "className": [
-                        "if",
-                        [
-                          "==",
-                          "@config.secondaryLabel",
-                          ""
-                        ],
-                        "hidden",
-                        ""
-                      ],
-                      "href": "@config.secondaryHref",
-                      "label": "@config.secondaryLabel",
-                      "size": "lg",
-                      "type": "button",
-                      "variant": "secondary"
-                    }
+                    "center",
+                    "start"
                   ],
                   "className": [
                     "if",
@@ -1165,31 +1138,54 @@
                     ],
                     "pt-2"
                   ],
-                  "direction": "horizontal",
-                  "gap": "md",
-                  "justify": [
-                    "if",
-                    [
-                      "==",
-                      "@config.alignment",
-                      "center"
-                    ],
-                    "center",
-                    "start"
-                  ],
-                  "type": "stack",
-                  "wrap": true
-                },
-                {
                   "children": [
                     {
-                      "code": "@config.command",
-                      "language": "bash",
-                      "showCopyButton": true,
-                      "showLanguageBadge": false,
-                      "type": "code-block"
+                      "type": "button",
+                      "label": "@config.primaryLabel",
+                      "href": "@config.primaryHref",
+                      "variant": "primary",
+                      "size": "lg",
+                      "action": "HERO_PRIMARY",
+                      "actionPayload": {
+                        "href": "@config.primaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.primaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": "button",
+                      "label": "@config.secondaryLabel",
+                      "href": "@config.secondaryHref",
+                      "variant": "secondary",
+                      "size": "lg",
+                      "action": "HERO_SECONDARY",
+                      "actionPayload": {
+                        "href": "@config.secondaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.secondaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ]
                     }
-                  ],
+                  ]
+                },
+                {
+                  "type": "box",
+                  "fullWidth": true,
                   "className": [
                     "if",
                     [
@@ -1200,13 +1196,17 @@
                     "hidden",
                     "max-w-xl"
                   ],
-                  "fullWidth": true,
-                  "type": "box"
+                  "children": [
+                    {
+                      "type": "code-block",
+                      "code": "@config.command",
+                      "language": "bash",
+                      "showLanguageBadge": false,
+                      "showCopyButton": true
+                    }
+                  ]
                 }
-              ],
-              "direction": "vertical",
-              "gap": "lg",
-              "type": "stack"
+              ]
             },
             "label": "Copy block",
             "tier": "internal"
@@ -1303,9 +1303,11 @@
             "key": "illustrationContent",
             "type": "render-ui",
             "default": {
-              "alt": "",
-              "animate": true,
+              "type": "animated-graphic",
+              "svgContent": "@config.illustration",
               "animation": "draw",
+              "animate": true,
+              "width": "100%",
               "height": [
                 "if",
                 [
@@ -1316,9 +1318,7 @@
                 200,
                 380
               ],
-              "svgContent": "@config.illustration",
-              "type": "animated-graphic",
-              "width": "100%"
+              "alt": ""
             },
             "label": "Illustration block",
             "tier": "internal"
@@ -1357,12 +1357,12 @@
             "key": "mediaContent",
             "type": "render-ui",
             "default": {
-              "alt": "@config.mediaAlt",
-              "bordered": true,
-              "loading": "eager",
-              "rounded": "xl",
+              "type": "image",
               "src": "@config.mediaSrc",
-              "type": "image"
+              "alt": "@config.mediaAlt",
+              "rounded": "xl",
+              "bordered": true,
+              "loading": "eager"
             },
             "label": "Media block",
             "tier": "internal"
@@ -1424,6 +1424,26 @@
             "key": "sideContent",
             "type": "render-ui",
             "default": {
+              "type": "box",
+              "paddingY": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "hero"
+                ],
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
+              ],
               "bg": [
                 "if",
                 [
@@ -1460,13 +1480,44 @@
                   ]
                 ]
               ],
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "edgeTop": "@config.edgeTop",
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "texture": "@config.texture",
+              "fullWidth": true,
+              "position": "relative",
+              "overflow": "hidden",
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
               "children": [
                 {
+                  "type": "box",
+                  "position": "absolute",
+                  "className": "inset-0 pointer-events-none",
                   "aria-hidden": true,
                   "children": [
                     {
+                      "type": "image",
+                      "src": "@config.backgroundSrc",
                       "alt": "",
-                      "className": "h-full",
                       "fit": "cover",
                       "position": "@config.backgroundPosition",
                       "priority": [
@@ -1474,10 +1525,10 @@
                         "@config.look",
                         "hero"
                       ],
-                      "src": "@config.backgroundSrc",
-                      "type": "image"
+                      "className": "h-full"
                     },
                     {
+                      "type": "box",
                       "className": [
                         "if",
                         [
@@ -1487,72 +1538,24 @@
                         ],
                         "band-scrim",
                         "hidden"
-                      ],
-                      "type": "box"
+                      ]
                     },
                     "@config.backdropContent"
-                  ],
-                  "className": "inset-0 pointer-events-none",
-                  "position": "absolute",
-                  "type": "box"
+                  ]
                 },
                 {
+                  "type": "box",
+                  "position": "relative",
+                  "fullWidth": true,
                   "children": [
                     {
+                      "type": "container",
+                      "size": "xl",
+                      "maxWidth": "xl",
+                      "padding": "lg",
                       "children": [
                         {
-                          "bg": [
-                            "if",
-                            [
-                              "and",
-                              [
-                                "==",
-                                "@config.look",
-                                "banner"
-                              ],
-                              [
-                                "==",
-                                "@config.surface",
-                                "plain"
-                              ]
-                            ],
-                            "muted",
-                            "transparent"
-                          ],
-                          "border": [
-                            "and",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            [
-                              "==",
-                              "@config.surface",
-                              "plain"
-                            ]
-                          ],
-                          "children": [
-                            {
-                              "align": "center",
-                              "children": [
-                                "@config.copyContent",
-                                [
-                                  "if",
-                                  [
-                                    "==",
-                                    "@config.illustration",
-                                    ""
-                                  ],
-                                  "@config.mediaContent",
-                                  "@config.illustrationContent"
-                                ]
-                              ],
-                              "gap": "xl",
-                              "ratio": "1:1",
-                              "type": "split"
-                            }
-                          ],
+                          "type": "box",
                           "padding": [
                             "if",
                             [
@@ -1573,35 +1576,73 @@
                             "2xl",
                             "none"
                           ],
-                          "type": "box"
+                          "border": [
+                            "and",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            [
+                              "==",
+                              "@config.surface",
+                              "plain"
+                            ]
+                          ],
+                          "bg": [
+                            "if",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@config.look",
+                                "banner"
+                              ],
+                              [
+                                "==",
+                                "@config.surface",
+                                "plain"
+                              ]
+                            ],
+                            "muted",
+                            "transparent"
+                          ],
+                          "children": [
+                            {
+                              "type": "split",
+                              "ratio": "1:1",
+                              "gap": "xl",
+                              "align": "center",
+                              "children": [
+                                "@config.copyContent",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
+                              ]
+                            }
+                          ]
                         }
-                      ],
-                      "maxWidth": "xl",
-                      "padding": "lg",
-                      "size": "xl",
-                      "type": "container"
+                      ]
                     }
-                  ],
-                  "fullWidth": true,
-                  "position": "relative",
-                  "type": "box"
+                  ]
                 }
-              ],
-              "className": [
-                "if",
-                [
-                  "==",
-                  "@config.height",
-                  "tall"
-                ],
-                "flex min-h-[80vh] items-center",
-                ""
-              ],
-              "edgeBottom": "@config.edgeBottom",
-              "edgeColor": "@config.edgeColor",
-              "edgeTop": "@config.edgeTop",
-              "fullWidth": true,
-              "overflow": "hidden",
+              ]
+            },
+            "label": "Side-by-side body",
+            "tier": "internal"
+          },
+          {
+            "key": "stackedContent",
+            "type": "render-ui",
+            "default": {
+              "type": "box",
               "paddingY": [
                 "if",
                 [
@@ -1621,27 +1662,6 @@
                   "lg"
                 ]
               ],
-              "position": "relative",
-              "rounded": [
-                "if",
-                [
-                  "==",
-                  "@config.look",
-                  "header"
-                ],
-                "2xl",
-                "none"
-              ],
-              "texture": "@config.texture",
-              "type": "box"
-            },
-            "label": "Side-by-side body",
-            "tier": "internal"
-          },
-          {
-            "key": "stackedContent",
-            "type": "render-ui",
-            "default": {
               "bg": [
                 "if",
                 [
@@ -1678,13 +1698,44 @@
                   ]
                 ]
               ],
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "edgeTop": "@config.edgeTop",
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "texture": "@config.texture",
+              "fullWidth": true,
+              "position": "relative",
+              "overflow": "hidden",
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
               "children": [
                 {
+                  "type": "box",
+                  "position": "absolute",
+                  "className": "inset-0 pointer-events-none",
                   "aria-hidden": true,
                   "children": [
                     {
+                      "type": "image",
+                      "src": "@config.backgroundSrc",
                       "alt": "",
-                      "className": "h-full",
                       "fit": "cover",
                       "position": "@config.backgroundPosition",
                       "priority": [
@@ -1692,10 +1743,10 @@
                         "@config.look",
                         "hero"
                       ],
-                      "src": "@config.backgroundSrc",
-                      "type": "image"
+                      "className": "h-full"
                     },
                     {
+                      "type": "box",
                       "className": [
                         "if",
                         [
@@ -1705,20 +1756,57 @@
                         ],
                         "band-scrim",
                         "hidden"
-                      ],
-                      "type": "box"
+                      ]
                     },
                     "@config.backdropContent"
-                  ],
-                  "className": "inset-0 pointer-events-none",
-                  "position": "absolute",
-                  "type": "box"
+                  ]
                 },
                 {
+                  "type": "box",
+                  "position": "relative",
+                  "fullWidth": true,
                   "children": [
                     {
+                      "type": "container",
+                      "size": "xl",
+                      "maxWidth": "xl",
+                      "padding": "lg",
                       "children": [
                         {
+                          "type": "box",
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "border": [
+                            "and",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            [
+                              "==",
+                              "@config.surface",
+                              "plain"
+                            ]
+                          ],
                           "bg": [
                             "if",
                             [
@@ -1737,21 +1825,11 @@
                             "muted",
                             "transparent"
                           ],
-                          "border": [
-                            "and",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            [
-                              "==",
-                              "@config.surface",
-                              "plain"
-                            ]
-                          ],
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "2xl",
                               "align": [
                                 "if",
                                 [
@@ -1774,93 +1852,15 @@
                                   "@config.mediaContent",
                                   "@config.illustrationContent"
                                 ]
-                              ],
-                              "direction": "vertical",
-                              "gap": "2xl",
-                              "type": "stack"
+                              ]
                             }
-                          ],
-                          "padding": [
-                            "if",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            "xl",
-                            "none"
-                          ],
-                          "rounded": [
-                            "if",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            "2xl",
-                            "none"
-                          ],
-                          "type": "box"
+                          ]
                         }
-                      ],
-                      "maxWidth": "xl",
-                      "padding": "lg",
-                      "size": "xl",
-                      "type": "container"
+                      ]
                     }
-                  ],
-                  "fullWidth": true,
-                  "position": "relative",
-                  "type": "box"
+                  ]
                 }
-              ],
-              "className": [
-                "if",
-                [
-                  "==",
-                  "@config.height",
-                  "tall"
-                ],
-                "flex min-h-[80vh] items-center",
-                ""
-              ],
-              "edgeBottom": "@config.edgeBottom",
-              "edgeColor": "@config.edgeColor",
-              "edgeTop": "@config.edgeTop",
-              "fullWidth": true,
-              "overflow": "hidden",
-              "paddingY": [
-                "if",
-                [
-                  "==",
-                  "@config.look",
-                  "hero"
-                ],
-                "2xl",
-                [
-                  "if",
-                  [
-                    "==",
-                    "@config.look",
-                    "banner"
-                  ],
-                  "xl",
-                  "lg"
-                ]
-              ],
-              "position": "relative",
-              "rounded": [
-                "if",
-                [
-                  "==",
-                  "@config.look",
-                  "header"
-                ],
-                "2xl",
-                "none"
-              ],
-              "texture": "@config.texture",
-              "type": "box"
+              ]
             },
             "label": "Stacked body",
             "tier": "internal"
@@ -1925,8 +1925,8 @@
             "key": "backdropContent",
             "type": "render-ui",
             "default": {
-              "className": "hidden",
-              "type": "box"
+              "type": "box",
+              "className": "hidden"
             },
             "label": "Backdrop",
             "description": "A scene behind the whole block, such as an animated canvas; it fills the block, never takes clicks, and the copy stays on top. Empty by default.",
@@ -1969,6 +1969,9 @@
             "key": "copyContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
               "align": [
                 "if",
                 [
@@ -1981,25 +1984,14 @@
               ],
               "children": [
                 {
-                  "label": "@config.eyebrow",
-                  "size": "md",
                   "type": "badge",
-                  "variant": "primary"
+                  "label": "@config.eyebrow",
+                  "variant": "primary",
+                  "size": "md"
                 },
                 {
-                  "align": [
-                    "if",
-                    [
-                      "==",
-                      "@config.alignment",
-                      "center"
-                    ],
-                    "center",
-                    "left"
-                  ],
-                  "className": "tracking-tight text-balance",
-                  "content": "@config.headline",
                   "type": "typography",
+                  "content": "@config.headline",
                   "variant": [
                     "if",
                     [
@@ -2010,9 +2002,33 @@
                     "h1",
                     "h2"
                   ],
-                  "weight": "bold"
+                  "weight": "bold",
+                  "align": [
+                    "if",
+                    [
+                      "==",
+                      "@config.alignment",
+                      "center"
+                    ],
+                    "center",
+                    "left"
+                  ],
+                  "className": "tracking-tight text-balance"
                 },
                 {
+                  "type": "typography",
+                  "content": "@config.lede",
+                  "variant": "large",
+                  "color": [
+                    "if",
+                    [
+                      "==",
+                      "@config.look",
+                      "header"
+                    ],
+                    "primary",
+                    "muted"
+                  ],
                   "align": [
                     "if",
                     [
@@ -2032,65 +2048,22 @@
                     ],
                     "hidden",
                     "max-w-2xl text-pretty"
-                  ],
-                  "color": [
+                  ]
+                },
+                {
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "wrap": true,
+                  "justify": [
                     "if",
                     [
                       "==",
-                      "@config.look",
-                      "header"
+                      "@config.alignment",
+                      "center"
                     ],
-                    "primary",
-                    "muted"
-                  ],
-                  "content": "@config.lede",
-                  "type": "typography",
-                  "variant": "large"
-                },
-                {
-                  "children": [
-                    {
-                      "action": "HERO_PRIMARY",
-                      "actionPayload": {
-                        "href": "@config.primaryHref"
-                      },
-                      "className": [
-                        "if",
-                        [
-                          "==",
-                          "@config.primaryLabel",
-                          ""
-                        ],
-                        "hidden",
-                        ""
-                      ],
-                      "href": "@config.primaryHref",
-                      "label": "@config.primaryLabel",
-                      "size": "lg",
-                      "type": "button",
-                      "variant": "primary"
-                    },
-                    {
-                      "action": "HERO_SECONDARY",
-                      "actionPayload": {
-                        "href": "@config.secondaryHref"
-                      },
-                      "className": [
-                        "if",
-                        [
-                          "==",
-                          "@config.secondaryLabel",
-                          ""
-                        ],
-                        "hidden",
-                        ""
-                      ],
-                      "href": "@config.secondaryHref",
-                      "label": "@config.secondaryLabel",
-                      "size": "lg",
-                      "type": "button",
-                      "variant": "secondary"
-                    }
+                    "center",
+                    "start"
                   ],
                   "className": [
                     "if",
@@ -2111,31 +2084,54 @@
                     ],
                     "pt-2"
                   ],
-                  "direction": "horizontal",
-                  "gap": "md",
-                  "justify": [
-                    "if",
-                    [
-                      "==",
-                      "@config.alignment",
-                      "center"
-                    ],
-                    "center",
-                    "start"
-                  ],
-                  "type": "stack",
-                  "wrap": true
-                },
-                {
                   "children": [
                     {
-                      "code": "@config.command",
-                      "language": "bash",
-                      "showCopyButton": true,
-                      "showLanguageBadge": false,
-                      "type": "code-block"
+                      "type": "button",
+                      "label": "@config.primaryLabel",
+                      "href": "@config.primaryHref",
+                      "variant": "primary",
+                      "size": "lg",
+                      "action": "HERO_PRIMARY",
+                      "actionPayload": {
+                        "href": "@config.primaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.primaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": "button",
+                      "label": "@config.secondaryLabel",
+                      "href": "@config.secondaryHref",
+                      "variant": "secondary",
+                      "size": "lg",
+                      "action": "HERO_SECONDARY",
+                      "actionPayload": {
+                        "href": "@config.secondaryHref"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.secondaryLabel",
+                          ""
+                        ],
+                        "hidden",
+                        ""
+                      ]
                     }
-                  ],
+                  ]
+                },
+                {
+                  "type": "box",
+                  "fullWidth": true,
                   "className": [
                     "if",
                     [
@@ -2146,13 +2142,17 @@
                     "hidden",
                     "max-w-xl"
                   ],
-                  "fullWidth": true,
-                  "type": "box"
+                  "children": [
+                    {
+                      "type": "code-block",
+                      "code": "@config.command",
+                      "language": "bash",
+                      "showLanguageBadge": false,
+                      "showCopyButton": true
+                    }
+                  ]
                 }
-              ],
-              "direction": "vertical",
-              "gap": "lg",
-              "type": "stack"
+              ]
             },
             "label": "Copy block",
             "tier": "internal"
@@ -2249,9 +2249,11 @@
             "key": "illustrationContent",
             "type": "render-ui",
             "default": {
-              "alt": "",
-              "animate": true,
+              "type": "animated-graphic",
+              "svgContent": "@config.illustration",
               "animation": "draw",
+              "animate": true,
+              "width": "100%",
               "height": [
                 "if",
                 [
@@ -2262,9 +2264,7 @@
                 200,
                 380
               ],
-              "svgContent": "@config.illustration",
-              "type": "animated-graphic",
-              "width": "100%"
+              "alt": ""
             },
             "label": "Illustration block",
             "tier": "internal"
@@ -2303,12 +2303,12 @@
             "key": "mediaContent",
             "type": "render-ui",
             "default": {
-              "alt": "@config.mediaAlt",
-              "bordered": true,
-              "loading": "eager",
-              "rounded": "xl",
+              "type": "image",
               "src": "@config.mediaSrc",
-              "type": "image"
+              "alt": "@config.mediaAlt",
+              "rounded": "xl",
+              "bordered": true,
+              "loading": "eager"
             },
             "label": "Media block",
             "tier": "internal"
@@ -2370,6 +2370,26 @@
             "key": "sideContent",
             "type": "render-ui",
             "default": {
+              "type": "box",
+              "paddingY": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "hero"
+                ],
+                "2xl",
+                [
+                  "if",
+                  [
+                    "==",
+                    "@config.look",
+                    "banner"
+                  ],
+                  "xl",
+                  "lg"
+                ]
+              ],
               "bg": [
                 "if",
                 [
@@ -2406,13 +2426,44 @@
                   ]
                 ]
               ],
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "edgeTop": "@config.edgeTop",
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "texture": "@config.texture",
+              "fullWidth": true,
+              "position": "relative",
+              "overflow": "hidden",
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
               "children": [
                 {
+                  "type": "box",
+                  "position": "absolute",
+                  "className": "inset-0 pointer-events-none",
                   "aria-hidden": true,
                   "children": [
                     {
+                      "type": "image",
+                      "src": "@config.backgroundSrc",
                       "alt": "",
-                      "className": "h-full",
                       "fit": "cover",
                       "position": "@config.backgroundPosition",
                       "priority": [
@@ -2420,10 +2471,10 @@
                         "@config.look",
                         "hero"
                       ],
-                      "src": "@config.backgroundSrc",
-                      "type": "image"
+                      "className": "h-full"
                     },
                     {
+                      "type": "box",
                       "className": [
                         "if",
                         [
@@ -2433,72 +2484,24 @@
                         ],
                         "band-scrim",
                         "hidden"
-                      ],
-                      "type": "box"
+                      ]
                     },
                     "@config.backdropContent"
-                  ],
-                  "className": "inset-0 pointer-events-none",
-                  "position": "absolute",
-                  "type": "box"
+                  ]
                 },
                 {
+                  "type": "box",
+                  "position": "relative",
+                  "fullWidth": true,
                   "children": [
                     {
+                      "type": "container",
+                      "size": "xl",
+                      "maxWidth": "xl",
+                      "padding": "lg",
                       "children": [
                         {
-                          "bg": [
-                            "if",
-                            [
-                              "and",
-                              [
-                                "==",
-                                "@config.look",
-                                "banner"
-                              ],
-                              [
-                                "==",
-                                "@config.surface",
-                                "plain"
-                              ]
-                            ],
-                            "muted",
-                            "transparent"
-                          ],
-                          "border": [
-                            "and",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            [
-                              "==",
-                              "@config.surface",
-                              "plain"
-                            ]
-                          ],
-                          "children": [
-                            {
-                              "align": "center",
-                              "children": [
-                                "@config.copyContent",
-                                [
-                                  "if",
-                                  [
-                                    "==",
-                                    "@config.illustration",
-                                    ""
-                                  ],
-                                  "@config.mediaContent",
-                                  "@config.illustrationContent"
-                                ]
-                              ],
-                              "gap": "xl",
-                              "ratio": "1:1",
-                              "type": "split"
-                            }
-                          ],
+                          "type": "box",
                           "padding": [
                             "if",
                             [
@@ -2519,35 +2522,73 @@
                             "2xl",
                             "none"
                           ],
-                          "type": "box"
+                          "border": [
+                            "and",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            [
+                              "==",
+                              "@config.surface",
+                              "plain"
+                            ]
+                          ],
+                          "bg": [
+                            "if",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@config.look",
+                                "banner"
+                              ],
+                              [
+                                "==",
+                                "@config.surface",
+                                "plain"
+                              ]
+                            ],
+                            "muted",
+                            "transparent"
+                          ],
+                          "children": [
+                            {
+                              "type": "split",
+                              "ratio": "1:1",
+                              "gap": "xl",
+                              "align": "center",
+                              "children": [
+                                "@config.copyContent",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@config.illustration",
+                                    ""
+                                  ],
+                                  "@config.mediaContent",
+                                  "@config.illustrationContent"
+                                ]
+                              ]
+                            }
+                          ]
                         }
-                      ],
-                      "maxWidth": "xl",
-                      "padding": "lg",
-                      "size": "xl",
-                      "type": "container"
+                      ]
                     }
-                  ],
-                  "fullWidth": true,
-                  "position": "relative",
-                  "type": "box"
+                  ]
                 }
-              ],
-              "className": [
-                "if",
-                [
-                  "==",
-                  "@config.height",
-                  "tall"
-                ],
-                "flex min-h-[80vh] items-center",
-                ""
-              ],
-              "edgeBottom": "@config.edgeBottom",
-              "edgeColor": "@config.edgeColor",
-              "edgeTop": "@config.edgeTop",
-              "fullWidth": true,
-              "overflow": "hidden",
+              ]
+            },
+            "label": "Side-by-side body",
+            "tier": "internal"
+          },
+          {
+            "key": "stackedContent",
+            "type": "render-ui",
+            "default": {
+              "type": "box",
               "paddingY": [
                 "if",
                 [
@@ -2567,27 +2608,6 @@
                   "lg"
                 ]
               ],
-              "position": "relative",
-              "rounded": [
-                "if",
-                [
-                  "==",
-                  "@config.look",
-                  "header"
-                ],
-                "2xl",
-                "none"
-              ],
-              "texture": "@config.texture",
-              "type": "box"
-            },
-            "label": "Side-by-side body",
-            "tier": "internal"
-          },
-          {
-            "key": "stackedContent",
-            "type": "render-ui",
-            "default": {
               "bg": [
                 "if",
                 [
@@ -2624,13 +2644,44 @@
                   ]
                 ]
               ],
+              "rounded": [
+                "if",
+                [
+                  "==",
+                  "@config.look",
+                  "header"
+                ],
+                "2xl",
+                "none"
+              ],
+              "edgeTop": "@config.edgeTop",
+              "edgeBottom": "@config.edgeBottom",
+              "edgeColor": "@config.edgeColor",
+              "texture": "@config.texture",
+              "fullWidth": true,
+              "position": "relative",
+              "overflow": "hidden",
+              "className": [
+                "if",
+                [
+                  "==",
+                  "@config.height",
+                  "tall"
+                ],
+                "flex min-h-[80vh] items-center",
+                ""
+              ],
               "children": [
                 {
+                  "type": "box",
+                  "position": "absolute",
+                  "className": "inset-0 pointer-events-none",
                   "aria-hidden": true,
                   "children": [
                     {
+                      "type": "image",
+                      "src": "@config.backgroundSrc",
                       "alt": "",
-                      "className": "h-full",
                       "fit": "cover",
                       "position": "@config.backgroundPosition",
                       "priority": [
@@ -2638,10 +2689,10 @@
                         "@config.look",
                         "hero"
                       ],
-                      "src": "@config.backgroundSrc",
-                      "type": "image"
+                      "className": "h-full"
                     },
                     {
+                      "type": "box",
                       "className": [
                         "if",
                         [
@@ -2651,20 +2702,57 @@
                         ],
                         "band-scrim",
                         "hidden"
-                      ],
-                      "type": "box"
+                      ]
                     },
                     "@config.backdropContent"
-                  ],
-                  "className": "inset-0 pointer-events-none",
-                  "position": "absolute",
-                  "type": "box"
+                  ]
                 },
                 {
+                  "type": "box",
+                  "position": "relative",
+                  "fullWidth": true,
                   "children": [
                     {
+                      "type": "container",
+                      "size": "xl",
+                      "maxWidth": "xl",
+                      "padding": "lg",
                       "children": [
                         {
+                          "type": "box",
+                          "padding": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "xl",
+                            "none"
+                          ],
+                          "rounded": [
+                            "if",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            "2xl",
+                            "none"
+                          ],
+                          "border": [
+                            "and",
+                            [
+                              "==",
+                              "@config.look",
+                              "banner"
+                            ],
+                            [
+                              "==",
+                              "@config.surface",
+                              "plain"
+                            ]
+                          ],
                           "bg": [
                             "if",
                             [
@@ -2683,21 +2771,11 @@
                             "muted",
                             "transparent"
                           ],
-                          "border": [
-                            "and",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            [
-                              "==",
-                              "@config.surface",
-                              "plain"
-                            ]
-                          ],
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "2xl",
                               "align": [
                                 "if",
                                 [
@@ -2720,93 +2798,15 @@
                                   "@config.mediaContent",
                                   "@config.illustrationContent"
                                 ]
-                              ],
-                              "direction": "vertical",
-                              "gap": "2xl",
-                              "type": "stack"
+                              ]
                             }
-                          ],
-                          "padding": [
-                            "if",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            "xl",
-                            "none"
-                          ],
-                          "rounded": [
-                            "if",
-                            [
-                              "==",
-                              "@config.look",
-                              "banner"
-                            ],
-                            "2xl",
-                            "none"
-                          ],
-                          "type": "box"
+                          ]
                         }
-                      ],
-                      "maxWidth": "xl",
-                      "padding": "lg",
-                      "size": "xl",
-                      "type": "container"
+                      ]
                     }
-                  ],
-                  "fullWidth": true,
-                  "position": "relative",
-                  "type": "box"
+                  ]
                 }
-              ],
-              "className": [
-                "if",
-                [
-                  "==",
-                  "@config.height",
-                  "tall"
-                ],
-                "flex min-h-[80vh] items-center",
-                ""
-              ],
-              "edgeBottom": "@config.edgeBottom",
-              "edgeColor": "@config.edgeColor",
-              "edgeTop": "@config.edgeTop",
-              "fullWidth": true,
-              "overflow": "hidden",
-              "paddingY": [
-                "if",
-                [
-                  "==",
-                  "@config.look",
-                  "hero"
-                ],
-                "2xl",
-                [
-                  "if",
-                  [
-                    "==",
-                    "@config.look",
-                    "banner"
-                  ],
-                  "xl",
-                  "lg"
-                ]
-              ],
-              "position": "relative",
-              "rounded": [
-                "if",
-                [
-                  "==",
-                  "@config.look",
-                  "header"
-                ],
-                "2xl",
-                "none"
-              ],
-              "texture": "@config.texture",
-              "type": "box"
+              ]
             },
             "label": "Stacked body",
             "tier": "internal"
@@ -2865,7 +2865,10 @@
             "key": "actionRow",
             "type": "render-ui",
             "default": {
-              "children": "@config.actions",
+              "type": "stack",
+              "direction": "horizontal",
+              "gap": "sm",
+              "wrap": true,
               "className": [
                 "if",
                 [
@@ -2879,10 +2882,7 @@
                 "hidden",
                 ""
               ],
-              "direction": "horizontal",
-              "gap": "sm",
-              "type": "stack",
-              "wrap": true
+              "children": "@config.actions"
             },
             "label": "Action row",
             "tier": "internal"
@@ -2927,31 +2927,31 @@
             "key": "briefingContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
               "children": [
                 "@trait.HomeHeader",
                 "@config.kpiRow",
                 {
+                  "type": "split",
+                  "ratio": "2:1",
+                  "gap": "lg",
                   "align": "start",
                   "children": [
                     "@config.sectionColumn",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         "@config.actionRow",
                         "@config.shortcutList"
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
+                      ]
                     }
-                  ],
-                  "gap": "lg",
-                  "ratio": "2:1",
-                  "type": "split"
+                  ]
                 }
-              ],
-              "direction": "vertical",
-              "gap": "lg",
-              "type": "stack"
+              ]
             },
             "label": "Briefing layout",
             "tier": "internal"
@@ -2960,16 +2960,16 @@
             "key": "commandContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
               "children": [
                 "@trait.HomeHeader",
                 "@config.kpiRow",
                 "@config.actionRow",
                 "@config.sectionGrid",
                 "@config.shortcutTiles"
-              ],
-              "direction": "vertical",
-              "gap": "lg",
-              "type": "stack"
+              ]
             },
             "label": "Command layout",
             "tier": "internal"
@@ -2978,16 +2978,16 @@
             "key": "conciergeContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
               "children": [
                 "@trait.HomeWelcome",
                 "@config.kpiRow",
                 "@config.shortcutTiles",
                 "@config.actionRow",
                 "@config.sectionGrid"
-              ],
-              "direction": "vertical",
-              "gap": "lg",
-              "type": "stack"
+              ]
             },
             "label": "Concierge layout",
             "tier": "internal"
@@ -3057,7 +3057,9 @@
             "key": "kpiRow",
             "type": "render-ui",
             "default": {
-              "children": "@config.kpis",
+              "type": "simple-grid",
+              "minChildWidth": "180px",
+              "gap": "md",
               "className": [
                 "if",
                 [
@@ -3071,9 +3073,7 @@
                 "hidden",
                 ""
               ],
-              "gap": "md",
-              "minChildWidth": "180px",
-              "type": "simple-grid"
+              "children": "@config.kpis"
             },
             "label": "Figures row",
             "tier": "internal"
@@ -3094,16 +3094,16 @@
             "key": "launchpadContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
               "children": [
                 "@trait.HomeHeader",
                 "@config.kpiRow",
                 "@config.actionRow",
                 "@config.shortcutTiles",
                 "@config.sectionGrid"
-              ],
-              "direction": "vertical",
-              "gap": "lg",
-              "type": "stack"
+              ]
             },
             "label": "Launchpad layout",
             "tier": "internal"
@@ -3129,8 +3129,14 @@
             "key": "sectionColumn",
             "type": "render-ui",
             "default": {
+              "type": "box",
+              "fullWidth": true,
               "children": [
                 {
+                  "type": "empty-state",
+                  "icon": "layout-dashboard",
+                  "title": "@config.emptyTitle",
+                  "description": "@config.emptyDescription",
                   "className": [
                     "if",
                     [
@@ -3143,14 +3149,12 @@
                     ],
                     "",
                     "hidden"
-                  ],
-                  "description": "@config.emptyDescription",
-                  "icon": "layout-dashboard",
-                  "title": "@config.emptyTitle",
-                  "type": "empty-state"
+                  ]
                 },
                 {
-                  "children": "@config.sections",
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg",
                   "className": [
                     "if",
                     [
@@ -3164,13 +3168,9 @@
                     "hidden",
                     ""
                   ],
-                  "direction": "vertical",
-                  "gap": "lg",
-                  "type": "stack"
+                  "children": "@config.sections"
                 }
-              ],
-              "fullWidth": true,
-              "type": "box"
+              ]
             },
             "label": "Sections column",
             "tier": "internal"
@@ -3179,8 +3179,14 @@
             "key": "sectionGrid",
             "type": "render-ui",
             "default": {
+              "type": "box",
+              "fullWidth": true,
               "children": [
                 {
+                  "type": "empty-state",
+                  "icon": "layout-dashboard",
+                  "title": "@config.emptyTitle",
+                  "description": "@config.emptyDescription",
                   "className": [
                     "if",
                     [
@@ -3193,14 +3199,12 @@
                     ],
                     "",
                     "hidden"
-                  ],
-                  "description": "@config.emptyDescription",
-                  "icon": "layout-dashboard",
-                  "title": "@config.emptyTitle",
-                  "type": "empty-state"
+                  ]
                 },
                 {
-                  "children": "@config.sections",
+                  "type": "simple-grid",
+                  "minChildWidth": "360px",
+                  "gap": "lg",
                   "className": [
                     "if",
                     [
@@ -3214,13 +3218,9 @@
                     "hidden",
                     ""
                   ],
-                  "gap": "lg",
-                  "minChildWidth": "360px",
-                  "type": "simple-grid"
+                  "children": "@config.sections"
                 }
-              ],
-              "fullWidth": true,
-              "type": "box"
+              ]
             },
             "label": "Sections grid",
             "tier": "internal"
@@ -3241,6 +3241,22 @@
             "key": "shortcutList",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "xs",
+              "className": [
+                "if",
+                [
+                  "==",
+                  [
+                    "array/len",
+                    "@config.shortcuts"
+                  ],
+                  0
+                ],
+                "hidden",
+                ""
+              ],
               "children": [
                 "array/map",
                 "@config.shortcuts",
@@ -3248,6 +3264,13 @@
                   "fn",
                   "s",
                   {
+                    "type": "button",
+                    "label": [
+                      "object/get",
+                      "@s",
+                      "label",
+                      ""
+                    ],
                     "href": [
                       "object/get",
                       "@s",
@@ -3260,14 +3283,6 @@
                       "icon",
                       "arrow-right"
                     ],
-                    "label": [
-                      "object/get",
-                      "@s",
-                      "label",
-                      ""
-                    ],
-                    "size": "md",
-                    "type": "button",
                     "variant": [
                       "if",
                       [
@@ -3278,10 +3293,22 @@
                       ],
                       "primary",
                       "ghost"
-                    ]
+                    ],
+                    "size": "md"
                   }
                 ]
-              ],
+              ]
+            },
+            "label": "Shortcut list",
+            "tier": "internal"
+          },
+          {
+            "key": "shortcutTiles",
+            "type": "render-ui",
+            "default": {
+              "type": "simple-grid",
+              "minChildWidth": "220px",
+              "gap": "md",
               "className": [
                 "if",
                 [
@@ -3295,17 +3322,6 @@
                 "hidden",
                 ""
               ],
-              "direction": "vertical",
-              "gap": "xs",
-              "type": "stack"
-            },
-            "label": "Shortcut list",
-            "tier": "internal"
-          },
-          {
-            "key": "shortcutTiles",
-            "type": "render-ui",
-            "default": {
               "children": [
                 "array/map",
                 "@config.shortcuts",
@@ -3313,12 +3329,17 @@
                   "fn",
                   "s",
                   {
+                    "type": "card",
+                    "padding": "lg",
                     "children": [
                       {
+                        "type": "stack",
+                        "direction": "vertical",
+                        "gap": "sm",
                         "align": "start",
                         "children": [
                           {
-                            "color": "primary",
+                            "type": "icon",
                             "name": [
                               "object/get",
                               "@s",
@@ -3326,45 +3347,43 @@
                               "arrow-right"
                             ],
                             "size": "lg",
-                            "type": "icon"
+                            "color": "primary"
                           },
                           {
+                            "type": "typography",
+                            "variant": "h4",
                             "content": [
                               "object/get",
                               "@s",
                               "label",
                               ""
-                            ],
-                            "type": "typography",
-                            "variant": "h4"
+                            ]
                           },
                           {
+                            "type": "typography",
+                            "variant": "body2",
                             "color": "muted",
                             "content": [
                               "object/get",
                               "@s",
                               "description",
                               ""
-                            ],
-                            "type": "typography",
-                            "variant": "body2"
+                            ]
                           },
                           {
-                            "href": [
-                              "object/get",
-                              "@s",
-                              "href",
-                              "#"
-                            ],
-                            "iconRight": "arrow-right",
+                            "type": "button",
                             "label": [
                               "object/get",
                               "@s",
                               "actionLabel",
                               "Open"
                             ],
-                            "size": "sm",
-                            "type": "button",
+                            "href": [
+                              "object/get",
+                              "@s",
+                              "href",
+                              "#"
+                            ],
                             "variant": [
                               "if",
                               [
@@ -3375,35 +3394,16 @@
                               ],
                               "primary",
                               "secondary"
-                            ]
+                            ],
+                            "size": "sm",
+                            "iconRight": "arrow-right"
                           }
-                        ],
-                        "direction": "vertical",
-                        "gap": "sm",
-                        "type": "stack"
+                        ]
                       }
-                    ],
-                    "padding": "lg",
-                    "type": "card"
+                    ]
                   }
                 ]
-              ],
-              "className": [
-                "if",
-                [
-                  "==",
-                  [
-                    "array/len",
-                    "@config.shortcuts"
-                  ],
-                  0
-                ],
-                "hidden",
-                ""
-              ],
-              "gap": "md",
-              "minChildWidth": "220px",
-              "type": "simple-grid"
+              ]
             },
             "label": "Shortcut tiles",
             "tier": "internal"
@@ -3418,9 +3418,9 @@
             "tier": "domain",
             "items": {
               "properties": {
-                "actionLabel": {
-                  "name": "actionLabel",
-                  "required": false,
+                "href": {
+                  "name": "href",
+                  "required": true,
                   "type": "string"
                 },
                 "description": {
@@ -3428,10 +3428,10 @@
                   "required": false,
                   "type": "string"
                 },
-                "href": {
-                  "name": "href",
-                  "required": true,
-                  "type": "string"
+                "primary": {
+                  "name": "primary",
+                  "required": false,
+                  "type": "boolean"
                 },
                 "icon": {
                   "name": "icon",
@@ -3443,10 +3443,10 @@
                   "required": true,
                   "type": "string"
                 },
-                "primary": {
-                  "name": "primary",
+                "actionLabel": {
+                  "name": "actionLabel",
                   "required": false,
-                  "type": "boolean"
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -3456,16 +3456,16 @@
             "key": "spotlightContent",
             "type": "render-ui",
             "default": {
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "lg",
               "children": [
                 "@trait.HomeHero",
                 "@config.kpiRow",
                 "@config.actionRow",
                 "@config.shortcutTiles",
                 "@config.sectionGrid"
-              ],
-              "direction": "vertical",
-              "gap": "lg",
-              "type": "stack"
+              ]
             },
             "label": "Spotlight layout",
             "tier": "internal"

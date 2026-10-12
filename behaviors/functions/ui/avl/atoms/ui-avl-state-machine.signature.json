@@ -56,20 +56,20 @@
             "key": "annotations",
             "type": "AvlStateMachineAnnotations",
             "default": {
-              "effects": {
-                "persist": {
-                  "body": "Saves the order."
-                }
-              },
               "states": {
                 "pending": {
-                  "body": "Every order starts here.",
-                  "title": "Unpaid"
+                  "title": "Unpaid",
+                  "body": "Every order starts here."
                 }
               },
               "transitions": {
                 "PAY": {
                   "body": "Only fires when the amount is positive."
+                }
+              },
+              "effects": {
+                "persist": {
+                  "body": "Saves the order."
                 }
               }
             },
@@ -77,20 +77,20 @@
             "description": "Author explanations shown in a popover on hover: a note per state name, per transition event and per effect type.",
             "tier": "presentation",
             "properties": {
-              "effects": {
-                "name": "effects",
+              "transitions": {
+                "name": "transitions",
                 "required": false,
                 "type": "object",
                 "items": {
                   "properties": {
-                    "body": {
-                      "name": "body",
-                      "required": true,
-                      "type": "string"
-                    },
                     "title": {
                       "name": "title",
                       "required": false,
+                      "type": "string"
+                    },
+                    "body": {
+                      "name": "body",
+                      "required": true,
                       "type": "string"
                     }
                   },
@@ -117,20 +117,20 @@
                   "type": "object"
                 }
               },
-              "transitions": {
-                "name": "transitions",
+              "effects": {
+                "name": "effects",
                 "required": false,
                 "type": "object",
                 "items": {
                   "properties": {
-                    "body": {
-                      "name": "body",
-                      "required": true,
-                      "type": "string"
-                    },
                     "title": {
                       "name": "title",
                       "required": false,
+                      "type": "string"
+                    },
+                    "body": {
+                      "name": "body",
+                      "required": true,
                       "type": "string"
                     }
                   },
@@ -478,129 +478,129 @@
             "key": "traitProp",
             "type": "AvlStateMachineTrait",
             "default": {
-              "emittedEvents": [
-                "ORDER_SAVED"
-              ],
-              "linkedEntity": "Order",
-              "listenedEvents": [
-                "PAYMENT_OK"
-              ],
               "name": "OrderFlow",
+              "linkedEntity": "Order",
               "states": [
                 {
+                  "name": "browsing",
                   "isInitial": true,
-                  "isTerminal": false,
-                  "name": "browsing"
+                  "isTerminal": false
                 },
                 {
+                  "name": "editing",
                   "isInitial": false,
-                  "isTerminal": false,
-                  "name": "editing"
+                  "isTerminal": false
                 },
                 {
+                  "name": "saving",
                   "isInitial": false,
-                  "isTerminal": false,
-                  "name": "saving"
+                  "isTerminal": false
                 },
                 {
+                  "name": "confirmed",
                   "isInitial": false,
-                  "isTerminal": true,
-                  "name": "confirmed"
+                  "isTerminal": true
                 },
                 {
+                  "name": "failed",
                   "isInitial": false,
-                  "isTerminal": false,
-                  "name": "failed"
+                  "isTerminal": false
                 }
               ],
               "transitions": [
                 {
-                  "effects": [
-                    {
-                      "args": [],
-                      "type": "render-ui"
-                    }
-                  ],
-                  "event": "EDIT",
                   "from": "browsing",
-                  "index": 0,
-                  "to": "editing"
-                },
-                {
+                  "to": "editing",
+                  "event": "EDIT",
                   "effects": [
                     {
-                      "args": [],
-                      "type": "persist"
-                    },
-                    {
-                      "args": [],
-                      "type": "notify"
+                      "type": "render-ui",
+                      "args": []
                     }
                   ],
+                  "index": 0
+                },
+                {
+                  "from": "editing",
+                  "to": "saving",
                   "event": "SAVE",
-                  "from": "editing",
-                  "index": 1,
-                  "to": "saving"
-                },
-                {
                   "effects": [
                     {
-                      "args": [],
-                      "type": "emit"
+                      "type": "persist",
+                      "args": []
                     },
                     {
-                      "args": [],
-                      "type": "render-ui"
+                      "type": "notify",
+                      "args": []
                     }
                   ],
+                  "index": 1
+                },
+                {
+                  "from": "saving",
+                  "to": "confirmed",
                   "event": "SAVED",
-                  "from": "saving",
-                  "index": 2,
-                  "to": "confirmed"
-                },
-                {
                   "effects": [
                     {
-                      "args": [],
-                      "type": "notify"
+                      "type": "emit",
+                      "args": []
+                    },
+                    {
+                      "type": "render-ui",
+                      "args": []
                     }
                   ],
+                  "index": 2
+                },
+                {
+                  "from": "saving",
+                  "to": "failed",
                   "event": "SAVE_FAILED",
-                  "from": "saving",
-                  "index": 3,
-                  "to": "failed"
+                  "effects": [
+                    {
+                      "type": "notify",
+                      "args": []
+                    }
+                  ],
+                  "index": 3
                 },
                 {
-                  "effects": [],
-                  "event": "RETRY",
                   "from": "failed",
-                  "index": 4,
-                  "to": "editing"
+                  "to": "editing",
+                  "event": "RETRY",
+                  "effects": [],
+                  "index": 4
                 },
                 {
-                  "effects": [
-                    {
-                      "args": [],
-                      "type": "render-ui"
-                    }
-                  ],
-                  "event": "CANCEL",
                   "from": "editing",
-                  "index": 5,
-                  "to": "browsing"
-                },
-                {
+                  "to": "browsing",
+                  "event": "CANCEL",
                   "effects": [
                     {
-                      "args": [],
-                      "type": "navigate"
+                      "type": "render-ui",
+                      "args": []
                     }
                   ],
-                  "event": "DONE",
+                  "index": 5
+                },
+                {
                   "from": "confirmed",
-                  "index": 6,
-                  "to": "browsing"
+                  "to": "browsing",
+                  "event": "DONE",
+                  "effects": [
+                    {
+                      "type": "navigate",
+                      "args": []
+                    }
+                  ],
+                  "index": 6
                 }
+              ],
+              "emittedEvents": [
+                "ORDER_SAVED"
+              ],
+              "listenedEvents": [
+                "PAYMENT_OK"
               ]
             },
             "label": "Trait",
@@ -608,21 +608,13 @@
             "synonyms": "trait",
             "tier": "presentation",
             "properties": {
-              "emittedEvents": {
-                "name": "emittedEvents",
-                "required": true,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
               "linkedEntity": {
                 "name": "linkedEntity",
                 "required": true,
                 "type": "string"
               },
-              "listenedEvents": {
-                "name": "listenedEvents",
+              "emittedEvents": {
+                "name": "emittedEvents",
                 "required": true,
                 "type": "array",
                 "items": {
@@ -634,43 +626,33 @@
                 "required": true,
                 "type": "string"
               },
-              "states": {
-                "name": "states",
-                "required": true,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "isInitial": {
-                      "name": "isInitial",
-                      "required": false,
-                      "type": "boolean"
-                    },
-                    "isTerminal": {
-                      "name": "isTerminal",
-                      "required": false,
-                      "type": "boolean"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
               "transitions": {
                 "name": "transitions",
                 "required": true,
                 "type": "array",
                 "items": {
                   "properties": {
+                    "to": {
+                      "name": "to",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "event": {
+                      "name": "event",
+                      "required": true,
+                      "type": "string"
+                    },
                     "effects": {
                       "name": "effects",
                       "required": true,
                       "type": "array",
                       "items": {
                         "properties": {
+                          "type": {
+                            "name": "type",
+                            "required": true,
+                            "type": "string"
+                          },
                           "args": {
                             "name": "args",
                             "required": true,
@@ -678,20 +660,15 @@
                             "items": {
                               "type": "SExpr"
                             }
-                          },
-                          "type": {
-                            "name": "type",
-                            "required": true,
-                            "type": "string"
                           }
                         },
                         "type": "object"
                       }
                     },
-                    "event": {
-                      "name": "event",
+                    "index": {
+                      "name": "index",
                       "required": true,
-                      "type": "string"
+                      "type": "number"
                     },
                     "from": {
                       "name": "from",
@@ -702,14 +679,37 @@
                       "name": "guard",
                       "required": false,
                       "type": "SExpr"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "listenedEvents": {
+                "name": "listenedEvents",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "states": {
+                "name": "states",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "isTerminal": {
+                      "name": "isTerminal",
+                      "required": false,
+                      "type": "boolean"
                     },
-                    "index": {
-                      "name": "index",
-                      "required": true,
-                      "type": "number"
+                    "isInitial": {
+                      "name": "isInitial",
+                      "required": false,
+                      "type": "boolean"
                     },
-                    "to": {
-                      "name": "to",
+                    "name": {
+                      "name": "name",
                       "required": true,
                       "type": "string"
                     }

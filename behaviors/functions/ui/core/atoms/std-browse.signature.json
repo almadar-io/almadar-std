@@ -239,13 +239,11 @@
                 ],
                 {
                   "cols": "@config.cols",
-                  "emptyDescription": "@config.emptyDescription",
-                  "emptyIcon": "@config.emptyIcon",
-                  "emptyTitle": "@config.emptyTitle",
                   "entity": "@payload.data",
                   "fields": "@config.fields",
                   "gap": "@config.gap",
                   "imageField": "@config.imageField",
+                  "itemClickEvent": "@config.itemClickEvent",
                   "itemActions": [
                     "array/filter",
                     "@config.itemActions",
@@ -280,12 +278,14 @@
                       ]
                     ]
                   ],
-                  "itemClickEvent": "@config.itemClickEvent",
-                  "itemEnter": "@config.itemEnter",
                   "maxInlineActions": "@config.maxInlineActions",
                   "pageSize": "@config.displayPageSize",
+                  "emptyDescription": "@config.emptyDescription",
+                  "emptyIcon": "@config.emptyIcon",
+                  "emptyTitle": "@config.emptyTitle",
                   "surface": "@config.surface",
-                  "type": "data-grid"
+                  "type": "data-grid",
+                  "itemEnter": "@config.itemEnter"
                 }
               ],
               "direction": "vertical",
@@ -359,20 +359,26 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "align": {
-                  "name": "align",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string",
                   "values": [
-                    "left",
-                    "center",
-                    "right"
+                    "badge",
+                    "date",
+                    "currency",
+                    "number",
+                    "percent",
+                    "boolean"
                   ]
                 },
-                "className": {
-                  "name": "className",
+                "labels": {
+                  "name": "labels",
                   "required": false,
-                  "type": "string"
+                  "type": "object",
+                  "items": {
+                    "type": "string"
+                  }
                 },
                 "colorMap": {
                   "name": "colorMap",
@@ -394,47 +400,6 @@
                     ]
                   }
                 },
-                "field": {
-                  "name": "field",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "badge",
-                    "date",
-                    "currency",
-                    "number",
-                    "percent",
-                    "boolean"
-                  ]
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": true,
-                  "type": "string"
-                },
-                "labels": {
-                  "name": "labels",
-                  "required": false,
-                  "type": "object",
-                  "items": {
-                    "type": "string"
-                  }
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -443,6 +408,31 @@
                     "h3",
                     "h4"
                   ]
+                },
+                "className": {
+                  "name": "className",
+                  "required": false,
+                  "type": "string"
+                },
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "string"
                 },
                 "weight": {
                   "name": "weight",
@@ -454,8 +444,18 @@
                     "semibold"
                   ]
                 },
-                "width": {
-                  "name": "width",
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "field": {
+                  "name": "field",
                   "required": false,
                   "type": "string"
                 }
@@ -527,9 +527,6 @@
                   "children": [
                     {
                       "columns": "@config.columns",
-                      "emptyDescription": "@config.emptyDescription",
-                      "emptyIcon": "@config.emptyIcon",
-                      "emptyTitle": "@config.emptyTitle",
                       "entity": "@payload.data",
                       "itemActions": [
                         "array/filter",
@@ -568,9 +565,12 @@
                       "itemClickEvent": "@config.itemClickEvent",
                       "look": "dense",
                       "maxInlineActions": "@config.maxInlineActions",
+                      "surface": "none",
                       "pageSize": "@config.displayPageSize",
                       "selectable": "@config.selectable",
-                      "surface": "none",
+                      "emptyDescription": "@config.emptyDescription",
+                      "emptyIcon": "@config.emptyIcon",
+                      "emptyTitle": "@config.emptyTitle",
                       "type": "table-view"
                     }
                   ],
@@ -613,10 +613,28 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "event": {
                   "name": "event",
                   "required": true,
                   "type": "event"
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "SExpr"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
                 },
                 "icon": {
                   "name": "icon",
@@ -627,24 +645,6 @@
                   "name": "label",
                   "required": true,
                   "type": "string"
-                },
-                "roles": {
-                  "name": "roles",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "when": {
-                  "name": "when",
-                  "required": false,
-                  "type": "SExpr"
                 }
               },
               "type": "object"
@@ -690,6 +690,64 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "time",
+                    "datetime",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
+                "labels": {
+                  "name": "labels",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4",
+                    "overline",
+                    "avatar",
+                    "body",
+                    "caption",
+                    "badge",
+                    "small",
+                    "progress"
+                  ]
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "colorMap": {
                   "name": "colorMap",
                   "required": false,
@@ -710,68 +768,10 @@
                     ]
                   }
                 },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "date",
-                    "time",
-                    "datetime",
-                    "currency",
-                    "number",
-                    "boolean",
-                    "percent"
-                  ]
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "key": {
                   "name": "key",
                   "required": false,
                   "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "labels": {
-                  "name": "labels",
-                  "required": false,
-                  "type": "object",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "h3",
-                    "h4",
-                    "overline",
-                    "avatar",
-                    "body",
-                    "caption",
-                    "badge",
-                    "small",
-                    "progress"
-                  ]
                 }
               },
               "type": "object"
@@ -875,12 +875,10 @@
                   }
                 ],
                 {
-                  "emptyDescription": "@config.emptyDescription",
-                  "emptyIcon": "@config.emptyIcon",
-                  "emptyTitle": "@config.emptyTitle",
                   "entity": "@payload.data",
                   "fields": "@config.fields",
                   "gap": "none",
+                  "itemClickEvent": "@config.itemClickEvent",
                   "itemActions": [
                     "array/filter",
                     "@config.itemActions",
@@ -915,8 +913,6 @@
                       ]
                     ]
                   ],
-                  "itemClickEvent": "@config.itemClickEvent",
-                  "itemEnter": "@config.itemEnter",
                   "look": [
                     "if",
                     [
@@ -928,6 +924,9 @@
                     "borderless"
                   ],
                   "maxInlineActions": "@config.maxInlineActions",
+                  "emptyDescription": "@config.emptyDescription",
+                  "emptyIcon": "@config.emptyIcon",
+                  "emptyTitle": "@config.emptyTitle",
                   "pageSize": "@config.displayPageSize",
                   "surface": [
                     "if",
@@ -940,6 +939,7 @@
                     "@config.surface"
                   ],
                   "type": "data-list",
+                  "itemEnter": "@config.itemEnter",
                   "variant": [
                     "if",
                     [
@@ -1001,6 +1001,37 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "h3",
+                    "h4",
+                    "overline",
+                    "avatar",
+                    "body",
+                    "caption",
+                    "badge",
+                    "small",
+                    "progress"
+                  ]
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
                 "colorMap": {
                   "name": "colorMap",
                   "required": false,
@@ -1021,6 +1052,24 @@
                     ]
                   }
                 },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "labels": {
+                  "name": "labels",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "format": {
                   "name": "format",
                   "required": false,
@@ -1033,55 +1082,6 @@
                     "number",
                     "boolean",
                     "percent"
-                  ]
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "labels": {
-                  "name": "labels",
-                  "required": false,
-                  "type": "object",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "h3",
-                    "h4",
-                    "overline",
-                    "avatar",
-                    "body",
-                    "caption",
-                    "badge",
-                    "small",
-                    "progress"
                   ]
                 }
               },
@@ -1199,13 +1199,11 @@
                 ],
                 {
                   "className": "w-full",
-                  "emptyDescription": "@config.emptyDescription",
-                  "emptyIcon": "@config.emptyIcon",
-                  "emptyTitle": "@config.emptyTitle",
                   "entity": "@payload.data",
                   "fields": "@config.fields",
                   "gap": "lg",
                   "imageField": "@config.imageField",
+                  "itemClickEvent": "@config.itemClickEvent",
                   "itemActions": [
                     "array/filter",
                     "@config.itemActions",
@@ -1240,12 +1238,14 @@
                       ]
                     ]
                   ],
-                  "itemClickEvent": "@config.itemClickEvent",
-                  "itemEnter": "@config.itemEnter",
                   "maxInlineActions": "@config.maxInlineActions",
                   "minCardWidth": 260,
+                  "emptyDescription": "@config.emptyDescription",
+                  "emptyIcon": "@config.emptyIcon",
+                  "emptyTitle": "@config.emptyTitle",
                   "surface": "@config.surface",
-                  "type": "data-grid"
+                  "type": "data-grid",
+                  "itemEnter": "@config.itemEnter"
                 }
               ],
               "className": "w-full",
@@ -1315,34 +1315,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": false,
-                  "type": "event"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "navigatesTo": {
-                  "name": "navigatesTo",
-                  "required": false,
-                  "type": "string"
-                },
-                "roles": {
-                  "name": "roles",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -1358,6 +1330,34 @@
                   "name": "when",
                   "required": false,
                   "type": "SExpr"
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "navigatesTo": {
+                  "name": "navigatesTo",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -1587,8 +1587,8 @@
                         ]
                       ]
                     ],
-                    "closeEvent": "@config.detailCloseEvent",
                     "fields": "@config.detailFields",
+                    "closeEvent": "@config.detailCloseEvent",
                     "initialData": "@payload.row",
                     "showActions": true,
                     "surface": "none",
@@ -1764,11 +1764,9 @@
                 {
                   "children": [
                     {
-                      "emptyDescription": "@config.emptyDescription",
-                      "emptyIcon": "@config.emptyIcon",
-                      "emptyTitle": "@config.emptyTitle",
                       "entity": "@payload.data",
                       "fields": "@config.fields",
+                      "itemClickEvent": "@config.itemClickEvent",
                       "itemActions": [
                         "array/filter",
                         "@config.itemActions",
@@ -1803,12 +1801,14 @@
                           ]
                         ]
                       ],
-                      "itemClickEvent": "@config.itemClickEvent",
-                      "itemEnter": "@config.itemEnter",
                       "maxInlineActions": "@config.maxInlineActions",
+                      "emptyDescription": "@config.emptyDescription",
+                      "emptyIcon": "@config.emptyIcon",
+                      "emptyTitle": "@config.emptyTitle",
                       "pageSize": "@config.displayPageSize",
                       "surface": "none",
                       "type": "data-list",
+                      "itemEnter": "@config.itemEnter",
                       "variant": "compact"
                     }
                   ],

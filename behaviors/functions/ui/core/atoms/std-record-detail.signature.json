@@ -222,20 +222,10 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "event"
-                },
-                "icon": {
-                  "name": "icon",
+                "when": {
+                  "name": "when",
                   "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
+                  "type": "SExpr"
                 },
                 "roles": {
                   "name": "roles",
@@ -244,6 +234,11 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
                 },
                 "variant": {
                   "name": "variant",
@@ -256,10 +251,15 @@
                     "danger"
                   ]
                 },
-                "when": {
-                  "name": "when",
-                  "required": false,
-                  "type": "SExpr"
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "event"
                 }
               },
               "type": "object"
@@ -336,36 +336,36 @@
                     ],
                     []
                   ],
-                  "avatarField": "@config.avatarField",
-                  "closeEvent": "@config.closeEvent",
-                  "coverField": "@config.coverField",
                   "entity": "@entity.loadedRow",
                   "fields": "@config.fields",
+                  "closeEvent": "@config.closeEvent",
                   "initialData": "@entity.loadedRow",
+                  "maxInlineActions": "@config.maxInlineActions",
+                  "sections": "@config.sections",
+                  "showActions": "@config.showActions",
+                  "subtitle": "@entity.description",
+                  "title": "@entity.name",
+                  "look": "@config.recordLook",
+                  "avatarField": "@config.avatarField",
+                  "coverField": "@config.coverField",
+                  "mediaField": "@config.mediaField",
+                  "stageField": "@config.stageField",
+                  "stages": "@config.stages",
                   "latitudeField": "@config.latitudeField",
-                  "lineItemColumns": "@config.lineItemColumns",
+                  "longitudeField": "@config.longitudeField",
                   "lineItems": [
                     "object/get",
                     "@entity.loadedRow",
                     "@config.lineItemsField"
                   ],
-                  "longitudeField": "@config.longitudeField",
-                  "look": "@config.recordLook",
-                  "maxInlineActions": "@config.maxInlineActions",
-                  "mediaField": "@config.mediaField",
-                  "sections": "@config.sections",
-                  "showActions": "@config.showActions",
-                  "stageField": "@config.stageField",
-                  "stages": "@config.stages",
-                  "subtitle": "@entity.description",
-                  "tabs": "@config.tabs",
+                  "lineItemColumns": "@config.lineItemColumns",
+                  "totals": "@config.totals",
                   "thread": [
                     "object/get",
                     "@entity.loadedRow",
                     "@config.threadField"
                   ],
-                  "title": "@entity.name",
-                  "totals": "@config.totals",
+                  "tabs": "@config.tabs",
                   "type": "detail-panel"
                 }
               ],
@@ -457,8 +457,8 @@
                   ]
                 ]
               ],
-              "className": "w-full",
               "coverImage": "@entity.coverUrl",
+              "icon": "@entity.iconName",
               "editEvent": [
                 "if",
                 "@config.allowEdit",
@@ -466,7 +466,6 @@
                 null
               ],
               "editLabel": "@config.editLabel",
-              "icon": "@entity.iconName",
               "id": "@entity.id",
               "maxInlineActions": "@config.maxInlineActions",
               "placeholder": "@config.placeholder",
@@ -479,7 +478,8 @@
                 null
               ],
               "type": "document-panel",
-              "value": "@entity.content"
+              "value": "@entity.content",
+              "className": "w-full"
             },
             "label": "Document look body (reading)",
             "description": "Render-ui SExpr for detailLook = document while reading: the pure writing surface — editable title with the rich-text body DIRECTLY beneath it, Edit and the actions menu tucked into the header corner. Metadata never sits between title and content; compose the sibling RecordItemDetails trait beside this one for the settings rail. Binds only @entity fields, never ?data, because it is also painted by arms whose payload is not the record.",
@@ -523,14 +523,13 @@
                   ]
                 ]
               ],
-              "autosaveHint": "@config.autosaveHint",
-              "className": "w-full",
-              "contentChangeEvent": "CONTENT_CHANGE",
               "coverImage": "@entity.coverUrl",
+              "icon": "@entity.iconName",
+              "autosaveHint": "@config.autosaveHint",
+              "contentChangeEvent": "CONTENT_CHANGE",
               "doneEvent": "DONE_EDITING",
               "doneLabel": "@config.doneLabel",
               "editing": true,
-              "icon": "@entity.iconName",
               "id": "@entity.id",
               "maxInlineActions": "@config.maxInlineActions",
               "placeholder": "@config.placeholder",
@@ -538,7 +537,8 @@
               "title": "@entity.name",
               "titleCommitEvent": "TITLE_COMMITTED",
               "type": "document-panel",
-              "value": "@entity.content"
+              "value": "@entity.content",
+              "className": "w-full"
             },
             "label": "Document look body (editing)",
             "description": "Render-ui SExpr for detailLook = document during an editing session: the same surface with the body live and the header corner showing the autosave hint + Done. Binds only @entity fields, never ?data.",
@@ -591,6 +591,19 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "labels": {
+                  "name": "labels",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "colorMap": {
                   "name": "colorMap",
                   "required": false,
@@ -623,24 +636,6 @@
                     "percent"
                   ]
                 },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": true,
-                  "type": "string"
-                },
-                "labels": {
-                  "name": "labels",
-                  "required": false,
-                  "type": "object",
-                  "items": {
-                    "type": "string"
-                  }
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -654,6 +649,11 @@
                     "small",
                     "progress"
                   ]
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -838,36 +838,36 @@
                     ],
                     []
                   ],
-                  "avatarField": "@config.avatarField",
-                  "closeEvent": "@config.closeEvent",
-                  "coverField": "@config.coverField",
                   "entity": "@entity.loadedRow",
                   "fields": "@config.fields",
+                  "closeEvent": "@config.closeEvent",
                   "initialData": "@entity.loadedRow",
+                  "maxInlineActions": "@config.maxInlineActions",
+                  "sections": "@config.sections",
+                  "showActions": "@config.showActions",
+                  "subtitle": "@entity.description",
+                  "title": "@entity.name",
+                  "look": "@config.recordLook",
+                  "avatarField": "@config.avatarField",
+                  "coverField": "@config.coverField",
+                  "mediaField": "@config.mediaField",
+                  "stageField": "@config.stageField",
+                  "stages": "@config.stages",
                   "latitudeField": "@config.latitudeField",
-                  "lineItemColumns": "@config.lineItemColumns",
+                  "longitudeField": "@config.longitudeField",
                   "lineItems": [
                     "object/get",
                     "@entity.loadedRow",
                     "@config.lineItemsField"
                   ],
-                  "longitudeField": "@config.longitudeField",
-                  "look": "@config.recordLook",
-                  "maxInlineActions": "@config.maxInlineActions",
-                  "mediaField": "@config.mediaField",
-                  "sections": "@config.sections",
-                  "showActions": "@config.showActions",
-                  "stageField": "@config.stageField",
-                  "stages": "@config.stages",
-                  "subtitle": "@entity.description",
-                  "tabs": "@config.tabs",
+                  "lineItemColumns": "@config.lineItemColumns",
+                  "totals": "@config.totals",
                   "thread": [
                     "object/get",
                     "@entity.loadedRow",
                     "@config.threadField"
                   ],
-                  "title": "@entity.name",
-                  "totals": "@config.totals",
+                  "tabs": "@config.tabs",
                   "type": "detail-panel"
                 }
               ],
@@ -988,37 +988,37 @@
                     ],
                     []
                   ],
-                  "avatarField": "@config.avatarField",
-                  "closeEvent": "@config.closeEvent",
-                  "coverField": "@config.coverField",
                   "entity": "@entity.loadedRow",
                   "fields": "@config.fields",
+                  "closeEvent": "@config.closeEvent",
                   "initialData": "@entity.loadedRow",
+                  "maxInlineActions": "@config.maxInlineActions",
+                  "sections": "@config.sections",
+                  "showActions": "@config.showActions",
+                  "slideOver": true,
+                  "subtitle": "@entity.description",
+                  "title": "@entity.name",
+                  "look": "@config.recordLook",
+                  "avatarField": "@config.avatarField",
+                  "coverField": "@config.coverField",
+                  "mediaField": "@config.mediaField",
+                  "stageField": "@config.stageField",
+                  "stages": "@config.stages",
                   "latitudeField": "@config.latitudeField",
-                  "lineItemColumns": "@config.lineItemColumns",
+                  "longitudeField": "@config.longitudeField",
                   "lineItems": [
                     "object/get",
                     "@entity.loadedRow",
                     "@config.lineItemsField"
                   ],
-                  "longitudeField": "@config.longitudeField",
-                  "look": "@config.recordLook",
-                  "maxInlineActions": "@config.maxInlineActions",
-                  "mediaField": "@config.mediaField",
-                  "sections": "@config.sections",
-                  "showActions": "@config.showActions",
-                  "slideOver": true,
-                  "stageField": "@config.stageField",
-                  "stages": "@config.stages",
-                  "subtitle": "@entity.description",
-                  "tabs": "@config.tabs",
+                  "lineItemColumns": "@config.lineItemColumns",
+                  "totals": "@config.totals",
                   "thread": [
                     "object/get",
                     "@entity.loadedRow",
                     "@config.threadField"
                   ],
-                  "title": "@entity.name",
-                  "totals": "@config.totals",
+                  "tabs": "@config.tabs",
                   "type": "detail-panel"
                 }
               ],
@@ -1049,13 +1049,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
+                "value": {
+                  "name": "value",
                   "required": true,
                   "type": "string"
                 },
-                "value": {
-                  "name": "value",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 }
@@ -1082,6 +1082,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
                 "content": {
                   "name": "content",
                   "required": false,
@@ -1097,11 +1102,6 @@
                 },
                 "id": {
                   "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
                   "required": true,
                   "type": "string"
                 }
@@ -1149,6 +1149,26 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "date",
+                    "currency",
+                    "number",
+                    "boolean",
+                    "percent"
+                  ]
+                },
+                "labels": {
+                  "name": "labels",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "colorMap": {
                   "name": "colorMap",
                   "required": false,
@@ -1169,18 +1189,6 @@
                     ]
                   }
                 },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "date",
-                    "currency",
-                    "number",
-                    "boolean",
-                    "percent"
-                  ]
-                },
                 "header": {
                   "name": "header",
                   "required": false,
@@ -1190,14 +1198,6 @@
                   "name": "key",
                   "required": true,
                   "type": "string"
-                },
-                "labels": {
-                  "name": "labels",
-                  "required": false,
-                  "type": "object",
-                  "items": {
-                    "type": "string"
-                  }
                 },
                 "variant": {
                   "name": "variant",
@@ -1416,14 +1416,9 @@
                     "percent"
                   ]
                 },
-                "icon": {
-                  "name": "icon",
+                "label": {
+                  "name": "label",
                   "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": true,
                   "type": "string"
                 },
                 "kind": {
@@ -1437,8 +1432,8 @@
                     "readonly"
                   ]
                 },
-                "label": {
-                  "name": "label",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -1449,6 +1444,11 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"

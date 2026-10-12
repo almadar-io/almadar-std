@@ -97,12 +97,12 @@
             "type": "[BookChapter]",
             "default": [
               {
-                "content": "The first chapter's text, in **markdown**.",
-                "title": "Chapter one"
+                "title": "Chapter one",
+                "content": "The first chapter's text, in **markdown**."
               },
               {
-                "content": "The second chapter's text.",
-                "title": "Chapter two"
+                "title": "Chapter two",
+                "content": "The second chapter's text."
               }
             ],
             "label": "Chapters",
@@ -111,13 +111,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "content": {
-                  "name": "content",
+                "title": {
+                  "name": "title",
                   "required": true,
                   "type": "string"
                 },
-                "title": {
-                  "name": "title",
+                "content": {
+                  "name": "content",
                   "required": true,
                   "type": "string"
                 }
@@ -136,32 +136,50 @@
             "key": "coverContent",
             "type": "render-ui",
             "default": {
+              "type": "box",
+              "paddingY": "2xl",
+              "fullWidth": true,
+              "dir": "@config.direction",
               "children": [
                 {
+                  "type": "container",
+                  "size": "md",
+                  "maxWidth": "md",
+                  "padding": "lg",
                   "children": [
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "xl",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md",
                           "align": "center",
                           "children": [
                             {
-                              "alt": "@config.title",
-                              "bordered": true,
-                              "className": "max-w-xs",
-                              "loading": "eager",
-                              "rounded": "lg",
+                              "type": "image",
                               "src": "@config.coverImage",
-                              "type": "image"
+                              "alt": "@config.title",
+                              "rounded": "lg",
+                              "bordered": true,
+                              "loading": "eager",
+                              "className": "max-w-xs"
                             },
                             {
-                              "align": "center",
-                              "className": "tracking-tight text-balance",
-                              "content": "@config.title",
                               "type": "typography",
+                              "content": "@config.title",
                               "variant": "h1",
-                              "weight": "bold"
+                              "weight": "bold",
+                              "align": "center",
+                              "className": "tracking-tight text-balance"
                             },
                             {
+                              "type": "typography",
+                              "content": "@config.subtitle",
+                              "variant": "large",
+                              "color": "muted",
                               "align": "center",
                               "className": [
                                 "if",
@@ -172,13 +190,13 @@
                                 ],
                                 "hidden",
                                 "text-pretty"
-                              ],
-                              "color": "muted",
-                              "content": "@config.subtitle",
-                              "type": "typography",
-                              "variant": "large"
+                              ]
                             },
                             {
+                              "type": "typography",
+                              "content": "@config.author",
+                              "variant": "label",
+                              "color": "muted",
                               "align": "center",
                               "className": [
                                 "if",
@@ -189,13 +207,13 @@
                                 ],
                                 "hidden",
                                 ""
-                              ],
-                              "color": "muted",
-                              "content": "@config.author",
-                              "type": "typography",
-                              "variant": "label"
+                              ]
                             },
                             {
+                              "type": "button",
+                              "label": "@config.startLabel",
+                              "variant": "primary",
+                              "size": "lg",
                               "action": "START_READING",
                               "className": [
                                 "if",
@@ -209,26 +227,38 @@
                                 ],
                                 "hidden",
                                 ""
-                              ],
-                              "label": "@config.startLabel",
-                              "size": "lg",
-                              "type": "button",
-                              "variant": "primary"
+                              ]
                             }
-                          ],
-                          "direction": "vertical",
-                          "gap": "md",
-                          "type": "stack"
+                          ]
                         },
                         {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "xs",
+                          "className": [
+                            "if",
+                            [
+                              "==",
+                              [
+                                "array/len",
+                                "@config.chapters"
+                              ],
+                              0
+                            ],
+                            "hidden",
+                            ""
+                          ],
                           "children": [
                             {
-                              "content": "@config.contentsLabel",
                               "type": "typography",
+                              "content": "@config.contentsLabel",
                               "variant": "label",
                               "weight": "semibold"
                             },
                             {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "none",
                               "align": "start",
                               "children": [
                                 "array/map",
@@ -237,10 +267,8 @@
                                   "fn",
                                   "chapter",
                                   {
-                                    "action": "OPEN_CHAPTER",
-                                    "actionPayload": {
-                                      "index": "@index"
-                                    },
+                                    "type": "button",
+                                    "variant": "link",
                                     "label": [
                                       "str/concat",
                                       [
@@ -256,49 +284,21 @@
                                         ""
                                       ]
                                     ],
-                                    "type": "button",
-                                    "variant": "link"
+                                    "action": "OPEN_CHAPTER",
+                                    "actionPayload": {
+                                      "index": "@index"
+                                    }
                                   }
                                 ]
-                              ],
-                              "direction": "vertical",
-                              "gap": "none",
-                              "type": "stack"
+                              ]
                             }
-                          ],
-                          "className": [
-                            "if",
-                            [
-                              "==",
-                              [
-                                "array/len",
-                                "@config.chapters"
-                              ],
-                              0
-                            ],
-                            "hidden",
-                            ""
-                          ],
-                          "direction": "vertical",
-                          "gap": "xs",
-                          "type": "stack"
+                          ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "xl",
-                      "type": "stack"
+                      ]
                     }
-                  ],
-                  "maxWidth": "md",
-                  "padding": "lg",
-                  "size": "md",
-                  "type": "container"
+                  ]
                 }
-              ],
-              "dir": "@config.direction",
-              "fullWidth": true,
-              "paddingY": "2xl",
-              "type": "box"
+              ]
             },
             "label": "Cover body",
             "tier": "internal"
@@ -361,22 +361,41 @@
             "key": "readingContent",
             "type": "render-ui",
             "default": {
+              "type": "box",
+              "paddingY": "xl",
+              "fullWidth": true,
+              "dir": "@config.direction",
               "children": [
                 {
+                  "type": "container",
+                  "size": "xl",
+                  "maxWidth": "xl",
+                  "padding": "lg",
                   "children": [
                     {
+                      "type": "split",
+                      "ratio": "1:3",
+                      "gap": "xl",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "xs",
                           "align": "start",
+                          "className": "lg:sticky lg:top-6 self-start",
                           "children": [
                             {
-                              "className": "text-balance",
-                              "content": "@config.title",
                               "type": "typography",
+                              "content": "@config.title",
                               "variant": "h5",
-                              "weight": "semibold"
+                              "weight": "semibold",
+                              "className": "text-balance"
                             },
                             {
+                              "type": "typography",
+                              "content": "@config.author",
+                              "variant": "caption",
+                              "color": "muted",
                               "className": [
                                 "if",
                                 [
@@ -386,27 +405,26 @@
                                 ],
                                 "hidden",
                                 "pb-2"
-                              ],
-                              "color": "muted",
-                              "content": "@config.author",
-                              "type": "typography",
-                              "variant": "caption"
+                              ]
                             },
                             {
-                              "action": "BACK_TO_COVER",
+                              "type": "button",
+                              "variant": "link",
                               "label": "@config.coverLabel",
                               "leftIcon": "book-open",
-                              "type": "button",
-                              "variant": "link"
+                              "action": "BACK_TO_COVER"
                             },
                             {
-                              "className": "pt-2",
-                              "content": "@config.contentsLabel",
                               "type": "typography",
+                              "content": "@config.contentsLabel",
                               "variant": "label",
-                              "weight": "semibold"
+                              "weight": "semibold",
+                              "className": "pt-2"
                             },
                             {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "none",
                               "align": "start",
                               "children": [
                                 "array/map",
@@ -415,6 +433,14 @@
                                   "fn",
                                   "chapter",
                                   {
+                                    "type": "button",
+                                    "variant": "link",
+                                    "label": [
+                                      "object/get",
+                                      "@chapter",
+                                      "title",
+                                      ""
+                                    ],
                                     "action": "OPEN_CHAPTER",
                                     "actionPayload": {
                                       "index": "@index"
@@ -438,65 +464,57 @@
                                       ],
                                       "h-auto justify-start text-start text-foreground font-semibold",
                                       "h-auto justify-start text-start"
-                                    ],
-                                    "label": [
-                                      "object/get",
-                                      "@chapter",
-                                      "title",
-                                      ""
-                                    ],
-                                    "type": "button",
-                                    "variant": "link"
+                                    ]
                                   }
                                 ]
-                              ],
-                              "direction": "vertical",
-                              "gap": "none",
-                              "type": "stack"
+                              ]
                             }
-                          ],
-                          "className": "lg:sticky lg:top-6 self-start",
-                          "direction": "vertical",
-                          "gap": "xs",
-                          "type": "stack"
+                          ]
                         },
                         {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "content": "@entity.progressLabel",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "className": "tracking-tight",
-                                  "content": "@entity.chapterTitle",
-                                  "size": "3xl",
-                                  "type": "typography",
-                                  "variant": "h1",
-                                  "weight": "bold"
-                                }
-                              ],
+                              "type": "stack",
                               "direction": "vertical",
                               "gap": "lg",
                               "role": "status",
-                              "type": "stack"
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.progressLabel",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.chapterTitle",
+                                  "variant": "h1",
+                                  "size": "3xl",
+                                  "weight": "bold",
+                                  "className": "tracking-tight"
+                                }
+                              ]
                             },
                             {
+                              "type": "markdown-content",
                               "content": "@entity.chapterContent",
-                              "direction": "@config.direction",
-                              "type": "markdown-content"
+                              "direction": "@config.direction"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
                               "children": [
                                 {
-                                  "action": "PREV_CHAPTER",
-                                  "disabled": "@entity.isFirst",
+                                  "type": "button",
+                                  "variant": "secondary",
                                   "label": "@config.previousLabel",
                                   "leftIcon": [
                                     "if",
@@ -508,12 +526,12 @@
                                     "chevron-right",
                                     "chevron-left"
                                   ],
-                                  "type": "button",
-                                  "variant": "secondary"
+                                  "action": "PREV_CHAPTER",
+                                  "disabled": "@entity.isFirst"
                                 },
                                 {
-                                  "action": "NEXT_CHAPTER",
-                                  "disabled": "@entity.isLast",
+                                  "type": "button",
+                                  "variant": "primary",
                                   "label": "@config.nextLabel",
                                   "rightIcon": [
                                     "if",
@@ -525,36 +543,18 @@
                                     "chevron-left",
                                     "chevron-right"
                                   ],
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "action": "NEXT_CHAPTER",
+                                  "disabled": "@entity.isLast"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "between",
-                              "type": "stack"
+                              ]
                             }
-                          ],
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "type": "stack"
+                          ]
                         }
-                      ],
-                      "gap": "xl",
-                      "ratio": "1:3",
-                      "type": "split"
+                      ]
                     }
-                  ],
-                  "maxWidth": "xl",
-                  "padding": "lg",
-                  "size": "xl",
-                  "type": "container"
+                  ]
                 }
-              ],
-              "dir": "@config.direction",
-              "fullWidth": true,
-              "paddingY": "xl",
-              "type": "box"
+              ]
             },
             "label": "Reading body",
             "tier": "internal"
