@@ -39,6 +39,11 @@
             "required": false
           },
           {
+            "name": "selected",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "status",
             "type": "string",
             "required": false
@@ -52,6 +57,7 @@
         "name": "BehaviorCatalog",
         "emittedEvents": [
           "PICKED",
+          "TOGGLED",
           "CATALOG_SHOWN",
           "LISTED",
           "LIST_FAILED",
@@ -64,6 +70,10 @@
         "events": [
           {
             "name": "PICKED",
+            "direction": "emit"
+          },
+          {
+            "name": "TOGGLED",
             "direction": "emit"
           },
           {
@@ -99,11 +109,19 @@
             "direction": "listen"
           },
           {
+            "name": "SELECTION",
+            "direction": "listen"
+          },
+          {
             "name": "SEARCH",
             "direction": "listen"
           },
           {
             "name": "PICK",
+            "direction": "listen"
+          },
+          {
+            "name": "TOGGLE",
             "direction": "listen"
           },
           {
@@ -121,6 +139,21 @@
             "type": "string",
             "default": "Details",
             "label": "Details button label",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyDescription",
+            "type": "string",
+            "default": "",
+            "label": "Empty explanation",
+            "description": "A line under the empty message saying why nothing is listed.",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyIcon",
+            "type": "string",
+            "default": "search",
+            "label": "Empty icon",
             "tier": "presentation"
           },
           {
@@ -160,6 +193,19 @@
             "tier": "policy"
           },
           {
+            "key": "pick",
+            "type": "string",
+            "default": "button",
+            "label": "How is a behavior chosen?",
+            "description": "button = a Use button per card that picks it once (PICKED); toggle = an on/off switch per card for a set of chosen behaviors (TOGGLED), seeded by SELECTION.",
+            "synonyms": "enable disable, on off switch, plugin toggles, choose many",
+            "tier": "presentation",
+            "enumValues": [
+              "button",
+              "toggle"
+            ]
+          },
+          {
             "key": "pickLabel",
             "type": "string",
             "default": "Use",
@@ -185,6 +231,13 @@
             "default": "Search building blocks",
             "label": "Search placeholder",
             "tier": "presentation"
+          },
+          {
+            "key": "toggleLabel",
+            "type": "string",
+            "default": "Enabled",
+            "label": "Switch label",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
@@ -201,7 +254,9 @@
           "PICK",
           "RETRY",
           "SEARCH",
-          "SEARCH_FAILED"
+          "SEARCH_FAILED",
+          "SELECTION",
+          "TOGGLE"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -214,6 +269,7 @@
             "knobs",
             "query",
             "rows",
+            "selected",
             "status"
           ]
         },
@@ -235,6 +291,10 @@
           {
             "kind": "emit",
             "resource": "PICKED"
+          },
+          {
+            "kind": "emit",
+            "resource": "TOGGLED"
           },
           {
             "kind": "render-ui",
@@ -270,6 +330,10 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.selected"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.status"
           }
         ]
@@ -290,7 +354,8 @@
       "LISTED",
       "LIST_FAILED",
       "PICKED",
-      "SEARCH_FAILED"
+      "SEARCH_FAILED",
+      "TOGGLED"
     ],
     "listenedEvents": [],
     "exposure": "palette",

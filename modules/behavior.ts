@@ -96,6 +96,20 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["behavior/resolve", "@entity.app", { "emit": { "success": "RESOLVED", "failure": "RESOLVE_FAILED" } }]',
   },
+  'behavior/dependencies': {
+    module: 'behavior', category: 'std-behavior',
+    minArity: 1, maxArity: 2,
+    description: 'A program\'s dependency graph: each orbital\'s `uses` imports, then every installed behavior they reach, with its layer (io, std, a std UI primitive, or unknown) and its own imports.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: 'DependencyGraph',
+    params: [
+      { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program (as written, with its `uses`)' },
+      { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+    ],
+    example: '["behavior/dependencies", "@entity.program", { "emit": { "success": "DEPENDENCIES", "failure": "DEPENDENCIES_FAILED" } }]',
+  },
 };
 
 export function getBehaviorOperators(): string[] {

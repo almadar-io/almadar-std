@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-11T15:27:23.294Z",
+  "generated": "2026-10-12T03:46:22.585Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -2099,6 +2099,40 @@
       ],
       "examples": [
         "(behavior/compose [{\"name\": \"home\"} {\"name\": \"settings\"}])"
+      ],
+      "docsSource": "generated"
+    },
+    "behavior/dependencies": {
+      "category": "std-behavior",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "DependencyGraph",
+      "description": "A program's dependency graph: each orbital's `uses` imports, then every installed behavior they reach, with its layer (io, std, a std UI primitive, or unknown) and its own imports.",
+      "module": "behavior",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "program",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "A quoted program (as written, with its `uses`)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {},
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(behavior/dependencies @entity.program {\"emit\":{\"success\":\"DEPENDENCIES\",\"failure\":\"DEPENDENCIES_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -7059,6 +7093,57 @@
       ],
       "examples": [
         "(program/read @entity.draft {\"emit\":{\"success\":\"READ\",\"failure\":\"READ_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "program/step": {
+      "category": "std-program",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "PlayedStep[]",
+      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm and the events it emitted.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "program",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "A quoted program"
+        },
+        {
+          "name": "requests",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "orbital": "string",
+                "trait": "string",
+                "from": "string",
+                "event": "string"
+              },
+              "open": true
+            }
+          },
+          "description": "The transitions to play: `{ orbital, trait, from, event, payload }` each"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {},
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/step @entity.program [{\"orbital\":\"Editor\",\"trait\":\"Modes\",\"from\":\"NORMAL\",\"event\":\"KEY\",\"payload\":{\"key\":\"i\"}}] {\"emit\":{\"success\":\"STEPPED\",\"failure\":\"STEP_FAILED\"}})"
       ],
       "docsSource": "generated"
     },

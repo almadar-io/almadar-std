@@ -80,6 +80,7 @@ orbital CodeBlockOrbital {
           onOperate: @config.onOperate
           onInsertText: @config.onInsertText
           onSetMode: @config.onSetMode
+          onKey: @config.onKey
           motions: @config.motions
           operators: @config.operators
           problems: @config.problems
@@ -137,6 +138,66 @@ orbital CodeBlockOrbital {
           onOperate: @config.onOperate
           onInsertText: @config.onInsertText
           onSetMode: @config.onSetMode
+          onKey: @config.onKey
+          motions: @config.motions
+          operators: @config.operators
+          problems: @config.problems
+          diagnostics: @config.diagnostics
+          onGoToDefinition: @config.onGoToDefinition
+          diagnosticsCode: @config.diagnosticsCode
+          lineNumbers: @config.lineNumbers
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          aria-label: @config.ariaLabel
+          aria-labelledby: @config.ariaLabelledby
+          aria-describedby: @config.ariaDescribedby
+          aria-live: @config.ariaLive
+          aria-current: @config.ariaCurrent
+          aria-pressed: @config.ariaPressed
+          aria-expanded: @config.ariaExpanded
+          aria-selected: @config.ariaSelected
+          aria-hidden: @config.ariaHidden
+          aria-busy: @config.ariaBusy
+          role: @config.role
+          lang: @config.lang
+          dir: @config.dir
+          tabIndex: @config.tabIndex
+          type: code-block
+        })
+      KEY -> idle
+        (set @entity.code ?code)
+        (set @entity.editorId ?editorId)
+        (render-ui main {
+          code: @entity.code
+          language: @config.language
+          showCopyButton: @config.showCopyButton
+          showLanguageBadge: @config.showLanguageBadge
+          maxHeight: @config.maxHeight
+          foldable: @config.foldable
+          className: @config.className
+          editable: @config.editable
+          onChange: @config.onChange
+          title: @config.title
+          mode: @config.mode
+          diff: @config.diff
+          oldValue: @config.oldValue
+          newValue: @config.newValue
+          showLineNumbers: @config.showLineNumbers
+          wordWrap: @config.wordWrap
+          files: @config.files
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          isLoading: @config.isLoading
+          error: @config.error
+          showCopy: @config.showCopy
+          editorId: @entity.editorId
+          onEditorFocus: @config.onEditorFocus
+          onEditorBlur: @config.onEditorBlur
+          onMotion: @config.onMotion
+          onOperate: @config.onOperate
+          onInsertText: @config.onInsertText
+          onSetMode: @config.onSetMode
+          onKey: @config.onKey
           motions: @config.motions
           operators: @config.operators
           problems: @config.problems
@@ -194,6 +255,7 @@ orbital CodeBlockOrbital {
           onOperate: @config.onOperate
           onInsertText: @config.onInsertText
           onSetMode: @config.onSetMode
+          onKey: @config.onKey
           motions: @config.motions
           operators: @config.operators
           problems: @config.problems
@@ -251,6 +313,7 @@ orbital CodeBlockOrbital {
           onOperate: @config.onOperate
           onInsertText: @config.onInsertText
           onSetMode: @config.onSetMode
+          onKey: @config.onKey
           motions: @config.motions
           operators: @config.operators
           problems: @config.problems
@@ -308,6 +371,7 @@ orbital CodeBlockOrbital {
           onOperate: @config.onOperate
           onInsertText: @config.onInsertText
           onSetMode: @config.onSetMode
+          onKey: @config.onKey
           motions: @config.motions
           operators: @config.operators
           problems: @config.problems
@@ -365,6 +429,7 @@ orbital CodeBlockOrbital {
           onOperate: @config.onOperate
           onInsertText: @config.onInsertText
           onSetMode: @config.onSetMode
+          onKey: @config.onKey
           motions: @config.motions
           operators: @config.operators
           problems: @config.problems
@@ -422,6 +487,7 @@ orbital CodeBlockOrbital {
           onOperate: @config.onOperate
           onInsertText: @config.onInsertText
           onSetMode: @config.onSetMode
+          onKey: @config.onKey
           motions: @config.motions
           operators: @config.operators
           problems: @config.problems
@@ -479,6 +545,7 @@ orbital CodeBlockOrbital {
           onOperate: @config.onOperate
           onInsertText: @config.onInsertText
           onSetMode: @config.onSetMode
+          onKey: @config.onKey
           motions: @config.motions
           operators: @config.operators
           problems: @config.problems
@@ -523,6 +590,18 @@ orbital CodeBlockOrbital {
       }
         @description "Declarative bus emit fired when this editor loses focus."
         @tier "essential"
+      @config.onKey -> external {
+        editorId : string!
+        key : string!
+        code : string!
+        ctrl : boolean!
+        alt : boolean!
+        shift : boolean!
+        meta : boolean!
+        repeat : boolean!
+      }
+        @description "Emits UI:{onKey} with the keystroke for each key the latest SET_MODE for this editor listed, and keeps it out of the text. No capture without it."
+        @tier "essential"
       @config.onGoToDefinition -> external {
         identifier : string
       }
@@ -550,9 +629,20 @@ orbital CodeBlockOrbital {
         editorId : string!
         mode : string!
         caret : "bar" | "block" | "underline"!
+        keys : [string]
       }
       CHANGE {
         code : string
+      }
+      KEY {
+        editorId : string!
+        key : string!
+        code : string!
+        ctrl : boolean!
+        alt : boolean!
+        shift : boolean!
+        meta : boolean!
+        repeat : boolean!
       }
       EDITOR_FOCUS {
         editorId : string!
@@ -674,6 +764,10 @@ orbital CodeBlockOrbital {
       onSetMode : event = "SET_MODE"
         @label "On Set Mode"
         @description "Declarative bus listen: switch editor mode and caret style."
+        @tier "presentation"
+      onKey : event = "KEY"
+        @label "On Key"
+        @description "Emits UI:{onKey} with the keystroke for each key the latest SET_MODE for this editor listed, and keeps it out of the text. No capture without it."
         @tier "presentation"
       motions : ["left" | "right" | "up" | "down" | "word-forward" | "word-back" | "word-end" | "line-start" | "line-end" | "first-nonblank" | "doc-start" | "doc-end" | "paragraph-forward" | "paragraph-back" | "line" | "selection" | "match-bracket"] = ["left", "right", "up", "down", "word-forward", "word-back", "word-end", "line-start", "line-end", "first-nonblank", "doc-start", "doc-end", "paragraph-forward", "paragraph-back", "line", "selection", "match-bracket"]
         @label "Motions"

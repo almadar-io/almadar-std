@@ -31,6 +31,7 @@
           "CHANGE",
           "EDITOR_FOCUS",
           "EDITOR_BLUR",
+          "KEY",
           "GO_TO_DEFINITION"
         ],
         "listenedEvents": [],
@@ -51,6 +52,12 @@
             "name": "EDITOR_BLUR",
             "direction": "emit",
             "description": "Declarative bus emit fired when this editor loses focus.",
+            "tier": "essential"
+          },
+          {
+            "name": "KEY",
+            "direction": "emit",
+            "description": "Emits UI:{onKey} with the keystroke for each key the latest SET_MODE for this editor listed, and keeps it out of the text. No capture without it.",
             "tier": "essential"
           },
           {
@@ -90,28 +97,10 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": false,
-                  "type": "event"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "navigatesTo": {
                   "name": "navigatesTo",
                   "required": false,
                   "type": "string"
-                },
-                "roles": {
-                  "name": "roles",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
                 },
                 "variant": {
                   "name": "variant",
@@ -122,6 +111,24 @@
                     "secondary",
                     "ghost"
                   ]
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -249,35 +256,20 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "approximate": {
-                  "name": "approximate",
-                  "required": false,
-                  "type": "boolean"
-                },
                 "column": {
                   "name": "column",
                   "required": false,
-                  "type": "number"
-                },
-                "endColumn": {
-                  "name": "endColumn",
-                  "required": false,
-                  "type": "number"
-                },
-                "endLine": {
-                  "name": "endLine",
-                  "required": false,
-                  "type": "number"
-                },
-                "line": {
-                  "name": "line",
-                  "required": true,
                   "type": "number"
                 },
                 "message": {
                   "name": "message",
                   "required": true,
                   "type": "string"
+                },
+                "line": {
+                  "name": "line",
+                  "required": true,
+                  "type": "number"
                 },
                 "severity": {
                   "name": "severity",
@@ -287,6 +279,21 @@
                     "error",
                     "warning"
                   ]
+                },
+                "approximate": {
+                  "name": "approximate",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "endLine": {
+                  "name": "endLine",
+                  "required": false,
+                  "type": "number"
+                },
+                "endColumn": {
+                  "name": "endColumn",
+                  "required": false,
+                  "type": "number"
                 }
               },
               "type": "object"
@@ -308,13 +315,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "afterLineNumber": {
-                  "name": "afterLineNumber",
+                "beforeLineNumber": {
+                  "name": "beforeLineNumber",
                   "required": false,
                   "type": "number"
                 },
-                "beforeLineNumber": {
-                  "name": "beforeLineNumber",
+                "afterLineNumber": {
+                  "name": "afterLineNumber",
                   "required": false,
                   "type": "number"
                 },
@@ -393,6 +400,16 @@
             "description": "Error state",
             "tier": "presentation",
             "properties": {
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
               "code": {
                 "name": "code",
                 "required": false,
@@ -401,16 +418,6 @@
               "message": {
                 "name": "message",
                 "required": true,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "stack": {
-                "name": "stack",
-                "required": false,
                 "type": "string"
               }
             }
@@ -685,6 +692,14 @@
             "tier": "presentation"
           },
           {
+            "key": "onKey",
+            "type": "event",
+            "default": "KEY",
+            "label": "On Key",
+            "description": "Emits UI:{onKey} with the keystroke for each key the latest SET_MODE for this editor listed, and keeps it out of the text. No capture without it.",
+            "tier": "presentation"
+          },
+          {
             "key": "onMotion",
             "type": "event",
             "default": "MOTION",
@@ -932,6 +947,7 @@
           "EDITOR_FOCUS",
           "INIT",
           "INSERT_TEXT",
+          "KEY",
           "MOTION",
           "OPERATE",
           "SET_MODE"
@@ -940,7 +956,8 @@
           "onChange",
           "onEditorBlur",
           "onEditorFocus",
-          "onGoToDefinition"
+          "onGoToDefinition",
+          "onKey"
         ],
         "entityRebindable": true,
         "entityContract": {
@@ -977,7 +994,8 @@
       "CHANGE",
       "EDITOR_BLUR",
       "EDITOR_FOCUS",
-      "GO_TO_DEFINITION"
+      "GO_TO_DEFINITION",
+      "KEY"
     ],
     "listenedEvents": [],
     "exposure": "palette",

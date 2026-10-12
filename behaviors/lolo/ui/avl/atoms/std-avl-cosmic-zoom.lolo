@@ -1,0 +1,356 @@
+app std-avl-cosmic-zoom [
+  version: "1.0.0",
+  description: "std-avl-cosmic-zoom — a whole app, drillable: the system map (one chip per orbital and the event wires between them, with a Dependencies lens over what each orbital imports), then one orbital's traits as state machines, then one transition as circuits. Step plays the transition on the kernel (`program/step`) and lights the machines and circuits with the run; a scene slider replays earlier steps. LOAD hands it the program to show (resolved) and the program as written (for its imports). Use for code workspaces and editors that let people explore how an app is wired."
+]
+;; @capabilities "explore an app's orbitals and wires, drill into an orbital's state machines, play a transition step by step, see what an app imports"
+
+type CosmicEvalStep = {
+  kind : "enter" | "exit" | "iter" | "skip"!
+  path : [string]!
+  error : string
+}
+type CosmicGuard = {
+  arm : number!
+  guard : SExpr!
+  passed : boolean!
+  trace : [CosmicEvalStep]!
+  error : string
+}
+type CosmicEffectRun = {
+  type : string!
+  args : [SExpr]!
+  status : "executed" | "failed" | "skipped"!
+  error : string
+}
+type CosmicEmitted = {
+  type : string!
+  timestamp : number!
+}
+type CosmicStepState = {
+  before : string
+  after : string
+}
+type CosmicStepResult = {
+  trait : string!
+  event : string!
+  transitionFired : boolean!
+  guard : "pass" | "fail" | "none"!
+  firedArm : number
+  state : CosmicStepState!
+  effects : [CosmicEffectRun]!
+  emitted : [CosmicEmitted]!
+  guards : [CosmicGuard]
+}
+type CosmicPlayStep = {
+  orbital : string!
+  trait : string!
+  from : string!
+  event : event!
+  payload : Map string scalar!
+  result : CosmicStepResult!
+}
+type CosmicDependency = {
+  layer : "io" | "std" | "primitive" | "unknown"!
+  imports : [string]!
+}
+type CosmicDependencies = {
+  orbitals : Map string [string]!
+  behaviors : Map string CosmicDependency!
+}
+type CosmicNodeContext = {
+  level : "overview" | "trait-expanded" | "system" | "code" | "transition"!
+  orbital : string!
+  trait : string
+  transition : string
+  transitionIndex : number
+}
+
+orbital CosmicZoomOrbital {
+
+  entity CosmicZoomView [runtime] {
+    id : string!
+    program : string = ""
+    source : string = ""
+    highlighted : string = ""
+    orbital : string = ""
+    trait : string = ""
+    transitionIndex : number = 0
+    scene : [CosmicPlayStep] = []
+    cursor : number = 0
+    dependencies : CosmicDependencies
+    hasDependencies : boolean = false
+    error : string = ""
+  }
+
+  trait CosmicZoom -> @rebindable CosmicZoomView [interaction, instance] {
+    config {
+      preview : boolean = true
+        @label "Show each orbital's screen on hover?"
+        @tier "presentation"
+      emptyTitle : string = "Nothing to show yet"
+        @label "Empty title"
+        @tier "presentation"
+      emptyDescription : string = "Load a program to explore it."
+        @label "Empty description"
+        @tier "presentation"
+      escHint : string = "Press Esc to zoom out"
+        @label "Zoom-out hint"
+        @tier "presentation"
+      backLabel : string = "Back"
+        @label "Back button label"
+        @tier "presentation"
+      stopLabel : string = "Clear steps"
+        @label "Clear steps label"
+        @tier "presentation"
+      sceneLabel : string = "Step"
+        @label "Scene step label"
+        @tier "presentation"
+      stepFailedTitle : string = "The step could not run"
+        @label "Step failure title"
+        @tier "presentation"
+    }
+    initial: empty
+
+    state empty {
+      INIT -> empty
+        (render-ui main <empty-state icon="orbit" title={@config.emptyTitle} description={@config.emptyDescription} />)
+      LOAD -> application
+        (set @entity.program ?program)
+        (set @entity.source ?source)
+        (set @entity.highlighted ?highlighted)
+        (set @entity.scene [])
+        (set @entity.cursor 0)
+        (set @entity.hasDependencies false)
+        (behavior/dependencies (json/parse ?source) { emit: { success: DEPENDENCIES, failure: DEPENDENCIES_FAILED } })
+        (emit SHOW_APPLICATION {})
+    }
+
+    state application {
+      INIT -> application
+        (emit SHOW_APPLICATION {})
+      SHOW_APPLICATION -> application
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: sm
+          className: "h-full min-h-0 p-md"
+          children: [
+            { type: breadcrumb, items: [{ label: (object/get (json/parse @entity.program) name "") }], itemEvent: CRUMB },
+            { type: box, className: "flex-1 min-h-0", children: [{
+              type: flow-canvas
+              schema: (json/parse @entity.program)
+              initialLevel: system
+              openTraitsEvent: OPEN_TRAITS
+              systemMap: { openCodeEvent: OPEN_CODE, highlighted: @entity.highlighted, preview: @config.preview }
+              systemDependencies: (if @entity.hasDependencies @entity.dependencies null)
+              width: "100%"
+              height: "100%"
+            }] }
+          ]
+        })
+      LOAD -> application
+        (set @entity.program ?program)
+        (set @entity.source ?source)
+        (set @entity.highlighted ?highlighted)
+        (set @entity.hasDependencies false)
+        (behavior/dependencies (json/parse ?source) { emit: { success: DEPENDENCIES, failure: DEPENDENCIES_FAILED } })
+        (emit SHOW_APPLICATION {})
+      DEPENDENCIES -> application
+        (set @entity.dependencies ?result)
+        (set @entity.hasDependencies true)
+        (emit SHOW_APPLICATION {})
+      DEPENDENCIES_FAILED -> application
+        (set @entity.error ?error)
+      OPEN_TRAITS -> trait
+        (set @entity.orbital ?orbital)
+        (emit SHOW_TRAITS {})
+      OPEN_CODE -> application
+        (emit CODE_REQUESTED { orbital: ?orbital })
+      CRUMB -> application
+    }
+
+    state trait {
+      INIT -> trait
+        (emit SHOW_TRAITS {})
+      SHOW_TRAITS -> trait
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: sm
+          className: "h-full min-h-0 p-md"
+          children: [
+            { type: stack, direction: horizontal, gap: sm, align: center, justify: between, children: [
+              { type: breadcrumb, items: [{ label: (object/get (json/parse @entity.program) name "") }, { label: @entity.orbital }], itemEvent: CRUMB },
+              { type: typography, variant: caption, color: muted, content: @config.escHint }
+            ] },
+            { type: box, className: "flex-1 min-h-0", children: [{
+              type: flow-canvas
+              schema: (json/parse @entity.program)
+              initialLevel: trait-expanded
+              initialOrbital: @entity.orbital
+              onNodeClick: NODE_CLICK
+              scene: { steps: @entity.scene, cursor: @entity.cursor }
+              keyMap: { Escape: ZOOM_OUT }
+              width: "100%"
+              height: "100%"
+            }] },
+            (if (= (array/len @entity.scene) 0)
+              { type: box, className: "hidden" }
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [
+                { type: box, className: "flex-1 min-w-0", children: [{ type: range-slider, min: 0, max: (- (array/len @entity.scene) 1), step: 1, value: @entity.cursor, size: sm, action: CURSOR }] },
+                { type: typography, variant: caption, color: muted, content: (str/concat @config.sceneLabel " " (+ @entity.cursor 1) " / " (array/len @entity.scene)) },
+                { type: button, label: @config.stopLabel, icon: x, variant: ghost, size: sm, action: STOP }
+              ] })
+          ]
+        })
+      NODE_CLICK -> transition when (and (= (object/get ?context level "") transition) (!= (object/get ?context trait "") ""))
+        (set @entity.trait (object/get ?context trait ""))
+        (set @entity.transitionIndex (object/get ?context transitionIndex 0))
+        (emit SHOW_TRANSITION {})
+      NODE_CLICK -> trait when (or (!= (object/get ?context level "") transition) (= (object/get ?context trait "") ""))
+      ZOOM_OUT -> application
+        (emit SHOW_APPLICATION {})
+      CRUMB -> application when (= ?index 0)
+        (emit SHOW_APPLICATION {})
+      CRUMB -> trait when (!= ?index 0)
+      CURSOR -> trait
+        (set @entity.cursor ?value)
+        (emit SHOW_TRAITS {})
+      STOP -> trait
+        (set @entity.scene [])
+        (set @entity.cursor 0)
+        (emit SHOW_TRAITS {})
+      LOAD -> trait
+        (set @entity.program ?program)
+        (set @entity.source ?source)
+        (set @entity.highlighted ?highlighted)
+        (emit SHOW_TRAITS {})
+    }
+
+    state transition {
+      INIT -> transition
+        (emit SHOW_TRANSITION {})
+      SHOW_TRANSITION -> transition
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: sm
+          className: "h-full min-h-0 p-md overflow-auto"
+          children: [
+            { type: stack, direction: horizontal, gap: sm, align: center, justify: between, children: [
+              { type: breadcrumb, items: [{ label: (object/get (json/parse @entity.program) name "") }, { label: @entity.orbital }, { label: @entity.trait }], itemEvent: CRUMB },
+              { type: button, label: @config.backLabel, icon: arrow-left, variant: ghost, size: sm, action: ZOOM_OUT }
+            ] },
+            (if (= @entity.error "")
+              { type: box, className: "hidden" }
+              { type: alert, variant: error, title: @config.stepFailedTitle, message: @entity.error }),
+            {
+              type: avl-transition-detail
+              orbital: @entity.orbital
+              trait: @entity.trait
+              schema: @entity.program
+              transitionIndex: @entity.transitionIndex
+              scene: @entity.scene
+              cursor: @entity.cursor
+              stepEvent: STEP
+            },
+            (if (= (array/len @entity.scene) 0)
+              { type: box, className: "hidden" }
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [
+                { type: box, className: "flex-1 min-w-0", children: [{ type: range-slider, min: 0, max: (- (array/len @entity.scene) 1), step: 1, value: @entity.cursor, size: sm, action: CURSOR }] },
+                { type: typography, variant: caption, color: muted, content: (str/concat @config.sceneLabel " " (+ @entity.cursor 1) " / " (array/len @entity.scene)) },
+                { type: button, label: @config.stopLabel, icon: x, variant: ghost, size: sm, action: STOP }
+              ] })
+          ]
+        })
+      STEP -> transition
+        (set @entity.error "")
+        (program/step (json/parse @entity.program) [{ orbital: ?orbital, trait: ?trait, from: ?from, event: ?event, payload: ?payload }] { emit: { success: STEPPED, failure: STEP_FAILED } })
+      STEPPED -> transition
+        (set @entity.scene (array/concat @entity.scene ?result))
+        (set @entity.cursor (array/len @entity.scene))
+        (emit SHOW_TRANSITION {})
+      STEP_FAILED -> transition
+        (set @entity.error ?error)
+        (emit SHOW_TRANSITION {})
+      ZOOM_OUT -> trait
+        (emit SHOW_TRAITS {})
+      CRUMB -> application when (= ?index 0)
+        (emit SHOW_APPLICATION {})
+      CRUMB -> trait when (= ?index 1)
+        (emit SHOW_TRAITS {})
+      CRUMB -> transition when (= ?index 2)
+      CURSOR -> transition
+        (set @entity.cursor ?value)
+        (emit SHOW_TRANSITION {})
+      STOP -> transition
+        (set @entity.scene [])
+        (set @entity.cursor 0)
+        (emit SHOW_TRANSITION {})
+      LOAD -> transition
+        (set @entity.program ?program)
+        (set @entity.source ?source)
+        (set @entity.highlighted ?highlighted)
+        (emit SHOW_TRANSITION {})
+    }
+
+    emits {
+      CODE_REQUESTED -> external {
+        orbital : string!
+      }
+        @description "The person asked to open an orbital's code."
+      SHOW_APPLICATION
+      SHOW_TRAITS
+      SHOW_TRANSITION
+      DEPENDENCIES {
+        result : CosmicDependencies!
+      }
+      DEPENDENCIES_FAILED {
+        error : string!
+      }
+      STEPPED {
+        result : [CosmicPlayStep]!
+      }
+      STEP_FAILED {
+        error : string!
+      }
+    }
+
+    listens {
+      LOAD {
+        program : string!
+        source : string!
+        highlighted : string!
+      }
+        @description "The program to show (resolved, as JSON), the program as written (as JSON, for its imports) and the orbital to ring."
+      OPEN_TRAITS {
+        orbital : string!
+      }
+      OPEN_CODE {
+        orbital : string!
+      }
+      NODE_CLICK {
+        context : CosmicNodeContext!
+      }
+      ZOOM_OUT
+      CRUMB {
+        label : string!
+        href : string
+        index : number!
+      }
+      CURSOR {
+        value : number!
+      }
+      STOP
+      STEP {
+        orbital : string!
+        trait : string!
+        from : string!
+        event : event!
+        payload : @payload event!
+      }
+    }
+  }
+
+  page "/cosmic-zoom" as CosmicZoomPage -> CosmicZoom
+}

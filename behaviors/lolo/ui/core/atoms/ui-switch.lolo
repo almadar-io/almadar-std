@@ -19,6 +19,8 @@ orbital SwitchOrbital {
           checked: @entity.checked
           defaultChecked: @config.defaultChecked
           onChange: @config.onChange
+          action: @config.action
+          actionPayload: @config.actionPayload
           disabled: @config.disabled
           label: @config.label
           name: @config.name
@@ -48,6 +50,8 @@ orbital SwitchOrbital {
           checked: @entity.checked
           defaultChecked: @config.defaultChecked
           onChange: @config.onChange
+          action: @config.action
+          actionPayload: @config.actionPayload
           disabled: @config.disabled
           label: @config.label
           name: @config.name
@@ -79,6 +83,9 @@ orbital SwitchOrbital {
       }
         @description "onChange prop"
         @tier "essential"
+      @config.action -> external { }
+        @description "Declarative event name — emits UI:{action} with `actionPayload` and the new `checked` value on toggle"
+        @tier "essential"
     }
 
     listens {
@@ -99,6 +106,14 @@ orbital SwitchOrbital {
       onChange : event = "CHANGE"
         @label "On Change"
         @description "onChange prop"
+        @tier "presentation"
+      action : event = "ACTION"
+        @label "Action"
+        @description "Declarative event name — emits UI:{action} with `actionPayload` and the new `checked` value on toggle"
+        @tier "presentation"
+      actionPayload : @payload @config.action
+        @label "Action Payload"
+        @description "Payload to include with the action event (the new `checked` is added to it)"
         @tier "presentation"
       disabled : boolean = false
         @label "Disabled"

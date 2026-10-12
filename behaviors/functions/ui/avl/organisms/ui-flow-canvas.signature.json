@@ -16,6 +16,7 @@
         "name": "FlowCanvasRender",
         "emittedEvents": [
           "NODE_CLICK",
+          "OPEN_TRAITS",
           "TRAIT_VIEW_CHANGE",
           "OPEN_BEHAVIOR",
           "FOCUS_CHANGE",
@@ -35,6 +36,12 @@
             "name": "NODE_CLICK",
             "direction": "emit",
             "description": "onNodeClick prop",
+            "tier": "essential"
+          },
+          {
+            "name": "OPEN_TRAITS",
+            "direction": "emit",
+            "description": "Emits UI:{openTraitsEvent} with { orbital } when an orbital on the system map is opened (drilled into).",
             "tier": "essential"
           },
           {
@@ -254,25 +261,6 @@
             "description": "Pre-select a node on mount (opens OrbInspector).",
             "tier": "presentation",
             "properties": {
-              "_fullSchema": {
-                "name": "_fullSchema",
-                "required": false,
-                "type": "SExpr"
-              },
-              "bandCount": {
-                "name": "bandCount",
-                "required": false,
-                "type": "number"
-              },
-              "bandKind": {
-                "name": "bandKind",
-                "required": false,
-                "type": "string",
-                "values": [
-                  "connected",
-                  "standalone"
-                ]
-              },
               "cardLabel": {
                 "name": "cardLabel",
                 "required": false,
@@ -281,28 +269,31 @@
                   "screen"
                 ]
               },
-              "cardWidth": {
-                "name": "cardWidth",
+              "layer": {
+                "name": "layer",
                 "required": false,
-                "type": "number"
+                "type": "string"
               },
-              "dependencyColumn": {
-                "name": "dependencyColumn",
+              "unitStatus": {
+                "name": "unitStatus",
                 "required": false,
                 "type": "string",
                 "values": [
-                  "app",
-                  "own",
-                  "io",
-                  "std",
-                  "primitive",
-                  "unknown",
-                  "client",
-                  "host",
-                  "service",
-                  "store",
-                  "external"
+                  "ok",
+                  "degraded",
+                  "down",
+                  "idle"
                 ]
+              },
+              "stateName": {
+                "name": "stateName",
+                "required": false,
+                "type": "string"
+              },
+              "entityName": {
+                "name": "entityName",
+                "required": false,
+                "type": "string"
               },
               "dependencyRole": {
                 "name": "dependencyRole",
@@ -316,13 +307,31 @@
                   "dim"
                 ]
               },
-              "effectTypes": {
-                "name": "effectTypes",
+              "traitCount": {
+                "name": "traitCount",
                 "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
+                "type": "number"
+              },
+              "flowTraits": {
+                "name": "flowTraits",
+                "required": false,
+                "type": "number"
+              },
+              "orbitalName": {
+                "name": "orbitalName",
+                "required": true,
+                "type": "string"
+              },
+              "stateRole": {
+                "name": "stateRole",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "initial",
+                  "terminal",
+                  "hub",
+                  "default"
+                ]
               },
               "emits": {
                 "name": "emits",
@@ -332,6 +341,104 @@
                   "type": "string"
                 }
               },
+              "guard": {
+                "name": "guard",
+                "required": false,
+                "type": "SExpr"
+              },
+              "cardWidth": {
+                "name": "cardWidth",
+                "required": false,
+                "type": "number"
+              },
+              "transitions": {
+                "name": "transitions",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "fromState": {
+                      "name": "fromState",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "toState": {
+                      "name": "toState",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "event": {
+                      "name": "event",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "toState": {
+                "name": "toState",
+                "required": false,
+                "type": "string"
+              },
+              "traitName": {
+                "name": "traitName",
+                "required": false,
+                "type": "string"
+              },
+              "bandKind": {
+                "name": "bandKind",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "connected",
+                  "standalone"
+                ]
+              },
+              "patterns": {
+                "name": "patterns",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "slot": {
+                      "name": "slot",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "pattern": {
+                      "name": "pattern",
+                      "required": true,
+                      "type": "SExpr"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "wireEvents": {
+                "name": "wireEvents",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "status": {
+                "name": "status",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "idle",
+                  "running",
+                  "success",
+                  "error"
+                ]
+              },
+              "linkedEntity": {
+                "name": "linkedEntity",
+                "required": false,
+                "type": "string"
+              },
               "enteredBy": {
                 "name": "enteredBy",
                 "required": false,
@@ -340,10 +447,25 @@
                   "type": "string"
                 }
               },
-              "entityName": {
-                "name": "entityName",
+              "flowRenderPieces": {
+                "name": "flowRenderPieces",
                 "required": false,
-                "type": "string"
+                "type": "number"
+              },
+              "bandCount": {
+                "name": "bandCount",
+                "required": false,
+                "type": "number"
+              },
+              "opensApp": {
+                "name": "opensApp",
+                "required": false,
+                "type": "boolean"
+              },
+              "focused": {
+                "name": "focused",
+                "required": false,
+                "type": "boolean"
               },
               "eventSources": {
                 "name": "eventSources",
@@ -351,14 +473,19 @@
                 "type": "array",
                 "items": {
                   "properties": {
-                    "event": {
-                      "name": "event",
-                      "required": true,
-                      "type": "string"
-                    },
                     "label": {
                       "name": "label",
                       "required": false,
+                      "type": "string"
+                    },
+                    "patternType": {
+                      "name": "patternType",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "event": {
+                      "name": "event",
+                      "required": true,
                       "type": "string"
                     },
                     "path": {
@@ -366,10 +493,10 @@
                       "required": true,
                       "type": "string"
                     },
-                    "patternType": {
-                      "name": "patternType",
+                    "positionHint": {
+                      "name": "positionHint",
                       "required": true,
-                      "type": "string"
+                      "type": "number"
                     },
                     "payloadFields": {
                       "name": "payloadFields",
@@ -395,45 +522,56 @@
                         },
                         "type": "object"
                       }
-                    },
-                    "positionHint": {
-                      "name": "positionHint",
-                      "required": true,
-                      "type": "number"
                     }
                   },
                   "type": "object"
                 }
               },
-              "fieldCount": {
-                "name": "fieldCount",
+              "unitMetric": {
+                "name": "unitMetric",
                 "required": false,
-                "type": "number"
-              },
-              "flowRenderPieces": {
-                "name": "flowRenderPieces",
-                "required": false,
-                "type": "number"
-              },
-              "flowTraits": {
-                "name": "flowTraits",
-                "required": false,
-                "type": "number"
-              },
-              "focused": {
-                "name": "focused",
-                "required": false,
-                "type": "boolean"
+                "type": "string"
               },
               "fromState": {
                 "name": "fromState",
                 "required": false,
                 "type": "string"
               },
-              "guard": {
-                "name": "guard",
+              "pageRoutes": {
+                "name": "pageRoutes",
                 "required": false,
-                "type": "SExpr"
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "transitionEvent": {
+                "name": "transitionEvent",
+                "required": false,
+                "type": "string"
+              },
+              "dependencyColumn": {
+                "name": "dependencyColumn",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "app",
+                  "own",
+                  "io",
+                  "std",
+                  "primitive",
+                  "unknown",
+                  "client",
+                  "host",
+                  "service",
+                  "store",
+                  "external"
+                ]
+              },
+              "sourceSchemaName": {
+                "name": "sourceSchemaName",
+                "required": false,
+                "type": "string"
               },
               "kind": {
                 "name": "kind",
@@ -447,13 +585,8 @@
                   "dependency-column"
                 ]
               },
-              "layer": {
-                "name": "layer",
-                "required": false,
-                "type": "string"
-              },
-              "linkedEntity": {
-                "name": "linkedEntity",
+              "persistence": {
+                "name": "persistence",
                 "required": false,
                 "type": "string"
               },
@@ -465,139 +598,18 @@
                   "type": "string"
                 }
               },
-              "orbitalName": {
-                "name": "orbitalName",
-                "required": true,
-                "type": "string"
-              },
-              "pageRoutes": {
-                "name": "pageRoutes",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "patterns": {
-                "name": "patterns",
-                "required": true,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "pattern": {
-                      "name": "pattern",
-                      "required": true,
-                      "type": "SExpr"
-                    },
-                    "slot": {
-                      "name": "slot",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "persistence": {
-                "name": "persistence",
-                "required": false,
-                "type": "string"
-              },
-              "sourceSchemaName": {
-                "name": "sourceSchemaName",
-                "required": false,
-                "type": "string"
-              },
-              "stateName": {
-                "name": "stateName",
-                "required": false,
-                "type": "string"
-              },
-              "stateRole": {
-                "name": "stateRole",
-                "required": false,
-                "type": "string",
-                "values": [
-                  "initial",
-                  "terminal",
-                  "hub",
-                  "default"
-                ]
-              },
-              "status": {
-                "name": "status",
-                "required": false,
-                "type": "string",
-                "values": [
-                  "idle",
-                  "running",
-                  "success",
-                  "error"
-                ]
-              },
-              "toState": {
-                "name": "toState",
-                "required": false,
-                "type": "string"
-              },
-              "traitCount": {
-                "name": "traitCount",
+              "fieldCount": {
+                "name": "fieldCount",
                 "required": false,
                 "type": "number"
               },
-              "traitName": {
-                "name": "traitName",
+              "_fullSchema": {
+                "name": "_fullSchema",
                 "required": false,
-                "type": "string"
+                "type": "SExpr"
               },
-              "transitionEvent": {
-                "name": "transitionEvent",
-                "required": false,
-                "type": "string"
-              },
-              "transitions": {
-                "name": "transitions",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "event": {
-                      "name": "event",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "fromState": {
-                      "name": "fromState",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "toState": {
-                      "name": "toState",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "unitMetric": {
-                "name": "unitMetric",
-                "required": false,
-                "type": "string"
-              },
-              "unitStatus": {
-                "name": "unitStatus",
-                "required": false,
-                "type": "string",
-                "values": [
-                  "ok",
-                  "degraded",
-                  "down",
-                  "idle"
-                ]
-              },
-              "wireEvents": {
-                "name": "wireEvents",
+              "effectTypes": {
+                "name": "effectTypes",
                 "required": false,
                 "type": "array",
                 "items": {
@@ -612,6 +624,19 @@
             "label": "Initial Trait",
             "description": "initialTrait prop",
             "tier": "presentation"
+          },
+          {
+            "key": "keyMap",
+            "type": "Map<string,string>",
+            "default": {
+              "item": "INIT"
+            },
+            "label": "Key Map",
+            "description": "Maps a keydown `e.code` — optionally prefixed `Mod+` (⌘/Ctrl), `Shift+`, `Alt+` in that order — to an event, emitted as `UI:{event}`; keystrokes inside inputs/textareas never route.",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
           },
           {
             "key": "layoutHint",
@@ -629,9 +654,9 @@
             "type": "Map<string,FlowCanvasNodePositionsValue>",
             "default": {
               "item": {
-                "width": 1,
                 "x": 1,
-                "y": 1
+                "y": 1,
+                "width": 1
               }
             },
             "label": "Node Positions",
@@ -639,11 +664,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "width": {
-                  "name": "width",
-                  "required": false,
-                  "type": "number"
-                },
                 "x": {
                   "name": "x",
                   "required": true,
@@ -652,6 +672,11 @@
                 "y": {
                   "name": "y",
                   "required": true,
+                  "type": "number"
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
                   "type": "number"
                 }
               },
@@ -763,6 +788,14 @@
             "tier": "presentation"
           },
           {
+            "key": "openTraitsEvent",
+            "type": "event",
+            "default": "OPEN_TRAITS",
+            "label": "Open Traits Event",
+            "description": "Emits UI:{openTraitsEvent} with { orbital } when an orbital on the system map is opened (drilled into).",
+            "tier": "presentation"
+          },
+          {
             "key": "orbitalStatus",
             "type": "Map<string,string>",
             "default": {},
@@ -800,6 +833,262 @@
                       "name": "orbital",
                       "required": true,
                       "type": "string"
+                    },
+                    "payload": {
+                      "name": "payload",
+                      "required": true,
+                      "type": "object"
+                    },
+                    "result": {
+                      "name": "result",
+                      "required": true,
+                      "properties": {
+                        "event": {
+                          "name": "event",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "effects": {
+                          "name": "effects",
+                          "required": true,
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "entityName": {
+                                "name": "entityName",
+                                "required": false,
+                                "type": "string"
+                              },
+                              "evalTrace": {
+                                "name": "evalTrace",
+                                "required": false,
+                                "type": "array",
+                                "items": {
+                                  "properties": {
+                                    "path": {
+                                      "name": "path",
+                                      "required": true,
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "kind": {
+                                      "name": "kind",
+                                      "required": true,
+                                      "type": "string",
+                                      "values": [
+                                        "enter",
+                                        "exit",
+                                        "iter",
+                                        "skip"
+                                      ]
+                                    },
+                                    "error": {
+                                      "name": "error",
+                                      "required": false,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": "object"
+                                }
+                              },
+                              "action": {
+                                "name": "action",
+                                "required": false,
+                                "type": "string",
+                                "values": [
+                                  "create",
+                                  "update",
+                                  "delete",
+                                  "batch"
+                                ]
+                              },
+                              "outcome": {
+                                "name": "outcome",
+                                "required": false,
+                                "type": "string",
+                                "values": [
+                                  "success",
+                                  "denied",
+                                  "failed"
+                                ]
+                              },
+                              "type": {
+                                "name": "type",
+                                "required": true,
+                                "type": "string"
+                              },
+                              "resultId": {
+                                "name": "resultId",
+                                "required": false,
+                                "type": "string"
+                              },
+                              "args": {
+                                "name": "args",
+                                "required": true,
+                                "type": "array",
+                                "items": {
+                                  "type": "SExpr"
+                                }
+                              },
+                              "error": {
+                                "name": "error",
+                                "required": false,
+                                "type": "string"
+                              },
+                              "status": {
+                                "name": "status",
+                                "required": true,
+                                "type": "string",
+                                "values": [
+                                  "executed",
+                                  "failed",
+                                  "skipped"
+                                ]
+                              },
+                              "durationMs": {
+                                "name": "durationMs",
+                                "required": false,
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "emitted": {
+                          "name": "emitted",
+                          "required": true,
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "type": {
+                                "name": "type",
+                                "required": true,
+                                "type": "string"
+                              },
+                              "timestamp": {
+                                "name": "timestamp",
+                                "required": true,
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "guard": {
+                          "name": "guard",
+                          "required": true,
+                          "type": "string",
+                          "values": [
+                            "pass",
+                            "fail",
+                            "none"
+                          ]
+                        },
+                        "trait": {
+                          "name": "trait",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "firedArm": {
+                          "name": "firedArm",
+                          "required": false,
+                          "type": "number"
+                        },
+                        "guards": {
+                          "name": "guards",
+                          "required": false,
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "arm": {
+                                "name": "arm",
+                                "required": true,
+                                "type": "number"
+                              },
+                              "guard": {
+                                "name": "guard",
+                                "required": true,
+                                "type": "SExpr"
+                              },
+                              "error": {
+                                "name": "error",
+                                "required": false,
+                                "type": "string"
+                              },
+                              "passed": {
+                                "name": "passed",
+                                "required": true,
+                                "type": "boolean"
+                              },
+                              "trace": {
+                                "name": "trace",
+                                "required": true,
+                                "type": "array",
+                                "items": {
+                                  "properties": {
+                                    "path": {
+                                      "name": "path",
+                                      "required": true,
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "kind": {
+                                      "name": "kind",
+                                      "required": true,
+                                      "type": "string",
+                                      "values": [
+                                        "enter",
+                                        "exit",
+                                        "iter",
+                                        "skip"
+                                      ]
+                                    },
+                                    "error": {
+                                      "name": "error",
+                                      "required": false,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "state": {
+                          "name": "state",
+                          "required": true,
+                          "properties": {
+                            "before": {
+                              "name": "before",
+                              "required": false,
+                              "type": "string"
+                            },
+                            "after": {
+                              "name": "after",
+                              "required": false,
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "transitionFired": {
+                          "name": "transitionFired",
+                          "required": true,
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "event": {
+                      "name": "event",
+                      "required": true,
+                      "type": "event"
                     },
                     "trait": {
                       "name": "trait",
@@ -852,79 +1141,6 @@
             }
           },
           {
-            "key": "systemDependencies",
-            "type": "FlowCanvasSystemDependencies",
-            "label": "System Dependencies",
-            "description": "With `initialLevel='system'`: the app's imports, for the Dependencies lens (absent: Events only).",
-            "tier": "presentation",
-            "properties": {
-              "behaviors": {
-                "name": "behaviors",
-                "required": true,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "imports": {
-                      "name": "imports",
-                      "required": true,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "layer": {
-                      "name": "layer",
-                      "required": true,
-                      "type": "string",
-                      "values": [
-                        "io",
-                        "std",
-                        "primitive",
-                        "unknown"
-                      ]
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "orbitals": {
-                "name": "orbitals",
-                "required": true,
-                "type": "object",
-                "items": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          },
-          {
-            "key": "systemMap",
-            "type": "FlowCanvasSystemMap",
-            "label": "System Map",
-            "description": "With `initialLevel='system'`: what an orbital chip does (drill in, hover preview, open code, preview).",
-            "tier": "presentation",
-            "properties": {
-              "highlighted": {
-                "name": "highlighted",
-                "required": false,
-                "type": "string"
-              },
-              "openCodeEvent": {
-                "name": "openCodeEvent",
-                "required": false,
-                "type": "string"
-              },
-              "previewEvent": {
-                "name": "previewEvent",
-                "required": false,
-                "type": "string"
-              }
-            }
-          },
-          {
             "key": "tools",
             "type": "[string]",
             "default": [],
@@ -958,6 +1174,11 @@
                 "name": "filter",
                 "required": false,
                 "properties": {
+                  "unit": {
+                    "name": "unit",
+                    "required": true,
+                    "type": "string"
+                  },
                   "traits": {
                     "name": "traits",
                     "required": true,
@@ -965,11 +1186,6 @@
                     "items": {
                       "type": "string"
                     }
-                  },
-                  "unit": {
-                    "name": "unit",
-                    "required": true,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -1032,7 +1248,8 @@
           "onSelectedPatternChange",
           "onTraitViewChange",
           "onZoomChange",
-          "openBehaviorEvent"
+          "openBehaviorEvent",
+          "openTraitsEvent"
         ],
         "entityRebindable": true,
         "entityContract": {
@@ -1060,6 +1277,7 @@
       "NODE_CLICK",
       "NODE_SELECT",
       "OPEN_BEHAVIOR",
+      "OPEN_TRAITS",
       "ORBITAL_HOVER",
       "PATTERN_DELETE",
       "POSITIONS_CHANGE",

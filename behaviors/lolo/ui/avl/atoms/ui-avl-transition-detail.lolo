@@ -1,0 +1,327 @@
+app ui-avl-transition-detail [
+  version: "1.0.0",
+  description: "One transition explained: from-state, event and to-state, the guard that must hold, and each effect it runs in order, drawn as circuit boards. — UI factory (1:1 with the @almadar/ui avl-transition-detail pattern)."
+]
+;; @capabilities "transition explainer, event guard effects walkthrough, state machine step detail"
+;; @pattern "avl-transition-detail"
+orbital AvlTransitionDetailOrbital {
+  type AvlTransitionDetailTransition = {
+    from : string!
+    to : string!
+    event : string!
+    guard : SExpr
+    effects : [AvlTransitionDetailTransitionEffectsItem]!
+    index : number!
+  }
+  type AvlTransitionDetailTransitionEffectsItem = {
+    type : string!
+    args : [SExpr]!
+  }
+  type AvlTransitionDetailSceneItem = {
+    orbital : string!
+    trait : string!
+    from : string!
+    event : event!
+    payload : @payload event!
+    result : AvlTransitionDetailSceneItemResult!
+    roles : [string]
+  }
+  type AvlTransitionDetailSceneItemResult = {
+    trait : string!
+    event : string!
+    transitionFired : boolean!
+    guard : "pass" | "fail" | "none"!
+    firedArm : number
+    state : AvlTransitionDetailSceneItemResultState!
+    effects : [AvlTransitionDetailSceneItemResultEffectsItem]!
+    emitted : [AvlTransitionDetailSceneItemResultEmittedItem]!
+    guards : [AvlTransitionDetailSceneItemResultGuardsItem]
+  }
+  type AvlTransitionDetailSceneItemResultState = {
+    before : string
+    after : string
+  }
+  type AvlTransitionDetailSceneItemResultEffectsItem = {
+    type : string!
+    entityName : string
+    action : "create" | "update" | "delete" | "batch"
+    resultId : string
+    outcome : "success" | "denied" | "failed"
+    args : [SExpr]!
+    status : "executed" | "failed" | "skipped"!
+    error : string
+    durationMs : number
+    evalTrace : [AvlTransitionDetailSceneItemResultEffectsItemEvalTraceItem]
+  }
+  type AvlTransitionDetailSceneItemResultEffectsItemEvalTraceItem = {
+    kind : "enter" | "exit" | "iter" | "skip"!
+    path : [string]!
+    error : string
+  }
+  type AvlTransitionDetailSceneItemResultEmittedItem = {
+    type : string!
+    timestamp : number!
+  }
+  type AvlTransitionDetailSceneItemResultGuardsItem = {
+    arm : number!
+    guard : SExpr!
+    passed : boolean!
+    trace : [AvlTransitionDetailSceneItemResultGuardsItemTraceItem]!
+    error : string
+  }
+  type AvlTransitionDetailSceneItemResultGuardsItemTraceItem = {
+    kind : "enter" | "exit" | "iter" | "skip"!
+    path : [string]!
+    error : string
+  }
+  type AvlTransitionDetailAnnotations = {
+    states : Map string AvlTransitionDetailAnnotationsStatesValue
+    transitions : Map string AvlTransitionDetailAnnotationsTransitionsValue
+    effects : Map string AvlTransitionDetailAnnotationsEffectsValue
+  }
+  type AvlTransitionDetailAnnotationsStatesValue = {
+    title : string
+    body : string!
+  }
+  type AvlTransitionDetailAnnotationsTransitionsValue = {
+    title : string
+    body : string!
+  }
+  type AvlTransitionDetailAnnotationsEffectsValue = {
+    title : string
+    body : string!
+  }
+  type AvlTransitionDetailPlayback = {
+    step : AvlTransitionDetailPlaybackStep!
+    fired : boolean!
+    guard : AvlTransitionDetailPlaybackGuard
+    effects : [AvlTransitionDetailPlaybackEffectsItem]!
+  }
+  type AvlTransitionDetailPlaybackStep = {
+    orbital : string!
+    trait : string!
+    from : string!
+    event : event!
+    payload : @payload event!
+    result : AvlTransitionDetailPlaybackStepResult!
+  }
+  type AvlTransitionDetailPlaybackStepResult = {
+    trait : string!
+    event : string!
+    transitionFired : boolean!
+    guard : "pass" | "fail" | "none"!
+    firedArm : number
+    state : AvlTransitionDetailPlaybackStepResultState!
+    effects : [AvlTransitionDetailPlaybackStepResultEffectsItem]!
+    emitted : [AvlTransitionDetailPlaybackStepResultEmittedItem]!
+    guards : [AvlTransitionDetailPlaybackStepResultGuardsItem]
+  }
+  type AvlTransitionDetailPlaybackStepResultState = {
+    before : string
+    after : string
+  }
+  type AvlTransitionDetailPlaybackStepResultEffectsItem = {
+    type : string!
+    entityName : string
+    action : "create" | "update" | "delete" | "batch"
+    resultId : string
+    outcome : "success" | "denied" | "failed"
+    args : [SExpr]!
+    status : "executed" | "failed" | "skipped"!
+    error : string
+    durationMs : number
+    evalTrace : [AvlTransitionDetailPlaybackStepResultEffectsItemEvalTraceItem]
+  }
+  type AvlTransitionDetailPlaybackStepResultEffectsItemEvalTraceItem = {
+    kind : "enter" | "exit" | "iter" | "skip"!
+    path : [string]!
+    error : string
+  }
+  type AvlTransitionDetailPlaybackStepResultEmittedItem = {
+    type : string!
+    timestamp : number!
+  }
+  type AvlTransitionDetailPlaybackStepResultGuardsItem = {
+    arm : number!
+    guard : SExpr!
+    passed : boolean!
+    trace : [AvlTransitionDetailPlaybackStepResultGuardsItemTraceItem]!
+    error : string
+  }
+  type AvlTransitionDetailPlaybackStepResultGuardsItemTraceItem = {
+    kind : "enter" | "exit" | "iter" | "skip"!
+    path : [string]!
+    error : string
+  }
+  type AvlTransitionDetailPlaybackGuard = {
+    arm : number!
+    guard : SExpr!
+    passed : boolean!
+    trace : [AvlTransitionDetailPlaybackGuardTraceItem]!
+    error : string
+  }
+  type AvlTransitionDetailPlaybackGuardTraceItem = {
+    kind : "enter" | "exit" | "iter" | "skip"!
+    path : [string]!
+    error : string
+  }
+  type AvlTransitionDetailPlaybackEffectsItem = {
+    type : string!
+    entityName : string
+    action : "create" | "update" | "delete" | "batch"
+    resultId : string
+    outcome : "success" | "denied" | "failed"
+    args : [SExpr]!
+    status : "executed" | "failed" | "skipped"!
+    error : string
+    durationMs : number
+    evalTrace : [AvlTransitionDetailPlaybackEffectsItemEvalTraceItem]
+  }
+  type AvlTransitionDetailPlaybackEffectsItemEvalTraceItem = {
+    kind : "enter" | "exit" | "iter" | "skip"!
+    path : [string]!
+    error : string
+  }
+
+  entity AvlTransitionDetailItem [runtime] {
+    id : string!
+    orbitalProp : string @intrinsic = ""
+    traitProp : string @intrinsic = ""
+  }
+
+  trait AvlTransitionDetailRender -> @rebindable AvlTransitionDetailItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.orbitalProp @config.orbitalProp)
+        (set @entity.traitProp @config.traitProp)
+        (render-ui main {
+          orbital: @entity.orbitalProp
+          trait: @entity.traitProp
+          transition: @config.transition
+          schema: @config.schema
+          transitionIndex: @config.transitionIndex
+          scene: (array/filter @config.scene (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          cursor: @config.cursor
+          annotations: @config.annotations
+          playback: @config.playback
+          stepEvent: @config.stepEvent
+          className: @config.className
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          type: avl-transition-detail
+        })
+      STEP -> idle
+        (set @entity.orbitalProp ?orbital)
+        (set @entity.traitProp ?trait)
+        (render-ui main {
+          orbital: @entity.orbitalProp
+          trait: @entity.traitProp
+          transition: @config.transition
+          schema: @config.schema
+          transitionIndex: @config.transitionIndex
+          scene: (array/filter @config.scene (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          cursor: @config.cursor
+          annotations: @config.annotations
+          playback: @config.playback
+          stepEvent: @config.stepEvent
+          className: @config.className
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          type: avl-transition-detail
+        })
+    }
+
+    emits {
+      @config.stepEvent -> external {
+        orbital : string!
+        trait : string!
+        from : string!
+        event : event!
+        payload : @payload event!
+      }
+        @description "Emits UI:{stepEvent} with an {@link AvlStepRequest} when Step is pressed."
+        @tier "essential"
+    }
+
+    listens {
+      STEP {
+        orbital : string!
+        trait : string!
+        from : string!
+        event : event!
+        payload : @payload event!
+      }
+    }
+
+    config {
+      orbitalProp : string = ""
+        @label "Orbital"
+        @description "Orbital the transition belongs to."
+        @synonyms "orbital"
+        @tier "presentation"
+      traitProp : string = ""
+        @label "Trait"
+        @description "Trait the transition belongs to."
+        @synonyms "trait"
+        @tier "presentation"
+      transition : AvlTransitionDetailTransition = { from: "pending", to: "paid", event: "PAY", effects: [{ type: "set", args: [] }, { type: "persist", args: [] }], index: 0 }
+        @label "Transition"
+        @description "The transition to explain."
+        @tier "presentation"
+      schema : SExpr
+        @label "Schema"
+        @description "The program the transition belongs to (object or JSON text), when it is given by position instead of `transition`."
+        @tier "presentation"
+      transitionIndex : number
+        @label "Transition Index"
+        @description "The transition's position among the trait's transitions, read from `schema`."
+        @tier "presentation"
+      scene : [AvlTransitionDetailSceneItem] = []
+        @label "Scene"
+        @description "Played steps; the one at `cursor` that ran this transition lights the boards (with `schema`)."
+        @tier "presentation"
+      cursor : number
+        @label "Cursor"
+        @description "The scene step shown. Default: the last."
+        @tier "presentation"
+      annotations : AvlTransitionDetailAnnotations = { transitions: { PAY: { title: "Paying", body: "The customer pays the order total." } }, effects: { persist: { body: "Saves the order." } } }
+        @label "Annotations"
+        @description "Author explanations shown in a popover on hover: the transition's event note and per-effect-type notes."
+        @tier "presentation"
+      playback : AvlTransitionDetailPlayback
+        @label "Playback"
+        @description "The latest played run of this transition (see `transitionPlayback`)."
+        @tier "presentation"
+      stepEvent : event = "STEP"
+        @label "Step Event"
+        @description "Emits UI:{stepEvent} with an {@link AvlStepRequest} when Step is pressed."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      enter : "none" | "fade" | "rise" | "scale" | "slide"
+        @label "Enter"
+        @description "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out."
+        @tier "presentation"
+      enterDelay : number
+        @label "Enter Delay"
+        @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
+    }
+  }
+
+  page "/avl-transition-detail" as AvlTransitionDetailPage -> AvlTransitionDetailRender
+}

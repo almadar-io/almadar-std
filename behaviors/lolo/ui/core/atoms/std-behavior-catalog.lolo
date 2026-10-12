@@ -1,6 +1,6 @@
 app std-behavior-catalog [
-  version: "1.2.0",
-  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the query is embedded with `call-service llm embed` and ranked by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. Pick for block libraries, plugin pickers and any page that lets users choose a building block."
+  version: "1.3.0",
+  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the query is embedded with `call-service llm embed` and ranked by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block."
 ]
 ;; @capabilities "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind"
 
@@ -50,6 +50,7 @@ orbital BehaviorCatalogOrbital {
     detail : string = ""
     knobs : [KnobField] = []
     error : string = ""
+    selected : [string] = []
     status : "loading" | "ready" | "searching" | "describing" | "failed" = loading
   }
 
@@ -75,6 +76,13 @@ orbital BehaviorCatalogOrbital {
       emptyLabel : string = "Nothing matches."
         @label "Empty message"
         @tier "presentation"
+      emptyDescription : string = ""
+        @label "Empty explanation"
+        @description "A line under the empty message saying why nothing is listed."
+        @tier "presentation"
+      emptyIcon : string = "search"
+        @label "Empty icon"
+        @tier "presentation"
       look : "list" | "chips" = list
         @label "How are behaviors shown?"
         @description "list = a search box over a card per behavior with Use and Details; chips = the best matches for the current query as a row of chips under a prompt that lives elsewhere (route its text to SEARCH), nothing while the query is empty."
@@ -83,6 +91,14 @@ orbital BehaviorCatalogOrbital {
       maxChips : number = 4
         @label "How many chips?"
         @description "In the chips look, how many of the best matches are shown."
+        @tier "presentation"
+      pick : "button" | "toggle" = button
+        @label "How is a behavior chosen?"
+        @description "button = a Use button per card that picks it once (PICKED); toggle = an on/off switch per card for a set of chosen behaviors (TOGGLED), seeded by SELECTION."
+        @synonyms "enable disable, on off switch, plugin toggles, choose many"
+        @tier "presentation"
+      toggleLabel : string = "Enabled"
+        @label "Switch label"
         @tier "presentation"
     }
     initial: loading
@@ -94,6 +110,8 @@ orbital BehaviorCatalogOrbital {
         (behavior/catalog { paths: @config.scope } {
           emit: { success: LISTED, failure: LIST_FAILED }
         })
+      SELECTION -> loading
+        (set @entity.selected ?behaviors)
       LISTED -> ready
         (set @entity.entries ?result)
         (set @entity.rows (array/map ?result (fn e { behavior: @e.behavior, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
@@ -141,7 +159,9 @@ orbital BehaviorCatalogOrbital {
             event: SEARCH
           }, {
             type: empty-state
+            icon: @config.emptyIcon
             title: @config.emptyLabel
+            description: @config.emptyDescription
             className: (if (= (array/len @entity.rows) 0) "" hidden)
           }, {
             type: stack
@@ -174,8 +194,10 @@ orbital BehaviorCatalogOrbital {
                   type: stack
                   direction: horizontal
                   gap: sm
+                  align: center
                   children: [
-                    { type: button, label: @config.pickLabel, variant: primary, size: sm, action: PICK, actionPayload: { behavior: @row.behavior } },
+                    { type: button, label: @config.pickLabel, variant: primary, size: sm, action: PICK, actionPayload: { behavior: @row.behavior }, className: (if (= @config.pick toggle) hidden "") },
+                    { type: switch, label: @config.toggleLabel, checked: (array/includes @entity.selected @row.behavior), action: TOGGLE, actionPayload: { behavior: @row.behavior }, className: (if (= @config.pick toggle) "" hidden) },
                     { type: button, label: @config.describeLabel, variant: ghost, size: sm, action: DESCRIBE, actionPayload: { behavior: @row.behavior } }
                   ]
                 }, {
@@ -205,6 +227,17 @@ orbital BehaviorCatalogOrbital {
         })
       PICK -> ready
         (emit PICKED { behavior: ?behavior, description: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) description ""), trait: (array/first (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) traits [])), value: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) value) })
+      TOGGLE -> ready when ?checked
+        (set @entity.selected (array/append (array/filter @entity.selected (fn b (!= @b ?behavior))) ?behavior))
+        (emit TOGGLED { behavior: ?behavior, checked: true, topic: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) topic ""), value: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) value) })
+        (emit CATALOG_SHOWN {})
+      TOGGLE -> ready when (not ?checked)
+        (set @entity.selected (array/filter @entity.selected (fn b (!= @b ?behavior))))
+        (emit TOGGLED { behavior: ?behavior, checked: false, topic: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) topic ""), value: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) value) })
+        (emit CATALOG_SHOWN {})
+      SELECTION -> ready
+        (set @entity.selected ?behaviors)
+        (emit CATALOG_SHOWN {})
       DESCRIBE -> describing
         (set @entity.detail ?behavior)
         (set @entity.status describing)
@@ -275,6 +308,12 @@ orbital BehaviorCatalogOrbital {
         trait : trait
         value : behavior
       }
+      TOGGLED -> external {
+        behavior : string!
+        checked : boolean!
+        topic : string!
+        value : behavior
+      }
       CATALOG_SHOWN
       LISTED {
         result : [CatalogHit]!
@@ -305,6 +344,13 @@ orbital BehaviorCatalogOrbital {
       }
       DESCRIBE {
         behavior : string!
+      }
+      TOGGLE {
+        behavior : string!
+        checked : boolean!
+      }
+      SELECTION {
+        behaviors : [string]!
       }
       RETRY
     }

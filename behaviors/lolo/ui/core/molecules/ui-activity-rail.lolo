@@ -1,0 +1,96 @@
+app ui-activity-rail [
+  version: "1.0.0",
+  description: "ActivityRail — UI factory (1:1 with the @almadar/ui activity-rail pattern)."
+]
+;; @pattern "activity-rail"
+orbital ActivityRailOrbital {
+  type ActivityRailItemsItem = {
+    id : string!
+    icon : icon!
+    label : string!
+    opensPanel : boolean
+  }
+
+  entity ActivityRailItem [runtime] {
+    id : string!
+  }
+
+  trait ActivityRailRender -> @rebindable ActivityRailItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          active: @config.active
+          onChange: @config.onChange
+          onSelect: @config.onSelect
+          footer: @config.footer
+          testId: @config.testId
+          className: @config.className
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          type: activity-rail
+        })
+    }
+
+    emits {
+      @config.onChange -> external {
+        id : string!
+      }
+        @description "Emits UI:{onChange} with { id } when an item is picked."
+        @tier "essential"
+      @config.onSelect -> external {
+        id : string
+      }
+        @description "React hosts: called with the picked item's id."
+        @tier "essential"
+    }
+
+    config {
+      items : [ActivityRailItemsItem] = [{ id: "Id", icon: "circle", label: "Label", opensPanel: false }, { id: "Id 2", icon: "circle", label: "Label 2", opensPanel: true }]
+        @label "Items"
+        @description "The rail's items, top to bottom."
+        @tier "presentation"
+      active : string = ""
+        @label "Active"
+        @description "The id of the item whose panel is showing."
+        @tier "presentation"
+      onChange : event = "CHANGE"
+        @label "On Change"
+        @description "Emits UI:{onChange} with { id } when an item is picked."
+        @tier "presentation"
+      onSelect : event = "SELECT"
+        @label "On Select"
+        @description "React hosts: called with the picked item's id."
+        @tier "presentation"
+      footer : node
+        @label "Footer"
+        @description "Pinned to the bottom of the desktop column."
+        @tier "presentation"
+      testId : string
+        @label "Test Id"
+        @description "testId prop"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      enter : "none" | "fade" | "rise" | "scale" | "slide"
+        @label "Enter"
+        @description "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out."
+        @tier "presentation"
+      enterDelay : number
+        @label "Enter Delay"
+        @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
+        @tier "presentation"
+    }
+  }
+
+  page "/activity-rail" as ActivityRailPage -> ActivityRailRender
+}

@@ -4,19 +4,6 @@ app ui-flow-canvas [
 ]
 ;; @pattern "flow-canvas"
 orbital FlowCanvasOrbital {
-  type FlowCanvasSystemMap = {
-    openCodeEvent : string
-    previewEvent : string
-    highlighted : string
-  }
-  type FlowCanvasSystemDependencies = {
-    orbitals : Map string [string]!
-    behaviors : Map string FlowCanvasSystemDependenciesBehaviorsValue!
-  }
-  type FlowCanvasSystemDependenciesBehaviorsValue = {
-    layer : "io" | "std" | "primitive" | "unknown"!
-    imports : [string]!
-  }
   type FlowCanvasTraitView = {
     lens : "flow" | "traits"!
     filter : FlowCanvasTraitViewFilter
@@ -33,6 +20,57 @@ orbital FlowCanvasOrbital {
     orbital : string!
     trait : string!
     from : string!
+    event : event!
+    payload : @payload event!
+    result : FlowCanvasSceneStepsItemResult!
+  }
+  type FlowCanvasSceneStepsItemResult = {
+    trait : string!
+    event : string!
+    transitionFired : boolean!
+    guard : "pass" | "fail" | "none"!
+    firedArm : number
+    state : FlowCanvasSceneStepsItemResultState!
+    effects : [FlowCanvasSceneStepsItemResultEffectsItem]!
+    emitted : [FlowCanvasSceneStepsItemResultEmittedItem]!
+    guards : [FlowCanvasSceneStepsItemResultGuardsItem]
+  }
+  type FlowCanvasSceneStepsItemResultState = {
+    before : string
+    after : string
+  }
+  type FlowCanvasSceneStepsItemResultEffectsItem = {
+    type : string!
+    entityName : string
+    action : "create" | "update" | "delete" | "batch"
+    resultId : string
+    outcome : "success" | "denied" | "failed"
+    args : [SExpr]!
+    status : "executed" | "failed" | "skipped"!
+    error : string
+    durationMs : number
+    evalTrace : [FlowCanvasSceneStepsItemResultEffectsItemEvalTraceItem]
+  }
+  type FlowCanvasSceneStepsItemResultEffectsItemEvalTraceItem = {
+    kind : "enter" | "exit" | "iter" | "skip"!
+    path : [string]!
+    error : string
+  }
+  type FlowCanvasSceneStepsItemResultEmittedItem = {
+    type : string!
+    timestamp : number!
+  }
+  type FlowCanvasSceneStepsItemResultGuardsItem = {
+    arm : number!
+    guard : SExpr!
+    passed : boolean!
+    trace : [FlowCanvasSceneStepsItemResultGuardsItemTraceItem]!
+    error : string
+  }
+  type FlowCanvasSceneStepsItemResultGuardsItemTraceItem = {
+    kind : "enter" | "exit" | "iter" | "skip"!
+    path : [string]!
+    error : string
   }
   type FlowCanvasInitialSelectedNode = {
     orbitalName : string!
@@ -44,6 +82,7 @@ orbital FlowCanvasOrbital {
     cardWidth : number
     cardLabel : "screen"
     enteredBy : [string]
+    opensApp : boolean
     patterns : [FlowCanvasInitialSelectedNodePatternsItem]!
     eventSources : [FlowCanvasInitialSelectedNodeEventSourcesItem]!
     layer : string
@@ -146,6 +185,7 @@ orbital FlowCanvasOrbital {
     cardWidth : number
     cardLabel : "screen"
     enteredBy : [string]
+    opensApp : boolean
     patterns : [FlowCanvasPATTERNDELETEContextNodeDataPatternsItem]!
     eventSources : [FlowCanvasPATTERNDELETEContextNodeDataEventSourcesItem]!
     layer : string
@@ -233,6 +273,7 @@ orbital FlowCanvasOrbital {
     cardWidth : number
     cardLabel : "screen"
     enteredBy : [string]
+    opensApp : boolean
     patterns : [FlowCanvasSELECTEDNODECHANGENodePatternsItem]!
     eventSources : [FlowCanvasSELECTEDNODECHANGENodeEventSourcesItem]!
     layer : string
@@ -306,6 +347,7 @@ orbital FlowCanvasOrbital {
     cardWidth : number
     cardLabel : "screen"
     enteredBy : [string]
+    opensApp : boolean
     patterns : [FlowCanvasSELECTEDPATTERNCHANGEPatternNodeDataPatternsItem]!
     eventSources : [FlowCanvasSELECTEDPATTERNCHANGEPatternNodeDataEventSourcesItem]!
     layer : string
@@ -414,11 +456,11 @@ orbital FlowCanvasOrbital {
           width: @config.width
           height: @config.height
           onNodeClick: @config.onNodeClick
-          systemMap: @config.systemMap
-          systemDependencies: @config.systemDependencies
+          openTraitsEvent: @config.openTraitsEvent
           traitView: @config.traitView
           onTraitViewChange: @config.onTraitViewChange
           openBehaviorEvent: @config.openBehaviorEvent
+          keyMap: @config.keyMap
           scene: @config.scene
           onFocusChange: @config.onFocusChange
           initialOrbital: @config.initialOrbital
@@ -460,6 +502,11 @@ orbital FlowCanvasOrbital {
         context : FlowCanvasNODECLICKContext
       }
         @description "onNodeClick prop"
+        @tier "essential"
+      @config.openTraitsEvent -> external {
+        orbital : string!
+      }
+        @description "Emits UI:{openTraitsEvent} with { orbital } when an orbital on the system map is opened (drilled into)."
         @tier "essential"
       @config.onTraitViewChange -> external {
         view : FlowCanvasTRAITVIEWCHANGEView
@@ -545,13 +592,9 @@ orbital FlowCanvasOrbital {
         @label "On Node Click"
         @description "onNodeClick prop"
         @tier "presentation"
-      systemMap : FlowCanvasSystemMap
-        @label "System Map"
-        @description "With `initialLevel='system'`: what an orbital chip does (drill in, hover preview, open code, preview)."
-        @tier "presentation"
-      systemDependencies : FlowCanvasSystemDependencies
-        @label "System Dependencies"
-        @description "With `initialLevel='system'`: the app's imports, for the Dependencies lens (absent: Events only)."
+      openTraitsEvent : event = "OPEN_TRAITS"
+        @label "Open Traits Event"
+        @description "Emits UI:{openTraitsEvent} with { orbital } when an orbital on the system map is opened (drilled into)."
         @tier "presentation"
       traitView : FlowCanvasTraitView
         @label "Trait View"
@@ -564,6 +607,10 @@ orbital FlowCanvasOrbital {
       openBehaviorEvent : event = "OPEN_BEHAVIOR"
         @label "Open Behavior Event"
         @description "Dependencies lens: emits UI:{openBehaviorEvent} with { name } to open a selected behavior's source."
+        @tier "presentation"
+      keyMap : Map string string = { item: "INIT" }
+        @label "Key Map"
+        @description "Maps a keydown `e.code` — optionally prefixed `Mod+` (⌘/Ctrl), `Shift+`, `Alt+` in that order — to an event, emitted as `UI:{event}`; keystrokes inside inputs/textareas never route."
         @tier "presentation"
       scene : FlowCanvasScene
         @label "Scene"

@@ -57,6 +57,21 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["program/eval", "@entity.program", { "emit": { "success": "BUILT", "failure": "BUILD_FAILED" } }]',
   },
+  'program/step': {
+    module: 'program', category: 'std-program',
+    minArity: 2, maxArity: 3,
+    description: 'Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm and the events it emitted.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: 'PlayedStep[]',
+    params: [
+      { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
+      { name: 'requests', type: { kind: 'array', of: { kind: 'object', fields: { orbital: 'string', trait: 'string', from: 'string', event: 'string' }, open: true } }, description: 'The transitions to play: `{ orbital, trait, from, event, payload }` each' },
+      EMIT_OPTIONS,
+    ],
+    example: '["program/step", "@entity.program", [{ "orbital": "Editor", "trait": "Modes", "from": "NORMAL", "event": "KEY", "payload": { "key": "i" } }], { "emit": { "success": "STEPPED", "failure": "STEP_FAILED" } }]',
+  },
   'program/compose': {
     module: 'program', category: 'std-program',
     minArity: 2, maxArity: 3,

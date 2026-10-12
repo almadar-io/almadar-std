@@ -39,6 +39,7 @@ export interface StdModalEditorSetModePayload {
   editorId?: string;
   mode?: string;
   caret?: string;
+  keys?: string[];
 }
 
 /**
@@ -83,54 +84,54 @@ export interface StdModalEditorExCommandPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModalEditorConfig {
-  /** Default: `{"0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9}` */
-  digits?: Record<string, TraitConfig>;
-  /** Default: `"a"` */
-  appendKey?: string;
-  /** Default: `"I"` */
-  insertLineKey?: string;
-  /** Default: `"~"` */
-  toggleCaseKey?: string;
-  /** Default: `"o"` */
-  openLineKey?: string;
-  /** Default: `"i"` */
-  insertKey?: string;
+  /** Default: `"J"` */
+  joinKey?: string;
   /** Default: `"x"` */
   deleteCharKey?: string;
-  /** Default: `{"y":"yank","<":"dedent",">":"indent","c":"change","d":"delete"}` */
+  /** Default: `{"d":"delete","y":"yank","c":"change",">":"indent","<":"dedent"}` */
   operators?: Record<string, TraitConfig>;
-  /** Default: `"A"` */
-  appendLineKey?: string;
-  /** Default: `":"` */
-  commandKey?: string;
-  /** Default: `"P"` */
-  putBeforeKey?: string;
-  /** Default: `"p"` */
-  putKey?: string;
-  /** Default: `"u"` */
-  undoKey?: string;
-  /** Default: `"v"` */
-  visualKey?: string;
   /** Default: `"r"` */
   redoKey?: string;
-  /** Default: `"g"` */
-  gotoPrefixKey?: string;
-  /** Default: `{"0":"line-start","G":"doc-end","}":"paragraph-forward","^":"first-nonblank","h":"left","j":"down","{":"paragraph-back","w":"word-forward","l":"right","%":"match-bracket","b":"word-back","k":"up","e":"word-end","$":"line-end"}` */
-  motions?: Record<string, TraitConfig>;
-  /** Default: `{"INSERT":["Escape"],"OPERATOR_PENDING":["Escape","d","y","c","h","j","k","l","w","b","e","0","1","2","3","4","5","6","7","8","9","$","^","G","{","}","%",">","<","g"],"VISUAL":["Escape","d","y","c","h","j","k","l","w","b","e","0","$","^","G","{","}","%","~",">","<","J"],"COMMAND":["Escape","Enter","Backspace","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9","!","%"," "],"NORMAL":["i","a","o","O","A","I","v",":","d","y","c","h","j","k","l","w","b","e","0","1","2","3","4","5","6","7","8","9","$","^","G","{","}","%",">","<","x","X","p","P","u","r","~","J",".","g","Escape"]}` */
-  keymap?: Record<string, TraitConfig>;
+  /** Default: `"o"` */
+  openLineKey?: string;
   /** Default: `"X"` */
   deleteCharBackKey?: string;
   /** Default: `"O"` */
   openLineAboveKey?: string;
-  /** Default: `"J"` */
-  joinKey?: string;
+  /** Default: `"g"` */
+  gotoPrefixKey?: string;
+  /** Default: `"p"` */
+  putKey?: string;
+  /** Default: `"A"` */
+  appendLineKey?: string;
+  /** Default: `"P"` */
+  putBeforeKey?: string;
+  /** Default: `{"0":"line-start","h":"left","j":"down","k":"up","l":"right","w":"word-forward","b":"word-back","e":"word-end","$":"line-end","^":"first-nonblank","G":"doc-end","{":"paragraph-back","}":"paragraph-forward","%":"match-bracket"}` */
+  motions?: Record<string, TraitConfig>;
+  /** Default: `"a"` */
+  appendKey?: string;
+  /** Default: `"v"` */
+  visualKey?: string;
+  /** Default: `"u"` */
+  undoKey?: string;
+  /** Default: `"i"` */
+  insertKey?: string;
   /** Default: `"."` */
   repeatKey?: string;
-  /** Default: `{"w":"save","q!":"close-tab-discard","x":"save-close-tab","wq":"save-close-tab","q":"close-tab"}` */
-  exCommands?: Record<string, TraitConfig>;
+  /** Default: `"~"` */
+  toggleCaseKey?: string;
+  /** Default: `{"0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9}` */
+  digits?: Record<string, TraitConfig>;
   /** Default: `"r"` */
   replaceKey?: string;
+  /** Default: `{"NORMAL":["i","a","o","O","A","I","v",":","d","y","c","h","j","k","l","w","b","e","0","1","2","3","4","5","6","7","8","9","$","^","G","{","}","%",">","<","x","X","p","P","u","r","~","J",".","g","Escape"],"INSERT":["Escape"],"VISUAL":["Escape","d","y","c","h","j","k","l","w","b","e","0","$","^","G","{","}","%","~",">","<","J"],"OPERATOR_PENDING":["Escape","d","y","c","h","j","k","l","w","b","e","0","1","2","3","4","5","6","7","8","9","$","^","G","{","}","%",">","<","g"],"COMMAND":["Escape","Enter","Backspace","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9","!","%"," "]}` */
+  keymap?: Record<string, TraitConfig>;
+  /** Default: `"I"` */
+  insertLineKey?: string;
+  /** Default: `":"` */
+  commandKey?: string;
+  /** Default: `{"w":"save","q":"close-tab","wq":"save-close-tab","q!":"close-tab-discard","x":"save-close-tab"}` */
+  exCommands?: Record<string, TraitConfig>;
 }
 
 /**
