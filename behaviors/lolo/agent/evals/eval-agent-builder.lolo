@@ -9,17 +9,17 @@ type EvalCaseSpec = { id : string!, request : string!, expectTier : string! }
 uses Builder from "std/behaviors/std-agent-builder"
 uses Pool from "std/behaviors/std-agent-pool"
 
-orbital EvalPool = Pool.orbitals.AgentPoolOrbital {
+orbital EvalPoolOrbital = Pool.orbitals.AgentPoolOrbital {
   config {
     pool: "eval-agent-builder"
   }
   listens {
-    EvalBuilder.BuilderPipeline.POOL_SEARCH -> AgentPoolSearch.SEARCH
-    EvalRun.EvalDriver.POOL_WRITE -> AgentPoolWriter.WRITE
+    EvalBuilderOrbital.BuilderPipeline.POOL_SEARCH -> AgentPoolSearch.SEARCH
+    EvalRunOrbital.EvalDriver.POOL_WRITE -> AgentPoolWriter.WRITE
   }
 }
 
-orbital EvalBuilder = Builder.orbitals.AgentBuilderOrbital {
+orbital EvalBuilderOrbital = Builder.orbitals.AgentBuilderOrbital {
   traits {
     BuilderPipeline {
       config {
@@ -27,20 +27,20 @@ orbital EvalBuilder = Builder.orbitals.AgentBuilderOrbital {
           { name: "pool", source: "pool", scope: [], threshold: 0.8, action: "adopt", take: 5 },
           { name: "instrument", source: "catalog", scope: ["almadar-std/ui/learning/atoms"], threshold: 0, action: "fill", take: 3 }
         ]
-        fillFields: [{ name: "hint", type: "string", required: true, description: "One short sentence, at most 12 words, telling the learner what to do with it. Never give the answer away." }]
-        fieldWordLimits: [{ name: "hint", words: 12 }]
-        fillEvent: EvalBuilder.EvalBuilderBuilderPipeline.FILL
-        pickEvent: EvalBuilder.EvalBuilderBuilderPipeline.PICK
+        pickFields: [{ name: "howToPlay", type: "string", required: true, description: "How to play, in one short sentence of at most 12 words: the controls to use (tap, drag, slide, press) and the goal. Never name an item, a rule, a step, an order or a number; the learner works those out by playing." }]
+        fieldWordLimits: [{ name: "howToPlay", words: 12 }]
+        fillEvent: EvalBuilderOrbital.EvalBuilderOrbitalBuilderPipeline.FILL
+        pickEvent: EvalBuilderOrbital.EvalBuilderOrbitalBuilderPipeline.PICK
       }
     }
   }
   listens {
-    EvalRun.EvalDriver.START_BUILD -> BuilderPipeline.START
-    EvalPool.AgentPoolSearch.POOL_FOUND -> BuilderPipeline.POOL_FOUND
+    EvalRunOrbital.EvalDriver.START_BUILD -> BuilderPipeline.START
+    EvalPoolOrbital.AgentPoolSearch.POOL_FOUND -> BuilderPipeline.POOL_FOUND
   }
 }
 
-orbital EvalRun {
+orbital EvalRunOrbital {
   entity EvalRunView [runtime] {
     id : string!
     index : number = 0
@@ -83,9 +83,9 @@ orbital EvalRun {
     state running {
       INIT -> idle
       BUILD_DONE -> idle when (= ?tier "pool")
-        (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), tier: ?tier, behavior: ?behavior, hint: (object/get ?fields hint ""), latencyMs: (- @now @entity.startedAt), verdict: (if (and (= ?tier (object/get (array/nth @config.cases @entity.index) expectTier)) (!= (object/get ?fields hint "") "")) pass fail) })
+        (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), tier: ?tier, behavior: ?behavior, hint: (object/get ?fields howToPlay ""), latencyMs: (- @now @entity.startedAt), verdict: (if (and (= ?tier (object/get (array/nth @config.cases @entity.index) expectTier)) (!= (object/get ?fields howToPlay "") "")) pass fail) })
       BUILD_DONE -> idle when (!= ?tier "pool")
-        (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), tier: ?tier, behavior: ?behavior, hint: (object/get ?fields hint ""), latencyMs: (- @now @entity.startedAt), verdict: (if (and (= ?tier (object/get (array/nth @config.cases @entity.index) expectTier)) (!= (object/get ?fields hint "") "")) pass fail) })
+        (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), tier: ?tier, behavior: ?behavior, hint: (object/get ?fields howToPlay ""), latencyMs: (- @now @entity.startedAt), verdict: (if (and (= ?tier (object/get (array/nth @config.cases @entity.index) expectTier)) (!= (object/get ?fields howToPlay "") "")) pass fail) })
         (emit POOL_WRITE { value: ?value, name: ?orbitalName, kind: "instrument", topic: "", fields: ?fields, description: (object/get (array/nth @config.cases @entity.index) request) })
       BUILD_FAILED_CASE -> idle
         (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), latencyMs: (- @now @entity.startedAt), verdict: fail, error: ?error })
@@ -142,7 +142,7 @@ orbital EvalRun {
       READ_CASES -> external {
       }
         @description "Read back every case recorded so far."
-      EvalBuilder.BuilderPipeline.BUILD_COMPLETE -> BUILD_DONE
+      EvalBuilderOrbital.BuilderPipeline.BUILD_COMPLETE -> BUILD_DONE
       BUILD_DONE {
         orbitalName : string!
         behavior : string!
@@ -150,12 +150,12 @@ orbital EvalRun {
         tier : string!
         fields : Map string string
       }
-      EvalBuilder.BuilderPipeline.BUILD_REJECTED -> BUILD_FAILED_CASE
+      EvalBuilderOrbital.BuilderPipeline.BUILD_REJECTED -> BUILD_FAILED_CASE
       BUILD_FAILED_CASE {
         error : string!
       }
     }
   }
 
-  page "/" as EvalAgentBuilderPage -> EvalDriver, EvalBuilderBuilderPipeline, EvalBuilderBuilderTools, EvalPoolAgentPoolWriter, EvalPoolAgentPoolSearch, EvalPoolAgentPoolSignal [initial]
+  page "/" as EvalAgentBuilderPage -> EvalDriver, EvalBuilderOrbitalBuilderPipeline, EvalBuilderOrbitalBuilderTools, EvalPoolOrbitalAgentPoolWriter, EvalPoolOrbitalAgentPoolSearch, EvalPoolOrbitalAgentPoolSignal [initial]
 }
