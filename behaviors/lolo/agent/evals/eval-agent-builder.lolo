@@ -1,0 +1,152 @@
+app eval-agent-builder [
+  version: "1.0.0",
+  description: "Eval of std-agent-builder's ladder over std-agent-pool. RUN_CASE { index } builds the case's request through the ladder (the pool first, adopted at or above its threshold; otherwise a std learning instrument filled by the model with its knobs and a one-line hint), pools what was built, and records an EvalCase: the tier that served it, the behavior, the hint, the latency and the verdict against the tier the case expects. Driven from outside, one case at a time."
+]
+;; @exposure internal
+
+type EvalCaseSpec = { id : string!, request : string!, expectTier : string! }
+
+uses Builder from "std/behaviors/std-agent-builder"
+uses Pool from "std/behaviors/std-agent-pool"
+
+orbital EvalPool = Pool.orbitals.AgentPoolOrbital {
+  config {
+    pool: "eval-agent-builder"
+  }
+  listens {
+    EvalBuilder.BuilderPipeline.POOL_SEARCH -> AgentPoolSearch.SEARCH
+    EvalRun.EvalDriver.POOL_WRITE -> AgentPoolWriter.WRITE
+  }
+}
+
+orbital EvalBuilder = Builder.orbitals.AgentBuilderOrbital {
+  traits {
+    BuilderPipeline {
+      config {
+        ladder: [
+          { name: "pool", source: "pool", scope: [], threshold: 0.85, action: "adopt", take: 5 },
+          { name: "instrument", source: "catalog", scope: ["almadar-std/ui/learning/atoms"], threshold: 0, action: "fill", take: 1 }
+        ]
+        fillFields: [{ name: "hint", type: "string", required: true, description: "One short line telling the learner how to play it." }]
+        fillEvent: EvalBuilder.EvalBuilderBuilderPipeline.FILL
+      }
+    }
+  }
+  listens {
+    EvalRun.EvalDriver.START_BUILD -> BuilderPipeline.START
+    EvalPool.AgentPoolSearch.POOL_FOUND -> BuilderPipeline.POOL_FOUND
+  }
+}
+
+orbital EvalRun {
+  entity EvalRunView [runtime] {
+    id : string!
+    index : number = 0
+    startedAt : number = 0
+  }
+
+  entity EvalCase [persistent: evalCases] {
+    id : string!
+    caseId : string = ""
+    request : string = ""
+    expectTier : string = ""
+    tier : string = ""
+    behavior : string = ""
+    hint : string = ""
+    latencyMs : number = 0
+    verdict : "pass" | "fail" = fail
+    error : string = ""
+  }
+
+  trait EvalDriver -> EvalRunView [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { type: stack, direction: horizontal, gap: sm, children: [{ type: button, variant: ghost, label: "Cases", href: "/" }, { type: button, variant: ghost, label: "Builder", href: "/agent-builder" }, { type: button, variant: ghost, label: "Pool", href: "/agent-pool" }] })
+      RUN_CASE -> running when (< ?index (array/len @config.cases))
+        (set @entity.index ?index)
+        (set @entity.startedAt @now)
+        (emit START_BUILD { request: (object/get (array/nth @config.cases ?index) request), orbitalName: (str/concat "EvalCard" (object/get (array/nth @config.cases ?index) id)) })
+      RUN_CASE -> idle when (>= ?index (array/len @config.cases))
+      READ_CASES -> idle
+        (fetch EvalCase {
+          emit: { failure: CASES_FAILED, success: CASES_READ }
+        })
+      CASES_READ -> idle
+      CASES_FAILED -> idle
+        (render-ui toast { message: ?error, type: alert, variant: warning })
+    }
+
+    state running {
+      INIT -> idle
+      BUILD_DONE -> idle when (= ?tier "pool")
+        (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), tier: ?tier, behavior: ?behavior, hint: (object/get ?fields hint ""), latencyMs: (- @now @entity.startedAt), verdict: (if (= ?tier (object/get (array/nth @config.cases @entity.index) expectTier)) pass fail) })
+      BUILD_DONE -> idle when (!= ?tier "pool")
+        (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), tier: ?tier, behavior: ?behavior, hint: (object/get ?fields hint ""), latencyMs: (- @now @entity.startedAt), verdict: (if (= ?tier (object/get (array/nth @config.cases @entity.index) expectTier)) pass fail) })
+        (emit POOL_WRITE { value: ?value, name: ?orbitalName, kind: "instrument", topic: "", hint: (object/get ?fields hint ""), description: (str/concat (object/get (array/nth @config.cases @entity.index) request) " — " (object/get ?fields hint "")) })
+      BUILD_FAILED_CASE -> idle
+        (persist create EvalCase { caseId: (object/get (array/nth @config.cases @entity.index) id), request: (object/get (array/nth @config.cases @entity.index) request), expectTier: (object/get (array/nth @config.cases @entity.index) expectTier), latencyMs: (- @now @entity.startedAt), verdict: fail, error: ?error })
+    }
+
+    config {
+      cases : [EvalCaseSpec] = [
+          { id: "sort-animals", request: "A quick game sorting animals into mammals, birds and reptiles", expectTier: "instrument" },
+          { id: "sort-animals-again", request: "Sort some animals into mammals, birds and reptiles", expectTier: "pool" },
+          { id: "water-cycle", request: "Put the stages of the water cycle in order", expectTier: "instrument" }
+        ]
+        @label "Cases"
+        @tier "domain"
+    }
+
+    emits {
+      CASES_READ -> external {
+        data : [EvalCase]!
+      }
+        @description "Every case recorded so far."
+        @tier "domain"
+      CASES_FAILED {
+        error : string!
+      }
+        @tier "internal"
+      START_BUILD -> external {
+        request : string!
+        orbitalName : string!
+      }
+        @tier "internal"
+      POOL_WRITE -> external {
+        value : behavior!
+        name : string!
+        kind : string!
+        topic : string
+        hint : string
+        description : string!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      RUN_CASE -> external {
+        index : number!
+      }
+        @description "Run one case of the eval."
+      READ_CASES -> external {
+      }
+        @description "Read back every case recorded so far."
+      EvalBuilder.BuilderPipeline.BUILD_COMPLETE -> BUILD_DONE
+      BUILD_DONE {
+        orbitalName : string!
+        behavior : string!
+        value : behavior!
+        tier : string!
+        fields : Map string string
+      }
+      EvalBuilder.BuilderPipeline.BUILD_REJECTED -> BUILD_FAILED_CASE
+      BUILD_FAILED_CASE {
+        error : string!
+      }
+    }
+  }
+
+  page "/" as EvalAgentBuilderPage -> EvalDriver, EvalBuilderBuilderPipeline, EvalBuilderBuilderTools, EvalPoolAgentPoolWriter, EvalPoolAgentPoolSearch, EvalPoolAgentPoolSignal [initial]
+}

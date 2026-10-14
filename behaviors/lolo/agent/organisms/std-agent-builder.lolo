@@ -1,21 +1,96 @@
 app std-agent-builder [
-  version: "2.0.0",
-  description: "Agent builder — turns a request into a working orbital built from an installed behavior. START { request, orbitalName } embeds the request with `call-service llm embed`, lists the installed behaviors under the `scope` registry folders (`behavior/catalog`), ranks them by cosine similarity to the request, and builds a program that mounts the best match's trait as the orbital's page (`quasiquote` + `program/eval`, written to the workspace's orbitals/). BUILD_COMPLETE { orbitalName, behavior } carries where the program was written; BUILD_FAILED { error, errors } carries the validator's issues as data. Headless apart from a status line."
+  version: "3.0.0",
+  description: "Agent builder — turns a request into a behavior by walking a ladder of caching tiers, cheapest first. START { request, orbitalName, context } embeds the request (`call-service llm embed`) and walks `ladder`: each step ranks its source by cosine similarity — installed behaviors under its registry folders (`behavior/catalog`), or a pool (POOL_SEARCH, answered by POOL_FOUND from std-agent-pool) — and when the best match reaches the step's threshold runs the step's action, otherwise goes to the next step. Actions: `mount` builds a page around the best match's first trait (`program/eval`); `adopt` serves the best match as it is, no model call; `fill` describes the best match (`behavior/describe`), asks the model once to set its knobs and the extra `fillFields`, applies them (`behavior/apply`) and evaluates the result (`program/eval`, final), feeding validator issues back for up to `maxRepairs` repair turns. BUILD_PROGRESS streams each step; BUILD_COMPLETE { orbitalName, behavior, value, tier, fields } carries the behavior and the step that served it; BUILD_REJECTED { error, errors } follows an exhausted ladder or a failed build. The default ladder mounts the closest UI molecule, as earlier versions did."
 ]
-;; @capabilities "build an orbital from a request, pick a behavior by meaning, generate a page, program evaluation"
+;; @capabilities "build a behavior from a request, caching tiers, retrieve before generating, adopt an existing behavior, fill a behavior's knobs, pick a behavior by meaning, program evaluation"
 
 type CatalogHit = {
   behavior : string!
+  description : string
   traits : [trait]!
+  value : behavior!
   vectors : Map string [number]
+}
+type PoolHit = {
+  id : string!
+  behavior : string!
+  value : behavior!
+  name : string
+  kind : string
+  topic : string
+  hint : string
+  description : string
+  score : number!
+}
+type Ranked = {
+  behavior : string!
+  value : behavior!
+  trait : trait
+  description : string
+  score : number!
+}
+type BuilderStep = {
+  name : string!
+  source : "catalog" | "pool"!
+  scope : [string]
+  threshold : number!
+  action : "mount" | "adopt" | "fill"!
+  take : number
 }
 type Built = {
   behavior : string!
+  value : behavior!
 }
 type BuildIssue = {
   code : string!
   message : string!
 }
+type AgentChatMessage = {
+  role : "user" | "assistant"
+  content : string!
+}
+type AgentToolField = {
+  name : string!
+  type : string!
+  required : boolean
+  values : [string]
+  properties : [AgentToolField]
+  description : string
+}
+type AgentToolInput = {
+  event : EventAddress!
+  payload : [AgentToolField]
+}
+type KnobField = {
+  name : string!
+  type : string!
+  required : boolean
+  values : [string]
+  properties : [KnobField]
+  default : SExpr
+  label : string
+  description : string
+  tier : string
+}
+type DescribedTrait = {
+  trait : string!
+  knobs : [KnobField]!
+}
+type DescribedOrbital = {
+  value : orbital!
+  knobs : [KnobField]!
+  traits : [DescribedTrait]!
+}
+type BehaviorDescription = {
+  behavior : string!
+  knobs : [KnobField]!
+  orbitals : [DescribedOrbital]!
+}
+type FilledTrait = {
+  config : Map string SExpr
+}
+
+uses ToolLoop from "std/behaviors/std-agent-tool-loop"
 
 orbital AgentBuilderOrbital {
 
@@ -23,33 +98,70 @@ orbital AgentBuilderOrbital {
     id : string!
     request : string = ""
     orbitalName : string = ""
+    context : string = ""
     queryVector : [number] = []
+    step : number = 0
+    ranked : [Ranked] = []
     pick : trait = none
+    target : orbital = none
+    filledConfig : Map string SExpr = {}
+    filledTraits : Map string FilledTrait = {}
+    filledFields : Map string string = {}
+    tool : [AgentToolField] = []
+    repairs : number = 0
     behavior : string = ""
     error : string = ""
-    status : "idle" | "searching" | "building" | "done" | "failed" = idle
+    status : "idle" | "searching" | "describing" | "filling" | "building" | "done" | "failed" = idle
   }
 
   trait BuilderPipeline -> BuilderProcess [lifecycle, instance] {
     config {
-      scope : [string] = ["almadar-std/ui/core/molecules"]
-        @label "Where to look for building blocks"
-        @description "Registry folders (`<prefix>/<topic>[/<tier>]`) the builder may pick from."
+      ladder : [BuilderStep] = [{ name: "mount", source: "catalog", scope: ["almadar-std/ui/core/molecules"], threshold: 0, action: "mount", take: 1 }]
+        @label "Caching tiers, cheapest first"
+        @description "Each step ranks its source (a registry catalog under `scope`, or the pool) against the request and, when the best match reaches `threshold`, runs `action` on it: `mount` (a page around its first trait), `adopt` (serve it as it is, no model call) or `fill` (one model turn setting its knobs). A step whose best match falls short hands over to the next one; when no step serves, the build is rejected."
+        @synonyms "tiers, cache levels, retrieval ladder"
         @tier "domain"
+      fillFields : [AgentToolField] = []
+        @label "Extra fields the fill turn writes"
+        @description "Fields the model fills alongside the knobs (e.g. a one-line hint); they come back in BUILD_COMPLETE's `fields`."
+        @tier "domain"
+      fillInstructions : string = "You adapt an existing building block to a request. Call the FILL tool once: set only the knobs the request needs (in `config` and `traits` → trait → `config`), write every requested field in `fields`, then reply with one sentence."
+        @label "How the fill turn is briefed"
+        @tier "domain"
+      fillEvent : EventAddress = BuilderPipeline.FILL
+        @label "Fill tool event"
+        @description "The address the model's FILL tool fires; a consumer that renames this trait sets it to its own name."
+        @tier "internal"
+      maxRepairs : number = 2
+        @label "Repair turns"
+        @description "How many times validator issues go back to the model before the build fails."
+        @tier "policy"
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the builder shows its one-line status; a page running it in the background sends it to `system`."
+        @tier "presentation"
     }
     initial: idle
 
     state idle {
       INIT -> idle
         (set @entity.status idle)
-        (render-ui main <typography content="Ready to build." variant="caption" />)
+        (render-ui @config.statusSlot <typography content="Ready to build." variant="caption" />)
       START -> searching
         (set @entity.request ?request)
         (set @entity.orbitalName ?orbitalName)
+        (set @entity.context (str/default ?context ""))
+        (set @entity.step 0)
+        (set @entity.repairs 0)
         (set @entity.status searching)
+        (emit BUILD_PROGRESS { status: "searching", tier: "" })
         (call-service llm embed { texts: [?request] } {
           emit: { failure: BUILD_FAILED, success: REQUEST_EMBEDDED }
         })
+      FILL -> idle
+      CONVERSE -> idle
+      ASSISTANT_REPLIED -> idle
+      TOOLS_FAILED -> idle
     }
 
     state searching {
@@ -57,17 +169,36 @@ orbital AgentBuilderOrbital {
         (set @entity.status searching)
       REQUEST_EMBEDDED -> searching when (> (array/len ?embeddings) 0)
         (set @entity.queryVector (array/first ?embeddings))
-        (behavior/catalog { paths: @config.scope } {
-          emit: { failure: BUILD_FAILED, success: CATALOG_LISTED }
-        })
+        (emit STEP {})
       REQUEST_EMBEDDED -> failed when (= (array/len ?embeddings) 0)
         (set @entity.error "The model returned no embedding")
         (set @entity.status failed)
-        (render-ui main <typography content="Build failed: the model returned no embedding." variant="caption" />)
+        (render-ui @config.statusSlot <typography content="Build failed: the model returned no embedding." variant="caption" />)
         (emit BUILD_REJECTED { error: "The model returned no embedding", errors: [] })
-      CATALOG_LISTED -> building when (> (array/len ?result) 0)
-        (set @entity.pick (object/get (array/first (array/sort (array/map ?result (fn entry { trait: (array/first @entry.traits), score: (array/cosine (object/get @entry.vectors description) @entity.queryVector) })) score desc)) trait))
+      STEP -> searching when (and (< @entity.step (array/len @config.ladder)) (= (object/get (array/nth @config.ladder @entity.step) source) "catalog"))
+        (behavior/catalog { paths: (object/get (array/nth @config.ladder @entity.step) scope []) } {
+          emit: { failure: BUILD_FAILED, success: CATALOG_LISTED }
+        })
+      STEP -> searching when (and (< @entity.step (array/len @config.ladder)) (= (object/get (array/nth @config.ladder @entity.step) source) "pool"))
+        (emit POOL_SEARCH { vector: @entity.queryVector, take: (object/get (array/nth @config.ladder @entity.step) take 5) })
+      STEP -> failed when (>= @entity.step (array/len @config.ladder))
+        (set @entity.error "No tier of the ladder could serve the request")
+        (set @entity.status failed)
+        (render-ui @config.statusSlot <typography content="No tier could serve the request." variant="caption" />)
+        (emit BUILD_REJECTED { error: "No tier of the ladder could serve the request", errors: [] })
+      CATALOG_LISTED -> searching
+        (set @entity.ranked (array/sort (array/map (array/filter ?result (fn e (> (array/len (object/get @e.vectors description [])) 0))) (fn e { behavior: @e.behavior, value: @e.value, trait: (array/first @e.traits), description: (object/get @e description ""), score: (array/cosine (object/get @e.vectors description) @entity.queryVector) })) score desc))
+        (emit RANKED {})
+      POOL_FOUND -> searching
+        (set @entity.ranked (array/map ?hits (fn h { behavior: @h.behavior, value: @h.value, description: (object/get @h description ""), score: @h.score })))
+        (emit RANKED {})
+      RANKED -> searching when (or (= (array/len @entity.ranked) 0) (< (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)))
+        (set @entity.step (+ @entity.step 1))
+        (emit STEP {})
+      RANKED -> building when (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "mount")))
+        (set @entity.pick (object/get (array/first @entity.ranked) trait))
         (set @entity.status building)
+        (emit BUILD_PROGRESS { status: "building", tier: (object/get (array/nth @config.ladder @entity.step) name) })
         (program/eval (quasiquote {
           name: (unquote @entity.orbitalName)
           orbitals: [{
@@ -88,14 +219,74 @@ orbital AgentBuilderOrbital {
         }) {
           emit: { failure: BUILD_FAILED, success: BUILT }
         })
-      CATALOG_LISTED -> failed when (= (array/len ?result) 0)
-        (set @entity.error "No building block in scope")
-        (set @entity.status failed)
-        (render-ui main <typography content="No building block in scope." variant="caption" />)
+      RANKED -> done when (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "adopt")))
+        (set @entity.behavior (object/get (array/first @entity.ranked) behavior))
+        (set @entity.status done)
+        (render-ui @config.statusSlot <typography content={(str/concat "Adopted " @entity.behavior)} variant="caption" />)
+        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: @entity.behavior, value: (object/get (array/first @entity.ranked) value), tier: (object/get (array/nth @config.ladder @entity.step) name), fields: (object/fromEntries []) })
+      RANKED -> describing when (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill")))
+        (set @entity.status describing)
+        (emit BUILD_PROGRESS { status: "describing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
+        (behavior/describe { behavior: (object/get (array/first @entity.ranked) behavior) } {
+          emit: { failure: BUILD_FAILED, success: DESCRIBED }
+        })
       BUILD_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui main <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
+        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
+        (emit BUILD_REJECTED { error: ?error, errors: [] })
+    }
+
+    state describing {
+      INIT -> describing
+        (set @entity.status describing)
+      DESCRIBED -> filling when (> (array/len (object/get ?result orbitals [])) 0)
+        (let ((o (array/first (object/get ?result orbitals []))))
+          (do
+            (set @entity.target (object/get @o value))
+            (set @entity.tool [
+              { name: "config", type: "object", properties: (array/map (array/filter (object/get @o knobs []) (fn k (!= (object/get @k tier "") "internal"))) (fn k (object/pick @k ["default", "description", "name", "properties", "required", "type", "values"]))) },
+              { name: "traits", type: "object", properties: (array/map (object/get @o traits []) (fn t { name: (object/get @t trait), type: "object", properties: [{ name: "config", type: "object", properties: (array/map (array/filter (object/get @t knobs []) (fn k (!= (object/get @k tier "") "internal"))) (fn k (object/pick @k ["default", "description", "name", "properties", "required", "type", "values"]))) }] })) },
+              { name: "fields", type: "object", required: (> (array/len @config.fillFields) 0), properties: @config.fillFields }
+            ])
+            (set @entity.status filling)
+            (emit BUILD_PROGRESS { status: "filling", tier: (object/get (array/nth @config.ladder @entity.step) name) })
+            (emit CONVERSE {
+              messages: [{ role: "user", content: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)) }]
+              instructions: (str/concat @config.fillInstructions "\nThe building block: " (object/get (array/first @entity.ranked) behavior) " — " (object/get (array/first @entity.ranked) description ""))
+              tools: [{ event: @config.fillEvent, payload: @entity.tool }]
+              ephemeral: true
+            })))
+      DESCRIBED -> failed when (= (array/len (object/get ?result orbitals [])) 0)
+        (set @entity.error "The best match has no orbital to fill")
+        (set @entity.status failed)
+        (render-ui @config.statusSlot <typography content="Build failed: the best match has no orbital to fill." variant="caption" />)
+        (emit BUILD_REJECTED { error: "The best match has no orbital to fill", errors: [] })
+      BUILD_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
+        (emit BUILD_REJECTED { error: ?error, errors: [] })
+    }
+
+    state filling {
+      INIT -> filling
+        (set @entity.status filling)
+      FILL -> filling
+        (set @entity.filledConfig (if (== ?config null) {} ?config))
+        (set @entity.filledTraits (if (== ?traits null) {} ?traits))
+        (set @entity.filledFields (if (== ?fields null) {} ?fields))
+      ASSISTANT_REPLIED -> building
+        (set @entity.status building)
+        (emit BUILD_PROGRESS { status: "building", tier: (object/get (array/nth @config.ladder @entity.step) name) })
+        (program/eval (quasiquote { name: (unquote @entity.orbitalName), orbitals: [(unquote (behavior/apply @entity.target { config: @entity.filledConfig, traits: @entity.filledTraits }))] }) { final: true } {
+          emit: { failure: BUILD_FAILED, success: BUILT }
+        })
+      TOOLS_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
+        (emit BUILD_REJECTED { error: ?error, errors: [] })
     }
 
     state building {
@@ -104,13 +295,23 @@ orbital AgentBuilderOrbital {
       BUILT -> done
         (set @entity.behavior (object/get ?result behavior))
         (set @entity.status done)
-        (render-ui main <typography content={(str/concat "Built " (object/get ?result behavior))} variant="caption" />)
-        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: (object/get ?result behavior) })
-      BUILD_FAILED -> failed
+        (render-ui @config.statusSlot <typography content={(str/concat "Built " (object/get ?result behavior))} variant="caption" />)
+        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: (object/get ?result behavior), value: (object/get ?result value), tier: (object/get (array/nth @config.ladder @entity.step) name), fields: @entity.filledFields })
+      BUILD_FAILED -> filling when (and (= (object/get (array/nth @config.ladder @entity.step) action) "fill") (< @entity.repairs @config.maxRepairs))
+        (set @entity.repairs (+ @entity.repairs 1))
+        (set @entity.status filling)
+        (emit BUILD_PROGRESS { status: "repairing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
+        (emit CONVERSE {
+          messages: [{ role: "user", content: @entity.request }, { role: "user", content: (str/concat "The result did not validate. The validator's issues: " (json/stringify (if (== ?errors null) [] ?errors)) " (" ?error "). Call FILL again with corrected values.") }]
+          instructions: @config.fillInstructions
+          tools: [{ event: @config.fillEvent, payload: @entity.tool }]
+          ephemeral: true
+        })
+      BUILD_FAILED -> failed when (or (!= (object/get (array/nth @config.ladder @entity.step) action) "fill") (>= @entity.repairs @config.maxRepairs))
         (set @entity.error ?error)
         (set @entity.status failed)
-        (render-ui main <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
-        (emit BUILD_REJECTED { error: ?error, errors: ?errors })
+        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
+        (emit BUILD_REJECTED { error: ?error, errors: (if (== ?errors null) [] ?errors) })
     }
 
     state done {
@@ -119,7 +320,18 @@ orbital AgentBuilderOrbital {
       RESET -> idle
         (set @entity.status idle)
         (set @entity.pick null)
-        (render-ui main <typography content="Ready to build." variant="caption" />)
+        (render-ui @config.statusSlot <typography content="Ready to build." variant="caption" />)
+      START -> searching
+        (set @entity.request ?request)
+        (set @entity.orbitalName ?orbitalName)
+        (set @entity.context (str/default ?context ""))
+        (set @entity.step 0)
+        (set @entity.repairs 0)
+        (set @entity.status searching)
+        (emit BUILD_PROGRESS { status: "searching", tier: "" })
+        (call-service llm embed { texts: [?request] } {
+          emit: { failure: BUILD_FAILED, success: REQUEST_EMBEDDED }
+        })
     }
 
     state failed {
@@ -128,41 +340,123 @@ orbital AgentBuilderOrbital {
       RESET -> idle
         (set @entity.status idle)
         (set @entity.pick null)
-        (render-ui main <typography content="Ready to build." variant="caption" />)
+        (render-ui @config.statusSlot <typography content="Ready to build." variant="caption" />)
+      START -> searching
+        (set @entity.request ?request)
+        (set @entity.orbitalName ?orbitalName)
+        (set @entity.context (str/default ?context ""))
+        (set @entity.step 0)
+        (set @entity.repairs 0)
+        (set @entity.status searching)
+        (emit BUILD_PROGRESS { status: "searching", tier: "" })
+        (call-service llm embed { texts: [?request] } {
+          emit: { failure: BUILD_FAILED, success: REQUEST_EMBEDDED }
+        })
     }
 
     emits {
       BUILD_COMPLETE -> external {
         orbitalName : string!
         behavior : string!
+        value : behavior!
+        tier : string!
+        fields : Map string string
       }
+        @description "A tier served the request: the behavior (its specifier and its value), the ladder step that served it, and the extra fields the fill turn wrote."
+        @tier "domain"
       BUILD_REJECTED -> external {
         error : string!
         errors : [BuildIssue]
       }
+        @description "No tier could serve the request, or the build failed; the validator's issues come back as data."
+        @tier "domain"
+      BUILD_PROGRESS -> external {
+        status : string!
+        tier : string
+      }
+        @description "The build moved on (searching, describing, filling, repairing, building) at a ladder step, for a page that shows the build as it streams."
+        @tier "domain"
+      POOL_SEARCH -> external {
+        vector : [number]!
+        take : number
+      }
+        @description "A pool step asks the pool for its best entries for the request's vector; std-agent-pool's SEARCH answers with POOL_FOUND."
+        @tier "domain"
+      CONVERSE -> external {
+        messages : [AgentChatMessage]!
+        instructions : string
+        tools : [AgentToolInput]
+        ephemeral : boolean
+      }
+        @tier "internal"
+      STEP {
+      }
+        @tier "internal"
+      RANKED {
+      }
+        @tier "internal"
       REQUEST_EMBEDDED {
         embeddings : [[number]]!
       }
+        @tier "internal"
       CATALOG_LISTED {
         result : [CatalogHit]!
       }
+        @tier "internal"
+      DESCRIBED {
+        result : BehaviorDescription!
+      }
+        @tier "internal"
       BUILT {
         result : Built!
       }
+        @tier "internal"
       BUILD_FAILED {
         error : string!
         errors : [BuildIssue]
       }
+        @tier "internal"
     }
 
     listens {
       START -> external {
         request : string!
         orbitalName : string!
+        context : string
       }
+        @description "Build a behavior for the request; orbitalName names the program a mount or fill writes; context is any extra the fill turn should know."
       RESET
+      POOL_FOUND {
+        hits : [PoolHit]!
+      }
+        @description "The pool's answer to POOL_SEARCH: its best entries, best first."
+      FILL -> external {
+        config : Map string SExpr
+        traits : Map string FilledTrait
+        fields : Map string string
+      }
+        @description "The model's knob settings for the building block and the extra fields it was asked to write."
+      BuilderTools.ASSISTANT_REPLIED -> ASSISTANT_REPLIED
+      ASSISTANT_REPLIED {
+        reply : string
+      }
+      BuilderTools.ASSISTANT_REPLY_FAILED -> TOOLS_FAILED
+      TOOLS_FAILED {
+        error : string!
+      }
     }
   }
 
-  page "/agent-builder" as AgentBuilderPage -> BuilderPipeline
+  trait BuilderTools = ToolLoop.traits.AgentToolLoop {
+    config {
+      quiet: true
+      maxSteps: 4
+      cancelKey: "std-agent-builder"
+    }
+    listens {
+      BuilderPipeline.CONVERSE -> CONVERSE
+    }
+  }
+
+  page "/agent-builder" as AgentBuilderPage -> BuilderPipeline, BuilderTools
 }

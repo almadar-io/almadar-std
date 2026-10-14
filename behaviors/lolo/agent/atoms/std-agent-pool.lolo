@@ -1,0 +1,355 @@
+app std-agent-pool [
+  version: "1.0.0",
+  description: "std-agent-pool — a shared pool of generated behaviors that every user of the app draws from. WRITE { value, name, kind, topic, hint, description } takes a behavior already built and validated (a `program/eval` result), keeps its source durably (`behavior/source` → `program/print` → the `storage` service; the provider is the deployment's), embeds its description (`llm embed`) and records a PoolEntry; any failure on the way leaves no entry (WRITE_FAILED). SEARCH { vector, kinds, exclude, take } ranks the live entries of this pool by cosine similarity to the vector, nudged by their quality, and answers POOL_FOUND with the best ones, no model call. SIGNAL { id, signal } counts a play, like, hide, right or wrong answer on an entry and retires it once it has been played enough and most of its outcomes are hides or wrong answers. The pool name, kinds, bucket and key prefix and the quality knobs are config, so the same mechanism serves any app that pools generated behaviors."
+]
+;; @capabilities "behavior pool, shared generated content, retrieve by meaning, reuse generated behaviors, quality signals, retire bad content"
+
+type PoolHit = {
+  id : string!
+  behavior : string!
+  value : behavior!
+  name : string
+  kind : string
+  topic : string
+  hint : string
+  description : string
+  score : number!
+}
+type PoolUploaded = {
+  key : string!
+}
+type PoolWrite = {
+  name : string
+  kind : string
+  topic : string
+  hint : string
+  description : string
+  key : string
+  value : behavior
+}
+
+orbital AgentPoolOrbital {
+  config {
+    pool : string = "default"
+      @label "Pool name"
+      @description "The pool this orbital writes to and searches; entries of other pools are never served."
+      @tier "domain"
+    kinds : [string] = []
+      @label "Kinds of behavior pooled"
+      @description "When listed, a write of any other kind is refused. Empty accepts any kind."
+      @tier "domain"
+    bucket : string = ""
+      @label "Storage bucket"
+      @description "The `storage` service bucket that keeps each pooled behavior's source. Empty uses the deployment's default bucket."
+      @tier "domain"
+    keyPrefix : string = "pool/"
+      @label "Storage key prefix"
+      @description "Every source is stored under `<keyPrefix><pool>/<name>.lolo`."
+      @tier "domain"
+    qualityWeight : number = 0.1
+      @label "Quality weight"
+      @description "How much an entry's track record moves its search score: score = similarity + weight × (likes + right − hides − wrong) / (1 + plays)."
+      @tier "policy"
+    retireAfter : number = 20
+      @label "Plays before an entry can be retired"
+      @tier "policy"
+    retireRatio : number = 0.6
+      @label "Share of hides and wrong answers that retires an entry"
+      @tier "policy"
+  }
+
+  entity AgentPoolHost [runtime] {
+    id : string!
+    pending : PoolWrite = { name: "", kind: "", topic: "", hint: "", description: "", key: "", value: none }
+    signalOf : string = ""
+    queryVector : [number] = []
+    queryKinds : [string] = []
+    queryExclude : [string] = []
+    queryTake : number = 10
+    error : string = ""
+  }
+
+  entity PoolEntry [persistent: poolEntries] {
+    id : string!
+    pool : string @description "The pool the entry belongs to." = ""
+    behavior : string @description "The pooled behavior's specifier, as `program/eval` wrote it." @synonyms "specifier, program" = ""
+    value : behavior @description "The pooled behavior as a value, ready to embed." = none
+    name : string @description "The pooled program's name." = ""
+    storageKey : string @description "Where its source is kept in the storage bucket." = ""
+    kind : string @description "The app's own kind of content (a game, a simulation…)." @synonyms "type, category" = ""
+    topic : string @description "What it is about." @synonyms "subject" = ""
+    hint : string @description "One line telling a user how to use it." @synonyms "how to play, instructions" = ""
+    description : string @description "The text its vector embeds." = ""
+    vector : [number] @description "The description's embedding." = []
+    plays : number = 0
+    likes : number = 0
+    hides : number = 0
+    right : number = 0
+    wrong : number = 0
+    retired : boolean @description "Retired entries are never served." = false
+    createdAt : number = 0
+  }
+
+  trait AgentPoolWriter -> AgentPoolHost [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      WRITE -> ready when (and (> (array/len @config.allowedKinds) 0) (not (array/includes @config.allowedKinds ?kind)))
+        (emit WRITE_FAILED { name: ?name, error: (str/concat "Unknown kind \"" ?kind "\". Allowed kinds: " (str/join @config.allowedKinds ", ")) })
+      WRITE -> sourcing when (or (= (array/len @config.allowedKinds) 0) (array/includes @config.allowedKinds ?kind))
+        (set @entity.pending { name: ?name, kind: ?kind, topic: (str/default ?topic ""), hint: (str/default ?hint ""), description: ?description, key: (str/concat @config.prefix @config.poolName "/" ?name ".lolo"), value: ?value })
+        (behavior/source ?value {
+          emit: { failure: STEP_FAILED, success: SOURCED }
+        })
+    }
+
+    state sourcing {
+      INIT -> ready
+      SOURCED -> keeping
+        (program/print ?result {
+          emit: { failure: STEP_FAILED, success: PRINTED }
+        })
+      STEP_FAILED -> ready
+        (emit WRITE_FAILED { name: @entity.pending.name, error: ?error })
+        (render-ui toast { message: ?error, type: alert, variant: warning })
+    }
+
+    state keeping {
+      INIT -> ready
+      PRINTED -> keeping
+        (call-service storage upload { bucket: @config.bucketName, key: @entity.pending.key, content: ?result, contentType: "text/plain" } {
+          emit: { failure: STEP_FAILED, success: UPLOADED }
+        })
+      UPLOADED -> indexing
+        (call-service llm embed { texts: [@entity.pending.description] } {
+          emit: { failure: STEP_FAILED, success: EMBEDDED }
+        })
+      STEP_FAILED -> ready
+        (emit WRITE_FAILED { name: @entity.pending.name, error: ?error })
+        (render-ui toast { message: ?error, type: alert, variant: warning })
+    }
+
+    state indexing {
+      INIT -> ready
+      EMBEDDED -> indexing when (> (array/len ?embeddings) 0)
+        (persist create PoolEntry {
+          pool: @config.poolName
+          behavior: (object/get @entity.pending.value behavior)
+          value: @entity.pending.value
+          name: @entity.pending.name
+          storageKey: @entity.pending.key
+          kind: @entity.pending.kind
+          topic: @entity.pending.topic
+          hint: @entity.pending.hint
+          description: @entity.pending.description
+          vector: (array/first ?embeddings)
+          createdAt: @now
+        } {
+          emit: { failure: STEP_FAILED, success: POOL_WRITTEN }
+        })
+      EMBEDDED -> ready when (= (array/len ?embeddings) 0)
+        (emit WRITE_FAILED { name: @entity.pending.name, error: "The model returned no embedding" })
+        (render-ui toast { message: "The model returned no embedding", type: alert, variant: warning })
+      POOL_WRITTEN -> ready
+      STEP_FAILED -> ready
+        (emit WRITE_FAILED { name: @entity.pending.name, error: ?error })
+        (render-ui toast { message: ?error, type: alert, variant: warning })
+    }
+
+    config {
+      poolName : string = @config.pool
+        @label "Pool name"
+        @tier "domain"
+      allowedKinds : [string] = @config.kinds
+        @label "Kinds of behavior pooled"
+        @tier "domain"
+      bucketName : string = @config.bucket
+        @label "Storage bucket"
+        @tier "domain"
+      prefix : string = @config.keyPrefix
+        @label "Storage key prefix"
+        @tier "domain"
+    }
+
+    emits {
+      POOL_WRITTEN -> external
+        @description "The behavior was validated, kept and indexed — payload is the created PoolEntry row."
+        @tier "domain"
+      WRITE_FAILED -> external {
+        name : string
+        error : string!
+      }
+        @description "The behavior was not pooled (invalid program, unknown kind, storage or embedding failure); no entry was recorded."
+        @tier "domain"
+      SOURCED {
+        result : SExpr!
+      }
+        @tier "internal"
+      PRINTED {
+        result : string!
+      }
+        @tier "internal"
+      UPLOADED {
+        key : string
+      }
+        @tier "internal"
+      EMBEDDED {
+        embeddings : [[number]]!
+      }
+        @tier "internal"
+      STEP_FAILED {
+        error : string!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      WRITE -> external {
+        value : behavior!
+        name : string!
+        kind : string!
+        topic : string
+        hint : string
+        description : string!
+      }
+        @description "Pool a behavior that was just built and validated: its value, its name, its kind, what it is about, a one-line hint on how to use it and the description its vector embeds."
+        @synonyms "pool, save generated, keep behavior"
+    }
+  }
+
+  trait AgentPoolSearch -> AgentPoolHost [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SEARCH -> searching
+        (fetch PoolEntry {
+          filter: ["and", ["=", (object/get @entity pool), @config.poolName], ["=", (object/get @entity retired), false]]
+          emit: { failure: SEARCH_FAILED, success: ENTRIES_LOADED }
+        })
+        (set @entity.queryVector ?vector)
+        (set @entity.queryKinds (if (== ?kinds null) [] ?kinds))
+        (set @entity.queryExclude (if (== ?exclude null) [] ?exclude))
+        (set @entity.queryTake (if (== ?take null) 10 ?take))
+    }
+
+    state searching {
+      INIT -> ready
+      ENTRIES_LOADED -> ready
+        (emit POOL_FOUND { hits: (array/take (array/sort (array/map (array/filter ?data (fn e (and (or (= (array/len @entity.queryKinds) 0) (array/includes @entity.queryKinds (object/get @e kind ""))) (not (array/includes @entity.queryExclude (object/get @e behavior "")))))) (fn e { id: (object/get @e id), behavior: (object/get @e behavior ""), value: (object/get @e value), name: (object/get @e name ""), kind: (object/get @e kind ""), topic: (object/get @e topic ""), hint: (object/get @e hint ""), description: (object/get @e description ""), score: (+ (array/cosine (object/get @e vector []) @entity.queryVector) (* @config.weight (/ (- (+ (object/get @e likes 0) (object/get @e right 0)) (+ (object/get @e hides 0) (object/get @e wrong 0))) (+ 1 (object/get @e plays 0))))) })) score desc) @entity.queryTake) })
+      SEARCH_FAILED -> ready
+        (emit POOL_FOUND { hits: [] })
+        (render-ui toast { message: ?error, type: alert, variant: warning })
+    }
+
+    config {
+      poolName : string = @config.pool
+        @label "Pool name"
+        @tier "domain"
+      weight : number = @config.qualityWeight
+        @label "Quality weight"
+        @tier "policy"
+    }
+
+    emits {
+      POOL_FOUND -> external {
+        hits : [PoolHit]!
+      }
+        @description "The pool's best entries for the search, best first; empty when nothing fits or the pool could not be read."
+        @tier "domain"
+      ENTRIES_LOADED {
+        data : [PoolEntry]!
+      }
+        @tier "internal"
+      SEARCH_FAILED {
+        error : string!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      SEARCH -> external {
+        vector : [number]!
+        kinds : [string]
+        exclude : [string]
+        take : number
+      }
+        @description "Rank this pool's live entries by meaning against the vector (an embedding of what is wanted): kinds narrows the kinds served, exclude lists behaviors already used, take caps the hits."
+        @synonyms "find in pool, retrieve, search pool"
+    }
+  }
+
+  trait AgentPoolSignal -> AgentPoolHost [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SIGNAL -> counting when (array/includes ["play", "like", "hide", "right", "wrong"] ?signal)
+        (set @entity.signalOf ?signal)
+        (fetch PoolEntry {
+          id: ?id
+          emit: { failure: SIGNAL_FAILED, success: ENTRY_LOADED }
+        })
+      SIGNAL -> ready when (not (array/includes ["play", "like", "hide", "right", "wrong"] ?signal))
+        (emit SIGNAL_REFUSED { reason: (str/concat "Unknown signal \"" ?signal "\"") })
+    }
+
+    state counting {
+      INIT -> ready
+      ENTRY_LOADED -> ready when (!= ?data null)
+        (let ((e ?data))
+          (let ((plays (+ (object/get @e plays 0) (if (= @entity.signalOf "play") 1 0))) (bad (+ (+ (object/get @e hides 0) (object/get @e wrong 0)) (if (or (= @entity.signalOf "hide") (= @entity.signalOf "wrong")) 1 0))))
+            (persist update PoolEntry {
+              id: (object/get @e id)
+              plays: @plays
+              likes: (+ (object/get @e likes 0) (if (= @entity.signalOf "like") 1 0))
+              hides: (+ (object/get @e hides 0) (if (= @entity.signalOf "hide") 1 0))
+              right: (+ (object/get @e right 0) (if (= @entity.signalOf "right") 1 0))
+              wrong: (+ (object/get @e wrong 0) (if (= @entity.signalOf "wrong") 1 0))
+              retired: (and (>= @plays @config.minPlays) (>= (/ @bad (math/max @plays 1)) @config.ratio))
+            })))
+      ENTRY_LOADED -> ready when (== ?data null)
+        (emit SIGNAL_REFUSED { reason: "No such pool entry" })
+      SIGNAL_FAILED -> ready
+        (emit SIGNAL_REFUSED { reason: ?error })
+        (render-ui toast { message: ?error, type: alert, variant: warning })
+    }
+
+    config {
+      minPlays : number = @config.retireAfter
+        @label "Plays before an entry can be retired"
+        @tier "policy"
+      ratio : number = @config.retireRatio
+        @label "Share of hides and wrong answers that retires an entry"
+        @tier "policy"
+    }
+
+    emits {
+      SIGNAL_REFUSED -> external {
+        reason : string!
+      }
+        @description "The signal was not counted (unknown signal, unknown entry, or the pool could not be read)."
+        @tier "domain"
+      ENTRY_LOADED {
+        data : PoolEntry
+      }
+        @tier "internal"
+      SIGNAL_FAILED {
+        error : string!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      SIGNAL -> external {
+        id : string!
+        signal : string!
+      }
+        @description "Count one outcome on a pool entry: play (it was shown and used), like, hide, right or wrong (an answer it graded)."
+        @synonyms "record outcome, rate, feedback"
+    }
+  }
+
+  page "/agent-pool" as AgentPoolPage -> AgentPoolWriter, AgentPoolSearch, AgentPoolSignal
+}
