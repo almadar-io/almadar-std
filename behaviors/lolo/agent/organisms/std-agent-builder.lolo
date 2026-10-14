@@ -58,6 +58,10 @@ type AgentToolField = {
   properties : [AgentToolField]
   description : string
 }
+type FieldWordLimit = {
+  name : string!
+  words : number!
+}
 type AgentToolInput = {
   event : EventAddress!
   payload : [AgentToolField]
@@ -104,6 +108,8 @@ orbital AgentBuilderOrbital {
     step : number = 0
     ranked : [Ranked] = []
     pick : trait = none
+    chosen : string = ""
+    chosenDescription : string = ""
     target : orbital = none
     filledConfig : Map string SExpr = {}
     filledTraits : Map string FilledTrait = {}
@@ -112,7 +118,7 @@ orbital AgentBuilderOrbital {
     repairs : number = 0
     behavior : string = ""
     error : string = ""
-    status : "idle" | "searching" | "describing" | "filling" | "building" | "done" | "failed" = idle
+    status : "idle" | "searching" | "choosing" | "describing" | "filling" | "building" | "done" | "failed" = idle
   }
 
   trait BuilderPipeline -> BuilderProcess [lifecycle, instance] {
@@ -129,6 +135,18 @@ orbital AgentBuilderOrbital {
       fillInstructions : string = "You adapt an existing building block to a request. Call the FILL tool once: set only the knobs the request needs (in `config` and `traits` → trait → `config`), write every requested field in `fields`, then reply with one sentence."
         @label "How the fill turn is briefed"
         @tier "domain"
+      pickInstructions : string = "Several building blocks could serve the request. Pick the one whose interaction does what the request asks (sorting into groups, putting in order, estimating, exploring…), not just the one about the same subject. Call the PICK tool once, then reply with one sentence."
+        @label "How the pick turn is briefed"
+        @description "Used when a fill step takes more than one candidate: the model picks the building block before filling it."
+        @tier "domain"
+      pickEvent : EventAddress = BuilderPipeline.PICK
+        @label "Pick tool event"
+        @description "The address the model's PICK tool fires; a consumer that renames this trait sets it to its own name."
+        @tier "internal"
+      fieldWordLimits : [FieldWordLimit] = []
+        @label "Most words per fill field"
+        @description "A fill field written longer than its limit goes back to the model as a repair turn; after the last repair turn the build goes ahead with what was written."
+        @tier "policy"
       fillEvent : EventAddress = BuilderPipeline.FILL
         @label "Fill tool event"
         @description "The address the model's FILL tool fires; a consumer that renames this trait sets it to its own name."
@@ -160,6 +178,7 @@ orbital AgentBuilderOrbital {
           emit: { failure: BUILD_FAILED, success: REQUEST_EMBEDDED }
         })
       FILL -> idle
+      PICK -> idle
       CONVERSE -> idle
       ASSISTANT_REPLIED -> idle
       TOOLS_FAILED -> idle
@@ -225,13 +244,49 @@ orbital AgentBuilderOrbital {
         (set @entity.status done)
         (render-ui @config.statusSlot <typography content={(str/concat "Adopted " @entity.behavior)} variant="caption" />)
         (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: @entity.behavior, value: (object/get (array/first @entity.ranked) value), tier: (object/get (array/nth @config.ladder @entity.step) name), fields: (object/get (array/first @entity.ranked) fields {}) })
-      RANKED -> describing when (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill")))
+      RANKED -> describing when (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill"))) (or (<= (object/get (array/nth @config.ladder @entity.step) take 1) 1) (= (array/len @entity.ranked) 1)))
+        (set @entity.chosen (object/get (array/first @entity.ranked) behavior))
+        (set @entity.chosenDescription (object/get (array/first @entity.ranked) description ""))
         (set @entity.status describing)
         (emit BUILD_PROGRESS { status: "describing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
-        (behavior/describe { behavior: (object/get (array/first @entity.ranked) behavior) } {
+        (behavior/describe { behavior: @entity.chosen } {
           emit: { failure: BUILD_FAILED, success: DESCRIBED }
         })
+      RANKED -> choosing when (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill"))) (and (> (object/get (array/nth @config.ladder @entity.step) take 1) 1) (> (array/len @entity.ranked) 1)))
+        (set @entity.chosen "")
+        (set @entity.status choosing)
+        (emit BUILD_PROGRESS { status: "choosing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
+        (emit CONVERSE {
+          messages: [{ role: "user", content: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)) }]
+          instructions: (str/concat @config.pickInstructions "\nThe building blocks:\n" (str/join (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (str/concat "- " @r.behavior ": " (object/get @r description "")))) "\n"))
+          tools: [{ event: @config.pickEvent, payload: [{ name: "behavior", type: "string", required: true, values: (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r @r.behavior)), description: "The building block that fits the request." }] }]
+          ephemeral: true
+        })
       BUILD_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
+        (emit BUILD_REJECTED { error: ?error, errors: [] })
+    }
+
+    state choosing {
+      INIT -> choosing
+        (set @entity.status choosing)
+      PICK -> choosing
+        (set @entity.chosen (str/default ?behavior ""))
+      ASSISTANT_REPLIED -> describing when (array/some (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (= @r.behavior @entity.chosen)))
+        (set @entity.chosenDescription (object/get (array/find @entity.ranked (fn r (= @r.behavior @entity.chosen))) description ""))
+        (set @entity.status describing)
+        (emit BUILD_PROGRESS { status: "describing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
+        (behavior/describe { behavior: @entity.chosen } {
+          emit: { failure: BUILD_FAILED, success: DESCRIBED }
+        })
+      ASSISTANT_REPLIED -> failed when (not (array/some (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (= @r.behavior @entity.chosen))))
+        (set @entity.error "The model picked none of the building blocks offered")
+        (set @entity.status failed)
+        (render-ui @config.statusSlot <typography content="Build failed: no building block was picked." variant="caption" />)
+        (emit BUILD_REJECTED { error: "The model picked none of the building blocks offered", errors: [] })
+      TOOLS_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
         (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
@@ -254,7 +309,7 @@ orbital AgentBuilderOrbital {
             (emit BUILD_PROGRESS { status: "filling", tier: (object/get (array/nth @config.ladder @entity.step) name) })
             (emit CONVERSE {
               messages: [{ role: "user", content: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)) }]
-              instructions: (str/concat @config.fillInstructions "\nThe building block: " (object/get (array/first @entity.ranked) behavior) " — " (object/get (array/first @entity.ranked) description ""))
+              instructions: (str/concat @config.fillInstructions "\nThe building block: " @entity.chosen " — " @entity.chosenDescription)
               tools: [{ event: @config.fillEvent, payload: @entity.tool }]
               ephemeral: true
             })))
@@ -277,7 +332,16 @@ orbital AgentBuilderOrbital {
         (set @entity.filledConfig (if (== ?config null) {} ?config))
         (set @entity.filledTraits (if (== ?traits null) {} ?traits))
         (set @entity.filledFields (if (== ?fields null) {} ?fields))
-      ASSISTANT_REPLIED -> building
+      ASSISTANT_REPLIED -> filling when (and (not (array/every @config.fieldWordLimits (fn l (<= (array/len (str/split (str/trim (object/get @entity.filledFields @l.name "")) " ")) @l.words)))) (< @entity.repairs @config.maxRepairs))
+        (set @entity.repairs (+ @entity.repairs 1))
+        (emit BUILD_PROGRESS { status: "repairing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
+        (emit CONVERSE {
+          messages: [{ role: "user", content: @entity.request }, { role: "user", content: (str/concat "Some fields are too long. The most words each field may hold: " (str/join (array/map @config.fieldWordLimits (fn l (str/concat @l.name " " (str/concat @l.words) " words"))) ", ") ". What you wrote: " (json/stringify @entity.filledFields) ". Call FILL again with the same knobs and shorter fields.") }]
+          instructions: (str/concat @config.fillInstructions "\nThe building block: " @entity.chosen " — " @entity.chosenDescription)
+          tools: [{ event: @config.fillEvent, payload: @entity.tool }]
+          ephemeral: true
+        })
+      ASSISTANT_REPLIED -> building when (or (array/every @config.fieldWordLimits (fn l (<= (array/len (str/split (str/trim (object/get @entity.filledFields @l.name "")) " ")) @l.words))) (>= @entity.repairs @config.maxRepairs))
         (set @entity.status building)
         (emit BUILD_PROGRESS { status: "building", tier: (object/get (array/nth @config.ladder @entity.step) name) })
         (program/eval (quasiquote { name: (unquote @entity.orbitalName), orbitals: [(unquote (behavior/apply @entity.target { config: @entity.filledConfig, traits: @entity.filledTraits }))] }) { final: true } {
@@ -437,6 +501,10 @@ orbital AgentBuilderOrbital {
         fields : Map string string
       }
         @description "The model's knob settings for the building block and the extra fields it was asked to write."
+      PICK -> external {
+        behavior : string!
+      }
+        @description "The model's pick among the building blocks a fill step offered."
       BuilderTools.ASSISTANT_REPLIED -> ASSISTANT_REPLIED
       ASSISTANT_REPLIED {
         reply : string

@@ -1,12 +1,12 @@
 {
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
-  "totalBehaviors": 466,
-  "atoms": 304,
+  "totalBehaviors": 468,
+  "atoms": 306,
   "molecules": 123,
   "organisms": 39,
   "layers": {
-    "UI Patterns": 453,
+    "UI Patterns": 455,
     "ML": 13
   },
   "behaviors": {
@@ -52,6 +52,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "kflow-lesson",
         "learning-algorithms",
         "learning-biology",
@@ -65,6 +66,7 @@
         "std-agent-fix-loop",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-suggestions",
@@ -434,12 +436,14 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "std-agent-assistant",
         "std-agent-builder",
         "std-agent-completion",
         "std-agent-fix-loop",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-suggestions",
@@ -640,6 +644,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "learning-algorithms",
         "learning-biology",
         "learning-chemistry",
@@ -652,6 +657,7 @@
         "std-agent-context",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-suggestions",
@@ -1028,12 +1034,14 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "std-agent-assistant",
         "std-agent-builder",
         "std-agent-completion",
         "std-agent-context",
         "std-agent-fix-loop",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-suggestions",
@@ -1379,6 +1387,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "learning-algorithms",
         "learning-biology",
         "learning-chemistry",
@@ -1391,6 +1400,7 @@
         "std-agent-context",
         "std-agent-fix-loop",
         "std-agent-memory",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-suggestions",
@@ -1722,6 +1732,489 @@
         "reactor"
       ]
     },
+    "std-agent-pool": {
+      "name": "std-agent-pool",
+      "level": "atom",
+      "topic": "agent",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "std-agent-pool — a shared pool of generated behaviors that every user of the app draws from. WRITE { value, name, kind, topic, fields, description } takes a behavior already built and validated (a `program/eval` result), keeps its source durably (`behavior/source` → `program/print` → the `storage` service; the provider is the deployment's), embeds its description (`llm embed`) and records a PoolEntry; any failure on the way leaves no entry (WRITE_FAILED). SEARCH { vector, kinds, exclude, take } ranks the live entries of this pool by cosine similarity to the vector, nudged by their quality, and answers POOL_FOUND with the best ones, no model call. SIGNAL { id, signal } counts a play, like, hide, right or wrong answer on an entry and retires it once it has been played enough and most of its outcomes are hides or wrong answers. The pool name, kinds, bucket and key prefix and the quality knobs are config, so the same mechanism serves any app that pools generated behaviors.",
+      "defaultOrbitalName": "AgentPoolOrbital",
+      "statePattern": "indexing, keeping, ready, sourcing",
+      "complexity": {
+        "states": 4,
+        "events": 9,
+        "transitions": 15
+      },
+      "defaultEntity": {
+        "name": "AgentPoolHost",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "pending",
+            "type": "object",
+            "default": {
+              "name": "",
+              "kind": "",
+              "topic": "",
+              "fields": {},
+              "description": "",
+              "key": "",
+              "value": "none"
+            }
+          },
+          {
+            "name": "signalOf",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "queryVector",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "queryKinds",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "queryExclude",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "queryTake",
+            "type": "number",
+            "default": 10
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "AgentPoolHosts",
+        "entitySingular": "AgentPoolHost",
+        "entityPlural": "AgentPoolHosts"
+      },
+      "defaultIcons": [],
+      "composableWith": [
+        "eval-agent-builder",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-completion",
+        "std-agent-context",
+        "std-agent-fix-loop",
+        "std-agent-memory",
+        "std-agent-planner",
+        "std-agent-proposal",
+        "std-agent-session",
+        "std-agent-suggestions",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-trace",
+        "std-avl-cosmic-zoom",
+        "std-behavior-catalog",
+        "std-integration-settings",
+        "std-learn-generate",
+        "std-ml-similarity",
+        "std-service-accounting",
+        "std-service-arxiv",
+        "std-service-banking",
+        "std-service-calendar",
+        "std-service-calendar-ical",
+        "std-service-cli",
+        "std-service-custom-bearer",
+        "std-service-database",
+        "std-service-docker",
+        "std-service-drive",
+        "std-service-email",
+        "std-service-esign",
+        "std-service-github",
+        "std-service-iconify",
+        "std-service-llm",
+        "std-service-maps",
+        "std-service-marketplace",
+        "std-service-meta-ads",
+        "std-service-ml",
+        "std-service-oauth",
+        "std-service-otel",
+        "std-service-print",
+        "std-service-push",
+        "std-service-queue",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-webhook",
+        "std-service-wikimedia",
+        "std-service-youtube",
+        "studio-architect-workspace",
+        "studio-designer-workspace",
+        "studio-generator",
+        "studio-library"
+      ],
+      "connectableEvents": [
+        "WRITE",
+        "SOURCED",
+        "STEP_FAILED",
+        "PRINTED",
+        "UPLOADED",
+        "EMBEDDED",
+        "POOL_WRITTEN",
+        "WRITE_FAILED"
+      ],
+      "eventPayloads": {},
+      "exposure": "both",
+      "provenance": "authored",
+      "capabilities": "behavior pool, shared generated content, retrieve by meaning, reuse generated behaviors, quality signals, retire bad content",
+      "traits": [
+        {
+          "name": "AgentPoolWriter",
+          "orbital": "AgentPoolOrbital",
+          "role": "renderer",
+          "emittedEvents": [
+            "POOL_WRITTEN",
+            "WRITE_FAILED",
+            "SOURCED",
+            "PRINTED",
+            "UPLOADED",
+            "EMBEDDED",
+            "STEP_FAILED"
+          ],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "allowedKinds",
+              "type": "[string]",
+              "default": "@config.kinds",
+              "label": "Kinds of behavior pooled",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "key": "bucketName",
+              "type": "string",
+              "default": "@config.bucket",
+              "label": "Storage bucket",
+              "tier": "domain"
+            },
+            {
+              "key": "poolName",
+              "type": "string",
+              "default": "@config.pool",
+              "label": "Pool name",
+              "tier": "domain"
+            },
+            {
+              "key": "prefix",
+              "type": "string",
+              "default": "@config.keyPrefix",
+              "label": "Storage key prefix",
+              "tier": "domain"
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "category": "lifecycle",
+          "linkedEntity": "AgentPoolHost",
+          "effectRow": [
+            {
+              "kind": "behavior/source"
+            },
+            {
+              "kind": "call-service",
+              "resource": "llm.embed"
+            },
+            {
+              "kind": "call-service",
+              "resource": "storage.upload"
+            },
+            {
+              "kind": "emit",
+              "resource": "WRITE_FAILED"
+            },
+            {
+              "kind": "persist",
+              "resource": "PoolEntry"
+            },
+            {
+              "kind": "program/print"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pending"
+            }
+          ],
+          "transitionEvents": [
+            "EMBEDDED",
+            "INIT",
+            "POOL_WRITTEN",
+            "PRINTED",
+            "SOURCED",
+            "STEP_FAILED",
+            "UPLOADED",
+            "WRITE"
+          ],
+          "events": [
+            {
+              "name": "POOL_WRITTEN",
+              "direction": "emit",
+              "description": "The behavior was validated, kept and indexed — payload is the created PoolEntry row.",
+              "tier": "domain"
+            },
+            {
+              "name": "WRITE_FAILED",
+              "direction": "emit",
+              "description": "The behavior was not pooled (invalid program, unknown kind, storage or embedding failure); no entry was recorded.",
+              "tier": "domain"
+            },
+            {
+              "name": "SOURCED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "PRINTED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "UPLOADED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "EMBEDDED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "STEP_FAILED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "WRITE",
+              "direction": "listen",
+              "description": "Pool a behavior that was just built and validated: its value, its name, its kind, what it is about, the extra fields its build wrote and the description its vector embeds.",
+              "synonyms": "pool, save generated, keep behavior"
+            }
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "AgentPoolSearch",
+          "orbital": "AgentPoolOrbital",
+          "role": "renderer",
+          "emittedEvents": [
+            "POOL_FOUND",
+            "ENTRIES_LOADED",
+            "SEARCH_FAILED"
+          ],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "poolName",
+              "type": "string",
+              "default": "@config.pool",
+              "label": "Pool name",
+              "tier": "domain"
+            },
+            {
+              "key": "weight",
+              "type": "number",
+              "default": "@config.qualityWeight",
+              "label": "Quality weight",
+              "tier": "policy"
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "category": "lifecycle",
+          "linkedEntity": "AgentPoolHost",
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "POOL_FOUND"
+            },
+            {
+              "kind": "fetch",
+              "resource": "PoolEntry"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.queryExclude"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.queryKinds"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.queryTake"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.queryVector"
+            }
+          ],
+          "transitionEvents": [
+            "ENTRIES_LOADED",
+            "INIT",
+            "SEARCH",
+            "SEARCH_FAILED"
+          ],
+          "events": [
+            {
+              "name": "POOL_FOUND",
+              "direction": "emit",
+              "description": "The pool's best entries for the search, best first; empty when nothing fits or the pool could not be read.",
+              "tier": "domain"
+            },
+            {
+              "name": "ENTRIES_LOADED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "SEARCH_FAILED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "SEARCH",
+              "direction": "listen",
+              "description": "Rank this pool's live entries by meaning against the vector (an embedding of what is wanted): kinds narrows the kinds served, exclude lists behaviors already used, take caps the hits.",
+              "synonyms": "find in pool, retrieve, search pool"
+            }
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "AgentPoolSignal",
+          "orbital": "AgentPoolOrbital",
+          "role": "renderer",
+          "emittedEvents": [
+            "SIGNAL_REFUSED",
+            "ENTRY_LOADED",
+            "SIGNAL_FAILED"
+          ],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "minPlays",
+              "type": "number",
+              "default": "@config.retireAfter",
+              "label": "Plays before an entry can be retired",
+              "tier": "policy"
+            },
+            {
+              "key": "ratio",
+              "type": "number",
+              "default": "@config.retireRatio",
+              "label": "Share of hides and wrong answers that retires an entry",
+              "tier": "policy"
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "category": "lifecycle",
+          "linkedEntity": "AgentPoolHost",
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "SIGNAL_REFUSED"
+            },
+            {
+              "kind": "fetch",
+              "resource": "PoolEntry"
+            },
+            {
+              "kind": "persist",
+              "resource": "PoolEntry"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.signalOf"
+            }
+          ],
+          "transitionEvents": [
+            "ENTRY_LOADED",
+            "INIT",
+            "SIGNAL",
+            "SIGNAL_FAILED"
+          ],
+          "events": [
+            {
+              "name": "SIGNAL_REFUSED",
+              "direction": "emit",
+              "description": "The signal was not counted (unknown signal, unknown entry, or the pool could not be read).",
+              "tier": "domain"
+            },
+            {
+              "name": "ENTRY_LOADED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "SIGNAL_FAILED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "SIGNAL",
+              "direction": "listen",
+              "description": "Count one outcome on a pool entry: play (it was shown and used), like, hide, right or wrong (an answer it graded).",
+              "synonyms": "record outcome, rate, feedback"
+            }
+          ],
+          "definerKnobs": []
+        }
+      ],
+      "factoryPath": "behaviors/functions/agent/atoms/std-agent-pool.ts",
+      "roles": [
+        "renderer"
+      ]
+    },
     "std-agent-proposal": {
       "name": "std-agent-proposal",
       "level": "atom",
@@ -1791,6 +2284,7 @@
         "@config.headingIcon"
       ],
       "composableWith": [
+        "eval-agent-builder",
         "kflow-import",
         "kflow-lesson",
         "kflow-onboarding",
@@ -1803,7 +2297,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-assistant",
         "std-agent-builder",
@@ -1812,6 +2308,7 @@
         "std-agent-fix-loop",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-session",
         "std-agent-suggestions",
         "std-agent-tool-call",
@@ -2556,6 +3053,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "std-agent-assistant",
         "std-agent-builder",
         "std-agent-completion",
@@ -2563,6 +3061,7 @@
         "std-agent-fix-loop",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-suggestions",
         "std-agent-tool-call",
@@ -3522,6 +4021,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "std-agent-assistant",
         "std-agent-builder",
         "std-agent-completion",
@@ -3529,6 +4029,7 @@
         "std-agent-fix-loop",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-tool-call",
@@ -4513,6 +5014,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "learning-algorithms",
         "learning-biology",
         "learning-chemistry",
@@ -4526,6 +5028,7 @@
         "std-agent-fix-loop",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-suggestions",
@@ -4883,6 +5386,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "kflow-onboarding",
         "std-agent-assistant",
         "std-agent-builder",
@@ -4891,6 +5395,7 @@
         "std-agent-fix-loop",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-suggestions",
@@ -5309,6 +5814,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "std-agent-assistant",
         "std-agent-builder",
         "std-agent-completion",
@@ -5316,6 +5822,7 @@
         "std-agent-fix-loop",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-suggestions",
@@ -5499,6 +6006,878 @@
         "renderer"
       ]
     },
+    "eval-agent-builder": {
+      "name": "eval-agent-builder",
+      "level": "atom",
+      "topic": "agent",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Eval of std-agent-builder's ladder over std-agent-pool. RUN_CASE { index } builds the case's request through the ladder (the pool first, adopted at or above its threshold; otherwise a std learning instrument filled by the model with its knobs and a one-line hint), pools what was built, and records an EvalCase: the tier that served it, the behavior, the hint, the latency and the verdict: the tier the case expects, with a hint. Driven from outside, one case at a time.",
+      "defaultOrbitalName": "EvalPool",
+      "statePattern": "idle, running",
+      "complexity": {
+        "states": 2,
+        "events": 9,
+        "transitions": 10
+      },
+      "defaultEntity": {
+        "name": "AgentPoolHost",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "pending",
+            "type": "object"
+          },
+          {
+            "name": "signalOf",
+            "type": "string"
+          },
+          {
+            "name": "queryVector",
+            "type": "array"
+          },
+          {
+            "name": "queryKinds",
+            "type": "array"
+          },
+          {
+            "name": "queryExclude",
+            "type": "array"
+          },
+          {
+            "name": "queryTake",
+            "type": "number"
+          },
+          {
+            "name": "error",
+            "type": "string"
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "AgentPoolHosts",
+        "entitySingular": "AgentPoolHost",
+        "entityPlural": "AgentPoolHosts"
+      },
+      "defaultIcons": [],
+      "composableWith": [
+        "kflow-onboarding",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-completion",
+        "std-agent-context",
+        "std-agent-fix-loop",
+        "std-agent-memory",
+        "std-agent-planner",
+        "std-agent-pool",
+        "std-agent-proposal",
+        "std-agent-session",
+        "std-agent-suggestions",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-trace",
+        "std-cicd-pipeline-experience",
+        "std-integration-settings",
+        "std-service-accounting",
+        "std-service-arxiv",
+        "std-service-banking",
+        "std-service-calendar",
+        "std-service-calendar-ical",
+        "std-service-cli",
+        "std-service-custom-bearer",
+        "std-service-database",
+        "std-service-docker",
+        "std-service-drive",
+        "std-service-email",
+        "std-service-esign",
+        "std-service-github",
+        "std-service-iconify",
+        "std-service-llm",
+        "std-service-maps",
+        "std-service-marketplace",
+        "std-service-meta-ads",
+        "std-service-ml",
+        "std-service-oauth",
+        "std-service-otel",
+        "std-service-print",
+        "std-service-push",
+        "std-service-queue",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-webhook",
+        "std-service-wikimedia",
+        "std-service-youtube"
+      ],
+      "connectableEvents": [
+        "RUN_CASE",
+        "READ_CASES",
+        "CASES_READ",
+        "CASES_FAILED",
+        "BUILD_DONE",
+        "BUILD_FAILED_CASE",
+        "START_BUILD",
+        "POOL_WRITE"
+      ],
+      "eventPayloads": {},
+      "exposure": "internal",
+      "provenance": "authored",
+      "traits": [
+        {
+          "name": "EvalPoolAgentPoolWriter",
+          "orbital": "EvalPool",
+          "role": "reactor",
+          "emittedEvents": [
+            "POOL_WRITTEN",
+            "WRITE_FAILED",
+            "SOURCED",
+            "PRINTED",
+            "UPLOADED",
+            "EMBEDDED",
+            "STEP_FAILED"
+          ],
+          "listenedEvents": [],
+          "overridableConfigKeys": [],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": false,
+          "linkedEntity": "AgentPoolHost",
+          "effectRow": [
+            {
+              "kind": "behavior/source"
+            },
+            {
+              "kind": "call-service",
+              "resource": "llm.embed"
+            },
+            {
+              "kind": "call-service",
+              "resource": "storage.upload"
+            },
+            {
+              "kind": "emit",
+              "resource": "WRITE_FAILED"
+            },
+            {
+              "kind": "persist",
+              "resource": "PoolEntry"
+            },
+            {
+              "kind": "program/print"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pending"
+            }
+          ],
+          "transitionEvents": [
+            "EMBEDDED",
+            "INIT",
+            "POOL_WRITTEN",
+            "PRINTED",
+            "SOURCED",
+            "STEP_FAILED",
+            "UPLOADED",
+            "WRITE"
+          ],
+          "events": [
+            {
+              "name": "POOL_WRITTEN",
+              "direction": "emit",
+              "description": "The behavior was validated, kept and indexed — payload is the created PoolEntry row.",
+              "tier": "domain"
+            },
+            {
+              "name": "WRITE_FAILED",
+              "direction": "emit",
+              "description": "The behavior was not pooled (invalid program, unknown kind, storage or embedding failure); no entry was recorded.",
+              "tier": "domain"
+            },
+            {
+              "name": "SOURCED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "PRINTED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "UPLOADED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "EMBEDDED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "STEP_FAILED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "WRITE",
+              "direction": "listen",
+              "description": "Pool a behavior that was just built and validated: its value, its name, its kind, what it is about, the extra fields its build wrote and the description its vector embeds.",
+              "synonyms": "pool, save generated, keep behavior"
+            }
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "EvalPoolAgentPoolSearch",
+          "orbital": "EvalPool",
+          "role": "reactor",
+          "emittedEvents": [
+            "POOL_FOUND",
+            "ENTRIES_LOADED",
+            "SEARCH_FAILED"
+          ],
+          "listenedEvents": [],
+          "overridableConfigKeys": [],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": false,
+          "linkedEntity": "AgentPoolHost",
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "POOL_FOUND"
+            },
+            {
+              "kind": "fetch",
+              "resource": "PoolEntry"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.queryExclude"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.queryKinds"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.queryTake"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.queryVector"
+            }
+          ],
+          "transitionEvents": [
+            "ENTRIES_LOADED",
+            "INIT",
+            "SEARCH",
+            "SEARCH_FAILED"
+          ],
+          "events": [
+            {
+              "name": "POOL_FOUND",
+              "direction": "emit",
+              "description": "The pool's best entries for the search, best first; empty when nothing fits or the pool could not be read.",
+              "tier": "domain"
+            },
+            {
+              "name": "ENTRIES_LOADED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "SEARCH_FAILED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "SEARCH",
+              "direction": "listen",
+              "description": "Rank this pool's live entries by meaning against the vector (an embedding of what is wanted): kinds narrows the kinds served, exclude lists behaviors already used, take caps the hits.",
+              "synonyms": "find in pool, retrieve, search pool"
+            }
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "EvalPoolAgentPoolSignal",
+          "orbital": "EvalPool",
+          "role": "reactor",
+          "emittedEvents": [
+            "SIGNAL_REFUSED",
+            "ENTRY_LOADED",
+            "SIGNAL_FAILED"
+          ],
+          "listenedEvents": [],
+          "overridableConfigKeys": [],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": false,
+          "linkedEntity": "AgentPoolHost",
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "SIGNAL_REFUSED"
+            },
+            {
+              "kind": "fetch",
+              "resource": "PoolEntry"
+            },
+            {
+              "kind": "persist",
+              "resource": "PoolEntry"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.signalOf"
+            }
+          ],
+          "transitionEvents": [
+            "ENTRY_LOADED",
+            "INIT",
+            "SIGNAL",
+            "SIGNAL_FAILED"
+          ],
+          "events": [
+            {
+              "name": "SIGNAL_REFUSED",
+              "direction": "emit",
+              "description": "The signal was not counted (unknown signal, unknown entry, or the pool could not be read).",
+              "tier": "domain"
+            },
+            {
+              "name": "ENTRY_LOADED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "SIGNAL_FAILED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "SIGNAL",
+              "direction": "listen",
+              "description": "Count one outcome on a pool entry: play (it was shown and used), like, hide, right or wrong (an answer it graded).",
+              "synonyms": "record outcome, rate, feedback"
+            }
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "EvalBuilderBuilderPipeline",
+          "orbital": "EvalBuilder",
+          "role": "reactor",
+          "emittedEvents": [
+            "BUILD_COMPLETE",
+            "BUILD_REJECTED",
+            "BUILD_PROGRESS",
+            "POOL_SEARCH",
+            "CONVERSE",
+            "STEP",
+            "RANKED",
+            "REQUEST_EMBEDDED",
+            "CATALOG_LISTED",
+            "DESCRIBED",
+            "BUILT",
+            "BUILD_FAILED"
+          ],
+          "listenedEvents": [
+            "ASSISTANT_REPLIED",
+            "ASSISTANT_REPLY_FAILED"
+          ],
+          "overridableConfigKeys": [],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": false,
+          "linkedEntity": "BuilderProcess",
+          "effectRow": [
+            {
+              "kind": "behavior/catalog"
+            },
+            {
+              "kind": "behavior/describe"
+            },
+            {
+              "kind": "call-service",
+              "resource": "llm.embed"
+            },
+            {
+              "kind": "emit",
+              "resource": "BUILD_COMPLETE"
+            },
+            {
+              "kind": "emit",
+              "resource": "BUILD_PROGRESS"
+            },
+            {
+              "kind": "emit",
+              "resource": "BUILD_REJECTED"
+            },
+            {
+              "kind": "emit",
+              "resource": "CONVERSE"
+            },
+            {
+              "kind": "emit",
+              "resource": "POOL_SEARCH"
+            },
+            {
+              "kind": "emit",
+              "resource": "RANKED"
+            },
+            {
+              "kind": "emit",
+              "resource": "STEP"
+            },
+            {
+              "kind": "program/eval"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "@config.statusSlot",
+              "resolved": false
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.behavior"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.chosen"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.chosenDescription"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.context"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.error"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.filledConfig"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.filledFields"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.filledTraits"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.orbitalName"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.queryVector"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.ranked"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.repairs"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.request"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.status"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.step"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.target"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.tool"
+            }
+          ],
+          "transitionEvents": [
+            "ASSISTANT_REPLIED",
+            "BUILD_FAILED",
+            "BUILT",
+            "CATALOG_LISTED",
+            "CONVERSE",
+            "DESCRIBED",
+            "FILL",
+            "INIT",
+            "PICK",
+            "POOL_FOUND",
+            "RANKED",
+            "REQUEST_EMBEDDED",
+            "RESET",
+            "START",
+            "STEP",
+            "TOOLS_FAILED"
+          ],
+          "events": [
+            {
+              "name": "BUILD_COMPLETE",
+              "direction": "emit",
+              "description": "A tier served the request: the behavior (its specifier and its value), the ladder step that served it, and the extra fields the fill turn wrote (or that the adopted pool entry carries).",
+              "tier": "domain"
+            },
+            {
+              "name": "BUILD_REJECTED",
+              "direction": "emit",
+              "description": "No tier could serve the request, or the build failed; the validator's issues come back as data.",
+              "tier": "domain"
+            },
+            {
+              "name": "BUILD_PROGRESS",
+              "direction": "emit",
+              "description": "The build moved on (searching, describing, filling, repairing, building) at a ladder step, for a page that shows the build as it streams.",
+              "tier": "domain"
+            },
+            {
+              "name": "POOL_SEARCH",
+              "direction": "emit",
+              "description": "A pool step asks the pool for its best entries for the request's vector; std-agent-pool's SEARCH answers with POOL_FOUND.",
+              "tier": "domain"
+            },
+            {
+              "name": "CONVERSE",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "STEP",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "RANKED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "REQUEST_EMBEDDED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "CATALOG_LISTED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "DESCRIBED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "BUILT",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "BUILD_FAILED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "START",
+              "direction": "listen",
+              "description": "Build a behavior for the request; orbitalName names the program a mount or fill writes; context is any extra the fill turn should know."
+            },
+            {
+              "name": "FILL",
+              "direction": "listen",
+              "description": "The model's knob settings for the building block and the extra fields it was asked to write."
+            },
+            {
+              "name": "PICK",
+              "direction": "listen",
+              "description": "The model's pick among the building blocks a fill step offered."
+            },
+            {
+              "name": "ASSISTANT_REPLIED",
+              "direction": "listen"
+            },
+            {
+              "name": "TOOLS_FAILED",
+              "direction": "listen"
+            },
+            {
+              "name": "POOL_FOUND",
+              "direction": "listen",
+              "description": "The pool's answer to POOL_SEARCH: its best entries, best first."
+            },
+            {
+              "name": "RESET",
+              "direction": "listen"
+            }
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "EvalBuilderBuilderTools",
+          "orbital": "EvalBuilder",
+          "role": "reactor",
+          "emittedEvents": [],
+          "listenedEvents": [
+            "CONVERSE"
+          ],
+          "overridableConfigKeys": [],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": false,
+          "ref": "ToolLoop.traits.AgentToolLoop",
+          "transitionEvents": [
+            "ANSWERED",
+            "ASK_FAILED",
+            "CANCEL",
+            "CONVERSE",
+            "INIT"
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "EvalDriver",
+          "orbital": "EvalRun",
+          "role": "renderer",
+          "emittedEvents": [
+            "CASES_READ",
+            "CASES_FAILED",
+            "START_BUILD",
+            "POOL_WRITE"
+          ],
+          "listenedEvents": [
+            "BUILD_COMPLETE",
+            "BUILD_REJECTED"
+          ],
+          "overridableConfigKeys": [
+            {
+              "key": "cases",
+              "type": "[EvalCaseSpec]",
+              "default": [
+                {
+                  "id": "sort-animals",
+                  "request": "A quick game sorting animals into mammals, birds and reptiles",
+                  "expectTier": "instrument"
+                },
+                {
+                  "id": "sort-animals-again",
+                  "request": "Sort some animals into mammals, birds and reptiles",
+                  "expectTier": "pool"
+                },
+                {
+                  "id": "water-cycle",
+                  "request": "Put the stages of the water cycle in order",
+                  "expectTier": "instrument"
+                },
+                {
+                  "id": "planets-order",
+                  "request": "Line up the planets from the closest to the Sun to the farthest",
+                  "expectTier": "instrument"
+                },
+                {
+                  "id": "planets-again",
+                  "request": "Order the planets by their distance from the Sun",
+                  "expectTier": "pool"
+                },
+                {
+                  "id": "fractions-compare",
+                  "request": "Which fraction is bigger? Compare pairs of fractions",
+                  "expectTier": "instrument"
+                },
+                {
+                  "id": "plant-light",
+                  "request": "Explore how light and water change how fast a plant grows",
+                  "expectTier": "instrument"
+                },
+                {
+                  "id": "times-tables",
+                  "request": "Quick-fire times tables practice against the clock",
+                  "expectTier": "instrument"
+                },
+                {
+                  "id": "moon-distance",
+                  "request": "Guess how far away the Moon is from Earth",
+                  "expectTier": "instrument"
+                },
+                {
+                  "id": "sort-foods",
+                  "request": "Sort foods into fruits and vegetables",
+                  "expectTier": "instrument"
+                }
+              ],
+              "label": "Cases",
+              "tier": "domain",
+              "items": {
+                "properties": {
+                  "expectTier": {
+                    "name": "expectTier",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "request": {
+                    "name": "request",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "category": "lifecycle",
+          "linkedEntity": "EvalRunView",
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "POOL_WRITE"
+            },
+            {
+              "kind": "emit",
+              "resource": "START_BUILD"
+            },
+            {
+              "kind": "fetch",
+              "resource": "EvalCase"
+            },
+            {
+              "kind": "persist",
+              "resource": "EvalCase"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.index"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.startedAt"
+            }
+          ],
+          "transitionEvents": [
+            "BUILD_DONE",
+            "BUILD_FAILED_CASE",
+            "CASES_FAILED",
+            "CASES_READ",
+            "INIT",
+            "READ_CASES",
+            "RUN_CASE"
+          ],
+          "events": [
+            {
+              "name": "CASES_READ",
+              "direction": "emit",
+              "description": "Every case recorded so far.",
+              "tier": "domain"
+            },
+            {
+              "name": "CASES_FAILED",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "START_BUILD",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "POOL_WRITE",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "RUN_CASE",
+              "direction": "listen",
+              "description": "Run one case of the eval."
+            },
+            {
+              "name": "READ_CASES",
+              "direction": "listen",
+              "description": "Read back every case recorded so far."
+            },
+            {
+              "name": "BUILD_DONE",
+              "direction": "listen"
+            },
+            {
+              "name": "BUILD_FAILED_CASE",
+              "direction": "listen"
+            }
+          ],
+          "definerKnobs": []
+        }
+      ],
+      "factoryPath": "behaviors/functions/agent/atoms/eval-agent-builder.ts",
+      "roles": [
+        "reactor",
+        "renderer"
+      ]
+    },
     "std-agent-assistant": {
       "name": "std-agent-assistant",
       "level": "organism",
@@ -5531,12 +6910,14 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "std-agent-builder",
         "std-agent-completion",
         "std-agent-context",
         "std-agent-fix-loop",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-suggestions",
@@ -6539,13 +7920,13 @@
       "topic": "agent",
       "family": "agent",
       "layer": "UI Patterns",
-      "description": "Agent builder — turns a request into a working orbital built from an installed behavior. START { request, orbitalName } embeds the request with `call-service llm embed`, lists the installed behaviors under the `scope` registry folders (`behavior/catalog`), ranks them by cosine similarity to the request, and builds a program that mounts the best match's trait as the orbital's page (`quasiquote` + `program/eval`, written to the workspace's orbitals/). BUILD_COMPLETE { orbitalName, behavior } carries where the program was written; BUILD_FAILED { error, errors } carries the validator's issues as data. Headless apart from a status line.",
+      "description": "Agent builder — turns a request into a behavior by walking a ladder of caching tiers, cheapest first. START { request, orbitalName, context } embeds the request (`call-service llm embed`) and walks `ladder`: each step ranks its source by cosine similarity — installed behaviors under its registry folders (`behavior/catalog`), or a pool (POOL_SEARCH, answered by POOL_FOUND from std-agent-pool) — and when the best match reaches the step's threshold runs the step's action, otherwise goes to the next step. Actions: `mount` builds a page around the best match's first trait (`program/eval`); `adopt` serves the best match as it is, no model call; `fill` describes the best match (`behavior/describe`), asks the model once to set its knobs and the extra `fillFields`, applies them (`behavior/apply`) and evaluates the result (`program/eval`, final), feeding validator issues back for up to `maxRepairs` repair turns. BUILD_PROGRESS streams each step; BUILD_COMPLETE { orbitalName, behavior, value, tier, fields } carries the behavior and the step that served it; BUILD_REJECTED { error, errors } follows an exhausted ladder or a failed build. The default ladder mounts the closest UI molecule, as earlier versions did.",
       "defaultOrbitalName": "AgentBuilderOrbital",
-      "statePattern": "building, done, failed, idle, searching",
+      "statePattern": "building, choosing, describing, done, failed, filling, idle, searching",
       "complexity": {
-        "states": 5,
-        "events": 9,
-        "transitions": 15
+        "states": 8,
+        "events": 20,
+        "transitions": 45
       },
       "defaultEntity": {
         "name": "BuilderProcess",
@@ -6567,13 +7948,67 @@
             "default": ""
           },
           {
+            "name": "context",
+            "type": "string",
+            "default": ""
+          },
+          {
             "name": "queryVector",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "step",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "ranked",
             "type": "array",
             "default": []
           },
           {
             "name": "pick",
             "type": "trait"
+          },
+          {
+            "name": "chosen",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "chosenDescription",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "target",
+            "type": "orbital"
+          },
+          {
+            "name": "filledConfig",
+            "type": "object",
+            "default": {}
+          },
+          {
+            "name": "filledTraits",
+            "type": "object",
+            "default": {}
+          },
+          {
+            "name": "filledFields",
+            "type": "object",
+            "default": {}
+          },
+          {
+            "name": "tool",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "repairs",
+            "type": "number",
+            "default": 0
           },
           {
             "name": "behavior",
@@ -6599,6 +8034,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "eval-agent-builder",
         "kflow-onboarding",
         "learning-algorithms",
         "learning-biology",
@@ -6612,6 +8048,7 @@
         "std-agent-fix-loop",
         "std-agent-memory",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-agent-session",
         "std-agent-suggestions",
@@ -6647,6 +8084,8 @@
         "std-astro-orbit",
         "std-astro-orbit-3d",
         "std-astro-stellar",
+        "std-avl-cosmic-zoom",
+        "std-behavior-catalog",
         "std-bio-cell",
         "std-bio-cell-3d",
         "std-bio-dna-3d",
@@ -6665,12 +8104,14 @@
         "std-chem-reaction",
         "std-chem-reaction-3d",
         "std-circuit-breaker",
+        "std-civics-checks",
         "std-civics-electoral",
         "std-civics-gerrymander",
         "std-coding-academy",
         "std-cooldown",
         "std-data-import",
         "std-earth-plates",
+        "std-earth-plates-3d",
         "std-earth-watercycle",
         "std-ecommerce",
         "std-econ-gdp",
@@ -6679,8 +8120,12 @@
         "std-form-advanced",
         "std-geo-vonthunen",
         "std-graph-builder",
+        "std-hist-comparison",
         "std-hist-periodization",
+        "std-hist-sourcing",
         "std-integration-settings",
+        "std-kflow",
+        "std-learn-classify",
         "std-learn-coupled-sim",
         "std-learn-derivation",
         "std-learn-doser",
@@ -6698,7 +8143,9 @@
         "std-learn-transport",
         "std-learn-tree",
         "std-ling-morphology",
+        "std-ling-phonology",
         "std-ling-soundchange",
+        "std-logic-fallacy",
         "std-logic-gates",
         "std-logic-inference",
         "std-logic-venn",
@@ -6722,6 +8169,7 @@
         "std-orb-docex-counter",
         "std-orb-docex-relay",
         "std-orb-docex-stopwatch",
+        "std-orb-live-machine",
         "std-physics-circular",
         "std-physics-collision",
         "std-physics-diagram",
@@ -6788,31 +8236,46 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-soc-conformity",
+        "std-soc-deviance",
+        "std-soc-imagination",
         "std-soc-mobility",
         "std-soc-network",
         "std-tokenizer",
+        "std-trade-order",
         "std-weight-validator",
         "studio-apps",
         "studio-builder-workspace",
         "studio-designer-workspace",
         "studio-generator",
+        "ui-avl-transition-detail",
         "ui-code-runner-panel",
         "ui-sports-board"
       ],
       "connectableEvents": [
         "START",
+        "FILL",
+        "PICK",
+        "CONVERSE",
+        "ASSISTANT_REPLIED",
+        "TOOLS_FAILED",
         "REQUEST_EMBEDDED",
+        "STEP",
         "CATALOG_LISTED",
+        "POOL_FOUND",
+        "RANKED",
         "BUILD_FAILED",
+        "DESCRIBED",
         "BUILT",
         "RESET",
         "BUILD_COMPLETE",
-        "BUILD_REJECTED"
+        "BUILD_REJECTED",
+        "BUILD_PROGRESS",
+        "POOL_SEARCH"
       ],
       "eventPayloads": {},
       "exposure": "internal",
       "provenance": "authored",
-      "capabilities": "build an orbital from a request, pick a behavior by meaning, generate a page, program evaluation",
+      "capabilities": "build a behavior from a request, caching tiers, retrieve before generating, adopt an existing behavior, fill a behavior's knobs, pick a behavior by meaning, program evaluation",
       "traits": [
         {
           "name": "BuilderPipeline",
@@ -6821,25 +8284,210 @@
           "emittedEvents": [
             "BUILD_COMPLETE",
             "BUILD_REJECTED",
+            "BUILD_PROGRESS",
+            "POOL_SEARCH",
+            "CONVERSE",
+            "STEP",
+            "RANKED",
             "REQUEST_EMBEDDED",
             "CATALOG_LISTED",
+            "DESCRIBED",
             "BUILT",
             "BUILD_FAILED"
           ],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "ASSISTANT_REPLIED",
+            "ASSISTANT_REPLY_FAILED"
+          ],
           "overridableConfigKeys": [
             {
-              "key": "scope",
-              "type": "[string]",
-              "default": [
-                "almadar-std/ui/core/molecules"
-              ],
-              "label": "Where to look for building blocks",
-              "description": "Registry folders (`<prefix>/<topic>[/<tier>]`) the builder may pick from.",
+              "key": "fieldWordLimits",
+              "type": "[FieldWordLimit]",
+              "default": [],
+              "label": "Most words per fill field",
+              "description": "A fill field written longer than its limit goes back to the model as a repair turn; after the last repair turn the build goes ahead with what was written.",
+              "tier": "policy",
+              "items": {
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "words": {
+                    "name": "words",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            {
+              "key": "fillEvent",
+              "type": "EventAddress",
+              "default": "BuilderPipeline.FILL",
+              "label": "Fill tool event",
+              "description": "The address the model's FILL tool fires; a consumer that renames this trait sets it to its own name.",
+              "tier": "internal"
+            },
+            {
+              "key": "fillFields",
+              "type": "[AgentToolField]",
+              "default": [],
+              "label": "Extra fields the fill turn writes",
+              "description": "Fields the model fills alongside the knobs (e.g. a one-line hint); they come back in BUILD_COMPLETE's `fields`.",
               "tier": "domain",
               "items": {
-                "type": "string"
+                "properties": {
+                  "values": {
+                    "name": "values",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "required": {
+                    "name": "required",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "properties": {
+                    "name": "properties",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "union",
+                      "values": [
+                        "AgentToolField"
+                      ]
+                    }
+                  },
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
               }
+            },
+            {
+              "key": "fillInstructions",
+              "type": "string",
+              "default": "You adapt an existing building block to a request. Call the FILL tool once: set only the knobs the request needs (in `config` and `traits` → trait → `config`), write every requested field in `fields`, then reply with one sentence.",
+              "label": "How the fill turn is briefed",
+              "tier": "domain"
+            },
+            {
+              "key": "ladder",
+              "type": "[BuilderStep]",
+              "default": [
+                {
+                  "name": "mount",
+                  "source": "catalog",
+                  "scope": [
+                    "almadar-std/ui/core/molecules"
+                  ],
+                  "threshold": 0,
+                  "action": "mount",
+                  "take": 1
+                }
+              ],
+              "label": "Caching tiers, cheapest first",
+              "description": "Each step ranks its source (a registry catalog under `scope`, or the pool) against the request and, when the best match reaches `threshold`, runs `action` on it: `mount` (a page around its first trait), `adopt` (serve it as it is, no model call) or `fill` (one model turn setting its knobs). A step whose best match falls short hands over to the next one; when no step serves, the build is rejected.",
+              "synonyms": "tiers, cache levels, retrieval ladder",
+              "tier": "domain",
+              "items": {
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "action": {
+                    "name": "action",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "mount",
+                      "adopt",
+                      "fill"
+                    ]
+                  },
+                  "threshold": {
+                    "name": "threshold",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "source": {
+                    "name": "source",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "catalog",
+                      "pool"
+                    ]
+                  },
+                  "take": {
+                    "name": "take",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "scope": {
+                    "name": "scope",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "type": "object"
+              }
+            },
+            {
+              "key": "maxRepairs",
+              "type": "number",
+              "default": 2,
+              "label": "Repair turns",
+              "description": "How many times validator issues go back to the model before the build fails.",
+              "tier": "policy"
+            },
+            {
+              "key": "pickEvent",
+              "type": "EventAddress",
+              "default": "BuilderPipeline.PICK",
+              "label": "Pick tool event",
+              "description": "The address the model's PICK tool fires; a consumer that renames this trait sets it to its own name.",
+              "tier": "internal"
+            },
+            {
+              "key": "pickInstructions",
+              "type": "string",
+              "default": "Several building blocks could serve the request. Pick the one whose interaction does what the request asks (sorting into groups, putting in order, estimating, exploring…), not just the one about the same subject. Call the PICK tool once, then reply with one sentence.",
+              "label": "How the pick turn is briefed",
+              "description": "Used when a fill step takes more than one candidate: the model picks the building block before filling it.",
+              "tier": "domain"
+            },
+            {
+              "key": "statusSlot",
+              "type": "slot",
+              "default": "main",
+              "label": "Status slot",
+              "description": "Where the builder shows its one-line status; a page running it in the background sends it to `system`.",
+              "tier": "presentation"
             }
           ],
           "capabilities": [],
@@ -6852,6 +8500,9 @@
               "kind": "behavior/catalog"
             },
             {
+              "kind": "behavior/describe"
+            },
+            {
               "kind": "call-service",
               "resource": "llm.embed"
             },
@@ -6861,14 +8512,35 @@
             },
             {
               "kind": "emit",
+              "resource": "BUILD_PROGRESS"
+            },
+            {
+              "kind": "emit",
               "resource": "BUILD_REJECTED"
+            },
+            {
+              "kind": "emit",
+              "resource": "CONVERSE"
+            },
+            {
+              "kind": "emit",
+              "resource": "POOL_SEARCH"
+            },
+            {
+              "kind": "emit",
+              "resource": "RANKED"
+            },
+            {
+              "kind": "emit",
+              "resource": "STEP"
             },
             {
               "kind": "program/eval"
             },
             {
               "kind": "render-ui",
-              "resource": "main"
+              "resource": "@config.statusSlot",
+              "resolved": false
             },
             {
               "kind": "set",
@@ -6876,7 +8548,31 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.chosen"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.chosenDescription"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.context"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.error"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.filledConfig"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.filledFields"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.filledTraits"
             },
             {
               "kind": "set",
@@ -6892,46 +8588,115 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.ranked"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.repairs"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.request"
             },
             {
               "kind": "set",
               "resource": "@entity.status"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.step"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.target"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.tool"
             }
           ],
           "transitionEvents": [
+            "ASSISTANT_REPLIED",
             "BUILD_FAILED",
             "BUILT",
             "CATALOG_LISTED",
+            "CONVERSE",
+            "DESCRIBED",
+            "FILL",
             "INIT",
+            "PICK",
+            "POOL_FOUND",
+            "RANKED",
             "REQUEST_EMBEDDED",
             "RESET",
-            "START"
+            "START",
+            "STEP",
+            "TOOLS_FAILED"
           ],
           "events": [
             {
               "name": "BUILD_COMPLETE",
-              "direction": "emit"
+              "direction": "emit",
+              "description": "A tier served the request: the behavior (its specifier and its value), the ladder step that served it, and the extra fields the fill turn wrote (or that the adopted pool entry carries).",
+              "tier": "domain"
             },
             {
               "name": "BUILD_REJECTED",
-              "direction": "emit"
+              "direction": "emit",
+              "description": "No tier could serve the request, or the build failed; the validator's issues come back as data.",
+              "tier": "domain"
+            },
+            {
+              "name": "BUILD_PROGRESS",
+              "direction": "emit",
+              "description": "The build moved on (searching, describing, filling, repairing, building) at a ladder step, for a page that shows the build as it streams.",
+              "tier": "domain"
+            },
+            {
+              "name": "POOL_SEARCH",
+              "direction": "emit",
+              "description": "A pool step asks the pool for its best entries for the request's vector; std-agent-pool's SEARCH answers with POOL_FOUND.",
+              "tier": "domain"
+            },
+            {
+              "name": "CONVERSE",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "STEP",
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "RANKED",
+              "direction": "emit",
+              "tier": "internal"
             },
             {
               "name": "REQUEST_EMBEDDED",
-              "direction": "emit"
+              "direction": "emit",
+              "tier": "internal"
             },
             {
               "name": "CATALOG_LISTED",
-              "direction": "emit"
+              "direction": "emit",
+              "tier": "internal"
+            },
+            {
+              "name": "DESCRIBED",
+              "direction": "emit",
+              "tier": "internal"
             },
             {
               "name": "BUILT",
-              "direction": "emit"
+              "direction": "emit",
+              "tier": "internal"
             },
             {
               "name": "BUILD_FAILED",
-              "direction": "emit"
+              "direction": "emit",
+              "tier": "internal"
             },
             {
               "name": "INIT",
@@ -6939,12 +8704,199 @@
             },
             {
               "name": "START",
+              "direction": "listen",
+              "description": "Build a behavior for the request; orbitalName names the program a mount or fill writes; context is any extra the fill turn should know."
+            },
+            {
+              "name": "FILL",
+              "direction": "listen",
+              "description": "The model's knob settings for the building block and the extra fields it was asked to write."
+            },
+            {
+              "name": "PICK",
+              "direction": "listen",
+              "description": "The model's pick among the building blocks a fill step offered."
+            },
+            {
+              "name": "ASSISTANT_REPLIED",
               "direction": "listen"
+            },
+            {
+              "name": "TOOLS_FAILED",
+              "direction": "listen"
+            },
+            {
+              "name": "POOL_FOUND",
+              "direction": "listen",
+              "description": "The pool's answer to POOL_SEARCH: its best entries, best first."
             },
             {
               "name": "RESET",
               "direction": "listen"
             }
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "BuilderTools",
+          "orbital": "AgentBuilderOrbital",
+          "role": "renderer",
+          "emittedEvents": [],
+          "listenedEvents": [
+            "CONVERSE"
+          ],
+          "overridableConfigKeys": [
+            {
+              "key": "cancelKey",
+              "type": "string",
+              "default": "std-agent-builder",
+              "label": "Cancel key",
+              "description": "The key this instance's model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own.",
+              "synonyms": "call key, abort key",
+              "tier": "internal"
+            },
+            {
+              "key": "instructions",
+              "type": "string",
+              "default": "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly.",
+              "label": "How should the assistant behave?",
+              "description": "Standing instructions sent with every conversation.",
+              "synonyms": "system prompt, persona, guidance",
+              "tier": "domain"
+            },
+            {
+              "key": "maxSteps",
+              "type": "number",
+              "default": 4,
+              "label": "Model round-trips per request",
+              "description": "How many model calls one request may take before it fails.",
+              "tier": "policy"
+            },
+            {
+              "key": "quiet",
+              "type": "boolean",
+              "default": true,
+              "label": "Run in the background?",
+              "description": "No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own.",
+              "synonyms": "silent, background, no toast, suppress errors, headless run",
+              "tier": "policy"
+            },
+            {
+              "key": "tools",
+              "type": "[AgentTool]",
+              "default": [],
+              "label": "What may the assistant do?",
+              "description": "The declared inputs it may fire (`{ event: Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user.",
+              "synonyms": "allowlist, abilities, actions, permissions",
+              "tier": "domain",
+              "items": {
+                "properties": {
+                  "AgentToolRead": {
+                    "name": "AgentToolRead",
+                    "properties": {
+                      "read": {
+                        "name": "read",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "AgentToolScope": {
+                    "name": "AgentToolScope",
+                    "properties": {
+                      "scope": {
+                        "name": "scope",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "declared"
+                        ]
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "AgentToolInput": {
+                    "name": "AgentToolInput",
+                    "properties": {
+                      "payload": {
+                        "name": "payload",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "required": {
+                              "name": "required",
+                              "required": false,
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "name": "name",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "description": {
+                              "name": "description",
+                              "required": false,
+                              "type": "string"
+                            },
+                            "type": {
+                              "name": "type",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "properties": {
+                              "name": "properties",
+                              "required": false,
+                              "type": "array",
+                              "items": {
+                                "type": "union",
+                                "values": [
+                                  "AgentToolField"
+                                ]
+                              }
+                            },
+                            "values": {
+                              "name": "values",
+                              "required": false,
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "event": {
+                        "name": "event",
+                        "required": true,
+                        "type": "EventAddress"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "union",
+                "values": [
+                  "AgentToolScope",
+                  "AgentToolInput",
+                  "AgentToolRead"
+                ]
+              }
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "ref": "ToolLoop.traits.AgentToolLoop",
+          "category": "interaction",
+          "transitionEvents": [
+            "ANSWERED",
+            "ASK_FAILED",
+            "CANCEL",
+            "CONVERSE",
+            "INIT"
           ],
           "definerKnobs": []
         }
@@ -37228,6 +39180,7 @@
       "composableWith": [
         "nata-lesson",
         "project-friday",
+        "rawi-companion",
         "rawi-lesson",
         "rawi-path",
         "std-accounting",
@@ -52120,7 +54073,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-accounting",
         "std-agent-proposal",
@@ -53857,6 +55812,7 @@
       "composableWith": [
         "nata-lesson",
         "project-friday",
+        "rawi-companion",
         "rawi-lesson",
         "rawi-path",
         "std-accounting",
@@ -66918,6 +68874,7 @@
         "std-agent-completion",
         "std-agent-fix-loop",
         "std-agent-planner",
+        "std-agent-pool",
         "std-agent-tool-call",
         "std-algo-astargraph",
         "std-algo-astargrid",
@@ -69004,6 +70961,8 @@
         "learning-math",
         "learning-physics",
         "learning-probability",
+        "std-agent-builder",
+        "std-agent-pool",
         "std-algo-astargraph",
         "std-algo-astargrid",
         "std-algo-bfs",
@@ -70789,6 +72748,7 @@
         "learning-math",
         "learning-physics",
         "learning-probability",
+        "std-agent-builder",
         "std-algo-astargraph",
         "std-algo-astargrid",
         "std-algo-bfs",
@@ -77114,6 +79074,7 @@
       "composableWith": [
         "nata-lesson",
         "project-friday",
+        "rawi-companion",
         "rawi-lesson",
         "rawi-path",
         "std-accounting",
@@ -78713,12 +80674,16 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
         "rawi-lesson",
+        "rawi-onboarding",
         "rawi-path",
         "rawi-tuning",
         "std-accounting",
         "std-accounting-solution",
+        "std-agent-builder",
+        "std-agent-pool",
         "std-agent-proposal",
         "std-api-gateway-solution",
         "std-app-layout",
@@ -87701,7 +89666,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-proposal",
         "std-app-layout",
@@ -91390,6 +93357,7 @@
       "defaultIcons": [],
       "composableWith": [
         "kflow-import",
+        "rawi-onboarding",
         "std-app-layout",
         "std-app-search",
         "std-approval-chain",
@@ -92481,7 +94449,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-accounting",
         "std-agent-proposal",
@@ -102675,7 +104645,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-proposal",
         "std-app-layout",
@@ -120190,7 +122162,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-proposal",
         "std-ap-bill",
@@ -122964,7 +124938,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-proposal",
         "std-app-layout",
@@ -125851,6 +127827,7 @@
       "composableWith": [
         "nata-lesson",
         "project-friday",
+        "rawi-companion",
         "rawi-lesson",
         "rawi-path",
         "std-accounting",
@@ -126379,7 +128356,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-proposal",
         "std-app-layout",
@@ -131688,6 +133667,7 @@
         "dnd-narrator",
         "dnd-token-art",
         "kflow-import",
+        "rawi-onboarding",
         "riya-game-platformer",
         "std-almadar-assistant-demo",
         "std-app-layout",
@@ -136423,7 +138403,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-proposal",
         "std-app-layout",
@@ -264227,6 +266209,7 @@
       "composableWith": [
         "nata-lesson",
         "project-friday",
+        "rawi-companion",
         "rawi-lesson",
         "rawi-path",
         "std-accounting",
@@ -284186,6 +286169,7 @@
       "composableWith": [
         "kflow-import",
         "learning-diagram",
+        "rawi-onboarding",
         "std-almadar-pitch",
         "std-app-layout",
         "std-app-search",
@@ -368492,7 +370476,7 @@
       "topic": "ui/learning",
       "family": "ui/learning",
       "layer": "UI Patterns",
-      "description": "Generic build-an-ordering-then-grade instrument — a config-declared roster of items (each with a correct position index and an optional hint) is tapped one at a time from a remaining-items button row onto a growing sequence of ordered slots rendered on a math-canvas; a tapped item becomes unavailable, an Undo button removes the last placement, and once every slot is filled a Check button grades the arrangement with per-slot correct/wrong coloring, a score readout, and a verdict badge. Retry clears the placements and keeps the same roster. Item vocabulary is entirely config-declared, so the same mechanism serves any ordering task (process steps, chronology, procedure, ranking) standalone. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+      "description": "Put things in order: an ordering game where the learner lines items up from first to last, smallest to largest or closest to farthest (the steps of a process, events in time, objects ranked by size, distance or speed) and then checks the order. Generic build-an-ordering-then-grade instrument — a config-declared roster of items (each with a correct position index and an optional hint) is tapped one at a time from a remaining-items button row onto a growing sequence of ordered slots rendered on a math-canvas; a tapped item becomes unavailable, an Undo button removes the last placement, and once every slot is filled a Check button grades the arrangement with per-slot correct/wrong coloring, a score readout, and a verdict badge. Retry clears the placements and keeps the same roster. Item vocabulary is entirely config-declared, so the same mechanism serves any ordering task (process steps, chronology, procedure, ranking) standalone. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
       "defaultOrbitalName": "LearnArrangementOrbital",
       "statePattern": "idle",
       "complexity": {
@@ -368589,7 +370573,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "riya-game-platformer",
         "std-agent-proposal",
@@ -368957,6 +370943,16 @@
               "tier": "domain",
               "items": {
                 "properties": {
+                  "hint": {
+                    "name": "hint",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
                   "label": {
                     "name": "label",
                     "required": true,
@@ -368966,16 +370962,6 @@
                     "name": "correctPosition",
                     "required": true,
                     "type": "number"
-                  },
-                  "id": {
-                    "name": "id",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "hint": {
-                    "name": "hint",
-                    "required": false,
-                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -369417,8 +371403,11 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
+        "std-agent-builder",
         "std-agent-proposal",
         "std-algo-astargraph",
         "std-algo-astargrid",
@@ -374208,7 +376197,7 @@
       "topic": "ui/learning",
       "family": "ui/learning",
       "layer": "UI Patterns",
-      "description": "Generic estimation drill — a config-declared prompt roster asks for a quantity, the learner commits an estimate on a slider and locks it in, and the guess is graded by relative-error band: within the exact band scores full points, within the close band partial, outside none, with the true answer and the learner's percentage error revealed after each lock-in and a running score across the round. All vocabulary and bands are config-declared, so the same mechanism serves any quantitative intuition: orders of magnitude, unit conversions, historical dates, population sizes, physical constants, probabilities. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+      "description": "Guess a quantity: the learner estimates how big, how far, how many or how long something is, then sees the true answer and how close the guess was. Generic estimation drill — a config-declared prompt roster asks for a quantity, the learner commits an estimate on a slider and locks it in, and the guess is graded by relative-error band: within the exact band scores full points, within the close band partial, outside none, with the true answer and the learner's percentage error revealed after each lock-in and a running score across the round. All vocabulary and bands are config-declared, so the same mechanism serves any quantitative intuition: orders of magnitude, unit conversions, historical dates, population sizes, physical constants, probabilities. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
       "defaultOrbitalName": "EstimateOrbital",
       "statePattern": "idle",
       "complexity": {
@@ -374339,7 +376328,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-proposal",
         "std-algo-astargraph",
@@ -374695,11 +376686,6 @@
                     "required": true,
                     "type": "string"
                   },
-                  "answer": {
-                    "name": "answer",
-                    "required": true,
-                    "type": "number"
-                  },
                   "unit": {
                     "name": "unit",
                     "required": false,
@@ -374709,6 +376695,11 @@
                     "name": "hint",
                     "required": false,
                     "type": "string"
+                  },
+                  "answer": {
+                    "name": "answer",
+                    "required": true,
+                    "type": "number"
                   }
                 },
                 "type": "object"
@@ -375828,6 +377819,7 @@
         "std-agent-assistant",
         "std-agent-builder",
         "std-agent-completion",
+        "std-agent-pool",
         "std-agent-session",
         "std-agent-tool-call",
         "std-agent-tool-loop",
@@ -378098,7 +380090,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-proposal",
         "std-algo-astargraph",
@@ -381814,7 +383808,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-proposal",
         "std-algo-astargraph",
@@ -386938,7 +388934,9 @@
         "nata-mentor",
         "nata-workbench",
         "project-friday",
+        "rawi-companion",
         "rawi-feed",
+        "rawi-onboarding",
         "rawi-tuning",
         "std-agent-proposal",
         "std-algo-astargraph",
@@ -389489,6 +391487,7 @@
         "learning-probability-lab",
         "learning-psychology-lab",
         "learning-sociology-lab",
+        "rawi-feed",
         "riya-game-platformer",
         "std-algo-astargraph",
         "std-algo-astargrid",
