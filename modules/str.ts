@@ -7,6 +7,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { BOOLEAN, NUMBER, PRIMITIVE_VALUE, STRING, list, rec, tv, union } from '../signature.js';
 
 /**
  * String module operators.
@@ -28,11 +29,11 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'str',
     category: 'std-str',
     minArity: 1,
-    maxArity: 99,
-    description: 'Concatenate strings together',
+    maxArity: null,
+    description: 'Concatenate the text of each value',
     hasSideEffects: false,
     returnType: 'string',
-    params: [{ name: 'strings', type: 'string', description: 'Strings to concatenate' }],
+    params: [{ name: '...values', type: PRIMITIVE_VALUE, description: 'Values whose text is concatenated' }],
     example: '["str/concat", "/users/", "123"] // => "/users/123"',
   },
   'str/upper': {
@@ -97,7 +98,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Split string into array by delimiter',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list(STRING),
     params: [
       { name: 's', type: 'string', description: 'The string' },
       { name: 'delim', type: 'string', description: 'Delimiter' },
@@ -113,7 +114,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'string',
     params: [
-      { name: 'arr', type: 'array', description: 'Array to join' },
+      { name: 'arr', type: list(PRIMITIVE_VALUE), description: 'Array to join' },
       { name: 'delim', type: 'string', description: 'Delimiter' },
     ],
     example: '["str/join", ["a", "b", "c"], ", "] // => "a, b, c"',
@@ -322,10 +323,10 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Return default if value is null/undefined/empty',
     hasSideEffects: false,
-    returnType: 'string',
+    returnType: tv('T'),
     params: [
-      { name: 's', type: 'string | null', description: 'The value' },
-      { name: 'default', type: 'string', description: 'Default value' },
+      { name: 's', type: tv('T', union(STRING, NUMBER, BOOLEAN)), description: 'The value (a string, number or boolean)' },
+      { name: 'default', type: tv('T'), description: 'Default value' },
     ],
     example: '["str/default", null, "N/A"] // => "N/A"',
   },
@@ -339,7 +340,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'string',
     params: [
       { name: 'template', type: 'string', description: 'Template with {placeholders}' },
-      { name: 'vars', type: 'object', description: 'Variables to substitute' },
+      { name: 'vars', type: rec('V'), description: 'Variables to substitute' },
     ],
     example: '["str/template", "Hello, {name}!", {"name": "World"}] // => "Hello, World!"',
   },

@@ -8,6 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { NUMBER, shape } from '../signature.js';
 
 /**
  * Anim module operators.
@@ -36,7 +37,7 @@ export const ANIM_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 4,
     description: 'Source rect {sx,sy,sw,sh} for a frame index on a sprite sheet',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: shape({ sx: NUMBER, sy: NUMBER, sw: NUMBER, sh: NUMBER }),
     params: [
       { name: 'frameIndex', type: 'number', description: 'Zero-based frame index' },
       { name: 'cols', type: 'number', description: 'Columns in the sheet' },

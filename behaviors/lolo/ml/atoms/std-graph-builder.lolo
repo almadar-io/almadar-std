@@ -5,9 +5,16 @@ app std-graph-builder [
 
 orbital GraphBuilderOrbital {
     type GraphBuilderEdge = { source : string!, target : string! }
+    type FeatureValue = string | number | boolean
+    type GraphNode = Map string FeatureValue
+
+  entity GraphSource [runtime] {
+    id : string!
+    neighbors : [string] = []
+  }
 
   entity GraphStructure [runtime] {
-    nodes     : [Map string scalar] = []
+    nodes     : [GraphNode] = []
     edges     : [GraphBuilderEdge] = []
     nodeCount : int = 0
     edgeCount : int = 0
@@ -18,11 +25,16 @@ orbital GraphBuilderOrbital {
     initial: idle
 
     config {
-      edgeField : string = ""
+      rowEntity : entity = GraphSource
+        @label "Entity of the rows"
+        @description "The entity whose rows BUILD_GRAPH delivers; edgeField and nodeFeatures name fields of it"
+        @synonyms "source entity, rows of, node entity"
+        @tier "internal"
+      edgeField : string = neighbors
         @label "Edge field"
         @description "Field on each source entity holding its adjacency — an array of target ids"
         @tier "domain"
-      nodeFeatures : [string] = []
+      nodeFeatures : [string] = [id]
         @label "Node features"
         @description "Entity fields carried onto each node alongside id"
         @tier "domain"
@@ -41,8 +53,7 @@ orbital GraphBuilderOrbital {
         (set @entity.status idle)
 
       BUILD_GRAPH -> built
-        (let ((nodeFields (array/unique (array/append @config.nodeFeatures "id")))
-              (nodes (array/map ?entities (fn e (object/pick @e @nodeFields))))
+        (let ((nodes (array/map ?entities (fn e (object/merge { id: (object/get @e "id") } (object/pick @e @config.nodeFeatures)))))
               (edges (array/flatten (array/map ?entities (fn e
                         (array/map (object/get @e @config.edgeField [])
                           (fn target { source: (object/get @e "id"), target: @target })))))))
@@ -74,7 +85,7 @@ orbital GraphBuilderOrbital {
 
     emits {
       GRAPH_READY -> external {
-        nodes : [Map string scalar]!
+        nodes : [GraphNode]!
         edges : [GraphBuilderEdge]!
         nodeCount : int!
         edgeCount : int!
@@ -86,7 +97,7 @@ orbital GraphBuilderOrbital {
 
     listens {
       BUILD_GRAPH {
-        entities : [Map string scalar]!
+        entities : [@entity @config.rowEntity]!
       }
     }
   }

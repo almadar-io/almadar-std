@@ -16,8 +16,9 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { EMIT_ENVELOPE, list } from '../signature.js';
 
-const EMIT_OPTIONS: NonNullable<StdOperatorMeta['params']>[number] = { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true };
+const EMIT_OPTIONS: NonNullable<StdOperatorMeta['params']>[number] = { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true };
 
 export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/read': {
@@ -52,7 +53,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'EvaluatedProgram',
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
-      { name: 'options', type: { kind: 'object', fields: { into: 'string', prior: { kind: 'sexpr' } } }, description: 'An optional target project (`into`) and prior program (`prior`)', optional: true },
+      { name: 'options', type: EMIT_ENVELOPE, description: 'An optional target project (`into`) and prior program (`prior`)', optional: true },
       EMIT_OPTIONS,
     ],
     example: '["program/eval", "@entity.program", { "emit": { "success": "BUILT", "failure": "BUILD_FAILED" } }]',
@@ -64,7 +65,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: 'PlayedStep[]',
+    returnType: list('PlayedStep'),
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
       { name: 'requests', type: { kind: 'array', of: { kind: 'object', fields: { orbital: 'string', trait: 'string', from: 'string', event: 'string' }, open: true } }, description: 'The transitions to play: `{ orbital, trait, from, event, payload }` each' },
@@ -82,7 +83,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'sexpr',
     params: [
       { name: 'programs', type: { kind: 'array', of: { kind: 'sexpr' } }, description: 'The programs to assemble, in roster order' },
-      { name: 'options', type: { kind: 'object', fields: { appName: 'string', layout: 'string', theme: 'string' } }, description: 'The app name, an optional layout strategy and theme (empty = none)' },
+      { name: 'options', type: EMIT_ENVELOPE, description: 'The app name, an optional layout strategy and theme (empty = none)' },
       EMIT_OPTIONS,
     ],
     example: '["program/compose", "@entity.programs", { "appName": "Shop" }, { "emit": { "success": "COMPOSED", "failure": "COMPOSE_FAILED" } }]',

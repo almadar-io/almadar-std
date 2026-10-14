@@ -27,6 +27,7 @@ export const OPERATOR_CATEGORIES = [
   'std-object',
   'std-validate',
   'std-json',
+  'std-csv',
   'std-time',
   'std-format',
   'std-i18n',
@@ -66,76 +67,29 @@ export const OPERATOR_CATEGORIES = [
 export type OperatorCategory = (typeof OPERATOR_CATEGORIES)[number];
 
 /**
- * Basic return types for core operators.
- */
-export type BasicReturnType = 'number' | 'boolean' | 'string' | 'any' | 'void' | 'array';
-
-/**
  * Base metadata for an operator.
  */
 /**
- * For operators whose actual return type depends on input expressions
- * rather than being a fixed primitive (gap #24's family in
- * `docs/Almadar_Std_Verification.md`). The static `returnType` is kept
- * for back-compat with consumers that don't reason about input-dependent
- * types; the validator (L2) reads `returnSemantics` first to derive the
- * concrete type from the call site's argument expressions.
+ * Value provenance of an operator's result: which of the call's own values the result carries. The result TYPE
+ * is the signature's (`returnType`, built from the type variables of `params`); provenance is a separate fact
+ * the validator's one generic value-source walk (`orbital-core` `SExpression::value_leaves`) reads to trace which
+ * leaf values an expression can yield — e.g. which events a render-bound `itemActions` list can fire.
  *
- * - `'first-truthy-of-args'` — returns the first truthy argument's value
- *   (`or` semantics, NOT a boolean). Trips arithmetic-context misuse.
- * - `'last-truthy-of-args'` — returns the last truthy argument's value
- *   when all are truthy, else first falsy (`and` short-circuit).
- * - `'first-non-null-of-args'` — returns the first non-null arg's type
- *   (`coalesce` / `default` / `??`-style).
- * - `'branch-union'` — return type is union of branch result types
- *   (`if cond X Y` → `X | Y`).
- * - `'element-of-arg<N>'` — returns element type of arg at index N
- *   (`array/first arr` → element of `arr`, `array/get arr i` → element
- *   of `arr`). Suffix `?` (e.g. `'element-of-arg<0>?'`) marks
- *   nullable-when-missing (`array/find` → `T | undefined`).
- * - `'lambda-result'` — return type is the lambda's body result, with
- *   the result possibly wrapped in an array (`array/map` →
- *   `Array<ReturnTypeOf<lambda>>`, `array/reduce` →
- *   `ReturnTypeOf<lambda>` / type of `init`).
- * - `'object-key-lookup'` — return type depends on the input object
- *   shape and the literal key (`object/get`, `object/pick`).
- * - `'identity-of-arg<N>'` — the result IS arg N, narrowed or reordered:
- *   its type matches arg N's, and every value/element it can carry is drawn
- *   from arg N (`array/filter`, `array/slice`, `array/sort`, `array/take`,
- *   `array/unique`, …; `let` is `identity-of-arg<1>`, its body).
- * - `'union-of-args'` — the result carries values drawn from EVERY arg
- *   (`array/concat`). `'union-of-args<i,j>'` restricts that to the listed arg
- *   indices: arg 0 is the list, the other listed index is the single element
- *   the operator adds (`array/append`/`array/prepend` are `<0,1>`,
- *   `array/insert` is `<0,2>`). A listed arg is either a list (contributes
- *   its elements) or one element (contributes itself).
+ * - `'branch-union'` — every argument after the condition (`if`).
+ * - `'lambda-result'` — the body of the lambda argument (`array/map`).
+ * - `'identity-of-arg<N>'` — the result IS arg N, narrowed or reordered (`array/filter`, `array/slice`,
+ *   `array/sort`, `array/take`, `array/unique`, …; `let` is `identity-of-arg<1>`, its body).
+ * - `'union-of-args'` — the result carries values drawn from EVERY arg (`array/concat`).
+ *   `'union-of-args<i,j>'` restricts that to the listed arg indices: arg 0 is the list, the other listed index is
+ *   the single element the operator adds (`array/append`/`array/prepend` are `<0,1>`, `array/insert` is `<0,2>`).
  * - `'last-of-args'` — the result is the last arg's value (`do`).
  *
- * Provenance kinds (`identity-of-arg<N>`, `union-of-args[<..>]`,
- * `last-of-args`, `branch-union`, `lambda-result`) are what the validator's
- * one generic value-source walk reads (`orbital-core`
- * `SExpression::value_leaves`) to trace which leaf values an expression can
- * yield — e.g. which events a render-bound `itemActions` list can fire.
- * `branch-union` = every arg after the condition; `lambda-result` = the body
- * of the lambda arg (the arg whose operator declares `returnType:
- * 'function'`). An operator whose result elements are NOT provably drawn from
- * its inputs (`array/range`, `array/zip`, `array/groupBy`, `array/partition`,
- * `array/flatten`) declares nothing and the walk treats it as opaque.
- *
- * Operators NOT listed here keep the fixed `returnType` semantics —
- * arithmetic, math, comparisons, aggregations (`array/sum`/`avg`/`len`),
- * type coercions, all effects.
+ * An operator whose result elements are NOT provably drawn from its inputs (`array/range`, `array/zip`,
+ * `array/groupBy`, `array/partition`, `array/flatten`) declares nothing and the walk treats it as opaque.
  */
 export type ReturnSemantics =
-  | 'first-truthy-of-args'
-  | 'last-truthy-of-args'
-  | 'first-non-null-of-args'
   | 'branch-union'
-  | 'element-of-arg<0>'
-  | 'element-of-arg<0>?'
-  | 'element-of-arg<1>'
   | 'lambda-result'
-  | 'object-key-lookup'
   | 'identity-of-arg<0>'
   | 'identity-of-arg<1>'
   | 'union-of-args'
@@ -160,8 +114,8 @@ export interface OperatorMeta {
   description: string;
   /** Whether this operator has side effects (only valid in effect context) */
   hasSideEffects: boolean;
-  /** Return type hint - basic types for core operators, extended types for std modules */
-  returnType: string;
+  /** The result type: a concrete type, or one built from the signature's type variables */
+  returnType: OperatorTypeRef;
   /**
    * For operators whose actual return type is determined at the call site
    * (input-dependent), tag with the appropriate semantics so the L2
@@ -193,6 +147,7 @@ export const STD_MODULES = [
   'array',
   'object',
   'json',
+  'csv',
   'time',
   'validate',
   'format',
@@ -238,6 +193,7 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-array',
   'std-object',
   'std-json',
+  'std-csv',
   'std-time',
   'std-validate',
   'std-format',
@@ -282,19 +238,32 @@ export type StdOperatorCategory = (typeof STD_OPERATOR_CATEGORIES)[number];
 // ============================================================================
 
 /**
- * Structured parameter type reference (Schema v2).
+ * The type language of an operator signature (`params[].type`, `returnType`, `effect.produces`).
  *
- * A plain string (e.g. `'number'`, `'string'`) is still accepted for
- * backward compatibility with simple primitives. Richer shapes let effect
- * operators declare literal unions, UI slots, event keys, and entity refs
- * so compilers, LLM prompt generators, and validators can reason about the
- * argument shape without string heuristics.
+ * There are NO generic types: `any`, `unknown`, `json`, a bare `object` and a bare `array` do not exist.
+ * Polymorphism is by TYPE VARIABLES, bound per call and resolved to one concrete type by the checker:
+ *
+ *   array/first   : [T] -> T
+ *   array/append  : [T], T -> [T]
+ *   =             : T, T -> boolean
+ *   if            : boolean, T, T -> T
+ *   array/map     : [T], (T) -> U -> [U]
+ *   array/reduce  : [T], A, (A, T) -> A -> A
+ *   object/get    : R, key-of R -> field-of R
+ *   json/parse    : string, Shape -> Shape
+ *
+ * A type variable is written only in an operator signature, never in a `.lolo` program.
+ *
+ * A plain string names a concrete type (`'number'`, `'string'`, `'boolean'`, `'void'`, a std struct such as
+ * `'tensor'`). A rest parameter (`...name`) declares the type of EACH further argument.
  */
 export type OperatorTypeRef =
   | string
   | { kind: 'union'; of: OperatorTypeRef[] }
   | { kind: 'literal'; value: string | number | boolean | null }
   | { kind: 'array'; of: OperatorTypeRef }
+  | { kind: 'tuple'; items: OperatorTypeRef[] }
+  | { kind: 'map'; key: OperatorTypeRef; value: OperatorTypeRef }
   | { kind: 'object'; fields: Record<string, OperatorTypeRef>; open?: boolean }
   | { kind: 'entity'; collection?: string }
   | { kind: 'entityRef' }
@@ -302,7 +271,26 @@ export type OperatorTypeRef =
   | { kind: 'uiSlot' }
   | { kind: 'patternType' }
   | { kind: 'binding'; shape?: OperatorTypeRef }
-  | { kind: 'sexpr' };
+  /** An unevaluated expression; `of` is the type its value has once evaluated. */
+  | { kind: 'sexpr'; of?: OperatorTypeRef }
+  /** A type variable. `bound` restricts what it may bind to; `each` binds it afresh at every argument it covers (a rest parameter). */
+  | { kind: 'var'; name: string; bound?: OperatorTypeRef; each?: boolean }
+  /** The constraint "a record": a struct, a `Map K V` or an entity row. Only valid as a variable `bound`. */
+  | { kind: 'record' }
+  /** A function type: a lambda parameter `(T) -> U`, or the value of `fn`. */
+  | { kind: 'fn'; params: OperatorTypeRef[]; returns: OperatorTypeRef }
+  /** An argument naming a field of record variable `of` (a dot path through nested records). */
+  | { kind: 'keyOf'; of: string }
+  /** The type of the field of record variable `of` that the call's `keyOf` argument names. */
+  | { kind: 'fieldOf'; of: string }
+  /** The record `of` restricted to the fields named by the call's `[keyOf]` argument. */
+  | { kind: 'pickOf'; of: string }
+  /** The record `of` without the fields named by the call's `[keyOf]` argument. */
+  | { kind: 'omitOf'; of: string }
+  /** The record whose fields are those of every binding of the `each` variable `of`, later bindings winning. */
+  | { kind: 'mergeOf'; of: string }
+  /** The declared target shape of the call: an argument naming a type, which is also the result type. */
+  | { kind: 'shape' };
 
 /**
  * Effect-specific metadata (Schema v2).

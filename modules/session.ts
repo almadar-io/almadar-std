@@ -9,6 +9,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { STRING, list } from '../signature.js';
 
 export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
   'session/read-spec': {
@@ -16,7 +17,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1, maxArity: 1,
     description: 'Read the per-orbital spec.json from the session store.',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: 'OrbitalDefinition',
     params: [{ name: 'orbitalName', type: 'string', description: 'Orbital name' }],
     example: '["session/read-spec", "ProductOrbital"]',
   },
@@ -27,7 +28,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true, runsOn: 'any', returnType: 'void',
     params: [
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
-      { name: 'spec', type: { kind: 'object', fields: { orbitalName: 'string', organism: 'string', method: 'string' } }, description: 'Orbital spec' },
+      { name: 'spec', type: 'OrbitalDefinition', description: 'Orbital spec' },
     ],
     example: '["session/write-spec", "ProductOrbital", {"goal": "manage products"}]',
   },
@@ -36,7 +37,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1, maxArity: 1,
     description: 'Read the per-orbital memory from the session store.',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: list('AgentMemoryRecord'),
     params: [{ name: 'orbitalName', type: 'string', description: 'Orbital name' }],
     example: '["session/read-memory", "ProductOrbital"]',
   },
@@ -47,7 +48,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true, runsOn: 'any', returnType: 'void',
     params: [
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
-      { name: 'memory', type: { kind: 'object', fields: { entityName: 'string', notes: { kind: 'array', of: 'string' } }, open: true }, description: 'Orbital memory' },
+      { name: 'memory', type: list('AgentMemoryRecord'), description: 'Orbital memory' },
     ],
     example: '["session/write-memory", "ProductOrbital", {"notes": ["initial draft"]}]',
   },
@@ -56,7 +57,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1, maxArity: 1,
     description: 'Read the per-orbital conversation history.',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list('SessionHistoryEntry'),
     params: [{ name: 'orbitalName', type: 'string', description: 'Orbital name' }],
     example: '["session/read-history", "ProductOrbital"]',
   },
@@ -67,7 +68,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true, runsOn: 'any', returnType: 'void',
     params: [
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
-      { name: 'entry', type: { kind: 'object', fields: { role: 'string', content: 'string' } }, description: 'History entry' },
+      { name: 'entry', type: 'SessionHistoryEntry', description: 'History entry' },
     ],
     example: '["session/append-history", "ProductOrbital", { "role": "user", "content": "Add a search bar" }]',
   },
@@ -76,7 +77,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1, maxArity: 1,
     description: 'Read validation errors for an orbital.',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list(STRING),
     params: [{ name: 'orbitalName', type: 'string', description: 'Orbital name' }],
     example: '["session/read-errors", "ProductOrbital"]',
   },
@@ -87,7 +88,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true, runsOn: 'any', returnType: 'void',
     params: [
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
-      { name: 'errors', type: { kind: 'array', of: 'ValidationError' }, description: 'Validation errors' },
+      { name: 'errors', type: list(STRING), description: 'Validation errors' },
     ],
     example: '["session/write-errors", "ProductOrbital", []]',
   },
@@ -96,7 +97,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 0, maxArity: 0,
     description: 'Read the pre-computed analysis result.',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: 'AnalysisResult',
     params: [],
     example: '["session/read-analysis"]',
   },

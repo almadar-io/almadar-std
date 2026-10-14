@@ -8,6 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { NUMBER, SEXPR, VOID, shape } from '../signature.js';
 
 /**
  * Async module operators.
@@ -23,10 +24,10 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Wait for specified milliseconds, optionally execute an effect after',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'any',
+    returnType: VOID,
     params: [
       { name: 'ms', type: 'number', description: 'Milliseconds to wait' },
-      { name: 'effect', type: 'expression', description: 'Optional effect to execute after delay' },
+      { name: 'effect', type: SEXPR, description: 'Optional effect to execute after delay' },
     ],
     example: '["async/delay", 2000, ["emit", "RETRY"]] // Wait 2s then emit',
   },
@@ -42,7 +43,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'string',
     params: [
       { name: 'ms', type: 'number', description: 'Interval in milliseconds' },
-      { name: 'effect', type: 'expression', description: 'Effect to execute each interval' },
+      { name: 'effect', type: SEXPR, description: 'Effect to execute each interval' },
     ],
     example: '["async/interval", 5000, ["emit", "POLL_TICK"]] // Emit every 5s',
   },
@@ -55,9 +56,9 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Add timeout to an effect',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'any',
+    returnType: VOID,
     params: [
-      { name: 'effect', type: 'expression', description: 'Effect to execute' },
+      { name: 'effect', type: SEXPR, description: 'Effect to execute' },
       { name: 'ms', type: 'number', description: 'Timeout in milliseconds' },
     ],
     example: '["async/timeout", ["call", "api", "fetchData"], 5000]',
@@ -103,10 +104,10 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Retry an effect with configurable backoff',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'any',
+    returnType: VOID,
     params: [
-      { name: 'effect', type: 'expression', description: 'Effect to retry' },
-      { name: 'opts', type: 'object', description: '{ attempts, backoff, baseDelay }' },
+      { name: 'effect', type: SEXPR, description: 'Effect to retry' },
+      { name: 'opts', type: shape({ maxAttempts: NUMBER, delayMs: NUMBER }), description: '{ attempts, backoff, baseDelay }' },
     ],
     example: `["async/retry",
   ["call", "api", "fetchData", { "id": "@entity.id" }],
@@ -121,8 +122,8 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Execute effects in parallel, return first to complete',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'any',
-    params: [{ name: '...effects', type: 'expression[]', description: 'Effects to race' }],
+    returnType: VOID,
+    params: [{ name: '...effects', type: SEXPR, description: 'Effects to race' }],
     example: '["async/race", ["call", "api1"], ["call", "api2"]]',
   },
   'async/all': {
@@ -134,8 +135,8 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Execute effects in parallel, wait for all to complete',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'array',
-    params: [{ name: '...effects', type: 'expression[]', description: 'Effects to execute' }],
+    returnType: VOID,
+    params: [{ name: '...effects', type: SEXPR, description: 'Effects to execute' }],
     example: '["async/all", ["call", "api1"], ["call", "api2"]]',
   },
   'async/sequence': {
@@ -147,8 +148,8 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Execute effects in sequence (one after another)',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'array',
-    params: [{ name: '...effects', type: 'expression[]', description: 'Effects to execute in order' }],
+    returnType: VOID,
+    params: [{ name: '...effects', type: SEXPR, description: 'Effects to execute in order' }],
     example: '["async/sequence", ["call", "validate"], ["call", "save"]]',
   },
 };

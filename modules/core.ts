@@ -17,16 +17,14 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
+import { BOOLEAN, EMIT_ENVELOPE, each, STRING, SEXPR, bindingOf, fn, list, openShape, rec, sexprOf, shape, tv, union } from '../signature.js';
 
 // ============================================================================
 // Shared type refs
 // ============================================================================
 
 const NUMBER: OperatorTypeRef = 'number';
-const BOOLEAN: OperatorTypeRef = 'boolean';
-const STRING: OperatorTypeRef = 'string';
-const ANY: OperatorTypeRef = 'any';
-const SEXPR: OperatorTypeRef = { kind: 'sexpr' };
+const ORDERED: OperatorTypeRef = tv('T', union(NUMBER, STRING));
 const BINDING: OperatorTypeRef = { kind: 'binding' };
 const ENTITY_REF: OperatorTypeRef = { kind: 'entityRef' };
 const EVENT_KEY: OperatorTypeRef = { kind: 'eventKey' };
@@ -148,8 +146,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'a', type: ANY, description: 'Left operand' },
-      { name: 'b', type: ANY, description: 'Right operand' },
+      { name: 'a', type: tv('T'), description: 'Left operand' },
+      { name: 'b', type: tv('T'), description: 'Right operand' },
     ],
     example: '["=", "active", "active"]',
   },
@@ -162,8 +160,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'a', type: ANY, description: 'Left operand' },
-      { name: 'b', type: ANY, description: 'Right operand' },
+      { name: 'a', type: tv('T'), description: 'Left operand' },
+      { name: 'b', type: tv('T'), description: 'Right operand' },
     ],
     example: '["==", "active", "active"]',
   },
@@ -176,8 +174,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'a', type: ANY, description: 'Left operand' },
-      { name: 'b', type: ANY, description: 'Right operand' },
+      { name: 'a', type: tv('T'), description: 'Left operand' },
+      { name: 'b', type: tv('T'), description: 'Right operand' },
     ],
     example: '["!=", 1, null]',
   },
@@ -190,8 +188,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'a', type: NUMBER, description: 'Left operand' },
-      { name: 'b', type: NUMBER, description: 'Right operand' },
+      { name: 'a', type: ORDERED, description: 'Left operand' },
+      { name: 'b', type: ORDERED, description: 'Right operand' },
     ],
     example: '["<", 5, 10]',
   },
@@ -204,8 +202,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'a', type: NUMBER, description: 'Left operand' },
-      { name: 'b', type: NUMBER, description: 'Right operand' },
+      { name: 'a', type: ORDERED, description: 'Left operand' },
+      { name: 'b', type: ORDERED, description: 'Right operand' },
     ],
     example: '[">", 10, 0]',
   },
@@ -218,8 +216,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'a', type: NUMBER, description: 'Left operand' },
-      { name: 'b', type: NUMBER, description: 'Right operand' },
+      { name: 'a', type: ORDERED, description: 'Left operand' },
+      { name: 'b', type: ORDERED, description: 'Right operand' },
     ],
     example: '["<=", 100, 100]',
   },
@@ -232,8 +230,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'a', type: NUMBER, description: 'Left operand' },
-      { name: 'b', type: NUMBER, description: 'Right operand' },
+      { name: 'a', type: ORDERED, description: 'Left operand' },
+      { name: 'b', type: ORDERED, description: 'Right operand' },
     ],
     example: '[">=", 18, 18]',
   },
@@ -248,9 +246,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Logical AND (returns the last truthy value, NOT a boolean — short-circuit)',
     hasSideEffects: false,
-    returnType: 'boolean',
-    returnSemantics: 'last-truthy-of-args',
-    params: [{ name: '...conds', type: BOOLEAN, description: 'Boolean expressions to AND' }],
+    returnType: tv('T'),
+    params: [{ name: '...operands', type: tv('T'), description: 'Operands; the last one is returned when all are truthy' }],
     example: '["and", ["=", "active", "active"], [">", 5, 0]]',
   },
   or: {
@@ -261,9 +258,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Logical OR (returns the first truthy value, NOT a boolean — short-circuit)',
     hasSideEffects: false,
-    returnType: 'boolean',
-    returnSemantics: 'first-truthy-of-args',
-    params: [{ name: '...conds', type: BOOLEAN, description: 'Boolean expressions to OR' }],
+    returnType: tv('T'),
+    params: [{ name: '...operands', type: tv('T'), description: 'Operands; the first truthy one is returned' }],
     example: '["or", ["=", "admin", "user"], ["=", "admin", "owner"]]',
   },
   not: {
@@ -275,7 +271,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Logical NOT',
     hasSideEffects: false,
     returnType: 'boolean',
-    params: [{ name: 'cond', type: BOOLEAN, description: 'Boolean to negate' }],
+    params: [{ name: 'operand', type: BOOLEAN, description: 'The boolean to negate' }],
     example: '["not", false]',
   },
   if: {
@@ -284,14 +280,14 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'logic',
     minArity: 3,
     maxArity: 3,
-    description: 'Conditional expression (ternary). Return type is union of branch types.',
+    description: 'Conditional expression (ternary). Both branches have the same type, which is the result type.',
     hasSideEffects: false,
-    returnType: 'any',
+    returnType: tv('T'),
     returnSemantics: 'branch-union',
     params: [
-      { name: 'cond', type: BOOLEAN, description: 'Condition to evaluate' },
-      { name: 'then', type: ANY, description: 'Value or effect if true' },
-      { name: 'else', type: ANY, description: 'Value or effect if false' },
+      { name: 'cond', type: BOOLEAN, description: 'Condition' },
+      { name: 'then', type: tv('T'), description: 'Value or effect if true' },
+      { name: 'else', type: tv('T'), description: 'Value or effect if false' },
     ],
     example: '["if", [">", 5, 0], "alive", "dead"]',
   },
@@ -306,15 +302,15 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Bind local variables for a body expression',
     hasSideEffects: false,
-    returnType: 'any',
+    returnType: tv('T'),
     returnSemantics: 'identity-of-arg<1>',
     params: [
       {
         name: 'bindings',
-        type: { kind: 'array', of: { kind: 'array', of: ANY } },
+        type: SEXPR,
         description: 'Array of [name, value] pairs',
       },
-      { name: 'body', type: SEXPR, description: 'Expression or effect list using the bindings' },
+      { name: 'body', type: sexprOf(tv('T')), description: 'Expression or effect list using the bindings' },
     ],
     example: '["let", [["x", 10]], ["+", "x", 1]]',
   },
@@ -326,9 +322,9 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Sequential execution of multiple effects/expressions',
     hasSideEffects: false,
-    returnType: 'any',
+    returnType: tv('T'),
     returnSemantics: 'last-of-args',
-    params: [{ name: '...exprs', type: SEXPR, description: 'Effects/expressions to run in order' }],
+    params: [{ name: '...exprs', type: sexprOf({kind:'var',name:'T',each:true}), description: 'Effects/expressions to run in order' }],
     example: '["do", ["set", "@entity.x", 0], ["set", "@entity.y", 0]]',
   },
   list: {
@@ -338,8 +334,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Literal array constructor — evaluates each argument and returns them as an array. Lowering wraps a literal list bound for a literal-array slot in `list` so it is unambiguously data, never a call (disambiguates a list whose first element collides with an operator name, e.g. [path method …]).',
     hasSideEffects: false,
-    returnType: 'array',
-    params: [{ name: '...items', type: SEXPR, description: 'Items to collect into a literal array' }],
+    returnType: list(each('T')),
+    params: [{ name: '...items', type: each('T'), description: 'Items to collect into a literal array' }],
     example: '["list", "path", "method", "status"] // => ["path", "method", "status"]',
   },
   when: {
@@ -365,12 +361,12 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Lambda expression (used for per-item renders and transforms)',
     hasSideEffects: false,
-    returnType: 'function',
+    returnType: fn([tv('T')], tv('U')),
     acceptsLambda: true,
     lambdaArgPosition: 1,
     params: [
-      { name: 'paramName', type: STRING, description: 'Name of the parameter binding' },
-      { name: 'body', type: SEXPR, description: 'Expression evaluated per invocation' },
+      { name: 'paramName', type: bindingOf(tv('T')), description: 'Name of the parameter binding' },
+      { name: 'body', type: sexprOf(tv('U')), description: 'Expression evaluated per invocation' },
     ],
     example: '["fn", "item", { "type": "typography", "content": "@item.title" }]',
   },
@@ -413,9 +409,9 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'A live hole inside `(quasiquote …)`: its expression is evaluated and spliced into the template. Legal only inside a quasiquote',
     hasSideEffects: false,
-    returnType: 'any',
+    returnType: tv('T'),
     params: [
-      { name: 'expr', type: SEXPR, description: 'The expression whose value fills the hole' },
+      { name: 'expr', type: sexprOf(tv('T')), description: 'The expression whose value fills the hole' },
     ],
     example: '["quasiquote", "[\\"unquote\\",0]", "@entity.widget"]',
   },
@@ -432,16 +428,14 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     runsOn: 'any',
     returnType: 'void',
     params: [
-      { name: 'binding', type: BINDING, description: 'Target binding (e.g. "@entity.field")' },
-      { name: 'value', type: ANY, description: 'Value to assign (literal or expression)' },
+      { name: 'binding', type: bindingOf(tv('T')), description: 'Target binding (e.g. "@entity.field")' },
+      { name: 'value', type: tv('T'), description: 'Value to assign (literal or expression)' },
     ],
     example: '["set", "@entity.health", 100]',
     effect: {
       kind: 'set',
-      // success emit carries the written value; the evaluator coerces to the
-      // binding's declared type, so 'any' is the general shape. A future pass
-      // can narrow per-binding via resolveBinding.
-      produces: ANY,
+      // success emit carries the written value, of the binding's type.
+      produces: tv('T'),
       config: { operation: SET_OPERATION },
     },
   },
@@ -463,7 +457,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       kind: 'emit',
       produces: {
         kind: 'object',
-        fields: { event: EVENT_KEY, payload: ANY },
+        fields: { event: EVENT_KEY, payload: ENTITY_REF },
         open: true,
       },
     },
@@ -487,7 +481,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         type: {
           kind: 'object',
           fields: {
-            emit: { kind: 'object', fields: {}, open: true },
+            emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
           },
           open: true,
         },
@@ -516,7 +510,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
           {
             kind: 'object',
             fields: {
-              operations: { kind: 'array', of: ANY },
+              operations: list(openShape({ action: STRING, entity: STRING })),
               completedCount: NUMBER,
               totalCount: NUMBER,
             },
@@ -540,13 +534,13 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'path', type: STRING, description: 'Route path (supports :param placeholders)' },
       {
         name: 'params',
-        type: { kind: 'object', fields: {}, open: true },
+        type: rec('P'),
         description: 'Optional route params',
         optional: true,
       },
       {
         name: 'options',
-        type: { kind: 'object', fields: {}, open: true },
+        type: openShape({ crumb: STRING }),
         description: 'Optional navigation options: { crumb } labels the navigation-stack entry for the target page',
         optional: true,
       },
@@ -607,7 +601,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'entity', type: { kind: 'entity' }, description: 'Entity name to spawn' },
       {
         name: 'initialState',
-        type: { kind: 'object', fields: {}, open: true },
+        type: rec('S'),
         description: 'Initial field values',
         optional: true,
       },
@@ -648,11 +642,11 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
           kind: 'object',
           fields: {
             id: STRING,
-            filter: ANY,
+            filter: SEXPR,
             limit: NUMBER,
             offset: NUMBER,
             include: { kind: 'array', of: STRING },
-            emit: { kind: 'object', fields: {}, open: true },
+            emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
           },
           open: true,
         },
@@ -696,8 +690,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
           kind: 'object',
           fields: {
             id: STRING,
-            filter: ANY,
-            emit: { kind: 'object', fields: {}, open: true },
+            filter: SEXPR,
+            emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
           },
           open: true,
         },
@@ -724,7 +718,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'event', type: EVENT_KEY, description: 'Target orbital event name on the server' },
       {
         name: 'payload',
-        type: { kind: 'object', fields: {}, open: true },
+        type: rec('P'),
         description: 'Event payload to forward to the server',
         optional: true,
       },
@@ -749,9 +743,9 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
           kind: 'object',
           fields: {
             id: STRING,
-            filter: ANY,
+            filter: SEXPR,
             include: { kind: 'array', of: STRING },
-            emit: { kind: 'object', fields: {}, open: true },
+            emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
           },
           open: true,
         },
@@ -788,14 +782,14 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Snapshot read of a binding or entity, without subscribing to changes',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'any',
+    returnType: tv('T'),
     params: [
-      { name: 'target', type: STRING, description: 'A binding (`@entity.health`) or entity name' },
+      { name: 'target', type: bindingOf(tv('T')), description: 'The binding to read (`@entity.health`)' },
       {
         name: 'options',
         type: {
           kind: 'object',
-          fields: { id: STRING, filter: ANY, include: { kind: 'array', of: STRING } },
+          fields: { id: STRING, filter: SEXPR, include: { kind: 'array', of: STRING } },
           open: true,
         },
         description: 'Selector: id | filter | include',
@@ -833,7 +827,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'event', type: EVENT_KEY, description: 'Event emitted on each change' },
       {
         name: 'options',
-        type: { kind: 'object', fields: { debounce: 'number', emit: { kind: 'object', fields: {}, open: true } }, open: false },
+        type: { kind: 'object', fields: { debounce: 'number', emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }) }, open: false },
         description: 'debounce (ms) | emit',
         optional: true,
       },
@@ -867,13 +861,13 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'action', type: STRING, description: 'Service action (e.g. "generate", "charge")' },
       {
         name: 'params',
-        type: { kind: 'object', fields: {}, open: true },
+        type: rec('P'),
         description: 'Service-specific params',
         optional: true,
       },
       {
         name: 'options',
-        type: { kind: 'object', fields: {}, open: true },
+        type: EMIT_ENVELOPE,
         description:
           'Optional trailing options object. Set `{ emit: { success: "...", failure: "...", cancelled: "..." } }` to wire closed-circuit result routing (V2 frame), and `key` to name the call for `cancel-call`.',
         optional: true,
@@ -885,7 +879,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       // TODO(entity-v2): narrow to the declared service return type once
       // per-service return shapes live on the orbital services block.
       // Today the emit.success payload is whatever the service adapter returns.
-      produces: ANY,
+      produces: rec('R'),
     },
   },
   'cancel-call': {
@@ -926,7 +920,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
       {
         name: 'props',
-        type: { kind: 'object', fields: {}, open: true },
+        type: rec('P'),
         description: 'Extra props forwarded to the pattern',
         optional: true,
       },

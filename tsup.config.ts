@@ -12,7 +12,6 @@ export default defineConfig({
     'behaviors/query.ts',
     'behaviors/data-dir.ts',
     'behaviors/embeddings.ts',
-    'behaviors/factory-signatures.ts',
     'behaviors/knob-embeddings.ts',
   ],
   format: ['esm'],

@@ -25,7 +25,6 @@ export {
   type OperatorTypeRef,
   type OperatorEffectMeta,
   type RunsOn,
-  type BasicReturnType,
   type StdModule,
   type StdOperatorCategory,
   type StdOperatorMeta,
@@ -38,6 +37,9 @@ export {
   getFunctionFromOperator,
   makeStdOperator,
 } from './types.js';
+
+// Signature builders
+export * from './signature.js';
 
 // Registry
 export {
@@ -129,8 +131,6 @@ export {
   type BehaviorEmbeddingsManifest,
   getBehaviorEmbeddings,
   getBehaviorEmbedding,
-  // Factory signature catalog (sync-time)
-  getFactorySignatureCatalog,
   // Per-knob embeddings (publish-time bake)
   type KnobEmbeddingsManifest,
   getKnobEmbeddings,

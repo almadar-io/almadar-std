@@ -10,18 +10,22 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { SHAPE, tv } from '../signature.js';
 
 export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
   'json/parse': {
     module: 'json',
     category: 'std-json',
-    minArity: 1,
-    maxArity: 1,
-    description: 'Parse a JSON string into a value; invalid JSON or non-string input returns null (never throws)',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Parse a JSON string into a value of the declared shape (the second argument names a type); invalid JSON or non-string input returns null (never throws)',
     hasSideEffects: false,
-    returnType: 'any',
-    params: [{ name: 's', type: 'string', description: 'The JSON string to parse' }],
-    example: '["json/parse", "{\\"a\\": 1}"] // => {a: 1}',
+    returnType: SHAPE,
+    params: [
+      { name: 's', type: 'string', description: 'The JSON string to parse' },
+      { name: 'shape', type: SHAPE, description: 'The name of the type the parsed value has' },
+    ],
+    example: '["json/parse", "{\\"a\\": 1}", "Point"] // => {a: 1}',
   },
   'json/stringify': {
     module: 'json',
@@ -31,7 +35,7 @@ export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Serialize any value to a JSON string',
     hasSideEffects: false,
     returnType: 'string',
-    params: [{ name: 'v', type: 'any', description: 'The value to serialize' }],
+    params: [{ name: 'v', type: tv('T'), description: 'The value to serialize' }],
     example: '["json/stringify", {a: 1}] // => "{\\"a\\":1}"',
   },
 };

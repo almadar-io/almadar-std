@@ -14,6 +14,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { NUMBER, STRING, list, shape } from '../signature.js';
 
 export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   'browser/open-file-picker': {
@@ -25,7 +26,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
       'Open the OS file picker (window.showOpenFilePicker / host dialog). Resolves with the selected file metadata list, or emits failure when the user cancels or the capability is denied. Async; use the trailing { emit } envelope for success/failure events.',
     hasSideEffects: true,
     runsOn: 'client',
-    returnType: 'array',
+    returnType: list(shape({ name: STRING, size: NUMBER, type: STRING, lastModified: NUMBER })),
     params: [
       {
         name: 'options',
@@ -102,7 +103,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
       'Subscribe this browser to Web Push notifications: registers the shared push service worker, fetches the VAPID public key from the host (/api/push/vapid-public-key — no key material in the schema), and calls PushManager.subscribe. Requires notification permission (user gesture). Resolves with the flat subscription credentials { endpoint, p256dh, auth } via the trailing { emit } envelope — persist them on an owner-scoped entity row and pass them back to the push.send service as subscription: { endpoint, keys: { p256dh, auth } }. Emits failure when the Push API is unavailable, permission is denied, or the host has no VAPID key configured.',
     hasSideEffects: true,
     runsOn: 'client',
-    returnType: 'object',
+    returnType: shape({ endpoint: STRING, p256dh: STRING, auth: STRING }),
     effect: {
       kind: 'custom',
       produces: {
@@ -125,7 +126,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
       'Read the current device position (navigator.geolocation.getCurrentPosition / host geolocation). Requires location permission. Resolves with { latitude, longitude, accuracy } via the trailing { emit } envelope.',
     hasSideEffects: true,
     runsOn: 'client',
-    returnType: 'object',
+    returnType: shape({ latitude: NUMBER, longitude: NUMBER, accuracy: NUMBER }),
     params: [
       {
         name: 'options',

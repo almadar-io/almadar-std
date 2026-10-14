@@ -9,6 +9,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { NUMBER, STRING, list, mapOf, shape, tuple, union } from '../signature.js';
 
 /**
  * Tensor module operators.
@@ -28,7 +29,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'tensor',
     params: [
-      { name: 'data', type: 'array', description: 'Array of numbers (can be nested for multi-dimensional)' },
+      { name: 'data', type: 'TensorValue', description: 'Array of numbers (can be nested for multi-dimensional)' },
     ],
     example: '["tensor/from", [1.0, 2.0, 3.0]]',
   },
@@ -41,7 +42,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'tensor',
     params: [
-      { name: 'shape', type: 'number[]', description: 'Shape of the tensor' },
+      { name: 'shape', type: list('number'), description: 'Shape of the tensor' },
     ],
     example: '["tensor/zeros", [3, 4]] // 3x4 tensor of zeros',
   },
@@ -54,7 +55,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'tensor',
     params: [
-      { name: 'shape', type: 'number[]', description: 'Shape of the tensor' },
+      { name: 'shape', type: list('number'), description: 'Shape of the tensor' },
     ],
     example: '["tensor/ones", [3, 4]] // 3x4 tensor of ones',
   },
@@ -67,7 +68,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'tensor',
     params: [
-      { name: 'shape', type: 'number[]', description: 'Shape of the tensor' },
+      { name: 'shape', type: list('number'), description: 'Shape of the tensor' },
     ],
     example: '["tensor/rand", [16]] // Random 16-element vector',
   },
@@ -80,7 +81,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'tensor',
     params: [
-      { name: 'shape', type: 'number[]', description: 'Shape of the tensor' },
+      { name: 'shape', type: list('number'), description: 'Shape of the tensor' },
     ],
     example: '["tensor/randn", [16]] // Random normal 16-element vector',
   },
@@ -96,7 +97,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Get tensor shape as array',
     hasSideEffects: false,
-    returnType: 'number[]',
+    returnType: list(NUMBER),
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
     ],
@@ -112,7 +113,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'number',
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
-      { name: 'index', type: 'number | number[]', description: 'Index (single for 1D, array for multi-D)' },
+      { name: 'index', type: union(NUMBER, list(NUMBER)), description: 'Index (single for 1D, array for multi-D)' },
     ],
     example: '["tensor/get", [10, 20, 30, 40], 3] // Get 4th element',
   },
@@ -141,7 +142,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'tensor',
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
-      { name: 'shape', type: 'number[]', description: 'New shape' },
+      { name: 'shape', type: list('number'), description: 'New shape' },
     ],
     example: '["tensor/reshape", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], [4, 4]] // Reshape to 4x4',
   },
@@ -173,7 +174,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'tensor',
     params: [
       { name: 'a', type: 'tensor', description: 'First tensor' },
-      { name: 'b', type: 'tensor | number', description: 'Second tensor or scalar' },
+      { name: 'b', type: union('tensor', NUMBER), description: 'Second tensor or scalar' },
     ],
     example: '["tensor/add", [1, 2], [3, 4]]',
   },
@@ -187,7 +188,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'tensor',
     params: [
       { name: 'a', type: 'tensor', description: 'First tensor' },
-      { name: 'b', type: 'tensor | number', description: 'Second tensor or scalar' },
+      { name: 'b', type: union('tensor', NUMBER), description: 'Second tensor or scalar' },
     ],
     example: '["tensor/sub", [1, 2], [3, 4]]',
   },
@@ -201,7 +202,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'tensor',
     params: [
       { name: 'a', type: 'tensor', description: 'First tensor' },
-      { name: 'b', type: 'tensor | number', description: 'Second tensor or scalar' },
+      { name: 'b', type: union('tensor', NUMBER), description: 'Second tensor or scalar' },
     ],
     example: '["tensor/mul", [0.5, 0.7], 0.99] // Decay weights',
   },
@@ -215,7 +216,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'tensor',
     params: [
       { name: 'a', type: 'tensor', description: 'First tensor' },
-      { name: 'b', type: 'tensor | number', description: 'Second tensor or scalar' },
+      { name: 'b', type: union('tensor', NUMBER), description: 'Second tensor or scalar' },
     ],
     example: '["tensor/div", [10, 20], 2]',
   },
@@ -259,7 +260,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Sum of tensor elements',
     hasSideEffects: false,
-    returnType: 'number | tensor',
+    returnType: union(NUMBER, 'tensor'),
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Dimension to reduce', optional: true },
@@ -273,7 +274,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Mean of tensor elements',
     hasSideEffects: false,
-    returnType: 'number | tensor',
+    returnType: union(NUMBER, 'tensor'),
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Dimension to reduce', optional: true },
@@ -287,7 +288,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Maximum value in tensor',
     hasSideEffects: false,
-    returnType: 'number | tensor',
+    returnType: union(NUMBER, 'tensor'),
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Dimension to reduce', optional: true },
@@ -301,7 +302,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Minimum value in tensor',
     hasSideEffects: false,
-    returnType: 'number | tensor',
+    returnType: union(NUMBER, 'tensor'),
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Dimension to reduce', optional: true },
@@ -315,7 +316,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Index of maximum value',
     hasSideEffects: false,
-    returnType: 'number | tensor',
+    returnType: union(NUMBER, 'tensor'),
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Dimension to reduce', optional: true },
@@ -351,7 +352,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'boolean',
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
-      { name: 'range', type: '[number, number]', description: 'Range as [min, max]' },
+      { name: 'range', type: tuple(NUMBER, NUMBER), description: 'Range as [min, max]' },
     ],
     example: '["tensor/allInRange", [0.5, -0.2], [-1.0, 1.0]]',
   },
@@ -362,10 +363,10 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Get indices of elements outside range',
     hasSideEffects: false,
-    returnType: 'number[]',
+    returnType: list(NUMBER),
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
-      { name: 'range', type: '[number, number]', description: 'Range as [min, max]' },
+      { name: 'range', type: tuple(NUMBER, NUMBER), description: 'Range as [min, max]' },
     ],
     example: '["tensor/outOfRangeIndices", [0.5, 1.5], [-1.0, 1.0]]',
   },
@@ -394,7 +395,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'tensor',
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
-      { name: 'ranges', type: 'object', description: 'Per-dimension ranges { "0": {min, max}, ... }' },
+      { name: 'ranges', type: mapOf(STRING, shape({ min: NUMBER, max: NUMBER })), description: 'Per-dimension ranges { "0": {min, max}, ... }' },
     ],
     example: '["tensor/clampPerDim", [5, -15], {"0": {"min": 0, "max": 10}, "1": {"min": -10, "max": 10}}]',
   },
@@ -405,10 +406,10 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Get dimensions that exceed their specified ranges',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list(NUMBER),
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
-      { name: 'ranges', type: 'object', description: 'Per-dimension ranges { "0": {min, max}, ... }' },
+      { name: 'ranges', type: mapOf(STRING, shape({ min: NUMBER, max: NUMBER })), description: 'Per-dimension ranges { "0": {min, max}, ... }' },
     ],
     example: '["tensor/outOfRangeDims", [5, -15], {"0": {"min": 0, "max": 10}, "1": {"min": -10, "max": 10}}]',
   },
@@ -424,7 +425,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Convert tensor to nested array',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: 'TensorValue',
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
     ],
@@ -437,7 +438,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Convert 1D tensor to flat array',
     hasSideEffects: false,
-    returnType: 'number[]',
+    returnType: list(NUMBER),
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor (must be 1D)' },
     ],

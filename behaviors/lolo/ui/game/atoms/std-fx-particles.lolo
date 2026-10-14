@@ -35,20 +35,20 @@ orbital FxParticlesOrbital {
     state active {
       INIT -> active
         (set @entity.fx (array/map @config.fx (fn p (object/merge @p {
-          maxTtl: (if (object/get @p maxTtl) (object/get @p maxTtl) (object/get @p ttl))
-          bornAt: (if (object/get @p bornAt) (object/get @p bornAt) (time/now))
+          maxTtl: (object/get @p maxTtl (object/get @p ttl))
+          bornAt: (object/get @p bornAt (time/now))
         }))))
       BURST -> active
         (set @entity.fx (array/concat @entity.fx (array/map @payload.particles (fn p (object/merge @p {
-          maxTtl: (if (object/get @p maxTtl) (object/get @p maxTtl) (object/get @p ttl))
-          bornAt: (if (object/get @p bornAt) (object/get @p bornAt) (time/now))
+          maxTtl: (object/get @p maxTtl (object/get @p ttl))
+          bornAt: (object/get @p bornAt (time/now))
         })))))
       RESTART -> active
         (set @entity.fx [])
     }
 
     ticks {
-      fxTick every 500ms
+      fxTick every 500ms [visible]
         when (and @config.running (> (array/len @entity.fx) 0))
         (set @entity.fx (array/filter
           (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) @config.decayRate) })))

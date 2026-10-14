@@ -6,9 +6,12 @@ orbital MigrationJobOrbital {
 
   type MigrationFile = { name : string, size : number, type : string, lastModified : number }
   type ImportSourceOption = { id : string!, kind : string!, label : string!, event : string }
-  type ImportUnit = { ref : string!, targetEntity : string!, title : string, fields : Map string scalar, parentRef : string }
+  type ImportFieldValue = string | number | boolean
+  type ImportUnit = { ref : string!, targetEntity : string!, title : string, fields : Map string ImportFieldValue, parentRef : string }
   type ImportSkip = { ref : string!, reason : string! }
-  type MigrationStats = { committed : number, failed : [Map string scalar] }
+  type ImportFailure = { ref : string!, reason : string! }
+  type ImportValidationError = { ref : string!, code : string!, field : string, message : string! }
+  type MigrationStats = { committed : number, failed : [ImportFailure] }
 
   entity MigrationJob [persistent: migration_jobs] {
     id : string!
@@ -16,12 +19,12 @@ orbital MigrationJobOrbital {
     files : [MigrationFile] @description "Client-side file metadata for upload sources (name/size/type/lastModified)." = []
     target : string @description "Name of the host entity this import writes into." = ""
     status : "idle" | "fetching" | "mapping" | "reviewing" | "committing" | "done" | "failed" @description "Lifecycle position of the run." = idle
-    documents : [Map string scalar] @description "Document metadata listed from the source — migration.listDocuments service result, never destructured by the atom." = []
-    document : Map string scalar @description "Most recently fetched document content — migration.fetchDocument service result, never destructured by the atom." = {}
+    documents : [Map string ImportFieldValue] @description "Document metadata listed from the source — migration.listDocuments service result, never destructured by the atom." = []
+    document : Map string ImportFieldValue @description "Most recently fetched document content — migration.fetchDocument service result, never destructured by the atom." = {}
     stats : MigrationStats @description "Staged/committed/failed/skipped counts — merged from host staging and migration.commit service results, never destructured by the atom." = {}
     units : [ImportUnit] @description "Staged ImportUnits ready for review (ref/targetEntity/title/fields/parentRef), when the host stages the full rows rather than aggregate stats only." @synonyms "staged units, preview rows, import rows, staged rows" = []
     skipped : [ImportSkip] @description "Source elements skipped during staging with a reason each, when the host stages the full rows rather than aggregate stats only." @synonyms "skipped rows, skipped elements, staging skips" = []
-    validationErrors : [Map string scalar] @description "Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only." @synonyms "staging errors, validation issues, import errors" = []
+    validationErrors : [ImportValidationError] @description "Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only." @synonyms "staging errors, validation issues, import errors" = []
     error : string @description "Failure detail when status is failed." = ""
     createdAt : number @description "Run start timestamp." = 0
   }
@@ -272,7 +275,7 @@ orbital MigrationJobOrbital {
 
     emits {
       DOCUMENTS_LISTED {
-        documents : [Map string scalar]!
+        documents : [Map string ImportFieldValue]!
       }
         @description "migration.listDocuments service result, flattened onto the payload by the call-service effect executor"
         @tier "secondary"
@@ -280,18 +283,18 @@ orbital MigrationJobOrbital {
         stats : MigrationStats!
         units : [ImportUnit]
         skipped : [ImportSkip]
-        validationErrors : [Map string scalar]
+        validationErrors : [ImportValidationError]
       }
         @description "migration.stage service result, flattened onto the payload by the call-service effect executor"
         @tier "secondary"
       DOCUMENT_FETCHED {
-        document : Map string scalar!
+        document : Map string ImportFieldValue!
       }
         @description "migration.fetchDocument service result, flattened onto the payload by the call-service effect executor"
         @tier "secondary"
       COMMITTED {
         committed : number!
-        failed : [Map string scalar]!
+        failed : [ImportFailure]!
       }
         @description "migration.commit service result — committed count plus per-unit failures"
         @tier "secondary"
@@ -301,13 +304,13 @@ orbital MigrationJobOrbital {
         @description "migration service call failure signal — lands the run in failed, never a silent swallow"
         @tier "secondary"
       MIGRATION_FETCHED -> external {
-        documents : [Map string scalar]!
+        documents : [Map string ImportFieldValue]!
       }
         @description "Source documents are listed and the run is ready for staging (deterministic pipeline or agent)"
         @synonyms "import fetched, source listed, documents ready"
         @tier "domain"
       MIGRATION_DOCUMENT -> external {
-        document : Map string scalar!
+        document : Map string ImportFieldValue!
       }
         @description "A single fetched document's content, for the host staging layer to map into target units"
         @synonyms "document loaded, content fetched"
@@ -316,7 +319,7 @@ orbital MigrationJobOrbital {
         stats : MigrationStats!
         units : [ImportUnit]
         skipped : [ImportSkip]
-        validationErrors : [Map string scalar]
+        validationErrors : [ImportValidationError]
       }
         @description "Staging is complete; the preview is ready for the approval gate. units/skipped/validationErrors forward the full staged rows when the host staged them, for a review-before-commit UI; stats-only hosts leave them empty."
         @synonyms "preview ready, staging complete, review import"
@@ -352,7 +355,7 @@ orbital MigrationJobOrbital {
         stats : MigrationStats!
         units : [ImportUnit]
         skipped : [ImportSkip]
-        validationErrors : [Map string scalar]
+        validationErrors : [ImportValidationError]
       }
         @description "Staging finished — the migration service's `stage` result (the source's stored profile replayed over the listed documents, no commit), or a host that stages itself. units/skipped/validationErrors carry the staged rows (server ImportPreview shape) so reviewing renders an ImportPreviewTree."
         @tier "internal"

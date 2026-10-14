@@ -33,7 +33,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Minimum of values',
     hasSideEffects: false,
     returnType: 'number',
-    params: [{ name: '...nums', type: 'number[]', description: 'Numbers to compare' }],
+    params: [{ name: '...nums', type: 'number', description: 'Numbers to compare' }],
     example: '["math/min", 3, 1, 4] // => 1',
   },
   'math/max': {
@@ -44,7 +44,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Maximum of values',
     hasSideEffects: false,
     returnType: 'number',
-    params: [{ name: '...nums', type: 'number[]', description: 'Numbers to compare' }],
+    params: [{ name: '...nums', type: 'number', description: 'Numbers to compare' }],
     example: '["math/max", 3, 1, 4] // => 4',
   },
   'math/clamp': {
@@ -236,7 +236,7 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'number',
     params: [
-      { name: 'n', type: 'number | null', description: 'The value' },
+      { name: 'n', type: { kind: 'union', of: ['number', { kind: 'literal', value: null }] }, description: 'The value' },
       { name: 'default', type: 'number', description: 'Default value' },
     ],
     example: '["math/default", null, 0] // => 0',

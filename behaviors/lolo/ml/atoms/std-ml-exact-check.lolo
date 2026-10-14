@@ -24,7 +24,7 @@ orbital MlExactCheckOrbital {
         @tier "policy"
       numericTolerance : float = 0
         @label "Numeric tolerance"
-        @description "Absolute tolerance applied when both candidate and key are numbers; 0 requires an exact numeric match"
+        @description "Absolute tolerance applied when the request carries both candidateNumber and keyNumber; 0 requires an exact numeric match"
         @tier "policy"
     }
 
@@ -33,7 +33,7 @@ orbital MlExactCheckOrbital {
         (set @entity.matched false)
         (set @entity.status idle)
       CHECK -> checked
-        (let ((bothNumeric (and (validate/number ?candidate) (validate/number ?key)))
+        (let ((bothNumeric (and (validate/number ?candidateNumber) (validate/number ?keyNumber)))
               (candStr (str/concat ?candidate))
               (keyStr (str/concat ?key))
               (candTrim (if @config.trimWhitespace (str/trim @candStr) @candStr))
@@ -41,7 +41,7 @@ orbital MlExactCheckOrbital {
               (candNorm (if @config.caseSensitive @candTrim (str/lower @candTrim)))
               (keyNorm (if @config.caseSensitive @keyTrim (str/lower @keyTrim)))
               (isMatch (if @bothNumeric
-                         (<= (math/abs (- ?candidate ?key)) @config.numericTolerance)
+                         (<= (math/abs (- ?candidateNumber ?keyNumber)) @config.numericTolerance)
                          (== @candNorm @keyNorm))))
           (if @isMatch
             (do
@@ -64,15 +64,15 @@ orbital MlExactCheckOrbital {
 
     emits {
       EXACT_MATCHED -> external {
-        candidate : scalar!
-        key : scalar!
+        candidate : string!
+        key : string!
       }
         @description "Fired when the candidate exactly equals the key under the configured normalization"
         @tier "primary"
 
       EXACT_UNMATCHED -> external {
-        candidate : scalar!
-        key : scalar!
+        candidate : string!
+        key : string!
         request : r
       }
         @description "Abstain — candidate does not equal the key; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it"
@@ -81,8 +81,10 @@ orbital MlExactCheckOrbital {
 
     listens {
       CHECK {
-        candidate : scalar!
-        key : scalar!
+        candidate : string!
+        key : string!
+        candidateNumber : number
+        keyNumber : number
         request : r
       }
     }

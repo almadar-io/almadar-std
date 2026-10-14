@@ -19,6 +19,7 @@ import { STR_OPERATORS } from './modules/str.js';
 import { ARRAY_OPERATORS } from './modules/array.js';
 import { OBJECT_OPERATORS } from './modules/object.js';
 import { JSON_OPERATORS } from './modules/json.js';
+import { CSV_OPERATORS } from './modules/csv.js';
 import { TIME_OPERATORS } from './modules/time.js';
 import { VALIDATE_OPERATORS } from './modules/validate.js';
 import { FORMAT_OPERATORS } from './modules/format.js';
@@ -66,6 +67,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...ARRAY_OPERATORS,
   ...OBJECT_OPERATORS,
   ...JSON_OPERATORS,
+  ...CSV_OPERATORS,
   ...TIME_OPERATORS,
   ...VALIDATE_OPERATORS,
   ...FORMAT_OPERATORS,
@@ -114,6 +116,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   str: STR_OPERATORS,
   array: ARRAY_OPERATORS,
   object: OBJECT_OPERATORS,
+  csv: CSV_OPERATORS,
   time: TIME_OPERATORS,
   validate: VALIDATE_OPERATORS,
   format: FORMAT_OPERATORS,

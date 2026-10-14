@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 /**
- * The behavior loaders alone (index / embeddings / factory signatures / data
+ * The behavior loaders alone (index / embeddings / data
  * dir), built in seconds for the dev loop (G-CROSS-142); the `.lolo` data is
  * never built in dev.
  */
@@ -11,7 +11,6 @@ export default defineConfig({
     'behaviors/data-dir.ts',
     'behaviors/embeddings.ts',
     'behaviors/knob-embeddings.ts',
-    'behaviors/factory-signatures.ts',
     'behaviors/exports-reader.ts',
     'behaviors/types.ts',
   ],

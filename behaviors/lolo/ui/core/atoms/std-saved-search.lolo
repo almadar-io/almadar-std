@@ -18,7 +18,7 @@ orbital SavedSearchOrbital {
     id : string!
     name : string! @description "A user-defined label for the saved search." @synonyms "title, label, search name"
     query : string @description "The text of the search query." @synonyms "search, expression, criteria"
-    filters : Map string scalar @description "Criteria used to define the search." @synonyms "criteria, conditions, constraints"
+    filters : Map string string @description "Criteria used to define the search." @synonyms "criteria, conditions, constraints"
     alertEnabled : boolean @description "Indicates whether alerts are enabled for this saved search." @synonyms "enabled, active, notification status" = false
     alertFrequency : "instant" | "daily" | "weekly" @description "How often alerts are triggered." @synonyms "frequency, interval, recurrence" = daily
     userId : string @description "Identifier of the user who created the saved search." @synonyms "creator, owner, user_id"
@@ -124,7 +124,7 @@ orbital SavedSearchOrbital {
         (set @entity.filters (if ["=", ?value, ""] (object/omit @entity.filters [?field]) (object/set @entity.filters ?field ?value)))
       SAVE_CURRENT -> browsing
         (persist create SavedSearch {
-          name: (if @entity.query @entity.query @config.defaultSearchName)
+          name: (if (validate/required @entity.query) @entity.query @config.defaultSearchName)
           query: @entity.query
           filters: @entity.filters
           userId: @user.id

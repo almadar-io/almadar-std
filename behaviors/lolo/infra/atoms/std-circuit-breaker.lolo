@@ -13,10 +13,6 @@ orbital ServiceNodeOrbital {
     uses Divider from "std/behaviors/ui-divider"
     uses SimpleGrid from "std/behaviors/ui-simple-grid"
 
-    type ServiceNodeLoaded = Event { data : [ServiceNode] } "Fired when ServiceNode finishes loading"
-
-    type ServiceNodeLoadFailed = Event { message : string } "Fired when ServiceNode fails to load"
-
   entity ServiceNode [runtime] {
     id : string
     name : string @description "A user-defined identifier for the circuit breaker." @synonyms "identifier, label, designation"
@@ -26,6 +22,7 @@ orbital ServiceNodeOrbital {
     failureCount : number @intrinsic @description "The number of times the circuit breaker has failed." @synonyms "error count, failures, error occurrences" = 0
     successCount : number @intrinsic @description "Number of successful operations." @synonyms "successes, hits, completions" = 0
     threshold : number @intrinsic @description "Maximum value before triggering an action." @synonyms "limit, cap, boundary" = 5
+    openedAt : number @intrinsic @description "When the circuit last opened, in epoch milliseconds; the cooldown tick measures from it. 0 = never opened." @synonyms "tripped at, opened time" = 0
   }
 
   trait ShieldIcon = Icon.traits.IconRender -> ServiceNode {
@@ -150,9 +147,6 @@ orbital ServiceNodeOrbital {
         (set @entity.failureCount 0)
         (set @entity.successCount 0)
         (set @entity.threshold @config.failureThreshold)
-        (fetch ServiceNode {
-          emit: { failure: ServiceNodeLoadFailed, success: ServiceNodeLoaded }
-        })
         (render-ui main {
           children: [{
             align: center
@@ -172,9 +166,8 @@ orbital ServiceNodeOrbital {
           gap: lg
           type: stack
         })
-      ServiceNodeLoadFailed -> closed
-        (notify error (str/concat "Couldn't load the service node — " ?message))
       FAILURE -> open
+        (set @entity.openedAt (time/now))
         (render-ui main {
           children: [{
             align: center
@@ -327,6 +320,7 @@ orbital ServiceNodeOrbital {
           type: stack
         })
       FAILURE -> open
+        (set @entity.openedAt (time/now))
         (render-ui main {
           children: [{
             align: center
@@ -368,24 +362,17 @@ orbital ServiceNodeOrbital {
         })
     }
 
-    emits {
-      ServiceNodeLoaded
-        @description "Signals successful loading of a service node."
-        @synonyms "loaded, initialized, ready"
-        @tier "internal"
-      ServiceNodeLoadFailed
-        @description "Indicates a node failed to load, potentially disrupting service."
-        @synonyms "failure, error, unavailable, outage"
-        @tier "internal"
+    ticks {
+      cooldownCheck every 1s
+        when (and (== @state "open") (>= (- @now @entity.openedAt) @config.cooldownMs))
+        (emit TIMEOUT)
     }
 
-    listens {
-      ServiceNodeLoadFailed {
-        message : string
+    emits {
+      TIMEOUT -> internal {
       }
-        @description "Indicates a node failed to load, potentially impacting service availability."
-        @synonyms "failure, error, unavailable, outage"
-        @tier "internal"
+        @description "The open circuit's cooldown elapsed; the breaker lets a trial request through (halfOpen)."
+        @synonyms "cooldown elapsed, retry window, trial period"
     }
 
     config {
@@ -393,6 +380,11 @@ orbital ServiceNodeOrbital {
         @label "Failure threshold"
         @description "Number of consecutive failures before the circuit opens and starts rejecting requests."
         @synonyms "open trigger, failure count"
+        @tier "domain"
+      cooldownMs : number = 30000
+        @label "Cooldown (ms)"
+        @description "How long the circuit stays open before it moves to half-open and lets a trial request through."
+        @synonyms "reset timeout, open duration, retry delay"
         @tier "domain"
       statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = elevated
         @label "Stat display look"

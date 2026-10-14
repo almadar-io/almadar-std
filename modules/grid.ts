@@ -9,6 +9,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { list } from '../signature.js';
 
 /**
  * Grid module operators.
@@ -107,7 +108,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Adjacent cells in order N,E,S,W (+NE,SE,SW,NW if diagonal)',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list('cell'),
     params: [
       { name: 'cell', type: 'cell', description: 'Center cell {x,y}' },
       { name: 'diagonal', type: 'boolean', description: 'Include diagonals', optional: true, defaultValue: false },
@@ -122,7 +123,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'All cells within Euclidean radius r (row-major order)',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list('cell'),
     params: [
       { name: 'cell', type: 'cell', description: 'Center cell {x,y}' },
       { name: 'r', type: 'number', description: 'Radius' },
@@ -137,7 +138,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Bresenham line cells from a to b, inclusive, in step order',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list('cell'),
     params: [
       { name: 'a', type: 'cell', description: 'Start cell {x,y}' },
       { name: 'b', type: 'cell', description: 'End cell {x,y}' },

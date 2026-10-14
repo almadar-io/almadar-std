@@ -1,7 +1,7 @@
 /**
  * Location-independent resolver for std's publish-time data sidecars
- * (`registry/factory-signatures.json`, `behaviors-registry.json`,
- * `behaviors-embeddings.json`, `knob-embeddings.json` — all under `dist/`).
+ * (`behaviors-registry.json`, `behaviors-embeddings.json`,
+ * `knob-embeddings.json` — all under `dist/`).
  *
  * The loaders used to derive their directory from `import.meta.url`, which
  * breaks the moment `@almadar/std` is inlined into a downstream single-file

@@ -184,6 +184,10 @@ orbital BehaviorTourOrbital {
         @label "Desktop frame"
         @description "Show the demo as a whole app window: rendered at desktop size (1280 by 800) in a browser-style frame and scaled down to fit, so a full page keeps its real layout at any width"
         @tier "presentation"
+      controlsAt : "below" | "corner" = below
+        @label "Controls position"
+        @description "Where Play / Pause and Reset sit: below the demo, or over its top corner, shown while the demo is hovered or focused, so the demo starts level with whatever sits beside it"
+        @tier "presentation"
       compact : boolean = true
         @label "Compact controls"
         @description "Show only Play / Pause and Reset"
@@ -227,6 +231,13 @@ orbital BehaviorTourOrbital {
         direction: vertical
         gap: md
         children: [{
+          type: box
+          className: "relative group"
+          children: [(if (== @config.controlsAt "corner") {
+            type: box
+            className: "absolute top-2 end-2 z-10 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+            children: [@trait.TourTransport]
+          } null), {
           type: animated-reveal
           trigger: scroll
           animation: none
@@ -265,6 +276,7 @@ orbital BehaviorTourOrbital {
               children: [@config.demo]
             })]
           }]
+        }]
         }, {
           type: box
           animateChanges: true
@@ -273,7 +285,7 @@ orbital BehaviorTourOrbital {
             direction: horizontal
             gap: sm
             align: start
-            className: (if (and (< @entity.shown 0) (== @config.introCaption "")) hidden "")
+            className: (if (== (str/default (if (< @entity.shown 0) @config.introCaption (array/nth @config.captions @entity.shown)) "") "") hidden "")
             children: [{
               type: icon
               name: message-square-text
@@ -285,7 +297,7 @@ orbital BehaviorTourOrbital {
               content: (if (< @entity.shown 0) @config.introCaption (array/nth @config.captions @entity.shown))
             }]
           }]
-        }, @trait.TourTransport]
+        }, (if (== @config.controlsAt "below") @trait.TourTransport null)]
       }
         @label "Tour layout"
         @tier "internal"

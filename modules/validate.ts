@@ -9,6 +9,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { BOOLEAN, STRING, fn, list, rec, shape, tv, union } from '../signature.js';
 
 /**
  * Validate module operators.
@@ -23,7 +24,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is not null, undefined, or empty string',
     hasSideEffects: false,
     returnType: 'boolean',
-    params: [{ name: 'value', type: 'any', description: 'Value to check' }],
+    params: [{ name: 'value', type: tv('T'), description: 'Value to check' }],
     example: '["validate/required", "Ann"]',
   },
   'validate/string': {
@@ -34,7 +35,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is a string',
     hasSideEffects: false,
     returnType: 'boolean',
-    params: [{ name: 'value', type: 'any', description: 'Value to check' }],
+    params: [{ name: 'value', type: tv('T'), description: 'Value to check' }],
     example: '["validate/string", "Ann"]',
   },
   'validate/number': {
@@ -45,7 +46,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is a number',
     hasSideEffects: false,
     returnType: 'boolean',
-    params: [{ name: 'value', type: 'any', description: 'Value to check' }],
+    params: [{ name: 'value', type: tv('T'), description: 'Value to check' }],
     example: '["validate/number", 42]',
   },
   'validate/boolean': {
@@ -56,7 +57,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is a boolean',
     hasSideEffects: false,
     returnType: 'boolean',
-    params: [{ name: 'value', type: 'any', description: 'Value to check' }],
+    params: [{ name: 'value', type: tv('T'), description: 'Value to check' }],
     example: '["validate/boolean", true]',
   },
   'validate/array': {
@@ -67,7 +68,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is an array',
     hasSideEffects: false,
     returnType: 'boolean',
-    params: [{ name: 'value', type: 'any', description: 'Value to check' }],
+    params: [{ name: 'value', type: tv('T'), description: 'Value to check' }],
     example: '["validate/array", [1, 2]]',
   },
   'validate/object': {
@@ -78,7 +79,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is an object',
     hasSideEffects: false,
     returnType: 'boolean',
-    params: [{ name: 'value', type: 'any', description: 'Value to check' }],
+    params: [{ name: 'value', type: tv('T'), description: 'Value to check' }],
     example: '["validate/object", {"a": 1}]',
   },
   'validate/email': {
@@ -144,7 +145,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is a valid date',
     hasSideEffects: false,
     returnType: 'boolean',
-    params: [{ name: 'value', type: 'any', description: 'Value to check' }],
+    params: [{ name: 'value', type: tv('T'), description: 'Value to check' }],
     example: '["validate/date", "2024-01-18"]',
   },
   'validate/minLength': {
@@ -156,7 +157,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'value', type: 'string | array', description: 'Value to check' },
+      { name: 'value', type: union(STRING, list(tv('T'))), description: 'Value to check' },
       { name: 'min', type: 'number', description: 'Minimum length' },
     ],
     example: '["validate/minLength", "password123", 8]',
@@ -170,7 +171,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'value', type: 'string | array', description: 'Value to check' },
+      { name: 'value', type: union(STRING, list(tv('T'))), description: 'Value to check' },
       { name: 'max', type: 'number', description: 'Maximum length' },
     ],
     example: '["validate/maxLength", "Ann", 50]',
@@ -184,7 +185,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'value', type: 'string | array', description: 'Value to check' },
+      { name: 'value', type: union(STRING, list(tv('T'))), description: 'Value to check' },
       { name: 'exact', type: 'number', description: 'Required length' },
     ],
     example: '["validate/length", "ABC123", 6]',
@@ -255,8 +256,8 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'value', type: 'any', description: 'Value to check' },
-      { name: 'options', type: 'array', description: 'Allowed values' },
+      { name: 'value', type: tv('T'), description: 'Value to check' },
+      { name: 'options', type: list(tv('T')), description: 'Allowed values' },
     ],
     example: '["validate/oneOf", "admin", ["admin", "user", "guest"]]',
   },
@@ -269,8 +270,8 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'value', type: 'any', description: 'Value to check' },
-      { name: 'options', type: 'array', description: 'Disallowed values' },
+      { name: 'value', type: tv('T'), description: 'Value to check' },
+      { name: 'options', type: list(tv('T')), description: 'Disallowed values' },
     ],
     example: '["validate/noneOf", "alice", ["admin", "root", "system"]]',
   },
@@ -283,8 +284,8 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
-      { name: 'a', type: 'any', description: 'First value' },
-      { name: 'b', type: 'any', description: 'Second value' },
+      { name: 'a', type: tv('T'), description: 'First value' },
+      { name: 'b', type: tv('T'), description: 'Second value' },
     ],
     example: '["validate/equals", "secret", "secret"]',
   },
@@ -295,10 +296,10 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Run multiple validation rules, return { valid, errors }',
     hasSideEffects: false,
-    returnType: 'any',
+    returnType: shape({ valid: BOOLEAN, errors: list(STRING) }),
     params: [
-      { name: 'value', type: 'any', description: 'Value or object to validate' },
-      { name: 'rules', type: 'object', description: 'Validation rules by field' },
+      { name: 'value', type: tv('T'), description: 'Value or object to validate' },
+      { name: 'rules', type: union(rec('V'), fn([tv('T')], BOOLEAN)), description: 'Validation rules by field (orbital-core takes a predicate function instead)' },
     ],
     example: '["validate/check", {"name": "Ann", "email": "ann@example.com", "age": 20}, {"name": [["required"], ["minLength", 2], ["maxLength", 50]], "email": [["required"], ["email"]], "age": [["number"]]}]',
   },

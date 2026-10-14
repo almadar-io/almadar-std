@@ -12,6 +12,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { SHAPE, rec } from '../signature.js';
 
 export const INTEGRATION_OPERATORS: Record<string, StdOperatorMeta> = {
   'integration/http': {
@@ -20,12 +21,12 @@ export const INTEGRATION_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'HTTP request with caller-declared response schema. Validates the response against the schema before returning.',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'object',
+    returnType: SHAPE,
     params: [
       { name: 'method', type: 'string', description: 'HTTP method (GET, POST, ...)' },
       { name: 'url', type: 'string', description: 'Request URL' },
-      { name: 'responseSchema', type: { kind: 'object', fields: {}, open: true }, description: 'JSON Schema the response must satisfy' },
-      { name: 'body', type: { kind: 'object', fields: {}, open: true }, description: 'Request body (for POST/PUT)', optional: true },
+      { name: 'responseSchema', type: SHAPE, description: 'JSON Schema the response must satisfy' },
+      { name: 'body', type: rec('B'), description: 'Request body (for POST/PUT)', optional: true },
     ],
     example: '["integration/http", "GET", "https://api.github.com/repos/foo/bar", { "name": "string", "stars": "number" }]',
   },
@@ -35,7 +36,7 @@ export const INTEGRATION_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Get a GitHub repository. Typed wrapper for the GitHub API.',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'object',
+    returnType: 'GitHubRepo',
     params: [
       { name: 'owner', type: 'string', description: 'Repository owner' },
       { name: 'repo', type: 'string', description: 'Repository name' },
@@ -48,7 +49,7 @@ export const INTEGRATION_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Create a GitHub issue. Typed wrapper for the GitHub API.',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'object',
+    returnType: 'GitHubIssue',
     params: [
       { name: 'repo', type: 'string', description: 'Full repo name (owner/repo)' },
       { name: 'title', type: 'string', description: 'Issue title' },

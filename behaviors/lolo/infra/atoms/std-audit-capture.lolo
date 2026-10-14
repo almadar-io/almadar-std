@@ -13,8 +13,8 @@ orbital AuditCaptureOrbital {
     action : string @description "The specific operation performed on the entity." @synonyms "operation, event, activity, change" = ""
     entityType : string @description "The type of entity that was modified." @synonyms "type, kind, class" = ""
     entityId : string @description "Unique identifier for the entity being audited." @synonyms "entity identifier, record id, item id" = ""
-    before : Map string scalar @description "The state of the entity prior to the modification." @synonyms "previous, original, old value" = {}
-    after : Map string scalar @description "The state of the entity after a modification." @synonyms "new, updated, post, subsequent" = {}
+    before : string @description "The state of the entity prior to the modification, as JSON text." @synonyms "previous, original, old value" = ""
+    after : string @description "The state of the entity after a modification, as JSON text." @synonyms "new, updated, post, subsequent" = ""
     recordedAt : number @description "Timestamp indicating when the audit event was recorded." @synonyms "timestamp, date, time" = 0
     sourceEvent : string @description "The event that delivered the change to the audit trail, e.g. ContactSaved." @synonyms "triggering event, cause, origin event" = ""
     sourceTrait : string @description "The behavior that emitted the change." @synonyms "emitter, origin, raised by" = ""
@@ -27,7 +27,7 @@ orbital AuditCaptureOrbital {
 
     state idle {
       EntityMutated -> idle when @config.enabled
-        (when (or ["=", (array/len @config.captureEventTypes), 0] (array/includes @config.captureEventTypes (object/get ?data kind @event.event))) (do (set @entity.actor @user.id) (set @entity.action (object/get ?data kind @event.event)) (set @entity.entityType @config.captureEntity) (set @entity.entityId (object/get ?data id "")) (set @entity.before (if @config.captureBeforeAfter (object/omit (object/get ?data before {}) @config.excludeFields) {})) (set @entity.after (if @config.captureBeforeAfter (object/omit (object/get ?data after {}) @config.excludeFields) {})) (set @entity.recordedAt 0) (persist create AuditEntry {
+        (when (or ["=", (array/len @config.captureEventTypes), 0] (array/includes @config.captureEventTypes (object/get ?data kind @event.event))) (do (set @entity.actor @user.id) (set @entity.action (object/get ?data kind @event.event)) (set @entity.entityType @config.captureEntity) (set @entity.entityId (object/get ?data id "")) (set @entity.before (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data before {}) @config.excludeFields)) "")) (set @entity.after (if @config.captureBeforeAfter (json/stringify (object/omit (object/get ?data after {}) @config.excludeFields)) "")) (set @entity.recordedAt 0) (persist create AuditEntry {
           action: @entity.action
           actor: @user.id
           after: @entity.after

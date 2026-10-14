@@ -6,30 +6,30 @@ orbital MlLabelCaptureOrbital {
 
   entity LabeledExample [persistent: ml_labels] {
     id : string! @key
-    input : Map string scalar @description "The input that was judged." = null
-    verdict : Map string scalar @description "The verdict/output produced by the rung." = null
+    input : string @description "The input that was judged, as JSON text." = ""
+    verdict : string @description "The verdict/output produced by the rung, as JSON text." = ""
     source : string @description "Which rung produced the verdict." = ""
-    outcome : Map string scalar @description "The observed ground-truth outcome, once known." = null
+    outcome : string @description "The observed ground-truth outcome, once known, as JSON text." = ""
     sink : string @description "Named destination this example is attributed to." = ""
     recordedAt : number = 0
   }
 
-  trait LabelCaptureListener -> @rebindable LabeledExample [lifecycle, instance] {
+  trait LabelCaptureListener (i : Type = string, v : Type = string, o : Type = string) -> @rebindable LabeledExample [lifecycle, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
-        (set @entity.input null)
-        (set @entity.verdict null)
+        (set @entity.input "")
+        (set @entity.verdict "")
         (set @entity.source "")
-        (set @entity.outcome null)
+        (set @entity.outcome "")
         (set @entity.sink "")
         (set @entity.recordedAt 0)
       CAPTURE -> idle
-        (set @entity.input ?input)
-        (set @entity.verdict ?verdict)
+        (set @entity.input (json/stringify ?input))
+        (set @entity.verdict (json/stringify ?verdict))
         (set @entity.source ?source)
-        (set @entity.outcome ?outcome)
+        (set @entity.outcome (json/stringify ?outcome))
         (set @entity.sink @config.sink)
         (set @entity.recordedAt @now)
         (if (prob/flip @config.sampleRate)
@@ -54,10 +54,10 @@ orbital MlLabelCaptureOrbital {
 
     listens {
       CAPTURE {
-        input : Map string scalar!
-        verdict : Map string scalar!
+        input : i!
+        verdict : v!
         source : string!
-        outcome : Map string scalar
+        outcome : o
       }
     }
 

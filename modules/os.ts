@@ -13,6 +13,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { EMIT_ENVELOPE, openShape } from '../signature.js';
 
 export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
   'os/watch-files': {
@@ -26,7 +27,7 @@ export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'void',
     params: [
       { name: 'glob', type: 'string', description: 'Glob pattern to watch (e.g., "**/*.orb")' },
-      { name: 'options', type: 'object', description: 'Optional config: { recursive, ignoreInitial, debounceMs }', optional: true },
+      { name: 'options', type: openShape({ emit: EMIT_ENVELOPE }), description: 'Optional config: { recursive, ignoreInitial, debounceMs }', optional: true },
     ],
     example: '["os/watch-files", "**/*.orb"]',
   },

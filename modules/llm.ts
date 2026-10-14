@@ -8,6 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { NUMBER, list, shape } from '../signature.js';
 
 export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
   'llm/generate': {
@@ -48,7 +49,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Generate embeddings for an array of texts. Returns a 2D array of floats.',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'array',
+    returnType: list(list(NUMBER)),
     params: [
       { name: 'texts', type: { kind: 'array', of: 'string' }, description: 'Texts to embed' },
     ],
@@ -88,7 +89,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Compact the context window. Returns before/after token counts.',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'object',
+    returnType: shape({ before: NUMBER, after: NUMBER }),
     params: [
       { name: 'strategy', type: { kind: 'union', of: [{ kind: 'literal', value: 'hybrid' }, { kind: 'literal', value: 'summarize' }, { kind: 'literal', value: 'truncate' }, { kind: 'literal', value: 'extract' }] }, description: 'Compaction strategy', optional: true },
     ],

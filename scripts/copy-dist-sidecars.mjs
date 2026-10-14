@@ -28,10 +28,6 @@ export function copyDistSidecars() {
   // per the data-dir contract (`behaviors/data-dir.ts`), which is what the
   // shipped loaders (`getBehaviorRegistry`, `getBehaviorEmbeddings`,
   // `getKnobEmbeddings`) AND pattern-sync's pinned bake read.
-  copyIfExists(
-    'behaviors/registry/factory-signatures.json',
-    'dist/registry/factory-signatures.json',
-  );
   copyIfExists('behaviors/behaviors-registry.json', 'dist/behaviors-registry.json');
   copyIfExists('behaviors/behaviors-embeddings.json', 'dist/behaviors-embeddings.json');
   copyIfExists('behaviors/knob-embeddings.json', 'dist/knob-embeddings.json');

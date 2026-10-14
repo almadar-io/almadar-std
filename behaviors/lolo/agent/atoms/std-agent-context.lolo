@@ -17,6 +17,10 @@ type AgentToolRead = {
   read : string!
 }
 type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
+type AgentToolInputData = {
+  event : string!
+}
+type AgentToolData = AgentToolScope | AgentToolInputData | AgentToolRead
 
 orbital AgentContextOrbital {
   type ContextSummarized = Event { summary : string, keyPoints : [string] } "Fired when the older turns have been summarized"
@@ -27,7 +31,7 @@ orbital AgentContextOrbital {
     pendingMessages : [AgentChatMessage] @description "The conversation being compacted." = []
     lastSize : number @description "Turns in the last conversation compacted." @synonyms "size, length" = 0
     pendingInstructions : string @description "The ephemeral conversation's own instructions, carried through a summarizing." = ""
-    pendingTools : [AgentTool] @description "The ephemeral conversation's own tools, carried through a summarizing." = []
+    pendingTools : [AgentToolData] @description "The ephemeral conversation's own tools, carried through a summarizing." = []
     pendingEphemeral : boolean @description "The conversation being compacted is ephemeral." = false
   }
 

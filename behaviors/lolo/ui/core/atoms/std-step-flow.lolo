@@ -98,12 +98,9 @@ orbital StepFlowOrbital {
         (fetch StepFlowView {
           emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
         })
-      ;; Role guard idiom: 3-arg object/get with a STRING sentinel default
-      ;; instead of [] (Zod's SExpr schema rejects bare empty arrays inside a
-      ;; guard expression; the sentinel form is structurally-valid SExpr and
-      ;; semantically equivalent for the "no allowedRoles → permit everyone"
-      ;; case). If allowedRoles is present, fall through to array/includes.
-      ADVANCE -> running when (and (not @entity.isLastStep) (or ["=", (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles ANY), ANY] (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles) @user.role)))
+      ;; Role guard idiom: a step that declares no allowedRoles permits everyone; one that does
+      ;; falls through to array/includes.
+      ADVANCE -> running when (and (not @entity.isLastStep) (or (not (object/has (array/nth @config.steps @entity.currentStepIndex) allowedRoles)) (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles []) @user.role)))
         (set @entity.currentStepIndex ["+", @entity.currentStepIndex, 1])
         (set @entity.currentStepLabel (object/get (array/nth @config.steps @entity.currentStepIndex) label))
         (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) description ""))
@@ -126,7 +123,7 @@ orbital StepFlowOrbital {
           title: (object/get @step label)
         })))
         (render-ui main @config.bodyContent)
-      ADVANCE -> approved when (and @entity.isLastStep (or ["=", (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles ANY), ANY] (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles) @user.role)))
+      ADVANCE -> approved when (and @entity.isLastStep (or (not (object/has (array/nth @config.steps @entity.currentStepIndex) allowedRoles)) (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles []) @user.role)))
         (set @entity.finalStatus approved)
         (render-ui main {
           align: center

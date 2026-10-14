@@ -4,8 +4,12 @@ app std-data-collector [
 ]
 orbital MlDataCollectorOrbital {
 
+  entity DataPoint [runtime] {
+    id : string!
+  }
+
   entity DataBuffer [runtime] {
-    buffer : [Map string scalar] @description "Data points accumulated in the current cycle." = []
+    buffer : [DataPoint] @description "Data points accumulated in the current cycle." = []
     count : int @description "Number of points currently in the buffer." = 0
     status : "idle" | "collecting" = idle
   }
@@ -35,18 +39,23 @@ orbital MlDataCollectorOrbital {
     }
 
     emits {
-      BUFFER_READY -> external { buffer : [Map string scalar]!, count : int! }
+      BUFFER_READY -> external { buffer : [@entity @config.rowEntity]!, count : int! }
         @description "Fired when the buffer reaches config.bufferSize; carries the full accumulated buffer and its count, then the buffer resets for the next cycle."
         @tier "primary"
     }
 
     listens {
       COLLECT {
-        point : Map string scalar!
+        point : @entity @config.rowEntity!
       }
     }
 
     config {
+      rowEntity : entity = DataPoint
+        @label "Entity of the points"
+        @description "The entity whose rows COLLECT delivers and BUFFER_READY carries"
+        @synonyms "point entity, data point entity, rows of"
+        @tier "internal"
       bufferSize : int = 100
         @label "Buffer size"
         @description "Number of data points collected before BUFFER_READY fires."

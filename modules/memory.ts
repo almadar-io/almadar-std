@@ -8,6 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { list } from '../signature.js';
 
 export const MEMORY_OPERATORS: Record<string, StdOperatorMeta> = {
   'memory/recall': {
@@ -15,7 +16,7 @@ export const MEMORY_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1, maxArity: 2,
     description: 'Search memories by semantic query. Returns matching memory records.',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list('AgentMemoryRecord'),
     params: [
       { name: 'query', type: 'string', description: 'Semantic search query' },
       { name: 'limit', type: 'number', description: 'Max results to return', optional: true },
@@ -41,7 +42,7 @@ export const MEMORY_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 0, maxArity: 1,
     description: 'List all memories, optionally filtered by category.',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list('AgentMemoryRecord'),
     params: [
       { name: 'category', type: 'string', description: 'Memory category filter', optional: true },
     ],

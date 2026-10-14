@@ -9,6 +9,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { NUMBER, list, union } from '../signature.js';
 
 /**
  * Neural network module operators.
@@ -24,7 +25,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'nn/module',
     params: [
-      { name: '...layers', type: 'nn/layer[]', description: 'Layers to stack sequentially' },
+      { name: '...layers', type: 'nn/layer', description: 'Layers to stack sequentially' },
     ],
     example: '["nn/sequential", ["nn/linear", 16, 64], ["nn/relu"], ["nn/linear", 64, 4]]',
   },
@@ -123,7 +124,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'nn/layer',
     params: [
-      { name: 'normalizedShape', type: 'number | number[]', description: 'Shape to normalize over' },
+      { name: 'normalizedShape', type: union(NUMBER, list(NUMBER)), description: 'Shape to normalize over' },
     ],
     example: '["nn/layernorm", 64]',
   },

@@ -14,9 +14,11 @@ orbital EscalatingDecisionOrbital {
   ;; The whole DECIDE payload, echoed untouched down the chain so each rung
   ;; can project its own inputs out of it (object/get "accepted"/"categories"/"candidate").
   type DecisionRequest = {
-    candidate  : scalar!
-    key        : scalar!
-    accepted   : [scalar]!
+    candidate  : string!
+    key        : string!
+    candidateNumber : number
+    keyNumber  : number
+    accepted   : [string]!
     categories : [string]!
   }
 
@@ -27,9 +29,12 @@ orbital EscalatingDecisionOrbital {
   type ContractNotATensor = { type : "not_a_tensor", actualType : string }
   type ContractViolation = ContractShapeMismatch | ContractRangeViolation | ContractNotATensor
 
-  ;; matched varies by which rung answered: an exact key, a table entry, a
-  ;; match index, or a category label (all scalar) — or R4's raw tensor output.
-  type Matched = scalar | [float]
+  ;; matched varies by which rung answered: an exact key, a table entry or a
+  ;; category label (text), a match index, or R4's raw tensor output.
+  type MatchedText = { type : "text", text : string! }
+  type MatchedIndex = { type : "index", index : int! }
+  type MatchedTensor = { type : "tensor", output : [float]! }
+  type Matched = MatchedText | MatchedIndex | MatchedTensor
 
   ;; The entry holds no request data: the whole DECIDE payload travels down
   ;; the chain as `request`, so there is nothing for this trait to remember.
@@ -75,7 +80,7 @@ orbital EscalatingDecisionOrbital {
   }
 
   entity Inference [runtime] {
-    input      : DecisionRequest      = {}
+    input      : Map string string    = {}
     output     : [float]              = []
     confidence : float                = 0
     violations : [ContractViolation]  = []
@@ -107,7 +112,7 @@ orbital EscalatingDecisionOrbital {
 
       DECIDE -> dispatched
         (set @entity.status dispatched)
-        (emit RUN_EXACT { candidate: ?candidate, key: ?key, request: ? })
+        (emit RUN_EXACT { candidate: ?candidate, key: ?key, candidateNumber: ?candidateNumber, keyNumber: ?keyNumber, request: ? })
     }
 
     state dispatched {
@@ -124,8 +129,10 @@ orbital EscalatingDecisionOrbital {
         @description "The ladder was reset; every rung returns to idle so the next DECIDE runs the whole chain again."
         @tier "secondary"
       RUN_EXACT {
-        candidate : scalar!
-        key : scalar!
+        candidate : string!
+        key : string!
+        candidateNumber : number
+        keyNumber : number
         request : DecisionRequest!
       }
         @description "Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs."
@@ -134,9 +141,11 @@ orbital EscalatingDecisionOrbital {
 
     listens {
       DECIDE {
-        candidate  : scalar!
-        key        : scalar!
-        accepted   : [scalar]!
+        candidate  : string!
+        key        : string!
+        candidateNumber : number
+        keyNumber  : number
+        accepted   : [string]!
         categories : [string]!
       }
         @description "Public entry point — decide the candidate, falling through the ladder until a rung can prove the answer. accepted is R1's table; categories is R3's comparison set (R5's closed label set is the ClassifyRung categories knob, a design-time decision rather than a per-request one)."
@@ -151,7 +160,7 @@ orbital EscalatingDecisionOrbital {
     }
   }
 
-  trait LookupRung :: e scalar r DecisionRequest = Rung1.traits.LookupRun -> KeyLookup {
+  trait LookupRung :: e string r DecisionRequest = Rung1.traits.LookupRun -> KeyLookup {
     listens {
       LadderEntry.RUNGS_RESET -> RESET
       ExactRung.EXACT_UNMATCHED -> LOOKUP
@@ -171,7 +180,7 @@ orbital EscalatingDecisionOrbital {
     listens {
       LadderEntry.RUNGS_RESET -> RESET
       SimilarityRung.SIMILARITY_ABSTAINED -> INFER
-        with { input: ?request, request: ?request }
+        with { input: { candidate: (object/get ?request "candidate"), key: (object/get ?request "key") }, request: ?request }
     }
   }
 
@@ -202,35 +211,35 @@ orbital EscalatingDecisionOrbital {
         (set @entity.confidence 1)
         (set @entity.reasoning "")
         (set @entity.status decided)
-        (emit DECIDED { rung: "R0", confidence: 1, matched: ?key, reasoning: "" })
+        (emit DECIDED { rung: "R0", confidence: 1, matched: { type: "text", text: ?key }, reasoning: "" })
 
       FROM_LOOKUP -> decided
         (set @entity.rung "R1")
         (set @entity.confidence 1)
         (set @entity.reasoning "")
         (set @entity.status decided)
-        (emit DECIDED { rung: "R1", confidence: 1, matched: ?entry, reasoning: "" })
+        (emit DECIDED { rung: "R1", confidence: 1, matched: { type: "text", text: ?entry }, reasoning: "" })
 
       FROM_SIMILARITY -> decided
         (set @entity.rung "R3")
         (set @entity.confidence ?score)
         (set @entity.reasoning "")
         (set @entity.status decided)
-        (emit DECIDED { rung: "R3", confidence: ?score, matched: ?index, reasoning: "" })
+        (emit DECIDED { rung: "R3", confidence: ?score, matched: { type: "index", index: ?index }, reasoning: "" })
 
       FROM_INFER -> decided
         (set @entity.rung "R4")
         (set @entity.confidence ?confidence)
         (set @entity.reasoning "")
         (set @entity.status decided)
-        (emit DECIDED { rung: "R4", confidence: ?confidence, matched: ?output, reasoning: "" })
+        (emit DECIDED { rung: "R4", confidence: ?confidence, matched: { type: "tensor", output: ?output }, reasoning: "" })
 
       FROM_CLASSIFY -> decided
         (set @entity.rung "R5")
         (set @entity.confidence ?confidence)
         (set @entity.reasoning ?reasoning)
         (set @entity.status decided)
-        (emit DECIDED { rung: "R5", confidence: ?confidence, matched: ?category, reasoning: ?reasoning })
+        (emit DECIDED { rung: "R5", confidence: ?confidence, matched: { type: "text", text: ?category }, reasoning: ?reasoning })
 
       FROM_CLASSIFY_FAILURE -> failed
         (set @entity.failReason ?error)
@@ -278,8 +287,8 @@ orbital EscalatingDecisionOrbital {
     }
 
     listens {
-      FROM_EXACT { key : scalar! }
-      FROM_LOOKUP { entry : scalar! }
+      FROM_EXACT { key : string! }
+      FROM_LOOKUP { entry : string! }
       FROM_SIMILARITY { index : int!  score : number! }
       FROM_INFER { output : [float]!  confidence : number! }
       FROM_CLASSIFY { category : string!  confidence : number!  reasoning : string! }

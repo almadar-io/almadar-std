@@ -26,7 +26,7 @@ type SuggestionProposal = {
   href : string
   subject : string
   signature : string
-  payload : Map string scalar
+  payload : Map string string
 }
 
 type SuggestionRow = {
@@ -37,7 +37,7 @@ type SuggestionRow = {
   body : string
   action : string
   href : string
-  payload : Map string scalar
+  payload : Map string string
   subject : string
   signature : string
   status : "pending" | "accepted" | "dismissed"
@@ -270,7 +270,7 @@ orbital AgentSuggestionsOrbital {
         action : string
         href : string
         subject : string!
-        payload : Map string scalar
+        payload : Map string string
       }
         @description "Propose something to the signed-in person: a kind, a title, a body that gives the reason, an optional action with its payload, an optional href, and the subject it is about (an id or slug). A proposal whose kind, action and subject were already proposed to this person is refused, whatever became of the first; so is one past the pending limit."
         @synonyms "suggest, recommend, propose, offer"
@@ -525,7 +525,7 @@ orbital AgentSuggestionsOrbital {
         action : string
         href : string
         subject : string
-        payload : Map string scalar
+        payload : Map string string
       }
         @description "The person accepted a suggestion; the app routes `action` with `payload` (a suggestion with an href has already navigated there)."
         @synonyms "accepted, approved, taken up, do it"
@@ -782,7 +782,7 @@ orbital AgentSuggestionRecordsOrbital {
     body : string @description "Why the agent proposes it." @synonyms "reasoning, reason, description, explanation" = ""
     action : string @description "What accepting it does: a name the app routes from SUGGESTION_ACCEPTED." @synonyms "event, command" = ""
     href : string @description "A page accepting it opens; empty for none." @synonyms "link, url, route" = ""
-    payload : Map string scalar @description "What the action needs." @synonyms "params, arguments, data" = {}
+    payload : Map string string @description "What the action needs." @synonyms "params, arguments, data" = {}
     subject : string @description "What the suggestion is about (an id or slug)." @synonyms "target, topic" = ""
     signature : string @description "kind:action:subject. One signature is proposed to a person at most once, whatever became of it." @synonyms "dedup key, fingerprint" = ""
     status : "pending" | "accepted" | "dismissed" @description "Where the suggestion stands." = pending

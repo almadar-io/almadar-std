@@ -62,7 +62,7 @@ orbital DungeonCombatOrbital {
                 (do
                   (set @entity.combatScore (+ @entity.combatScore @config.pointsPerKill))
                   (emit BURST { particles: (array/map (array/filter @entity.enemies (fn e (== @e.id @payload.targetId))) (fn t { id: (str/concat "fx-kill-" (object/get @t id)), type: "explosion", x: (object/get (object/get @t position) x), z: (object/get (object/get @t position) y), ttl: 5 })) }))
-                true))))
+                null))))
 
       MONSTER_TICK -> active when @config.running
         (set @entity.enemies (array/map @entity.enemies (fn u
@@ -77,7 +77,7 @@ orbital DungeonCombatOrbital {
                         @u))))))
             @u))))
         (set @entity.hp (if (> (array/len (array/filter @entity.enemies (fn u (and (> @u.health 0) (<= (grid/manhattan-distance (object/get @u position) { x: @payload.heroX, y: @payload.heroY }) 1))))) 0) (math/max 0 (- @entity.hp 1)) @entity.hp))
-        (if (<= @entity.hp 0) (do (set @entity.combatResult "lost") (emit DEFEATED { id: "board" })) true)
+        (if (<= @entity.hp 0) (do (set @entity.combatResult "lost") (emit DEFEATED { id: "board" })) null)
 
       RESTART -> active
         (set @entity.enemies @config.enemies)

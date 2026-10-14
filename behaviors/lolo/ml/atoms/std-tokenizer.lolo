@@ -5,12 +5,21 @@ app std-tokenizer [
 
 orbital MlTokenizerOrbital {
 
+  ;; The caller-supplied request, kept so a composing ladder (e.g. std-escalating-decision)
+  ;; can project its own inputs out of it.
+  type DecisionRequest = {
+    candidate  : string!
+    key        : string!
+    accepted   : [string]!
+    categories : [string]!
+  }
+
   entity TokenSequence [runtime] {
     text       : string  = ""
     tokens     : [string] = []
     tokenIds   : [int]    = []
     tokenCount : int      = 0
-    request    : Map string scalar   = {}
+    request    : DecisionRequest = {}
     status     : "idle" | "checked" = idle
   }
 
@@ -101,7 +110,7 @@ orbital MlTokenizerOrbital {
     listens {
       TOKENIZE {
         text : string!
-        request : Map string scalar
+        request : DecisionRequest
       }
     }
   }

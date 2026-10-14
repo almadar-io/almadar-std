@@ -14,6 +14,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { DESCRIPTION, EMIT_ENVELOPE, list, rec, tv, union } from '../signature.js';
 
 export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/apply': {
@@ -21,11 +22,11 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 2, maxArity: 2,
     description: 'Record overrides on a behavior value and return the new value of the same kind. A trait value takes the §8 trait-reference surface (config, events and fields merge key-wise, the later value winning; listens, emitsScope and linkedEntity replace); an orbital value takes the §8b import body (maps merge key-wise, traits per trait, extend and retype by field name, the rest replaces). Nothing is resolved until the value is bound or evaluated.',
     hasSideEffects: false,
-    returnType: 'any',
+    returnType: tv('V'),
     returnSemantics: 'identity-of-arg<0>',
     params: [
-      { name: 'value', type: 'any', description: 'A trait value or an orbital value' },
-      { name: 'overrides', type: { kind: 'object', fields: {}, open: true }, description: 'The LOLO §8 trait-reference overrides (trait value) or the §8b import body (orbital value)' },
+      { name: 'value', type: tv('V', union('trait', 'orbital')), description: 'A trait value or an orbital value' },
+      { name: 'overrides', type: rec('O'), description: 'The LOLO §8 trait-reference overrides (trait value) or the §8b import body (orbital value)' },
     ],
     example: '["behavior/apply", "@entity.widget", { "config": { "compact": true } }]',
   },
@@ -47,10 +48,10 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: 'CatalogEntry[]',
+    returnType: list('CatalogEntry'),
     params: [
       { name: 'scope', type: { kind: 'object', fields: { paths: { kind: 'array', of: 'string' }, exposure: { kind: 'array', of: 'string' } } }, description: 'Registry folders and an optional exposure filter' },
-      { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+      { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
     example: '["behavior/catalog", { "paths": ["std/ui/core/molecules"] }, { "emit": { "success": "LISTED", "failure": "LIST_FAILED" } }]',
   },
@@ -61,10 +62,10 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: 'any',
+    returnType: DESCRIPTION,
     params: [
-      { name: 'value', type: 'any', description: 'A trait value, an orbital value, or { behavior }' },
-      { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+      { name: 'value', type: union('trait', 'orbital', 'behavior'), description: 'A trait value, an orbital value, or { behavior }' },
+      { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
     example: '["behavior/describe", "@entity.widget", { "emit": { "success": "DESCRIBED", "failure": "DESCRIBE_FAILED" } }]',
   },
@@ -77,8 +78,8 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     host: 'program',
     returnType: 'sexpr',
     params: [
-      { name: 'value', type: 'any', description: 'A trait value, an orbital value, or { behavior }' },
-      { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+      { name: 'value', type: union('trait', 'orbital', 'behavior'), description: 'A trait value, an orbital value, or { behavior }' },
+      { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
     example: '["behavior/source", "@entity.widget", { "emit": { "success": "SOURCED", "failure": "SOURCE_FAILED" } }]',
   },
@@ -91,8 +92,8 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     host: 'program',
     returnType: 'sexpr',
     params: [
-      { name: 'value', type: 'any', description: 'A trait value, an orbital value, or { behavior }' },
-      { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+      { name: 'value', type: union('trait', 'orbital', 'behavior'), description: 'A trait value, an orbital value, or { behavior }' },
+      { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
     example: '["behavior/resolve", "@entity.app", { "emit": { "success": "RESOLVED", "failure": "RESOLVE_FAILED" } }]',
   },
@@ -106,7 +107,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'DependencyGraph',
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program (as written, with its `uses`)' },
-      { name: 'options', type: { kind: 'object', fields: {}, open: true }, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
+      { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
     example: '["behavior/dependencies", "@entity.program", { "emit": { "success": "DEPENDENCIES", "failure": "DEPENDENCIES_FAILED" } }]',
   },

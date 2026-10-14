@@ -6,7 +6,7 @@ type PrefRow = { personId : string, eventKey : string, mode : string, channel : 
 type AuditRow = { recipient : string, channel : string, dispatched : boolean, recordedAt : number }
 type SubRow = { userId : string, endpoint : string, p256dh : string, auth : string }
 orbital NotifyOnEventOrbital {
-    type EventOccurred = Event { data : Map string scalar, status : string } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification. The optional `status` field lets `triggerStatus` gate dispatch to a single status-change value."
+    type EventOccurred = Event { data : @entity @config.sourceEntity, status : string, id : string } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification. The optional `status` field lets `triggerStatus` gate dispatch to a single status-change value."
 
     type NotificationDispatched = Event { recipient : string, channel : string, message : string, severity : string } "Re-emitted after dispatch; rename to wire downstream observers (e.g. NotificationLogAppended)."
 
@@ -51,7 +51,7 @@ orbital NotifyOnEventOrbital {
     initial: idle
 
     state idle {
-      EventOccurred -> idle when (and (or ["=", @config.coalesce, "none"] (if ["=", @config.coalesce, "perDispatch"] (not (array/includes (array/map @prevEvents (fn e (object/get @e "event"))) @event.event)) (not (array/some @prevEvents (fn e (and ["=", (object/get @e "event"), @event.event] ["=", (object/get (object/get @e "payload" {}) @config.coalesceKey), (object/get @event.payload @config.coalesceKey)])))))) (if ["=", @config.guardOp, "eq"] (or ["=", @config.triggerStatus, ""] ["=", ?status, @config.triggerStatus]) (if ["=", @config.guardOp, "gt"] [">", (object/get ?data @config.guardField), @config.guardValue] (if ["=", @config.guardOp, "lt"] ["<", (object/get ?data @config.guardField), @config.guardValue] (if ["=", @config.guardOp, "gte"] [">=", (object/get ?data @config.guardField), @config.guardValue] ["<=", (object/get ?data @config.guardField), @config.guardValue])))))
+      EventOccurred -> idle when (and (or ["=", @config.coalesce, "none"] (if ["=", @config.coalesce, "perDispatch"] (not (array/includes (array/map @prevEvents (fn e (object/get @e "event"))) @event.event)) (not (array/some @prevEvents (fn e (and ["=", (object/get @e "event"), @event.event] ["=", (object/get (object/get @e "payload" {}) @config.coalesceKey), (object/get @event.payload @config.coalesceKey)])))))) (if ["=", @config.guardOp, "eq"] (or ["=", @config.triggerStatus, ""] ["=", ?status, @config.triggerStatus]) (if ["=", @config.guardOp, "gt"] [">", (object/get ?data @config.guardField 0), @config.guardValue] (if ["=", @config.guardOp, "lt"] ["<", (object/get ?data @config.guardField 0), @config.guardValue] (if ["=", @config.guardOp, "gte"] [">=", (object/get ?data @config.guardField 0), @config.guardValue] ["<=", (object/get ?data @config.guardField 0), @config.guardValue])))))
         (set @entity.recipient (if ["=", (array/len @config.recipients), 0] (if (not ["=", @config.fallbackRecipient, ""]) @config.fallbackRecipient @user.id) (array/first @config.recipients)))
         (set @entity.channel @config.notifyChannel)
         (set @entity.message @config.template)
@@ -201,7 +201,7 @@ orbital NotifyOnEventOrbital {
           severity: @entity.severity
         })
         (notify error (str/concat "Couldn't send the text message — " ?error))
-      NOTIFY_WEBHOOK_SENT -> idle
+      NOTIFY_WEBHOOK_SENT -> idle when (not ["=", @config.webhookUrl, ""])
         (set @entity.dispatched true)
         (persist create NotificationRecord {
           channel: @entity.channel
@@ -211,7 +211,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
-      NOTIFY_WEBHOOK_FAILED -> idle
+      NOTIFY_WEBHOOK_FAILED -> idle when (not ["=", @config.webhookUrl, ""])
         (set @entity.dispatched false)
         (set @entity.error ?error)
         (persist create NotificationRecord {
@@ -339,8 +339,9 @@ orbital NotifyOnEventOrbital {
 
     listens {
       EventOccurred {
-        data : Map string scalar
+        data : @entity @config.sourceEntity
         status : string
+        id : string
       }
       NOTIFY_PREFS_LOADED {
         data : [PrefRow]
@@ -374,6 +375,11 @@ orbital NotifyOnEventOrbital {
         @description "How to gate dispatch. `eq` (default) does string-equality via `triggerStatus` against the upstream event's `status` field, exactly as before. `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue` — e.g. fire only when a stock level drops below a threshold."
         @synonyms "comparison operator, threshold operator, guard mode, trigger comparison, numeric gate, greater than, less than, threshold crossing"
         @tier "policy"
+      sourceEntity : entity = NotificationRecord
+        @label "Entity of the upstream event's data"
+        @description "The entity whose row the upstream event carries in `data`; `guardField` names a field of it."
+        @synonyms "source entity, event entity, data entity, row of the event"
+        @tier "internal"
       guardField : string = ""
         @label "Guard field (numeric)"
         @description "Field read from the upstream event's `data` payload and compared against `guardValue` when `guardOp` is not `eq` (e.g. 'stockLevel', 'quantity'). Ignored when `guardOp` is `eq`."

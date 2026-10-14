@@ -1,0 +1,191 @@
+app ui-video-embed [
+  version: "1.0.0",
+  description: "Embedded video player: a YouTube video by id, or any player page by URL. Fires a ready event once it can play and an error event when it cannot. — UI factory (1:1 with the @almadar/ui video-embed pattern)."
+]
+;; @capabilities "embedded video, YouTube player, lesson video, video embed, play a video by id or URL, player ready and error events"
+;; @pattern "video-embed"
+orbital VideoEmbedOrbital {
+  entity VideoEmbedItem [runtime] {
+    id : string!
+  }
+
+  trait VideoEmbedRender -> @rebindable VideoEmbedItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          videoId: @config.videoId
+          src: @config.src
+          title: @config.title
+          autoplay: @config.autoplay
+          controls: @config.controls
+          start: @config.start
+          readyEvent: @config.readyEvent
+          playEvent: @config.playEvent
+          errorEvent: @config.errorEvent
+          className: @config.className
+          enter: @config.enter
+          enterDelay: @config.enterDelay
+          skeleton: @config.skeleton
+          aria-label: @config.ariaLabel
+          aria-labelledby: @config.ariaLabelledby
+          aria-describedby: @config.ariaDescribedby
+          aria-live: @config.ariaLive
+          aria-current: @config.ariaCurrent
+          aria-pressed: @config.ariaPressed
+          aria-expanded: @config.ariaExpanded
+          aria-selected: @config.ariaSelected
+          aria-hidden: @config.ariaHidden
+          aria-busy: @config.ariaBusy
+          role: @config.role
+          lang: @config.lang
+          dir: @config.dir
+          tabIndex: @config.tabIndex
+          type: video-embed
+        })
+    }
+
+    emits {
+      @config.readyEvent -> external {
+        source : string!
+      }
+        @description "Event fired once the player is ready to play; the payload names the video id or URL"
+        @tier "essential"
+      @config.playEvent -> external {
+        source : string!
+      }
+        @description "Event fired each time the YouTube player begins or resumes playing; the payload names the video id"
+        @tier "essential"
+      @config.errorEvent -> external {
+        error : string!
+        code : string!
+      }
+        @description "Event fired when the YouTube player cannot load or play the video; the payload carries the message and the player's error code. A plain URL never fires it: a browser reports no load failure for a page frame"
+        @tier "essential"
+    }
+
+    config {
+      videoId : string
+        @label "Video Id"
+        @description "YouTube video id (the 11 characters of the share URL); played through the YouTube IFrame API"
+        @tier "presentation"
+      src : string
+        @label "Src"
+        @description "URL of any other embeddable player page; used when no `videoId` is set"
+        @tier "presentation"
+      title : string
+        @label "Title"
+        @description "Accessible name of the player"
+        @tier "presentation"
+      autoplay : boolean = false
+        @label "Autoplay"
+        @description "Start playback as soon as the player is ready (YouTube ids only)"
+        @tier "presentation"
+      controls : boolean = true
+        @label "Controls"
+        @description "Show the player's own controls (YouTube ids only)"
+        @tier "presentation"
+      start : number = 0
+        @label "Start"
+        @description "Second of the video to start from (YouTube ids only)"
+        @tier "presentation"
+      readyEvent : event = "READY"
+        @label "Ready Event"
+        @description "Event fired once the player is ready to play; the payload names the video id or URL"
+        @tier "presentation"
+      playEvent : event = "PLAY"
+        @label "Play Event"
+        @description "Event fired each time the YouTube player begins or resumes playing; the payload names the video id"
+        @tier "presentation"
+      errorEvent : event = "ERROR"
+        @label "Error Event"
+        @description "Event fired when the YouTube player cannot load or play the video; the payload carries the message and the player's error code. A plain URL never fires it: a browser reports no load failure for a page frame"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+      enter : "none" | "fade" | "rise" | "scale" | "slide"
+        @label "Enter"
+        @description "How this element animates in when it mounts (theme-styled); overrides the theme's default slot entry. `none` opts out."
+        @tier "presentation"
+      enterDelay : number
+        @label "Enter Delay"
+        @description "Stagger step for the entry: waits this many `--motion-enter-stagger` steps before animating."
+        @tier "presentation"
+      skeleton : "header" | "table" | "list" | "grid" | "detail" | "stats" | "form" | "card" | "text" | "none"
+        @label "Skeleton"
+        @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
+        @tier "presentation"
+      ariaLabel : string
+        @label "Aria-label"
+        @description "Accessible name read by screen readers when the visible text is missing or not descriptive (e.g. an icon-only control)."
+        @synonyms "aria-label"
+        @tier "presentation"
+      ariaLabelledby : string
+        @label "Aria-labelledby"
+        @description "Id of the element whose text names this one."
+        @synonyms "aria-labelledby"
+        @tier "presentation"
+      ariaDescribedby : string
+        @label "Aria-describedby"
+        @description "Id of the element whose text describes this one (help text, error)."
+        @synonyms "aria-describedby"
+        @tier "presentation"
+      ariaLive : "off" | "polite" | "assertive"
+        @label "Aria-live"
+        @description "Announce changes to this region: polite waits for a pause, assertive interrupts."
+        @synonyms "aria-live"
+        @tier "presentation"
+      ariaCurrent : "page" | "step" | "location" | "date" | "time" | "true" | "false"
+        @label "Aria-current"
+        @description "Marks the current item in a set: the current page, step, location, date or time."
+        @synonyms "aria-current"
+        @tier "presentation"
+      ariaPressed : "true" | "false" | "mixed"
+        @label "Aria-pressed"
+        @description "Toggle-button state."
+        @synonyms "aria-pressed"
+        @tier "presentation"
+      ariaExpanded : boolean
+        @label "Aria-expanded"
+        @description "Whether the element it controls is expanded."
+        @synonyms "aria-expanded"
+        @tier "presentation"
+      ariaSelected : boolean
+        @label "Aria-selected"
+        @description "Whether this item is selected (tabs, options, grid cells)."
+        @synonyms "aria-selected"
+        @tier "presentation"
+      ariaHidden : boolean
+        @label "Aria-hidden"
+        @description "Hide from assistive technology (decorative content only)."
+        @synonyms "aria-hidden"
+        @tier "presentation"
+      ariaBusy : boolean
+        @label "Aria-busy"
+        @description "This region is updating; assistive technology waits before announcing it."
+        @synonyms "aria-busy"
+        @tier "presentation"
+      role : "alert" | "alertdialog" | "application" | "article" | "banner" | "blockquote" | "button" | "caption" | "cell" | "checkbox" | "code" | "columnheader" | "combobox" | "complementary" | "contentinfo" | "definition" | "deletion" | "dialog" | "document" | "emphasis" | "feed" | "figure" | "form" | "generic" | "grid" | "gridcell" | "group" | "heading" | "img" | "insertion" | "link" | "list" | "listbox" | "listitem" | "log" | "main" | "marquee" | "math" | "menu" | "menubar" | "menuitem" | "menuitemcheckbox" | "menuitemradio" | "meter" | "navigation" | "none" | "note" | "option" | "paragraph" | "presentation" | "progressbar" | "radio" | "radiogroup" | "region" | "row" | "rowgroup" | "rowheader" | "scrollbar" | "search" | "searchbox" | "separator" | "slider" | "spinbutton" | "status" | "strong" | "subscript" | "superscript" | "switch" | "tab" | "table" | "tablist" | "tabpanel" | "term" | "textbox" | "time" | "timer" | "toolbar" | "tooltip" | "tree" | "treegrid" | "treeitem"
+        @label "Role"
+        @description "WAI-ARIA role when the element's native semantics don't describe it."
+        @tier "presentation"
+      lang : string
+        @label "Lang"
+        @description "Language of this element's content (BCP 47, e.g. ar, sl, en)."
+        @tier "presentation"
+      dir : "ltr" | "rtl" | "auto"
+        @label "Dir"
+        @description "Text direction of this element's content."
+        @tier "presentation"
+      tabIndex : number
+        @label "Tab Index"
+        @description "0 puts the element in the Tab order; -1 makes it focusable only programmatically."
+        @tier "presentation"
+    }
+  }
+
+  page "/video-embed" as VideoEmbedPage -> VideoEmbedRender
+}

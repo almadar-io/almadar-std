@@ -7,6 +7,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { NUMBER, PRIMITIVE_VALUE, STRING, list, shape } from '../signature.js';
 
 /**
  * Format module operators.
@@ -23,7 +24,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'string',
     params: [
       { name: 'n', type: 'number', description: 'Number to format' },
-      { name: 'opts', type: 'object', description: 'Format options (decimals, locale)', optional: true },
+      { name: 'opts', type: shape({ locale: STRING, minimumFractionDigits: NUMBER, maximumFractionDigits: NUMBER }), description: 'Format options (decimals, locale)', optional: true },
     ],
     example: '["format/number", 1234567.89] // => "1,234,567.89"',
   },
@@ -102,7 +103,7 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'string',
     params: [
-      { name: 'arr', type: 'array', description: 'Array of strings' },
+      { name: 'arr', type: list(PRIMITIVE_VALUE), description: 'Array of strings' },
       { name: 'style', type: 'string', description: '"and" or "or"', optional: true, defaultValue: 'and' },
     ],
     example: '["format/list", ["Alice", "Bob", "Charlie"], "and"] // => "Alice, Bob, and Charlie"',

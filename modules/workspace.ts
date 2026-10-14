@@ -8,6 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { STRING, list } from '../signature.js';
 
 export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/read-orbital': {
@@ -16,7 +17,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1, maxArity: 1,
     description: 'Read an orbital definition from the workspace by name.',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: 'OrbitalDefinition',
     params: [{ name: 'name', type: 'string', description: 'Orbital name' }],
     example: '["workspace/read-orbital", "ProductOrbital"]',
   },
@@ -74,7 +75,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 0, maxArity: 0,
     description: 'List all orbital names in the workspace.',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list(STRING),
     params: [],
     example: '["workspace/list-orbitals"] // => ["ProductOrbital", "CartOrbital"]',
   },
@@ -84,7 +85,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 0, maxArity: 0,
     description: 'Read the composed schema.orb from the workspace.',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: 'OrbitalSchema',
     params: [],
     example: '["workspace/read-schema"]',
   },
@@ -105,7 +106,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 0, maxArity: 0,
     description: 'Read the plan snapshot from the workspace.',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: 'PlanSnapshot',
     params: [],
     example: '["workspace/read-plan"]',
   },
@@ -117,7 +118,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true,
     runsOn: 'any',
     returnType: 'void',
-    params: [{ name: 'snapshot', type: { kind: 'object', fields: { id: 'string', status: 'string' } }, description: 'Plan snapshot' }],
+    params: [{ name: 'snapshot', type: 'PlanSnapshot', description: 'Plan snapshot' }],
     example: '["workspace/write-plan", ["create entity", "add list page"]]',
   },
   'workspace/archive-orbital': {

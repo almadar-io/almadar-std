@@ -13,6 +13,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { fn, list, tv } from '../signature.js';
 
 /**
  * Composition module operators.
@@ -27,11 +28,11 @@ export const COMPOSITION_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Compose N orbitals into one application schema. Wires events, picks layout, generates pages.',
     hasSideEffects: false,
     compileTime: true,
-    returnType: 'object',
+    returnType: 'OrbitalSchema',
     params: [
       {
         name: 'config',
-        type: 'object',
+        type: 'ComposeBehaviorsInput',
         description: 'ComposeBehaviorsInput: { appName, orbitals[], layoutStrategy?, eventWiring?, entityMappings? }',
       },
     ],
@@ -45,16 +46,16 @@ export const COMPOSITION_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Apply cross-orbital event wiring. Adds external emits/listens to inline traits.',
     hasSideEffects: false,
     compileTime: true,
-    returnType: 'array',
+    returnType: list('OrbitalDefinition'),
     params: [
       {
         name: 'orbitals',
-        type: 'array',
+        type: list('OrbitalDefinition'),
         description: 'Array of OrbitalDefinition to wire',
       },
       {
         name: 'wiring',
-        type: 'array',
+        type: list('EventWiringEntry'),
         description: 'Array of EventWiringEntry { from, event, to, triggers }',
       },
     ],
@@ -72,12 +73,12 @@ export const COMPOSITION_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       {
         name: 'orbitals',
-        type: 'array',
+        type: list('OrbitalDefinition'),
         description: 'Array of OrbitalDefinition',
       },
       {
         name: 'wiring',
-        type: 'array',
+        type: list('EventWiringEntry'),
         description: 'Optional EventWiringEntry array',
         optional: true,
       },
@@ -92,16 +93,16 @@ export const COMPOSITION_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Left-to-right composition. Each step receives the previous result as its first arg.',
     hasSideEffects: false,
     compileTime: true,
-    returnType: 'any',
+    returnType: tv('A'),
     params: [
       {
         name: 'seed',
-        type: 'any',
+        type: tv('A'),
         description: 'Initial value to pipe through steps',
       },
       {
         name: '...steps',
-        type: 'function[]',
+        type: fn([tv('A')], tv('A')),
         description: 'Functions, each receiving the previous result as first argument',
       },
     ],

@@ -8,6 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { STRING, list, mapOf, rec, tv } from '../signature.js';
 
 /**
  * Contract module operators.
@@ -25,10 +26,10 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Validate tensor against input contract. Returns { valid, violations } — guard on `valid`, or read `violations` for the detail.',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: 'ContractValidationResult',
     params: [
       { name: 'tensor', type: 'tensor', description: 'Input tensor' },
-      { name: 'contract', type: 'object', description: 'Input contract spec' },
+      { name: 'contract', type: 'ContractSpec', description: 'Input contract spec' },
     ],
     example: '["contract/validate-input", [0.5, 0.7], {"ranges": {"0": {"min": 0, "max": 1}, "1": {"min": 0, "max": 1}}}]',
   },
@@ -39,10 +40,10 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Validate tensor against output contract. Returns { valid, violations } — guard on `valid`, or read `violations` for the detail.',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: 'ContractValidationResult',
     params: [
       { name: 'tensor', type: 'tensor', description: 'Output tensor' },
-      { name: 'contract', type: 'object', description: 'Output contract spec' },
+      { name: 'contract', type: 'ContractSpec', description: 'Output contract spec' },
     ],
     example: '["contract/validate-output", [0.5, 0.7], {"ranges": {"0": {"min": 0, "max": 1}, "1": {"min": 0, "max": 1}}}]',
   },
@@ -53,10 +54,10 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Clamp output tensor to contract ranges',
     hasSideEffects: false,
-    returnType: 'tensor',
+    returnType: tv('T'),
     params: [
-      { name: 'tensor', type: 'tensor', description: 'Output tensor' },
-      { name: 'contract', type: 'object', description: 'Output contract spec' },
+      { name: 'tensor', type: tv('T'), description: 'Output tensor (the clamped tensor has the same type)' },
+      { name: 'contract', type: 'ContractSpec', description: 'Output contract spec' },
     ],
     example: '["contract/clamp-output", [0.5, 1.7], {"ranges": {"0": {"min": 0, "max": 1}, "1": {"min": 0, "max": 1}}}]',
   },
@@ -67,10 +68,10 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'List contract violations',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list('ContractViolation'),
     params: [
       { name: 'tensor', type: 'tensor', description: 'Tensor to check' },
-      { name: 'contract', type: 'object', description: 'Contract spec' },
+      { name: 'contract', type: 'ContractSpec', description: 'Contract spec' },
     ],
     example: '["contract/violations", [0.5, 1.7], {"ranges": {"0": {"min": 0, "max": 1}, "1": {"min": 0, "max": 1}}}]',
   },
@@ -88,8 +89,8 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'tensor',
     params: [
-      { name: 'entity', type: 'object', description: 'Entity data' },
-      { name: 'contract', type: 'object', description: 'Input contract mapping fields to dims' },
+      { name: 'entity', type: rec('E'), description: 'Entity data' },
+      { name: 'contract', type: 'ContractSpec', description: 'Input contract mapping fields to dims' },
     ],
     example: '["contract/entity-to-tensor", {"price": 10, "qty": 2}, {"fields": ["price", "qty"]}]',
   },
@@ -100,10 +101,10 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Convert output tensor to event payload via contract',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: mapOf(STRING, 'TensorValue'),
     params: [
       { name: 'tensor', type: 'tensor', description: 'Output tensor' },
-      { name: 'contract', type: 'object', description: 'Output contract mapping dims to fields' },
+      { name: 'contract', type: 'ContractSpec', description: 'Output contract mapping dims to fields' },
     ],
     example: '["contract/tensor-to-payload", [0.5, 0.7], {"fields": ["price", "qty"]}]',
   },

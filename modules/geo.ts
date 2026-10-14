@@ -8,6 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { nullable } from '../signature.js';
 
 /**
  * Geo module operators.
@@ -107,7 +108,7 @@ export const GEO_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Intersection point of two segments, or null when parallel/none',
     hasSideEffects: false,
-    returnType: 'point | null',
+    returnType: nullable('point'),
     params: [
       { name: 'a', type: 'segment', description: 'First segment {x1,y1,x2,y2}' },
       { name: 'b', type: 'segment', description: 'Second segment {x1,y1,x2,y2}' },

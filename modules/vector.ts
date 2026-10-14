@@ -9,6 +9,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { NUMBER, union } from '../signature.js';
 
 /**
  * Vec module operators.
@@ -77,7 +78,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: '3D cross product → vector; 2D → scalar ax·by-ay·bx',
     hasSideEffects: false,
-    returnType: 'vector | number',
+    returnType: union('vector', NUMBER),
     params: [
       { name: 'a', type: 'vector', description: 'First vector {x,y[,z]}' },
       { name: 'b', type: 'vector', description: 'Second vector {x,y[,z]}' },

@@ -47,7 +47,7 @@ orbital ApprovalGateOrbital {
     decidedAt : number @description "Timestamp indicating when a decision was made on the request." @synonyms "decision time, resolved at, completed at" = 0
     escalatedAt : number @description "Timestamp indicating when the request was escalated." @synonyms "escalation time, escalation timestamp, escalated time" = 0
     notes : string @description "The reviewer's written reason, captured by the deny step." @synonyms "comments, remarks, explanation, reason, details" = ""
-    payload : Map string scalar @description "The held data of the gated action, replayed by the downstream listener when the request is granted." @synonyms "request data, held payload, pending data, gated data" = {}
+    payload : string @description "The held data of the gated action as JSON text, replayed by the downstream listener when the request is granted." @synonyms "request data, held payload, pending data, gated data" = ""
   }
 
   trait LoadingSpinner = Spinner.traits.SpinnerRender -> ApprovalRequest {
@@ -240,7 +240,7 @@ orbital ApprovalGateOrbital {
         (persist update ApprovalRequest @entity {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
         })
-        (emit ApprovalGranted { payload: ?row.payload, requestId: ?id })
+        (emit ApprovalGranted { payload: (json/parse ?row.payload p), requestId: ?id })
       ;; Deny is a two-step: capture the written reason first, commit second.
       DENY -> denying when (or ["=", (array/len @config.approverRoles), 0] (array/includes @config.approverRoles @user.role))
         (set @entity.id ?id)

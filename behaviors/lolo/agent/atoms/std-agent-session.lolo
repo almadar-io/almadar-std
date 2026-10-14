@@ -36,6 +36,10 @@ type AgentToolRead = {
   read : string!
 }
 type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
+type AgentToolInputData = {
+  event : string!
+}
+type AgentToolData = AgentToolScope | AgentToolInputData | AgentToolRead
 type AgentToolKind = "input" | "read" | "invalid"
 type AgentMessageEntry = {
   type : "message"!
@@ -109,7 +113,7 @@ orbital AgentSessionOrbital {
     entries : [AgentFeedEntry] @description "The conversation as shown: messages with the assistant's steps between them." = []
     working : boolean @description "The assistant is answering." = false
     chatInstructions : string @description "The ephemeral conversation's own instructions (empty: the assistant's configured ones)." = ""
-    chatTools : [AgentTool] @description "The ephemeral conversation's own tools (empty: none)." = []
+    chatTools : [AgentToolData] @description "The ephemeral conversation's own tools (empty: none)." = []
     chatTitle : string @description "The ephemeral conversation's header title." = ""
     chatSubtitle : string @description "The ephemeral conversation's header subtitle." = ""
     chatAvatar : string @description "The ephemeral conversation's header avatar image." = ""

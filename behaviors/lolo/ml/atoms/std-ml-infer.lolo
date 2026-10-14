@@ -4,6 +4,14 @@ app std-ml-infer [
 ]
 
 type Range = { min: float!, max: float! }
+;; The caller-supplied request, echoed untouched through INFER_ABSTAINED so a composing
+;; ladder (e.g. std-escalating-decision) can project its own inputs out of it.
+type DecisionRequest = {
+  candidate  : string!
+  key        : string!
+  accepted   : [string]!
+  categories : [string]!
+}
 type OutputContract = { shape: [int], ranges: Map string Range }
 type ShapeMismatchViolation = { type: "shape_mismatch", expected: [int]!, actual: [int]! }
 type RangeViolationDetail = { type: "range_violation", dim: int!, min: float!, max: float!, actualMin: float!, actualMax: float! }
@@ -13,12 +21,12 @@ type ContractViolation = ShapeMismatchViolation | RangeViolationDetail | NotATen
 orbital MlInferOrbital {
 
   entity Inference [runtime] {
-    input      : Map string scalar   = {}
+    input      : Map string string = {}
     output     : [float]  = []
     confidence : float    = 0
     violations : [ContractViolation] = []
     reason     : string   = ""
-    request    : Map string scalar   = {}
+    request    : DecisionRequest = {}
     status     : "idle" | "inferring" | "resolved" = idle
   }
 
@@ -138,7 +146,7 @@ orbital MlInferOrbital {
       INFER_ABSTAINED -> external {
         reason     : string!
         violations : [ContractViolation]!
-        request    : Map string scalar
+        request    : DecisionRequest
       }
         @description "The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path. request echoes the originating request untouched so the next rung can project its own inputs out of it"
         @tier "primary"
@@ -146,8 +154,8 @@ orbital MlInferOrbital {
 
     listens {
       INFER {
-        input : Map string scalar!
-        request : Map string scalar
+        input : Map string string!
+        request : DecisionRequest
       }
     }
   }

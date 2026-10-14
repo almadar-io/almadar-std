@@ -9,6 +9,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { list, rec } from '../signature.js';
 
 /**
  * Graph module operators.
@@ -28,7 +29,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'graph',
     params: [
-      { name: 'config', type: 'object', description: 'Graph construction config (nodes, edges, node-features, edge-features, directed)' },
+      { name: 'entities', type: list(rec('E')), description: 'Entity rows; one node per entity from its numeric fields' },
     ],
     example: '["graph/from-entities", [{ "age": 30, "score": 0.5 }, { "age": 25, "score": 0.7 }]]',
   },
@@ -217,7 +218,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'graph',
     params: [
-      { name: 'graphs', type: 'array', description: 'List of graphs' },
+      { name: 'graphs', type: list('graph'), description: 'List of graphs' },
     ],
     example: '["graph/batch", [["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]]]',
   },

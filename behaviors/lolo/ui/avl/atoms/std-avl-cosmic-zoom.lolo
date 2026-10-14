@@ -4,6 +4,10 @@ app std-avl-cosmic-zoom [
 ]
 ;; @capabilities "explore an app's orbitals and wires, drill into an orbital's state machines, play a transition step by step, see what an app imports"
 
+type CosmicProgram = {
+  name : string
+  orbitals : [orbital]
+}
 type CosmicEvalStep = {
   kind : "enter" | "exit" | "iter" | "skip"!
   path : [string]!
@@ -45,8 +49,8 @@ type CosmicPlayStep = {
   orbital : string!
   trait : string!
   from : string!
-  event : event!
-  payload : Map string scalar!
+  event : string!
+  payload : SExpr!
   result : CosmicStepResult!
 }
 type CosmicDependency = {
@@ -121,7 +125,7 @@ orbital CosmicZoomOrbital {
         (set @entity.scene [])
         (set @entity.cursor 0)
         (set @entity.hasDependencies false)
-        (behavior/dependencies (json/parse ?source) { emit: { success: DEPENDENCIES, failure: DEPENDENCIES_FAILED } })
+        (behavior/dependencies (json/parse ?source CosmicProgram) { emit: { success: DEPENDENCIES, failure: DEPENDENCIES_FAILED } })
         (emit SHOW_APPLICATION {})
     }
 
@@ -135,10 +139,10 @@ orbital CosmicZoomOrbital {
           gap: sm
           className: "h-full min-h-0 p-md"
           children: [
-            { type: breadcrumb, items: [{ label: (object/get (json/parse @entity.program) name "") }], itemEvent: CRUMB },
+            { type: breadcrumb, items: [{ label: (object/get (json/parse @entity.program CosmicProgram) name "") }], itemEvent: CRUMB },
             { type: box, className: "flex-1 min-h-0", children: [{
               type: flow-canvas
-              schema: (json/parse @entity.program)
+              schema: (json/parse @entity.program CosmicProgram)
               initialLevel: system
               openTraitsEvent: OPEN_TRAITS
               systemMap: { openCodeEvent: OPEN_CODE, highlighted: @entity.highlighted, preview: @config.preview }
@@ -153,7 +157,7 @@ orbital CosmicZoomOrbital {
         (set @entity.source ?source)
         (set @entity.highlighted ?highlighted)
         (set @entity.hasDependencies false)
-        (behavior/dependencies (json/parse ?source) { emit: { success: DEPENDENCIES, failure: DEPENDENCIES_FAILED } })
+        (behavior/dependencies (json/parse ?source CosmicProgram) { emit: { success: DEPENDENCIES, failure: DEPENDENCIES_FAILED } })
         (emit SHOW_APPLICATION {})
       DEPENDENCIES -> application
         (set @entity.dependencies ?result)
@@ -180,12 +184,12 @@ orbital CosmicZoomOrbital {
           className: "h-full min-h-0 p-md"
           children: [
             { type: stack, direction: horizontal, gap: sm, align: center, justify: between, children: [
-              { type: breadcrumb, items: [{ label: (object/get (json/parse @entity.program) name "") }, { label: @entity.orbital }], itemEvent: CRUMB },
+              { type: breadcrumb, items: [{ label: (object/get (json/parse @entity.program CosmicProgram) name "") }, { label: @entity.orbital }], itemEvent: CRUMB },
               { type: typography, variant: caption, color: muted, content: @config.escHint }
             ] },
             { type: box, className: "flex-1 min-h-0", children: [{
               type: flow-canvas
-              schema: (json/parse @entity.program)
+              schema: (json/parse @entity.program CosmicProgram)
               initialLevel: trait-expanded
               initialOrbital: @entity.orbital
               onNodeClick: NODE_CLICK
@@ -238,7 +242,7 @@ orbital CosmicZoomOrbital {
           className: "h-full min-h-0 p-md overflow-auto"
           children: [
             { type: stack, direction: horizontal, gap: sm, align: center, justify: between, children: [
-              { type: breadcrumb, items: [{ label: (object/get (json/parse @entity.program) name "") }, { label: @entity.orbital }, { label: @entity.trait }], itemEvent: CRUMB },
+              { type: breadcrumb, items: [{ label: (object/get (json/parse @entity.program CosmicProgram) name "") }, { label: @entity.orbital }, { label: @entity.trait }], itemEvent: CRUMB },
               { type: button, label: @config.backLabel, icon: arrow-left, variant: ghost, size: sm, action: ZOOM_OUT }
             ] },
             (if (= @entity.error "")
@@ -265,7 +269,7 @@ orbital CosmicZoomOrbital {
         })
       STEP -> transition
         (set @entity.error "")
-        (program/step (json/parse @entity.program) [{ orbital: ?orbital, trait: ?trait, from: ?from, event: ?event, payload: ?payload }] { emit: { success: STEPPED, failure: STEP_FAILED } })
+        (program/step (json/parse @entity.program CosmicProgram) [{ orbital: ?orbital, trait: ?trait, from: ?from, event: ?event, payload: ?payload }] { emit: { success: STEPPED, failure: STEP_FAILED } })
       STEPPED -> transition
         (set @entity.scene (array/concat @entity.scene ?result))
         (set @entity.cursor (array/len @entity.scene))

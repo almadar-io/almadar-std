@@ -1,8 +1,11 @@
 app std-data-import [
   version: "1.0.0",
-  description: "std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → parse+map → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); the host's file UI parses the CSV and answers with STAGE_ROWS, one JSON string per raw row, which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed, emits IMPORT_CONFIRMED { batchId, sourceName, rowCount }, and fetches the batch's staged rows; on fetch success the atom parses each rowJson via json/parse, remaps keys through the batch's mappingJson, and emits IMPORT_ROWS_PARSED { batchId, rows, failed } — the persist half is the CONSUMER organism's: it listens for IMPORT_ROWS_PARSED and persists the mapped rows into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity are consumer configs, and any persist failure marks the batch row failed and fires IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu."
+  description: "std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → parse+map → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); once the batch row is persisted the atom parses the picked file's text with csv/parse and stages it itself with STAGE_ROWS, one JSON string per raw row (a host that parses elsewhere may still answer STAGE_ROWS directly), which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed, emits IMPORT_CONFIRMED { batchId, sourceName, rowCount }, and fetches the batch's staged rows; on fetch success the atom parses each rowJson via json/parse, remaps keys through the batch's mappingJson, and emits IMPORT_ROWS_PARSED { batchId, rows, failed } — the persist half is the CONSUMER organism's: it listens for IMPORT_ROWS_PARSED and persists the mapped rows into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity are consumer configs, and any persist failure marks the batch row failed and fires IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu."
 ]
 orbital DataImportOrbital {
+
+  type ImportCells = Map string string
+
     type DataImportFile = { name : string!, size : number, type : string, content : string }
 
   entity ImportBatch [persistent: import_batches] {
@@ -13,6 +16,7 @@ orbital DataImportOrbital {
     errorCount : number @description "Number of rows the host parser flagged with errors during staging." @synonyms "errors, failed rows, parse errors" = 0
     mappingJson : string @description "Source-column → target-field mapping (JSON string), recorded verbatim from config for provenance; the atom applies it when parsing staged rows on confirm." @synonyms "field mapping, column mapping, mapping" = "{}"
     createdAt : number @description "Run start timestamp." = 0
+    pendingCsv : string @intrinsic @description "The picked file's CSV text, held from UPLOAD_CSV until the batch row is persisted and the rows are staged." @synonyms "uploaded file text" = ""
   }
 
   entity ImportRow [persistent: import_rows] {
@@ -45,6 +49,7 @@ orbital DataImportOrbital {
             icon: upload
             label: "Upload CSV file"
             maxFiles: 1
+            readAs: text
             type: upload-drop-zone
           }]
           direction: vertical
@@ -53,6 +58,7 @@ orbital DataImportOrbital {
         })
       UPLOAD_CSV -> uploaded
         (set @entity.id ?batchId)
+        (set @entity.pendingCsv (str/default (object/get (array/first ?files) content) ""))
         (set @entity.sourceName (or ?sourceName @config.sourceName))
         (set @entity.status uploaded)
         (set @entity.mappingJson @config.fieldMappingJson)
@@ -92,23 +98,24 @@ orbital DataImportOrbital {
             icon: upload
             label: "Upload CSV file"
             maxFiles: 1
+            readAs: text
             type: upload-drop-zone
           }]
           direction: vertical
           gap: md
           type: stack
         })
-      ;; STAGE_ROWS has no emitter yet (host-side CSV-content parsing is a
-      ;; still-open substrate gap, R-DATA-IMPORT-PAGES-BLANK-NO-UPLOAD-UI) —
-      ;; render something here too so `uploaded` is never a second blank
-      ;; dead end after the upload affordance's UPLOAD_CSV succeeds.
+      ;; BATCH_CREATED binds the batch id, then stages the picked file: its
+      ;; text is parsed by csv/parse and handed to STAGE_ROWS below, one JSON
+      ;; string per raw row.
       BATCH_CREATED -> uploaded
         (set @entity.id ?id)
         (render-ui main {
-          message: (str/concat "Import started — " @entity.sourceName ". Waiting for the file's rows to be staged.")
+          message: (str/concat "Import started — " @entity.sourceName ". Staging the file's rows.")
           type: alert
           variant: info
         })
+        (emit STAGE_ROWS { rows: (array/map (csv/parse @entity.pendingCsv) (fn r (json/stringify @r))) })
       STAGE_ROWS -> staged when [">", (array/len ?rows), 0]
         (set @entity.rowCount (array/len ?rows))
         (set @entity.errorCount (or ?errorCount 0))
@@ -207,6 +214,7 @@ orbital DataImportOrbital {
             icon: upload
             label: "Upload CSV file"
             maxFiles: 1
+            readAs: text
             type: upload-drop-zone
           }]
           direction: vertical
@@ -268,6 +276,7 @@ orbital DataImportOrbital {
             icon: upload
             label: "Upload CSV file"
             maxFiles: 1
+            readAs: text
             type: upload-drop-zone
           }]
           direction: vertical
@@ -285,15 +294,15 @@ orbital DataImportOrbital {
           batchId: @entity.id
           failed: (array/len (array/filter ?data (fn row (and
             ["=", (object/get @row "batchId"), @entity.id]
-            (not (validate/object (json/parse (object/get @row "rowJson"))))))))
+            (not (validate/object (json/parse (object/get @row "rowJson") ImportCells)))))))
           rows: (array/map
             (array/filter ?data (fn row (and
               ["=", (object/get @row "batchId"), @entity.id]
-              (validate/object (json/parse (object/get @row "rowJson"))))))
+              (validate/object (json/parse (object/get @row "rowJson") ImportCells)))))
             (fn row (object/mapKeys
-              (json/parse (object/get @row "rowJson"))
-              (fn k (if (object/has (json/parse @entity.mappingJson) @k)
-                (object/get (json/parse @entity.mappingJson) @k)
+              (json/parse (object/get @row "rowJson") ImportCells)
+              (fn k (if (object/has (json/parse @entity.mappingJson ImportCells) @k)
+                (object/get (json/parse @entity.mappingJson ImportCells) @k)
                 @k)))))
           targetEntity: @config.targetEntity
         })
@@ -340,6 +349,7 @@ orbital DataImportOrbital {
             icon: upload
             label: "Upload CSV file"
             maxFiles: 1
+            readAs: text
             type: upload-drop-zone
           }]
           direction: vertical
@@ -357,6 +367,12 @@ orbital DataImportOrbital {
     }
 
     emits {
+      STAGE_ROWS {
+        rows : [string]!
+        errorCount : number
+      }
+        @description "The uploaded file's text was parsed into rows (csv/parse): rows carries one JSON string per data row, keyed by the header row (raw source shape, pre-mapping). The atom bulk-persists them and opens the staged review."
+        @tier "internal"
       BATCH_CREATED {
         id : string!
       }
@@ -386,7 +402,7 @@ orbital DataImportOrbital {
       IMPORT_ROWS_PARSED -> external {
         batchId : string!
         failed : number
-        rows : [Map string scalar]
+        rows : [ImportCells]
         targetEntity : string
       }
         @description "Confirmed rows parsed and key-mapped: each staged row's rowJson was parsed via json/parse and remapped through the batch's mappingJson; failed counts rows whose rowJson did not parse to an object (surfaced, never dropped). The consumer persists rows into its own target entity and marks them imported."
@@ -407,14 +423,14 @@ orbital DataImportOrbital {
         sourceName : string
         files : [DataImportFile]!
       }
-        @description "Starts an import run for a CSV file upload, fired by the idle state's own upload-drop-zone affordance. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. files carries the picked file(s) (name/size/type/content) but the atom does not read content from it yet — no runtime capability exists to decode/parse it into rows (tracked: R-DATA-IMPORT-PAGES-BLANK-NO-UPLOAD-UI); STAGE_ROWS is the still-open handoff for a future host-side parser to answer with real row data."
+        @description "Starts an import run for a CSV file upload, fired by the idle state's own upload-drop-zone affordance. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. files carries the picked file(s) (name/size/type/content, content as UTF-8 text); the first file's text is parsed with csv/parse and staged once the batch row is persisted."
         @synonyms "upload csv, import csv, start import, import file, bulk import"
         @tier "domain"
       STAGE_ROWS {
         rows : [string]!
         errorCount : number
       }
-        @description "Host-side CSV parsing finished: rows carries one JSON string per parsed row (raw source shape, pre-mapping); errorCount counts rows the parser flagged. The atom bulk-persists them into import_rows and opens the staged review."
+        @description "Rows are ready to stage: rows carries one JSON string per parsed row (raw source shape, pre-mapping); errorCount counts rows the parser flagged. The atom emits this itself from the uploaded file; a host that parses elsewhere may answer it too. The atom bulk-persists the rows into import_rows and opens the staged review."
         @tier "internal"
       CONFIRM_IMPORT
         @description "The user approved the staged review; the batch is marked confirmed, IMPORT_CONFIRMED fires, and the atom parses+maps the staged rows into IMPORT_ROWS_PARSED for the consumer's persist half."

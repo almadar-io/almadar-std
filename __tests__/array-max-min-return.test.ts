@@ -9,14 +9,16 @@ import canonical from '../canonical-operators.json';
  */
 describe('array/max and array/min return type', () => {
   it('declares the null an empty list yields', () => {
-    expect(STD_OPERATORS['array/max'].returnType).toBe('number | null');
-    expect(STD_OPERATORS['array/min'].returnType).toBe('number | null');
+    const nullableNumber = { kind: 'union', of: ['number', { kind: 'literal', value: null }] };
+    expect(STD_OPERATORS['array/max'].returnType).toEqual(nullableNumber);
+    expect(STD_OPERATORS['array/min'].returnType).toEqual(nullableNumber);
   });
 
   it('the generated canonical registry carries it', () => {
-    const ops = canonical.operators as Record<string, { returnType?: string }>;
-    expect(ops['array/max'].returnType).toBe('number | null');
-    expect(ops['array/min'].returnType).toBe('number | null');
+    const ops = canonical.operators;
+    const nullableNumber = { kind: 'union', of: ['number', { kind: 'literal', value: null }] };
+    expect(ops['array/max'].returnType).toEqual(nullableNumber);
+    expect(ops['array/min'].returnType).toEqual(nullableNumber);
   });
 
   it('control: array/sum stays a definite number', () => {

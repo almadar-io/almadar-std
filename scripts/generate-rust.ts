@@ -10,7 +10,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STD_OPERATORS, STD_OPERATORS_BY_MODULE } from '../registry.js';
-import type { EffectHost, OperatorEffectMeta, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
+import type { EffectHost, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
@@ -32,6 +32,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-array': { description: 'Array utilities', target: ['ts', 'rust'] },
     'std-object': { description: 'Object utilities', target: ['ts', 'rust'] },
     'std-json': { description: 'JSON parsing/serialization', target: ['ts', 'rust'] },
+    'std-csv': { description: 'CSV parsing', target: ['ts', 'rust'] },
     'std-time': { description: 'Date/time utilities', target: ['ts', 'rust'] },
     'std-validate': { description: 'Validation utilities', target: ['ts', 'rust'] },
     'std-format': { description: 'Formatting utilities', target: ['ts', 'rust'] },
@@ -76,7 +77,7 @@ interface CanonicalOperatorEntry {
     category: string;
     minArity: number;
     maxArity: number | null;
-    returnType: string;
+    returnType: OperatorTypeRef;
     description: string;
     hasSideEffects?: boolean;
     module?: StdModule;
@@ -174,9 +175,10 @@ function toCanonicalEntry(
     }
     // Docs enrichment: existing curated fields win; the module source's
     // `example` is the fallback so regeneration never drops enrichment.
+    // `params` is the type contract both evaluators check (D-12), so the module source always wins.
     const title = existing?.title;
     if (title) entry.title = title;
-    const params = existing?.params ?? meta.params;
+    const params = meta.params ?? existing?.params;
     if (params && params.length > 0) entry.params = params;
     const examples =
         existing?.examples && existing.examples.length > 0

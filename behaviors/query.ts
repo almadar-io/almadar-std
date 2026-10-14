@@ -73,8 +73,7 @@ export type BehaviorTraitRole =
  * Per-trait exposure surface for one trait inside a `RegistryEntry`'s
  * orbital — the registry-record mirror of `FactoryTraitSignature`
  * (`@almadar/core` `src/factory/types.ts`) plus the fields
- * `*.signature.json` computes but the trait-signature type doesn't carry
- * (`ticks`, `rendersUi`) and the derived `role`. Stamped by
+ * the trait-signature type doesn't carry (`ticks`, `rendersUi`) and the derived `role`. Stamped by
  * `tools/almadar-pattern-sync` (`behaviors` command); a ref trait (organism
  * call site) inherits `entityContract`/`transitionEvents`/`ticks`/
  * `rendersUi`/`overridableConfigKeys` from the referenced atom.
@@ -191,7 +190,7 @@ export interface RegistryEntry {
   /**
    * `orb validate`/`orb resolve` readiness, back-stamped by `std-ts`
    * (`tools/almadar-pattern-sync` `regenerate.ts`) right after it computes
-   * the same fields for `*.signature.json` — one writer, pipeline-ordered.
+   * the same fields — one writer, pipeline-ordered.
    * Optional: unstamped until the `orb` binary is available at regen time.
    */
   sourceValid?: boolean;

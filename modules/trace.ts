@@ -8,6 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { rec } from '../signature.js';
 
 export const TRACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'trace/emit': {
@@ -19,7 +20,7 @@ export const TRACE_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'void',
     params: [
       { name: 'event', type: 'string', description: 'Event type name' },
-      { name: 'payload', type: { kind: 'object', fields: {}, open: true }, description: 'Event payload', optional: true },
+      { name: 'payload', type: rec('P'), description: 'Event payload', optional: true },
     ],
     example: '["trace/emit", "coordinator_state_changed", {"phase": "planning"}]',
   },

@@ -13,9 +13,7 @@ const orb = {
   prefix: 'x',
   registry: 'r',
   index: 'i',
-  factorySignatures: 'f',
   loloContracts: 'l',
-  signatures: 's',
   embeddings: [REL],
   compiler: '>=1.0.0',
 };
@@ -116,7 +114,7 @@ describe('resolveDeclaredDataFile — a declared key, read where the manifest sa
   const saved = process.env['SIDECAR_TEST_DIR'];
 
   function install(declared: string): void {
-    writeFileSync(join(pkgRoot, 'package.json'), JSON.stringify({ name: PKG, version: '1.0.0', orb: { ...orb, factorySignatures: declared } }));
+    writeFileSync(join(pkgRoot, 'package.json'), JSON.stringify({ name: PKG, version: '1.0.0', orb: { ...orb, index: declared } }));
   }
 
   beforeEach(() => {
@@ -127,8 +125,8 @@ describe('resolveDeclaredDataFile — a declared key, read where the manifest sa
     request = {
       packageName: PKG,
       fromUrl: pathToFileURL(join(tmp, 'caller.js')).href,
-      key: 'factorySignatures',
-      dataRel: 'registry/factory-signatures.json',
+      key: 'index',
+      dataRel: 'behaviors-registry.json',
       overrideEnv: 'SIDECAR_TEST_DIR',
       dataDir: async () => join(tmp, 'module-relative'),
     };
@@ -141,21 +139,21 @@ describe('resolveDeclaredDataFile — a declared key, read where the manifest sa
   });
 
   it('follows the manifest: a published (dist) and a workspace (behaviors) declaration resolve to their own paths', async () => {
-    install('dist/registry/factory-signatures.json');
-    expect(await resolveDeclaredDataFile(request)).toBe(join(pkgRoot, 'dist/registry/factory-signatures.json'));
-    install('behaviors/factory-signatures.json');
-    expect(await resolveDeclaredDataFile(request)).toBe(join(pkgRoot, 'behaviors/factory-signatures.json'));
+    install('dist/behaviors-registry.json');
+    expect(await resolveDeclaredDataFile(request)).toBe(join(pkgRoot, 'dist/behaviors-registry.json'));
+    install('behaviors/behaviors-registry.json');
+    expect(await resolveDeclaredDataFile(request)).toBe(join(pkgRoot, 'behaviors/behaviors-registry.json'));
   });
 
   it('control: the bundle override wins, read at the data-dir layout', async () => {
-    install('behaviors/factory-signatures.json');
+    install('behaviors/behaviors-registry.json');
     process.env['SIDECAR_TEST_DIR'] = join(tmp, 'override');
-    expect(await resolveDeclaredDataFile(request)).toBe(join(tmp, 'override', 'registry/factory-signatures.json'));
+    expect(await resolveDeclaredDataFile(request)).toBe(join(tmp, 'override', 'behaviors-registry.json'));
   });
 
   it('edge: a package that is not installed reads the module-relative data dir', async () => {
     expect(await resolveDeclaredDataFile({ ...request, packageName: 'not-installed-anywhere-pkg' })).toBe(
-      join(tmp, 'module-relative', 'registry/factory-signatures.json'),
+      join(tmp, 'module-relative', 'behaviors-registry.json'),
     );
   });
 });

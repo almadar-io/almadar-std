@@ -8,6 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { NUMBER, list, sexprOf, shape, tuple, tv } from '../signature.js';
 
 /**
  * Probabilistic module operators.
@@ -88,10 +89,10 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Weighted random selection from items',
     hasSideEffects: false,
-    returnType: 'any',
+    returnType: tv('T'),
     params: [
-      { name: 'items', type: 'array', description: 'Array of items to choose from' },
-      { name: 'weights', type: 'number[]', description: 'Array of weights (same length as items)' },
+      { name: 'items', type: list(tv('T')), description: 'Array of items to choose from' },
+      { name: 'weights', type: list(NUMBER), description: 'Array of weights (same length as items)' },
     ],
     example: '["prob/categorical", ["a", "b", "c"], [1, 2, 1]] // => "b" most likely',
   },
@@ -129,10 +130,10 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Evaluate an expression n times and collect results',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list(tv('T')),
     params: [
       { name: 'n', type: 'number', description: 'Number of samples' },
-      { name: 'expr', type: 'SExpr', description: 'Expression to evaluate (lazy)' },
+      { name: 'expr', type: sexprOf(tv('T')), description: 'Expression to evaluate (lazy)' },
     ],
     example: '["prob/sample", 1000, ["prob/flip", 0.5]] // => array of booleans',
   },
@@ -143,7 +144,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 4,
     description: 'Rejection sampling: returns accepted query values',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list(NUMBER),
     params: [
       { name: 'model', type: 'SExpr', description: 'Model expression (lazy, may call set/condition)' },
       { name: 'evidence', type: 'SExpr', description: 'Evidence expression (lazy, boolean)' },
@@ -159,7 +160,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 4,
     description: 'Like posterior but returns {mean, variance, samples, acceptRate}',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: shape({ mean: NUMBER, variance: NUMBER, samples: list(NUMBER), acceptRate: NUMBER }),
     params: [
       { name: 'model', type: 'SExpr', description: 'Model expression (lazy)' },
       { name: 'evidence', type: 'SExpr', description: 'Evidence expression (lazy, boolean)' },
@@ -180,7 +181,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Mean of numeric samples',
     hasSideEffects: false,
     returnType: 'number',
-    params: [{ name: 'samples', type: 'number[]', description: 'Array of numeric samples' }],
+    params: [{ name: 'samples', type: list('number'), description: 'Array of numeric samples' }],
     example: '["prob/expected-value", [2, 4, 6, 8]] // => 5',
   },
   'prob/variance': {
@@ -191,7 +192,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Population variance of numeric samples',
     hasSideEffects: false,
     returnType: 'number',
-    params: [{ name: 'samples', type: 'number[]', description: 'Array of numeric samples' }],
+    params: [{ name: 'samples', type: list('number'), description: 'Array of numeric samples' }],
     example: '["prob/variance", [2, 4, 4, 4, 5, 5, 7, 9]] // => 4',
   },
   'prob/histogram': {
@@ -201,9 +202,9 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Bin numeric samples into a histogram',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: shape({ binEdges: list(NUMBER), counts: list(NUMBER) }),
     params: [
-      { name: 'samples', type: 'number[]', description: 'Array of numeric samples' },
+      { name: 'samples', type: list('number'), description: 'Array of numeric samples' },
       { name: 'bins', type: 'number', description: 'Number of bins' },
     ],
     example: '["prob/histogram", [1, 2, 3, 4, 5], 2] // => {binEdges, counts}',
@@ -217,7 +218,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'number',
     params: [
-      { name: 'samples', type: 'number[]', description: 'Array of numeric samples' },
+      { name: 'samples', type: list('number'), description: 'Array of numeric samples' },
       { name: 'p', type: 'number', description: 'Percentile (0 to 100)' },
     ],
     example: '["prob/percentile", [1, 2, 3, 4, 5], 50] // => 3',
@@ -229,9 +230,9 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Compute symmetric credible interval from samples',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: tuple(NUMBER, NUMBER),
     params: [
-      { name: 'samples', type: 'number[]', description: 'Array of numeric samples' },
+      { name: 'samples', type: list('number'), description: 'Array of numeric samples' },
       { name: 'alpha', type: 'number', description: 'Significance level (e.g., 0.05 for 95% interval)' },
     ],
     example: '["prob/credible-interval", [1, 2, 3, 4, 5], 0.05] // => [lo, hi]',

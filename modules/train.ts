@@ -9,6 +9,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { NUMBER, STRING, TEST_CASES, TRAIN_CONFIG, list, mapOf, shape, tv } from '../signature.js';
 
 /**
  * Training module operators.
@@ -30,7 +31,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'train/result',
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network to train' },
-      { name: 'data', type: 'array', description: 'Training data (array of {input, target} or experiences)' },
+      { name: 'data', type: list(shape({ state: 'tensor', action: NUMBER, reward: NUMBER })), description: 'Training data (array of {input, target} or experiences)' },
       { name: 'config', type: 'train/config', description: 'Training configuration with constraints' },
     ],
     example: '["train/loop", {"layers": [{"type": "dense", "units": 2}]}, [{"state": [0], "action": 1, "reward": 1}], {"epochs": 10}]',
@@ -67,7 +68,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'train/validationResult',
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network' },
-      { name: 'testCases', type: 'array', description: 'Array of {input, expected, tolerance?}' },
+      { name: 'testCases', type: TEST_CASES, description: 'Array of {input, expected, tolerance?}' },
     ],
     example: '["train/validate", {"layers": [{"type": "dense", "units": 2}]}, [{"input": [0], "expected": [1]}]]',
   },
@@ -82,7 +83,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'newModule', type: 'nn/module', description: 'Newly trained network' },
       { name: 'oldModule', type: 'nn/module', description: 'Previous network' },
-      { name: 'invariants', type: 'array', description: 'Test cases that must not regress' },
+      { name: 'invariants', type: TEST_CASES, description: 'Test cases that must not regress' },
     ],
     example: '["train/checkRegression", [0.1, 0.2], {"layers": [{"type": "dense", "units": 2}]}, [{"input": [0], "expected": [1]}]]',
   },
@@ -129,8 +130,8 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'train/forbiddenResult',
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network' },
-      { name: 'testInputs', type: 'array', description: 'Inputs to test' },
-      { name: 'forbiddenRegions', type: 'array', description: 'Forbidden output regions' },
+      { name: 'testInputs', type: 'tensor', description: 'Inputs to test' },
+      { name: 'forbiddenRegions', type: mapOf(STRING, shape({ min: NUMBER, max: NUMBER })), description: 'Forbidden output regions' },
     ],
     example: '["train/checkForbiddenOutputs", {"layers": [{"type": "dense", "units": 2}]}, [[0], [1]], {"0": {"min": 100, "max": 200}}]',
   },
@@ -298,9 +299,9 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Sample random batch from experience buffer',
     hasSideEffects: false,
-    returnType: 'array',
+    returnType: list(tv('T')),
     params: [
-      { name: 'buffer', type: 'array', description: 'Experience buffer' },
+      { name: 'buffer', type: list(tv('T')), description: 'Experience buffer' },
       { name: 'batchSize', type: 'number', description: 'Number of samples' },
     ],
     example: '["train/sampleBatch", [{"state": [0], "reward": 1}, {"state": [1], "reward": 0}], 2]',
@@ -314,7 +315,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'tensor',
     params: [
-      { name: 'rewards', type: 'array', description: 'Array of rewards' },
+      { name: 'rewards', type: list(NUMBER), description: 'Array of rewards' },
       { name: 'gamma', type: 'number', description: 'Discount factor' },
     ],
     example: '["train/computeReturns", [1, 0, 1], 0.99]',
@@ -328,9 +329,9 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'tensor',
     params: [
-      { name: 'rewards', type: 'array', description: 'Array of rewards' },
+      { name: 'rewards', type: list(NUMBER), description: 'Array of rewards' },
       { name: 'values', type: 'tensor', description: 'Value estimates' },
-      { name: 'config', type: 'object', description: 'Config with gamma, lambda' },
+      { name: 'config', type: shape({ gamma: NUMBER, lambda: NUMBER }), description: 'Config with gamma, lambda' },
     ],
     example: '["train/computeAdvantages", [1, 0, 1], [0.5, 0.4, 0.3], { "gamma": 0.99, "lambda": 0.95 }]',
   },
@@ -347,11 +348,11 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Train a model over a dataset (ML effect)',
     hasSideEffects: true,
     runsOn: 'any',
-    returnType: 'object',
+    returnType: 'train/result',
     params: [
       { name: 'model', type: 'nn/module', description: 'The neural network module' },
-      { name: 'data', type: 'array', description: 'Training data (optional)' },
-      { name: 'config', type: 'object', description: 'Training config (optional)' },
+      { name: 'data', type: 'tensor', description: 'Training data (optional)' },
+      { name: 'config', type: TRAIN_CONFIG, description: 'Training config (optional)' },
     ],
     example: '["train", {"layers": [{"type": "dense", "units": 2}]}, [[0, 1], [1, 0]], { "epochs": 100 }]',
   },
@@ -362,10 +363,10 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Evaluate a model against test cases (ML effect)',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: 'train/validationResult',
     params: [
       { name: 'model', type: 'nn/module', description: 'The neural network module' },
-      { name: 'testCases', type: 'array', description: 'Test cases (optional)' },
+      { name: 'testCases', type: TEST_CASES, description: 'Test cases (optional)' },
     ],
     example: '["evaluate", {"layers": [{"type": "dense", "units": 2}]}, [{"input": [0], "expected": [1]}]]',
   },
@@ -391,7 +392,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Load a model checkpoint (ML effect)',
     hasSideEffects: false,
-    returnType: 'object',
+    returnType: 'nn/module',
     params: [
       { name: 'key', type: 'string', description: 'Checkpoint identifier' },
     ],
