@@ -159,10 +159,12 @@ orbital LearnGenerateOrbital {
         (let ((fields (array/flatten (array/map (object/get ?result orbitals []) (fn o (array/flatten (array/map (object/get @o traits []) (fn t (array/flatten (array/map (array/filter (object/get (object/get @t stateMachine {}) events []) (fn e (= (object/get @e key "") "ROSTER_LOADED"))) (fn e (array/filter (object/get @e payloadSchema []) (fn f (!= (object/get @f name "") "mode"))))))))))))))
           (do
             (set @entity.instruments (if (> (array/len @fields) 0) (array/append @entity.instruments { behavior: (object/get (array/nth @entity.candidates @entity.cursor) behavior), description: (object/get (array/nth @entity.candidates @entity.cursor) description ""), fields: @fields }) @entity.instruments))
-            (set @entity.cursor (+ @entity.cursor 1))
-            (behavior/source { behavior: (object/get (array/nth @entity.candidates (+ @entity.cursor 1)) behavior) } {
-              emit: { failure: GENERATE_FAILED, success: SOURCED }
-            })))
+            (let ((next (+ @entity.cursor 1)))
+              (do
+                (set @entity.cursor @next)
+                (behavior/source { behavior: (object/get (array/nth @entity.candidates @next) behavior) } {
+                  emit: { failure: GENERATE_FAILED, success: SOURCED }
+                })))))
       SOURCED -> choosing when (>= (+ @entity.cursor 1) (array/len @entity.candidates))
         (let ((fields (array/flatten (array/map (object/get ?result orbitals []) (fn o (array/flatten (array/map (object/get @o traits []) (fn t (array/flatten (array/map (array/filter (object/get (object/get @t stateMachine {}) events []) (fn e (= (object/get @e key "") "ROSTER_LOADED"))) (fn e (array/filter (object/get @e payloadSchema []) (fn f (!= (object/get @f name "") "mode"))))))))))))))
           (do

@@ -181,7 +181,7 @@ orbital AgentSuggestionsOrbital {
           href: (str/default ?href "")
           subject: ?subject
           signature: (str/concat ?kind ":" (str/default ?action "") ":" ?subject)
-          payload: (if ?payload ?payload {})
+          payload: (if (== ?payload null) {} ?payload)
         })
         (fetch AgentSuggestion {
           filter: ["=", (object/get @entity ownerId), @user.id]
@@ -224,7 +224,21 @@ orbital AgentSuggestionsOrbital {
     }
 
     emits {
-      SUGGESTION_ADDED -> external
+      SUGGESTION_ADDED -> external {
+        id : string!
+        ownerId : string
+        kind : string
+        title : string
+        body : string
+        action : string
+        href : string
+        payload : Map string string
+        subject : string
+        signature : string
+        status : "pending" | "accepted" | "dismissed"
+        createdAt : number
+        resolvedAt : number
+      }
         @description "A suggestion was stored for the person — payload is the created AgentSuggestion row itself."
         @synonyms "proposed, suggested, new suggestion"
         @tier "domain"
