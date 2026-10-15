@@ -1,0 +1,106 @@
+app std-arxiv [
+  version: "1.0.0",
+  description: "std-arxiv — arXiv paper search through the keyless public Atom API (export.arxiv.org). ARXIV_SEARCH requests a relevance-ranked feed; a blank query, a non-2xx reply or a failed call answers an empty result list. A 2xx feed is handed on as ARXIV_SEARCH_FEED text because no std operator can read Atom entries yet.",
+  egress: ["https://export.arxiv.org"]
+]
+type ArxivPaper = { id : string, title : string, summary : string, authors : [string], published : string, url : string }
+orbital ArxivOrbital {
+  entity ArxivLookup [runtime] {
+    id : string!
+  }
+
+  trait ArxivClient -> ArxivLookup [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      ARXIV_SEARCH -> idle when (!= (str/trim @payload.query) "")
+        (http GET @config.origin "/api/query" {
+          query: {
+            search_query: (str/concat "all:" (str/trim @payload.query)),
+            start: 0,
+            max_results: (math/default @payload.maxResults 8),
+            sortBy: "relevance"
+          },
+          headers: { Accept: "application/atom+xml" },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: ARXIV_SEARCH_REPLIED, failure: ARXIV_SEARCH_FAILED } })
+      ARXIV_SEARCH -> idle when (= (str/trim @payload.query) "")
+        (emit ARXIV_SEARCH_RESULT { results: [] })
+      ARXIV_SEARCH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit ARXIV_SEARCH_FEED { feed: @payload.body })
+      ARXIV_SEARCH_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit ARXIV_SEARCH_RESULT { results: [] })
+      ARXIV_SEARCH_FAILED -> idle
+        (emit ARXIV_SEARCH_RESULT { results: [] })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "arXiv unavailable: " @payload.error) })
+    }
+
+    emits {
+      ARXIV_SEARCH_RESULT -> external {
+        results : [ArxivPaper]!
+      }
+        @description "Papers matching the search, most relevant first; empty when the query is blank, the call failed or arXiv answered non-2xx."
+        @synonyms "paper search results, preprints, academic papers"
+        @tier "primary"
+      ARXIV_SEARCH_FEED -> external {
+        feed : string!
+      }
+        @description "The raw Atom feed text of a 2xx search reply, awaiting an Atom reader."
+        @synonyms "atom feed, arxiv xml"
+        @tier "secondary"
+      ARXIV_SEARCH_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the search call's HTTP reply."
+        @tier "secondary"
+      ARXIV_SEARCH_FAILED {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the search call never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      ARXIV_SEARCH -> external {
+        query : string!
+        maxResults : number
+      }
+        @description "Search arXiv by relevance across all fields; maxResults defaults to 8."
+        @synonyms "find papers, search preprints, look up research"
+      ARXIV_SEARCH_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      ARXIV_SEARCH_FAILED {
+        error : string!
+        kind : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable arXiv call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "https://export.arxiv.org"
+        @label "arXiv API origin"
+        @description "The arXiv API origin (scheme://host, no path). Must be declared in the app egress list."
+        @synonyms "arxiv url, api host"
+        @tier "infra"
+      timeoutMs : number = 10000
+        @label "Request timeout (ms)"
+        @description "Milliseconds each arXiv request may take before it counts as failed."
+        @synonyms "timeout, request deadline, wait limit"
+        @tier "infra"
+    }
+  }
+
+  page "/arxiv" as ArxivPage -> ArxivClient
+}

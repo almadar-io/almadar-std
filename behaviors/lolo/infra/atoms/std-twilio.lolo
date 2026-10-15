@@ -1,0 +1,199 @@
+app std-twilio [
+  version: "1.0.0",
+  description: "std-twilio — outbound SMS and WhatsApp through the Twilio Messages REST resource (api.twilio.com). TWILIO_SEND_SMS sends a text (sender defaults to the configured phone number), TWILIO_SEND_WHATSAPP sends a whatsapp: message from the configured number. Each answers a result event with the message sid and status, or a failure event carrying the provider error message.",
+  egress: ["https://api.twilio.com"]
+]
+type TwilioMessage = { sid : string, status : string }
+type TwilioError = { type : string, title : string, status : number, code : number, message : string }
+orbital TwilioOrbital {
+  entity TwilioMessageRequest [runtime] {
+    id : string!
+  }
+
+  trait TwilioClient -> TwilioMessageRequest [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      TWILIO_SEND_SMS -> idle when (= @config.accountSid "")
+        (emit TWILIO_SMS_FAILED { code: null, message: "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" })
+      TWILIO_SEND_SMS -> idle when (and (!= @config.accountSid "") (not (str/startsWith @config.accountSid "AC")) (str/startsWith @config.accountSid "SK"))
+        (emit TWILIO_SMS_FAILED { code: null, message: "accountSid must start with AC. The given SID indicates an API Key which requires the accountSid to be passed as an additional option" })
+      TWILIO_SEND_SMS -> idle when (and (!= @config.accountSid "") (not (str/startsWith @config.accountSid "AC")) (not (str/startsWith @config.accountSid "SK")))
+        (emit TWILIO_SMS_FAILED { code: null, message: "accountSid must start with AC" })
+      TWILIO_SEND_SMS -> idle when (str/startsWith @config.accountSid "AC")
+        (http POST @config.origin (str/concat "/2010-04-01/Accounts/" @config.accountSid "/Messages.json") {
+          text: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/concat "To=" (str/encode-uri-component @payload.to) "&From=" (str/encode-uri-component (if (or (= @payload.from null) (= @payload.from "")) @config.phoneNumber @payload.from)) "&Body=" (str/encode-uri-component @payload.body)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A"),
+          headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+          auth: { scheme: basic, user: @config.accountSidCredential, credential: @config.authTokenCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: TWILIO_SMS_REPLIED, failure: TWILIO_SMS_HTTP_FAILED } })
+      TWILIO_SMS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (!= (object/get (json/parse @payload.body TwilioMessage) status null) null))
+        (emit TWILIO_SMS_RESULT { sid: (object/get (json/parse @payload.body TwilioMessage) sid ""), status: (object/get (json/parse @payload.body TwilioMessage) status "") })
+      TWILIO_SMS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.body TwilioMessage) status null) null))
+        (emit TWILIO_SMS_RESULT { sid: (object/get (json/parse @payload.body TwilioMessage) sid "") })
+      TWILIO_SMS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit TWILIO_SMS_FAILED { code: null, message: (if (and (!= (object/get (json/parse @payload.body TwilioError) type null) null) (!= (object/get (json/parse @payload.body TwilioError) title null) null) (!= (object/get (json/parse @payload.body TwilioError) status null) null) (!= (object/get (json/parse @payload.body TwilioError) code null) null))
+          (str/concat "[HTTP " (if (!= (object/get (json/parse @payload.body TwilioError) status 0) 0) (object/get (json/parse @payload.body TwilioError) status 0) @payload.status) "] " (if (!= (object/get (json/parse @payload.body TwilioError) title "") "") (object/get (json/parse @payload.body TwilioError) title "") "Failed to execute request"))
+          (if (= (json/parse @payload.body TwilioError) null) (str/concat "[HTTP " @payload.status "] Failed to execute request") (object/get (json/parse @payload.body TwilioError) message ""))) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Twilio rejected the message" })
+      TWILIO_SMS_HTTP_FAILED -> idle
+        (emit TWILIO_SMS_FAILED { code: null, message: (if (= @payload.kind "refused") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Twilio unavailable: " @payload.error) })
+
+      TWILIO_SEND_WHATSAPP -> idle when (= @config.accountSid "")
+        (emit TWILIO_WHATSAPP_FAILED { code: null, message: "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" })
+      TWILIO_SEND_WHATSAPP -> idle when (and (!= @config.accountSid "") (not (str/startsWith @config.accountSid "AC")) (str/startsWith @config.accountSid "SK"))
+        (emit TWILIO_WHATSAPP_FAILED { code: null, message: "accountSid must start with AC. The given SID indicates an API Key which requires the accountSid to be passed as an additional option" })
+      TWILIO_SEND_WHATSAPP -> idle when (and (!= @config.accountSid "") (not (str/startsWith @config.accountSid "AC")) (not (str/startsWith @config.accountSid "SK")))
+        (emit TWILIO_WHATSAPP_FAILED { code: null, message: "accountSid must start with AC" })
+      TWILIO_SEND_WHATSAPP -> idle when (str/startsWith @config.accountSid "AC")
+        (http POST @config.origin (str/concat "/2010-04-01/Accounts/" @config.accountSid "/Messages.json") {
+          text: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/concat "To=" (str/encode-uri-component (str/concat "whatsapp:" @payload.to)) "&From=" (str/encode-uri-component (str/concat "whatsapp:" @config.phoneNumber)) "&Body=" (str/encode-uri-component @payload.body)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A"),
+          headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+          auth: { scheme: basic, user: @config.accountSidCredential, credential: @config.authTokenCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: TWILIO_WHATSAPP_REPLIED, failure: TWILIO_WHATSAPP_HTTP_FAILED } })
+      TWILIO_WHATSAPP_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (!= (object/get (json/parse @payload.body TwilioMessage) status null) null))
+        (emit TWILIO_WHATSAPP_RESULT { sid: (object/get (json/parse @payload.body TwilioMessage) sid ""), status: (object/get (json/parse @payload.body TwilioMessage) status "") })
+      TWILIO_WHATSAPP_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.body TwilioMessage) status null) null))
+        (emit TWILIO_WHATSAPP_RESULT { sid: (object/get (json/parse @payload.body TwilioMessage) sid "") })
+      TWILIO_WHATSAPP_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit TWILIO_WHATSAPP_FAILED { code: null, message: (if (and (!= (object/get (json/parse @payload.body TwilioError) type null) null) (!= (object/get (json/parse @payload.body TwilioError) title null) null) (!= (object/get (json/parse @payload.body TwilioError) status null) null) (!= (object/get (json/parse @payload.body TwilioError) code null) null))
+          (str/concat "[HTTP " (if (!= (object/get (json/parse @payload.body TwilioError) status 0) 0) (object/get (json/parse @payload.body TwilioError) status 0) @payload.status) "] " (if (!= (object/get (json/parse @payload.body TwilioError) title "") "") (object/get (json/parse @payload.body TwilioError) title "") "Failed to execute request"))
+          (if (= (json/parse @payload.body TwilioError) null) (str/concat "[HTTP " @payload.status "] Failed to execute request") (object/get (json/parse @payload.body TwilioError) message ""))) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Twilio rejected the message" })
+      TWILIO_WHATSAPP_HTTP_FAILED -> idle
+        (emit TWILIO_WHATSAPP_FAILED { code: null, message: (if (= @payload.kind "refused") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Twilio unavailable: " @payload.error) })
+    }
+
+    emits {
+      TWILIO_SMS_RESULT -> external {
+        sid : string!
+        status : string
+      }
+        @description "The Twilio message that was sent: its sid and, when the reply carries one, its delivery status."
+        @tier "primary"
+      TWILIO_SMS_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Twilio refused or never answered the was request; message carries the provider error text."
+        @tier "primary"
+      TWILIO_SMS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the Twilio Messages reply."
+        @tier "secondary"
+      TWILIO_SMS_HTTP_FAILED {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the Twilio call never produced a reply."
+        @tier "secondary"
+      TWILIO_WHATSAPP_RESULT -> external {
+        sid : string!
+        status : string
+      }
+        @description "The Twilio message that was sent: its sid and, when the reply carries one, its delivery status."
+        @tier "primary"
+      TWILIO_WHATSAPP_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Twilio refused or never answered the was request; message carries the provider error text."
+        @tier "primary"
+      TWILIO_WHATSAPP_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the Twilio Messages reply."
+        @tier "secondary"
+      TWILIO_WHATSAPP_HTTP_FAILED {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the Twilio call never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      TWILIO_SEND_SMS -> external {
+        to : string!
+        body : string!
+        from : string
+      }
+        @description "Send an SMS; from defaults to the configured phone number when empty or absent."
+        @synonyms "send text message, text, sms"
+      TWILIO_SEND_WHATSAPP -> external {
+        to : string!
+        body : string!
+      }
+        @description "Send a WhatsApp message to a phone number (E.164) from the configured number."
+        @synonyms "whatsapp message, send whatsapp"
+      TWILIO_SMS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      TWILIO_SMS_HTTP_FAILED {
+        error : string!
+        kind : string!
+      }
+      TWILIO_WHATSAPP_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      TWILIO_WHATSAPP_HTTP_FAILED {
+        error : string!
+        kind : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable or rejecting Twilio call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "https://api.twilio.com"
+        @label "Twilio API origin"
+        @description "The Twilio REST origin (scheme://host, no path). Must be declared in the app egress list."
+        @synonyms "twilio url, api host"
+        @tier "infra"
+      accountSid : string = ""
+        @label "Account SID"
+        @description "The Twilio account SID (starts with AC). The Messages URL carries it, so it is a plain setting here; the same SID is also read as a credential for the basic-auth user."
+        @synonyms "account sid, twilio account"
+        @tier "infra"
+      phoneNumber : string = ""
+        @label "Sender phone number"
+        @description "The default sender number (E.164); the sender of every WhatsApp message."
+        @synonyms "from number, twilio number, sender"
+        @tier "infra"
+      accountSidCredential : secret = "TWILIO_ACCOUNT_SID"
+        @label "Account SID credential"
+        @description "Name of the credential holding the account SID (the basic-auth user)."
+        @synonyms "sid credential"
+        @tier "infra"
+      authTokenCredential : secret = "TWILIO_AUTH_TOKEN"
+        @label "Auth token credential"
+        @description "Name of the credential holding the Twilio auth token."
+        @synonyms "token credential, twilio secret"
+        @tier "infra"
+      timeoutMs : number = 30000
+        @label "Request timeout (ms)"
+        @description "Milliseconds each Twilio request may take before it fails."
+        @synonyms "timeout, request deadline"
+        @tier "infra"
+    }
+  }
+
+  page "/twilio" as TwilioPage -> TwilioClient
+}

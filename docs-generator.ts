@@ -239,11 +239,23 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Read .lolo text into a quoted program, print one back, and evaluate one (validate, then instantiate).',
         icon: '🧬',
     },
-    integration: {
-        name: 'Integration',
-        displayName: 'External Integrations',
-        description: 'HTTP requests and typed API wrappers (GitHub, etc.).',
-        icon: '🔌',
+    base64: {
+        name: 'Base64',
+        displayName: 'Base64 Codec',
+        description: 'Encode a string as standard base64 and decode it back.',
+        icon: '🔡',
+    },
+    hash: {
+        name: 'Hash',
+        displayName: 'Digests',
+        description: 'SHA-256 digests as hex or base64.',
+        icon: '#️⃣',
+    },
+    hmac: {
+        name: 'HMAC',
+        displayName: 'Message Authentication',
+        description: 'HMAC-SHA256 signatures as hex or base64.',
+        icon: '🔏',
     },
 };
 

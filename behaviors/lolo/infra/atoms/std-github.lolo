@@ -1,0 +1,570 @@
+app std-github [
+  version: "1.0.0",
+  description: "std-github — the GitHub REST API (api.github.com) as one atom: open a pull request, list a pull request's review comments, list and read issues, open an issue, read a file at a ref and list commits. Requests are authenticated with the GitHub token knob and carry the 2022-11-28 API version. A non-2xx reply answers the action's failure event with GitHub's code (RATE_LIMIT_ERROR for 429, AUTH_ERROR for 401/403, SERVICE_ERROR otherwise) and message; an unreachable API answers NETWORK_ERROR. The git CLI actions (clone, branch, commit, push) are local processes, not HTTP, and are not part of this atom.",
+  egress: ["https://api.github.com"]
+]
+type GithubError = { message : string }
+type GithubRef = { ref : string }
+type GithubPull = { number : number, url : string, html_url : string, title : string, state : string, draft : boolean, head : GithubRef, base : GithubRef }
+type GithubUser = { login : string }
+type GithubLabel = { name : string, color : string }
+type GithubComment = { id : number, body : string, user : GithubUser, created_at : string }
+type GithubIssue = { number : number, url : string, title : string, body : string, state : string, labels : [GithubLabel], created_at : string, updated_at : string }
+type GithubCommit = { sha : string, message : string, author : string, date : string }
+type GithubFileData = { path : string, content : string, sha : string, size : number, encoding : string }
+type GithubCommitAuthor = { name : string, email : string, date : string }
+type GithubCommitDetail = { message : string, author : GithubCommitAuthor }
+type GithubCommitItem = { sha : string, commit : GithubCommitDetail }
+type GithubCreatedIssue = { number : number, title : string, url : string }
+orbital GithubOrbital {
+  entity GithubCall [runtime] {
+    id : string!
+  }
+
+  trait GithubClient -> GithubCall [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      GITHUB_CREATE_PR -> idle when (and (!= @config.owner "") (!= @config.repo ""))
+        (http POST @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/pulls") {
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion, Content-Type: "text/plain;charset=UTF-8" },
+          text: (json/stringify { title: @payload.title, body: @payload.body, base: @payload.baseBranch, head: @payload.headBranch, draft: (or @payload.draft false) }),
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: GITHUB_CREATE_PR_REPLIED, failure: GITHUB_CREATE_PR_UNREACHABLE } })
+      GITHUB_CREATE_PR -> idle when (or (= @config.owner "") (= @config.repo ""))
+        (emit GITHUB_CREATE_PR_FAILED { code: null, message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
+      GITHUB_CREATE_PR_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (let ((pr (json/parse @payload.body GithubPull)))
+          (emit GITHUB_PR_CREATED { number: @pr.number, url: @pr.url, html_url: @pr.html_url, title: @pr.title, state: @pr.state, draft: @pr.draft, head: @pr.head, base: @pr.base }))
+      GITHUB_CREATE_PR_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GITHUB_CREATE_PR_FAILED {
+          code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+        })
+      GITHUB_CREATE_PR_UNREACHABLE -> idle
+        (emit GITHUB_CREATE_PR_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
+      GITHUB_GET_PR_COMMENTS -> idle when (and (!= @config.owner "") (!= @config.repo ""))
+        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/pulls/" @payload.prNumber "/comments") {
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: GITHUB_GET_PR_COMMENTS_REPLIED, failure: GITHUB_GET_PR_COMMENTS_UNREACHABLE } })
+      GITHUB_GET_PR_COMMENTS -> idle when (or (= @config.owner "") (= @config.repo ""))
+        (emit GITHUB_GET_PR_COMMENTS_FAILED { code: null, message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
+      GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit GITHUB_PR_COMMENTS { comments: (json/parse @payload.body [GithubComment]) })
+      GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GITHUB_GET_PR_COMMENTS_FAILED {
+          code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+        })
+      GITHUB_GET_PR_COMMENTS_UNREACHABLE -> idle
+        (emit GITHUB_GET_PR_COMMENTS_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
+      GITHUB_LIST_ISSUES -> idle when (and (!= @config.owner "") (!= @config.repo ""))
+        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues?state=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (if (= @payload.state null) "open" @payload.state)) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29") "&per_page=" (math/min (if (= @payload.per_page null) 30 @payload.per_page) 100) (if (> (array/len (or @payload.labels [])) 0) (str/concat "&labels=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/join (or @payload.labels []) ",")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) "")) {
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: GITHUB_LIST_ISSUES_REPLIED, failure: GITHUB_LIST_ISSUES_UNREACHABLE } })
+      GITHUB_LIST_ISSUES -> idle when (or (= @config.owner "") (= @config.repo ""))
+        (emit GITHUB_LIST_ISSUES_FAILED { code: null, message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
+      GITHUB_LIST_ISSUES_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit GITHUB_ISSUES { issues: (json/parse @payload.body [GithubIssue]) })
+      GITHUB_LIST_ISSUES_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GITHUB_LIST_ISSUES_FAILED {
+          code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+        })
+      GITHUB_LIST_ISSUES_UNREACHABLE -> idle
+        (emit GITHUB_LIST_ISSUES_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
+      GITHUB_GET_ISSUE -> idle when (and (!= @config.owner "") (!= @config.repo ""))
+        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues/" @payload.issueNumber) {
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { key: @payload.issueNumber, emit: { success: GITHUB_GET_ISSUE_REPLIED, failure: GITHUB_GET_ISSUE_UNREACHABLE } })
+      GITHUB_GET_ISSUE -> idle when (or (= @config.owner "") (= @config.repo ""))
+        (emit GITHUB_GET_ISSUE_FAILED { code: null, message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
+      GITHUB_GET_ISSUE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues/" @payload.key "/comments") {
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { key: @payload.body, emit: { success: GITHUB_GET_ISSUE_COMMENTS_REPLIED, failure: GITHUB_GET_ISSUE_COMMENTS_UNREACHABLE } })
+      GITHUB_GET_ISSUE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GITHUB_GET_ISSUE_FAILED {
+          code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+        })
+      GITHUB_GET_ISSUE_UNREACHABLE -> idle
+        (emit GITHUB_GET_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+      GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit GITHUB_ISSUE { issue: (json/parse @payload.key GithubIssue), comments: (json/parse @payload.body [GithubComment]) })
+      GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GITHUB_GET_ISSUE_FAILED {
+          code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+        })
+      GITHUB_GET_ISSUE_COMMENTS_UNREACHABLE -> idle
+        (emit GITHUB_GET_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
+      GITHUB_GET_FILE -> idle
+        (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/contents/" @payload.path) {
+          query: { ref: (if (= (or @payload.ref "") "") null @payload.ref) },
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: GITHUB_GET_FILE_REPLIED, failure: GITHUB_GET_FILE_UNREACHABLE } })
+      GITHUB_GET_FILE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (let ((file (json/parse @payload.body GithubFileData)))
+          (emit GITHUB_FILE { path: @file.path, content: (if (= @file.encoding "base64") (base64/decode (str/replaceAll (str/replaceAll (str/replaceAll @file.content "\n" "") "\r" "") " " "")) @file.content), sha: @file.sha, size: @file.size }))
+      GITHUB_GET_FILE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GITHUB_GET_FILE_FAILED {
+          code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+        })
+      GITHUB_GET_FILE_UNREACHABLE -> idle
+        (emit GITHUB_GET_FILE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
+      GITHUB_LIST_COMMITS -> idle
+        (let ((query (str/join (array/filter [(if (!= (or @payload.path "") "") (str/concat "path=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.path) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (or @payload.ref "") "") (str/concat "sha=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.ref) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (or @payload.per_page 0) 0) (str/concat "per_page=" @payload.per_page) "")] (fn p (!= @p ""))) "&")))
+          (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/commits" (if (= @query "") "" (str/concat "?" @query))) {
+            headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
+            auth: { scheme: bearer, credential: @config.token },
+            timeoutMs: @config.timeoutMs
+          } { emit: { success: GITHUB_LIST_COMMITS_REPLIED, failure: GITHUB_LIST_COMMITS_UNREACHABLE } }))
+      GITHUB_LIST_COMMITS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit GITHUB_COMMITS { commits: (array/map (json/parse @payload.body [GithubCommitItem]) (fn c { sha: @c.sha, message: @c.commit.message, author: @c.commit.author.name, date: @c.commit.author.date })) })
+      GITHUB_LIST_COMMITS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GITHUB_LIST_COMMITS_FAILED {
+          code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+        })
+      GITHUB_LIST_COMMITS_UNREACHABLE -> idle
+        (emit GITHUB_LIST_COMMITS_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
+      GITHUB_CREATE_ISSUE -> idle
+        (http POST @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/issues") {
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion, Content-Type: "text/plain;charset=UTF-8" },
+          text: (json/stringify (object/merge { title: @payload.title } (if (= @payload.body null) {} { body: @payload.body }) (if (= @payload.labels null) {} { labels: @payload.labels }))),
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: GITHUB_CREATE_ISSUE_REPLIED, failure: GITHUB_CREATE_ISSUE_UNREACHABLE } })
+      GITHUB_CREATE_ISSUE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (let ((issue (json/parse @payload.body GithubCreatedIssue)))
+          (emit GITHUB_ISSUE_CREATED { number: @issue.number, title: @issue.title, url: @issue.url }))
+      GITHUB_CREATE_ISSUE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GITHUB_CREATE_ISSUE_FAILED {
+          code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")),
+          message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) ""))))
+        })
+      GITHUB_CREATE_ISSUE_UNREACHABLE -> idle
+        (emit GITHUB_CREATE_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+    }
+
+    emits {
+      GITHUB_PR_CREATED -> external {
+        number : number!
+        url : string!
+        html_url : string!
+        title : string!
+        state : string!
+        draft : boolean!
+        head : GithubRef!
+        base : GithubRef!
+      }
+        @description "The pull request GitHub opened."
+        @synonyms "pull request created, new pr"
+        @tier "primary"
+      GITHUB_CREATE_PR_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Opening the pull request failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
+        @synonyms "opening the pull request failed, github error"
+        @tier "primary"
+      GITHUB_CREATE_PR_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the createPR call's HTTP reply."
+        @tier "secondary"
+      GITHUB_CREATE_PR_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the createPR call never produced a reply."
+        @tier "secondary"
+      GITHUB_PR_COMMENTS -> external {
+        comments : [GithubComment]!
+      }
+        @description "The review comments of the pull request."
+        @synonyms "pr comments, review feedback"
+        @tier "primary"
+      GITHUB_GET_PR_COMMENTS_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Listing the pull request comments failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
+        @synonyms "listing the pull request comments failed, github error"
+        @tier "primary"
+      GITHUB_GET_PR_COMMENTS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the getPRComments call's HTTP reply."
+        @tier "secondary"
+      GITHUB_GET_PR_COMMENTS_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the getPRComments call never produced a reply."
+        @tier "secondary"
+      GITHUB_ISSUES -> external {
+        issues : [GithubIssue]!
+      }
+        @description "The issues GitHub listed."
+        @synonyms "issue list, repository issues"
+        @tier "primary"
+      GITHUB_LIST_ISSUES_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Listing the issues failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
+        @synonyms "listing the issues failed, github error"
+        @tier "primary"
+      GITHUB_LIST_ISSUES_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the listIssues call's HTTP reply."
+        @tier "secondary"
+      GITHUB_LIST_ISSUES_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the listIssues call never produced a reply."
+        @tier "secondary"
+      GITHUB_ISSUE -> external {
+        issue : GithubIssue!
+        comments : [GithubComment]!
+      }
+        @description "The issue and its comments."
+        @synonyms "issue details, issue thread"
+        @tier "primary"
+      GITHUB_GET_ISSUE_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Fetching the issue failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
+        @synonyms "fetching the issue failed, github error"
+        @tier "primary"
+      GITHUB_GET_ISSUE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: the issue call's HTTP reply; key carries the issue number."
+        @tier "secondary"
+      GITHUB_GET_ISSUE_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: the issue call never produced a reply."
+        @tier "secondary"
+      GITHUB_GET_ISSUE_COMMENTS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: the issue comments call's HTTP reply; key carries the issue text."
+        @tier "secondary"
+      GITHUB_GET_ISSUE_COMMENTS_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: the issue comments call never produced a reply."
+        @tier "secondary"
+      GITHUB_FILE -> external {
+        path : string!
+        content : string!
+        sha : string!
+        size : number!
+      }
+        @description "The file path, decoded content, blob sha and size."
+        @synonyms "file contents, source file"
+        @tier "primary"
+      GITHUB_GET_FILE_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Reading the file failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
+        @synonyms "reading the file failed, github error"
+        @tier "primary"
+      GITHUB_GET_FILE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the getFile call's HTTP reply."
+        @tier "secondary"
+      GITHUB_GET_FILE_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the getFile call never produced a reply."
+        @tier "secondary"
+      GITHUB_COMMITS -> external {
+        commits : [GithubCommit]!
+      }
+        @description "The commits (sha, message, author name, date), newest first."
+        @synonyms "commit list, history"
+        @tier "primary"
+      GITHUB_LIST_COMMITS_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Listing the commits failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
+        @synonyms "listing the commits failed, github error"
+        @tier "primary"
+      GITHUB_LIST_COMMITS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the listCommits call's HTTP reply."
+        @tier "secondary"
+      GITHUB_LIST_COMMITS_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the listCommits call never produced a reply."
+        @tier "secondary"
+      GITHUB_ISSUE_CREATED -> external {
+        number : number!
+        title : string!
+        url : string!
+      }
+        @description "The number, title and url of the issue GitHub opened."
+        @synonyms "issue created, new issue"
+        @tier "primary"
+      GITHUB_CREATE_ISSUE_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Opening the issue failed: GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message; the code is absent when the default repository is not configured."
+        @synonyms "opening the issue failed, github error"
+        @tier "primary"
+      GITHUB_CREATE_ISSUE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the createIssue call's HTTP reply."
+        @tier "secondary"
+      GITHUB_CREATE_ISSUE_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the createIssue call never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      GITHUB_CREATE_PR -> external {
+        title : string!
+        body : string!
+        baseBranch : string!
+        headBranch : string!
+        draft : boolean
+      }
+        @description "Open a pull request from headBranch into baseBranch on the default repository (draft defaults to false)."
+        @synonyms "open pull request, create pr, new pull request"
+      GITHUB_CREATE_PR_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      GITHUB_CREATE_PR_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+      GITHUB_GET_PR_COMMENTS -> external {
+        prNumber : number!
+      }
+        @description "List the review comments of a pull request on the default repository."
+        @synonyms "pull request comments, review comments, pr feedback"
+      GITHUB_GET_PR_COMMENTS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      GITHUB_GET_PR_COMMENTS_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+      GITHUB_LIST_ISSUES -> external {
+        state : string
+        labels : [string]
+        per_page : number
+      }
+        @description "List issues of the default repository; state defaults to open, per_page to 30 and is capped at 100, labels restrict to issues carrying all of them."
+        @synonyms "list issues, search issues, open issues"
+      GITHUB_LIST_ISSUES_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      GITHUB_LIST_ISSUES_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+      GITHUB_GET_ISSUE -> external {
+        issueNumber : number!
+      }
+        @description "Fetch one issue of the default repository together with its comments."
+        @synonyms "get issue, read issue, issue details"
+      GITHUB_GET_ISSUE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      GITHUB_GET_ISSUE_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+      GITHUB_GET_ISSUE_COMMENTS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      GITHUB_GET_ISSUE_COMMENTS_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+      GITHUB_GET_FILE -> external {
+        owner : string!
+        repo : string!
+        path : string!
+        ref : string
+      }
+        @description "Read a file of a repository at an optional branch, tag or commit; the content is decoded to text."
+        @synonyms "read file, get file contents, fetch source file"
+      GITHUB_GET_FILE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      GITHUB_GET_FILE_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+      GITHUB_LIST_COMMITS -> external {
+        owner : string!
+        repo : string!
+        path : string
+        ref : string
+        per_page : number
+      }
+        @description "List commits of a repository, optionally only those touching a path, starting from a branch, tag or commit."
+        @synonyms "list commits, commit history, file history"
+      GITHUB_LIST_COMMITS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      GITHUB_LIST_COMMITS_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+      GITHUB_CREATE_ISSUE -> external {
+        owner : string!
+        repo : string!
+        title : string!
+        body : string
+        labels : [string]
+      }
+        @description "Open an issue on a repository, with an optional body and labels."
+        @synonyms "open issue, create issue, file a bug"
+      GITHUB_CREATE_ISSUE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      GITHUB_CREATE_ISSUE_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable GitHub call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "https://api.github.com"
+        @label "GitHub API origin"
+        @description "The GitHub API origin (scheme://host, no path); a GitHub Enterprise host must also be declared in the app egress list."
+        @synonyms "github url, api host, enterprise host"
+        @tier "infra"
+      token : secret = "GITHUB_TOKEN"
+        @label "GitHub token"
+        @description "Name of the credential holding the GitHub personal access token."
+        @synonyms "github token, access token, pat"
+        @tier "infra"
+      owner : string = ""
+        @label "Default repository owner"
+        @description "Owner (user or org) of the repository the pull request and issue actions without an owner parameter act on; set from GITHUB_OWNER."
+        @synonyms "repo owner, organization, account"
+        @tier "infra"
+      repo : string = ""
+        @label "Default repository name"
+        @description "Name of the repository the pull request and issue actions without a repo parameter act on; set from GITHUB_REPO."
+        @synonyms "repository, repo name"
+        @tier "infra"
+      apiVersion : string = "2022-11-28"
+        @label "API version"
+        @description "Value of the X-GitHub-Api-Version header sent with every request."
+        @synonyms "api version, github version header"
+        @tier "infra"
+      timeoutMs : number = 30000
+        @label "Request timeout (ms)"
+        @description "Milliseconds each GitHub request may take before it fails as unreachable."
+        @synonyms "timeout, request deadline, wait limit"
+        @tier "infra"
+      statusText : Map string string = { "400": "Bad Request", "401": "Unauthorized", "402": "Payment Required", "403": "Forbidden", "404": "Not Found", "405": "Method Not Allowed", "408": "Request Timeout", "409": "Conflict", "410": "Gone", "413": "Payload Too Large", "422": "Unprocessable Entity", "500": "Internal Server Error", "501": "Not Implemented", "502": "Bad Gateway", "503": "Service Unavailable", "504": "Gateway Timeout" }
+        @label "Status texts"
+        @description "Reason phrase by HTTP status, used in the failure message when GitHub's error body carries no message."
+        @synonyms "reason phrases, status names"
+        @tier "infra"
+    }
+  }
+
+  page "/github" as GithubPage -> GithubClient
+}

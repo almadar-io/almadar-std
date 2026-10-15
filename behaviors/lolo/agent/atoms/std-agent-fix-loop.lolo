@@ -1,6 +1,7 @@
 app std-agent-fix-loop [
   version: "2.0.0",
-  description: "Agent fix loop — evaluate a program and, when it does not validate, ask the model for a repair. VALIDATE_PROGRAM { program } runs `program/eval` (the 0-error / 0-warning gate, written to the workspace's orbitals/ on success): a valid program emits PROGRAM_VALID { behavior }; an invalid one hands the validator's issues to `call-service llm generate` and emits FIX_PROPOSED { issues, fix } with the model's repair instructions. Headless apart from a status line."
+  description: "Agent fix loop — evaluate a program and, when it does not validate, ask the model for a repair. VALIDATE_PROGRAM { program } runs `program/eval` (the 0-error / 0-warning gate, written to the workspace's orbitals/ on success): a valid program emits PROGRAM_VALID { behavior }; an invalid one hands the validator's issues to `call-service llm generate` and emits FIX_PROPOSED { issues, fix } with the model's repair instructions. Headless apart from a status line.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "program repair, fix validation errors, evaluate a program, repair suggestion"
 
@@ -12,6 +13,8 @@ type Evaluated = {
   behavior : string!
 }
 
+uses Llm from "std/behaviors/std-llm"
+
 orbital AgentFixLoopOrbital {
 
   entity FixLoop [runtime] {
@@ -19,6 +22,12 @@ orbital AgentFixLoopOrbital {
     issues : [FixIssue] = []
     fix : string = ""
     status : "idle" | "validating" | "fixing" | "fixed" | "valid" | "failed" = idle
+  }
+
+  trait FixLoopLlm = Llm.traits.LlmClient {
+    listens {
+      FixLoopExecution.LLM_GENERATE -> LLM_GENERATE
+    }
   }
 
   trait FixLoopExecution -> FixLoop [lifecycle, instance] {
@@ -47,10 +56,8 @@ orbital AgentFixLoopOrbital {
         (set @entity.issues ?errors)
         (set @entity.status fixing)
         (render-ui main <typography content={(str/concat "Does not validate: " ?error)} variant="caption" />)
-        (call-service llm generate {
+        (emit LLM_GENERATE {
           userPrompt: (str/concat "This program does not validate. Explain, step by step, how to fix it. Issues:\n" (str/join (array/map ?errors (fn issue (str/concat (object/get @issue code) ": " (object/get @issue message)))) "\n"))
-        } {
-          emit: { failure: FIX_FAILED, success: FIX_GENERATED }
         })
     }
 
@@ -58,14 +65,14 @@ orbital AgentFixLoopOrbital {
       INIT -> idle
         (set @entity.status idle)
         (render-ui main <typography content="Waiting for a program." variant="caption" />)
-      FIX_GENERATED -> fixed
+      LLM_GENERATE_RESULT -> fixed
         (set @entity.fix ?content)
         (set @entity.status fixed)
         (render-ui main <typography content="Repair proposed." variant="caption" />)
         (emit FIX_PROPOSED { issues: @entity.issues, fix: ?content })
-      FIX_FAILED -> failed
+      LLM_FAILED -> failed
         (set @entity.status failed)
-        (render-ui main <typography content={(str/concat "No repair: " ?error)} variant="caption" />)
+        (render-ui main <typography content={(str/concat "No repair: " ?message)} variant="caption" />)
     }
 
     state valid {
@@ -107,11 +114,15 @@ orbital AgentFixLoopOrbital {
         error : string!
         errors : [FixIssue]!
       }
-      FIX_GENERATED {
+      LLM_GENERATE -> external {
+        userPrompt : string!
+      }
+      LLM_GENERATE_RESULT {
         content : string!
       }
-      FIX_FAILED {
-        error : string!
+      LLM_FAILED {
+        code : string
+        message : string!
       }
     }
 
@@ -120,8 +131,10 @@ orbital AgentFixLoopOrbital {
         program : SExpr!
       }
       RESET
+      FixLoopLlm.LLM_GENERATE_RESULT -> LLM_GENERATE_RESULT
+      FixLoopLlm.LLM_FAILED -> LLM_FAILED
     }
   }
 
-  page "/agent-fix-loop" as AgentFixLoopPage -> FixLoopExecution
+  page "/agent-fix-loop" as AgentFixLoopPage -> FixLoopExecution, FixLoopLlm
 }

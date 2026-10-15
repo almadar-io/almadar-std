@@ -13,7 +13,6 @@ const orb = {
   prefix: 'x',
   registry: 'r',
   index: 'i',
-  loloContracts: 'l',
   embeddings: [REL],
   compiler: '>=1.0.0',
 };

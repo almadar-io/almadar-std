@@ -17,7 +17,7 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
-import { BOOLEAN, EMIT_ENVELOPE, each, STRING, SEXPR, bindingOf, fn, list, openShape, rec, sexprOf, shape, tv, union } from '../signature.js';
+import { BOOLEAN, each, STRING, SEXPR, bindingOf, fn, lit, list, mapOf, openShape, rec, sexprOf, shape, tv, union } from '../signature.js';
 
 // ============================================================================
 // Shared type refs
@@ -31,10 +31,58 @@ const EVENT_KEY: OperatorTypeRef = { kind: 'eventKey' };
 const UI_SLOT: OperatorTypeRef = { kind: 'uiSlot' };
 const PATTERN_TYPE: OperatorTypeRef = { kind: 'patternType' };
 
+const KEYED_CALL_ENVELOPE: OperatorTypeRef = openShape({
+  key: STRING,
+  emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY, onMessage: EVENT_KEY }),
+});
+
+const HOST_CALL_ENVELOPE: OperatorTypeRef = openShape({
+  emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
+});
+
+const HTTP_METHOD: OperatorTypeRef = union(lit('GET'), lit('POST'), lit('PUT'), lit('PATCH'), lit('DELETE'));
+
+const HTTP_AUTH: OperatorTypeRef = openShape({
+  scheme: union(lit('bearer'), lit('api-key'), lit('basic'), lit('oauth2-client'), lit('hmac-sha256')),
+  credential: STRING,
+  name: STRING,
+  in: union(lit('header'), lit('query')),
+  user: STRING,
+  tokenUrl: STRING,
+  clientId: STRING,
+  clientSecret: STRING,
+  scope: STRING,
+  signs: STRING,
+  encoding: union(lit('hex'), lit('base64')),
+});
+
+const HTTP_PAGINATE: OperatorTypeRef = openShape({
+  style: union(lit('cursor'), lit('offset'), lit('page'), lit('link-header')),
+  param: STRING,
+  next: SEXPR,
+  collect: SEXPR,
+  max: NUMBER,
+});
+
+const HTTP_REQUEST: OperatorTypeRef = openShape({
+  query: rec('P'),
+  headers: mapOf(STRING, STRING),
+  json: tv('J'),
+  form: rec('S'),
+  text: STRING,
+  bytes: STRING,
+  auth: HTTP_AUTH,
+  timeoutMs: NUMBER,
+  responseAs: union(lit('text'), lit('bytes')),
+  paginate: HTTP_PAGINATE,
+  stream: union(lit('sse'), lit('json-lines')),
+});
+
 const PERSIST_ACTION: OperatorTypeRef = {
   kind: 'union',
   of: [
     { kind: 'literal', value: 'create' },
+    { kind: 'literal', value: 'upsert' },
     { kind: 'literal', value: 'update' },
     { kind: 'literal', value: 'delete' },
     { kind: 'literal', value: 'clear' },
@@ -467,7 +515,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'effect',
     minArity: 2,
     maxArity: 4,
-    description: 'Create, update, delete, clear, or batch entity records. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing.',
+    description: 'Create, upsert, update, delete, clear, or batch entity records. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing.',
     hasSideEffects: true,
     runsOn: 'server',
     entityArgPosition: 1,
@@ -475,7 +523,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'action', type: PERSIST_ACTION, description: 'Persist action' },
       { name: 'entity', type: { kind: 'entity' }, description: 'Target entity name' },
-      { name: 'data', type: ENTITY_REF, description: 'Payload (create/update) or entity id (delete)', optional: true },
+      { name: 'data', type: ENTITY_REF, description: 'Payload (create/upsert/update) or entity id (delete)', optional: true },
       {
         name: 'options',
         type: {
@@ -495,7 +543,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       // Action-discriminated union. The compiler narrows at the call site
       // based on the action arg literal to pick the right branch when
       // checking the emit.success event's declared payload.
-      //   create/update -> the resulting entity record
+      //   create/upsert/update -> the resulting entity record
       //   delete/clear  -> { id, deleted }
       //   batch         -> summary of operations
       produces: {
@@ -867,7 +915,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
       {
         name: 'options',
-        type: EMIT_ENVELOPE,
+        type: KEYED_CALL_ENVELOPE,
         description:
           'Optional trailing options object. Set `{ emit: { success: "...", failure: "...", cancelled: "..." } }` to wire closed-circuit result routing (V2 frame), and `key` to name the call for `cancel-call`.',
         optional: true,
@@ -880,6 +928,39 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       // per-service return shapes live on the orbital services block.
       // Today the emit.success payload is whatever the service adapter returns.
       produces: rec('R'),
+    },
+  },
+  http: {
+    module: 'core',
+    category: 'effect',
+    minArity: 3,
+    maxArity: 5,
+    description:
+      'Send one HTTP request from the server: (http METHOD origin path request? options?). The origin must be declared in the app egress list; credentials are named secret knobs resolved by the host. The reply { status, headers, body } is the success payload (a non-2xx status is a success reply); failures carry { error, kind }. Optional trailing { key, emit: { success, failure, cancelled, onMessage } } routes the result like call-service.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'method', type: HTTP_METHOD, description: 'HTTP method word: GET, POST, PUT, PATCH or DELETE' },
+      { name: 'origin', type: STRING, description: 'Origin (scheme://host[:port], no path): a string literal or a url-typed @config knob' },
+      { name: 'path', type: STRING, description: 'Request path, starting with "/"' },
+      {
+        name: 'request',
+        type: HTTP_REQUEST,
+        description: 'Request parts: query, headers, at most one body (json | form | text | bytes), auth, timeoutMs, responseAs, paginate, stream',
+        optional: true,
+      },
+      {
+        name: 'options',
+        type: KEYED_CALL_ENVELOPE,
+        description: 'Optional trailing options: { key } names the call for cancel-call; { emit: { success, failure, cancelled, onMessage } } wires closed-circuit result routing',
+        optional: true,
+      },
+    ],
+    example: '["http", "GET", "https://api.example.com", "/items", { "query": { "limit": 10 } }, { "emit": { "success": "ITEMS_LOADED", "failure": "ITEMS_FAILED" } }]',
+    effect: {
+      kind: 'http',
+      produces: shape({ status: NUMBER, headers: mapOf(STRING, STRING), body: STRING }),
     },
   },
   'cancel-call': {
@@ -895,6 +976,72 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [{ name: 'key', type: STRING, description: 'The key the call-service declared in its options' }],
     example: '["cancel-call", "@entity.id"]',
     effect: { kind: 'cancel-call' },
+  },
+  'random-bytes': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      'Draw n bytes from the host CSPRNG (journaled, so a replay sees the same bytes). The success payload is { value }: the bytes as base64url without padding, for an OAuth state or a PKCE verifier. n is an integer from 1 to 1024.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'bytes', type: NUMBER, description: 'How many random bytes to draw (1 to 1024)' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the { value } payload and the { error } failure',
+        optional: true,
+      },
+    ],
+    example: '["random-bytes", 32, { "emit": { "success": "STATE_DRAWN", "failure": "STATE_FAILED" } }]',
+    effect: { kind: 'random-bytes', produces: shape({ value: STRING }) },
+  },
+  'credential-status': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      'Whether the signed-in viewer has connected the credential named by a secret knob: the success payload is { connected }. Fails when nobody is signed in. The credential value is never readable.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'credential', type: STRING, description: 'A secret-typed @config knob whose value names the credential' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the { connected } payload and the { error } failure',
+        optional: true,
+      },
+    ],
+    example: '["credential-status", "@config.googleToken", { "emit": { "success": "STATUS_KNOWN" } }]',
+    effect: { kind: 'credential-status', produces: shape({ connected: BOOLEAN }) },
+  },
+  'credential-forget': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      'Drop the signed-in viewer\'s stored credential named by a secret knob; the success payload is { connected: false }. Fails when nobody is signed in.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'credential', type: STRING, description: 'A secret-typed @config knob whose value names the credential' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the { connected } payload and the { error } failure',
+        optional: true,
+      },
+    ],
+    example: '["credential-forget", "@config.googleToken", { "emit": { "success": "DISCONNECTED" } }]',
+    effect: { kind: 'credential-forget', produces: shape({ connected: BOOLEAN }) },
   },
   'render-ui': {
     module: 'core',

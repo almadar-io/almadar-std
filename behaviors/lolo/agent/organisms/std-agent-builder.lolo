@@ -140,6 +140,13 @@ orbital AgentBuilderOrbital {
         @label "How the pick turn is briefed"
         @description "Used when a fill step takes more than one candidate: the model picks the building block before filling it."
         @tier "domain"
+      pickDecider : "chat" | "jev" = chat
+        @label "Who picks the building block"
+        @description "`chat`: a model turn picks it (and writes `pickFields`). `jev`: the decision model picks it in one typed choice (`llm choose`), and the fill turn writes `pickFields`."
+        @tier "policy"
+      pickQuestion : string = "Which building block's interaction does what the request asks (sorting into groups, putting in order, estimating, exploring), not just the one about the same subject?"
+        @label "The decision model's question"
+        @tier "domain"
       pickEvent : EventAddress = BuilderPipeline.PICK
         @label "Pick tool event"
         @description "The address the model's PICK tool fires; a consumer that renames this trait sets it to its own name."
@@ -258,7 +265,15 @@ orbital AgentBuilderOrbital {
         (behavior/describe { behavior: @entity.chosen } {
           emit: { failure: BUILD_FAILED, success: DESCRIBED }
         })
-      RANKED -> choosing when (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill"))) (and (> (object/get (array/nth @config.ladder @entity.step) take 1) 1) (> (array/len @entity.ranked) 1)))
+      RANKED -> choosing when (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill"))) (and (> (object/get (array/nth @config.ladder @entity.step) take 1) 1) (and (> (array/len @entity.ranked) 1) (= @config.pickDecider "jev"))))
+        (set @entity.chosen "")
+        (set @entity.pickedFields {})
+        (set @entity.status choosing)
+        (emit BUILD_PROGRESS { status: "choosing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
+        (call-service llm choose { state: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)), instructions: @config.pickQuestion, options: (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r { value: @r.behavior, description: (object/get @r description "") })) } {
+          emit: { failure: BUILD_FAILED, success: CHOSEN }
+        })
+      RANKED -> choosing when (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill"))) (and (> (object/get (array/nth @config.ladder @entity.step) take 1) 1) (and (> (array/len @entity.ranked) 1) (= @config.pickDecider "chat"))))
         (set @entity.chosen "")
         (set @entity.pickedFields {})
         (set @entity.status choosing)
@@ -279,6 +294,24 @@ orbital AgentBuilderOrbital {
     state choosing {
       INIT -> choosing
         (set @entity.status choosing)
+      CHOSEN -> describing when (array/some (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (= @r.behavior ?choice)))
+        (set @entity.chosen ?choice)
+        (set @entity.chosenDescription (object/get (array/find @entity.ranked (fn r (= @r.behavior ?choice))) description ""))
+        (set @entity.status describing)
+        (emit BUILD_PROGRESS { status: "describing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
+        (behavior/describe { behavior: ?choice } {
+          emit: { failure: BUILD_FAILED, success: DESCRIBED }
+        })
+      CHOSEN -> failed when (not (array/some (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (= @r.behavior ?choice))))
+        (set @entity.error "The decision model picked none of the building blocks offered")
+        (set @entity.status failed)
+        (render-ui @config.statusSlot <typography content="Build failed: no building block was picked." variant="caption" />)
+        (emit BUILD_REJECTED { error: "The decision model picked none of the building blocks offered", errors: [] })
+      BUILD_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
+        (emit BUILD_REJECTED { error: ?error, errors: [] })
       PICK -> choosing
         (set @entity.chosen (str/default ?behavior ""))
         (set @entity.pickedFields (if (== ?fields null) {} ?fields))
@@ -479,6 +512,11 @@ orbital AgentBuilderOrbital {
         @tier "internal"
       DESCRIBED {
         result : BehaviorDescription!
+      }
+        @tier "internal"
+      CHOSEN {
+        choice : string!
+        confidence : number!
       }
         @tier "internal"
       BUILT {

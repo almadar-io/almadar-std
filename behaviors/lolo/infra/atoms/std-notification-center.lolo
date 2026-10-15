@@ -1,11 +1,13 @@
 app std-notification-center [
   version: "1.0.0",
-  description: "std-notification-center — per-user notification preferences, web-push subscriptions, and the digest drain for suppressed notifications. Owns the two owner-scoped stores std-notify-on-event consults at dispatch time: NotificationPreference rows (per event key: mode instant/digest/off, channel override, per-user quiet hours) and PushSubscription rows (captured via the browser/push-subscribe flow — the shared service worker + PushManager subscription, persisted as flat endpoint/p256dh/auth credentials). The DigestDrain trait is the delivery half of every suppression std-notify-on-event records: an hourly cron tick scans NotificationRecord audit rows left undispatched for digest/quiet-hours reasons and at least `minAgeHours` old, delivers each by email (the digest channel), and marks it dispatched — the reminder-scheduler self-driving scan loop verbatim. Compose alongside std-notify-on-event: the listener suppresses and records, this atom captures subscriptions, edits preferences, and drains."
+  description: "std-notification-center — per-user notification preferences, web-push subscriptions, and the digest drain for suppressed notifications. Owns the two owner-scoped stores std-notify-on-event consults at dispatch time: NotificationPreference rows (per event key: mode instant/digest/off, channel override, per-user quiet hours) and PushSubscription rows (captured via the browser/push-subscribe flow — the shared service worker + PushManager subscription, persisted as flat endpoint/p256dh/auth credentials). The DigestDrain trait is the delivery half of every suppression std-notify-on-event records: an hourly cron tick scans NotificationRecord audit rows left undispatched for digest/quiet-hours reasons and at least `minAgeHours` old, delivers each by email (the digest channel), and marks it dispatched — the reminder-scheduler self-driving scan loop verbatim. Compose alongside std-notify-on-event: the listener suppresses and records, this atom captures subscriptions, edits preferences, and drains.",
+  egress: ["https://api.sendgrid.com", "https://api.resend.com"]
 ]
 type NotifRow = { id : string, recipient : string, channel : string, message : string, severity : string, dispatched : boolean, error : string, recordedAt : number }
 type PushCreds = { endpoint : string, p256dh : string, auth : string }
 orbital NotificationCenterOrbital {
     uses Button from "std/behaviors/ui-button"
+    uses Email from "std/behaviors/std-email"
 
     type PUSH_SUBSCRIBED = Event { endpoint : string, p256dh : string, auth : string } "browser/push-subscribe resolved — the credentials arrive FLAT on the payload (?endpoint, ?p256dh, ?auth), not wrapped in a `result` field."
 
@@ -193,6 +195,30 @@ orbital NotificationCenterOrbital {
     }
   }
 
+  trait DigestMailer = Email.traits.EmailSender {
+    listens {
+      DigestDrain.EMAIL_SEND -> EMAIL_SEND
+      EMAIL_SENDGRID_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      EMAIL_SENDGRID_FAILED {
+        error : string!
+        kind : string!
+      }
+      EMAIL_RESEND_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      EMAIL_RESEND_FAILED {
+        error : string!
+        kind : string!
+      }
+    }
+  }
+
   trait DigestDrain -> DigestRunView [lifecycle, instance] {
     initial: idle
 
@@ -201,12 +227,7 @@ orbital NotificationCenterOrbital {
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headRecipient (object/get (array/first ?data) recipient))
         (set @entity.headMessage (object/get (array/first ?data) message))
-        (call-service "email" "send" {
-          body: @entity.headMessage
-          from: ""
-          subject: @config.digestSubject
-          to: @entity.headRecipient
-        } { emit: { failure: DIGEST_FAILED, success: DIGEST_ITEM_SENT } })
+        (emit EMAIL_SEND { body: @entity.headMessage, subject: @config.digestSubject, to: @entity.headRecipient })
       DIGEST_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
       DIGEST_FAILED -> idle
         (set @entity.lastError ?error)
@@ -228,16 +249,14 @@ orbital NotificationCenterOrbital {
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headRecipient (object/get (array/first ?data) recipient))
         (set @entity.headMessage (object/get (array/first ?data) message))
-        (call-service "email" "send" {
-          body: @entity.headMessage
-          from: ""
-          subject: @config.digestSubject
-          to: @entity.headRecipient
-        } { emit: { failure: DIGEST_FAILED, success: DIGEST_ITEM_SENT } })
+        (emit EMAIL_SEND { body: @entity.headMessage, subject: @config.digestSubject, to: @entity.headRecipient })
       DIGEST_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
       DIGEST_FAILED -> idle
         (set @entity.lastError ?error)
         (notify error (str/concat "Couldn't send the notification digest — " ?error))
+      DIGEST_MAIL_FAILED -> idle
+        (set @entity.lastError ?message)
+        (notify error (str/concat "Couldn't send the notification digest — " ?message))
     }
 
     emits {
@@ -246,11 +265,12 @@ orbital NotificationCenterOrbital {
       }
         @description "Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first"
         @tier "secondary"
-      DIGEST_ITEM_SENT {
-        id : string!
-        status : string!
+      EMAIL_SEND -> external {
+        to : string!
+        subject : string!
+        body : string!
       }
-        @description "email.send result for the current digest row"
+        @description "Send the current digest row by email"
         @tier "secondary"
       DIGEST_STEPPED {
         id : string!
@@ -268,9 +288,14 @@ orbital NotificationCenterOrbital {
       DIGEST_ROWS_LOADED {
         data : [NotifRow]
       }
+      DigestMailer.EMAIL_SENT -> DIGEST_ITEM_SENT
+      DigestMailer.EMAIL_SEND_FAILED -> DIGEST_MAIL_FAILED
       DIGEST_ITEM_SENT {
-        id : string!
+        id : string
         status : string!
+      }
+      DIGEST_MAIL_FAILED {
+        message : string!
       }
       DIGEST_STEPPED {
         id : string!
@@ -310,5 +335,5 @@ orbital NotificationCenterOrbital {
 
   page "/notifications/preferences" as NotificationPreferencesPage -> PreferenceEditor, PreferenceEditorButtonSubscribe, PreferenceEditorButtonDigest
   page "/notifications/subscribe" as PushSubscribePage -> PushSubscriber
-  page "/notifications/digest" as NotificationDigestPage -> DigestDrain
+  page "/notifications/digest" as NotificationDigestPage -> DigestDrain, DigestMailer
 }

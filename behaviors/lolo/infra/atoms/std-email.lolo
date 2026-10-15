@@ -1,0 +1,229 @@
+app std-email [
+  version: "1.0.0",
+  description: "std-email — transactional email through SendGrid or Resend over the http effect. EMAIL_SEND sends one message through the vendor the `vendor` knob names and answers EMAIL_SENT { id?, status } or EMAIL_SEND_FAILED { code?, message }. Credentials are the SENDGRID_API_KEY / RESEND_API_KEY names, resolved by the host.",
+  egress: ["https://api.sendgrid.com", "https://api.resend.com"]
+]
+type ResendReply = { id : string, message : string }
+orbital EmailOrbital {
+  entity EmailDelivery [runtime] {
+    id : string!
+  }
+
+  trait EmailSender -> EmailDelivery [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      EMAIL_SEND -> idle when (= @config.vendor sendgrid)
+        (let ((from (if (validate/required @payload.from) @payload.from @config.fromEmail)))
+          (http POST @config.sendgridOrigin "/v3/mail/send" {
+            headers: { Accept: "application/json" },
+            auth: { scheme: bearer, credential: @config.sendgridApiKey },
+            json: (object/merge
+              {
+                from: (if (str/includes @from "<")
+                  (object/merge
+                    { email: (str/trim (str/replace (array/nth (str/split @from "<") 1) ">" "")) }
+                    (if (!= (str/trim (array/nth (str/split @from "<") 0)) "") { name: (str/trim (array/nth (str/split @from "<") 0)) } {}))
+                  { email: @from }),
+                subject: @payload.subject,
+                personalizations: [{ to: [(if (str/includes @payload.to "<")
+                  (object/merge
+                    { email: (str/trim (str/replace (array/nth (str/split @payload.to "<") 1) ">" "")) }
+                    (if (!= (str/trim (array/nth (str/split @payload.to "<") 0)) "") { name: (str/trim (array/nth (str/split @payload.to "<") 0)) } {}))
+                  { email: @payload.to })] }],
+                content: (if (validate/required @payload.htmlBody)
+                  [{ value: @payload.body, type: "text/plain" }, { value: @payload.htmlBody, type: "text/html" }]
+                  [{ value: @payload.body, type: "text/html" }])
+              }
+              (if (validate/required @payload.replyTo)
+                { reply_to: (if (str/includes @payload.replyTo "<")
+                  (object/merge
+                    { email: (str/trim (str/replace (array/nth (str/split @payload.replyTo "<") 1) ">" "")) }
+                    (if (!= (str/trim (array/nth (str/split @payload.replyTo "<") 0)) "") { name: (str/trim (array/nth (str/split @payload.replyTo "<") 0)) } {}))
+                  { email: @payload.replyTo }) }
+                {})
+              (if (validate/required @payload.templateId) { template_id: @payload.templateId } {})),
+            timeoutMs: @config.timeoutMs
+          } { emit: { success: EMAIL_SENDGRID_REPLIED, failure: EMAIL_SENDGRID_FAILED } }))
+      EMAIL_SEND -> idle when (and (= @config.vendor resend) (validate/required @payload.templateId))
+        (emit EMAIL_SEND_FAILED { code: null, message: "templateId is not supported by the resend provider — use sendgrid or drop templateId" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: templateId is not supported by the resend provider" })
+      EMAIL_SEND -> idle when (and (= @config.vendor resend) (not (validate/required @payload.templateId)))
+        (http POST @config.resendOrigin "/emails" {
+          headers: { Accept: "*/*" },
+          auth: { scheme: bearer, credential: @config.resendApiKey },
+          json: (object/merge
+            {
+              from: (if (validate/required @payload.from) @payload.from @config.fromEmail),
+              html: (if (validate/required @payload.htmlBody) @payload.htmlBody @payload.body)
+            }
+            (if (validate/required @payload.replyTo) { reply_to: @payload.replyTo } {})
+            { subject: @payload.subject }
+            (if (validate/required @payload.htmlBody) { text: @payload.body } {})
+            { to: @payload.to }),
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: EMAIL_RESEND_REPLIED, failure: EMAIL_RESEND_FAILED } })
+
+      EMAIL_SENDGRID_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (object/get @payload.headers "x-message-id" "") ""))
+        (emit EMAIL_SENT { id: (object/get @payload.headers "x-message-id" ""), status: "sent" })
+      EMAIL_SENDGRID_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get @payload.headers "x-message-id" "") ""))
+        (emit EMAIL_SENT { status: "sent" })
+      EMAIL_SENDGRID_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit EMAIL_SEND_FAILED { code: null, message: (object/get @config.statusText (str/concat @payload.status) "") })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Email not sent: " (object/get @config.statusText (str/concat @payload.status) "")) })
+      EMAIL_SENDGRID_FAILED -> idle
+        (emit EMAIL_SEND_FAILED { code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Email not sent: " @payload.error) })
+
+      EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ResendReply) null) (!= (object/get (json/parse @payload.body ResendReply) id "") ""))
+        (emit EMAIL_SENT { id: (object/get (json/parse @payload.body ResendReply) id ""), status: "sent" })
+      EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ResendReply) null) (= (object/get (json/parse @payload.body ResendReply) id "") ""))
+        (emit EMAIL_SENT { status: "sent" })
+      EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body ResendReply) null) (= (str/trim @payload.body) "null"))
+        (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: no message id returned" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: Resend returned no message id" })
+      EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body ResendReply) null) (!= (str/trim @payload.body) "null"))
+        (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: Resend reply was unreadable" })
+      EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (!= (json/parse @payload.body ResendReply) null))
+        (emit EMAIL_SEND_FAILED { code: null, message: (str/concat "Resend rejected the email: " (if (validate/required (object/get (json/parse @payload.body ResendReply) message "")) (object/get (json/parse @payload.body ResendReply) message "") "no message id returned")) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: Resend rejected the email" })
+      EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= (json/parse @payload.body ResendReply) null) (= (str/trim @payload.body) "null"))
+        (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: no message id returned" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: Resend rejected the email" })
+      EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= (json/parse @payload.body ResendReply) null) (!= (str/trim @payload.body) "null"))
+        (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: Internal server error. We are unable to process your request right now, please try again later." })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Email not sent: Resend rejected the email" })
+      EMAIL_RESEND_FAILED -> idle
+        (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Email not sent: " @payload.error) })
+    }
+
+    emits {
+      EMAIL_SENT -> external {
+        id : string
+        status : string!
+      }
+        @description "The message was accepted by the vendor; id is the vendor message id when it returned one."
+        @synonyms "email sent, message accepted, delivery queued"
+        @tier "primary"
+      EMAIL_SEND_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "The message was not sent: the vendor rejected it, answered with a non-2xx status, or the call never completed."
+        @synonyms "email failed, send error, delivery rejected"
+        @tier "primary"
+      EMAIL_SENDGRID_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the SendGrid HTTP reply."
+        @tier "secondary"
+      EMAIL_SENDGRID_FAILED {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the SendGrid call never produced a reply."
+        @tier "secondary"
+      EMAIL_RESEND_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the Resend HTTP reply."
+        @tier "secondary"
+      EMAIL_RESEND_FAILED {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the Resend call never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      EMAIL_SEND -> external {
+        to : string!
+        subject : string!
+        body : string!
+        from : string
+        htmlBody : string
+        replyTo : string
+        templateId : string
+      }
+        @description "Send one transactional email. to/from/replyTo accept `Name <address>`; htmlBody adds an HTML part beside the plain body; templateId is SendGrid only; from defaults to the fromEmail knob."
+        @synonyms "send email, mail, notify by email, transactional email"
+      EMAIL_SENDGRID_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      EMAIL_SENDGRID_FAILED {
+        error : string!
+        kind : string!
+      }
+      EMAIL_RESEND_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      EMAIL_RESEND_FAILED {
+        error : string!
+        kind : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unsent email; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      vendor : "sendgrid" | "resend" = sendgrid
+        @label "Email vendor"
+        @description "The vendor that delivers the mail."
+        @synonyms "email provider, mail service, sendgrid or resend"
+        @tier "infra"
+      sendgridOrigin : url = "https://api.sendgrid.com"
+        @label "SendGrid API origin"
+        @description "The SendGrid API origin (scheme://host, no path). Must be declared in the app egress list."
+        @synonyms "sendgrid url, api host"
+        @tier "infra"
+      resendOrigin : url = "https://api.resend.com"
+        @label "Resend API origin"
+        @description "The Resend API origin (scheme://host, no path). Must be declared in the app egress list."
+        @synonyms "resend url, api host"
+        @tier "infra"
+      sendgridApiKey : secret = "SENDGRID_API_KEY"
+        @label "SendGrid API key name"
+        @description "Name of the credential that holds the SendGrid API key."
+        @synonyms "sendgrid key, mail credential"
+        @tier "infra"
+      resendApiKey : secret = "RESEND_API_KEY"
+        @label "Resend API key name"
+        @description "Name of the credential that holds the Resend API key."
+        @synonyms "resend key, mail credential"
+        @tier "infra"
+      fromEmail : string = "noreply@example.com"
+        @label "Default sender"
+        @description "The From address used when a message names none."
+        @synonyms "from address, sender, noreply"
+        @tier "infra"
+      timeoutMs : number = 30000
+        @label "Request timeout (ms)"
+        @description "Milliseconds the vendor request may take before the send fails."
+        @synonyms "timeout, request deadline, wait limit"
+        @tier "infra"
+      statusText : Map string string = { "200": "OK", "201": "Created", "202": "Accepted", "204": "No Content", "301": "Moved Permanently", "302": "Found", "304": "Not Modified", "400": "Bad Request", "401": "Unauthorized", "402": "Payment Required", "403": "Forbidden", "404": "Not Found", "405": "Method Not Allowed", "408": "Request Timeout", "409": "Conflict", "413": "Payload Too Large", "422": "Unprocessable Entity", "429": "Too Many Requests", "500": "Internal Server Error", "501": "Not Implemented", "502": "Bad Gateway", "503": "Service Unavailable", "504": "Gateway Timeout" }
+        @label "Status reasons"
+        @description "The reason phrase reported for a non-2xx SendGrid status, keyed by status code."
+        @synonyms "http reasons, status messages"
+        @tier "infra"
+    }
+  }
+
+  page "/email" as EmailPage -> EmailSender
+}

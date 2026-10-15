@@ -1,12 +1,15 @@
 app std-esign-flow [
   version: "1.2.0",
-  description: "std-esign-flow — the send-for-signature flow: list signature requests, create one (pick document + recipient), resend or cancel, track status. Composes std-file-store + std-esign-request; no document-rendering or code-preview chrome. v1.2 (W5): EnvelopeDispatcher wires sessions to the real `esign` service — SEND_ENVELOPE dispatches a DocuSign envelope (the document rides the event as an UploadDropZone-shaped file payload, since StoredFile rows are metadata-only) and stamps `envelopeId`/`sentAt`/status=sent; the browse grid's per-row \"Refresh status\" pulls getEnvelopeStatus and maps completed/delivered/declined onto signed/viewed/declined."
+  description: "std-esign-flow — the send-for-signature flow: list signature requests, create one (pick document + recipient), resend or cancel, track status. Composes std-file-store + std-esign-request; no document-rendering or code-preview chrome. v1.2 (W5): EnvelopeDispatcher wires sessions to the real `esign` service — SEND_ENVELOPE dispatches a DocuSign envelope (the document rides the event as an UploadDropZone-shaped file payload, since StoredFile rows are metadata-only) and stamps `envelopeId`/`sentAt`/status=sent; the browse grid's per-row \"Refresh status\" pulls getEnvelopeStatus and maps completed/delivered/declined onto signed/viewed/declined.",
+  egress: ["https://demo.docusign.net", "https://na1.docusign.net", "https://na2.docusign.net", "https://na3.docusign.net", "https://na4.docusign.net", "https://eu.docusign.net", "https://au.docusign.net", "https://ca.docusign.net"]
 ]
 type ItemAction = { label : string!, event : event, variant : string, roles : [string], when : SExpr }
 orbital SignatureSessionOrbital {
   uses StoredFile from "std/behaviors/std-file-store"
 
   uses ESignRequest from "std/behaviors/std-esign-request"
+
+  uses Esign from "std/behaviors/std-esign"
 
   uses Modal from "std/behaviors/std-modal"
 
@@ -454,21 +457,17 @@ orbital SignatureSessionOrbital {
     state idle {
       SEND_ENVELOPE -> dispatching
         (set @entity.id ?id)
-        (call-service esign sendEnvelope {
+        (emit ESIGN_SEND_ENVELOPE {
           documentContent: (object/get (array/first ?files) content)
           documentName: (object/get ?row documentName)
           emailSubject: (str/concat "Signature requested: " (object/get ?row documentName))
           recipientEmail: (object/get ?row recipientEmail)
           recipientName: (object/get ?row recipientName)
-        } {
-          emit: { failure: ENVELOPE_SEND_FAILED, success: ENVELOPE_SENT }
         })
       CHECK_ENVELOPE_STATUS -> polling when ["!=", (object/get ?row envelopeId), ""]
         (set @entity.id ?id)
-        (call-service esign getEnvelopeStatus {
+        (emit ESIGN_GET_ENVELOPE_STATUS {
           envelopeId: (object/get ?row envelopeId)
-        } {
-          emit: { failure: ENVELOPE_STATUS_FAILED, success: ENVELOPE_STATUS_LOADED }
         })
       CHECK_ENVELOPE_STATUS -> idle
         (notify info "This request was never dispatched to the e-sign provider — send it first")
@@ -527,29 +526,19 @@ orbital SignatureSessionOrbital {
     }
 
     emits {
-      ENVELOPE_SENT {
-        envelopeId : string
-        status : string
+      ESIGN_SEND_ENVELOPE -> internal {
+        recipientEmail : string!
+        recipientName : string!
+        documentName : string!
+        documentContent : string!
+        emailSubject : string
       }
-        @description "The provider accepted the envelope; carries its id."
+        @description "Hand the document to the e-sign gateway."
         @tier "internal"
-      ENVELOPE_SEND_FAILED {
-        error : string
-        code : string
+      ESIGN_GET_ENVELOPE_STATUS -> internal {
+        envelopeId : string!
       }
-        @description "The e-sign provider rejected or failed the dispatch."
-        @tier "internal"
-      ENVELOPE_STATUS_LOADED {
-        status : string
-        completedAt : string
-      }
-        @description "The provider returned the envelope's current status."
-        @tier "internal"
-      ENVELOPE_STATUS_FAILED {
-        error : string
-        code : string
-      }
-        @description "Reading the envelope status failed."
+        @description "Ask the e-sign gateway for the envelope's status."
         @tier "internal"
       ENVELOPE_STAMPED -> external {
         id : string
@@ -582,21 +571,25 @@ orbital SignatureSessionOrbital {
         @description "Pull the provider's current envelope status and stamp it onto the session row."
         @synonyms "refresh status, check signature, poll envelope"
         @tier "domain"
+      EsignGateway.ESIGN_ENVELOPE_SENT -> ENVELOPE_SENT
       ENVELOPE_SENT {
-        envelopeId : string
-        status : string
+        envelopeId : string!
+        status : string!
       }
+      EsignGateway.ESIGN_SEND_ENVELOPE_FAILED -> ENVELOPE_SEND_FAILED
       ENVELOPE_SEND_FAILED {
-        error : string
         code : string
+        message : string!
       }
+      EsignGateway.ESIGN_ENVELOPE_STATUS -> ENVELOPE_STATUS_LOADED
       ENVELOPE_STATUS_LOADED {
-        status : string
-        completedAt : string
+        status : string!
+        completedAt : string!
       }
+      EsignGateway.ESIGN_GET_ENVELOPE_STATUS_FAILED -> ENVELOPE_STATUS_FAILED
       ENVELOPE_STATUS_FAILED {
-        error : string
         code : string
+        message : string!
       }
       ENVELOPE_STAMPED {
         id : string
@@ -608,5 +601,54 @@ orbital SignatureSessionOrbital {
     }
   }
 
-  page "/esign-flow" as SignatureSessionPage -> SignatureSessionBrowse, SignatureSessionCreate, SignatureSessionDelete, SignatureSessionPersistor, EnvelopeSendDialog, EnvelopeDispatcher
+  trait EsignGateway = Esign.traits.EsignClient {
+    listens {
+      EnvelopeDispatcher.ESIGN_SEND_ENVELOPE -> ESIGN_SEND_ENVELOPE
+      ESIGN_SEND_ENVELOPE {
+        recipientEmail : string!
+        recipientName : string!
+        documentName : string!
+        documentContent : string!
+        emailSubject : string
+      }
+      EnvelopeDispatcher.ESIGN_GET_ENVELOPE_STATUS -> ESIGN_GET_ENVELOPE_STATUS
+      ESIGN_GET_ENVELOPE_STATUS {
+        envelopeId : string!
+      }
+      ESIGN_DOWNLOAD_DOCUMENT {
+        envelopeId : string!
+      }
+      ESIGN_SEND_ENVELOPE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      ESIGN_SEND_ENVELOPE_UNREACHED {
+        error : string!
+        kind : string!
+      }
+      ESIGN_GET_ENVELOPE_STATUS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      ESIGN_GET_ENVELOPE_STATUS_UNREACHED {
+        error : string!
+        kind : string!
+      }
+      ESIGN_DOWNLOAD_DOCUMENT_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string
+      }
+      ESIGN_DOWNLOAD_DOCUMENT_UNREACHED {
+        error : string!
+        kind : string!
+        key : string
+      }
+    }
+  }
+
+  page "/esign-flow" as SignatureSessionPage -> SignatureSessionBrowse, SignatureSessionCreate, SignatureSessionDelete, SignatureSessionPersistor, EnvelopeSendDialog, EnvelopeDispatcher, EsignGateway
 }

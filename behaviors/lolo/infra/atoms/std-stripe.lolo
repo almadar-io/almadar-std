@@ -1,0 +1,478 @@
+app std-stripe [
+  version: "1.0.0",
+  description: "std-stripe — payments and subscriptions through the Stripe API (api.stripe.com, version 2025-02-24.acacia): PaymentIntents, refunds, customers, hosted Checkout and Billing Portal sessions, and subscription read, create, update and cancel. Requests are form-encoded with bearer auth and an idempotency key on every POST. Every failure answers STRIPE_FAILED with Stripe's own message.",
+  egress: ["https://api.stripe.com"]
+]
+type StripeKey = { action : string, customerId : string, subscriptionId : string, quantity : number, cancelAtPeriodEnd : boolean }
+type StripeApiError = { type : string, code : string, message : string, param : string }
+type StripeErrorReply = { error : StripeApiError }
+type StripeOauthErrorReply = { error : string, error_description : string }
+type StripePaymentIntent = { id : string!, object : string, amount : number, currency : string, status : string, client_secret : string, metadata : Map string string }
+type StripeRefund = { id : string!, object : string, amount : number, status : string }
+type StripeCustomer = { id : string, email : string, metadata : Map string string }
+type StripeIdRef = { id : string }
+type StripeSessionWithCustomer = { id : string, url : string, customer : StripeIdRef }
+type StripeSessionWithCustomerId = { id : string, url : string, customer : string }
+type StripeSubscriptionItem = { id : string, quantity : number, price : StripeIdRef }
+type StripeSubscriptionItems = { data : [StripeSubscriptionItem] }
+type StripeSubscription = { id : string, customer : StripeIdRef, status : string, cancel_at_period_end : boolean, current_period_start : number, current_period_end : number, items : StripeSubscriptionItems }
+type StripeSubscriptionRef = { id : string, customer : string, status : string, cancel_at_period_end : boolean, current_period_start : number, current_period_end : number, items : StripeSubscriptionItems }
+orbital StripeOrbital {
+  entity StripeCall [runtime] {
+    id : string!
+  }
+
+  trait StripeClient -> StripeCall [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      STRIPE_CREATE_PAYMENT_INTENT -> idle
+        (http POST @config.origin "/v1/payment_intents" {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
+          text: (str/join (array/map (array/filter (array/concat [{ k: "amount", v: (str/concat @payload.amount) }, { k: "currency", v: @payload.currency }] (array/map (object/entries (or @payload.metadata {})) (fn e { k: (str/concat "metadata[" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "createPaymentIntent" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_CONFIRM_PAYMENT -> idle
+        (http POST @config.origin (str/concat "/v1/payment_intents/" (str/encode-uri-component @payload.paymentIntentId) "/confirm") {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
+          text: (str/join (array/map (array/filter [] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "confirmPayment" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_REFUND -> idle
+        (http POST @config.origin "/v1/refunds" {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
+          text: (str/join (array/map (array/filter [{ k: "payment_intent", v: @payload.paymentIntentId }, { k: "amount", v: (if (validate/number @payload.amount) (str/concat @payload.amount) null) }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "refund" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_CREATE_CUSTOMER -> idle
+        (http POST @config.origin "/v1/customers" {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
+          text: (str/join (array/map (array/filter [{ k: "email", v: @payload.email }, { k: "name", v: @payload.displayName }, { k: "metadata[almadarUid]", v: @payload.almadarUid }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "createCustomer" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_CREATE_CHECKOUT_SESSION -> idle when (not (or (= @payload.tier "solo") (= @payload.tier "teams")))
+        (emit STRIPE_FAILED { code: null, message: "tier must be \"solo\" or \"teams\"" })
+      STRIPE_CREATE_CHECKOUT_SESSION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
+        (emit STRIPE_FAILED { code: null, message: (str/concat "STRIPE_PRICE_" (str/upper @payload.tier) " not configured") })
+      STRIPE_CREATE_CHECKOUT_SESSION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (!= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
+        (http POST @config.origin "/v1/checkout/sessions" {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
+          text: (str/join (array/map (array/filter (array/concat (array/concat [{ k: "mode", v: "subscription" }, { k: "customer", v: (if (validate/required @payload.customerId) @payload.customerId null) }, { k: "line_items[0][price]", v: (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) }, { k: "line_items[0][quantity]", v: (str/concat @payload.quantity) }, { k: "success_url", v: @payload.successUrl }, { k: "cancel_url", v: @payload.cancelUrl }] (array/map (object/entries (or @payload.metadata {})) (fn e { k: (str/concat "subscription_data[metadata][" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) [{ k: "automatic_tax[enabled]", v: "true" }, { k: "allow_promotion_codes", v: "true" }]) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "createCheckoutSession" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_CREATE_PORTAL_SESSION -> idle
+        (http POST @config.origin "/v1/billing_portal/sessions" {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
+          text: (str/join (array/map (array/filter [{ k: "customer", v: @payload.customerId }, { k: "return_url", v: @payload.returnUrl }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "createPortalSession", customerId: @payload.customerId }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_GET_SUBSCRIPTION -> idle
+        (http GET @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "getSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_CREATE_SUBSCRIPTION -> idle when (not (or (= @payload.tier "solo") (= @payload.tier "teams")))
+        (emit STRIPE_FAILED { code: null, message: "tier must be \"solo\" or \"teams\"" })
+      STRIPE_CREATE_SUBSCRIPTION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
+        (emit STRIPE_FAILED { code: null, message: (str/concat "STRIPE_PRICE_" (str/upper @payload.tier) " not configured") })
+      STRIPE_CREATE_SUBSCRIPTION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (!= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
+        (http POST @config.origin "/v1/subscriptions" {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
+          text: (str/join (array/map (array/filter (array/concat (array/concat [{ k: "customer", v: @payload.customerId }, { k: "items[0][price]", v: (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) }, { k: "items[0][quantity]", v: (str/concat @payload.quantity) }] (array/map (object/entries (or @payload.metadata {})) (fn e { k: (str/concat "metadata[" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) [{ k: "proration_behavior", v: "create_prorations" }, { k: "automatic_tax[enabled]", v: "true" }]) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "createSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_UPDATE_SUBSCRIPTION -> idle when (validate/number @payload.quantity)
+        (http GET @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "updateSubscription.fetch", subscriptionId: @payload.subscriptionId, quantity: @payload.quantity, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_UPDATE_SUBSCRIPTION -> idle when (not (validate/number @payload.quantity))
+        (emit STRIPE_UPDATE_READY { subscriptionId: @payload.subscriptionId, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd })
+      STRIPE_UPDATE_READY -> idle
+        (http POST @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
+          text: (str/join (array/map (array/filter [{ k: "proration_behavior", v: "create_prorations" }, { k: "items[0][id]", v: @payload.itemId }, { k: "items[0][quantity]", v: (if (validate/required @payload.itemId) (str/concat @payload.quantity) null) }, { k: "cancel_at_period_end", v: (if (= @payload.cancelAtPeriodEnd null) null (if @payload.cancelAtPeriodEnd "true" "false")) }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "updateSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_CANCEL_SUBSCRIPTION -> idle when (!= @payload.atPeriodEnd false)
+        (http POST @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
+          text: (str/join (array/map (array/filter [{ k: "cancel_at_period_end", v: "true" }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "cancelSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_CANCEL_SUBSCRIPTION -> idle when (= @payload.atPeriodEnd false)
+        (http DELETE @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { action: "cancelSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_REPLIED -> idle when (not (!= (json/parse @payload.body StripeErrorReply) null))
+        (emit STRIPE_FAILED { code: null, message: "Invalid JSON received from the Stripe API" })
+      STRIPE_REPLIED -> idle when (and (!= (json/parse @payload.body StripeErrorReply) null) (and (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) null) (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) "")))
+        (emit STRIPE_FAILED { code: null, message: (if (validate/string (object/get (json/parse @payload.body StripeOauthErrorReply) error null)) (object/get (json/parse @payload.body StripeOauthErrorReply) error_description "") (object/get (json/parse @payload.body StripeErrorReply) "error.message" "")) })
+      STRIPE_REPLIED -> idle when (and (!= (json/parse @payload.body StripeErrorReply) null) (not (and (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) null) (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) ""))))
+        (emit STRIPE_OK { key: @payload.key, body: @payload.body })
+      STRIPE_HTTP_FAILED -> idle
+        (emit STRIPE_FAILED { code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Stripe unavailable: " @payload.error) })
+      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "createPaymentIntent")
+        (emit STRIPE_CREATE_PAYMENT_INTENT_RESULT { id: (object/get (json/parse @payload.body StripePaymentIntent) id null), object: (object/get (json/parse @payload.body StripePaymentIntent) object null), amount: (object/get (json/parse @payload.body StripePaymentIntent) amount null), currency: (object/get (json/parse @payload.body StripePaymentIntent) currency null), status: (object/get (json/parse @payload.body StripePaymentIntent) status null), client_secret: (object/get (json/parse @payload.body StripePaymentIntent) client_secret null), metadata: (object/get (json/parse @payload.body StripePaymentIntent) metadata null) })
+      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "confirmPayment")
+        (emit STRIPE_CONFIRM_PAYMENT_RESULT { id: (object/get (json/parse @payload.body StripePaymentIntent) id null), object: (object/get (json/parse @payload.body StripePaymentIntent) object null), amount: (object/get (json/parse @payload.body StripePaymentIntent) amount null), currency: (object/get (json/parse @payload.body StripePaymentIntent) currency null), status: (object/get (json/parse @payload.body StripePaymentIntent) status null), client_secret: (object/get (json/parse @payload.body StripePaymentIntent) client_secret null), metadata: (object/get (json/parse @payload.body StripePaymentIntent) metadata null) })
+      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "refund")
+        (emit STRIPE_REFUND_RESULT { id: (object/get (json/parse @payload.body StripeRefund) id null), object: (object/get (json/parse @payload.body StripeRefund) object null), amount: (object/get (json/parse @payload.body StripeRefund) amount null), status: (object/get (json/parse @payload.body StripeRefund) status null) })
+      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "createCustomer")
+        (emit STRIPE_CREATE_CUSTOMER_RESULT { customerId: (object/get (json/parse @payload.body StripeCustomer) id null), email: (if (validate/string (object/get (json/parse @payload.body StripeCustomer) email null)) (object/get (json/parse @payload.body StripeCustomer) email null) ""), almadarUid: (if (validate/string (object/get (json/parse @payload.body StripeCustomer) "metadata.almadarUid" null)) (object/get (json/parse @payload.body StripeCustomer) "metadata.almadarUid" null) "") })
+      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "createCheckoutSession")
+        (emit STRIPE_CREATE_CHECKOUT_SESSION_RESULT { url: (if (validate/string (object/get (json/parse @payload.body StripeSessionWithCustomer) url null)) (object/get (json/parse @payload.body StripeSessionWithCustomer) url null) ""), sessionId: (object/get (json/parse @payload.body StripeSessionWithCustomer) id null), customerId: (if (validate/string (object/get (json/parse @payload.body StripeSessionWithCustomerId) customer null)) (object/get (json/parse @payload.body StripeSessionWithCustomerId) customer "") (object/get (json/parse @payload.body StripeSessionWithCustomer) "customer.id" "")) })
+      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "createPortalSession")
+        (emit STRIPE_CREATE_PORTAL_SESSION_RESULT { url: (object/get (json/parse @payload.body StripeSessionWithCustomer) url null), customerId: (object/get (json/parse @payload.key StripeKey) customerId "") })
+      STRIPE_OK -> idle when (and (or (= (object/get (json/parse @payload.key StripeKey) action "") "getSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "createSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "cancelSubscription")) (or (not (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_start null))) (not (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_end null)))))
+        (emit STRIPE_FAILED { code: null, message: "Invalid time value" })
+      STRIPE_OK -> idle when (and (or (= (object/get (json/parse @payload.key StripeKey) action "") "getSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "createSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "cancelSubscription")) (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_start null)) (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_end null)))
+        (emit STRIPE_SUBSCRIPTION_SHAPED {
+          action: (object/get (json/parse @payload.key StripeKey) action ""),
+          subscriptionId: (object/get (json/parse @payload.body StripeSubscription) id null),
+          customerId: (if (validate/string (object/get (json/parse @payload.body StripeSubscriptionRef) customer null)) (object/get (json/parse @payload.body StripeSubscriptionRef) customer "") (object/get (json/parse @payload.body StripeSubscription) "customer.id" "")),
+          status: (if (array/includes ["active", "past_due", "canceled", "incomplete", "incomplete_expired", "trialing", "unpaid"] (object/get (json/parse @payload.body StripeSubscription) status null)) (object/get (json/parse @payload.body StripeSubscription) status null) (if (= (object/get (json/parse @payload.body StripeSubscription) status null) "paused") "unpaid" "incomplete")),
+          priceId: (object/get (json/parse @payload.body StripeSubscription) "items.data.0.price.id" ""),
+          quantity: (if (= (object/get (json/parse @payload.body StripeSubscription) "items.data.0.quantity" null) null) 1 (object/get (json/parse @payload.body StripeSubscription) "items.data.0.quantity" null)),
+          currentPeriodStart: (str/concat (time/format (* (object/get (json/parse @payload.body StripeSubscription) current_period_start null) 1000) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (math/floor (* (object/get (json/parse @payload.body StripeSubscription) current_period_start null) 1000)) 1000)) 3 "0") "Z"),
+          currentPeriodEnd: (str/concat (time/format (* (object/get (json/parse @payload.body StripeSubscription) current_period_end null) 1000) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (math/floor (* (object/get (json/parse @payload.body StripeSubscription) current_period_end null) 1000)) 1000)) 3 "0") "Z"),
+          cancelAtPeriodEnd: (object/get (json/parse @payload.body StripeSubscription) cancel_at_period_end null),
+          tier: (if (= (object/get (json/parse @payload.body StripeSubscription) "items.data.0.price.id" "") @config.priceSolo) "solo" (if (= (object/get (json/parse @payload.body StripeSubscription) "items.data.0.price.id" "") @config.priceTeams) "teams" ""))
+        })
+      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription.fetch")
+        (emit STRIPE_UPDATE_READY { subscriptionId: (object/get (json/parse @payload.key StripeKey) subscriptionId ""), quantity: (object/get (json/parse @payload.key StripeKey) quantity null), cancelAtPeriodEnd: (object/get (json/parse @payload.key StripeKey) cancelAtPeriodEnd null), itemId: (object/get (json/parse @payload.body StripeSubscription) "items.data.0.id" null) })
+      STRIPE_SUBSCRIPTION_SHAPED -> idle when (= @payload.action "getSubscription")
+        (emit STRIPE_GET_SUBSCRIPTION_RESULT { subscriptionId: @payload.subscriptionId, customerId: @payload.customerId, status: @payload.status, priceId: @payload.priceId, quantity: @payload.quantity, currentPeriodStart: @payload.currentPeriodStart, currentPeriodEnd: @payload.currentPeriodEnd, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd, tier: @payload.tier })
+      STRIPE_SUBSCRIPTION_SHAPED -> idle when (= @payload.action "createSubscription")
+        (emit STRIPE_CREATE_SUBSCRIPTION_RESULT { subscriptionId: @payload.subscriptionId, customerId: @payload.customerId, status: @payload.status, priceId: @payload.priceId, quantity: @payload.quantity, currentPeriodStart: @payload.currentPeriodStart, currentPeriodEnd: @payload.currentPeriodEnd, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd, tier: @payload.tier })
+      STRIPE_SUBSCRIPTION_SHAPED -> idle when (= @payload.action "updateSubscription")
+        (emit STRIPE_UPDATE_SUBSCRIPTION_RESULT { subscriptionId: @payload.subscriptionId, customerId: @payload.customerId, status: @payload.status, priceId: @payload.priceId, quantity: @payload.quantity, currentPeriodStart: @payload.currentPeriodStart, currentPeriodEnd: @payload.currentPeriodEnd, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd, tier: @payload.tier })
+      STRIPE_SUBSCRIPTION_SHAPED -> idle when (= @payload.action "cancelSubscription")
+        (emit STRIPE_CANCEL_SUBSCRIPTION_RESULT { subscriptionId: @payload.subscriptionId, customerId: @payload.customerId, status: @payload.status, priceId: @payload.priceId, quantity: @payload.quantity, currentPeriodStart: @payload.currentPeriodStart, currentPeriodEnd: @payload.currentPeriodEnd, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd, tier: @payload.tier })
+    }
+
+    emits {
+      STRIPE_CREATE_PAYMENT_INTENT_RESULT -> external {
+        id : string!
+        object : string
+        amount : number
+        currency : string
+        status : string
+        client_secret : string
+        metadata : Map string string
+      }
+        @description "The PaymentIntent Stripe created, as Stripe returned it."
+        @synonyms "payment intent created, charge created"
+        @tier "primary"
+      STRIPE_CONFIRM_PAYMENT_RESULT -> external {
+        id : string!
+        object : string
+        amount : number
+        currency : string
+        status : string
+        client_secret : string
+        metadata : Map string string
+      }
+        @description "The PaymentIntent after the confirm attempt, as Stripe returned it."
+        @synonyms "payment confirmed, charge completed"
+        @tier "primary"
+      STRIPE_REFUND_RESULT -> external {
+        id : string!
+        object : string
+        amount : number
+        status : string
+      }
+        @description "The refund Stripe created, as Stripe returned it."
+        @synonyms "refund created, money returned"
+        @tier "primary"
+      STRIPE_CREATE_CUSTOMER_RESULT -> external {
+        customerId : string!
+        email : string!
+        almadarUid : string!
+      }
+        @description "The created Stripe Customer: its id and the email and Almadar user id Stripe echoed (empty when Stripe returned none)."
+        @synonyms "customer created, billing customer"
+        @tier "primary"
+      STRIPE_CREATE_CHECKOUT_SESSION_RESULT -> external {
+        url : string!
+        sessionId : string!
+        customerId : string!
+      }
+        @description "The hosted Checkout Session: the url to redirect to, its id and the customer id (empty when Stripe returned none)."
+        @synonyms "checkout url, hosted checkout"
+        @tier "primary"
+      STRIPE_CREATE_PORTAL_SESSION_RESULT -> external {
+        url : string
+        customerId : string!
+      }
+        @description "The hosted Billing Portal session url for the customer."
+        @synonyms "billing portal url, manage subscription"
+        @tier "primary"
+      STRIPE_GET_SUBSCRIPTION_RESULT -> external {
+        subscriptionId : string!
+        customerId : string!
+        status : string!
+        priceId : string!
+        quantity : number!
+        currentPeriodStart : string!
+        currentPeriodEnd : string!
+        cancelAtPeriodEnd : boolean
+        tier : string!
+      }
+        @description "The subscription in canonical form: ids, status, price, seats, period bounds as ISO timestamps, cancel flag and tier (solo, teams or empty)."
+        @synonyms "subscription fetched, subscription status"
+        @tier "primary"
+      STRIPE_CREATE_SUBSCRIPTION_RESULT -> external {
+        subscriptionId : string!
+        customerId : string!
+        status : string!
+        priceId : string!
+        quantity : number!
+        currentPeriodStart : string!
+        currentPeriodEnd : string!
+        cancelAtPeriodEnd : boolean
+        tier : string!
+      }
+        @description "The created subscription in canonical form."
+        @synonyms "subscription created, customer subscribed"
+        @tier "primary"
+      STRIPE_UPDATE_SUBSCRIPTION_RESULT -> external {
+        subscriptionId : string!
+        customerId : string!
+        status : string!
+        priceId : string!
+        quantity : number!
+        currentPeriodStart : string!
+        currentPeriodEnd : string!
+        cancelAtPeriodEnd : boolean
+        tier : string!
+      }
+        @description "The updated subscription in canonical form."
+        @synonyms "subscription updated, seats changed"
+        @tier "primary"
+      STRIPE_CANCEL_SUBSCRIPTION_RESULT -> external {
+        subscriptionId : string!
+        customerId : string!
+        status : string!
+        priceId : string!
+        quantity : number!
+        currentPeriodStart : string!
+        currentPeriodEnd : string!
+        cancelAtPeriodEnd : boolean
+        tier : string!
+      }
+        @description "The cancelled subscription in canonical form."
+        @synonyms "subscription cancelled, subscription ended"
+        @tier "primary"
+      STRIPE_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Any Stripe call that failed: Stripe's error message, a configuration error (unknown tier, price id not set), an unreadable reply or an unreachable Stripe (code is null)."
+        @synonyms "stripe error, payment failed, billing error"
+        @tier "primary"
+      STRIPE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string
+      }
+        @description "Internal: a Stripe call's HTTP reply."
+        @tier "secondary"
+      STRIPE_HTTP_FAILED {
+        error : string!
+        kind : string!
+        key : string
+      }
+        @description "Internal: a Stripe call never produced a reply."
+        @tier "secondary"
+      STRIPE_OK {
+        key : string!
+        body : string!
+      }
+        @description "Internal: a Stripe reply that carried no error."
+        @tier "secondary"
+      STRIPE_SUBSCRIPTION_SHAPED {
+        action : string!
+        subscriptionId : string!
+        customerId : string!
+        status : string!
+        priceId : string!
+        quantity : number!
+        currentPeriodStart : string!
+        currentPeriodEnd : string!
+        cancelAtPeriodEnd : boolean
+        tier : string!
+      }
+        @description "Internal: a subscription reply in canonical form, awaiting its action's result event."
+        @tier "secondary"
+      STRIPE_UPDATE_READY {
+        subscriptionId : string!
+        quantity : number
+        cancelAtPeriodEnd : boolean
+        itemId : string
+      }
+        @description "Internal: an update whose subscription item is known."
+        @tier "secondary"
+    }
+
+    listens {
+      STRIPE_CREATE_PAYMENT_INTENT -> external {
+        amount : number!
+        currency : string!
+        metadata : Map string string
+      }
+        @description "Create a PaymentIntent for a one-off charge; amount is in the currency's smallest unit."
+        @synonyms "charge, pay, one-off payment"
+      STRIPE_CONFIRM_PAYMENT -> external {
+        paymentIntentId : string!
+      }
+        @description "Confirm a PaymentIntent, attempting to complete the charge."
+        @synonyms "confirm payment, complete charge"
+      STRIPE_REFUND -> external {
+        paymentIntentId : string!
+        amount : number
+      }
+        @description "Refund a PaymentIntent in full, or in part when amount is given."
+        @synonyms "refund payment, return money"
+      STRIPE_CREATE_CUSTOMER -> external {
+        email : string!
+        almadarUid : string!
+        displayName : string
+      }
+        @description "Create a Stripe Customer for an Almadar user; the user id is stored as Stripe metadata."
+        @synonyms "new customer, billing customer"
+      STRIPE_CREATE_CHECKOUT_SESSION -> external {
+        customerId : string
+        tier : string!
+        quantity : number!
+        successUrl : string!
+        cancelUrl : string!
+        metadata : Map string string
+      }
+        @description "Create a hosted Checkout Session subscribing a customer to the solo or teams tier."
+        @synonyms "start checkout, subscribe checkout"
+      STRIPE_CREATE_PORTAL_SESSION -> external {
+        customerId : string!
+        returnUrl : string!
+      }
+        @description "Create a hosted Billing Portal session for plan self-service."
+        @synonyms "manage billing, customer portal"
+      STRIPE_GET_SUBSCRIPTION -> external {
+        subscriptionId : string!
+      }
+        @description "Fetch one subscription in canonical form."
+        @synonyms "get subscription, subscription status"
+      STRIPE_CREATE_SUBSCRIPTION -> external {
+        customerId : string!
+        tier : string!
+        quantity : number!
+        metadata : Map string string
+      }
+        @description "Subscribe a customer to the solo or teams tier directly, without Checkout."
+        @synonyms "subscribe customer, create plan"
+      STRIPE_UPDATE_SUBSCRIPTION -> external {
+        subscriptionId : string!
+        quantity : number
+        cancelAtPeriodEnd : boolean
+      }
+        @description "Change a subscription's seat count or its cancel-at-period-end flag."
+        @synonyms "change seats, resume subscription"
+      STRIPE_CANCEL_SUBSCRIPTION -> external {
+        subscriptionId : string!
+        atPeriodEnd : boolean
+      }
+        @description "Cancel a subscription at the period end (default) or immediately."
+        @synonyms "cancel subscription, end plan"
+      STRIPE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string
+      }
+      STRIPE_HTTP_FAILED {
+        error : string!
+        kind : string!
+        key : string
+      }
+      STRIPE_OK {
+        key : string!
+        body : string!
+      }
+      STRIPE_SUBSCRIPTION_SHAPED {
+        action : string!
+        subscriptionId : string!
+        customerId : string!
+        status : string!
+        priceId : string!
+        quantity : number!
+        currentPeriodStart : string!
+        currentPeriodEnd : string!
+        cancelAtPeriodEnd : boolean
+        tier : string!
+      }
+      STRIPE_UPDATE_READY {
+        subscriptionId : string!
+        quantity : number
+        cancelAtPeriodEnd : boolean
+        itemId : string
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable Stripe call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "https://api.stripe.com"
+        @label "Stripe API origin"
+        @description "The Stripe API origin (scheme://host, no path). Must be declared in the app egress list."
+        @synonyms "stripe url, api host"
+        @tier "infra"
+      apiVersion : string = "2025-02-24.acacia"
+        @label "Stripe API version"
+        @description "The Stripe-Version header pinned on every request."
+        @synonyms "api version, version pin"
+        @tier "infra"
+      secretKey : secret = "STRIPE_SECRET_KEY"
+        @label "Stripe secret key"
+        @description "Name of the credential holding the Stripe secret API key; sent only as the bearer token."
+        @synonyms "api key, secret key, stripe credential"
+        @tier "infra"
+      priceSolo : string = ""
+        @label "Solo price id"
+        @description "The Stripe price id of the solo tier (STRIPE_PRICE_SOLO); empty means checkout and subscriptions for solo report it as not configured."
+        @synonyms "solo price, solo plan price"
+        @tier "domain"
+      priceTeams : string = ""
+        @label "Teams price id"
+        @description "The Stripe price id of the teams tier (STRIPE_PRICE_TEAMS); empty means checkout and subscriptions for teams report it as not configured."
+        @synonyms "teams price, teams plan price"
+        @tier "domain"
+      timeoutMs : number = 80000
+        @label "Request timeout (ms)"
+        @description "Milliseconds each Stripe request may take before it fails."
+        @synonyms "timeout, request deadline"
+        @tier "infra"
+    }
+  }
+
+  page "/stripe" as StripePage -> StripeClient
+}

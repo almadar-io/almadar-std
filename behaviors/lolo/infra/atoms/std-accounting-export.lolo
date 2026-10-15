@@ -1,0 +1,112 @@
+app std-accounting-export [
+  version: "1.0.0",
+  description: "std-accounting — shapes invoice and journal rows into import-ready CSV. No network: ACCOUNTING_EXPORT_INVOICES and ACCOUNTING_EXPORT_JOURNAL each answer with the CSV content (CRLF rows, header first, cells quoted when they hold a quote, comma or line break), a dated filename and the row count."
+]
+type AccountingInvoice = {
+  id : string!
+  number : string!
+  customer : string!
+  issuedAt : string!
+  dueAt : string!
+  currency : string!
+  net : number!
+  tax : number!
+  gross : number!
+  status : string!
+}
+type AccountingEntry = {
+  date : string!
+  account : string!
+  description : string!
+  debit : number!
+  credit : number!
+  reference : string!
+}
+orbital AccountingOrbital {
+  entity AccountingExport [runtime] {
+    id : string!
+  }
+
+  trait AccountingExporter -> AccountingExport [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      ACCOUNTING_EXPORT_INVOICES -> idle
+        (emit ACCOUNTING_EXPORT_INVOICES_RESULT {
+          content: (str/concat
+            "id,number,customer,issuedAt,dueAt,currency,net,tax,gross,status\r\n"
+            (str/join
+              (array/map @payload.invoices (fn r (str/concat
+                (str/join
+                  (array/map
+                    [(str/concat "" @r.id) (str/concat "" @r.number) (str/concat "" @r.customer) (str/concat "" @r.issuedAt) (str/concat "" @r.dueAt)
+                     (str/concat "" @r.currency) (str/concat "" @r.net) (str/concat "" @r.tax) (str/concat "" @r.gross) (str/concat "" @r.status)]
+                    (fn c (if (or (str/includes @c "\"") (str/includes @c ",") (str/includes @c "\r") (str/includes @c "\n"))
+                      (str/concat "\"" (str/replaceAll @c "\"" "\"\"") "\"")
+                      @c)))
+                  ",")
+                "\r\n")))
+              ""))
+          filename: (str/concat "invoices-export-" (time/format (time/now) "YYYY-MM-DD") ".csv"),
+          count: (array/len @payload.invoices)
+        })
+
+      ACCOUNTING_EXPORT_JOURNAL -> idle
+        (emit ACCOUNTING_EXPORT_JOURNAL_RESULT {
+          content: (str/concat
+            "date,account,description,debit,credit,reference\r\n"
+            (str/join
+              (array/map @payload.entries (fn r (str/concat
+                (str/join
+                  (array/map
+                    [(str/concat "" @r.date) (str/concat "" @r.account) (str/concat "" @r.description) (str/concat "" @r.debit) (str/concat "" @r.credit) (str/concat "" @r.reference)]
+                    (fn c (if (or (str/includes @c "\"") (str/includes @c ",") (str/includes @c "\r") (str/includes @c "\n"))
+                      (str/concat "\"" (str/replaceAll @c "\"" "\"\"") "\"")
+                      @c)))
+                  ",")
+                "\r\n")))
+              ""))
+          filename: (str/concat "journal-export-" (time/format (time/now) "YYYY-MM-DD") ".csv"),
+          count: (array/len @payload.entries)
+        })
+    }
+
+    emits {
+      ACCOUNTING_EXPORT_INVOICES_RESULT -> external {
+        content : string!
+        filename : string!
+        count : number!
+      }
+        @description "The invoice rows as CSV (header id,number,customer,issuedAt,dueAt,currency,net,tax,gross,status; CRLF line ends), the dated filename and the row count."
+        @synonyms "invoice csv, invoice export, invoices file"
+        @tier "primary"
+      ACCOUNTING_EXPORT_JOURNAL_RESULT -> external {
+        content : string!
+        filename : string!
+        count : number!
+      }
+        @description "The journal entries as CSV (header date,account,description,debit,credit,reference; CRLF line ends), the dated filename and the row count."
+        @synonyms "journal csv, ledger export, journal file"
+        @tier "primary"
+    }
+
+    listens {
+      ACCOUNTING_EXPORT_INVOICES -> external {
+        invoices : [AccountingInvoice]!
+        format : string
+      }
+        @description "Shape invoice rows into an import-ready CSV export."
+        @synonyms "export invoices, invoice csv, accounting export"
+      ACCOUNTING_EXPORT_JOURNAL -> external {
+        entries : [AccountingEntry]!
+        format : string
+      }
+        @description "Shape journal entry rows into an import-ready CSV export."
+        @synonyms "export journal, ledger csv, journal entries export"
+    }
+  }
+
+  page "/accounting" as AccountingPage -> AccountingExporter
+}

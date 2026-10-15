@@ -20,6 +20,7 @@ import { ARRAY_OPERATORS } from './modules/array.js';
 import { OBJECT_OPERATORS } from './modules/object.js';
 import { JSON_OPERATORS } from './modules/json.js';
 import { CSV_OPERATORS } from './modules/csv.js';
+import { XML_OPERATORS } from './modules/xml.js';
 import { TIME_OPERATORS } from './modules/time.js';
 import { VALIDATE_OPERATORS } from './modules/validate.js';
 import { FORMAT_OPERATORS } from './modules/format.js';
@@ -51,7 +52,7 @@ import { MEMORY_OPERATORS } from './modules/memory.js';
 import { TRACE_OPERATORS } from './modules/trace.js';
 import { BEHAVIOR_OPERATORS } from './modules/behavior.js';
 import { PROGRAM_OPERATORS } from './modules/program.js';
-import { INTEGRATION_OPERATORS } from './modules/integration.js';
+import { BASE64_OPERATORS, HASH_OPERATORS, HMAC_OPERATORS } from './modules/codec.js';
 
 // ============================================================================
 // Combined Registry
@@ -98,7 +99,10 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...TRACE_OPERATORS,
   ...BEHAVIOR_OPERATORS,
   ...PROGRAM_OPERATORS,
-  ...INTEGRATION_OPERATORS,
+  ...BASE64_OPERATORS,
+  ...HASH_OPERATORS,
+  ...HMAC_OPERATORS,
+  ...XML_OPERATORS,
 };
 
 /**
@@ -147,7 +151,10 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   trace: TRACE_OPERATORS,
   behavior: BEHAVIOR_OPERATORS,
   program: PROGRAM_OPERATORS,
-  integration: INTEGRATION_OPERATORS,
+  base64: BASE64_OPERATORS,
+  hash: HASH_OPERATORS,
+  hmac: HMAC_OPERATORS,
+  xml: XML_OPERATORS,
 };
 
 // ============================================================================
@@ -310,12 +317,21 @@ export function getOperatorRunsOn(operator: string): RunsOn | undefined {
   return STD_OPERATORS[operator]?.runsOn;
 }
 
+/** The request argument of `(http METHOD origin path request? options?)`. */
+const HTTP_REQUEST_ARG = 3;
+
+/** A literal request without an `auth` key (even a null one), or none at all: the call carries no credential. Twin of Rust `effects::http_auth`. */
+function isHttpKeyless(request: unknown): boolean {
+  if (request === undefined || request === null) return true;
+  return typeof request === 'object' && !Array.isArray(request) && !('auth' in request);
+}
+
 /**
  * Where one effect call runs: its declared `runsOn`, except a data effect
  * (`entityArgPosition`) whose target entity stores its rows in the browser
  * (core's `storesRowsInBrowser` over the program's entities), or a
  * `call-service` to a browser-only service (core's `isBrowserOnlyService`),
- * which runs on the client. Undefined for a pure op. Twin of Rust
+ * or an `http` whose literal request has no `auth` key, which runs on the client. Undefined for a pure op. Twin of Rust
  * `effects::effect_site`.
  */
 export function effectSiteFor(
@@ -329,6 +345,7 @@ export function effectSiteFor(
     const service = args[0];
     return typeof service === 'string' && !service.startsWith('@') && isBrowserOnlyService(service) ? 'client' : 'server';
   }
+  if (operator === 'http' && site === 'server') return isHttpKeyless(args[HTTP_REQUEST_ARG]) ? 'client' : 'server';
   if (site !== 'server' || meta.entityArgPosition === undefined) return site;
   const entity = args[meta.entityArgPosition];
   return typeof entity === 'string' && !entity.startsWith('@') && storesRowsInBrowser(entity) ? 'client' : 'server';

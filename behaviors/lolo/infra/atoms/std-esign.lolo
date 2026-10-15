@@ -1,0 +1,246 @@
+app std-esign [
+  version: "1.0.0",
+  description: "std-esign — e-signature through the DocuSign eSignature REST API. ESIGN_SEND_ENVELOPE sends a document to one signer, ESIGN_GET_ENVELOPE_STATUS polls an envelope, ESIGN_DOWNLOAD_DOCUMENT fetches the combined signed PDF as base64. Each action answers with its result event, or its failure event ({code, message}) when DocuSign refuses (non-2xx), is unavailable (5xx) or cannot be reached.",
+  egress: ["https://demo.docusign.net", "https://na1.docusign.net", "https://na2.docusign.net", "https://na3.docusign.net", "https://na4.docusign.net", "https://eu.docusign.net", "https://au.docusign.net", "https://ca.docusign.net"]
+]
+type DocusignEnvelopeReply = { envelopeId : string, status : string, completedDateTime : string }
+orbital EsignOrbital {
+  entity EsignEnvelope [runtime] {
+    id : string!
+  }
+
+  trait EsignClient -> EsignEnvelope [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      ESIGN_SEND_ENVELOPE -> idle
+        (http POST @config.origin (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes") {
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          auth: { scheme: bearer, credential: @config.accessToken },
+          timeoutMs: @config.timeoutMs,
+          json: {
+            emailSubject: (str/default @payload.emailSubject (str/concat "Please sign: " @payload.documentName)),
+            status: "sent",
+            documents: [{
+              documentBase64: (if (and (str/startsWith @payload.documentContent "data:") (str/includes @payload.documentContent ",")) (str/join (array/drop (str/split @payload.documentContent ",") 1) ",") @payload.documentContent),
+              name: @payload.documentName,
+              fileExtension: (if (= (array/last (str/split @payload.documentName ".")) "") "pdf" (array/last (str/split @payload.documentName "."))),
+              documentId: "1"
+            }],
+            recipients: { signers: [{ email: @payload.recipientEmail, name: @payload.recipientName, recipientId: "1", routingOrder: "1" }] }
+          }
+        } { emit: { success: ESIGN_SEND_ENVELOPE_REPLIED, failure: ESIGN_SEND_ENVELOPE_UNREACHED } })
+      ESIGN_SEND_ENVELOPE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit ESIGN_ENVELOPE_SENT { envelopeId: (object/get (json/parse @payload.body DocusignEnvelopeReply) envelopeId ""), status: (object/get (json/parse @payload.body DocusignEnvelopeReply) status "sent") })
+      ESIGN_SEND_ENVELOPE_REPLIED -> idle when (>= @payload.status 500)
+        (emit ESIGN_SEND_ENVELOPE_FAILED { code: null, message: (str/concat "DocuSign returned " @payload.status) })
+      ESIGN_SEND_ENVELOPE_REPLIED -> idle when (or (< @payload.status 200) (and (>= @payload.status 300) (< @payload.status 500)))
+        (emit ESIGN_SEND_ENVELOPE_FAILED { code: null, message: (str/concat "DocuSign error " @payload.status ": " (str/slice @payload.body 0 300)) })
+      ESIGN_SEND_ENVELOPE_UNREACHED -> idle
+        (emit ESIGN_SEND_ENVELOPE_FAILED { code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "DocuSign unavailable: " @payload.error) })
+
+      ESIGN_GET_ENVELOPE_STATUS -> idle
+        (http GET @config.origin (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes/" @payload.envelopeId) {
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          auth: { scheme: bearer, credential: @config.accessToken },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: ESIGN_GET_ENVELOPE_STATUS_REPLIED, failure: ESIGN_GET_ENVELOPE_STATUS_UNREACHED } })
+      ESIGN_GET_ENVELOPE_STATUS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit ESIGN_ENVELOPE_STATUS { status: (object/get (json/parse @payload.body DocusignEnvelopeReply) status ""), completedAt: (object/get (json/parse @payload.body DocusignEnvelopeReply) completedDateTime "") })
+      ESIGN_GET_ENVELOPE_STATUS_REPLIED -> idle when (>= @payload.status 500)
+        (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { code: null, message: (str/concat "DocuSign returned " @payload.status) })
+      ESIGN_GET_ENVELOPE_STATUS_REPLIED -> idle when (or (< @payload.status 200) (and (>= @payload.status 300) (< @payload.status 500)))
+        (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { code: null, message: (str/concat "DocuSign error " @payload.status ": " (str/slice @payload.body 0 300)) })
+      ESIGN_GET_ENVELOPE_STATUS_UNREACHED -> idle
+        (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "DocuSign unavailable: " @payload.error) })
+
+      ESIGN_DOWNLOAD_DOCUMENT -> idle
+        (http GET @config.origin (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes/" @payload.envelopeId "/documents/combined") {
+          headers: { Accept: "application/pdf", "Content-Type": "application/json" },
+          auth: { scheme: bearer, credential: @config.accessToken },
+          timeoutMs: @config.timeoutMs,
+          responseAs: bytes
+        } { key: @payload.envelopeId, emit: { success: ESIGN_DOWNLOAD_DOCUMENT_REPLIED, failure: ESIGN_DOWNLOAD_DOCUMENT_UNREACHED } })
+      ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit ESIGN_DOCUMENT_DOWNLOADED { content: @payload.body, documentName: (str/concat "envelope-" @payload.key ".pdf") })
+      ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (>= @payload.status 500)
+        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { code: null, message: (str/concat "DocuSign returned " @payload.status) })
+      ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (or (< @payload.status 200) (and (>= @payload.status 300) (< @payload.status 500)))
+        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { code: null, message: (str/concat "DocuSign error " @payload.status ": " (str/slice (base64/decode @payload.body) 0 300)) })
+      ESIGN_DOWNLOAD_DOCUMENT_UNREACHED -> idle
+        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "DocuSign unavailable: " @payload.error) })
+    }
+
+    emits {
+      ESIGN_ENVELOPE_SENT -> external {
+        envelopeId : string!
+        status : string!
+      }
+        @description "The envelope DocuSign created for the document: its id (empty when the reply carried none) and its status (sent when absent)."
+        @synonyms "envelope sent, signature request created, document sent for signing"
+        @tier "primary"
+      ESIGN_ENVELOPE_STATUS -> external {
+        status : string!
+        completedAt : string!
+      }
+        @description "The envelope's signing status and completion timestamp; both empty when the reply carried none."
+        @synonyms "envelope status, signing progress, signature status"
+        @tier "primary"
+      ESIGN_DOCUMENT_DOWNLOADED -> external {
+        content : string!
+        documentName : string!
+      }
+        @description "The combined signed document as base64 PDF content, named envelope-<id>.pdf."
+        @synonyms "signed document, download pdf, signed contract"
+        @tier "primary"
+      ESIGN_SEND_ENVELOPE_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Sending the envelope failed: DocuSign answered non-2xx or 5xx, or could not be reached."
+        @synonyms "send failed, signature request error"
+        @tier "primary"
+      ESIGN_GET_ENVELOPE_STATUS_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Polling the envelope failed: DocuSign answered non-2xx or 5xx, or could not be reached."
+        @synonyms "status failed, envelope lookup error"
+        @tier "primary"
+      ESIGN_DOWNLOAD_DOCUMENT_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Downloading the signed document failed: DocuSign answered non-2xx or 5xx, or could not be reached."
+        @synonyms "download failed, signed document error"
+        @tier "primary"
+      ESIGN_SEND_ENVELOPE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the esign_send_envelope call's HTTP reply."
+        @tier "secondary"
+      ESIGN_SEND_ENVELOPE_UNREACHED {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the esign_send_envelope call never produced a reply."
+        @tier "secondary"
+      ESIGN_GET_ENVELOPE_STATUS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the esign_get_envelope_status call's HTTP reply."
+        @tier "secondary"
+      ESIGN_GET_ENVELOPE_STATUS_UNREACHED {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the esign_get_envelope_status call never produced a reply."
+        @tier "secondary"
+      ESIGN_DOWNLOAD_DOCUMENT_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string
+      }
+        @description "Internal: the document download's HTTP reply (body is base64)."
+        @tier "secondary"
+      ESIGN_DOWNLOAD_DOCUMENT_UNREACHED {
+        error : string!
+        kind : string!
+        key : string
+      }
+        @description "Internal: the document download never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      ESIGN_SEND_ENVELOPE -> external {
+        recipientEmail : string!
+        recipientName : string!
+        documentName : string!
+        documentContent : string!
+        emailSubject : string
+      }
+        @description "Send a document to one signer; documentContent is a base64 data URL or raw base64, emailSubject defaults to Please sign: plus the document name."
+        @synonyms "send for signature, create envelope, request e-signature"
+      ESIGN_GET_ENVELOPE_STATUS -> external {
+        envelopeId : string!
+      }
+        @description "Poll the signing status of an envelope returned by a send."
+        @synonyms "check envelope, signing status, poll signature"
+      ESIGN_DOWNLOAD_DOCUMENT -> external {
+        envelopeId : string!
+      }
+        @description "Download the combined signed document of an envelope as base64 PDF."
+        @synonyms "download signed pdf, get signed document, fetch contract"
+      ESIGN_SEND_ENVELOPE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      ESIGN_SEND_ENVELOPE_UNREACHED {
+        error : string!
+        kind : string!
+      }
+      ESIGN_GET_ENVELOPE_STATUS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      ESIGN_GET_ENVELOPE_STATUS_UNREACHED {
+        error : string!
+        kind : string!
+      }
+      ESIGN_DOWNLOAD_DOCUMENT_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string
+      }
+      ESIGN_DOWNLOAD_DOCUMENT_UNREACHED {
+        error : string!
+        kind : string!
+        key : string
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable DocuSign call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "https://demo.docusign.net"
+        @label "DocuSign API origin"
+        @description "The DocuSign base URI origin (scheme://host, no path) of the account; must be declared in the app egress list."
+        @synonyms "docusign host, base uri origin, esign api host"
+        @tier "infra"
+      basePath : string = "/restapi/v2.1/accounts"
+        @label "Account path"
+        @description "The account-scoped REST path after the origin, ending with the account id (for example /restapi/v2.1/accounts/<accountId>); a trailing slash is ignored."
+        @synonyms "account path, base path, account id path"
+        @tier "infra"
+      accessToken : secret = "DOCUSIGN_ACCESS_TOKEN"
+        @label "Access token credential"
+        @description "Name of the credential holding the DocuSign OAuth access token; resolved by the host on every call so a rotated value applies without restart."
+        @synonyms "docusign token, oauth token, api credential"
+        @tier "infra"
+      timeoutMs : number = 30000
+        @label "Request timeout (ms)"
+        @description "Milliseconds each DocuSign request may take before it fails."
+        @synonyms "timeout, request deadline, wait limit"
+        @tier "infra"
+    }
+  }
+
+  page "/esign" as EsignPage -> EsignClient
+}

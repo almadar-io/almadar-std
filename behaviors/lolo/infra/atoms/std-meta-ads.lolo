@@ -1,0 +1,226 @@
+app std-meta-ads [
+  version: "1.0.0",
+  description: "std-meta-ads — read-only Meta Graph API Marketing Insights. META_ADS_GET_SPEND answers total spend, impressions and clicks of an ad account over a date range; META_ADS_LIST_CAMPAIGNS lists the account's campaigns with dailyBudget converted from Meta's minor units. The access token is a secret knob sent as the access_token query parameter; a failed call answers META_ADS_FAILED.",
+  egress: ["https://graph.facebook.com"]
+]
+type MetaInsightRow = { spend : string, impressions : string, clicks : string, account_currency : string }
+type MetaInsightsReply = { data : [MetaInsightRow] }
+type MetaCampaignRow = { id : string, name : string, status : string, daily_budget : string }
+type MetaCampaignsReply = { data : [MetaCampaignRow] }
+type MetaCampaign = { id : string, name : string, status : string, dailyBudget : number }
+type MetaCount = { v : number }
+type MetaErrorDetail = { message : string }
+type MetaErrorReply = { error : MetaErrorDetail }
+orbital MetaAdsOrbital {
+  entity MetaAdsLookup [runtime] {
+    id : string!
+  }
+
+  trait MetaAdsClient -> MetaAdsLookup [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      META_ADS_GET_SPEND -> idle when (= (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+        (emit META_ADS_FAILED { code: null, message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
+      META_ADS_GET_SPEND -> idle when (!= (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+        (http GET @config.origin
+          (str/concat "/" @config.apiVersion "/"
+            (if (str/startsWith (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "act_") "" "act_")
+            (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId)
+            "/insights")
+          {
+            query: {
+              fields: "spend,impressions,clicks,account_currency",
+              time_range: (str/concat "{\"since\":" (json/stringify @payload.since) ",\"until\":" (json/stringify @payload.until) "}"),
+              level: "account"
+            },
+            headers: { Accept: "*/*" },
+            auth: { scheme: api-key, credential: @config.accessToken, name: "access_token", in: query },
+            timeoutMs: @config.timeoutMs
+          } { emit: { success: META_ADS_SPEND_REPLIED, failure: META_ADS_SPEND_FAILED } })
+      META_ADS_SPEND_REPLIED -> idle when (>= @payload.status 500)
+        (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API returned " (format/number @payload.status)) })
+      META_ADS_SPEND_REPLIED -> idle when (and (< @payload.status 500) (or (< @payload.status 200) (>= @payload.status 300)))
+        (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
+      META_ADS_SPEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (let ((row (array/first (or (object/get (json/parse @payload.body MetaInsightsReply) data []) []))))
+          (emit META_ADS_SPEND_RESULT {
+            spend: (if (= (str/trim (object/get @row spend "")) "") 0 (object/get (json/parse (str/concat "{\"v\":" (object/get @row spend "") "}") MetaCount) v null)),
+            currency: (object/get @row account_currency ""),
+            impressions: (if (= (str/trim (object/get @row impressions "")) "") 0 (object/get (json/parse (str/concat "{\"v\":" (object/get @row impressions "") "}") MetaCount) v null)),
+            clicks: (if (= (str/trim (object/get @row clicks "")) "") 0 (object/get (json/parse (str/concat "{\"v\":" (object/get @row clicks "") "}") MetaCount) v null))
+          }))
+      META_ADS_SPEND_FAILED -> idle when (str/startsWith @payload.error "credential missing: ")
+        (emit META_ADS_FAILED { code: null, message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
+      META_ADS_SPEND_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (= @payload.kind "timeout"))
+        (emit META_ADS_FAILED { code: null, message: "The operation was aborted due to timeout" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
+      META_ADS_SPEND_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (!= @payload.kind "timeout"))
+        (emit META_ADS_FAILED { code: null, message: "fetch failed" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
+
+      META_ADS_LIST_CAMPAIGNS -> idle when (= (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+        (emit META_ADS_FAILED { code: null, message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
+      META_ADS_LIST_CAMPAIGNS -> idle when (!= (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+        (http GET @config.origin
+          (str/concat "/" @config.apiVersion "/"
+            (if (str/startsWith (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "act_") "" "act_")
+            (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId)
+            "/campaigns")
+          {
+            query: {
+              fields: "id,name,status,daily_budget",
+              effective_status: (if (!= (or @payload.status "") "") (json/stringify [@payload.status]) null)
+            },
+            headers: { Accept: "*/*" },
+            auth: { scheme: api-key, credential: @config.accessToken, name: "access_token", in: query },
+            timeoutMs: @config.timeoutMs
+          } { emit: { success: META_ADS_CAMPAIGNS_REPLIED, failure: META_ADS_CAMPAIGNS_FAILED } })
+      META_ADS_CAMPAIGNS_REPLIED -> idle when (>= @payload.status 500)
+        (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API returned " (format/number @payload.status)) })
+      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (< @payload.status 500) (or (< @payload.status 200) (>= @payload.status 300)))
+        (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
+      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit META_ADS_CAMPAIGNS_RESULT {
+          campaigns: (array/map (or (object/get (json/parse @payload.body MetaCampaignsReply) data []) []) (fn row {
+            id: (object/get @row id ""),
+            name: (object/get @row name ""),
+            status: (object/get @row status ""),
+            dailyBudget: (if (= (str/trim (object/get @row daily_budget "")) "") 0 (/ (object/get (json/parse (str/concat "{\"v\":" (object/get @row daily_budget "") "}") MetaCount) v null) 100))
+          }))
+        })
+      META_ADS_CAMPAIGNS_FAILED -> idle when (str/startsWith @payload.error "credential missing: ")
+        (emit META_ADS_FAILED { code: null, message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
+      META_ADS_CAMPAIGNS_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (= @payload.kind "timeout"))
+        (emit META_ADS_FAILED { code: null, message: "The operation was aborted due to timeout" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
+      META_ADS_CAMPAIGNS_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (!= @payload.kind "timeout"))
+        (emit META_ADS_FAILED { code: null, message: "fetch failed" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Meta Ads unavailable: " @payload.error) })
+    }
+
+    emits {
+      META_ADS_SPEND_RESULT -> external {
+        spend : number
+        currency : string!
+        impressions : number
+        clicks : number
+      }
+        @description "Total spend, impressions and clicks of the ad account over the range; zeros and an empty currency when Meta returns no rows, spend null when Meta's figure is not numeric."
+        @synonyms "ad spend, meta spend, facebook ads cost, campaign insights"
+        @tier "primary"
+      META_ADS_CAMPAIGNS_RESULT -> external {
+        campaigns : [MetaCampaign]!
+      }
+        @description "The ad account's campaigns with id, name, status and dailyBudget in major currency units."
+        @synonyms "meta campaigns, facebook ad campaigns, campaign list"
+        @tier "primary"
+      META_ADS_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "The Meta Graph call failed: no ad account, missing access token, unreachable API, a 5xx reply or a Graph API error message."
+        @synonyms "meta ads error, graph api failure"
+        @tier "primary"
+      META_ADS_SPEND_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the insights call's HTTP reply."
+        @tier "secondary"
+      META_ADS_SPEND_FAILED {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the insights call never produced a reply."
+        @tier "secondary"
+      META_ADS_CAMPAIGNS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the campaigns call's HTTP reply."
+        @tier "secondary"
+      META_ADS_CAMPAIGNS_FAILED {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the campaigns call never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      META_ADS_GET_SPEND -> external {
+        accountId : string
+        since : string!
+        until : string!
+      }
+        @description "Fetch total spend, impressions and clicks of an ad account (id with or without the act_ prefix; defaults to the defaultAccountId knob) for a date range (YYYY-MM-DD)."
+        @synonyms "get ad spend, meta spend report, insights for range"
+      META_ADS_LIST_CAMPAIGNS -> external {
+        accountId : string
+        status : string
+      }
+        @description "List campaigns of an ad account, optionally filtered by effective status (ACTIVE, PAUSED)."
+        @synonyms "list meta campaigns, campaigns by status"
+      META_ADS_SPEND_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      META_ADS_SPEND_FAILED {
+        error : string!
+        kind : string!
+      }
+      META_ADS_CAMPAIGNS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      META_ADS_CAMPAIGNS_FAILED {
+        error : string!
+        kind : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable Graph API call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "https://graph.facebook.com"
+        @label "Graph API origin"
+        @description "The Meta Graph API origin (scheme://host, no path). Must be declared in the app egress list."
+        @synonyms "graph url, api host, meta origin"
+        @tier "infra"
+      apiVersion : string = "v21.0"
+        @label "Graph API version"
+        @description "The Graph API version path segment."
+        @synonyms "api version, graph version"
+        @tier "infra"
+      accessToken : secret = "META_ACCESS_TOKEN"
+        @label "Access token credential"
+        @description "Name of the credential holding the Meta Graph access token (Marketing API, ads_read); sent as the access_token query parameter."
+        @synonyms "meta token, graph token, ads_read token"
+        @tier "infra"
+      defaultAccountId : string = ""
+        @label "Default ad account id"
+        @description "Ad account id used when a request passes none (with or without the act_ prefix)."
+        @synonyms "ad account, default account"
+        @tier "infra"
+      timeoutMs : number = 15000
+        @label "Request timeout (ms)"
+        @description "Milliseconds each Graph API request may take before it fails."
+        @synonyms "timeout, request deadline"
+        @tier "infra"
+    }
+  }
+
+  page "/meta-ads" as MetaAdsPage -> MetaAdsClient
+}

@@ -1,0 +1,330 @@
+app std-google-calendar [
+  version: "1.0.0",
+  description: "std-google-calendar — Google Calendar through the REST API (www.googleapis.com/calendar/v3): list, create, update and delete events, free-busy queries and push-channel watch. Each action is one input event with a typed payload and one result event carrying the provider's result record; an API or transport failure answers on that action's failure event with the error message.",
+  egress: ["https://www.googleapis.com"]
+]
+type CalendarRawTime = { dateTime : string, date : string }
+type CalendarRawEvent = { id : string, summary : string, description : string, location : string, start : CalendarRawTime, end : CalendarRawTime, status : string, updated : string }
+type CalendarEventsReply = { items : [CalendarRawEvent], nextSyncToken : string }
+type CalendarEventRecord = { id : string, summary : string, description : string, location : string, start : string, end : string, status : string, updated : string }
+type CalendarCreatedReply = { id : string, status : string, htmlLink : string }
+type CalendarPatchedReply = { id : string, status : string }
+type CalendarBusySlot = { start : string, end : string }
+type CalendarFreeBusyCalendar = { busy : [CalendarBusySlot] }
+type CalendarFreeBusyReply = { calendars : Map string CalendarFreeBusyCalendar }
+type CalendarWatchReply = { id : string, resourceId : string, expiration : string }
+type CalendarApiErrorItem = { message : string, domain : string }
+type CalendarApiError = { code : number, message : string, errors : [CalendarApiErrorItem] }
+type CalendarErrorReply = { error : CalendarApiError }
+type CalendarErrorStringReply = { error : string }
+type CalendarCall = { op : string, attempt : number, calendarId : string, eventId : string, channelId : string, timeMin : string, timeMax : string, syncToken : string, maxResults : number }
+orbital CalendarOrbital {
+  entity CalendarRequest [runtime] {
+    id : string!
+    callKey : string
+  }
+
+  trait CalendarClient -> CalendarRequest [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      CALENDAR_LIST_EVENTS -> idle
+        (do (set @entity.callKey (json/stringify { op: "list", attempt: 0, calendarId: (or @payload.calendarId @config.calendarId), eventId: "", channelId: "", timeMin: (or @payload.timeMin ""), timeMax: (or @payload.timeMax ""), syncToken: (or @payload.syncToken ""), maxResults: (or @payload.maxResults 250) })) (http GET @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events") { headers: { Accept: "*/*" }, query: { syncToken: (if (!= (or @payload.syncToken "") "") (or @payload.syncToken "") null), timeMin: (if (and (not (!= (or @payload.syncToken "") "")) (!= (or @payload.timeMin "") "")) (or @payload.timeMin "") null), timeMax: (if (and (not (!= (or @payload.syncToken "") "")) (!= (or @payload.timeMax "") "")) (or @payload.timeMax "") null), singleEvents: (if (!= (or @payload.syncToken "") "") null "true"), orderBy: (if (!= (or @payload.syncToken "") "") null "startTime"), maxResults: (or @payload.maxResults 250) }, auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))
+      CALENDAR_CREATE_EVENT -> idle when (!= @payload.end "")
+        (do (set @entity.callKey (json/stringify { op: "create", attempt: 0, calendarId: (or @payload.calendarId @config.calendarId), eventId: "", channelId: "", timeMin: "", timeMax: "", syncToken: "", maxResults: 0 })) (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events") { headers: { Accept: "*/*", Content-Type: "application/json" }, text: (str/concat "{" (str/join (array/filter [(str/concat "\"summary\":" (json/stringify @payload.summary)) (if (!= @payload.description "") (str/concat "\"description\":" (json/stringify @payload.description)) "") (if (!= @payload.location "") (str/concat "\"location\":" (json/stringify @payload.location)) "") (str/concat "\"start\":" (if (= (str/len @payload.start) 10) (str/concat "{\"date\":" (json/stringify @payload.start) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.start) "}"))) (str/concat "\"end\":" (if (= (str/len @payload.end) 10) (str/concat "{\"date\":" (json/stringify @payload.end) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.end) "}")))] (fn p (!= @p ""))) ",") "}"), auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))
+      CALENDAR_CREATE_EVENT -> idle when (and (= @payload.end "") (= (str/len @payload.start) 10))
+        (do (set @entity.callKey (json/stringify { op: "create", attempt: 0, calendarId: (or @payload.calendarId @config.calendarId), eventId: "", channelId: "", timeMin: "", timeMax: "", syncToken: "", maxResults: 0 })) (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events") { headers: { Accept: "*/*", Content-Type: "application/json" }, text: (str/concat "{" (str/join (array/filter [(str/concat "\"summary\":" (json/stringify @payload.summary)) (if (!= @payload.description "") (str/concat "\"description\":" (json/stringify @payload.description)) "") (if (!= @payload.location "") (str/concat "\"location\":" (json/stringify @payload.location)) "") (str/concat "\"start\":" (if (= (str/len @payload.start) 10) (str/concat "{\"date\":" (json/stringify @payload.start) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.start) "}"))) (str/concat "\"end\":" (if (= (str/len (time/format (time/add (time/parse @payload.start) 1 day) "YYYY-MM-DD")) 10) (str/concat "{\"date\":" (json/stringify (time/format (time/add (time/parse @payload.start) 1 day) "YYYY-MM-DD")) "}") (str/concat "{\"dateTime\":" (json/stringify (time/format (time/add (time/parse @payload.start) 1 day) "YYYY-MM-DD")) "}")))] (fn p (!= @p ""))) ",") "}"), auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))
+      CALENDAR_CREATE_EVENT -> idle when (and (= @payload.end "") (!= (str/len @payload.start) 10) (> (or @payload.durationMinutes 0) 0))
+        (emit CALENDAR_CREATE_EVENT_FAILED { code: null, message: "createEvent derives a timed end from durationMinutes, which needs full ISO time parsing (time/parse drops the time of day); pass an explicit end" })
+      CALENDAR_CREATE_EVENT -> idle when (and (= @payload.end "") (!= (str/len @payload.start) 10) (<= (or @payload.durationMinutes 0) 0))
+        (emit CALENDAR_CREATE_EVENT_FAILED { code: null, message: "createEvent requires `end` or a positive `durationMinutes`" })
+      CALENDAR_UPDATE_EVENT -> idle
+        (do (set @entity.callKey (json/stringify { op: "update", attempt: 0, calendarId: (or @payload.calendarId @config.calendarId), eventId: @payload.eventId, channelId: "", timeMin: "", timeMax: "", syncToken: "", maxResults: 0 })) (http PATCH @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events/" (str/encode-uri-component @payload.eventId)) { headers: { Accept: "*/*", Content-Type: "application/json" }, text: (str/concat "{" (str/join (array/filter [(if (object/has @payload summary) (str/concat "\"summary\":" (json/stringify @payload.summary)) "") (if (object/has @payload description) (str/concat "\"description\":" (json/stringify @payload.description)) "") (if (object/has @payload location) (str/concat "\"location\":" (json/stringify @payload.location)) "") (if (!= @payload.start "") (str/concat "\"start\":" (if (= (str/len @payload.start) 10) (str/concat "{\"date\":" (json/stringify @payload.start) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.start) "}"))) "") (if (!= @payload.end "") (str/concat "\"end\":" (if (= (str/len @payload.end) 10) (str/concat "{\"date\":" (json/stringify @payload.end) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.end) "}"))) "")] (fn p (!= @p ""))) ",") "}"), auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))
+      CALENDAR_DELETE_EVENT -> idle
+        (do (set @entity.callKey (json/stringify { op: "delete", attempt: 0, calendarId: (or @payload.calendarId @config.calendarId), eventId: @payload.eventId, channelId: "", timeMin: "", timeMax: "", syncToken: "", maxResults: 0 })) (http DELETE @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events/" (str/encode-uri-component @payload.eventId)) { headers: { Accept: "*/*" }, auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))
+      CALENDAR_FREE_BUSY -> idle
+        (do (set @entity.callKey (json/stringify { op: "freeBusy", attempt: 0, calendarId: (or @payload.calendarId @config.calendarId), eventId: "", channelId: "", timeMin: "", timeMax: "", syncToken: "", maxResults: 0 })) (http POST @config.origin "/calendar/v3/freeBusy" { headers: { Accept: "*/*" }, json: { timeMin: @payload.timeMin, timeMax: @payload.timeMax, items: [{ id: (or @payload.calendarId @config.calendarId) }] }, auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))
+      CALENDAR_WATCH -> idle
+        (do (set @entity.callKey (json/stringify { op: "watch", attempt: 0, calendarId: (or @payload.calendarId @config.calendarId), eventId: "", channelId: @payload.channelId, timeMin: "", timeMax: "", syncToken: "", maxResults: 0 })) (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events/watch") { headers: { Accept: "*/*", Content-Type: "application/json" }, text: (str/concat "{" (str/join (array/filter [(str/concat "\"id\":" (json/stringify @payload.channelId)) (str/concat "\"type\":" "\"web_hook\"") (str/concat "\"address\":" (json/stringify @payload.address)) (if (!= (or @payload.ttlSeconds 0) 0) (str/concat "\"params\":{\"ttl\":" (json/stringify (str/concat @payload.ttlSeconds)) "}") "")] (fn p (!= @p ""))) ",") "}"), auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))
+      CALENDAR_STOP_WATCH -> idle
+        (do (set @entity.callKey (json/stringify { op: "stopWatch", attempt: 0, calendarId: "", eventId: "", channelId: "", timeMin: "", timeMax: "", syncToken: "", maxResults: 0 })) (http POST @config.origin "/calendar/v3/channels/stop" { headers: { Accept: "*/*" }, json: { id: @payload.channelId, resourceId: @payload.resourceId }, auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))
+      CALENDAR_REPLIED -> idle when (and (= (object/get (json/parse @payload.key CalendarCall) op "") "list") (< (object/get (json/parse @payload.key CalendarCall) attempt 0) 3) (or (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600)) (and (>= @payload.status 100) (< @payload.status 200))))
+        (let ((call (json/parse @payload.key CalendarCall))) (do (set @entity.callKey (json/stringify { op: "list", attempt: (+ (object/get @call attempt 0) 1), calendarId: (object/get @call calendarId ""), eventId: "", channelId: "", timeMin: (object/get @call timeMin ""), timeMax: (object/get @call timeMax ""), syncToken: (object/get @call syncToken ""), maxResults: (object/get @call maxResults 0) })) (http GET @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (object/get @call calendarId "")) "/events") { headers: { Accept: "*/*" }, query: { syncToken: (if (!= (object/get @call syncToken "") "") (object/get @call syncToken "") null), timeMin: (if (and (not (!= (object/get @call syncToken "") "")) (!= (object/get @call timeMin "") "")) (object/get @call timeMin "") null), timeMax: (if (and (not (!= (object/get @call syncToken "") "")) (!= (object/get @call timeMax "") "")) (object/get @call timeMax "") null), singleEvents: (if (!= (object/get @call syncToken "") "") null "true"), orderBy: (if (!= (object/get @call syncToken "") "") null "startTime"), maxResults: (object/get @call maxResults 0) }, auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })))
+      CALENDAR_REPLIED -> idle when (and (= (object/get (json/parse @payload.key CalendarCall) op "") "delete") (< (object/get (json/parse @payload.key CalendarCall) attempt 0) 3) (or (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600)) (and (>= @payload.status 100) (< @payload.status 200))))
+        (let ((call (json/parse @payload.key CalendarCall))) (do (set @entity.callKey (json/stringify { op: "delete", attempt: (+ (object/get @call attempt 0) 1), calendarId: (object/get @call calendarId ""), eventId: (object/get @call eventId ""), channelId: "", timeMin: "", timeMax: "", syncToken: "", maxResults: 0 })) (http DELETE @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (object/get @call calendarId "")) "/events/" (str/encode-uri-component (object/get @call eventId ""))) { headers: { Accept: "*/*" }, auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })))
+      CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key CalendarCall) op "") "list"))
+        (emit CALENDAR_EVENTS_LISTED { events: (array/map (or (object/get (json/parse @payload.body CalendarEventsReply) items []) []) (fn i { id: (or (object/get @i id "") ""), summary: (or (object/get @i summary "") ""), description: (or (object/get @i description "") ""), location: (or (object/get @i location "") ""), start: (or (object/get @i "start.dateTime" "") (object/get @i "start.date" "") ""), end: (or (object/get @i "end.dateTime" "") (object/get @i "end.date" "") ""), status: (or (object/get @i status "") ""), updated: (or (object/get @i updated "") "") })), nextSyncToken: (object/get (json/parse @payload.body CalendarEventsReply) nextSyncToken null) })
+      CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key CalendarCall) op "") "create"))
+        (emit CALENDAR_EVENT_CREATED { id: (or (object/get (json/parse @payload.body CalendarCreatedReply) id "") ""), status: (or (object/get (json/parse @payload.body CalendarCreatedReply) status "") ""), htmlLink: (or (object/get (json/parse @payload.body CalendarCreatedReply) htmlLink "") "") })
+      CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key CalendarCall) op "") "update"))
+        (emit CALENDAR_EVENT_UPDATED { id: (or (object/get (json/parse @payload.body CalendarPatchedReply) id "") ""), status: (or (object/get (json/parse @payload.body CalendarPatchedReply) status "") "") })
+      CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key CalendarCall) op "") "delete"))
+        (emit CALENDAR_EVENT_DELETED { id: (object/get (json/parse @payload.key CalendarCall) eventId ""), deleted: true })
+      CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key CalendarCall) op "") "freeBusy"))
+        (emit CALENDAR_FREE_BUSY_RESULT { busy: (array/map (object/get (object/get (object/get (json/parse @payload.body CalendarFreeBusyReply) calendars {}) (object/get (json/parse @payload.key CalendarCall) calendarId "") {}) busy []) (fn s { start: (or (object/get @s start "") ""), end: (or (object/get @s end "") "") })) })
+      CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key CalendarCall) op "") "watch"))
+        (emit CALENDAR_WATCHED { channelId: (or (object/get (json/parse @payload.body CalendarWatchReply) id "") (object/get (json/parse @payload.key CalendarCall) channelId "")), resourceId: (or (object/get (json/parse @payload.body CalendarWatchReply) resourceId "") ""), expiration: (or (object/get (json/parse @payload.body CalendarWatchReply) expiration "") "") })
+      CALENDAR_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key CalendarCall) op "") "stopWatch"))
+        (emit CALENDAR_WATCH_STOPPED { stopped: true })
+      CALENDAR_REPLIED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "list")
+        (emit CALENDAR_LIST_EVENTS_FAILED { code: null, message: (if (= (object/get (json/parse @payload.body CalendarErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse @payload.body CalendarErrorReply)) "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.body CalendarErrorReply) error null)) "\"") (object/get (json/parse @payload.body CalendarErrorStringReply) error "") (if (object/has (json/parse @payload.body CalendarErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.body CalendarErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.body CalendarErrorReply) "error.message" "") "")))) })
+      CALENDAR_REPLIED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "create")
+        (emit CALENDAR_CREATE_EVENT_FAILED { code: null, message: (if (= (object/get (json/parse @payload.body CalendarErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse @payload.body CalendarErrorReply)) "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.body CalendarErrorReply) error null)) "\"") (object/get (json/parse @payload.body CalendarErrorStringReply) error "") (if (object/has (json/parse @payload.body CalendarErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.body CalendarErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.body CalendarErrorReply) "error.message" "") "")))) })
+      CALENDAR_REPLIED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "update")
+        (emit CALENDAR_UPDATE_EVENT_FAILED { code: null, message: (if (= (object/get (json/parse @payload.body CalendarErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse @payload.body CalendarErrorReply)) "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.body CalendarErrorReply) error null)) "\"") (object/get (json/parse @payload.body CalendarErrorStringReply) error "") (if (object/has (json/parse @payload.body CalendarErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.body CalendarErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.body CalendarErrorReply) "error.message" "") "")))) })
+      CALENDAR_REPLIED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "delete")
+        (emit CALENDAR_DELETE_EVENT_FAILED { code: null, message: (if (= (object/get (json/parse @payload.body CalendarErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse @payload.body CalendarErrorReply)) "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.body CalendarErrorReply) error null)) "\"") (object/get (json/parse @payload.body CalendarErrorStringReply) error "") (if (object/has (json/parse @payload.body CalendarErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.body CalendarErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.body CalendarErrorReply) "error.message" "") "")))) })
+      CALENDAR_REPLIED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "freeBusy")
+        (emit CALENDAR_FREE_BUSY_FAILED { code: null, message: (if (= (object/get (json/parse @payload.body CalendarErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse @payload.body CalendarErrorReply)) "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.body CalendarErrorReply) error null)) "\"") (object/get (json/parse @payload.body CalendarErrorStringReply) error "") (if (object/has (json/parse @payload.body CalendarErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.body CalendarErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.body CalendarErrorReply) "error.message" "") "")))) })
+      CALENDAR_REPLIED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "watch")
+        (emit CALENDAR_WATCH_FAILED { code: null, message: (if (= (object/get (json/parse @payload.body CalendarErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse @payload.body CalendarErrorReply)) "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.body CalendarErrorReply) error null)) "\"") (object/get (json/parse @payload.body CalendarErrorStringReply) error "") (if (object/has (json/parse @payload.body CalendarErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.body CalendarErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.body CalendarErrorReply) "error.message" "") "")))) })
+      CALENDAR_REPLIED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "stopWatch")
+        (emit CALENDAR_STOP_WATCH_FAILED { code: null, message: (if (= (object/get (json/parse @payload.body CalendarErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse @payload.body CalendarErrorReply)) "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.body CalendarErrorReply) error null)) "\"") (object/get (json/parse @payload.body CalendarErrorStringReply) error "") (if (object/has (json/parse @payload.body CalendarErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.body CalendarErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.body CalendarErrorReply) "error.message" "") "")))) })
+      CALENDAR_REQUEST_FAILED -> idle when (and (= (object/get (json/parse @payload.key CalendarCall) op "") "list") (< (object/get (json/parse @payload.key CalendarCall) attempt 0) 2))
+        (let ((call (json/parse @payload.key CalendarCall))) (do (set @entity.callKey (json/stringify { op: "list", attempt: (+ (object/get @call attempt 0) 1), calendarId: (object/get @call calendarId ""), eventId: "", channelId: "", timeMin: (object/get @call timeMin ""), timeMax: (object/get @call timeMax ""), syncToken: (object/get @call syncToken ""), maxResults: (object/get @call maxResults 0) })) (http GET @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (object/get @call calendarId "")) "/events") { headers: { Accept: "*/*" }, query: { syncToken: (if (!= (object/get @call syncToken "") "") (object/get @call syncToken "") null), timeMin: (if (and (not (!= (object/get @call syncToken "") "")) (!= (object/get @call timeMin "") "")) (object/get @call timeMin "") null), timeMax: (if (and (not (!= (object/get @call syncToken "") "")) (!= (object/get @call timeMax "") "")) (object/get @call timeMax "") null), singleEvents: (if (!= (object/get @call syncToken "") "") null "true"), orderBy: (if (!= (object/get @call syncToken "") "") null "startTime"), maxResults: (object/get @call maxResults 0) }, auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })))
+      CALENDAR_REQUEST_FAILED -> idle when (and (= (object/get (json/parse @payload.key CalendarCall) op "") "delete") (< (object/get (json/parse @payload.key CalendarCall) attempt 0) 2))
+        (let ((call (json/parse @payload.key CalendarCall))) (do (set @entity.callKey (json/stringify { op: "delete", attempt: (+ (object/get @call attempt 0) 1), calendarId: (object/get @call calendarId ""), eventId: (object/get @call eventId ""), channelId: "", timeMin: "", timeMax: "", syncToken: "", maxResults: 0 })) (http DELETE @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (object/get @call calendarId "")) "/events/" (str/encode-uri-component (object/get @call eventId ""))) { headers: { Accept: "*/*" }, auth: { scheme: bearer, credential: @config.accessToken }, timeoutMs: @config.timeoutMs } { key: @entity.callKey, emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })))
+      CALENDAR_REQUEST_FAILED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "list")
+        (emit CALENDAR_LIST_EVENTS_FAILED { code: null, message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Google Calendar unavailable: " @payload.error) })
+      CALENDAR_REQUEST_FAILED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "create")
+        (emit CALENDAR_CREATE_EVENT_FAILED { code: null, message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Google Calendar unavailable: " @payload.error) })
+      CALENDAR_REQUEST_FAILED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "update")
+        (emit CALENDAR_UPDATE_EVENT_FAILED { code: null, message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Google Calendar unavailable: " @payload.error) })
+      CALENDAR_REQUEST_FAILED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "delete")
+        (emit CALENDAR_DELETE_EVENT_FAILED { code: null, message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Google Calendar unavailable: " @payload.error) })
+      CALENDAR_REQUEST_FAILED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "freeBusy")
+        (emit CALENDAR_FREE_BUSY_FAILED { code: null, message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Google Calendar unavailable: " @payload.error) })
+      CALENDAR_REQUEST_FAILED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "watch")
+        (emit CALENDAR_WATCH_FAILED { code: null, message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Google Calendar unavailable: " @payload.error) })
+      CALENDAR_REQUEST_FAILED -> idle when (= (object/get (json/parse @payload.key CalendarCall) op "") "stopWatch")
+        (emit CALENDAR_STOP_WATCH_FAILED { code: null, message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Google Calendar unavailable: " @payload.error) })
+    }
+
+    emits {
+      CALENDAR_EVENTS_LISTED -> external {
+        events : [CalendarEventRecord]!
+        nextSyncToken : string
+      }
+        @description "The events of the listed calendar, mapped to flat records (start and end are dateTime or date text), and the next incremental-sync token when the API returned one."
+        @synonyms "listed events, calendar events result"
+        @tier "primary"
+      CALENDAR_EVENT_CREATED -> external {
+        id : string!
+        status : string!
+        htmlLink : string!
+      }
+        @description "The created event: id, status and link (blank when the API named none)."
+        @synonyms "event created, new event"
+        @tier "primary"
+      CALENDAR_EVENT_UPDATED -> external {
+        id : string!
+        status : string!
+      }
+        @description "The patched event: id and status (blank when the API named none)."
+        @synonyms "event updated, event patched"
+        @tier "primary"
+      CALENDAR_EVENT_DELETED -> external {
+        id : string!
+        deleted : boolean!
+      }
+        @description "The deleted event id."
+        @synonyms "event deleted, event removed"
+        @tier "primary"
+      CALENDAR_FREE_BUSY_RESULT -> external {
+        busy : [CalendarBusySlot]!
+      }
+        @description "Busy time blocks of the queried calendar within the window."
+        @synonyms "busy slots, availability result"
+        @tier "primary"
+      CALENDAR_WATCHED -> external {
+        channelId : string!
+        resourceId : string!
+        expiration : string!
+      }
+        @description "The registered notification channel; expiration is epoch milliseconds as text."
+        @synonyms "watch registered, channel created"
+        @tier "primary"
+      CALENDAR_WATCH_STOPPED -> external {
+        stopped : boolean!
+      }
+        @description "The watch channel was stopped."
+        @synonyms "watch stopped, channel closed"
+        @tier "primary"
+      CALENDAR_LIST_EVENTS_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Failure of listing events: the API error message, or the transport error; code is always blank."
+        @synonyms "calendar failure, calendar error"
+        @tier "primary"
+      CALENDAR_CREATE_EVENT_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Failure of creating an event: the API error message, or the transport error; code is always blank."
+        @synonyms "calendar failure, calendar error"
+        @tier "primary"
+      CALENDAR_UPDATE_EVENT_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Failure of updating an event: the API error message, or the transport error; code is always blank."
+        @synonyms "calendar failure, calendar error"
+        @tier "primary"
+      CALENDAR_DELETE_EVENT_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Failure of deleting an event: the API error message, or the transport error; code is always blank."
+        @synonyms "calendar failure, calendar error"
+        @tier "primary"
+      CALENDAR_FREE_BUSY_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Failure of the free-busy query: the API error message, or the transport error; code is always blank."
+        @synonyms "calendar failure, calendar error"
+        @tier "primary"
+      CALENDAR_WATCH_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Failure of registering a watch channel: the API error message, or the transport error; code is always blank."
+        @synonyms "calendar failure, calendar error"
+        @tier "primary"
+      CALENDAR_STOP_WATCH_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "Failure of stopping a watch channel: the API error message, or the transport error; code is always blank."
+        @synonyms "calendar failure, calendar error"
+        @tier "primary"
+      CALENDAR_REPLIED -> internal {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: a calendar request's HTTP reply."
+        @tier "secondary"
+      CALENDAR_REQUEST_FAILED -> internal {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: a calendar request never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      CALENDAR_LIST_EVENTS -> external {
+        calendarId : string
+        timeMin : string
+        timeMax : string
+        syncToken : string
+        maxResults : number
+      }
+        @description "List events on a Google Calendar; pass syncToken for incremental sync instead of a time window (the API rejects combining them). calendarId defaults to the calendarId knob; maxResults defaults to 250."
+        @synonyms "list events, calendar events, sync events"
+      CALENDAR_CREATE_EVENT -> external {
+        calendarId : string
+        summary : string!
+        description : string
+        location : string
+        start : string!
+        end : string
+        durationMinutes : number
+      }
+        @description "Create a calendar event; an all-day event uses a 10-character (YYYY-MM-DD) start with no end, defaulting to the next day. A timed event needs an explicit end."
+        @synonyms "create event, add calendar event, schedule meeting"
+      CALENDAR_UPDATE_EVENT -> external {
+        calendarId : string
+        eventId : string!
+        summary : string
+        description : string
+        location : string
+        start : string
+        end : string
+      }
+        @description "Patch an existing event's fields; only fields present in the payload are changed."
+        @synonyms "update event, edit calendar event, reschedule"
+      CALENDAR_DELETE_EVENT -> external {
+        calendarId : string
+        eventId : string!
+      }
+        @description "Delete a calendar event."
+        @synonyms "delete event, remove calendar event, cancel event"
+      CALENDAR_FREE_BUSY -> external {
+        calendarId : string
+        timeMin : string!
+        timeMax : string!
+      }
+        @description "Query busy time blocks on a calendar within a window."
+        @synonyms "free busy, availability, busy slots"
+      CALENDAR_WATCH -> external {
+        calendarId : string
+        channelId : string!
+        address : string!
+        ttlSeconds : number
+      }
+        @description "Register a push-notification channel for calendar change events."
+        @synonyms "watch calendar, push notifications, subscribe changes"
+      CALENDAR_STOP_WATCH -> external {
+        channelId : string!
+        resourceId : string!
+      }
+        @description "Stop an active watch channel, ending calendar change notifications."
+        @synonyms "stop watch, unsubscribe, end notifications"
+      CALENDAR_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      CALENDAR_REQUEST_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable Google Calendar call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "https://www.googleapis.com"
+        @label "Google APIs origin"
+        @description "The Google APIs origin (scheme://host, no path). Must be declared in the app egress list."
+        @synonyms "google api url, calendar api host"
+        @tier "infra"
+      accessToken : secret = "GOOGLE_CALENDAR_ACCESS_TOKEN"
+        @label "Access token credential"
+        @description "Name of the credential holding a Google OAuth access token with the calendar scope (sent as a bearer token)."
+        @synonyms "calendar token, oauth access token, google credential"
+        @tier "infra"
+      calendarId : string = "primary"
+        @label "Default calendar id"
+        @description "Calendar used when an action names none."
+        @synonyms "default calendar, calendar id"
+        @tier "domain"
+      timeoutMs : number = 30000
+        @label "Request timeout (ms)"
+        @description "Milliseconds each Google Calendar request may take before it fails."
+        @synonyms "timeout, request deadline"
+        @tier "infra"
+    }
+  }
+
+  page "/calendar" as CalendarPage -> CalendarClient
+}

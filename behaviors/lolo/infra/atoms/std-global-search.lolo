@@ -19,7 +19,7 @@ orbital GlobalSearchOrbital {
 
     type QUERY_SAVE_FAILED = Event { error : string! } "Persisting the SearchQuery row failed."
 
-    type FAN_OUT_STEP = Event { remaining : number } "Internal sentinel: drains pendingModules, one MODULE_SEARCH_REQUESTED per pass. Carries the post-seed/post-drop queue length so the loop guard reads the payload (walker-provable), not the config-seeded entity field."
+    type FAN_OUT_STEP = Event { remaining : number! } "Internal sentinel: drains pendingModules, one MODULE_SEARCH_REQUESTED per pass. Carries the post-seed/post-drop queue length so the loop guard reads the payload (walker-provable), not the config-seeded entity field."
 
   entity SearchQuery [persistent: search_queries] {
     id : string!
@@ -244,7 +244,7 @@ orbital GlobalSearchOrbital {
         @description "Persisting the query failed — the search itself is unaffected"
         @tier "secondary"
       FAN_OUT_STEP {
-        remaining : number
+        remaining : number!
       }
         @description "Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass; `remaining` is the queue length after the last seed/drop"
         @tier "internal"
@@ -263,7 +263,7 @@ orbital GlobalSearchOrbital {
         resultsJson : string
       }
       FAN_OUT_STEP {
-        remaining : number
+        remaining : number!
       }
       *.SEARCH_RESULTS -> SEARCH_RESULTS
     }

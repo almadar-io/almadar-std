@@ -13,6 +13,7 @@ export { ARRAY_OPERATORS, getArrayOperators, getLambdaArrayOperators } from './a
 export { OBJECT_OPERATORS, getObjectOperators } from './object.js';
 export { JSON_OPERATORS, getJsonOperators } from './json.js';
 export { CSV_OPERATORS, getCsvOperators } from './csv.js';
+export { XML_OPERATORS, getXmlOperators } from './xml.js';
 export { TIME_OPERATORS, getTimeOperators } from './time.js';
 export { VALIDATE_OPERATORS, getValidateOperators } from './validate.js';
 export { FORMAT_OPERATORS, getFormatOperators } from './format.js';
@@ -61,4 +62,3 @@ export { SESSION_OPERATORS, getSessionOperators } from './session.js';
 export { MEMORY_OPERATORS, getMemoryOperators } from './memory.js';
 export { TRACE_OPERATORS, getTraceOperators } from './trace.js';
 export { BEHAVIOR_OPERATORS, getBehaviorOperators } from './behavior.js';
-export { INTEGRATION_OPERATORS, getIntegrationOperators } from './integration.js';

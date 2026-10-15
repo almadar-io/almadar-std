@@ -47,7 +47,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-session': { description: 'Session state substrate (runtime)', target: ['ts'] },
     'std-memory': { description: 'Agent memory substrate (runtime)', target: ['ts'] },
     'std-trace': { description: 'Execution tracing substrate (runtime)', target: ['ts'] },
-    'std-integration': { description: 'External integration calls (runtime)', target: ['ts'] },
+    'std-codec': { description: 'Byte codecs and digests (base64, sha256, hmac-sha256)', target: ['ts', 'rust'] },
     'std-behavior': { description: 'Behavior reflection effects (catalog, describe, source)', target: ['ts'] },
     'std-behavior-value': { description: 'Behaviors as first-class values (pure)', target: ['ts', 'rust'] },
     'std-program': { description: 'Read, print and evaluate programs held as data', target: ['ts'] },

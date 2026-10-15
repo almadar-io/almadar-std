@@ -1,0 +1,281 @@
+app std-youtube [
+  version: "1.0.0",
+  description: "std-youtube — YouTube Data API v3 search, video and channel lookups. YOUTUBE_SEARCH lists matching video snippets, YOUTUBE_GET_VIDEO and YOUTUBE_GET_CHANNEL fetch snippet and statistics. The API key is a secret knob sent as the key query parameter; server errors, rate limiting and dead connections are retried as the googleapis SDK does.",
+  egress: ["https://youtube.googleapis.com"]
+]
+type YoutubeCall = { kind : string, attempt : number, query : string, maxResults : number, type : string, id : string }
+type YoutubeSearchId = { videoId : string }
+type YoutubeThumbnail = { url : string }
+type YoutubeThumbnails = { default : YoutubeThumbnail }
+type YoutubeSnippet = { title : string, description : string, thumbnails : YoutubeThumbnails }
+type YoutubeStatistics = { viewCount : string, likeCount : string, subscriberCount : string }
+type YoutubeSearchItem = { id : YoutubeSearchId, snippet : YoutubeSnippet }
+type YoutubeSearchReply = { items : [YoutubeSearchItem] }
+type YoutubeResource = { snippet : YoutubeSnippet, statistics : YoutubeStatistics }
+type YoutubeResourceReply = { items : [YoutubeResource] }
+type YoutubeErrorDetail = { message : string }
+type YoutubeErrorObject = { message : string, errors : [YoutubeErrorDetail] }
+type YoutubeErrorBody = { error : (string | YoutubeErrorObject) }
+orbital YoutubeOrbital {
+  entity YoutubeLookup [runtime] {
+    id : string!
+  }
+
+  trait YoutubeClient -> YoutubeLookup [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      YOUTUBE_SEARCH -> idle
+        (emit YOUTUBE_REQUEST { kind: "search", attempt: 0, query: @payload.query, maxResults: (or @payload.maxResults 10), type: (or @payload.type ""), id: "" })
+      YOUTUBE_GET_VIDEO -> idle
+        (emit YOUTUBE_REQUEST { kind: "video", attempt: 0, query: "", maxResults: 0, type: "", id: @payload.videoId })
+      YOUTUBE_GET_CHANNEL -> idle
+        (emit YOUTUBE_REQUEST { kind: "channel", attempt: 0, query: "", maxResults: 0, type: "", id: @payload.channelId })
+
+      YOUTUBE_REQUEST -> idle when (and (= @payload.kind "search") (!= @payload.type ""))
+        (http GET @config.origin "/youtube/v3/search" {
+          query: { part: "snippet", q: @payload.query, maxResults: @payload.maxResults, type: @payload.type },
+          headers: { Accept: "*/*" },
+          auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify @payload), emit: { success: YOUTUBE_REPLIED, failure: YOUTUBE_UNREACHED } })
+      YOUTUBE_REQUEST -> idle when (and (= @payload.kind "search") (= @payload.type ""))
+        (http GET @config.origin "/youtube/v3/search" {
+          query: { part: "snippet", q: @payload.query, maxResults: @payload.maxResults },
+          headers: { Accept: "*/*" },
+          auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify @payload), emit: { success: YOUTUBE_REPLIED, failure: YOUTUBE_UNREACHED } })
+      YOUTUBE_REQUEST -> idle when (= @payload.kind "video")
+        (http GET @config.origin "/youtube/v3/videos" {
+          query: { part: ["snippet", "statistics"], id: @payload.id },
+          headers: { Accept: "*/*" },
+          auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify @payload), emit: { success: YOUTUBE_REPLIED, failure: YOUTUBE_UNREACHED } })
+      YOUTUBE_REQUEST -> idle when (= @payload.kind "channel")
+        (http GET @config.origin "/youtube/v3/channels" {
+          query: { part: ["snippet", "statistics"], id: @payload.id },
+          headers: { Accept: "*/*" },
+          auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify @payload), emit: { success: YOUTUBE_REPLIED, failure: YOUTUBE_UNREACHED } })
+
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "search"))
+        (emit YOUTUBE_SEARCH_RESULT {
+          items: (array/map (object/get (json/parse @payload.body YoutubeSearchReply) items [])
+            (fn item (object/fromEntries (array/filter [
+              ["videoId", (object/get @item "id.videoId" null)],
+              ["title", (object/get @item "snippet.title" null)],
+              ["thumbnail", (object/get @item "snippet.thumbnails.default.url" null)],
+              ["description", (object/get @item "snippet.description" null)]
+            ] (fn entry (!= (array/nth @entry 1) null))))))
+        })
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "video") (> (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
+        (emit YOUTUBE_VIDEO_RESULT (object/fromEntries (array/filter [
+          ["title", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "snippet.title" null)],
+          ["description", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "snippet.description" null)],
+          ["viewCount", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "statistics.viewCount" null)],
+          ["likeCount", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "statistics.likeCount" null)]
+        ] (fn entry (!= (array/nth @entry 1) null)))))
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "video") (= (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
+        (emit YOUTUBE_REJECTED { kind: "video", message: (str/concat "Video not found: " (object/get (json/parse @payload.key YoutubeCall) id "")) })
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "channel") (> (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
+        (emit YOUTUBE_CHANNEL_RESULT (object/fromEntries (array/filter [
+          ["name", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "snippet.title" null)],
+          ["description", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "snippet.description" null)],
+          ["subscriberCount", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "statistics.subscriberCount" null)]
+        ] (fn entry (!= (array/nth @entry 1) null)))))
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "channel") (= (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
+        (emit YOUTUBE_REJECTED { kind: "channel", message: (str/concat "Channel not found: " (object/get (json/parse @payload.key YoutubeCall) id "")) })
+
+      YOUTUBE_REPLIED -> idle when (and (not (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304))) (or (< @payload.status 200) (= @payload.status 408) (= @payload.status 429) (>= @payload.status 500)) (< (object/get (json/parse @payload.key YoutubeCall) attempt 0) 3))
+        (let ((call (json/parse @payload.key YoutubeCall)))
+          (emit YOUTUBE_REQUEST { kind: (object/get @call kind ""), attempt: (+ (object/get @call attempt 0) 1), query: (object/get @call query ""), maxResults: (object/get @call maxResults 0), type: (object/get @call type ""), id: (object/get @call id "") }))
+      YOUTUBE_REPLIED -> idle when (and (not (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304))) (or (and (>= @payload.status 200) (< @payload.status 500) (!= @payload.status 408) (!= @payload.status 429)) (>= (object/get (json/parse @payload.key YoutubeCall) attempt 0) 3)))
+        (let ((error (object/get (json/parse @payload.body YoutubeErrorBody) error null)))
+          (emit YOUTUBE_REJECTED {
+            kind: (object/get (json/parse @payload.key YoutubeCall) kind ""),
+            message: (if (validate/string @error)
+              (if (!= @error "") @error (if (>= @payload.status 400) @payload.body (str/concat "Request failed with status code " @payload.status)))
+              (if (!= @error null)
+                (if (!= (object/get @error errors null) null)
+                  (str/join (array/map (object/get @error errors []) (fn detail (or (object/get @detail message null) ""))) "\n")
+                  (or (object/get @error message null) ""))
+                (if (>= @payload.status 400) @payload.body (str/concat "Request failed with status code " @payload.status))))
+          }))
+
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (< (object/get (json/parse @payload.key YoutubeCall) attempt 0) 2))
+        (let ((call (json/parse @payload.key YoutubeCall)))
+          (emit YOUTUBE_REQUEST { kind: (object/get @call kind ""), attempt: (+ (object/get @call attempt 0) 1), query: (object/get @call query ""), maxResults: (object/get @call maxResults 0), type: (object/get @call type ""), id: (object/get @call id "") }))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (>= (object/get (json/parse @payload.key YoutubeCall) attempt 0) 2))
+        (emit YOUTUBE_REJECTED { kind: (object/get (json/parse @payload.key YoutubeCall) kind ""), message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
+      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "refused") (str/startsWith @payload.error "credential missing: "))
+        (emit YOUTUBE_REJECTED { kind: (object/get (json/parse @payload.key YoutubeCall) kind ""), message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
+      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "refused") (not (str/startsWith @payload.error "credential missing: ")))
+        (emit YOUTUBE_REJECTED { kind: (object/get (json/parse @payload.key YoutubeCall) kind ""), message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
+
+      YOUTUBE_REJECTED -> idle when (= @payload.kind "search")
+        (emit YOUTUBE_SEARCH_FAILED { code: null, message: @payload.message })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube search failed: " @payload.message) })
+      YOUTUBE_REJECTED -> idle when (= @payload.kind "video")
+        (emit YOUTUBE_VIDEO_FAILED { code: null, message: @payload.message })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube video lookup failed: " @payload.message) })
+      YOUTUBE_REJECTED -> idle when (= @payload.kind "channel")
+        (emit YOUTUBE_CHANNEL_FAILED { code: null, message: @payload.message })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube channel lookup failed: " @payload.message) })
+    }
+
+    emits {
+      YOUTUBE_SEARCH_RESULT -> external {
+        items : [Map string string]!
+      }
+        @description "Matching search results, each with whichever of videoId, title, thumbnail and description the API returned."
+        @synonyms "youtube search results, video search, matching videos"
+        @tier "primary"
+      YOUTUBE_VIDEO_RESULT -> external {
+        title : string
+        description : string
+        viewCount : string
+        likeCount : string
+      }
+        @description "A video's title, description and view and like counts; a field the API omitted is absent."
+        @synonyms "video details, video statistics, youtube video"
+        @tier "primary"
+      YOUTUBE_CHANNEL_RESULT -> external {
+        name : string
+        description : string
+        subscriberCount : string
+      }
+        @description "A channel's name, description and subscriber count; a field the API omitted (hidden subscribers) is absent."
+        @synonyms "channel details, channel statistics, youtube channel"
+        @tier "primary"
+      YOUTUBE_SEARCH_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "The search failed: the API rejected it, the key is not configured, or the API stayed unreachable after retries."
+        @synonyms "search error, youtube search failed"
+        @tier "primary"
+      YOUTUBE_VIDEO_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "The video lookup failed or the video does not exist."
+        @synonyms "video error, video not found"
+        @tier "primary"
+      YOUTUBE_CHANNEL_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "The channel lookup failed or the channel does not exist."
+        @synonyms "channel error, channel not found"
+        @tier "primary"
+      YOUTUBE_REQUEST {
+        kind : string!
+        attempt : number!
+        query : string!
+        maxResults : number!
+        type : string!
+        id : string!
+      }
+        @description "Internal: one attempt at a Data API call."
+        @tier "secondary"
+      YOUTUBE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: a Data API call's HTTP reply."
+        @tier "secondary"
+      YOUTUBE_UNREACHED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: a Data API call never produced a reply."
+        @tier "secondary"
+      YOUTUBE_REJECTED {
+        kind : string!
+        message : string!
+      }
+        @description "Internal: a call ended in failure with this message."
+        @tier "secondary"
+    }
+
+    listens {
+      YOUTUBE_SEARCH -> external {
+        query : string!
+        maxResults : number
+        type : string
+      }
+        @description "Search YouTube for videos matching a query; maxResults defaults to 10, type filters the resource kind (video, channel, playlist)."
+        @synonyms "search youtube, find videos, video search"
+      YOUTUBE_GET_VIDEO -> external {
+        videoId : string!
+      }
+        @description "Fetch a video's snippet and statistics."
+        @synonyms "get video, video details, youtube video info"
+      YOUTUBE_GET_CHANNEL -> external {
+        channelId : string!
+      }
+        @description "Fetch a channel's snippet and statistics."
+        @synonyms "get channel, channel details, youtube channel info"
+      YOUTUBE_REQUEST {
+        kind : string!
+        attempt : number!
+        query : string!
+        maxResults : number!
+        type : string!
+        id : string!
+      }
+      YOUTUBE_REJECTED {
+        kind : string!
+        message : string!
+      }
+      YOUTUBE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      YOUTUBE_UNREACHED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a failed YouTube call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "https://youtube.googleapis.com"
+        @label "YouTube API origin"
+        @description "The YouTube Data API origin (scheme://host, no path). Must be declared in the app egress list."
+        @synonyms "youtube url, api host, data api origin"
+        @tier "infra"
+      apiKey : secret = "YOUTUBE_API_KEY"
+        @label "API key credential"
+        @description "Name of the credential holding the YouTube Data API key."
+        @synonyms "api key, youtube key, credential"
+        @tier "infra"
+      timeoutMs : number = 30000
+        @label "Request timeout (ms)"
+        @description "Milliseconds each YouTube request may take before it counts as unreachable."
+        @synonyms "timeout, request deadline, wait limit"
+        @tier "infra"
+    }
+  }
+
+  page "/youtube" as YoutubePage -> YoutubeClient
+}

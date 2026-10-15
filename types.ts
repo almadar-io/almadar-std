@@ -61,7 +61,7 @@ export const OPERATOR_CATEGORIES = [
   'std-behavior',
   'std-behavior-value',
   'std-program',
-  'std-integration',
+  'std-codec',
 ] as const;
 
 export type OperatorCategory = (typeof OPERATOR_CATEGORIES)[number];
@@ -178,7 +178,10 @@ export const STD_MODULES = [
   'trace',
   'behavior',
   'program',
-  'integration',
+  'base64',
+  'hash',
+  'hmac',
+  'xml',
 ] as const;
 
 export type StdModule = (typeof STD_MODULES)[number];
@@ -228,7 +231,7 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-behavior',
   'std-behavior-value',
   'std-program',
-  'std-integration',
+  'std-codec',
 ] as const;
 
 export type StdOperatorCategory = (typeof STD_OPERATOR_CATEGORIES)[number];
@@ -313,7 +316,11 @@ export interface OperatorEffectMeta {
     | 'despawn'
     | 'set'
     | 'call-service'
+    | 'http'
     | 'cancel-call'
+    | 'random-bytes'
+    | 'credential-status'
+    | 'credential-forget'
     | 'log'
     | 'send-server'
     | 'custom';

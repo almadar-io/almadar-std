@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-13T17:28:45.190Z",
+  "generated": "2026-10-15T08:29:10.838Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -175,10 +175,11 @@
         "ts"
       ]
     },
-    "std-integration": {
-      "description": "External integration calls (runtime)",
+    "std-codec": {
+      "description": "Byte codecs and digests (base64, sha256, hmac-sha256)",
       "target": [
-        "ts"
+        "ts",
+        "rust"
       ]
     },
     "std-behavior": {
@@ -2757,6 +2758,44 @@
       ],
       "docsSource": "generated"
     },
+    "base64/decode": {
+      "category": "std-codec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "string",
+      "description": "Decode standard base64 (RFC 4648) to a UTF-8 string; invalid base64 or non-UTF-8 bytes are an evaluation error",
+      "module": "base64",
+      "params": [
+        {
+          "name": "s",
+          "type": "string",
+          "description": "The base64 text"
+        }
+      ],
+      "examples": [
+        "(base64/decode \"Zm9vYmFy\") // => \"foobar\""
+      ],
+      "docsSource": "generated"
+    },
+    "base64/encode": {
+      "category": "std-codec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "string",
+      "description": "Encode a string (its UTF-8 bytes) as standard padded base64 (RFC 4648)",
+      "module": "base64",
+      "params": [
+        {
+          "name": "s",
+          "type": "string",
+          "description": "The string to encode"
+        }
+      ],
+      "examples": [
+        "(base64/encode \"foobar\") // => \"Zm9vYmFy\""
+      ],
+      "docsSource": "generated"
+    },
     "behavior/apply": {
       "category": "std-behavior-value",
       "minArity": 2,
@@ -3510,6 +3549,9 @@
                   },
                   "cancelled": {
                     "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
                   }
                 },
                 "open": true
@@ -3763,6 +3805,112 @@
       ],
       "examples": [
         "(contract/violations [0.5,1.7] {\"ranges\":{\"0\":{\"min\":0,\"max\":1},\"1\":{\"min\":0,\"max\":1}}}) // => []"
+      ],
+      "docsSource": "generated"
+    },
+    "credential-forget": {
+      "category": "effect",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Drop the signed-in viewer's stored credential named by a secret knob; the success payload is { connected: false }. Fails when nobody is signed in.",
+      "module": "core",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "credential-forget",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "connected": "boolean"
+          }
+        }
+      },
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "credential",
+          "type": "string",
+          "description": "A secret-typed @config knob whose value names the credential"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure } } routes the { connected } payload and the { error } failure",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(credential-forget @config.googleToken {\"emit\":{\"success\":\"DISCONNECTED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "credential-status": {
+      "category": "effect",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Whether the signed-in viewer has connected the credential named by a secret knob: the success payload is { connected }. Fails when nobody is signed in. The credential value is never readable.",
+      "module": "core",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "credential-status",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "connected": "boolean"
+          }
+        }
+      },
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "credential",
+          "type": "string",
+          "description": "A secret-typed @config knob whose value names the credential"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure } } routes the { connected } payload and the { error } failure",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(credential-status @config.googleToken {\"emit\":{\"success\":\"STATUS_KNOWN\"}})"
       ],
       "docsSource": "generated"
     },
@@ -5583,6 +5731,346 @@
       ],
       "docsSource": "generated"
     },
+    "hash/sha256": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "string",
+      "description": "SHA-256 digest of a string (its UTF-8 bytes), as lower-case hex or standard base64 (FIPS 180-2)",
+      "module": "hash",
+      "params": [
+        {
+          "name": "s",
+          "type": "string",
+          "description": "The string to hash"
+        },
+        {
+          "name": "encoding",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "hex"
+              },
+              {
+                "kind": "literal",
+                "value": "base64"
+              }
+            ]
+          },
+          "description": "Digest encoding: \"hex\" or \"base64\""
+        }
+      ],
+      "examples": [
+        "(hash/sha256 \"abc\" \"hex\") // => \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\""
+      ],
+      "docsSource": "generated"
+    },
+    "hmac/sha256": {
+      "category": "std-codec",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "string",
+      "description": "HMAC-SHA256 of a message under a key (both UTF-8), as lower-case hex or standard base64 (RFC 4231)",
+      "module": "hmac",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "The secret key"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The message to sign"
+        },
+        {
+          "name": "encoding",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "hex"
+              },
+              {
+                "kind": "literal",
+                "value": "base64"
+              }
+            ]
+          },
+          "description": "Digest encoding: \"hex\" or \"base64\""
+        }
+      ],
+      "examples": [
+        "(hmac/sha256 \"Jefe\" \"what do ya want for nothing?\" \"hex\") // => \"5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843\""
+      ],
+      "docsSource": "generated"
+    },
+    "http": {
+      "category": "effect",
+      "minArity": 3,
+      "maxArity": 5,
+      "returnType": "void",
+      "description": "Send one HTTP request from the server: (http METHOD origin path request? options?). The origin must be declared in the app egress list; credentials are named secret knobs resolved by the host. The reply { status, headers, body } is the success payload (a non-2xx status is a success reply); failures carry { error, kind }. Optional trailing { key, emit: { success, failure, cancelled, onMessage } } routes the result like call-service.",
+      "module": "core",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "http",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "status": "number",
+            "headers": {
+              "kind": "map",
+              "key": "string",
+              "value": "string"
+            },
+            "body": "string"
+          }
+        }
+      },
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "method",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "GET"
+              },
+              {
+                "kind": "literal",
+                "value": "POST"
+              },
+              {
+                "kind": "literal",
+                "value": "PUT"
+              },
+              {
+                "kind": "literal",
+                "value": "PATCH"
+              },
+              {
+                "kind": "literal",
+                "value": "DELETE"
+              }
+            ]
+          },
+          "description": "HTTP method word: GET, POST, PUT, PATCH or DELETE"
+        },
+        {
+          "name": "origin",
+          "type": "string",
+          "description": "Origin (scheme://host[:port], no path): a string literal or a url-typed @config knob"
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "description": "Request path, starting with \"/\""
+        },
+        {
+          "name": "request",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "query": {
+                "kind": "var",
+                "name": "P",
+                "bound": {
+                  "kind": "record"
+                }
+              },
+              "headers": {
+                "kind": "map",
+                "key": "string",
+                "value": "string"
+              },
+              "json": {
+                "kind": "var",
+                "name": "J"
+              },
+              "form": {
+                "kind": "var",
+                "name": "S",
+                "bound": {
+                  "kind": "record"
+                }
+              },
+              "text": "string",
+              "bytes": "string",
+              "auth": {
+                "kind": "object",
+                "fields": {
+                  "scheme": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "bearer"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "api-key"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "basic"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "oauth2-client"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "hmac-sha256"
+                      }
+                    ]
+                  },
+                  "credential": "string",
+                  "name": "string",
+                  "in": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "header"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "query"
+                      }
+                    ]
+                  },
+                  "user": "string",
+                  "tokenUrl": "string",
+                  "clientId": "string",
+                  "clientSecret": "string",
+                  "scope": "string",
+                  "signs": "string",
+                  "encoding": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "hex"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "base64"
+                      }
+                    ]
+                  }
+                },
+                "open": true
+              },
+              "timeoutMs": "number",
+              "responseAs": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "text"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "bytes"
+                  }
+                ]
+              },
+              "paginate": {
+                "kind": "object",
+                "fields": {
+                  "style": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "literal",
+                        "value": "cursor"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "offset"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "page"
+                      },
+                      {
+                        "kind": "literal",
+                        "value": "link-header"
+                      }
+                    ]
+                  },
+                  "param": "string",
+                  "next": {
+                    "kind": "sexpr"
+                  },
+                  "collect": {
+                    "kind": "sexpr"
+                  },
+                  "max": "number"
+                },
+                "open": true
+              },
+              "stream": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "sse"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "json-lines"
+                  }
+                ]
+              }
+            },
+            "open": true
+          },
+          "description": "Request parts: query, headers, at most one body (json | form | text | bytes), auth, timeoutMs, responseAs, paginate, stream",
+          "optional": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { key } names the call for cancel-call; { emit: { success, failure, cancelled, onMessage } } wires closed-circuit result routing",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(http \"GET\" \"https://api.example.com\" \"/items\" {\"query\":{\"limit\":10}} {\"emit\":{\"success\":\"ITEMS_LOADED\",\"failure\":\"ITEMS_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "i18n/t": {
       "category": "std-i18n",
       "minArity": 1,
@@ -5658,113 +6146,6 @@
       ],
       "examples": [
         "(if true 42 0) // => 42"
-      ],
-      "docsSource": "generated"
-    },
-    "integration/github-create-issue": {
-      "category": "std-integration",
-      "minArity": 3,
-      "maxArity": 3,
-      "returnType": "GitHubIssue",
-      "description": "Create a GitHub issue. Typed wrapper for the GitHub API.",
-      "module": "integration",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Create GitHub Issue",
-      "params": [
-        {
-          "name": "repo",
-          "type": "string",
-          "description": "Full repo name (owner/repo)"
-        },
-        {
-          "name": "title",
-          "type": "string",
-          "description": "Issue title"
-        },
-        {
-          "name": "body",
-          "type": "string",
-          "description": "Issue body"
-        }
-      ],
-      "examples": [
-        "(integration/github-create-issue \"owner/repo\" \"Bug found\" \"Details here\")"
-      ],
-      "docsSource": "generated"
-    },
-    "integration/github-get-repo": {
-      "category": "std-integration",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "GitHubRepo",
-      "description": "Get a GitHub repository. Typed wrapper for the GitHub API.",
-      "module": "integration",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Get GitHub Repository",
-      "params": [
-        {
-          "name": "owner",
-          "type": "string",
-          "description": "Repository owner"
-        },
-        {
-          "name": "repo",
-          "type": "string",
-          "description": "Repository name"
-        }
-      ],
-      "examples": [
-        "(integration/github-get-repo \"microsoft\" \"vscode\")"
-      ],
-      "docsSource": "generated"
-    },
-    "integration/http": {
-      "category": "std-integration",
-      "minArity": 3,
-      "maxArity": 4,
-      "returnType": {
-        "kind": "shape"
-      },
-      "description": "HTTP request with caller-declared response schema. Validates the response against the schema before returning.",
-      "module": "integration",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "HTTP Request",
-      "params": [
-        {
-          "name": "method",
-          "type": "string",
-          "description": "HTTP method (GET, POST, ...)"
-        },
-        {
-          "name": "url",
-          "type": "string",
-          "description": "Request URL"
-        },
-        {
-          "name": "responseSchema",
-          "type": {
-            "kind": "shape"
-          },
-          "description": "JSON Schema the response must satisfy"
-        },
-        {
-          "name": "body",
-          "type": {
-            "kind": "var",
-            "name": "B",
-            "bound": {
-              "kind": "record"
-            }
-          },
-          "description": "Request body (for POST/PUT)",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(integration/http \"GET\" \"https://api.example.com/data\")"
       ],
       "docsSource": "generated"
     },
@@ -8501,7 +8882,7 @@
       "minArity": 2,
       "maxArity": 4,
       "returnType": "void",
-      "description": "Create, update, delete, clear, or batch entity records. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing.",
+      "description": "Create, upsert, update, delete, clear, or batch entity records. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing.",
       "module": "core",
       "hasSideEffects": true,
       "effect": {
@@ -8557,6 +8938,10 @@
               },
               {
                 "kind": "literal",
+                "value": "upsert"
+              },
+              {
+                "kind": "literal",
                 "value": "update"
               },
               {
@@ -8587,7 +8972,7 @@
           "type": {
             "kind": "entityRef"
           },
-          "description": "Payload (create/update) or entity id (delete)",
+          "description": "Payload (create/upsert/update) or entity id (delete)",
           "optional": true
         },
         {
@@ -9458,6 +9843,59 @@
       ],
       "docsSource": "generated"
     },
+    "random-bytes": {
+      "category": "effect",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Draw n bytes from the host CSPRNG (journaled, so a replay sees the same bytes). The success payload is { value }: the bytes as base64url without padding, for an OAuth state or a PKCE verifier. n is an integer from 1 to 1024.",
+      "module": "core",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "random-bytes",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "value": "string"
+          }
+        }
+      },
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "bytes",
+          "type": "number",
+          "description": "How many random bytes to draw (1 to 1024)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure } } routes the { value } payload and the { error } failure",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(random-bytes 32 {\"emit\":{\"success\":\"STATE_DRAWN\",\"failure\":\"STATE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "ref": {
       "category": "effect",
       "minArity": 1,
@@ -10072,6 +10510,25 @@
         "(str/default null \"N/A\") // => \"N/A\""
       ],
       "docsSource": "reference-docs"
+    },
+    "str/encode-uri-component": {
+      "category": "std-str",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "string",
+      "description": "Percent-encode a string as a URI component (JavaScript encodeURIComponent; UTF-8 bytes, unreserved A-Z a-z 0-9 - _ . ! ~ * ' ( ) kept)",
+      "module": "str",
+      "params": [
+        {
+          "name": "s",
+          "type": "string",
+          "description": "The string to encode"
+        }
+      ],
+      "examples": [
+        "(str/encode-uri-component \"a b&c\") // => \"a%20b%26c\""
+      ],
+      "docsSource": "generated"
     },
     "str/endsWith": {
       "category": "std-str",
@@ -12029,22 +12486,16 @@
     "time/parse": {
       "category": "std-time",
       "minArity": 1,
-      "maxArity": 2,
+      "maxArity": 1,
       "returnType": "number",
-      "description": "Parse string to timestamp",
+      "description": "Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); an unparsable string is an error",
       "module": "time",
       "title": "Parse",
       "params": [
         {
           "name": "str",
           "type": "string",
-          "description": "Date string"
-        },
-        {
-          "name": "format",
-          "type": "string",
-          "description": "Format pattern",
-          "optional": true
+          "description": "ISO 8601 date or date-time, e.g. 2024-01-18 or 2024-01-18T09:30:00+02:00"
         }
       ],
       "examples": [
@@ -14231,6 +14682,34 @@
       ],
       "examples": [
         "(workspace/write-schema {\"orbitals\":[{\"name\":\"ProductOrbital\"}]})"
+      ],
+      "docsSource": "generated"
+    },
+    "xml/parse": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "shape"
+      },
+      "description": "Parse XML text into a value of the declared shape (the second argument names a type): namespaces are ignored by local name, an attribute is the field \"@name\", a repeated child element is a list, an element with no attributes or children is its text (whitespace collapsed, trimmed), other elements are objects with \"#text\" for their own text; malformed XML is an evaluation error, a null input is null",
+      "module": "xml",
+      "params": [
+        {
+          "name": "s",
+          "type": "string",
+          "description": "The XML text"
+        },
+        {
+          "name": "shape",
+          "type": {
+            "kind": "shape"
+          },
+          "description": "The name of the type the parsed value has"
+        }
+      ],
+      "examples": [
+        "(xml/parse \"<a id=\\\"1\\\"><b>x</b></a>\" \"Row\") // => {\"@id\": \"1\", b: \"x\"}"
       ],
       "docsSource": "generated"
     }

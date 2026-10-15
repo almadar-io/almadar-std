@@ -359,6 +359,17 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["str/truncate", "Hello World", 8, "..."] // => "Hello..."',
   },
+  'str/encode-uri-component': {
+    module: 'str',
+    category: 'std-str',
+    minArity: 1,
+    maxArity: 1,
+    description: 'Percent-encode a string as a URI component (JavaScript encodeURIComponent; UTF-8 bytes, unreserved A-Z a-z 0-9 - _ . ! ~ * \' ( ) kept)',
+    hasSideEffects: false,
+    returnType: 'string',
+    params: [{ name: 's', type: 'string', description: 'The string to encode' }],
+    example: '["str/encode-uri-component", "a b&c"] // => "a%20b%26c"',
+  },
 };
 
 /**
