@@ -1,0 +1,111 @@
+app std-timeout [
+  version: "1.0.0",
+  description: "std-timeout — race one keyed ask against a deadline. START carries the ask's CallKey, which the caller makes with the as cast and runs its call-service or http under; the first of SUCCEEDED, FAILED or the deadline wins. On the deadline the atom cancels that key itself (cancel-call) and then emits TIMED_OUT; an outcome after the deadline is ignored. Replaces the retired async/timeout operator."
+]
+orbital TimeoutOrbital {
+  entity TimeoutRun [runtime] {
+    id : string!
+    key : CallKey @description "The call key the ask runs under; set by START."
+    deadline : number @description "Epoch milliseconds at which the ask is abandoned; 0 while idle." = 0
+  }
+
+  trait Timeout -> @rebindable TimeoutRun [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.deadline 0)
+      START -> running
+        (set @entity.key ?key)
+        (set @entity.deadline (+ @now @config.timeoutMs))
+        (emit ASK_STARTED { key: ?key })
+    }
+
+    state running {
+      INIT -> idle
+        (set @entity.deadline 0)
+      SUCCEEDED -> idle when (== ?key @entity.key)
+        (set @entity.deadline 0)
+        (emit COMPLETED { key: @entity.key })
+      FAILED -> idle when (== ?key @entity.key)
+        (set @entity.deadline 0)
+        (emit ASK_FAILED { key: @entity.key, error: ?error })
+      CANCEL -> idle
+        (cancel-call @entity.key)
+        (set @entity.deadline 0)
+      TIMER_DUE -> idle
+        (cancel-call @entity.key)
+        (set @entity.deadline 0)
+        (emit TIMED_OUT { key: @entity.key, timeoutMs: @config.timeoutMs })
+    }
+
+    emits {
+      ASK_STARTED -> external {
+        key : CallKey!
+      }
+        @description "The deadline is armed; start the ask under this key."
+        @synonyms "begin, go, run the call"
+        @tier "domain"
+      COMPLETED -> external {
+        key : CallKey!
+      }
+        @description "The ask succeeded before the deadline."
+        @synonyms "succeeded, in time, done"
+        @tier "domain"
+      ASK_FAILED -> external {
+        key : CallKey!
+        error : string
+      }
+        @description "The ask failed before the deadline."
+        @synonyms "failed, error"
+        @tier "domain"
+      TIMED_OUT -> external {
+        key : CallKey!
+        timeoutMs : number!
+      }
+        @description "The deadline passed first; the ask was cancelled first."
+        @synonyms "expired, too slow, deadline"
+        @tier "domain"
+      TIMER_DUE -> internal { }
+        @tier "internal"
+    }
+
+    listens {
+      START {
+        key : CallKey!
+      }
+        @description "Begin the raced ask under this key."
+        @synonyms "run, begin, ask"
+      SUCCEEDED {
+        key : CallKey!
+      }
+        @description "The ask's success outcome, carrying its key."
+        @synonyms "ok, resolved"
+      FAILED {
+        key : CallKey!
+        error : string
+      }
+        @description "The ask's failure outcome, carrying its key."
+        @synonyms "rejected, error"
+      CANCEL { }
+        @description "Abandon the ask: it is cancelled and no deadline outcome follows."
+        @synonyms "stop, abort"
+    }
+
+    ticks {
+      deadlineCheck every 100ms [background]
+        when (and (> @entity.deadline 0) (>= @now @entity.deadline))
+        (emit TIMER_DUE { })
+    }
+
+    config {
+      timeoutMs : number = 5000
+        @label "Deadline (ms)"
+        @description "Milliseconds the ask may run before it is cancelled. Resolution is the 100ms deadline check."
+        @synonyms "time limit, max wait, deadline"
+        @tier "domain"
+    }
+  }
+
+  page "/timeout" as TimeoutPage -> Timeout
+}

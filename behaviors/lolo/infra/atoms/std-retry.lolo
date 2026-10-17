@@ -1,0 +1,147 @@
+app std-retry [
+  version: "1.0.0",
+  description: "std-retry — retry one keyed ask with exponential backoff. START carries the CallKey the caller makes with the as cast and emits ATTEMPT (attempt 1); a FAILED outcome schedules the next ATTEMPT after baseDelayMs * multiplier^(attempt-1), capped at maxDelayMs, until maxAttempts is spent, then GAVE_UP. SUCCEEDED ends the run with COMPLETED. No jitter: the schedule is deterministic and replayable. Replaces the retired async/retry operator and the http retry option."
+]
+orbital RetryOrbital {
+  entity RetryRun [runtime] {
+    id : string!
+    key : CallKey @description "The call key every attempt runs under; set by START."
+    attempt : number @description "The attempt in flight or last made; 0 while idle." = 0
+    dueAt : number @description "Epoch milliseconds at which the next attempt starts; 0 when none is scheduled." = 0
+  }
+
+  trait Retry -> @rebindable RetryRun [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.attempt 0)
+        (set @entity.dueAt 0)
+      START -> running
+        (set @entity.key ?key)
+        (set @entity.attempt 1)
+        (set @entity.dueAt 0)
+        (emit ATTEMPT { key: ?key, attempt: 1 })
+    }
+
+    state running {
+      INIT -> idle
+        (set @entity.attempt 0)
+        (set @entity.dueAt 0)
+      SUCCEEDED -> idle when (== ?key @entity.key)
+        (emit COMPLETED { key: @entity.key, attempts: @entity.attempt })
+        (set @entity.attempt 0)
+      FAILED -> backoff when (and (== ?key @entity.key) (< @entity.attempt @config.maxAttempts))
+        (set @entity.dueAt (+ @now (math/min @config.maxDelayMs (* @config.baseDelayMs (math/pow @config.multiplier (- @entity.attempt 1))))))
+        (emit RETRY_SCHEDULED { key: @entity.key, attempt: @entity.attempt, delayMs: (math/min @config.maxDelayMs (* @config.baseDelayMs (math/pow @config.multiplier (- @entity.attempt 1)))), error: ?error })
+      FAILED -> idle when (and (== ?key @entity.key) (>= @entity.attempt @config.maxAttempts))
+        (emit GAVE_UP { key: @entity.key, attempts: @entity.attempt, error: ?error })
+        (set @entity.attempt 0)
+      CANCEL -> idle
+        (cancel-call @entity.key)
+        (set @entity.attempt 0)
+    }
+
+    state backoff {
+      INIT -> idle
+        (set @entity.attempt 0)
+        (set @entity.dueAt 0)
+      TIMER_DUE -> running
+        (set @entity.attempt (+ @entity.attempt 1))
+        (set @entity.dueAt 0)
+        (emit ATTEMPT { key: @entity.key, attempt: (+ @entity.attempt 1) })
+      CANCEL -> idle
+        (set @entity.attempt 0)
+        (set @entity.dueAt 0)
+    }
+
+    emits {
+      ATTEMPT -> external {
+        key : CallKey!
+        attempt : number!
+      }
+        @description "Make the ask now, under this key; attempt counts from 1."
+        @synonyms "try, run the call, go"
+        @tier "domain"
+      RETRY_SCHEDULED -> external {
+        key : CallKey!
+        attempt : number!
+        delayMs : number!
+        error : string
+      }
+        @description "An attempt failed and another is scheduled after delayMs."
+        @synonyms "backing off, will retry"
+        @tier "domain"
+      COMPLETED -> external {
+        key : CallKey!
+        attempts : number!
+      }
+        @description "An attempt succeeded."
+        @synonyms "succeeded, done"
+        @tier "domain"
+      GAVE_UP -> external {
+        key : CallKey!
+        attempts : number!
+        error : string
+      }
+        @description "The last allowed attempt failed."
+        @synonyms "exhausted, failed for good"
+        @tier "domain"
+      TIMER_DUE -> internal { }
+        @tier "internal"
+    }
+
+    listens {
+      START {
+        key : CallKey!
+      }
+        @description "Begin attempt 1 under this key."
+        @synonyms "run, begin, try"
+      SUCCEEDED {
+        key : CallKey!
+      }
+        @description "The attempt's success outcome, carrying its key."
+        @synonyms "ok, resolved"
+      FAILED {
+        key : CallKey!
+        error : string
+      }
+        @description "The attempt's failure outcome, carrying its key."
+        @synonyms "rejected, error"
+      CANCEL { }
+        @description "Stop retrying; an attempt in flight is cancelled by its key."
+        @synonyms "stop, abort"
+    }
+
+    ticks {
+      backoffCheck every 100ms [background]
+        when (and (> @entity.dueAt 0) (>= @now @entity.dueAt))
+        (emit TIMER_DUE { })
+    }
+
+    config {
+      maxAttempts : number = 3
+        @label "Maximum attempts"
+        @description "Total attempts, the first included, before GAVE_UP."
+        @synonyms "retries, tries, attempt limit"
+        @tier "domain"
+      baseDelayMs : number = 500
+        @label "First backoff (ms)"
+        @description "Wait after the first failure; later waits multiply by `multiplier`."
+        @synonyms "initial delay, backoff"
+        @tier "domain"
+      multiplier : number = 2
+        @label "Backoff multiplier"
+        @description "Growth factor per failure; 1 keeps the wait constant."
+        @synonyms "growth, exponent, factor"
+        @tier "domain"
+      maxDelayMs : number = 30000
+        @label "Backoff ceiling (ms)"
+        @description "No wait exceeds this."
+        @synonyms "cap, max wait"
+        @tier "domain"
+    }
+  }
+
+  page "/retry" as RetryPage -> Retry
+}

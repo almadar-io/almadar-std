@@ -37,7 +37,6 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-validate': { description: 'Validation utilities', target: ['ts', 'rust'] },
     'std-format': { description: 'Formatting utilities', target: ['ts', 'rust'] },
     'std-i18n': { description: 'Message catalogs', target: ['ts', 'rust'] },
-    'std-async': { description: 'Async utilities (runtime only)', target: ['ts'] },
     'std-prob': { description: 'Probabilistic programming', target: ['ts'] },
     'std-os': { description: 'OS-level event watchers for system triggers', target: ['ts'] },
     'std-browser': { description: 'Browser device APIs (file picker, clipboard, geolocation) — client host effects', target: ['ts'] },
@@ -47,7 +46,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-session': { description: 'Session state substrate (runtime)', target: ['ts'] },
     'std-memory': { description: 'Agent memory substrate (runtime)', target: ['ts'] },
     'std-trace': { description: 'Execution tracing substrate (runtime)', target: ['ts'] },
-    'std-codec': { description: 'Byte codecs and digests (base64, sha256, hmac-sha256)', target: ['ts', 'rust'] },
+    'std-codec': { description: 'Byte codecs and digests (base64, sha256, md5, hmac-sha256)', target: ['ts', 'rust'] },
     'std-behavior': { description: 'Behavior reflection effects (catalog, describe, source)', target: ['ts'] },
     'std-behavior-value': { description: 'Behaviors as first-class values (pure)', target: ['ts', 'rust'] },
     'std-program': { description: 'Read, print and evaluate programs held as data', target: ['ts'] },
@@ -110,6 +109,7 @@ interface CanonicalOperatorEntry {
     host?: EffectHost;
     /** 0-indexed argument naming a data effect's target entity; the effect runs where that entity lives. */
     entityArgPosition?: number;
+    pattern?: string;
     /** Enrichment (docs): human title, parameter docs, lolo examples, provenance. */
     title?: string;
     params?: { name: string; type: unknown; description?: string }[];
@@ -170,6 +170,7 @@ function toCanonicalEntry(
     if (meta.runsOn) entry.runsOn = meta.runsOn;
     if (meta.host) entry.host = meta.host;
     if (meta.entityArgPosition != null) entry.entityArgPosition = meta.entityArgPosition;
+    if (meta.pattern) entry.pattern = meta.pattern;
     if (meta.acceptsLambda && meta.lambdaArgPosition != null) {
         entry.lambdaArgPosition = meta.lambdaArgPosition;
     }
@@ -180,14 +181,15 @@ function toCanonicalEntry(
     if (title) entry.title = title;
     const params = meta.params ?? existing?.params;
     if (params && params.length > 0) entry.params = params;
+    if (meta.exampleSource === 'module' && !meta.example) throw new Error('module-owned examples require an example');
     const examples =
-        existing?.examples && existing.examples.length > 0
+        meta.exampleSource !== 'module' && existing?.examples && existing.examples.length > 0
             ? existing.examples
             : meta.example
               ? [jsonExampleToLolo(meta.example) ?? meta.example]
               : undefined;
     if (examples) entry.examples = examples;
-    const docsSource = existing?.docsSource ?? (examples && !existing?.examples ? 'generated' : undefined);
+    const docsSource = meta.exampleSource === 'module' ? 'module' : existing?.docsSource ?? (examples && !existing?.examples ? 'generated' : undefined);
     if (docsSource) entry.docsSource = docsSource;
     return entry;
 }

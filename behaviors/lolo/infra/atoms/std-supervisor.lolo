@@ -1,0 +1,314 @@
+app std-supervisor [
+  version: "1.0.0",
+  stdio: [out, err],
+  description: "std-supervisor — Erlang-style supervisor for OS child processes. START spawns every configured child in order (os/spawn) and watches each (os/wait). A child exit, or a DOWN event naming a child index, is judged by the child's restart policy (permanent always restarts, transient restarts on abnormal exit, temporary never). A restart stops siblings per strategy (os/kill: one-for-one none, one-for-all every other child, rest-for-one the children after it) and respawns them in order. Restarts are counted in a sliding periodMs window of @now stamps; one more than maxRestarts stops the remaining children and emits SUPERVISOR_GAVE_UP. Needs the exec grant for every configured command."
+]
+orbital SupervisorOrbital {
+  entity SupervisedChild [runtime] {
+    id : string!
+    name : string @description "The child's name, reported in every event." = ""
+    command : string @description "Executable, matched exactly against the exec grant." = ""
+    args : [string] @description "Arguments passed to the command." = []
+    restart : "permanent" | "transient" | "temporary" @description "permanent restarts on any exit, transient only on abnormal exit, temporary never." = permanent
+  }
+
+  entity Supervisor [runtime] {
+    id : string!
+    pids : [number] @description "Process id per child, index-aligned with the configured children; 0 = not running." = []
+    restartLog : [number] @description "Epoch-millisecond stamps of the restarts inside the current period." = []
+    cursor : number @description "Child index the running spawn or kill sweep is on." = 0
+    spawnFrom : number @description "First child index of the pending respawn sweep." = 0
+    spawnTo : number @description "Exclusive end index of the spawn sweep." = 0
+    killTo : number @description "Exclusive end index of the kill sweep." = 0
+    after : "restart" | "stop" | "giveup" @description "What follows the kill sweep." = restart
+    exitIndex : number @description "Index of the child whose exit is being judged; -1 when the pid is unknown." = -1
+    exitFailed : boolean @description "True when the judged exit was abnormal (non-zero code, signal, wait failure or DOWN event)." = false
+    exitRestartable : boolean @description "True when the judged child's policy asks for a restart." = false
+    exitCode : number @description "Exit code of the judged child; -1 when it ended by signal or unknown." = -1
+  }
+
+  trait Supervisor -> @rebindable Supervisor [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.pids [])
+        (set @entity.restartLog [])
+        (set @entity.cursor 0)
+      START -> spawning when (> (array/len @config.children) 0)
+        (set @entity.pids (array/map @config.children (fn c 0)))
+        (set @entity.restartLog [])
+        (set @entity.cursor 0)
+        (set @entity.spawnTo (array/len @config.children))
+        (emit SPAWN_STEP { })
+    }
+
+    state spawning {
+      INIT -> idle
+        (set @entity.pids [])
+        (set @entity.restartLog [])
+        (set @entity.cursor 0)
+      SPAWN_STEP -> spawning
+        (os/spawn (object/get (array/nth @config.children @entity.cursor) "command") (object/get (array/nth @config.children @entity.cursor) "args") { cwd: null, env: null, stdin: "null", stdout: "inherit", stderr: "inherit" } { key: "spawn", emit: { success: CHILD_SPAWNED, failure: CHILD_SPAWN_FAILED } })
+      CHILD_SPAWNED -> spawning when (< (+ @entity.cursor 1) @entity.spawnTo)
+        (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @entity.cursor) @payload.pid @p))))
+        (os/wait @payload.pid { key: (str/concat @payload.pid), emit: { success: CHILD_EXITED, failure: CHILD_WAIT_FAILED } })
+        (emit CHILD_STARTED { name: (object/get (array/nth @config.children @entity.cursor) "name"), pid: @payload.pid })
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit SPAWN_STEP { })
+      CHILD_SPAWNED -> running when (>= (+ @entity.cursor 1) @entity.spawnTo)
+        (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @entity.cursor) @payload.pid @p))))
+        (os/wait @payload.pid { key: (str/concat @payload.pid), emit: { success: CHILD_EXITED, failure: CHILD_WAIT_FAILED } })
+        (emit CHILD_STARTED { name: (object/get (array/nth @config.children @entity.cursor) "name"), pid: @payload.pid })
+        (emit SUPERVISOR_READY { children: (array/len @config.children) })
+      CHILD_SPAWN_FAILED -> idle
+        (emit SUPERVISOR_GAVE_UP { reason: "spawn-failed", child: (object/get (array/nth @config.children @entity.cursor) "name"), restarts: (array/len @entity.restartLog) })
+    }
+
+    state running {
+      INIT -> idle
+        (set @entity.pids [])
+        (set @entity.restartLog [])
+        (set @entity.cursor 0)
+      CHILD_EXITED -> deciding
+        (let ((idx (array/reduce (array/range (array/len @entity.pids)) -1 (fn acc i (if (== (array/nth @entity.pids @i) (str/to-number @payload.key)) @i @acc)))))
+          (do (set @entity.exitIndex @idx)
+          (set @entity.exitFailed (or (!= (or @payload.code 0) 0) (validate/required @payload.signal)))
+          (set @entity.exitCode (if (== @payload.code null) -1 @payload.code))
+          (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @idx) 0 @p))))
+          (emit DECIDE { })))
+      CHILD_WAIT_FAILED -> deciding
+        (let ((idx (array/reduce (array/range (array/len @entity.pids)) -1 (fn acc i (if (== (array/nth @entity.pids @i) (str/to-number @payload.key)) @i @acc)))))
+          (do (set @entity.exitIndex @idx)
+          (set @entity.exitFailed true)
+          (set @entity.exitCode -1)
+          (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @idx) 0 @p))))
+          (emit DECIDE { })))
+      CHILD_DOWN -> deciding when (and (>= @payload.index 0) (< @payload.index (array/len @entity.pids)))
+        (set @entity.exitIndex @payload.index)
+        (set @entity.exitFailed true)
+        (set @entity.exitCode -1)
+        (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @payload.index) 0 @p))))
+        (emit DECIDE { })
+      STOP -> stopping
+        (set @entity.after "stop")
+        (set @entity.cursor 0)
+        (set @entity.killTo (array/len @entity.pids))
+        (emit KILL_STEP { at: 0 })
+    }
+
+    state deciding {
+      INIT -> idle
+        (set @entity.pids [])
+        (set @entity.restartLog [])
+        (set @entity.cursor 0)
+      DECIDE -> running when (< @entity.exitIndex 0)
+      DECIDE -> judged when (>= @entity.exitIndex 0)
+        (set @entity.exitRestartable (or (== (object/get (array/nth @config.children @entity.exitIndex) "restart") "permanent") (and (== (object/get (array/nth @config.children @entity.exitIndex) "restart") "transient") @entity.exitFailed)))
+        (emit JUDGE { })
+    }
+
+    state judged {
+      INIT -> idle
+        (set @entity.pids [])
+        (set @entity.restartLog [])
+        (set @entity.cursor 0)
+      JUDGE -> running when (not @entity.exitRestartable)
+        (emit CHILD_RETIRED { name: (object/get (array/nth @config.children @entity.exitIndex) "name"), code: @entity.exitCode, abnormal: @entity.exitFailed })
+      JUDGE -> stopping when (and @entity.exitRestartable (>= (array/len (array/filter @entity.restartLog (fn t (>= @t (- @now @config.periodMs))))) @config.maxRestarts))
+        (set @entity.after "giveup")
+        (set @entity.cursor 0)
+        (set @entity.killTo (array/len @entity.pids))
+        (emit KILL_STEP { at: 0 })
+      JUDGE -> stopping when (and @entity.exitRestartable (< (array/len (array/filter @entity.restartLog (fn t (>= @t (- @now @config.periodMs))))) @config.maxRestarts))
+        (set @entity.restartLog (array/append (array/filter @entity.restartLog (fn t (>= @t (- @now @config.periodMs)))) @now))
+        (set @entity.after "restart")
+        (set @entity.cursor (if (== @config.strategy "rest-for-one") (+ @entity.exitIndex 1) 0))
+        (set @entity.killTo (if (== @config.strategy "one-for-one") 0 (array/len @entity.pids)))
+        (set @entity.spawnFrom (if (== @config.strategy "one-for-all") 0 @entity.exitIndex))
+        (set @entity.spawnTo (if (== @config.strategy "one-for-one") (+ @entity.exitIndex 1) (array/len @entity.pids)))
+        (emit CHILD_RESTARTING { name: (object/get (array/nth @config.children @entity.exitIndex) "name"), strategy: @config.strategy, code: @entity.exitCode, restarts: (array/len (array/filter @entity.restartLog (fn t (>= @t (- @now @config.periodMs))))) })
+        (emit KILL_STEP { at: 0 })
+    }
+
+    state stopping {
+      INIT -> idle
+        (set @entity.pids [])
+        (set @entity.restartLog [])
+        (set @entity.cursor 0)
+      KILL_STEP -> stopping when (and (< @entity.cursor @entity.killTo) (!= (array/nth @entity.pids @entity.cursor) 0))
+        (os/kill (array/nth @entity.pids @entity.cursor) "TERM" { key: "kill", emit: { failure: CHILD_KILL_FAILED } })
+        (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @entity.cursor) 0 @p))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit KILL_STEP { at: (+ @entity.cursor 1) })
+      KILL_STEP -> stopping when (and (< @entity.cursor @entity.killTo) (== (array/nth @entity.pids @entity.cursor) 0))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit KILL_STEP { at: (+ @entity.cursor 1) })
+      KILL_STEP -> spawning when (and (>= @entity.cursor @entity.killTo) (== @entity.after "restart"))
+        (set @entity.cursor @entity.spawnFrom)
+        (emit SPAWN_STEP { })
+      KILL_STEP -> idle when (and (>= @entity.cursor @entity.killTo) (== @entity.after "giveup"))
+        (emit SUPERVISOR_GAVE_UP { reason: "intensity", child: (object/get (array/nth @config.children @entity.exitIndex) "name"), restarts: (array/len @entity.restartLog) })
+      KILL_STEP -> idle when (and (>= @entity.cursor @entity.killTo) (== @entity.after "stop"))
+        (emit SUPERVISOR_STOPPED { })
+      CHILD_KILL_FAILED -> stopping
+        (emit CHILD_KILL_ERROR { error: @payload.error })
+    }
+
+    emits {
+      CHILD_SPAWNED -> internal {
+        pid : number!
+      }
+        @description "Internal: the os/spawn answer for the child being started."
+        @tier "secondary"
+      CHILD_SPAWN_FAILED -> internal {
+        error : string
+      }
+        @description "Internal: os/spawn could not start the child."
+        @tier "secondary"
+      CHILD_EXITED -> internal {
+        code : number
+        signal : string
+      }
+        @description "Internal: the os/wait answer, a watched child ended."
+        @tier "secondary"
+      CHILD_WAIT_FAILED -> internal {
+        error : string
+      }
+        @description "Internal: os/wait could not watch the child."
+        @tier "secondary"
+      CHILD_KILL_FAILED -> internal {
+        error : string
+      }
+        @description "Internal: os/kill could not signal the child."
+        @tier "secondary"
+      CHILD_STARTED -> external {
+        name : string!
+        pid : number!
+      }
+        @description "A child was spawned and is being watched."
+        @synonyms "child up, process started"
+        @tier "domain"
+      SUPERVISOR_READY -> external {
+        children : number!
+      }
+        @description "Every configured child is running."
+        @synonyms "all started, up"
+        @tier "domain"
+      CHILD_RETIRED -> external {
+        name : string!
+        code : number!
+        abnormal : boolean!
+      }
+        @description "A child ended and its restart policy chose not to restart it."
+        @synonyms "child finished, not restarted"
+        @tier "domain"
+      CHILD_RESTARTING -> external {
+        name : string!
+        strategy : string!
+        code : number!
+        restarts : number!
+      }
+        @description "A child ended and the strategy is stopping siblings and respawning; restarts counts this one inside the period."
+        @synonyms "restart, respawn"
+        @tier "domain"
+      SUPERVISOR_GAVE_UP -> external {
+        reason : string!
+        child : string!
+        restarts : number!
+      }
+        @description "Escalation: restart intensity (maxRestarts inside periodMs) was exceeded or a spawn failed; the remaining children were stopped."
+        @synonyms "escalate, intensity exceeded, failed for good"
+        @tier "domain"
+      SUPERVISOR_STOPPED -> external {
+      }
+        @description "STOP finished; every child was signalled."
+        @synonyms "stopped, shut down"
+        @tier "domain"
+      CHILD_KILL_ERROR -> external {
+        error : string
+      }
+        @description "A sibling could not be signalled."
+        @synonyms "kill failed"
+        @tier "domain"
+      SPAWN_STEP -> internal { }
+        @tier "internal"
+      KILL_STEP -> internal {
+        at : number!
+      }
+        @tier "internal"
+      DECIDE -> internal { }
+        @tier "internal"
+      JUDGE -> internal { }
+        @tier "internal"
+    }
+
+    listens {
+      START { }
+        @description "Spawn every configured child in order."
+        @synonyms "begin, boot, launch"
+      STOP { }
+        @description "Signal every child and end supervision."
+        @synonyms "shutdown, terminate"
+      CHILD_SPAWNED {
+        pid : number!
+        key : string!
+      }
+        @description "The os/spawn success: the child's process id."
+      CHILD_SPAWN_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "The os/spawn failure."
+      CHILD_EXITED {
+        code : number
+        signal : string
+        key : string!
+      }
+        @description "The os/wait completion for the pid in key."
+      CHILD_WAIT_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "The os/wait failure for the pid in key; judged as an abnormal exit."
+      CHILD_DOWN {
+        index : number!
+      }
+        @description "Platform down event for the child at this index; rename it to the instance-down event at the call site with a listens override."
+        @synonyms "instance down, child died"
+      CHILD_KILL_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "The os/kill failure."
+    }
+
+    config {
+      strategy : "one-for-one" | "one-for-all" | "rest-for-one" = one-for-one
+        @label "Strategy"
+        @description "one-for-one restarts only the failed child; one-for-all stops and restarts every child; rest-for-one restarts the failed child and those after it."
+        @synonyms "restart strategy, supervision strategy"
+        @tier "domain"
+      maxRestarts : number = 3
+        @label "Maximum restarts"
+        @description "Restarts allowed inside periodMs; one more emits SUPERVISOR_GAVE_UP."
+        @synonyms "restart intensity, restart limit"
+        @tier "domain"
+      periodMs : number = 5000
+        @label "Period (ms)"
+        @description "Width of the sliding window the restarts are counted in."
+        @synonyms "window, intensity period"
+        @tier "domain"
+      children : [SupervisedChild] = []
+        @label "Children"
+        @description "Child specs in start order: name, command, args, restart."
+        @synonyms "child specs, workers, processes"
+        @tier "domain"
+    }
+  }
+
+  page "/supervisor" as SupervisorPage -> Supervisor
+}

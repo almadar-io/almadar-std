@@ -1,8 +1,12 @@
 app std-arxiv [
   version: "1.0.0",
-  description: "std-arxiv — arXiv paper search through the keyless public Atom API (export.arxiv.org). ARXIV_SEARCH requests a relevance-ranked feed; a blank query, a non-2xx reply or a failed call answers an empty result list. A 2xx feed is handed on as ARXIV_SEARCH_FEED text because no std operator can read Atom entries yet.",
+  description: "std-arxiv — arXiv paper search through the keyless public Atom API (export.arxiv.org). ARXIV_SEARCH requests a relevance-ranked feed; a blank query or a non-2xx reply answers an empty result list. A 2xx feed is read with xml/parse into the paper list; a failed call or a 2xx body that is not well-formed XML answers ARXIV_SEARCH_ERROR { error, kind } (kind: timeout, failed, refused, unconfigured or malformed).",
   egress: ["https://export.arxiv.org"]
 ]
+type ArxivAuthor = { name : string }
+type ArxivLink = { "@href" : string, "@rel" : string }
+type ArxivEntry = { id : string, title : string, summary : string, published : string, author : [ArxivAuthor], link : [ArxivLink] }
+type ArxivFeed = { entry : [ArxivEntry] }
 type ArxivPaper = { id : string, title : string, summary : string, authors : [string], published : string, url : string }
 orbital ArxivOrbital {
   entity ArxivLookup [runtime] {
@@ -28,12 +32,32 @@ orbital ArxivOrbital {
         } { emit: { success: ARXIV_SEARCH_REPLIED, failure: ARXIV_SEARCH_FAILED } })
       ARXIV_SEARCH -> idle when (= (str/trim @payload.query) "")
         (emit ARXIV_SEARCH_RESULT { results: [] })
-      ARXIV_SEARCH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit ARXIV_SEARCH_FEED { feed: @payload.body })
+      ARXIV_SEARCH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (xml/valid @payload.body))
+        (emit ARXIV_SEARCH_RESULT {
+          results: (array/map
+            (array/filter
+              (let ((feed (xml/parse @payload.body ArxivFeed))) (if (validate/object @feed) (object/get @feed entry []) []))
+              (fn e (or (!= (object/get @e id "") "") (!= (object/get @e title "") ""))))
+            (fn e {
+              id: (object/get @e id ""),
+              title: (object/get @e title ""),
+              summary: (object/get @e summary ""),
+              authors: (array/map
+                (array/filter (object/get @e author []) (fn a (object/has @a name)))
+                (fn a (object/get @a name ""))),
+              published: (object/get @e published ""),
+              url: (let ((alt (array/find
+                  (object/get @e link [])
+                  (fn l (and (= (object/get @l (quote "@rel") "") "alternate") (!= (object/get @l (quote "@href") "") ""))))))
+                (if (!= @alt null) (object/get @alt (quote "@href") "") (object/get @e id "")))
+            }))
+        })
+      ARXIV_SEARCH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (xml/valid @payload.body)))
+        (emit ARXIV_SEARCH_ERROR { error: "arXiv returned a malformed Atom feed", kind: "malformed" })
       ARXIV_SEARCH_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit ARXIV_SEARCH_RESULT { results: [] })
       ARXIV_SEARCH_FAILED -> idle
-        (emit ARXIV_SEARCH_RESULT { results: [] })
+        (emit ARXIV_SEARCH_ERROR { error: @payload.error, kind: @payload.kind })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "arXiv unavailable: " @payload.error) })
     }
 
@@ -41,15 +65,16 @@ orbital ArxivOrbital {
       ARXIV_SEARCH_RESULT -> external {
         results : [ArxivPaper]!
       }
-        @description "Papers matching the search, most relevant first; empty when the query is blank, the call failed or arXiv answered non-2xx."
+        @description "Papers matching the search, most relevant first; empty when the query is blank or arXiv answered non-2xx."
         @synonyms "paper search results, preprints, academic papers"
         @tier "primary"
-      ARXIV_SEARCH_FEED -> external {
-        feed : string!
+      ARXIV_SEARCH_ERROR -> external {
+        error : string!
+        kind : string!
       }
-        @description "The raw Atom feed text of a 2xx search reply, awaiting an Atom reader."
-        @synonyms "atom feed, arxiv xml"
-        @tier "secondary"
+        @description "The search failed: the call timed out, failed, was refused or unconfigured, or the 2xx body is not a well-formed XML document; no paper list is produced."
+        @synonyms "malformed feed, arxiv parse failure"
+        @tier "primary"
       ARXIV_SEARCH_REPLIED {
         status : number!
         headers : Map string string

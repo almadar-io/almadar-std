@@ -1,0 +1,641 @@
+app std-otel [
+  version: "1.0.0",
+  description: "std-otel — OpenTelemetry export over OTLP/HTTP JSON. START_SPAN mints W3C trace and span ids from journaled random bytes and keeps the span in flight in the OtelSpan store; ADD_EVENT attaches a timed event; END_SPAN stamps the end and POSTs every ended, unexported span with its events to <endpoint>/v1/traces; RECORD_METRIC stores one sample and POSTs it to <endpoint>/v1/metrics as a sum, gauge or histogram data point. GET_SPAN and GET_METRICS read the local store. A rejected or unreachable collector answers OTEL_EXPORT_FAILED and leaves the data unexported.",
+  egress: ["http://localhost:4318"]
+]
+type OtelAttrValue = string | number | boolean
+type OtelSpanDraw = { name : string!, traceId : string, parentSpanId : string, kind : number, attributes : Map string OtelAttrValue }
+type OtelMetricDraw = { name : string!, metricType : string, value : number, unit : string, labels : Map string OtelAttrValue }
+type OtelSpanRow = { id : string!, traceId : string, parentSpanId : string, name : string, kind : number, startTime : number, endTime : number, status : string, statusMessage : string, attributes : Map string OtelAttrValue }
+type OtelEventView = { name : string!, timestamp : number!, attributes : Map string OtelAttrValue }
+type OtelSpanView = { spanId : string!, traceId : string!, name : string!, startTime : number!, endTime : number, status : string, attributes : Map string OtelAttrValue, events : [OtelEventView] }
+type OtelMetricView = { name : string!, metricType : string!, value : number!, values : [number], labels : Map string OtelAttrValue }
+type OtelSendKey = { signal : string, spanIds : [string], eventIds : [string], metricId : string }
+orbital OtelOrbital {
+  entity OtelSpan [persistent: otel_spans] {
+    id : string!
+    traceId : string!
+    parentSpanId : string = ""
+    name : string!
+    kind : number = 1
+    startTime : number!
+    endTime : number = 0
+    state : "open" | "ending" | "exported" = open
+    status : string = ""
+    statusMessage : string = ""
+    attributes : Map string OtelAttrValue = {}
+    lastEventTime : number = 0
+  }
+
+  entity OtelSpanEvent [persistent: otel_span_events] {
+    id : string!
+    spanId : string!
+    name : string!
+    timestamp : number!
+    attributes : Map string OtelAttrValue = {}
+    shipped : boolean = false
+  }
+
+  entity OtelMetric [persistent: otel_metrics] {
+    id : string!
+    name : string!
+    metricType : "counter" | "gauge" | "histogram" = counter
+    value : number = 0
+    unit : string = ""
+    labels : Map string OtelAttrValue = {}
+    timestamp : number!
+    exported : boolean = false
+  }
+
+  entity OtelExport [runtime] {
+    id : string!
+    spans : [OtelSpanRow] = []
+  }
+
+  trait OtelExporter -> OtelExport [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      START_SPAN -> idle
+        (random-bytes 24 {
+          key: (json/stringify { name: @payload.name, traceId: (or @payload.traceId ""), parentSpanId: (or @payload.parentSpanId ""), kind: (if (= @payload.kind "server") 2 (if (= @payload.kind "client") 3 (if (= @payload.kind "producer") 4 (if (= @payload.kind "consumer") 5 1)))), attributes: (or @payload.attributes {}) }),
+          emit: { success: OTEL_SPAN_DRAWN, failure: OTEL_RANDOM_FAILED }
+        })
+      OTEL_SPAN_DRAWN -> idle
+        (let ((d (json/parse @payload.key OtelSpanDraw)) (spanId (str/slice (hash/sha256 (str/concat @payload.value "span") "hex") 0 16)) (traceId (if (!= (object/get (json/parse @payload.key OtelSpanDraw) traceId "") "") (object/get (json/parse @payload.key OtelSpanDraw) traceId "") (str/slice (hash/sha256 (str/concat @payload.value "trace") "hex") 0 32))))
+          (do (persist create OtelSpan {
+            id: @spanId,
+            traceId: @traceId,
+            parentSpanId: (object/get @d parentSpanId ""),
+            name: (object/get @d name ""),
+            kind: (object/get @d kind 1),
+            startTime: (time/now),
+            attributes: (object/get @d attributes {})
+          } { emit: { success: OTEL_SPAN_STORED, failure: OTEL_STORE_FAILED } })
+          (emit START_SPAN_RESULT { spanId: @spanId, traceId: @traceId })))
+      OTEL_RANDOM_FAILED -> idle
+        (emit OTEL_EXPORT_FAILED { signal: "traces", kind: "random", error: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
+      OTEL_SPAN_STORED -> idle
+      OTEL_STORE_FAILED -> idle
+        (emit OTEL_EXPORT_FAILED { signal: "store", kind: "store", error: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
+
+      ADD_EVENT -> idle
+        (persist batch [
+          ["update", "OtelSpan", @payload.spanId, { lastEventTime: (time/now) }],
+          ["create", "OtelSpanEvent", { spanId: @payload.spanId, name: @payload.name, timestamp: (time/now), attributes: (or @payload.attributes {}), shipped: false }]
+        ] { emit: { success: OTEL_EVENT_STORED, failure: OTEL_EVENT_REFUSED } })
+      OTEL_EVENT_STORED -> idle
+        (emit ADD_EVENT_RESULT { added: true })
+      OTEL_EVENT_REFUSED -> idle
+        (emit ADD_EVENT_RESULT { added: false, error: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
+
+      END_SPAN -> idle
+        (persist update OtelSpan {
+          id: @payload.spanId,
+          endTime: (time/now),
+          state: "ending",
+          status: (or @payload.status ""),
+          statusMessage: (or @payload.statusMessage "")
+        } { emit: { success: OTEL_SPAN_STAMPED, failure: OTEL_SPAN_NOT_ENDED } })
+      OTEL_SPAN_NOT_ENDED -> idle
+        (emit END_SPAN_RESULT { ended: false, error: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
+      OTEL_SPAN_STAMPED -> idle
+        (emit END_SPAN_RESULT { ended: true })
+        (fetch OtelSpan { filter: { state: "ending" }, orderBy: "startTime", emit: { success: OTEL_ENDING_LOADED, failure: OTEL_READ_FAILED } })
+      OTEL_ENDING_LOADED -> idle when (> (array/count @payload.data) 0)
+        (set @entity.spans @payload.data)
+        (fetch OtelSpanEvent { filter: { shipped: false }, orderBy: "timestamp", emit: { success: OTEL_EVENTS_LOADED, failure: OTEL_READ_FAILED } })
+      OTEL_ENDING_LOADED -> idle when (= (array/count @payload.data) 0)
+      OTEL_EVENTS_LOADED -> idle
+        (let ((evs (array/filter @payload.data (fn ev (array/some @entity.spans (fn s (= (object/get @s id "") (object/get @ev spanId ""))))))))
+          (emit OTEL_SEND {
+            signal: "traces",
+            path: "/v1/traces",
+            key: (json/stringify { signal: "traces", spanIds: (array/map @entity.spans (fn s (object/get @s id ""))), eventIds: (array/map @evs (fn ev (object/get @ev id ""))), metricId: "" }),
+            body: (json/stringify { resourceSpans: [{
+              resource: { attributes: [{ key: "service.name", value: { stringValue: @config.serviceName } }] },
+              scopeSpans: [{
+                scope: { name: @config.scopeName },
+                spans: (array/map @entity.spans (fn s (object/merge
+                  {
+                    traceId: (object/get @s traceId ""),
+                    spanId: (object/get @s id ""),
+                    name: (object/get @s name ""),
+                    kind: (object/get @s kind 1),
+                    startTimeUnixNano: (str/concat (object/get @s startTime 0) "000000"),
+                    endTimeUnixNano: (str/concat (object/get @s endTime 0) "000000"),
+                    attributes: (let ((m (object/mapValues (object/get @s attributes {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))),
+                    events: (array/map (array/filter @evs (fn ev (= (object/get @ev spanId "") (object/get @s id "")))) (fn ev {
+                      timeUnixNano: (str/concat (object/get @ev timestamp 0) "000000"),
+                      name: (object/get @ev name ""),
+                      attributes: (let ((m (object/mapValues (object/get @ev attributes {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) })))
+                    })),
+                    status: (if (= (object/get @s status "") "ok") { code: 1, message: (object/get @s statusMessage "") } (if (= (object/get @s status "") "error") { code: 2, message: (object/get @s statusMessage "") } { code: 0 }))
+                  }
+                  (if (!= (object/get @s parentSpanId "") "") { parentSpanId: (object/get @s parentSpanId "") } {}))))
+              }]
+            }] })
+          }))
+
+      RECORD_METRIC -> idle
+        (random-bytes 16 {
+          key: (json/stringify { name: @payload.name, metricType: (or @payload.type "counter"), value: (if (validate/number @payload.value) @payload.value 0), unit: (or @payload.unit ""), labels: (or @payload.labels {}) }),
+          emit: { success: OTEL_METRIC_DRAWN, failure: OTEL_RANDOM_FAILED }
+        })
+      OTEL_METRIC_DRAWN -> idle
+        (let ((d (json/parse @payload.key OtelMetricDraw)) (id (str/slice (hash/sha256 (str/concat @payload.value "metric") "hex") 0 32)) (now (time/now)))
+          (do (persist create OtelMetric {
+            id: @id,
+            name: (object/get @d name ""),
+            metricType: (object/get @d metricType "counter"),
+            value: (object/get @d value 0),
+            unit: (object/get @d unit ""),
+            labels: (object/get @d labels {}),
+            timestamp: @now,
+            exported: false
+          } { emit: { success: OTEL_METRIC_STORED, failure: OTEL_METRIC_NOT_STORED } })
+          (emit OTEL_SEND {
+            signal: "metrics",
+            path: "/v1/metrics",
+            key: (json/stringify { signal: "metrics", spanIds: [], eventIds: [], metricId: @id }),
+            body: (json/stringify { resourceMetrics: [{
+              resource: { attributes: [{ key: "service.name", value: { stringValue: @config.serviceName } }] },
+              scopeMetrics: [{
+                scope: { name: @config.scopeName },
+                metrics: [(object/merge
+                  { name: (object/get @d name ""), unit: (object/get @d unit "") }
+                  (if (= (object/get @d metricType "counter") "gauge")
+                    { gauge: { dataPoints: [{ attributes: (let ((m (object/mapValues (object/get @d labels {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))), timeUnixNano: (str/concat @now "000000"), asDouble: (object/get @d value 0) }] } }
+                    (if (= (object/get @d metricType "counter") "histogram")
+                      { histogram: { aggregationTemporality: 1, dataPoints: [{ attributes: (let ((m (object/mapValues (object/get @d labels {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))), startTimeUnixNano: (str/concat @now "000000"), timeUnixNano: (str/concat @now "000000"), count: "1", sum: (object/get @d value 0), min: (object/get @d value 0), max: (object/get @d value 0), bucketCounts: ["1"], explicitBounds: [] }] } }
+                      { sum: { aggregationTemporality: 1, isMonotonic: true, dataPoints: [{ attributes: (let ((m (object/mapValues (object/get @d labels {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))), startTimeUnixNano: (str/concat @now "000000"), timeUnixNano: (str/concat @now "000000"), asDouble: (object/get @d value 0) }] } })))]
+              }]
+            }] })
+          })))
+      OTEL_METRIC_STORED -> idle
+        (emit RECORD_METRIC_RESULT { recorded: true })
+      OTEL_METRIC_NOT_STORED -> idle
+        (emit RECORD_METRIC_RESULT { recorded: false, error: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
+
+      OTEL_SEND -> idle when (not @config.authenticated)
+        (http POST @config.endpoint @payload.path {
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          text: @payload.body,
+          timeoutMs: @config.timeoutMs
+        } { key: @payload.key, emit: { success: OTEL_REPLIED, failure: OTEL_SEND_FAILED } })
+      OTEL_SEND -> idle when @config.authenticated
+        (http POST @config.endpoint @payload.path {
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          text: @payload.body,
+          auth: { scheme: api-key, credential: @config.headerCredential, name: @config.headerName, in: header },
+          timeoutMs: @config.timeoutMs
+        } { key: @payload.key, emit: { success: OTEL_REPLIED, failure: OTEL_SEND_FAILED } })
+      OTEL_SEND_FAILED -> idle
+        (emit OTEL_EXPORT_FAILED { signal: (object/get (json/parse @payload.key OtelSendKey) signal ""), kind: @payload.kind, error: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
+      OTEL_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit OTEL_EXPORT_FAILED { signal: (object/get (json/parse @payload.key OtelSendKey) signal ""), kind: "rejected", status: @payload.status, error: @payload.body })
+      OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (json/parse @payload.key OtelSendKey) signal "") "traces") (= (array/count (object/get (json/parse @payload.key OtelSendKey) eventIds [])) 0))
+        (persist batch (array/map (object/get (json/parse @payload.key OtelSendKey) spanIds []) (fn id ["update", "OtelSpan", @id, { state: "exported" }])) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
+        (emit OTEL_EXPORTED { signal: "traces", count: (array/count (object/get (json/parse @payload.key OtelSendKey) spanIds [])) })
+      OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (json/parse @payload.key OtelSendKey) signal "") "traces") (> (array/count (object/get (json/parse @payload.key OtelSendKey) eventIds [])) 0))
+        (persist batch (array/map (object/get (json/parse @payload.key OtelSendKey) spanIds []) (fn id ["update", "OtelSpan", @id, { state: "exported" }])) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
+        (persist batch (array/map (object/get (json/parse @payload.key OtelSendKey) eventIds []) (fn id ["update", "OtelSpanEvent", @id, { shipped: true }])) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
+        (emit OTEL_EXPORTED { signal: "traces", count: (array/count (object/get (json/parse @payload.key OtelSendKey) spanIds [])) })
+      OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (json/parse @payload.key OtelSendKey) signal "") "metrics"))
+        (persist update OtelMetric { id: (object/get (json/parse @payload.key OtelSendKey) metricId ""), exported: true } { emit: { success: OTEL_METRIC_MARKED, failure: OTEL_MARK_FAILED } })
+        (emit OTEL_EXPORTED { signal: "metrics", count: 1 })
+      OTEL_TRACES_MARKED -> idle
+      OTEL_METRIC_MARKED -> idle
+      OTEL_MARK_FAILED -> idle
+        (emit OTEL_EXPORT_FAILED { signal: "store", kind: "store", error: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
+
+      GET_SPAN -> idle
+        (fetch OtelSpan { id: @payload.spanId, emit: { success: OTEL_SPAN_LOADED, failure: OTEL_SPAN_MISSING } })
+      OTEL_SPAN_MISSING -> idle
+        (emit GET_SPAN_RESULT { found: false })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No span has that id" })
+      OTEL_SPAN_LOADED -> idle
+        (set @entity.spans [@payload.data])
+        (fetch OtelSpanEvent { filter: { spanId: (object/get @payload.data id "") }, orderBy: "timestamp", emit: { success: OTEL_SPAN_EVENTS_LOADED, failure: OTEL_READ_FAILED } })
+      OTEL_SPAN_EVENTS_LOADED -> idle
+        (let ((s (array/first @entity.spans)))
+          (emit GET_SPAN_RESULT { found: true, span: (object/merge
+            {
+              spanId: (object/get @s id ""),
+              traceId: (object/get @s traceId ""),
+              name: (object/get @s name ""),
+              startTime: (object/get @s startTime 0),
+              attributes: (object/get @s attributes {}),
+              events: (array/map @payload.data (fn ev { name: (object/get @ev name ""), timestamp: (object/get @ev timestamp 0), attributes: (object/get @ev attributes {}) }))
+            }
+            (if (!= (object/get @s endTime 0) 0) { endTime: (object/get @s endTime 0) } {})
+            (if (!= (object/get @s status "") "") { status: (object/get @s status "") } {})) }))
+
+      GET_METRICS -> idle
+        (fetch OtelMetric { orderBy: "timestamp", emit: { success: OTEL_METRICS_LOADED, failure: OTEL_READ_FAILED } })
+      OTEL_METRICS_LOADED -> idle
+        (emit GET_METRICS_RESULT { metrics: (array/map (array/unique (array/map @payload.data (fn m (object/get @m name "")))) (fn n
+          (let ((rows (array/filter @payload.data (fn m (= (object/get @m name "") @n)))))
+            (let ((acc (array/reduce @rows { value: 0, values: [] } (fn acc m
+              (if (= (object/get @m metricType "counter") "counter") { value: (+ (object/get @acc value 0) (object/get @m value 0)), values: (object/get @acc values []) }
+                (if (= (object/get @m metricType "counter") "gauge") { value: (object/get @m value 0), values: (object/get @acc values []) }
+                  { value: (object/get @acc value 0), values: (array/append (object/get @acc values []) (object/get @m value 0)) }))))))
+              { name: @n, metricType: (object/get (array/first @rows) metricType "counter"), value: (object/get @acc value 0), values: (object/get @acc values []), labels: (object/get (array/last @rows) labels {}) })))) })
+      OTEL_READ_FAILED -> idle
+        (emit OTEL_EXPORT_FAILED { signal: "store", kind: "store", error: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "OpenTelemetry export unavailable: " @payload.error) })
+    }
+
+    emits {
+      START_SPAN_RESULT -> external {
+        spanId : string!
+        traceId : string!
+      }
+        @description "A span was started and is in flight: its 16-hex-character span id and 32-hex-character trace id."
+        @synonyms "span started, span opened, trace id"
+        @tier "primary"
+      END_SPAN_RESULT -> external {
+        ended : boolean!
+        error : string
+      }
+        @description "Whether END_SPAN found the span and stamped its end; false carries the store's reason. The OTLP export itself answers OTEL_EXPORTED or OTEL_EXPORT_FAILED."
+        @synonyms "span ended, span closed"
+        @tier "primary"
+      ADD_EVENT_RESULT -> external {
+        added : boolean!
+        error : string
+      }
+        @description "Whether the event was attached to the span; false when the span does not exist."
+        @synonyms "event added, span event recorded"
+        @tier "primary"
+      RECORD_METRIC_RESULT -> external {
+        recorded : boolean!
+        error : string
+      }
+        @description "Whether the metric sample was stored locally; the OTLP export answers OTEL_EXPORTED or OTEL_EXPORT_FAILED."
+        @synonyms "metric recorded, sample stored"
+        @tier "primary"
+      GET_SPAN_RESULT -> external {
+        found : boolean!
+        span : OtelSpanView
+      }
+        @description "The locally stored span with its events, or found false when no span has that id."
+        @synonyms "span lookup, span details"
+        @tier "primary"
+      GET_METRICS_RESULT -> external {
+        metrics : [OtelMetricView]!
+      }
+        @description "The locally stored samples aggregated per metric name: counters summed, gauges at their last value, histograms as the list of samples."
+        @synonyms "metrics lookup, metric totals"
+        @tier "primary"
+      OTEL_EXPORTED -> external {
+        signal : string!
+        count : number!
+      }
+        @description "The collector accepted an OTLP request (2xx): the signal (traces or metrics) and how many spans or samples it carried."
+        @synonyms "export succeeded, telemetry shipped"
+        @tier "primary"
+      OTEL_EXPORT_FAILED -> external {
+        signal : string!
+        kind : string!
+        status : number
+        error : string!
+      }
+        @description "An export or store step failed: the signal (traces, metrics or store), the kind (timeout, failed, refused, unconfigured, unavailable, rejected for a non-2xx collector reply, random, store), the HTTP status when the collector replied, and the error text or reply body. Unexported spans stay in the ending state and ride the next END_SPAN."
+        @synonyms "export error, collector unreachable, telemetry failed"
+        @tier "primary"
+      OTEL_SPAN_DRAWN {
+        value : string!
+        key : string!
+      }
+        @description "Internal: the journaled random bytes that form a span's ids."
+        @tier "secondary"
+      OTEL_METRIC_DRAWN {
+        value : string!
+        key : string!
+      }
+        @description "Internal: the journaled random bytes that form a metric sample's id."
+        @tier "secondary"
+      OTEL_RANDOM_FAILED {
+        error : string!
+        key : string
+      }
+        @description "Internal: the random bytes were refused."
+        @tier "secondary"
+      OTEL_SPAN_STORED {
+        id : string
+      }
+        @description "Internal: the span row was written."
+        @tier "secondary"
+      OTEL_STORE_FAILED {
+        error : string!
+        code : string
+      }
+        @description "Internal: a store write failed."
+        @tier "secondary"
+      OTEL_EVENT_STORED {
+        operations : [OtelSpanEvent]
+        completedCount : number
+        totalCount : number
+      }
+        @description "Internal: the span event batch was written."
+        @tier "secondary"
+      OTEL_EVENT_REFUSED {
+        error : string!
+      }
+        @description "Internal: the span event batch failed, the span being absent."
+        @tier "secondary"
+      OTEL_SPAN_STAMPED {
+        id : string
+      }
+        @description "Internal: the span end was stamped."
+        @tier "secondary"
+      OTEL_SPAN_NOT_ENDED {
+        error : string!
+        code : string
+      }
+        @description "Internal: the span end could not be stamped."
+        @tier "secondary"
+      OTEL_ENDING_LOADED {
+        data : [OtelSpan]
+      }
+        @description "Internal: the ended, unexported spans."
+        @tier "secondary"
+      OTEL_EVENTS_LOADED {
+        data : [OtelSpanEvent]
+      }
+        @description "Internal: the unshipped span events."
+        @tier "secondary"
+      OTEL_METRIC_STORED {
+        id : string
+      }
+        @description "Internal: the metric sample was written."
+        @tier "secondary"
+      OTEL_METRIC_NOT_STORED {
+        error : string!
+        code : string
+      }
+        @description "Internal: the metric sample write failed."
+        @tier "secondary"
+      OTEL_SEND {
+        signal : string!
+        path : string!
+        key : string!
+        body : string!
+      }
+        @description "Internal: one OTLP/HTTP JSON request."
+        @tier "secondary"
+      OTEL_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: the collector's HTTP reply."
+        @tier "secondary"
+      OTEL_SEND_FAILED {
+        error : string!
+        kind : string!
+        key : string
+      }
+        @description "Internal: the collector call never produced a reply."
+        @tier "secondary"
+      OTEL_TRACES_MARKED {
+        operations : [OtelSpan]
+        completedCount : number
+        totalCount : number
+      }
+        @description "Internal: exported spans and events were marked."
+        @tier "secondary"
+      OTEL_METRIC_MARKED {
+        id : string
+      }
+        @description "Internal: the exported metric sample was marked."
+        @tier "secondary"
+      OTEL_MARK_FAILED {
+        error : string!
+        code : string
+      }
+        @description "Internal: marking exported rows failed."
+        @tier "secondary"
+      OTEL_SPAN_LOADED {
+        data : OtelSpan
+      }
+        @description "Internal: the span GET_SPAN asked for."
+        @tier "secondary"
+      OTEL_SPAN_MISSING {
+        error : string
+        code : string
+      }
+        @description "Internal: no span has the id GET_SPAN asked for."
+        @tier "secondary"
+      OTEL_SPAN_EVENTS_LOADED {
+        data : [OtelSpanEvent]
+      }
+        @description "Internal: the events of the span GET_SPAN asked for."
+        @tier "secondary"
+      OTEL_METRICS_LOADED {
+        data : [OtelMetric]
+      }
+        @description "Internal: every stored metric sample."
+        @tier "secondary"
+      OTEL_READ_FAILED {
+        error : string!
+        code : string
+      }
+        @description "Internal: a store read failed."
+        @tier "secondary"
+    }
+
+    listens {
+      START_SPAN -> external {
+        name : string!
+        traceId : string
+        parentSpanId : string
+        kind : "internal" | "server" | "client" | "producer" | "consumer"
+        attributes : Map string OtelAttrValue
+      }
+        @description "Start a span. A traceId (32 lowercase hex characters) joins an existing trace; without one a new trace id is minted."
+        @synonyms "begin span, open span, start trace"
+      END_SPAN -> external {
+        spanId : string!
+        status : "ok" | "error"
+        statusMessage : string
+      }
+        @description "End a span and export every ended span with its events to the collector."
+        @synonyms "finish span, close span, stop span"
+      ADD_EVENT -> external {
+        spanId : string!
+        name : string!
+        attributes : Map string OtelAttrValue
+      }
+        @description "Attach a timed event to an in-flight span."
+        @synonyms "span event, annotate span, log on span"
+      RECORD_METRIC -> external {
+        name : string!
+        value : number
+        type : "counter" | "gauge" | "histogram"
+        unit : string
+        labels : Map string OtelAttrValue
+      }
+        @description "Record one metric sample and export it to the collector; type defaults to counter and value to 0."
+        @synonyms "emit metric, add sample, increment counter"
+      GET_SPAN -> external {
+        spanId : string!
+      }
+        @description "Read a span and its events from the local store."
+        @synonyms "inspect span, span lookup"
+      GET_METRICS -> external {
+      }
+        @description "Read the locally stored samples, aggregated per metric name."
+        @synonyms "read metrics, metric totals"
+      OTEL_SPAN_DRAWN {
+        value : string!
+        key : string!
+      }
+      OTEL_METRIC_DRAWN {
+        value : string!
+        key : string!
+      }
+      OTEL_RANDOM_FAILED {
+        error : string!
+        key : string
+      }
+      OTEL_SPAN_STORED {
+        id : string
+      }
+      OTEL_STORE_FAILED {
+        error : string!
+        code : string
+      }
+      OTEL_EVENT_STORED {
+        operations : [OtelSpanEvent]
+        completedCount : number
+        totalCount : number
+      }
+      OTEL_EVENT_REFUSED {
+        error : string!
+      }
+      OTEL_SPAN_STAMPED {
+        id : string
+      }
+      OTEL_SPAN_NOT_ENDED {
+        error : string!
+        code : string
+      }
+      OTEL_ENDING_LOADED {
+        data : [OtelSpan]
+      }
+      OTEL_EVENTS_LOADED {
+        data : [OtelSpanEvent]
+      }
+      OTEL_METRIC_STORED {
+        id : string
+      }
+      OTEL_METRIC_NOT_STORED {
+        error : string!
+        code : string
+      }
+      OTEL_SEND {
+        signal : string!
+        path : string!
+        key : string!
+        body : string!
+      }
+      OTEL_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      OTEL_SEND_FAILED {
+        error : string!
+        kind : string!
+        key : string
+      }
+      OTEL_TRACES_MARKED {
+        operations : [OtelSpan]
+        completedCount : number
+        totalCount : number
+      }
+      OTEL_METRIC_MARKED {
+        id : string
+      }
+      OTEL_MARK_FAILED {
+        error : string!
+        code : string
+      }
+      OTEL_SPAN_LOADED {
+        data : OtelSpan
+      }
+      OTEL_SPAN_MISSING {
+        error : string
+        code : string
+      }
+      OTEL_SPAN_EVENTS_LOADED {
+        data : [OtelSpanEvent]
+      }
+      OTEL_METRICS_LOADED {
+        data : [OtelMetric]
+      }
+      OTEL_READ_FAILED {
+        error : string!
+        code : string
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a failed export or store step; a page running it in the background keeps it in `system`."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      endpoint : url = "http://localhost:4318"
+        @label "OTLP/HTTP endpoint"
+        @description "The collector's OTLP/HTTP origin (scheme://host[:port]); requests go to <endpoint>/v1/traces and <endpoint>/v1/metrics. 4318 is the OTLP/HTTP port OTEL_EXPORTER_OTLP_ENDPOINT conventionally names. Must be declared in the app egress list."
+        @synonyms "collector url, otlp endpoint, otel exporter endpoint"
+        @tier "infra"
+      headerCredential : secret = ""
+        @label "Collector auth credential"
+        @description "Name of the credential whose value is sent in the header named by headerName; empty sends no auth header."
+        @synonyms "otlp headers, collector token, api key"
+        @tier "infra"
+      authenticated : boolean = false
+        @label "Send auth header"
+        @description "When true every request carries the header headerName with the value of the credential named by headerCredential."
+        @synonyms "use auth, authenticate collector"
+        @tier "infra"
+      headerName : string = "Authorization"
+        @label "Auth header name"
+        @description "The request header that carries the credential's value verbatim (for example Authorization with a Bearer or Basic value, or a vendor key header)."
+        @synonyms "auth header, token header"
+        @tier "infra"
+      serviceName : string = "almadar"
+        @label "Service name"
+        @description "The service.name resource attribute stamped on every exported span and metric."
+        @synonyms "otel service name, resource name"
+        @tier "domain"
+      scopeName : string = "almadar.std-otel"
+        @label "Instrumentation scope"
+        @description "The instrumentation scope name on every exported span and metric."
+        @synonyms "scope name, instrumentation library"
+        @tier "domain"
+      timeoutMs : number = 6000
+        @label "Request timeout (ms)"
+        @description "Milliseconds each OTLP request may take before it counts as failed."
+        @synonyms "timeout, export deadline"
+        @tier "infra"
+    }
+  }
+
+  page "/otel" as OtelPage -> OtelExporter
+}

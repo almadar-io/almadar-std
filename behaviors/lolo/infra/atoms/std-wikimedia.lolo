@@ -31,11 +31,11 @@ orbital WikimediaOrbital {
         (let ((page (array/first (object/values (object/get (object/get (json/parse @payload.body WikimediaReply) query {}) pages {})))))
           (emit WIKIMEDIA_PAGE_RESULT (if (or (= @page null) (object/has @page missing)) {}
             (object/merge
-              (if (!= (object/get @page title null) null) { title: (object/get @page title "") } {})
-              (if (!= (object/get @page description null) null) { description: (object/get @page description "") }
-                (if (!= (object/get @page extract null) null) { description: (array/first (str/split (object/get @page extract "") ".")) } {}))
+              (if (validate/required (object/get @page title null)) { title: (object/get @page title "") } {})
+              (if (validate/required (object/get @page description null)) { description: (object/get @page description "") }
+                (if (validate/required (object/get @page extract null)) { description: (array/first (str/split (object/get @page extract "") ".")) } {}))
               (if (!= (object/get (object/get @page thumbnail {}) source null) null) { portraitUrl: (object/get (object/get @page thumbnail {}) source "") } {})
-              (if (!= (object/get @page extract null) null) { extract: (str/trim (str/slice (object/get @page extract "") 0 2000)) } {})))))
+              (if (validate/required (object/get @page extract null)) { extract: (str/trim (str/slice (object/get @page extract "") 0 2000)) } {})))))
       WIKIMEDIA_PAGE_FAILED -> idle
         (emit WIKIMEDIA_PAGE_FAILURE { error: @payload.error, kind: @payload.kind })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Wikipedia unavailable: " @payload.error) })

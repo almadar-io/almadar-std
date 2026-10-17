@@ -1,0 +1,741 @@
+app std-social-graph [
+  version: "1.0.0",
+  description: "std-social-graph — anonymous peer matching and conversations. SOCIAL_TOUCH records that a member is on a node. SOCIAL_PEERS lists the members active on the node recently, each behind a 10 minute token and an anonymous handle, ranked by overlap with the caller's own concept set then by who is active now. SOCIAL_OPEN turns a token into a connection with badges; a connection with no activity for 7 days archives when it is read. Badge labels and message moderation are steps a std-llm composition answers: SOCIAL_BADGES_REQUESTED and SOCIAL_MODERATION_REQUESTED leave under a call key and a pending row, SOCIAL_BADGES_PROVIDED and SOCIAL_MODERATION_SCORED return echoing the key, so any number of requests may be outstanding at once."
+]
+type SocialStrings = [string]
+type SocialBadge = { id : string, label : string, kind : string }
+type SocialBadges = [SocialBadge]
+type SocialMemberSet = { memberId : string, names : [string], completed : number }
+type SocialMemberSets = [SocialMemberSet]
+type SocialPeer = { peerRef : string, handle : string, conceptsCompleted : number, convergencePct : number, activeNow : boolean }
+type SocialPeers = [SocialPeer]
+type SocialViewBadge = { id : string, label : string, kind : string, active : boolean }
+type SocialViewMessage = { id : string, fromViewer : boolean, content : string, createdAt : number, flagged : boolean, moderationReason : string }
+orbital SocialGraphOrbital {
+  entity NodePresence [persistent: node_presence] {
+    id : string!
+    nodeKey : string @description "The node the member was on, as kind:id." @synonyms "topic key, node" = ""
+    memberId : string @description "The member who was there." @synonyms "learner, user" = ""
+    lastSeenOnNode : number @description "Epoch milliseconds of the last visit." @synonyms "last seen, presence" = 0
+    reqLearner : string @intrinsic = ""
+    reqKey : string @intrinsic = ""
+    reqNames : [string] @intrinsic
+    reqSets : [SocialMemberSet] @intrinsic
+    reqMembers : [NodePresence] @intrinsic
+    reqRandom : string @intrinsic = ""
+  }
+
+  entity PeerToken [persistent: peer_tokens] {
+    id : string!
+    peerId : string @description "The member the token stands for." @synonyms "peer, target" = ""
+    issuedTo : string @description "The member the token was issued to." @synonyms "holder, caller" = ""
+    nodeKey : string @description "The node the token was issued on." @synonyms "topic key" = ""
+    expiresAt : number @description "Epoch milliseconds the token stops working." @synonyms "expiry" = 0
+  }
+
+  entity SocialConnection [persistent: social_connections] {
+    id : string!
+    callerId : string @description "The member who opened the connection." @synonyms "opener, caller" = ""
+    peerId : string @description "The member on the other side." @synonyms "peer, other member" = ""
+    participants : [string] @description "Both members." @synonyms "members, parties"
+    originKind : string @description "The kind of node the connection came from." @synonyms "origin type" = ""
+    originId : string @description "The node the connection came from." @synonyms "origin, topic" = ""
+    badges : [SocialBadge] @description "The conversation topics on offer." @synonyms "topics, subtopics"
+    activeBadgeId : string @description "The badge currently chosen." @synonyms "current badge, current topic" = ""
+    status : "active" | "archived" = active
+    lastActivityAt : number @description "Epoch milliseconds of the last message or the opening." @synonyms "last activity" = 0
+    archivedAt : number @description "Epoch milliseconds the connection archived; 0 while active." @synonyms "archived time" = 0
+    reqOp : string @intrinsic = ""
+    reqLearner : string @intrinsic = ""
+    reqConnection : string @intrinsic = ""
+    reqBadge : string @intrinsic = ""
+    reqContent : string @intrinsic = ""
+    reqPeerRef : string @intrinsic = ""
+    reqOriginKind : string @intrinsic = ""
+    reqOriginId : string @intrinsic = ""
+    reqPeerId : string @intrinsic = ""
+    pendingId : string @intrinsic = ""
+    reqLabels : [string] @intrinsic
+    reqScore : number @intrinsic = 0
+    reqReason : string @intrinsic = ""
+    scratchConn : [SocialConnection] @intrinsic
+    scratchStatus : string @intrinsic = ""
+    resultMessage : string @intrinsic = ""
+  }
+
+  entity SocialPending [runtime] {
+    id : string! @description "The call key the request runs under; replies find the row by it." @synonyms "request key, correlation key"
+    kind : string @description "badges or moderation." @synonyms "request kind" = ""
+    learnerId : string @description "The member who asked." @synonyms "caller" = ""
+    peerId : string @description "The peer a pending connection is for." @synonyms "other member" = ""
+    originKind : string @description "The kind of node a pending connection came from." @synonyms "origin type" = ""
+    originId : string @description "The node a pending connection came from." @synonyms "origin, topic" = ""
+    messageId : string @description "The message awaiting a relevance score." @synonyms "message" = ""
+    content : string @description "The text awaiting a relevance score." @synonyms "body" = ""
+    badgeLabel : string @description "The badge label the text is scored against." @synonyms "topic label" = ""
+  }
+
+  entity SocialMessage [persistent: social_messages] {
+    id : string!
+    connectionId : string @description "The connection the message belongs to." @synonyms "conversation" = ""
+    senderId : string @description "The member who sent it." @synonyms "from, author" = ""
+    content : string @description "The text." @synonyms "body, text" = ""
+    sentAt : number @description "Epoch milliseconds it was sent." @synonyms "sent time" = 0
+    badgeId : string @description "The badge active when it was sent." @synonyms "topic" = ""
+    flagged : boolean @description "True when moderation scored it as off topic." @synonyms "off topic, moderated" = false
+    moderationScore : number @description "Relevance from 0 to 1; 1 until scored." @synonyms "relevance" = 1
+    moderationReason : string @description "Why moderation flagged it." @synonyms "reason" = ""
+  }
+
+  trait SocialPresence -> NodePresence [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      SOCIAL_TOUCH -> touching when (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1)))))
+        (persist upsert NodePresence { id: (str/concat ?nodeKey "|" ?learnerId), nodeKey: ?nodeKey, memberId: ?learnerId, lastSeenOnNode: @now } { emit: { success: PresenceStored, failure: PeerFailed } })
+      SOCIAL_TOUCH -> idle when (not (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1))))))
+        (emit SOCIAL_REJECTED { reason: "bad-node-key" })
+
+      SOCIAL_PEERS -> loadingMembers when (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1)))))
+        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqKey ?nodeKey)
+        (set @entity.reqNames ?callerNames)
+        (set @entity.reqSets (if (= ?memberSets null) (json/parse "[]" SocialMemberSets) ?memberSets))
+        (fetch NodePresence { filter: ["and", ["=", (object/get @entity nodeKey), ?nodeKey], [">=", (object/get @entity lastSeenOnNode), (- @now (* @config.peerWindowDays 86400000))]], emit: { success: PresenceLoaded, failure: PeerFailed } })
+      SOCIAL_PEERS -> idle when (not (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1))))))
+        (emit SOCIAL_REJECTED { reason: "bad-node-key" })
+    }
+
+    state touching {
+      INIT -> idle
+      PresenceStored -> idle
+        (emit SOCIAL_TOUCHED {})
+      PeerFailed -> idle
+        (emit SOCIAL_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state loadingMembers {
+      INIT -> idle
+      PresenceLoaded -> idle when (= (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqLearner)))) 0)
+        (emit SOCIAL_PEERS_LISTED { peers: (json/parse "[]" SocialPeers) })
+      PresenceLoaded -> drawing when (> (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqLearner)))) 0)
+        (set @entity.reqMembers (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqLearner))))
+        (random-bytes (* @config.tokenBytes (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqLearner))))) { key: "social-peer-tokens", emit: { success: TokensDrawn, failure: PeerFailed } })
+      PeerFailed -> idle
+        (emit SOCIAL_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state drawing {
+      INIT -> idle
+      TokensDrawn -> issuing
+        (set @entity.reqRandom ?value)
+        (persist batch (array/map (array/range 0 (array/len @entity.reqMembers)) (fn i ["create" "PeerToken" { id: (str/slice ?value (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3)))), peerId: (object/get (array/nth @entity.reqMembers @i) memberId ""), issuedTo: @entity.reqLearner, nodeKey: @entity.reqKey, expiresAt: (+ @now @config.tokenTtlMs) }])) { emit: { success: TokensStored, failure: PeerFailed } })
+      PeerFailed -> idle
+        (emit SOCIAL_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state issuing {
+      INIT -> idle
+      TokensStored -> idle
+        (emit SOCIAL_PEERS_LISTED {
+          peers: (array/map (array/sort
+            (array/map (array/range 0 (array/len @entity.reqMembers))
+              (fn i (let ((vm (array/nth @entity.reqMembers @i))
+                          (vset (array/find @entity.reqSets (fn s (= (object/get @s memberId "") (object/get (array/nth @entity.reqMembers @i) memberId ""))))))
+                (let ((vnames (array/unique (object/get @vset names (json/parse "[]" SocialStrings))))
+                      (vcaller (array/unique @entity.reqNames)))
+                  (let ((vinter (array/len (array/filter @vcaller (fn n (array/includes @vnames @n))))))
+                    {
+                      peerRef: (str/slice @entity.reqRandom (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3))))
+                      handle: (str/concat "peer-" (str/slice (hash/sha256 (object/get @vm memberId "") "hex") 0 6))
+                      conceptsCompleted: (object/get @vset completed 0)
+                      convergencePct: (if (or (= (array/len @vcaller) 0) (= (array/len @vnames) 0)) 0 (math/round (* 100 (/ @vinter (- (+ (array/len @vcaller) (array/len @vnames)) @vinter)))))
+                      activeNow: (<= (- @now (object/get @vm lastSeenOnNode 0)) (* @config.activeNowMinutes 60000))
+                      rank: (+ (* 2 (if (or (= (array/len @vcaller) 0) (= (array/len @vnames) 0)) 0 (math/round (* 100 (/ @vinter (- (+ (array/len @vcaller) (array/len @vnames)) @vinter)))))) (if (<= (- @now (object/get @vm lastSeenOnNode 0)) (* @config.activeNowMinutes 60000)) 1 0))
+                    })))))
+            rank desc) (fn p { peerRef: (object/get @p peerRef ""), handle: (object/get @p handle ""), conceptsCompleted: (object/get @p conceptsCompleted 0), convergencePct: (object/get @p convergencePct 0), activeNow: (object/get @p activeNow false) }))
+        })
+      PeerFailed -> idle
+        (emit SOCIAL_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    emits {
+      SOCIAL_TOUCHED -> external {
+      }
+        @description "The member's presence on the node was recorded."
+        @synonyms "presence recorded, visited node"
+        @tier "primary"
+      SOCIAL_PEERS_LISTED -> external {
+        peers : [SocialPeer]!
+      }
+        @description "The members active on the node recently, other than the caller: a one-use token (peerRef), an anonymous handle, how many concepts they completed, the overlap with the caller's concepts as a percentage, and whether they are active now. Best overlap first, then active-now."
+        @synonyms "peers, who is here, matched learners"
+        @tier "primary"
+      SOCIAL_REJECTED -> external {
+        reason : string!
+      }
+        @description "The request was refused: bad-node-key."
+        @synonyms "peer request refused"
+        @tier "primary"
+      SOCIAL_FAILED -> external {
+        error : string
+      }
+        @description "A presence or token step failed against the store."
+        @synonyms "peer failure"
+        @tier "primary"
+      PresenceStored
+        @tier "internal"
+      PresenceLoaded {
+        data : [NodePresence]
+      }
+        @tier "internal"
+      TokensDrawn {
+        value : string!
+      }
+        @tier "internal"
+      TokensStored
+        @tier "internal"
+      PeerFailed {
+        error : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      SOCIAL_TOUCH -> external {
+        learnerId : string!
+        nodeKey : string!
+      }
+        @description "Record that a member is on a node (kind:id) right now."
+        @synonyms "touch node, presence, visit"
+        @tier "domain"
+      SOCIAL_PEERS -> external {
+        learnerId : string!
+        nodeKey : string!
+        callerNames : [string]!
+        memberSets : [SocialMemberSet]
+      }
+        @description "List the peers active on a node. callerNames is the caller's canonical concept names and memberSets holds the same for each member to compare."
+        @synonyms "find peers, who else is here, match learners"
+        @tier "domain"
+      PresenceStored
+      PresenceLoaded {
+        data : [NodePresence]
+      }
+      TokensDrawn {
+        value : string!
+      }
+      TokensStored
+      PeerFailed {
+        error : string
+      }
+    }
+
+    config {
+      nodeKinds : [string] = ["concept", "path"]
+        @label "Node kinds"
+        @description "The kinds a node key may start with; a key is kind:id."
+        @synonyms "key prefixes, node types"
+        @tier "domain"
+      peerWindowDays : number = 7
+        @label "Peer window in days"
+        @description "A member last seen on a node longer ago than this is not offered as a peer."
+        @synonyms "presence window, recent days"
+        @tier "domain"
+      activeNowMinutes : number = 5
+        @label "Active-now minutes"
+        @description "A member seen within this many minutes counts as active now."
+        @synonyms "online window"
+        @tier "domain"
+      tokenTtlMs : number = 600000
+        @label "Peer token lifetime in milliseconds"
+        @description "How long a peer token works after it is issued."
+        @synonyms "token expiry, ttl"
+        @tier "domain"
+      tokenBytes : number = 18
+        @label "Peer token size in bytes"
+        @description "Random bytes per token; must be a multiple of 3 so the token is 4/3 of that many characters with no padding."
+        @synonyms "token length"
+        @tier "infra"
+    }
+  }
+
+  trait SocialConnections -> SocialConnection [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      SOCIAL_OPEN -> loadingToken
+        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqPeerRef ?peerRef)
+        (set @entity.reqOriginKind ?originKind)
+        (set @entity.reqOriginId ?originId)
+        (fetch PeerToken { filter: ["=", (object/get @entity id), ?peerRef], emit: { success: TokenLoaded, failure: ConnFailed } })
+
+      SOCIAL_VIEW -> loadingConn
+        (set @entity.reqOp "view")
+        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqConnection ?connectionId)
+        (fetch SocialConnection { filter: ["=", (object/get @entity id), ?connectionId], emit: { success: ConnLoaded, failure: ConnFailed } })
+
+      SOCIAL_SET_BADGE -> loadingConn
+        (set @entity.reqOp "badge")
+        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqConnection ?connectionId)
+        (set @entity.reqBadge ?badgeId)
+        (fetch SocialConnection { filter: ["=", (object/get @entity id), ?connectionId], emit: { success: ConnLoaded, failure: ConnFailed } })
+
+      SOCIAL_SEND -> loadingConn when (> (str/len (str/trim ?content)) 0)
+        (set @entity.reqOp "send")
+        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqConnection ?connectionId)
+        (set @entity.reqContent ?content)
+        (set @entity.reqBadge (if (= ?badgeId null) "" ?badgeId))
+        (fetch SocialConnection { filter: ["=", (object/get @entity id), ?connectionId], emit: { success: ConnLoaded, failure: ConnFailed } })
+      SOCIAL_SEND -> idle when (= (str/len (str/trim ?content)) 0)
+        (emit SOCIAL_CONNECTION_REJECTED { reason: "content-required" })
+
+      SOCIAL_BADGES_PROVIDED -> loadingPending
+        (set @entity.reqOp "badges")
+        (set @entity.reqLabels ?labels)
+        (fetch SocialPending { filter: ["=", (object/get @entity id), ?key], emit: { success: PendingLoaded, failure: ConnFailed } })
+      SOCIAL_BADGES_FAILED -> loadingPending
+        (set @entity.reqOp "badges")
+        (set @entity.reqLabels (json/parse "[]" SocialStrings))
+        (fetch SocialPending { filter: ["=", (object/get @entity id), ?key], emit: { success: PendingLoaded, failure: ConnFailed } })
+      SOCIAL_MODERATION_SCORED -> loadingPending
+        (set @entity.reqOp "scored")
+        (set @entity.reqScore (math/max 0 (math/min 1 ?score)))
+        (set @entity.reqReason (if (= ?reason null) "" ?reason))
+        (fetch SocialPending { filter: ["=", (object/get @entity id), ?key], emit: { success: PendingLoaded, failure: ConnFailed } })
+      SOCIAL_MODERATION_FAILED -> loadingPending
+        (set @entity.reqOp "modFailed")
+        (fetch SocialPending { filter: ["=", (object/get @entity id), ?key], emit: { success: PendingLoaded, failure: ConnFailed } })
+      PendingDeleted -> idle
+      TokenDeleted -> idle
+      PendingStored -> idle when (= ?kind "badges")
+        (emit SOCIAL_BADGES_REQUESTED { key: (as ?id CallKey), originKind: ?originKind, originId: ?originId })
+      PendingStored -> idle when (= ?kind "moderation")
+        (emit SOCIAL_MODERATION_REQUESTED { key: (as ?id CallKey), messageId: ?messageId, content: ?content, badgeLabel: ?badgeLabel })
+      ConnFailed -> idle
+        (emit SOCIAL_CONNECTION_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state loadingToken {
+      INIT -> idle
+      TokenLoaded -> idle when (= (array/len ?data) 0)
+        (emit SOCIAL_CONNECTION_REJECTED { reason: "invalid-peer-ref" })
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (< (object/get (array/first ?data) expiresAt 0) @now))
+        (persist delete PeerToken @entity.reqPeerRef { emit: { success: TokenDeleted, failure: ConnFailed } })
+        (emit SOCIAL_CONNECTION_REJECTED { reason: "invalid-peer-ref" })
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (!= (object/get (array/first ?data) issuedTo "") @entity.reqLearner))
+        (emit SOCIAL_CONNECTION_REJECTED { reason: "invalid-peer-ref" })
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqLearner) (= (object/get (array/first ?data) peerId "") @entity.reqLearner))
+        (emit SOCIAL_CONNECTION_REJECTED { reason: "self-connection" })
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqLearner) (!= (object/get (array/first ?data) peerId "") @entity.reqLearner) @config.badgesFromLlm)
+        (persist create SocialPending { id: (str/concat "social-badges:" @entity.reqPeerRef), kind: "badges", learnerId: @entity.reqLearner, peerId: (object/get (array/first ?data) peerId ""), originKind: @entity.reqOriginKind, originId: @entity.reqOriginId } { emit: { success: PendingStored, failure: ConnFailed } })
+      TokenLoaded -> opening when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqLearner) (!= (object/get (array/first ?data) peerId "") @entity.reqLearner) (not @config.badgesFromLlm))
+        (set @entity.reqPeerId (object/get (array/first ?data) peerId ""))
+        (set @entity.pendingId "")
+        (emit BadgesReady { labels: [@entity.reqOriginId] })
+      ConnFailed -> idle
+        (emit SOCIAL_CONNECTION_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state opening {
+      INIT -> idle
+      BadgesReady -> saving
+        (persist create SocialConnection {
+          callerId: @entity.reqLearner
+          peerId: @entity.reqPeerId
+          participants: [@entity.reqLearner @entity.reqPeerId]
+          originKind: @entity.reqOriginKind
+          originId: @entity.reqOriginId
+          badges: (array/map (array/range 0 (array/len ?labels)) (fn i { id: (str/concat "b" @i), label: (array/nth ?labels @i), kind: "subtopic" }))
+          activeBadgeId: "b0"
+          status: "active"
+          lastActivityAt: @now
+          archivedAt: 0
+        } { emit: { success: ConnCreated, failure: ConnFailed } })
+      ConnFailed -> idle
+        (emit SOCIAL_CONNECTION_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state loadingPending {
+      INIT -> idle
+      PendingLoaded -> idle when (or (= (array/len ?data) 0) (and (= @entity.reqOp "badges") (!= (object/get (array/first ?data) kind "") "badges")) (and (!= @entity.reqOp "badges") (!= (object/get (array/first ?data) kind "") "moderation")))
+        (emit SOCIAL_CONNECTION_REJECTED { reason: "unknown-key" })
+      PendingLoaded -> opening when (and (> (array/len ?data) 0) (= @entity.reqOp "badges") (= (object/get (array/first ?data) kind "") "badges"))
+        (set @entity.pendingId (object/get (array/first ?data) id ""))
+        (set @entity.reqLearner (object/get (array/first ?data) learnerId ""))
+        (set @entity.reqPeerId (object/get (array/first ?data) peerId ""))
+        (set @entity.reqOriginKind (object/get (array/first ?data) originKind ""))
+        (set @entity.reqOriginId (object/get (array/first ?data) originId ""))
+        (emit BadgesReady { labels: (if (> (array/len @entity.reqLabels) 0) @entity.reqLabels [(object/get (array/first ?data) originId "")]) })
+      PendingLoaded -> cleaning when (and (> (array/len ?data) 0) (= @entity.reqOp "scored") (= (object/get (array/first ?data) kind "") "moderation"))
+        (set @entity.pendingId (object/get (array/first ?data) id ""))
+        (persist update SocialMessage { id: (object/get (array/first ?data) messageId ""), moderationScore: @entity.reqScore, flagged: (< @entity.reqScore @config.flagThreshold), moderationReason: @entity.reqReason } { emit: { success: ModerationStored, failure: ConnFailed } })
+      PendingLoaded -> idle when (and (> (array/len ?data) 0) (= @entity.reqOp "modFailed") (= (object/get (array/first ?data) kind "") "moderation"))
+        (set @entity.pendingId (object/get (array/first ?data) id ""))
+        (persist delete SocialPending @entity.pendingId { emit: { success: PendingDeleted, failure: ConnFailed } })
+      ConnFailed -> idle
+        (emit SOCIAL_CONNECTION_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state cleaning {
+      INIT -> idle
+      ModerationStored -> idle
+        (persist delete SocialPending @entity.pendingId { emit: { success: PendingDeleted, failure: ConnFailed } })
+      ConnFailed -> idle
+        (emit SOCIAL_CONNECTION_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state loadingConn {
+      INIT -> idle
+      ConnLoaded -> idle when (not (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqLearner)))
+        (emit SOCIAL_CONNECTION_REJECTED { reason: "not-found" })
+      ConnLoaded -> archiving when (and (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqLearner)) (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000))))
+        (set @entity.scratchConn ?data)
+        (set @entity.scratchStatus "archived")
+        (persist update SocialConnection { id: @entity.reqConnection, status: "archived", archivedAt: @now } { emit: { success: ConnArchived, failure: ConnFailed } })
+      ConnLoaded -> routing when (and (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqLearner)) (not (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000)))))
+        (set @entity.scratchConn ?data)
+        (set @entity.scratchStatus (object/get (array/first ?data) status ""))
+        (emit ConnReady)
+      ConnFailed -> idle
+        (emit SOCIAL_CONNECTION_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state archiving {
+      INIT -> idle
+      ConnArchived -> routing
+        (emit ConnReady)
+      ConnFailed -> idle
+        (emit SOCIAL_CONNECTION_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state routing {
+      INIT -> idle
+      ConnReady -> loadingMessages when (= @entity.reqOp "view")
+        (fetch SocialMessage { filter: ["=", (object/get @entity connectionId), @entity.reqConnection], orderBy: "sentAt:asc", emit: { success: MessagesLoaded, failure: ConnFailed } })
+      ConnReady -> idle when (and (!= @entity.reqOp "view") (= @entity.scratchStatus "archived"))
+        (emit SOCIAL_CONNECTION_REJECTED { reason: "archived" })
+      ConnReady -> idle when (and (= @entity.reqOp "badge") (!= @entity.scratchStatus "archived") (not (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
+        (emit SOCIAL_CONNECTION_REJECTED { reason: "badge-not-found" })
+      ConnReady -> saving when (and (= @entity.reqOp "badge") (!= @entity.scratchStatus "archived") (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge))))
+        (persist update SocialConnection { id: @entity.reqConnection, activeBadgeId: @entity.reqBadge } { emit: { success: BadgeStored, failure: ConnFailed } })
+      ConnReady -> idle when (and (= @entity.reqOp "send") (!= @entity.scratchStatus "archived") (!= @entity.reqBadge "") (not (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
+        (emit SOCIAL_CONNECTION_REJECTED { reason: "badge-not-found" })
+      ConnReady -> saving when (and (= @entity.reqOp "send") (!= @entity.scratchStatus "archived") (or (= @entity.reqBadge "") (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
+        (persist create SocialMessage {
+          connectionId: @entity.reqConnection
+          senderId: @entity.reqLearner
+          content: @entity.reqContent
+          sentAt: @now
+          badgeId: (if (= @entity.reqBadge "") (object/get (array/first @entity.scratchConn) activeBadgeId "") @entity.reqBadge)
+          flagged: false
+          moderationScore: 1
+          moderationReason: ""
+        } { emit: { success: MessageCreated, failure: ConnFailed } })
+      ConnFailed -> idle
+        (emit SOCIAL_CONNECTION_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state loadingMessages {
+      INIT -> idle
+      MessagesLoaded -> idle
+        (let ((vconn (array/first @entity.scratchConn)))
+          (emit SOCIAL_VIEWED {
+            connectionId: @entity.reqConnection
+            status: @entity.scratchStatus
+            peerHandle: (str/concat "peer-" (str/slice (hash/sha256 (if (= (object/get @vconn callerId "") @entity.reqLearner) (object/get @vconn peerId "") (object/get @vconn callerId "")) "hex") 0 6))
+            originKind: (object/get @vconn originKind "")
+            originLabel: (object/get @vconn originId "")
+            badges: (array/map (object/get @vconn badges (json/parse "[]" SocialBadges)) (fn b { id: (object/get @b id ""), label: (object/get @b label ""), kind: (object/get @b kind ""), active: (= (object/get @b id "") (object/get @vconn activeBadgeId "")) }))
+            messages: (array/map ?data (fn m { id: (object/get @m id ""), fromViewer: (= (object/get @m senderId "") @entity.reqLearner), content: (object/get @m content ""), createdAt: (object/get @m sentAt 0), flagged: (object/get @m flagged false), moderationReason: (object/get @m moderationReason "") }))
+          }))
+      ConnFailed -> idle
+        (emit SOCIAL_CONNECTION_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    state saving {
+      INIT -> idle
+      ConnCreated -> idle when (= @entity.pendingId "")
+        (emit SOCIAL_OPENED { connectionId: ?id })
+      ConnCreated -> idle when (!= @entity.pendingId "")
+        (emit SOCIAL_OPENED { connectionId: ?id })
+        (persist delete SocialPending @entity.pendingId { emit: { success: PendingDeleted, failure: ConnFailed } })
+      BadgeStored -> idle
+        (emit SOCIAL_BADGE_SET { connectionId: @entity.reqConnection })
+      MessageCreated -> saving
+        (set @entity.resultMessage ?id)
+        (persist update SocialConnection { id: @entity.reqConnection, lastActivityAt: @now } { emit: { success: ActivityStored, failure: ConnFailed } })
+      ActivityStored -> idle when (not @config.moderationFromLlm)
+        (emit SOCIAL_SENT { messageId: @entity.resultMessage })
+      ActivityStored -> idle when @config.moderationFromLlm
+        (emit SOCIAL_SENT { messageId: @entity.resultMessage })
+        (persist create SocialPending { id: (str/concat "social-moderation:" @entity.resultMessage), kind: "moderation", learnerId: @entity.reqLearner, messageId: @entity.resultMessage, content: @entity.reqContent, badgeLabel: (object/get (array/find (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") (if (= @entity.reqBadge "") (object/get (array/first @entity.scratchConn) activeBadgeId "") @entity.reqBadge)))) label "") } { emit: { success: PendingStored, failure: ConnFailed } })
+      ConnFailed -> idle
+        (emit SOCIAL_CONNECTION_FAILED { error: ?error })
+        (notify error (str/concat "The social step failed: " ?error))
+    }
+
+    emits {
+      SOCIAL_OPENED -> external {
+        connectionId : string!
+      }
+        @description "A connection to the peer was opened."
+        @synonyms "connected, conversation started"
+        @tier "primary"
+      SOCIAL_VIEWED -> external {
+        connectionId : string!
+        status : string!
+        peerHandle : string!
+        originKind : string!
+        originLabel : string!
+        badges : [SocialViewBadge]!
+        messages : [SocialViewMessage]!
+      }
+        @description "A connection as the viewer sees it: its status (a connection idle for the dormant window is archived by this read), the peer's anonymous handle, badges with the active one marked, and the messages oldest first."
+        @synonyms "conversation, connection view, thread"
+        @tier "primary"
+      SOCIAL_BADGE_SET -> external {
+        connectionId : string!
+      }
+        @description "The active badge of a connection changed."
+        @synonyms "topic chosen, badge chosen"
+        @tier "primary"
+      SOCIAL_SENT -> external {
+        messageId : string!
+      }
+        @description "A message was stored and the connection's activity time moved."
+        @synonyms "message sent, posted"
+        @tier "primary"
+      SOCIAL_CONNECTION_REJECTED -> external {
+        reason : string!
+      }
+        @description "The request was refused: invalid-peer-ref, self-connection, not-found, archived, badge-not-found or content-required."
+        @synonyms "connection refused"
+        @tier "primary"
+      SOCIAL_CONNECTION_FAILED -> external {
+        error : string
+      }
+        @description "A connection read or write failed against the store."
+        @synonyms "connection failure"
+        @tier "primary"
+      SOCIAL_BADGES_REQUESTED -> external {
+        key : CallKey!
+        originKind : string!
+        originId : string!
+      }
+        @description "Seam for a std-llm step: propose 3 to 5 short discussion labels for this origin and answer SOCIAL_BADGES_PROVIDED, or SOCIAL_BADGES_FAILED, each echoing this key, to fall back to the origin as the one badge. Sent only when badgesFromLlm is on."
+        @synonyms "badge labels needed, subtopics wanted"
+        @tier "secondary"
+      SOCIAL_MODERATION_REQUESTED -> external {
+        key : CallKey!
+        messageId : string!
+        content : string!
+        badgeLabel : string!
+      }
+        @description "Seam for a std-llm step: score how relevant the message is to the badge from 0 to 1 and answer SOCIAL_MODERATION_SCORED, or SOCIAL_MODERATION_FAILED, each echoing this key, to leave it unflagged. Sent only when moderationFromLlm is on."
+        @synonyms "moderation wanted, relevance check"
+        @tier "secondary"
+      PendingStored {
+        id : string!
+        kind : string
+        originKind : string
+        originId : string
+        messageId : string
+        content : string
+        badgeLabel : string
+      }
+        @tier "internal"
+      PendingLoaded {
+        data : [SocialPending]
+      }
+        @tier "internal"
+      PendingDeleted
+        @tier "internal"
+      TokenDeleted
+        @tier "internal"
+      TokenLoaded {
+        data : [PeerToken]
+      }
+        @tier "internal"
+      BadgesReady {
+        labels : [string]!
+      }
+        @tier "internal"
+      ConnCreated {
+        id : string!
+      }
+        @tier "internal"
+      ConnLoaded {
+        data : [SocialConnection]
+      }
+        @tier "internal"
+      ConnArchived
+        @tier "internal"
+      ConnReady
+        @tier "internal"
+      MessagesLoaded {
+        data : [SocialMessage]
+      }
+        @tier "internal"
+      BadgeStored
+        @tier "internal"
+      MessageCreated {
+        id : string!
+      }
+        @tier "internal"
+      ActivityStored
+        @tier "internal"
+      ModerationStored
+        @tier "internal"
+      ConnFailed {
+        error : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      SOCIAL_OPEN -> external {
+        learnerId : string!
+        peerRef : string!
+        originKind : string!
+        originId : string!
+      }
+        @description "Open a connection to the peer a token stands for; the token must be unexpired, issued to the caller and not the caller's own."
+        @synonyms "connect, open connection, start conversation"
+        @tier "domain"
+      SOCIAL_BADGES_PROVIDED {
+        key : CallKey!
+        labels : [string]!
+      }
+      SOCIAL_BADGES_FAILED {
+        key : CallKey!
+        error : string
+      }
+      SOCIAL_VIEW -> external {
+        learnerId : string!
+        connectionId : string!
+      }
+        @description "Read a connection and its messages; only a participant may."
+        @synonyms "open conversation, read thread"
+        @tier "domain"
+      SOCIAL_SET_BADGE -> external {
+        learnerId : string!
+        connectionId : string!
+        badgeId : string!
+      }
+        @description "Choose the active badge of an active connection."
+        @synonyms "choose topic, pick badge"
+        @tier "domain"
+      SOCIAL_SEND -> external {
+        learnerId : string!
+        connectionId : string!
+        content : string!
+        badgeId : string
+      }
+        @description "Send a message on an active connection under the given or current badge."
+        @synonyms "send message, post message, reply"
+        @tier "domain"
+      SOCIAL_MODERATION_SCORED -> external {
+        key : CallKey!
+        score : number!
+        reason : string
+      }
+        @description "The relevance a std-llm step gave a message, from 0 to 1; below the flag threshold it is flagged."
+        @synonyms "relevance score, moderation result"
+        @tier "secondary"
+      SOCIAL_MODERATION_FAILED -> external {
+        key : CallKey!
+        error : string
+      }
+        @description "The moderation step failed; the message stays unflagged."
+        @synonyms "moderation failure"
+        @tier "secondary"
+      PendingStored {
+        id : string!
+        kind : string
+        originKind : string
+        originId : string
+        messageId : string
+        content : string
+        badgeLabel : string
+      }
+      PendingLoaded {
+        data : [SocialPending]
+      }
+      PendingDeleted
+      TokenDeleted
+      TokenLoaded {
+        data : [PeerToken]
+      }
+      BadgesReady {
+        labels : [string]!
+      }
+      ConnCreated {
+        id : string!
+      }
+      ConnLoaded {
+        data : [SocialConnection]
+      }
+      ConnArchived
+      ConnReady
+      MessagesLoaded {
+        data : [SocialMessage]
+      }
+      BadgeStored
+      MessageCreated {
+        id : string!
+      }
+      ActivityStored
+      ModerationStored
+      ConnFailed {
+        error : string
+      }
+    }
+
+    config {
+      dormantDays : number = 7
+        @label "Dormant days"
+        @description "A connection with no activity for this many days archives the next time it is read."
+        @synonyms "archive after, idle days"
+        @tier "domain"
+      flagThreshold : number = 0.4
+        @label "Flag threshold"
+        @description "A relevance score below this flags the message."
+        @synonyms "moderation threshold, relevance cutoff"
+        @tier "domain"
+      badgesFromLlm : boolean = false
+        @label "Badges from a model"
+        @description "When on, opening a connection asks a std-llm step for the badge labels through SOCIAL_BADGES_REQUESTED; when off the origin is the one badge."
+        @synonyms "ai badges, generate topics"
+        @tier "domain"
+      moderationFromLlm : boolean = false
+        @label "Moderate with a model"
+        @description "When on, each sent message is sent for relevance scoring through SOCIAL_MODERATION_REQUESTED; when off messages are never flagged."
+        @synonyms "ai moderation, relevance check"
+        @tier "domain"
+    }
+  }
+
+  page "/social-graph" as SocialGraphPage -> SocialPresence, SocialConnections
+}

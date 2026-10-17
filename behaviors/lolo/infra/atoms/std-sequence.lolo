@@ -1,0 +1,94 @@
+app std-sequence [
+  version: "1.0.0",
+  description: "std-sequence — run named steps strictly in order. START emits STEP for steps[0]; the caller does that step's work and answers STEP_DONE or STEP_FAILED naming it; STEP_DONE emits STEP for the next, the last one emits COMPLETED, and a failure stops the sequence with FAILED at that step. Replaces the retired async/sequence operator."
+]
+orbital SequenceOrbital {
+  entity SequenceRun [runtime] {
+    id : string!
+    index : number @description "Index into steps of the step in flight." = 0
+  }
+
+  trait Sequence -> @rebindable SequenceRun [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.index 0)
+      START -> running when (> (array/len @config.steps) 0)
+        (set @entity.index 0)
+        (emit STEP { step: (array/nth @config.steps 0), index: 0 })
+      START -> idle when (== (array/len @config.steps) 0)
+        (emit COMPLETED { steps: 0 })
+    }
+
+    state running {
+      INIT -> idle
+        (set @entity.index 0)
+      STEP_DONE -> running when (and (== ?step (array/nth @config.steps @entity.index)) (< (+ @entity.index 1) (array/len @config.steps)))
+        (set @entity.index (+ @entity.index 1))
+        (emit STEP { step: (array/nth @config.steps (+ @entity.index 1)), index: (+ @entity.index 1) })
+      STEP_DONE -> idle when (and (== ?step (array/nth @config.steps @entity.index)) (== (+ @entity.index 1) (array/len @config.steps)))
+        (emit COMPLETED { steps: (array/len @config.steps) })
+        (set @entity.index 0)
+      STEP_FAILED -> idle when (== ?step (array/nth @config.steps @entity.index))
+        (emit FAILED { step: ?step, index: @entity.index, error: ?error })
+        (set @entity.index 0)
+      CANCEL -> idle
+        (set @entity.index 0)
+    }
+
+    emits {
+      STEP -> external {
+        step : string!
+        index : number!
+      }
+        @description "Do this step now; answer STEP_DONE or STEP_FAILED naming it."
+        @synonyms "next, do, run step"
+        @tier "domain"
+      COMPLETED -> external {
+        steps : number!
+      }
+        @description "Every step finished in order."
+        @synonyms "done, finished"
+        @tier "domain"
+      FAILED -> external {
+        step : string!
+        index : number!
+        error : string
+      }
+        @description "A step failed; later steps never started."
+        @synonyms "stopped, aborted"
+        @tier "domain"
+    }
+
+    listens {
+      START { }
+        @description "Begin at the first step."
+        @synonyms "run, begin"
+      STEP_DONE {
+        step : string!
+      }
+        @description "The step in flight succeeded; a different name is ignored."
+        @synonyms "step ok, advance"
+      STEP_FAILED {
+        step : string!
+        error : string
+      }
+        @description "The step in flight failed; a different name is ignored."
+        @synonyms "step error, halt"
+      CANCEL { }
+        @description "Stop where it is; no outcome event follows."
+        @synonyms "stop, abort"
+    }
+
+    config {
+      steps : [string] = []
+        @label "Steps"
+        @description "Step names in execution order; each is handed to the call site in STEP. Empty completes at once."
+        @synonyms "stages, phases, order"
+        @tier "domain"
+    }
+  }
+
+  page "/sequence" as SequencePage -> Sequence
+}

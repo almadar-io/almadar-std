@@ -1,0 +1,1262 @@
+app std-workspace [
+  version: "1.0.0",
+  description: "std-workspace — a viewer's project workspace as a git repository, run entirely by the kernel's os/ effects (no host provider). Requests are queued and run one at a time: tree, read, write and remove a file, snapshot (a commit), history with undo/redo flags, the file changes of one snapshot, and restore, undo and redo (each a new commit carrying its own trailer). A workspace lives at <root>/<owner>/<workspace>, where owner and workspace are reversible one-segment encodings, and is found again by the appId in its .almadar/app-marker.json. Which workspaces a viewer may open is declared: scope own opens any id inside the viewer's own owner directory, scope listed also requires the viewer and workspace in the access knob. Every git call is os/spawn git with -C naming the workspace directory. Store disk keeps the workspaces only under root. Store bucket treats root as a cache: a cold workspace is restored from workspaces/<owner>/<workspace>/files/ and its git history from the base and incremental bundles under .../history/, and every write, remove, snapshot, restore, undo and redo is mirrored back through the WorkspaceStore trait (std-storage over SigV4: Google Cloud Storage's S3 interoperability endpoint with HMAC keys, or any S3-compatible service). A file that is not valid UTF-8 text answers WORKSPACE_READ_FAILED with code not-text. Needs fs read and create on the root, the exec grant for git and, in bucket mode, the storage origin in egress. Residual authority: the exec grant is for the git executable, and the grant checks only git's working directory, so git itself can reach any path through its arguments; the atom's own owner/workspace/path/oid checks, not a grant, confine them to the workspace.",
+  fs: { "/var/lib/almadar/workspaces/**": [read, write, create, remove] },
+  egress: ["https://storage.googleapis.com"],
+  exec: ["git"]
+]
+type WorkspaceStep = { scope : "root" | "repo", args : [string], stdin : string, feed : boolean, tolerate : boolean, raw : boolean }
+type WorkspaceRequest = { action : string, workspace : string, user : string, path : string, content : string, reason : string, oid : string, limit : number }
+type WorkspaceNode = { id : string!, path : string!, type : string!, size : number! }
+type WorkspaceSnapshot = { id : string!, timestamp : number!, reason : string!, kind : string!, target : string! }
+type WorkspaceChange = { id : string!, path : string!, before : string!, after : string!, change : string! }
+type WorkspaceEntry = { id : string, timestamp : number, reason : string, kind : string, restores : string, undoes : string, redoes : string }
+type WorkspaceKey = { key : string!, size : number!, lastModified : number! }
+type BucketStep = { op : string, key : string, content : string, prefix : string }
+type WalkItem = { path : string, kind : string }
+type WalkEntry = { name : string, kind : string }
+type WorkspaceFileData = { path : string }
+type WorkspaceAccess = { user : string!, workspaces : [string]! }
+orbital WorkspaceOrbital {
+  uses Storage from "std/behaviors/std-storage"
+  entity WorkspaceJob [runtime] {
+    id : string!
+    queue : [WorkspaceRequest] = []
+    action : string @description "The request being run." = ""
+    workspace : string = ""
+    user : string = ""
+    path : string = ""
+    content : string = ""
+    reason : string = ""
+    oid : string = ""
+    limit : number = -1
+    owner : string = ""
+    slug : string = ""
+    dir : string @description "Absolute directory of the workspace being run." = ""
+    problemCode : string = ""
+    problemMessage : string = ""
+    stage : string = ""
+    steps : [WorkspaceStep] = []
+    cursor : number = 0
+    outputs : [string] = []
+    codes : [number] = []
+    failures : [string] = []
+    argv : [string] = []
+    stepIn : string = ""
+    stepFeed : boolean = false
+    pid : number = 0
+    inFd : number = 0
+    outFd : number = 0
+    errFd : number = 0
+    buf : bytes = ""
+    stdoutText : string = ""
+    stderrText : string = ""
+    outValid : boolean = true
+    entries : [WorkspaceEntry] = []
+    paths : [string] = []
+    ref : string = ""
+    tree : string = ""
+    subject : string = ""
+    trailer : string = ""
+    toRestore : [string] = []
+    toRemove : [string] = []
+    specs : [string] = []
+    files : [string] = []
+    wsRel : string @description "The workspace directory relative to root." = ""
+    wpaths : [string] = []
+    wdata : [bytes] = []
+    wcursor : number = 0
+    wstage : string = ""
+    rpaths : [string] = []
+    rdata : [bytes] = []
+    rcursor : number = 0
+    rstage : string = ""
+    wstack : [WalkItem] = []
+    wnodes : [WorkspaceNode] = []
+    wcur : string = ""
+    wfor : string = ""
+    wstarted : boolean = false
+    bseq : number = 0
+    pfx : string = ""
+    existed : boolean = false
+    needSync : boolean = false
+    syncNext : string = ""
+    withArchive : boolean = false
+    synced : boolean = false
+    resCommitted : boolean = false
+    resChanged : boolean = false
+    resOid : string = ""
+    bsteps : [BucketStep] = []
+    bcursor : number = 0
+    bresults : [bytes] = []
+    rawInputs : [bytes] = []
+    bkeys : [string] = []
+    btoken : string = ""
+    bstage : string = ""
+    rawOuts : [bytes] = []
+    stdoutBytes : bytes = ""
+    stepRaw : boolean = false
+    stepRawIn : bytes = ""
+    since : string = ""
+    incs : number = 0
+    full : boolean = false
+    bundle : bytes = ""
+  }
+
+  trait WorkspaceClient -> WorkspaceJob [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      WORKSPACE_TREE -> working
+        (set @entity.queue (array/append @entity.queue { action: "tree", workspace: @payload.workspace, user: (str/default @user.id ""), path: (str/default @payload.path ""), content: "", reason: "", oid: "", limit: -1 }))
+        (emit WS_NEXT { })
+      WORKSPACE_READ_FILE -> working
+        (set @entity.queue (array/append @entity.queue { action: "readFile", workspace: @payload.workspace, user: (str/default @user.id ""), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
+        (emit WS_NEXT { })
+      WORKSPACE_WRITE_FILE -> working
+        (set @entity.queue (array/append @entity.queue { action: "writeFile", workspace: @payload.workspace, user: (str/default @user.id ""), path: @payload.path, content: @payload.content, reason: "", oid: "", limit: -1 }))
+        (emit WS_NEXT { })
+      WORKSPACE_REMOVE_FILE -> working
+        (set @entity.queue (array/append @entity.queue { action: "removeFile", workspace: @payload.workspace, user: (str/default @user.id ""), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
+        (emit WS_NEXT { })
+      WORKSPACE_SNAPSHOT -> working
+        (set @entity.queue (array/append @entity.queue { action: "snapshot", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: @payload.reason, oid: "", limit: -1 }))
+        (emit WS_NEXT { })
+      WORKSPACE_HISTORY -> working
+        (set @entity.queue (array/append @entity.queue { action: "history", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: "", oid: "", limit: (math/default @payload.limit -1) }))
+        (emit WS_NEXT { })
+      WORKSPACE_CHANGES -> working
+        (set @entity.queue (array/append @entity.queue { action: "changes", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
+        (emit WS_NEXT { })
+      WORKSPACE_RESTORE -> working
+        (set @entity.queue (array/append @entity.queue { action: "restore", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
+        (emit WS_NEXT { })
+      WORKSPACE_UNDO -> working
+        (set @entity.queue (array/append @entity.queue { action: "undo", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: "", oid: "", limit: -1 }))
+        (emit WS_NEXT { })
+      WORKSPACE_REDO -> working
+        (set @entity.queue (array/append @entity.queue { action: "redo", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: "", oid: "", limit: -1 }))
+        (emit WS_NEXT { })
+    }
+
+    state working {
+      INIT -> working
+
+      WORKSPACE_TREE -> working
+        (set @entity.queue (array/append @entity.queue { action: "tree", workspace: @payload.workspace, user: (str/default @user.id ""), path: (str/default @payload.path ""), content: "", reason: "", oid: "", limit: -1 }))
+      WORKSPACE_READ_FILE -> working
+        (set @entity.queue (array/append @entity.queue { action: "readFile", workspace: @payload.workspace, user: (str/default @user.id ""), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
+      WORKSPACE_WRITE_FILE -> working
+        (set @entity.queue (array/append @entity.queue { action: "writeFile", workspace: @payload.workspace, user: (str/default @user.id ""), path: @payload.path, content: @payload.content, reason: "", oid: "", limit: -1 }))
+      WORKSPACE_REMOVE_FILE -> working
+        (set @entity.queue (array/append @entity.queue { action: "removeFile", workspace: @payload.workspace, user: (str/default @user.id ""), path: @payload.path, content: "", reason: "", oid: "", limit: -1 }))
+      WORKSPACE_SNAPSHOT -> working
+        (set @entity.queue (array/append @entity.queue { action: "snapshot", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: @payload.reason, oid: "", limit: -1 }))
+      WORKSPACE_HISTORY -> working
+        (set @entity.queue (array/append @entity.queue { action: "history", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: "", oid: "", limit: (math/default @payload.limit -1) }))
+      WORKSPACE_CHANGES -> working
+        (set @entity.queue (array/append @entity.queue { action: "changes", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
+      WORKSPACE_RESTORE -> working
+        (set @entity.queue (array/append @entity.queue { action: "restore", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: "", oid: @payload.oid, limit: -1 }))
+      WORKSPACE_UNDO -> working
+        (set @entity.queue (array/append @entity.queue { action: "undo", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: "", oid: "", limit: -1 }))
+      WORKSPACE_REDO -> working
+        (set @entity.queue (array/append @entity.queue { action: "redo", workspace: @payload.workspace, user: (str/default @user.id ""), path: "", content: "", reason: "", oid: "", limit: -1 }))
+
+      WS_NEXT -> idle when (== (array/len @entity.queue) 0)
+      WS_NEXT -> working when (> (array/len @entity.queue) 0)
+        (set @entity.action (object/get (array/first @entity.queue) action))
+        (set @entity.workspace (object/get (array/first @entity.queue) workspace))
+        (set @entity.user (object/get (array/first @entity.queue) user))
+        (set @entity.content (object/get (array/first @entity.queue) content))
+        (set @entity.reason (object/get (array/first @entity.queue) reason))
+        (set @entity.oid (object/get (array/first @entity.queue) oid))
+        (set @entity.limit (object/get (array/first @entity.queue) limit))
+        (set @entity.path (if (== (object/get (array/first @entity.queue) path) "") "" (os/path-normalize (object/get (array/first @entity.queue) path))))
+        (set @entity.owner (str/join (array/map (str/split (array/reduce [{ from: "_", to: "%5F" }, { from: ".", to: "%2E" }, { from: "!", to: "%21" }, { from: "~", to: "%7E" }, { from: "*", to: "%2A" }, { from: "'", to: "%27" }, { from: "(", to: "%28" }, { from: ")", to: "%29" }] (str/encode-uri-component (object/get (array/first @entity.queue) user)) (fn acc pair (str/replaceAll @acc (object/get @pair from) (object/get @pair to)))) "%") (fn part i (if (== @i 0) @part (str/concat "_" (str/lower (str/slice @part 0 2)) (str/slice @part 2))))) ""))
+        (set @entity.slug (str/join (array/map (str/split (array/reduce [{ from: "_", to: "%5F" }, { from: ".", to: "%2E" }, { from: "!", to: "%21" }, { from: "~", to: "%7E" }, { from: "*", to: "%2A" }, { from: "'", to: "%27" }, { from: "(", to: "%28" }, { from: ")", to: "%29" }] (str/encode-uri-component (object/get (array/first @entity.queue) workspace)) (fn acc pair (str/replaceAll @acc (object/get @pair from) (object/get @pair to)))) "%") (fn part i (if (== @i 0) @part (str/concat "_" (str/lower (str/slice @part 0 2)) (str/slice @part 2))))) ""))
+        (set @entity.problemCode "")
+        (set @entity.problemMessage "")
+        (set @entity.problemMessage (if (and (!= @entity.path "") (or (== @entity.path "..") (str/startsWith @entity.path "../"))) (str/concat "sandbox: path escapes workspace (" (object/get (array/first @entity.queue) path) ")") @entity.problemMessage))
+        (set @entity.problemMessage (if (str/startsWith (object/get (array/first @entity.queue) path) "/") (str/concat "sandbox: absolute paths are not allowed (" (object/get (array/first @entity.queue) path) ")") @entity.problemMessage))
+        (set @entity.problemMessage (if (and (array/includes ["readFile", "writeFile", "removeFile"] @entity.action) (== (object/get (array/first @entity.queue) path) "")) "sandbox: empty relative path" @entity.problemMessage))
+        (set @entity.problemCode (if (and (== @config.scope "listed") (not (array/some @config.access (fn g (and (== (object/get @g user) @entity.user) (array/includes (object/get @g workspaces) @entity.workspace)))))) "FORBIDDEN" @entity.problemCode))
+        (set @entity.problemCode (if (and (array/includes ["writeFile", "removeFile"] @entity.action) (array/includes (array/map (str/split @entity.path "/") (fn seg (str/lower @seg))) ".git")) "reserved-path" @entity.problemCode))
+        (set @entity.problemMessage (if (and (array/includes ["writeFile", "removeFile"] @entity.action) (array/includes (array/map (str/split @entity.path "/") (fn seg (str/lower @seg))) ".git")) (str/concat "reserved path: " @entity.path " is inside .git") @entity.problemMessage))
+        (set @entity.problemMessage (if (and (== @config.scope "listed") (not (array/some @config.access (fn g (and (== (object/get @g user) @entity.user) (array/includes (object/get @g workspaces) @entity.workspace)))))) (str/concat "Workspace " @entity.workspace " is not open to this viewer") @entity.problemMessage))
+        (set @entity.problemCode (if (== @entity.user "") "AUTH_ERROR" @entity.problemCode))
+        (set @entity.problemMessage (if (== @entity.user "") "A workspace needs a signed-in caller" @entity.problemMessage))
+        (set @entity.synced false)
+        (set @entity.needSync false)
+        (set @entity.queue (array/drop @entity.queue 1))
+        (emit WS_BEGIN { })
+
+      WS_BEGIN -> working when (!= @entity.problemMessage "")
+        (emit WS_FAIL { code: @entity.problemCode, message: @entity.problemMessage })
+      WS_BEGIN -> working when (== @entity.problemMessage "")
+        (set @entity.dir (str/concat @config.root "/" @entity.owner "/" @entity.slug))
+        (set @entity.wsRel (str/concat @entity.owner "/" @entity.slug))
+        (set @entity.pfx (str/concat "workspaces/" @entity.owner "/" @entity.slug "/"))
+        (os/mkdir @config.root true { emit: { success: WS_ROOT_READY, failure: WS_STEP_ERROR } })
+
+      WS_ROOT_READY -> working
+        (set @entity.stage "lookup")
+        (set @entity.steps [{ scope: "root", args: ["grep", "--no-index", "-l", "-F", "-e", (str/concat "\"appId\": " (json/stringify @entity.workspace)), "--", (str/concat ":(glob)" @entity.owner "/*/.almadar/app-marker.json")], stdin: "", feed: false, tolerate: true, raw: false }])
+        (emit WS_START { })
+
+      WS_START -> working
+        (set @entity.cursor 0)
+        (set @entity.outputs [])
+        (set @entity.codes [])
+        (set @entity.failures [])
+        (set @entity.rawOuts [])
+        (emit WS_RUN { })
+
+      WS_RUN -> working
+        (set @entity.argv (array/concat ["-C", (if (== (object/get (array/nth @entity.steps @entity.cursor) scope) "root") @config.root @entity.dir), "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "protocol.allow=never"] (object/get (array/nth @entity.steps @entity.cursor) args)))
+        (set @entity.stepIn (object/get (array/nth @entity.steps @entity.cursor) stdin))
+        (set @entity.stepFeed (object/get (array/nth @entity.steps @entity.cursor) feed))
+        (set @entity.stepRaw (object/get (array/nth @entity.steps @entity.cursor) raw))
+        (set @entity.stepRawIn (if (object/get (array/nth @entity.steps @entity.cursor) raw) (array/nth @entity.rawInputs @entity.cursor) (bytes/from-string "")))
+        (emit WS_EXEC { })
+
+      WS_EXEC -> working
+        (os/spawn "git" @entity.argv { cwd: @config.root, env: { PATH: @config.gitPath, LC_ALL: "C", GIT_CEILING_DIRECTORIES: (os/path-dir @entity.dir) }, stdin: (if @entity.stepFeed "pipe" "null"), stdout: "pipe", stderr: "pipe" } { key: "spawn", emit: { success: WS_SPAWNED, failure: WS_STEP_ERROR } })
+
+      WS_SPAWNED -> working when @entity.stepFeed
+        (set @entity.pid @payload.pid)
+        (set @entity.inFd @payload.stdin)
+        (set @entity.outFd @payload.stdout)
+        (set @entity.errFd @payload.stderr)
+        (set @entity.buf (bytes/from-string ""))
+        (os/write @payload.stdin (if @entity.stepRaw @entity.stepRawIn (bytes/from-string @entity.stepIn)) { key: "stdin", emit: { success: WS_STDIN_DONE, failure: WS_STEP_ERROR } })
+      WS_SPAWNED -> working when (not @entity.stepFeed)
+        (set @entity.pid @payload.pid)
+        (set @entity.outFd @payload.stdout)
+        (set @entity.errFd @payload.stderr)
+        (set @entity.buf (bytes/from-string ""))
+        (os/read @payload.stdout 65536 { key: "out", emit: { success: WS_OUT_CHUNK, failure: WS_STEP_ERROR } })
+      WS_STDIN_DONE -> working
+        (os/close @entity.inFd { key: "stdin-close", emit: { success: WS_STDIN_CLOSED, failure: WS_STEP_ERROR } })
+      WS_STDIN_CLOSED -> working
+        (os/read @entity.outFd 65536 { key: "out", emit: { success: WS_OUT_CHUNK, failure: WS_STEP_ERROR } })
+      WS_OUT_CHUNK -> working when (not @payload.eof)
+        (set @entity.buf (bytes/concat [@entity.buf, @payload.data]))
+        (os/read @entity.outFd 65536 { key: "out", emit: { success: WS_OUT_CHUNK, failure: WS_STEP_ERROR } })
+      WS_OUT_CHUNK -> working when @payload.eof
+        (os/close @entity.outFd { key: "out-close", emit: { success: WS_OUT_CLOSED, failure: WS_STEP_ERROR } })
+      WS_OUT_CLOSED -> working
+        (set @entity.stdoutBytes @entity.buf)
+        (set @entity.outValid (base64/valid @entity.buf))
+        (set @entity.stdoutText (if (base64/valid @entity.buf) (bytes/to-string @entity.buf) ""))
+        (set @entity.buf (bytes/from-string ""))
+        (os/read @entity.errFd 65536 { key: "err", emit: { success: WS_ERR_CHUNK, failure: WS_STEP_ERROR } })
+      WS_ERR_CHUNK -> working when (not @payload.eof)
+        (set @entity.buf (bytes/concat [@entity.buf, @payload.data]))
+        (os/read @entity.errFd 65536 { key: "err", emit: { success: WS_ERR_CHUNK, failure: WS_STEP_ERROR } })
+      WS_ERR_CHUNK -> working when @payload.eof
+        (os/close @entity.errFd { key: "err-close", emit: { success: WS_ERR_CLOSED, failure: WS_STEP_ERROR } })
+      WS_ERR_CLOSED -> working
+        (set @entity.stderrText (if (base64/valid @entity.buf) (bytes/to-string @entity.buf) ""))
+        (os/wait @entity.pid { key: "wait", emit: { success: WS_WAITED, failure: WS_STEP_ERROR } })
+
+      WS_WAITED -> working when (and (!= (math/default @payload.code -1) 0) (not (object/get (array/nth @entity.steps @entity.cursor) tolerate)))
+        (emit WS_FAIL { code: "", message: (str/concat "git " (array/nth (object/get (array/nth @entity.steps @entity.cursor) args) 0) ": " (str/default (str/trim @entity.stderrText) (str/trim @entity.stdoutText))) })
+      WS_WAITED -> working when (and (or (== (math/default @payload.code -1) 0) (object/get (array/nth @entity.steps @entity.cursor) tolerate)) (< (+ @entity.cursor 1) (array/len @entity.steps)))
+        (set @entity.outputs (array/append @entity.outputs @entity.stdoutText))
+        (set @entity.rawOuts (array/append @entity.rawOuts @entity.stdoutBytes))
+        (set @entity.codes (array/append @entity.codes (math/default @payload.code -1)))
+        (set @entity.failures (array/append @entity.failures @entity.stderrText))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit WS_RUN { })
+      WS_WAITED -> working when (and (or (== (math/default @payload.code -1) 0) (object/get (array/nth @entity.steps @entity.cursor) tolerate)) (>= (+ @entity.cursor 1) (array/len @entity.steps)))
+        (set @entity.outputs (array/append @entity.outputs @entity.stdoutText))
+        (set @entity.rawOuts (array/append @entity.rawOuts @entity.stdoutBytes))
+        (set @entity.codes (array/append @entity.codes (math/default @payload.code -1)))
+        (set @entity.failures (array/append @entity.failures @entity.stderrText))
+        (emit WS_SCRIPT_DONE { })
+
+      WS_STEP_ERROR -> working
+        (emit WS_FAIL { code: "SERVICE_ERROR", message: @payload.error })
+
+      WS_FAIL -> working when (== @entity.action "tree")
+        (emit WORKSPACE_TREE_FAILED { workspace: @entity.workspace, code: @payload.code, message: @payload.message })
+        (emit WS_NEXT { })
+      WS_FAIL -> working when (== @entity.action "readFile")
+        (emit WORKSPACE_READ_FAILED { workspace: @entity.workspace, code: @payload.code, message: @payload.message })
+        (emit WS_NEXT { })
+      WS_FAIL -> working when (== @entity.action "writeFile")
+        (emit WORKSPACE_WRITE_FAILED { workspace: @entity.workspace, code: @payload.code, message: @payload.message })
+        (emit WS_NEXT { })
+      WS_FAIL -> working when (== @entity.action "removeFile")
+        (emit WORKSPACE_REMOVE_FAILED { workspace: @entity.workspace, code: @payload.code, message: @payload.message })
+        (emit WS_NEXT { })
+      WS_FAIL -> working when (== @entity.action "snapshot")
+        (emit WORKSPACE_SNAPSHOT_FAILED { workspace: @entity.workspace, code: @payload.code, message: @payload.message })
+        (emit WS_NEXT { })
+      WS_FAIL -> working when (== @entity.action "history")
+        (emit WORKSPACE_HISTORY_FAILED { workspace: @entity.workspace, code: @payload.code, message: @payload.message })
+        (emit WS_NEXT { })
+      WS_FAIL -> working when (== @entity.action "changes")
+        (emit WORKSPACE_CHANGES_FAILED { workspace: @entity.workspace, code: @payload.code, message: @payload.message })
+        (emit WS_NEXT { })
+      WS_FAIL -> working when (array/includes ["restore", "undo", "redo"] @entity.action)
+        (emit WORKSPACE_STEP_FAILED { workspace: @entity.workspace, code: @payload.code, message: @payload.message })
+        (emit WS_NEXT { })
+
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "lookup") (== (array/nth @entity.codes 0) 0) (!= (str/trim (array/nth @entity.outputs 0)) ""))
+        (set @entity.wsRel (str/replace (array/first (str/split (str/trim (array/nth @entity.outputs 0)) "\n")) "/.almadar/app-marker.json" ""))
+        (set @entity.dir (str/concat @config.root "/" (str/replace (array/first (str/split (str/trim (array/nth @entity.outputs 0)) "\n")) "/.almadar/app-marker.json" "")))
+        (emit WS_OPENED { })
+
+      WS_OPENED -> working when (== @entity.action "snapshot")
+        (set @entity.stage "snap1")
+        (set @entity.steps [{ scope: "repo", args: (str/split "add -A" " "), stdin: "", feed: false, tolerate: false, raw: false }, { scope: "repo", args: ["commit", "-m", (str/concat "snapshot: " @entity.reason), "--allow-empty-message", "-m", "Almadar-Kind: snapshot"], stdin: "", feed: false, tolerate: true, raw: false }])
+        (emit WS_START { })
+      WS_OPENED -> working when (== @entity.action "history")
+        (set @entity.stage "hist1")
+        (set @entity.steps [{ scope: "repo", args: (array/concat (str/split "log" " ") ["--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e", "--"] @config.appPaths), stdin: "", feed: false, tolerate: true, raw: false }])
+        (emit WS_START { })
+      WS_OPENED -> working when (and (== @entity.action "changes") (or (== @entity.oid "") (str/startsWith @entity.oid "-")))
+        (emit WORKSPACE_CHANGES_LOADED { workspace: @entity.workspace, changes: [] })
+        (emit WS_NEXT { })
+      WS_OPENED -> working when (and (== @entity.action "changes") (!= @entity.oid "") (not (str/startsWith @entity.oid "-")))
+        (set @entity.stage "chg1")
+        (set @entity.steps [{ scope: "repo", args: ["rev-parse", "--verify", "--quiet", (str/concat @entity.oid "^{commit}")], stdin: "", feed: false, tolerate: true, raw: false }])
+        (emit WS_START { })
+      WS_OPENED -> working when (and (== @entity.action "restore") (or (== @entity.oid "") (str/startsWith @entity.oid "-")))
+        (set @entity.resCommitted false)
+        (set @entity.resChanged false)
+        (set @entity.resOid "")
+        (emit WS_FINISH { })
+      WS_OPENED -> working when (and (== @entity.action "restore") (!= @entity.oid "") (not (str/startsWith @entity.oid "-")))
+        (set @entity.stage "res1")
+        (set @entity.steps [{ scope: "repo", args: ["rev-parse", "--verify", "--quiet", (str/concat @entity.oid "^{commit}")], stdin: "", feed: false, tolerate: true, raw: false }])
+        (emit WS_START { })
+      WS_OPENED -> working when (array/includes ["undo", "redo"] @entity.action)
+        (set @entity.stage "stepLog")
+        (set @entity.steps [{ scope: "repo", args: (array/concat (str/split "log" " ") ["--format=%H%x1f%at%x1f%s%x1f%(trailers:only,unfold)%x1e", "--"] @config.appPaths), stdin: "", feed: false, tolerate: true, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "snap1") (== (array/nth @entity.codes 1) 0))
+        (set @entity.stage "snap2")
+        (set @entity.steps [{ scope: "repo", args: ["rev-parse", "HEAD"], stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "snap1") (!= (array/nth @entity.codes 1) 0) (or (str/includes (str/concat (array/nth @entity.outputs 1) (array/nth @entity.failures 1)) "nothing to commit") (str/includes (str/concat (array/nth @entity.outputs 1) (array/nth @entity.failures 1)) "no changes added to commit")))
+        (set @entity.resCommitted false)
+        (set @entity.resChanged false)
+        (set @entity.resOid "")
+        (emit WS_FINISH { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "snap1") (!= (array/nth @entity.codes 1) 0) (not (or (str/includes (str/concat (array/nth @entity.outputs 1) (array/nth @entity.failures 1)) "nothing to commit") (str/includes (str/concat (array/nth @entity.outputs 1) (array/nth @entity.failures 1)) "no changes added to commit"))))
+        (emit WS_FAIL { code: "", message: (str/concat "git commit: " (str/default (str/trim (array/nth @entity.failures 1)) (str/trim (array/nth @entity.outputs 1)))) })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "snap2")
+        (set @entity.resCommitted true)
+        (set @entity.resChanged false)
+        (set @entity.resOid (str/trim (array/nth @entity.outputs 0)))
+        (emit WS_FINISH { })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "hist1")
+        (set @entity.entries (if (== (array/nth @entity.codes 0) 0) (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\u{1e}") (fn r (!= (str/trim @r) ""))) (fn r (let ((f (str/split (str/trimStart @r) "\u{1f}"))) { id: (array/nth @f 0), timestamp: (* (str/to-number (array/nth @f 1)) 1000), reason: (if (str/startsWith (array/nth @f 2) "snapshot: ") (str/slice (array/nth @f 2) 10) (array/nth @f 2)), kind: (let ((k (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Almadar-Kind: ")))) "") "Almadar-Kind: " ""))) (if (array/includes ["user", "agent", "restore", "undo", "redo", "snapshot", "merge"] @k) @k "")), restores: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Restores: ")))) "") "Restores: " ""), undoes: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Undoes: ")))) "") "Undoes: " ""), redoes: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Redoes: ")))) "") "Redoes: " "") }))) []))
+        (set @entity.ref (let ((reversed (array/map @entity.entries (fn e (object/get @e redoes))))) (let ((undone (array/map (array/filter @entity.entries (fn e (and (!= (object/get @e undoes) "") (not (array/includes @reversed (object/get @e id)))))) (fn e (object/get @e undoes))))) (object/get (array/find @entity.entries (fn e (and (!= (object/get @e kind) "undo") (!= (object/get @e kind) "redo") (not (array/includes @undone (object/get @e id)))))) id ""))))
+        (set @entity.tree (let ((reversed (array/map @entity.entries (fn e (object/get @e redoes))))) (let ((hd (array/find @entity.entries (fn e (and (!= (object/get @e kind) "redo") (not (and (== (object/get @e kind) "undo") (array/includes @reversed (object/get @e id))))))))) (if (== (object/get @hd kind "") "undo") (object/get @hd id "") ""))))
+        (emit WORKSPACE_HISTORY_LOADED { workspace: @entity.workspace, snapshots: (if (>= @entity.limit 0) (array/take (array/map @entity.entries (fn e { id: (object/get @e id), timestamp: (object/get @e timestamp), reason: (object/get @e reason), kind: (object/get @e kind), target: (if (!= (object/get @e restores) "") (object/get @e restores) (if (!= (object/get @e undoes) "") (object/get @e undoes) (object/get @e redoes))) })) @entity.limit) (array/map @entity.entries (fn e { id: (object/get @e id), timestamp: (object/get @e timestamp), reason: (object/get @e reason), kind: (object/get @e kind), target: (if (!= (object/get @e restores) "") (object/get @e restores) (if (!= (object/get @e undoes) "") (object/get @e undoes) (object/get @e redoes))) }))), canUndo: (!= @entity.ref ""), canRedo: (!= @entity.tree "") })
+        (emit WS_NEXT { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "chg1") (!= (array/nth @entity.codes 0) 0))
+        (emit WORKSPACE_CHANGES_LOADED { workspace: @entity.workspace, changes: [] })
+        (emit WS_NEXT { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "chg1") (== (array/nth @entity.codes 0) 0))
+        (set @entity.stage "chg2")
+        (set @entity.steps [{ scope: "repo", args: ["rev-parse", "--verify", "--quiet", (str/concat @entity.oid "^")], stdin: "", feed: false, tolerate: true, raw: false }, { scope: "repo", args: (array/concat ["diff-tree", "--root", "-r", "--name-only", "--no-commit-id", "--no-renames", @entity.oid, "--"] @config.appPaths), stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "chg2") (== (array/len (array/sort (array/filter (str/split (array/nth @entity.outputs 1) "\n") (fn l (!= @l ""))))) 0))
+        (emit WORKSPACE_CHANGES_LOADED { workspace: @entity.workspace, changes: [] })
+        (emit WS_NEXT { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "chg2") (> (array/len (array/sort (array/filter (str/split (array/nth @entity.outputs 1) "\n") (fn l (!= @l ""))))) 0))
+        (set @entity.ref (if (== (array/nth @entity.codes 0) 0) (str/trim (array/nth @entity.outputs 0)) ""))
+        (set @entity.paths (array/sort (array/filter (str/split (array/nth @entity.outputs 1) "\n") (fn l (!= @l "")))))
+        (set @entity.stage "chg3")
+        (set @entity.steps (array/flatten (array/map @entity.paths (fn f (array/concat [{ scope: "repo", args: ["show", (str/concat @entity.oid ":" @f)], stdin: "", feed: false, tolerate: true, raw: false }] (if (== @entity.ref "") [] [{ scope: "repo", args: ["show", (str/concat @entity.ref ":" @f)], stdin: "", feed: false, tolerate: true, raw: false }]))))))
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "chg3")
+        (emit WORKSPACE_CHANGES_LOADED { workspace: @entity.workspace, changes: (array/map @entity.paths (fn f i (let ((a (if (== (array/nth @entity.codes (* @i (if (== @entity.ref "") 1 2))) 0) (array/nth @entity.outputs (* @i (if (== @entity.ref "") 1 2))) null)) (b (if (== @entity.ref "") null (if (== (array/nth @entity.codes (+ (* @i 2) 1)) 0) (array/nth @entity.outputs (+ (* @i 2) 1)) null)))) { id: @f, path: @f, before: (str/default @b ""), after: (str/default @a ""), change: (if (== @b null) "added" (if (== @a null) "removed" "modified")) }))) })
+        (emit WS_NEXT { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "res1") (!= (array/nth @entity.codes 0) 0))
+        (set @entity.resCommitted false)
+        (set @entity.resChanged false)
+        (set @entity.resOid "")
+        (emit WS_FINISH { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "res1") (== (array/nth @entity.codes 0) 0))
+        (set @entity.tree @entity.oid)
+        (set @entity.subject (str/concat "restore: " (str/slice @entity.oid 0 7)))
+        (set @entity.trailer (str/concat "Almadar-Kind: restore\nRestores: " @entity.oid))
+        (emit WS_STAGE { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "stepLog") (== @entity.action "undo"))
+        (set @entity.entries (if (== (array/nth @entity.codes 0) 0) (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\u{1e}") (fn r (!= (str/trim @r) ""))) (fn r (let ((f (str/split (str/trimStart @r) "\u{1f}"))) { id: (array/nth @f 0), timestamp: (* (str/to-number (array/nth @f 1)) 1000), reason: (if (str/startsWith (array/nth @f 2) "snapshot: ") (str/slice (array/nth @f 2) 10) (array/nth @f 2)), kind: (let ((k (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Almadar-Kind: ")))) "") "Almadar-Kind: " ""))) (if (array/includes ["user", "agent", "restore", "undo", "redo", "snapshot", "merge"] @k) @k "")), restores: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Restores: ")))) "") "Restores: " ""), undoes: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Undoes: ")))) "") "Undoes: " ""), redoes: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Redoes: ")))) "") "Redoes: " "") }))) []))
+        (set @entity.ref (let ((reversed (array/map @entity.entries (fn e (object/get @e redoes))))) (let ((undone (array/map (array/filter @entity.entries (fn e (and (!= (object/get @e undoes) "") (not (array/includes @reversed (object/get @e id)))))) (fn e (object/get @e undoes))))) (object/get (array/find @entity.entries (fn e (and (!= (object/get @e kind) "undo") (!= (object/get @e kind) "redo") (not (array/includes @undone (object/get @e id)))))) id ""))))
+        (emit WS_TARGET { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "stepLog") (== @entity.action "redo"))
+        (set @entity.entries (if (== (array/nth @entity.codes 0) 0) (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\u{1e}") (fn r (!= (str/trim @r) ""))) (fn r (let ((f (str/split (str/trimStart @r) "\u{1f}"))) { id: (array/nth @f 0), timestamp: (* (str/to-number (array/nth @f 1)) 1000), reason: (if (str/startsWith (array/nth @f 2) "snapshot: ") (str/slice (array/nth @f 2) 10) (array/nth @f 2)), kind: (let ((k (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Almadar-Kind: ")))) "") "Almadar-Kind: " ""))) (if (array/includes ["user", "agent", "restore", "undo", "redo", "snapshot", "merge"] @k) @k "")), restores: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Restores: ")))) "") "Restores: " ""), undoes: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Undoes: ")))) "") "Undoes: " ""), redoes: (str/replace (str/default (array/first (array/filter (str/split (array/nth @f 3) "\n") (fn l (str/startsWith @l "Redoes: ")))) "") "Redoes: " "") }))) []))
+        (set @entity.ref (let ((reversed (array/map @entity.entries (fn e (object/get @e redoes))))) (let ((hd (array/find @entity.entries (fn e (and (!= (object/get @e kind) "redo") (not (and (== (object/get @e kind) "undo") (array/includes @reversed (object/get @e id))))))))) (if (== (object/get @hd kind "") "undo") (object/get @hd id "") ""))))
+        (emit WS_TARGET { })
+      WS_TARGET -> working when (== @entity.ref "")
+        (set @entity.resCommitted false)
+        (set @entity.resChanged false)
+        (set @entity.resOid "")
+        (emit WS_FINISH { })
+      WS_TARGET -> working when (!= @entity.ref "")
+        (set @entity.stage "stepParent")
+        (set @entity.steps [{ scope: "repo", args: ["rev-parse", "--verify", "--quiet", (str/concat @entity.ref "^")], stdin: "", feed: false, tolerate: true, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "stepParent")
+        (set @entity.tree (if (== (array/nth @entity.codes 0) 0) (str/trim (array/nth @entity.outputs 0)) ""))
+        (set @entity.subject (str/concat @entity.action ": " (str/slice @entity.ref 0 7)))
+        (set @entity.trailer (str/concat "Almadar-Kind: " @entity.action "\n" (if (== @entity.action "undo") "Undoes" "Redoes") ": " @entity.ref))
+        (emit WS_STAGE { })
+      WS_STAGE -> working when (!= @entity.tree "")
+        (set @entity.stage "stg1")
+        (set @entity.steps [{ scope: "repo", args: (array/concat ["diff", "--name-status", "--no-renames", @entity.tree, "--"] @config.appPaths), stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_STAGE -> working when (== @entity.tree "")
+        (set @entity.stage "stg1n")
+        (set @entity.steps [{ scope: "repo", args: (array/concat ["ls-files", "--"] @config.appPaths), stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "stg1") (== (array/len (array/filter (array/map (array/filter (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= (str/trim @l) ""))) (fn l { status: (array/nth (str/split @l "\t") 0), path: (array/nth (str/split @l "\t") 1) })) (fn r (== (object/get @r status) "A"))) (fn r (object/get @r path))) (fn p (and (str/startsWith @p ".almadar/sessions/") (str/endsWith @p "/spec.json") (> (array/len (str/split @p "/")) 3) (== (array/len (str/split @p "/")) 4))))) 0))
+        (set @entity.toRestore (array/map (array/filter (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= (str/trim @l) ""))) (fn l { status: (array/nth (str/split @l "\t") 0), path: (array/nth (str/split @l "\t") 1) })) (fn r (!= (object/get @r status) "A"))) (fn r (object/get @r path))))
+        (set @entity.toRemove (array/map (array/filter (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= (str/trim @l) ""))) (fn l { status: (array/nth (str/split @l "\t") 0), path: (array/nth (str/split @l "\t") 1) })) (fn r (== (object/get @r status) "A"))) (fn r (object/get @r path))))
+        (set @entity.specs [])
+        (emit WS_APPLY { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "stg1") (> (array/len (array/filter (array/map (array/filter (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= (str/trim @l) ""))) (fn l { status: (array/nth (str/split @l "\t") 0), path: (array/nth (str/split @l "\t") 1) })) (fn r (== (object/get @r status) "A"))) (fn r (object/get @r path))) (fn p (and (str/startsWith @p ".almadar/sessions/") (str/endsWith @p "/spec.json") (> (array/len (str/split @p "/")) 3) (== (array/len (str/split @p "/")) 4))))) 0))
+        (set @entity.toRestore (array/map (array/filter (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= (str/trim @l) ""))) (fn l { status: (array/nth (str/split @l "\t") 0), path: (array/nth (str/split @l "\t") 1) })) (fn r (!= (object/get @r status) "A"))) (fn r (object/get @r path))))
+        (set @entity.toRemove (array/filter (array/map (array/filter (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= (str/trim @l) ""))) (fn l { status: (array/nth (str/split @l "\t") 0), path: (array/nth (str/split @l "\t") 1) })) (fn r (== (object/get @r status) "A"))) (fn r (object/get @r path))) (fn p (not (and (str/startsWith @p ".almadar/sessions/") (str/endsWith @p "/spec.json") (> (array/len (str/split @p "/")) 3) (== (array/len (str/split @p "/")) 4))))))
+        (set @entity.specs (array/filter (array/map (array/filter (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= (str/trim @l) ""))) (fn l { status: (array/nth (str/split @l "\t") 0), path: (array/nth (str/split @l "\t") 1) })) (fn r (== (object/get @r status) "A"))) (fn r (object/get @r path))) (fn p (and (str/startsWith @p ".almadar/sessions/") (str/endsWith @p "/spec.json") (> (array/len (str/split @p "/")) 3) (== (array/len (str/split @p "/")) 4)))))
+        (set @entity.stage "stg2")
+        (set @entity.steps (array/flatten (array/map @entity.specs (fn p [{ scope: "repo", args: ["cat-file", "-e", (str/concat @entity.tree ":orbitals/" (array/nth (str/split @p "/") 2) ".orb")], stdin: "", feed: false, tolerate: true, raw: false }, { scope: "repo", args: ["cat-file", "-e", (str/concat @entity.tree ":orbitals/" (array/nth (str/split @p "/") 2) ".lolo")], stdin: "", feed: false, tolerate: true, raw: false }]))))
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "stg2")
+        (set @entity.toRemove (array/concat @entity.toRemove (array/filter @entity.specs (fn p (and (!= (array/nth @entity.codes (* 2 (array/indexOf @entity.specs @p))) 0) (!= (array/nth @entity.codes (+ 1 (* 2 (array/indexOf @entity.specs @p)))) 0))))))
+        (emit WS_APPLY { })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "stg1n")
+        (set @entity.toRestore [])
+        (set @entity.toRemove (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= @l ""))))
+        (emit WS_APPLY { })
+      WS_APPLY -> working
+        (set @entity.stage "apply")
+        (set @entity.steps (array/concat (if (> (array/len @entity.toRestore) 0) [{ scope: "repo", args: (array/concat ["restore", (str/concat "--source=" @entity.tree), "--staged", "--worktree", "--"] @entity.toRestore), stdin: "", feed: false, tolerate: false, raw: false }] []) (if (> (array/len @entity.toRemove) 0) [{ scope: "repo", args: (array/concat ["rm", "-r", "-q", "-f", "--ignore-unmatch", "--"] @entity.toRemove), stdin: "", feed: false, tolerate: false, raw: false }] []) [{ scope: "repo", args: ["commit", "-m", @entity.subject, "--allow-empty-message", "-m", @entity.trailer], stdin: "", feed: false, tolerate: true, raw: false }, { scope: "repo", args: ["rev-parse", "HEAD"], stdin: "", feed: false, tolerate: false, raw: false }]))
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "apply") (or (== (array/nth @entity.codes (- (array/len @entity.codes) 2)) 0) (or (str/includes (str/concat (array/nth @entity.outputs (- (array/len @entity.codes) 2)) (array/nth @entity.failures (- (array/len @entity.codes) 2))) "nothing to commit") (str/includes (str/concat (array/nth @entity.outputs (- (array/len @entity.codes) 2)) (array/nth @entity.failures (- (array/len @entity.codes) 2))) "no changes added to commit"))))
+        (set @entity.resCommitted false)
+        (set @entity.resChanged true)
+        (set @entity.resOid (str/trim (array/last @entity.outputs)))
+        (emit WS_FINISH { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "apply") (!= (array/nth @entity.codes (- (array/len @entity.codes) 2)) 0) (not (or (str/includes (str/concat (array/nth @entity.outputs (- (array/len @entity.codes) 2)) (array/nth @entity.failures (- (array/len @entity.codes) 2))) "nothing to commit") (str/includes (str/concat (array/nth @entity.outputs (- (array/len @entity.codes) 2)) (array/nth @entity.failures (- (array/len @entity.codes) 2))) "no changes added to commit"))))
+        (emit WS_FAIL { code: "", message: (str/concat "git commit: " (str/default (str/trim (array/nth @entity.failures (- (array/len @entity.codes) 2))) (str/trim (array/nth @entity.outputs (- (array/len @entity.codes) 2))))) })
+      WS_B_START -> working when (== (array/len @entity.bsteps) 0)
+        (emit WS_B_DONE { })
+      WS_B_START -> working when (> (array/len @entity.bsteps) 0)
+        (set @entity.bcursor 0)
+        (set @entity.bresults [])
+        (set @entity.bkeys [])
+        (set @entity.btoken "")
+        (emit WS_B_RUN { })
+      WS_B_RUN -> working when (== (object/get (array/nth @entity.bsteps @entity.bcursor) op) "put")
+        (set @entity.bseq (+ @entity.bseq 1))
+        (emit STORAGE_UPLOAD { requestId: (str/concat @entity.bseq), bucket: @config.bucket, key: (object/get (array/nth @entity.bsteps @entity.bcursor) key), content: (object/get (array/nth @entity.bsteps @entity.bcursor) content), contentType: "application/octet-stream" })
+      WS_B_RUN -> working when (== (object/get (array/nth @entity.bsteps @entity.bcursor) op) "get")
+        (set @entity.bseq (+ @entity.bseq 1))
+        (emit STORAGE_DOWNLOAD { requestId: (str/concat @entity.bseq), bucket: @config.bucket, key: (object/get (array/nth @entity.bsteps @entity.bcursor) key) })
+      WS_B_RUN -> working when (== (object/get (array/nth @entity.bsteps @entity.bcursor) op) "del")
+        (set @entity.bseq (+ @entity.bseq 1))
+        (emit STORAGE_DELETE { requestId: (str/concat @entity.bseq), bucket: @config.bucket, key: (object/get (array/nth @entity.bsteps @entity.bcursor) key) })
+      WS_B_RUN -> working when (== (object/get (array/nth @entity.bsteps @entity.bcursor) op) "list")
+        (set @entity.bseq (+ @entity.bseq 1))
+        (emit STORAGE_LIST { requestId: (str/concat @entity.bseq), bucket: @config.bucket, prefix: (object/get (array/nth @entity.bsteps @entity.bcursor) prefix), maxKeys: 1000, continuationToken: @entity.btoken })
+      WS_B_UPLOADED -> working
+        (set @entity.bresults (array/append @entity.bresults (bytes/from-string "")))
+        (emit WS_B_ADVANCE { })
+      WS_B_DELETED -> working
+        (set @entity.bresults (array/append @entity.bresults (bytes/from-string "")))
+        (emit WS_B_ADVANCE { })
+      WS_B_DOWNLOADED -> working
+        (set @entity.bresults (array/append @entity.bresults @payload.content))
+        (emit WS_B_ADVANCE { })
+      WS_B_LISTED -> working when @payload.truncated
+        (set @entity.bkeys (array/concat @entity.bkeys (array/map @payload.keys (fn k (object/get @k key)))))
+        (set @entity.btoken (str/default @payload.nextToken ""))
+        (emit WS_B_RUN { })
+      WS_B_LISTED -> working when (not @payload.truncated)
+        (set @entity.bkeys (array/concat @entity.bkeys (array/map @payload.keys (fn k (object/get @k key)))))
+        (set @entity.btoken "")
+        (set @entity.bresults (array/append @entity.bresults (bytes/from-string "")))
+        (emit WS_B_ADVANCE { })
+      WS_B_ADVANCE -> working when (< (+ @entity.bcursor 1) (array/len @entity.bsteps))
+        (set @entity.bcursor (+ @entity.bcursor 1))
+        (emit WS_B_RUN { })
+      WS_B_ADVANCE -> working when (>= (+ @entity.bcursor 1) (array/len @entity.bsteps))
+        (emit WS_B_DONE { })
+      WS_B_FAILED -> working
+        (emit WS_FAIL { code: (str/default @payload.code "SERVICE_ERROR"), message: @payload.message })
+      WS_B_DONE -> working when (and (== @entity.bstage "hydList") (== (array/len @entity.bkeys) 0))
+        (set @entity.needSync true)
+        (emit WS_INIT { })
+      WS_B_DONE -> working when (and (== @entity.bstage "hydList") (> (array/len @entity.bkeys) 0))
+        (set @entity.paths @entity.bkeys)
+        (set @entity.bstage "hydGet")
+        (set @entity.bsteps (array/map @entity.paths (fn k { op: "get", key: @k, content: "", prefix: "" })))
+        (emit WS_B_START { })
+      WS_B_DONE -> working when (and (== @entity.bstage "hydHist") (== (array/len @entity.bkeys) 0))
+        (emit WS_OPENED { })
+      WS_B_DONE -> working when (and (== @entity.bstage "hydHist") (> (array/len @entity.bkeys) 0))
+        (set @entity.paths (array/concat (array/filter @entity.bkeys (fn k (str/endsWith @k "base.bundle"))) (array/sort (array/filter @entity.bkeys (fn k (not (str/endsWith @k "base.bundle")))))))
+        (set @entity.bstage "hydBundle")
+        (set @entity.bsteps (array/map @entity.paths (fn k { op: "get", key: @k, content: "", prefix: "" })))
+        (emit WS_B_START { })
+      WS_B_DONE -> working when (== @entity.bstage "hydBundle")
+        (set @entity.rawInputs @entity.bresults)
+        (set @entity.stage "hydUnbundle")
+        (set @entity.steps (array/map @entity.bresults (fn r { scope: "repo", args: ["bundle", "unbundle", "-"], stdin: "", feed: true, tolerate: false, raw: true })))
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "hydUnbundle")
+        (set @entity.ref (let ((hd (array/find (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= (str/trim @l) ""))) (fn l { oid: (array/nth (str/split (str/trim @l) " ") 0), ref: (array/nth (str/split (str/trim @l) " ") 1) })) (fn r (== (object/get @r ref) "HEAD"))))) (str/default (object/get (array/find (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= (str/trim @l) ""))) (fn l { oid: (array/nth (str/split (str/trim @l) " ") 0), ref: (array/nth (str/split (str/trim @l) " ") 1) })) (fn r (and (str/startsWith (object/get @r ref) "refs/heads/") (== (object/get @r oid) (object/get @hd oid "")))) ) ref "") (object/get (array/find (array/map (array/filter (str/split (array/nth @entity.outputs 0) "\n") (fn l (!= (str/trim @l) ""))) (fn l { oid: (array/nth (str/split (str/trim @l) " ") 0), ref: (array/nth (str/split (str/trim @l) " ") 1) })) (fn r (str/startsWith (object/get @r ref) "refs/heads/"))) ref ""))))
+        (set @entity.stage "hydRefs")
+        (set @entity.steps (array/concat (array/map (array/filter (array/flatten (array/map @entity.outputs (fn o (array/map (array/filter (str/split @o "\n") (fn l (!= (str/trim @l) ""))) (fn l { oid: (array/nth (str/split (str/trim @l) " ") 0), ref: (array/nth (str/split (str/trim @l) " ") 1) }))))) (fn r (or (str/startsWith (object/get @r ref) "refs/heads/") (str/startsWith (object/get @r ref) "refs/tags/")))) (fn r { scope: "repo", args: ["update-ref", (object/get @r ref), (object/get @r oid)], stdin: "", feed: false, tolerate: false, raw: false })) (if (!= @entity.ref "") [{ scope: "repo", args: ["symbolic-ref", "HEAD", @entity.ref], stdin: "", feed: false, tolerate: false, raw: false }, { scope: "repo", args: (str/split "reset -q" " "), stdin: "", feed: false, tolerate: false, raw: false }] [])))
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "hydRefs")
+        (emit WS_OPENED { })
+      WS_FINISH -> working when (and (array/includes ["snapshot", "restore", "undo", "redo"] @entity.action) (== @config.store "bucket") (not @entity.synced))
+        (set @entity.syncNext "finish")
+        (set @entity.withArchive true)
+        (emit WS_SYNC { })
+      WS_FINISH -> working when (and (== @entity.action "snapshot") (or (== @config.store "disk") @entity.synced))
+        (emit WORKSPACE_SNAPSHOT_TAKEN { workspace: @entity.workspace, committed: @entity.resCommitted, oid: @entity.resOid })
+        (emit WS_NEXT { })
+      WS_FINISH -> working when (and (array/includes ["restore", "undo", "redo"] @entity.action) (or (== @config.store "disk") @entity.synced))
+        (emit WORKSPACE_HISTORY_STEPPED { workspace: @entity.workspace, changed: @entity.resChanged, oid: @entity.resOid })
+        (emit WS_NEXT { })
+      WS_B_DONE -> working when (== @entity.bstage "syncB")
+        (set @entity.bkeys (array/filter @entity.bkeys (fn k (not (array/includes @entity.paths (str/slice @k (str/len (str/concat @entity.pfx "files/"))))))))
+        (set @entity.bstage "syncDel")
+        (set @entity.bsteps (array/map @entity.bkeys (fn k { op: "del", key: @k, content: "", prefix: "" })))
+        (emit WS_B_START { })
+      WS_B_DONE -> working when (and (== @entity.bstage "syncDel") @entity.withArchive)
+        (set @entity.stage "arch1")
+        (set @entity.steps [{ scope: "repo", args: ["rev-parse", "--verify", "--quiet", "refs/almadar/archived^{commit}"], stdin: "", feed: false, tolerate: true, raw: false }, { scope: "repo", args: ["config", "--get", "almadar.archiveIncrements"], stdin: "", feed: false, tolerate: true, raw: false }, { scope: "repo", args: ["rev-parse", "--verify", "--quiet", "HEAD"], stdin: "", feed: false, tolerate: true, raw: false }])
+        (emit WS_START { })
+      WS_B_DONE -> working when (and (== @entity.bstage "syncDel") (not @entity.withArchive))
+        (emit WS_SYNC_DONE { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "arch1") (!= (array/nth @entity.codes 2) 0))
+        (emit WS_SYNC_DONE { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "arch1") (== (array/nth @entity.codes 2) 0))
+        (set @entity.ref (str/trim (array/nth @entity.outputs 2)))
+        (set @entity.since (if (== (array/nth @entity.codes 0) 0) (str/trim (array/nth @entity.outputs 0)) ""))
+        (set @entity.incs (if (== (array/nth @entity.codes 1) 0) (str/to-number (str/trim (array/nth @entity.outputs 1))) 0))
+        (set @entity.full (or (== (if (== (array/nth @entity.codes 0) 0) (str/trim (array/nth @entity.outputs 0)) "") "") (>= (if (== (array/nth @entity.codes 1) 0) (str/to-number (str/trim (array/nth @entity.outputs 1))) 0) 20)))
+        (emit WS_ARCH { })
+      WS_ARCH -> working when @entity.full
+        (set @entity.stage "arch3")
+        (set @entity.steps [{ scope: "repo", args: (str/split "bundle create - --all" " "), stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_ARCH -> working when (not @entity.full)
+        (set @entity.stage "arch2")
+        (set @entity.steps [{ scope: "repo", args: (array/concat (str/split "rev-list --count --branches --tags" " ") [(str/concat "^" @entity.since)]), stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "arch2") (== (str/trim (array/nth @entity.outputs 0)) "0"))
+        (emit WS_SYNC_DONE { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "arch2") (!= (str/trim (array/nth @entity.outputs 0)) "0"))
+        (set @entity.stage "arch3")
+        (set @entity.steps [{ scope: "repo", args: (array/concat (str/split "bundle create - --branches --tags" " ") [(str/concat "^" @entity.since)]), stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "arch3") @entity.full)
+        (set @entity.bundle (array/nth @entity.rawOuts 0))
+        (set @entity.bstage "archFullA")
+        (set @entity.bsteps [{ op: "put", key: (str/concat @entity.pfx "history/base.bundle"), content: (str/concat "data:application/octet-stream;base64," (array/nth @entity.rawOuts 0)), prefix: "" }, { op: "list", key: "", content: "", prefix: (str/concat @entity.pfx "history/inc-") }])
+        (emit WS_B_START { })
+      WS_B_DONE -> working when (== @entity.bstage "archFullA")
+        (set @entity.bstage "archFullB")
+        (set @entity.bsteps (array/map (array/sort @entity.bkeys) (fn k { op: "del", key: @k, content: "", prefix: "" })))
+        (emit WS_B_START { })
+      WS_B_DONE -> working when (== @entity.bstage "archFullB")
+        (set @entity.incs 0)
+        (set @entity.stage "arch4")
+        (set @entity.steps [{ scope: "repo", args: ["update-ref", "refs/almadar/archived", @entity.ref], stdin: "", feed: false, tolerate: false, raw: false }, { scope: "repo", args: ["config", "almadar.archiveIncrements", "0"], stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "arch3") (not @entity.full))
+        (set @entity.bundle (array/nth @entity.rawOuts 0))
+        (set @entity.bstage "archIncA")
+        (set @entity.bsteps [{ op: "list", key: "", content: "", prefix: (str/concat @entity.pfx "history/inc-") }])
+        (emit WS_B_START { })
+      WS_B_DONE -> working when (== @entity.bstage "archIncA")
+        (set @entity.bstage "archIncB")
+        (set @entity.bsteps [{ op: "put", key: (str/concat @entity.pfx "history/inc-" (str/padStart (str/concat (array/len @entity.bkeys)) 6 "0") ".bundle"), content: (str/concat "data:application/octet-stream;base64," @entity.bundle), prefix: "" }])
+        (emit WS_B_START { })
+      WS_B_DONE -> working when (== @entity.bstage "archIncB")
+        (set @entity.incs (+ @entity.incs 1))
+        (set @entity.stage "arch4")
+        (set @entity.steps [{ scope: "repo", args: ["update-ref", "refs/almadar/archived", @entity.ref], stdin: "", feed: false, tolerate: false, raw: false }, { scope: "repo", args: ["config", "almadar.archiveIncrements", (str/concat @entity.incs)], stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "arch4")
+        (emit WS_SYNC_DONE { })
+      WS_SYNC_DONE -> working when (== @entity.syncNext "open")
+        (emit WS_OPENED { })
+      WS_SYNC_DONE -> working when (== @entity.syncNext "finish")
+        (set @entity.synced true)
+        (emit WS_FINISH { })
+    
+      WS_OPENED -> working when (== @entity.action "readFile")
+        (set @entity.rpaths [@entity.path])
+        (set @entity.rdata [])
+        (set @entity.rcursor 0)
+        (set @entity.rstage "read")
+        (emit WS_R_NEXT { })
+      WS_R_NEXT -> working when (>= @entity.rcursor (array/len @entity.rpaths))
+        (emit WS_R_DONE { })
+      WS_R_NEXT -> working when (< @entity.rcursor (array/len @entity.rpaths))
+        (os/read-file (str/concat @config.root "/" @entity.wsRel "/" (array/nth @entity.rpaths @entity.rcursor)) { emit: { success: WS_R_GOT, failure: WS_R_ERR } })
+      WS_R_GOT -> working
+        (set @entity.stdoutBytes @payload.data)
+        (set @entity.outValid (base64/valid @entity.stdoutBytes))
+        (set @entity.rdata (array/append @entity.rdata @payload.data))
+        (set @entity.rcursor (+ @entity.rcursor 1))
+        (emit WS_R_NEXT { })
+      WS_R_ERR -> working when (== @entity.rstage "read")
+        (emit WORKSPACE_FILE_READ { workspace: @entity.workspace, path: @entity.path, exists: false, content: "" })
+        (emit WS_NEXT { })
+      WS_R_ERR -> working when (!= @entity.rstage "read")
+        (emit WS_FAIL { code: "", message: @payload.error })
+      WS_R_DONE -> working when (and (== @entity.rstage "read") @entity.outValid)
+        (emit WORKSPACE_FILE_READ { workspace: @entity.workspace, path: @entity.path, exists: true, content: (bytes/to-string (array/first @entity.rdata)) })
+        (emit WS_NEXT { })
+      WS_R_DONE -> working when (and (== @entity.rstage "read") (not @entity.outValid))
+        (emit WS_FAIL { code: "not-text", message: (str/concat "not valid UTF-8 text: " @entity.path) })
+      WS_R_DONE -> working when (== @entity.rstage "sync")
+        (set @entity.paths @entity.rpaths)
+        (set @entity.bstage "syncPut")
+        (set @entity.bsteps (array/map @entity.rpaths (fn p i { op: "put", key: (str/concat @entity.pfx "files/" @p), content: (str/concat "data:application/octet-stream;base64," (array/nth @entity.rdata @i)), prefix: "" })))
+        (emit WS_B_START { })
+      WS_OPENED -> working when (== @entity.action "writeFile")
+        (set @entity.wpaths [@entity.path])
+        (set @entity.wdata [(bytes/from-string @entity.content)])
+        (set @entity.wcursor 0)
+        (set @entity.wstage "write")
+        (emit WS_W_NEXT { })
+      WS_W_NEXT -> working when (>= @entity.wcursor (array/len @entity.wpaths))
+        (emit WS_W_DONE { })
+      WS_W_NEXT -> working when (< @entity.wcursor (array/len @entity.wpaths))
+        (os/mkdir (str/concat @config.root "/" @entity.wsRel "/" (os/path-dir (array/nth @entity.wpaths @entity.wcursor))) true { emit: { success: WS_W_MKDIR_OK, failure: WS_W_ERR } })
+      WS_W_MKDIR_OK -> working
+        (os/write-file (str/concat @config.root "/" @entity.wsRel "/" (array/nth @entity.wpaths @entity.wcursor)) (array/nth @entity.wdata @entity.wcursor) { emit: { success: WS_W_WROTE, failure: WS_W_ERR } })
+      WS_W_WROTE -> working
+        (set @entity.wcursor (+ @entity.wcursor 1))
+        (emit WS_W_NEXT { })
+      WS_W_ERR -> working
+        (emit WS_FAIL { code: "", message: @payload.error })
+      WS_W_DONE -> working when (and (== @entity.wstage "write") (== @config.store "disk"))
+        (emit WORKSPACE_FILE_WRITTEN { workspace: @entity.workspace, path: @entity.path, written: true })
+        (emit WS_NEXT { })
+      WS_W_DONE -> working when (and (== @entity.wstage "write") (== @config.store "bucket"))
+        (set @entity.bstage "wput")
+        (set @entity.bsteps [{ op: "put", key: (str/concat @entity.pfx "files/" @entity.path), content: (str/concat "data:application/octet-stream;base64," (array/first @entity.wdata)), prefix: "" }])
+        (emit WS_B_START { })
+      WS_B_DONE -> working when (== @entity.bstage "wput")
+        (emit WORKSPACE_FILE_WRITTEN { workspace: @entity.workspace, path: @entity.path, written: true })
+        (emit WS_NEXT { })
+      WS_W_DONE -> working when (and (== @entity.wstage "init") @entity.needSync)
+        (set @entity.needSync false)
+        (set @entity.syncNext "open")
+        (set @entity.withArchive false)
+        (emit WS_SYNC { })
+      WS_W_DONE -> working when (and (== @entity.wstage "init") (not @entity.needSync))
+        (emit WS_OPENED { })
+      WS_W_DONE -> working when (== @entity.wstage "hyd")
+        (set @entity.bstage "hydHist")
+        (set @entity.bsteps [{ op: "list", key: "", content: "", prefix: (str/concat @entity.pfx "history/") }])
+        (emit WS_B_START { })
+      WS_OPENED -> working when (== @entity.action "removeFile")
+        (os/remove (str/concat @config.root "/" @entity.wsRel "/" @entity.path) { emit: { success: WS_RM_OK, failure: WS_RM_ERR } })
+      WS_RM_OK -> working when (== @config.store "disk")
+        (emit WORKSPACE_FILE_REMOVED { workspace: @entity.workspace, path: @entity.path, removed: true })
+        (emit WS_NEXT { })
+      WS_RM_OK -> working when (== @config.store "bucket")
+        (set @entity.existed true)
+        (set @entity.bstage "rmdel")
+        (set @entity.bsteps [{ op: "del", key: (str/concat @entity.pfx "files/" @entity.path), content: "", prefix: "" }])
+        (emit WS_B_START { })
+      WS_RM_ERR -> working when (and (== @payload.kind "not-found") (== @config.store "disk"))
+        (emit WORKSPACE_FILE_REMOVED { workspace: @entity.workspace, path: @entity.path, removed: false })
+        (emit WS_NEXT { })
+      WS_RM_ERR -> working when (and (== @payload.kind "not-found") (== @config.store "bucket"))
+        (set @entity.existed false)
+        (set @entity.bstage "rmdel")
+        (set @entity.bsteps [{ op: "del", key: (str/concat @entity.pfx "files/" @entity.path), content: "", prefix: "" }])
+        (emit WS_B_START { })
+      WS_RM_ERR -> working when (!= @payload.kind "not-found")
+        (emit WS_FAIL { code: "", message: @payload.error })
+      WS_B_DONE -> working when (== @entity.bstage "rmdel")
+        (emit WORKSPACE_FILE_REMOVED { workspace: @entity.workspace, path: @entity.path, removed: @entity.existed })
+        (emit WS_NEXT { })
+      WS_OPENED -> working when (== @entity.action "tree")
+        (set @entity.wfor "tree")
+        (emit WS_WALK_INIT { })
+      WS_WALK_INIT -> working
+        (set @entity.wstack [])
+        (set @entity.wnodes [])
+        (set @entity.wstarted false)
+        (set @entity.wcur (if (== @entity.wfor "tree") @entity.path ""))
+        (emit WS_WALK_START { })
+      WS_WALK_START -> working when (== @entity.wcur "")
+        (os/list-dir (str/concat @config.root "/" @entity.wsRel) { emit: { success: WS_WALK_LISTED, failure: WS_WALK_ERR } })
+      WS_WALK_START -> working when (!= @entity.wcur "")
+        (os/list-dir (str/concat @config.root "/" @entity.wsRel "/" @entity.wcur) { emit: { success: WS_WALK_LISTED, failure: WS_WALK_ERR } })
+      WS_WALK_LISTED -> working
+        (set @entity.wstack (array/concat (array/map (array/sort (array/filter (array/map @payload.entries (fn e (object/get @e name))) (fn n (not (and (== @entity.wcur "") (== @n ".git")))))) (fn n { path: (if (== @entity.wcur "") @n (str/concat @entity.wcur "/" @n)), kind: (object/get (array/find @payload.entries (fn e (== (object/get @e name) @n))) kind "file") })) @entity.wstack))
+        (set @entity.wstarted true)
+        (emit WS_WALK_NEXT { })
+      WS_WALK_ERR -> working when (and (not @entity.wstarted) (== @payload.kind "not-found") (== @entity.wfor "tree"))
+        (emit WORKSPACE_TREE_LOADED { workspace: @entity.workspace, nodes: [] })
+        (emit WS_NEXT { })
+      WS_WALK_ERR -> working when (or @entity.wstarted (!= @payload.kind "not-found") (!= @entity.wfor "tree"))
+        (emit WS_FAIL { code: "", message: @payload.error })
+      WS_WALK_NEXT -> working when (== (array/len @entity.wstack) 0)
+        (emit WS_WALK_DONE { })
+      WS_WALK_NEXT -> working when (and (> (array/len @entity.wstack) 0) (== (object/get (array/first @entity.wstack) kind) "dir"))
+        (set @entity.wcur (object/get (array/first @entity.wstack) path))
+        (set @entity.wnodes (array/append @entity.wnodes { id: (object/get (array/first @entity.wstack) path), path: (object/get (array/first @entity.wstack) path), type: "directory", size: 0 }))
+        (set @entity.wstack (array/drop @entity.wstack 1))
+        (os/list-dir (str/concat @config.root "/" @entity.wsRel "/" @entity.wcur) { emit: { success: WS_WALK_LISTED, failure: WS_WALK_ERR } })
+      WS_WALK_NEXT -> working when (and (> (array/len @entity.wstack) 0) (!= (object/get (array/first @entity.wstack) kind) "dir"))
+        (os/stat (str/concat @config.root "/" @entity.wsRel "/" (object/get (array/first @entity.wstack) path)) { emit: { success: WS_WALK_STATED, failure: WS_WALK_ERR } })
+      WS_WALK_STATED -> working
+        (set @entity.wnodes (array/append @entity.wnodes { id: (object/get (array/first @entity.wstack) path), path: (object/get (array/first @entity.wstack) path), type: "file", size: @payload.size }))
+        (set @entity.wstack (array/drop @entity.wstack 1))
+        (emit WS_WALK_NEXT { })
+      WS_WALK_DONE -> working when (== @entity.wfor "tree")
+        (emit WORKSPACE_TREE_LOADED { workspace: @entity.workspace, nodes: @entity.wnodes })
+        (emit WS_NEXT { })
+      WS_WALK_DONE -> working when (== @entity.wfor "sync")
+        (set @entity.rpaths (array/map (array/filter @entity.wnodes (fn n (== (object/get @n type) "file"))) (fn n (object/get @n path))))
+        (set @entity.rdata [])
+        (set @entity.rcursor 0)
+        (set @entity.rstage "sync")
+        (emit WS_R_NEXT { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "lookup") (or (!= (array/nth @entity.codes 0) 0) (== (str/trim (array/nth @entity.outputs 0)) "")) (== @config.store "disk"))
+        (emit WS_INIT { })
+      WS_SCRIPT_DONE -> working when (and (== @entity.stage "lookup") (or (!= (array/nth @entity.codes 0) 0) (== (str/trim (array/nth @entity.outputs 0)) "")) (== @config.store "bucket"))
+        (set @entity.bstage "hydList")
+        (set @entity.bsteps [{ op: "list", key: "", content: "", prefix: (str/concat @entity.pfx "files/") }])
+        (emit WS_B_START { })
+      WS_INIT -> working
+        (set @entity.stage "init")
+        (set @entity.steps [{ scope: "root", args: ["init", "-q", "-b", "main", @entity.dir], stdin: "", feed: false, tolerate: false, raw: false }, { scope: "repo", args: ["config", "user.email", "agent@almadar.io"], stdin: "", feed: false, tolerate: false, raw: false }, { scope: "repo", args: ["config", "user.name", "Almadar Agent"], stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "init")
+        (set @entity.wpaths [".gitignore", "schema.orb", ".almadar/app-marker.json"])
+        (set @entity.wdata [(bytes/from-string @config.gitignore), (bytes/from-string "{\n  \"name\": \"Untitled\",\n  \"version\": \"1.0.0\",\n  \"description\": \"\",\n  \"orbitals\": []\n}"), (bytes/from-string (str/concat "{\n  \"appId\": " (json/stringify @entity.workspace) ",\n  \"userId\": " (json/stringify @entity.owner) ",\n  \"createdAt\": " (str/concat @now) "\n}"))])
+        (set @entity.wcursor 0)
+        (set @entity.wstage "init")
+        (emit WS_W_NEXT { })
+      WS_B_DONE -> working when (== @entity.bstage "hydGet")
+        (set @entity.stage "hydInit")
+        (set @entity.steps [{ scope: "root", args: ["init", "-q", "-b", "main", @entity.dir], stdin: "", feed: false, tolerate: false, raw: false }, { scope: "repo", args: ["config", "user.email", "agent@almadar.io"], stdin: "", feed: false, tolerate: false, raw: false }, { scope: "repo", args: ["config", "user.name", "Almadar Agent"], stdin: "", feed: false, tolerate: false, raw: false }])
+        (emit WS_START { })
+      WS_SCRIPT_DONE -> working when (== @entity.stage "hydInit")
+        (set @entity.wpaths (array/map @entity.paths (fn k (str/slice @k (str/len (str/concat @entity.pfx "files/"))))))
+        (set @entity.wdata @entity.bresults)
+        (set @entity.wcursor 0)
+        (set @entity.wstage "hyd")
+        (emit WS_W_NEXT { })
+      WS_SYNC -> working
+        (set @entity.wfor "sync")
+        (emit WS_WALK_INIT { })
+      WS_B_DONE -> working when (== @entity.bstage "syncPut")
+        (set @entity.bstage "syncB")
+        (set @entity.bsteps [{ op: "list", key: "", content: "", prefix: (str/concat @entity.pfx "files/") }])
+        (emit WS_B_START { })
+    }
+
+    emits {
+      WORKSPACE_TREE_LOADED -> external {
+        workspace : string!
+        nodes : [WorkspaceNode]!
+      }
+        @description "The files and directories under the requested path, with each file's size in bytes."
+        @synonyms "file tree, listing, directory listing"
+        @tier "primary"
+      WORKSPACE_FILE_READ -> external {
+        workspace : string!
+        path : string!
+        exists : boolean!
+        content : string!
+      }
+        @description "One file's text; exists is false (and content empty) when the file is absent."
+        @synonyms "file contents, opened file"
+        @tier "primary"
+      WORKSPACE_FILE_WRITTEN -> external {
+        workspace : string!
+        path : string!
+        written : boolean!
+      }
+        @description "The file was written."
+        @synonyms "file saved"
+        @tier "primary"
+      WORKSPACE_FILE_REMOVED -> external {
+        workspace : string!
+        path : string!
+        removed : boolean!
+      }
+        @description "The file was removed; removed is false when it did not exist."
+        @synonyms "file deleted"
+        @tier "primary"
+      WORKSPACE_SNAPSHOT_TAKEN -> external {
+        workspace : string!
+        committed : boolean!
+        oid : string!
+      }
+        @description "The snapshot's commit id; committed is false (oid empty) when nothing had changed."
+        @synonyms "committed, version saved"
+        @tier "primary"
+      WORKSPACE_HISTORY_LOADED -> external {
+        workspace : string!
+        snapshots : [WorkspaceSnapshot]!
+        canUndo : boolean!
+        canRedo : boolean!
+      }
+        @description "The program-source snapshots newest first, with whether undo and redo apply."
+        @synonyms "versions, snapshot list"
+        @tier "primary"
+      WORKSPACE_CHANGES_LOADED -> external {
+        workspace : string!
+        changes : [WorkspaceChange]!
+      }
+        @description "The program files one snapshot changed, each with its text before and after."
+        @synonyms "snapshot diff"
+        @tier "primary"
+      WORKSPACE_HISTORY_STEPPED -> external {
+        workspace : string!
+        changed : boolean!
+        oid : string!
+      }
+        @description "A restore, undo or redo committed a new snapshot (oid); changed is false when there was nothing to do."
+        @synonyms "restored, undone, redone"
+        @tier "primary"
+      WORKSPACE_TREE_FAILED -> external {
+        workspace : string!
+        code : string
+        message : string!
+      }
+        @description "Listing the workspace failed."
+        @synonyms "tree error, listing failed"
+        @tier "primary"
+      WORKSPACE_READ_FAILED -> external {
+        workspace : string!
+        code : string
+        message : string!
+      }
+        @description "Reading the file failed."
+        @synonyms "read error"
+        @tier "primary"
+      WORKSPACE_WRITE_FAILED -> external {
+        workspace : string!
+        code : string
+        message : string!
+      }
+        @description "Writing the file failed."
+        @synonyms "write error, save failed"
+        @tier "primary"
+      WORKSPACE_REMOVE_FAILED -> external {
+        workspace : string!
+        code : string
+        message : string!
+      }
+        @description "Removing the file failed."
+        @synonyms "remove error, delete failed"
+        @tier "primary"
+      WORKSPACE_SNAPSHOT_FAILED -> external {
+        workspace : string!
+        code : string
+        message : string!
+      }
+        @description "Taking the snapshot failed."
+        @synonyms "snapshot error, commit failed"
+        @tier "primary"
+      WORKSPACE_HISTORY_FAILED -> external {
+        workspace : string!
+        code : string
+        message : string!
+      }
+        @description "Reading the history failed."
+        @synonyms "history error"
+        @tier "primary"
+      WORKSPACE_CHANGES_FAILED -> external {
+        workspace : string!
+        code : string
+        message : string!
+      }
+        @description "Reading the changes of a snapshot failed."
+        @synonyms "changes error, diff failed"
+        @tier "primary"
+      WORKSPACE_STEP_FAILED -> external {
+        workspace : string!
+        code : string
+        message : string!
+      }
+        @description "Restoring, undoing or redoing failed."
+        @synonyms "restore failed, undo failed, redo failed"
+        @tier "primary"
+      WS_NEXT -> internal { }
+        @tier "internal"
+      WS_BEGIN -> internal { }
+        @tier "internal"
+      WS_START -> internal { }
+        @tier "internal"
+      WS_RUN -> internal { }
+        @tier "internal"
+      WS_EXEC -> internal { }
+        @tier "internal"
+      WS_SCRIPT_DONE -> internal { }
+        @tier "internal"
+      WS_ROOT_READY -> internal {
+        key : string
+      }
+        @tier "internal"
+      WS_SPAWNED -> internal {
+        pid : number!
+        stdin : number
+        stdout : number!
+        stderr : number!
+        key : string
+      }
+        @tier "internal"
+      WS_STDIN_DONE -> internal {
+        bytes : number
+        key : string
+      }
+        @tier "internal"
+      WS_STDIN_CLOSED -> internal {
+        key : string
+      }
+        @tier "internal"
+      WS_OUT_CHUNK -> internal {
+        data : bytes!
+        eof : boolean!
+        key : string
+      }
+        @tier "internal"
+      WS_OUT_CLOSED -> internal {
+        key : string
+      }
+        @tier "internal"
+      WS_ERR_CHUNK -> internal {
+        data : bytes!
+        eof : boolean!
+        key : string
+      }
+        @tier "internal"
+      WS_ERR_CLOSED -> internal {
+        key : string
+      }
+        @tier "internal"
+      WS_WAITED -> internal {
+        code : number
+        signal : number
+        key : string
+      }
+        @tier "internal"
+      WS_STEP_ERROR -> internal {
+        error : string!
+        kind : string
+      }
+        @tier "internal"
+      STORAGE_UPLOAD -> external {
+        bucket : string
+        key : string
+        content : string
+        contentType : string
+        requestId : string
+      }
+        @description "Bucket mode: store one object in the workspace bucket (route it to the std-storage client)."
+        @tier "secondary"
+      STORAGE_DOWNLOAD -> external {
+        bucket : string
+        key : string!
+        requestId : string
+      }
+        @description "Bucket mode: fetch one object from the workspace bucket."
+        @tier "secondary"
+      STORAGE_DELETE -> external {
+        bucket : string
+        key : string!
+        requestId : string
+      }
+        @description "Bucket mode: delete one object from the workspace bucket."
+        @tier "secondary"
+      STORAGE_LIST -> external {
+        bucket : string
+        prefix : string
+        maxKeys : number
+        continuationToken : string
+        requestId : string
+      }
+        @description "Bucket mode: list a page of keys under a prefix."
+        @tier "secondary"
+      WS_INIT -> internal { }
+        @tier "internal"
+      WS_FINISH -> internal { }
+        @tier "internal"
+      WS_SYNC -> internal { }
+        @tier "internal"
+      WS_SYNC_DONE -> internal { }
+        @tier "internal"
+      WS_ARCH -> internal { }
+        @tier "internal"
+      WS_B_START -> internal { }
+        @tier "internal"
+      WS_B_RUN -> internal { }
+        @tier "internal"
+      WS_B_ADVANCE -> internal { }
+        @tier "internal"
+      WS_B_DONE -> internal { }
+        @tier "internal"
+      WS_WALK_INIT -> internal { }
+        @tier "internal"
+      WS_WALK_START -> internal { }
+        @tier "internal"
+      WS_WALK_NEXT -> internal { }
+        @tier "internal"
+      WS_WALK_DONE -> internal { }
+        @tier "internal"
+      WS_R_NEXT -> internal { }
+        @tier "internal"
+      WS_R_DONE -> internal { }
+        @tier "internal"
+      WS_W_NEXT -> internal { }
+        @tier "internal"
+      WS_W_DONE -> internal { }
+        @tier "internal"
+      WS_R_GOT -> internal {
+        data : bytes!
+      }
+        @tier "internal"
+      WS_R_ERR -> internal {
+        error : string!
+        kind : string
+      }
+        @tier "internal"
+      WS_W_MKDIR_OK -> internal { }
+        @tier "internal"
+      WS_W_WROTE -> internal {
+        bytes : number
+      }
+        @tier "internal"
+      WS_W_ERR -> internal {
+        error : string!
+        kind : string
+      }
+        @tier "internal"
+      WS_RM_OK -> internal { }
+        @tier "internal"
+      WS_RM_ERR -> internal {
+        error : string!
+        kind : string
+      }
+        @tier "internal"
+      WS_WALK_LISTED -> internal {
+        entries : [WalkEntry]!
+      }
+        @tier "internal"
+      WS_WALK_STATED -> internal {
+        kind : string
+        size : number!
+      }
+        @tier "internal"
+      WS_WALK_ERR -> internal {
+        error : string!
+        kind : string
+      }
+        @tier "internal"
+      WS_OPENED -> internal { }
+        @tier "internal"
+      WS_TARGET -> internal { }
+        @tier "internal"
+      WS_STAGE -> internal { }
+        @tier "internal"
+      WS_APPLY -> internal { }
+        @tier "internal"
+      WS_FAIL -> internal {
+        code : string
+        message : string!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      WORKSPACE_TREE {
+        workspace : string!
+        path : string
+      }
+        @description "List the files under path (the whole workspace when absent)."
+        @synonyms "list files, file tree"
+      WORKSPACE_READ_FILE {
+        workspace : string!
+        path : string!
+      }
+        @description "Read one file's text."
+        @synonyms "open file, read file"
+      WORKSPACE_WRITE_FILE {
+        workspace : string!
+        path : string!
+        content : string!
+      }
+        @description "Write one file's text, creating its directories."
+        @synonyms "save file, write file"
+      WORKSPACE_REMOVE_FILE {
+        workspace : string!
+        path : string!
+      }
+        @description "Remove one file."
+        @synonyms "delete file, remove file"
+      WORKSPACE_SNAPSHOT {
+        workspace : string!
+        reason : string!
+      }
+        @description "Commit every change in the workspace as a snapshot."
+        @synonyms "commit, save version, checkpoint"
+      WORKSPACE_HISTORY {
+        workspace : string!
+        limit : number
+      }
+        @description "List the program-source snapshots newest first, with whether undo and redo apply."
+        @synonyms "versions, snapshots, log"
+      WORKSPACE_CHANGES {
+        workspace : string!
+        oid : string!
+      }
+        @description "The program files one snapshot changed, before and after."
+        @synonyms "diff, snapshot changes"
+      WORKSPACE_RESTORE {
+        workspace : string!
+        oid : string!
+      }
+        @description "Commit the program files as they were at a snapshot."
+        @synonyms "revert to, roll back to"
+      WORKSPACE_UNDO {
+        workspace : string!
+      }
+        @description "Undo the newest change no live undo has undone."
+        @synonyms "step back"
+      WORKSPACE_REDO {
+        workspace : string!
+      }
+        @description "Redo the newest live undo."
+        @synonyms "step forward"
+      WorkspaceStore.STORAGE_UPLOADED -> WS_B_UPLOADED
+      WS_B_UPLOADED {
+        key : string
+        size : number
+        etag : string
+        url : string
+      }
+        @description "Bucket mode: the store accepted an object."
+      WorkspaceStore.STORAGE_DOWNLOADED -> WS_B_DOWNLOADED
+      WS_B_DOWNLOADED {
+        content : bytes!
+        size : number
+      }
+        @description "Bucket mode: an object's bytes as base64."
+      WorkspaceStore.STORAGE_LISTED -> WS_B_LISTED
+      WS_B_LISTED {
+        keys : [WorkspaceKey]!
+        truncated : boolean!
+        nextToken : string
+      }
+        @description "Bucket mode: one page of keys."
+      WorkspaceStore.STORAGE_DELETED -> WS_B_DELETED
+      WS_B_DELETED {
+        deleted : boolean
+      }
+        @description "Bucket mode: the object is deleted."
+      WorkspaceStore.STORAGE_FAILED -> WS_B_FAILED
+      WS_B_FAILED {
+        code : string
+        message : string!
+      }
+        @description "Bucket mode: the store refused or could not be reached."
+    }
+
+    config {
+      root : string = "/var/lib/almadar/workspaces"
+        @label "Workspaces root"
+        @description "Absolute directory every workspace lives under, as <root>/<owner>/<workspace>. The app must grant fs read and create on it."
+        @synonyms "workspaces directory, storage root"
+        @tier "infra"
+      store : "disk" | "bucket" = disk
+        @label "Workspace store"
+        @description "disk: workspaces live only under root. bucket: root is a local cache restored from, and mirrored to, the bucket (files under workspaces/<owner>/<workspace>/files/, git history as bundles under .../history/); the app must also route the WorkspaceStore trait."
+        @synonyms "storage mode, object store, cloud storage"
+        @tier "infra"
+      bucket : string = ""
+        @label "Bucket"
+        @description "The bucket name, in bucket mode."
+        @synonyms "bucket name, firebase storage bucket"
+        @tier "infra"
+      gitPath : string = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+        @label "Executable search path"
+        @description "The PATH git is looked up on; the call runs with no other inherited environment."
+        @synonyms "path, git location"
+        @tier "infra"
+      scope : "own" | "listed" = own
+        @label "Who may open what"
+        @description "own: a viewer opens any workspace id, always inside the viewer's own owner directory. listed: the viewer and workspace must also appear in access."
+        @synonyms "access mode, workspace access"
+        @tier "infra"
+      access : [WorkspaceAccess] = []
+        @label "Allowed workspaces"
+        @description "Per viewer id, the workspace ids that viewer may open when scope is listed."
+        @synonyms "allow list, permitted workspaces"
+        @tier "infra"
+      gitignore : string = "# Almadar — version only the app; ignore generated/churny state\n# `.almadar/` is an allowlist: its app state is history, anything else there is scratch.\n/.almadar/*\n!/.almadar/app-marker.json\n!/.almadar/ledger.json\n!/.almadar/project.orb\n!/.almadar/user.orb\n!/.almadar/fill-candidates/\n# A session is churn except each orbital's spec.json: its .orb is derived from it.\n!/.almadar/sessions/\n/.almadar/sessions/*\n!/.almadar/sessions/*/\n/.almadar/sessions/*/**\n!/.almadar/sessions/*/spec.json\n/apps/\n/.almadar-archive.bundle\n"
+        @label "Ignore rules"
+        @description "The .gitignore written into a new workspace: only the app's program sources enter history."
+        @synonyms "gitignore, ignored files"
+        @tier "infra"
+      appPaths : [string] = ["schema.orb", ":(glob)orbitals/*", ":(glob)**/*.lolo", ":(glob).almadar/sessions/*/spec.json", ":(exclude,glob).almadar/**/*.lolo", ":(exclude)apps", ":(exclude)node_modules"]
+        @label "History pathspecs"
+        @description "The git pathspecs naming the program sources whose changes history, changes, restore, undo and redo cover."
+        @synonyms "source paths, tracked sources"
+        @tier "infra"
+    }
+  }
+
+  trait WorkspaceStore = Storage.traits.StorageClient -> WorkspaceJob {
+    listens {
+      WorkspaceClient.STORAGE_UPLOAD -> STORAGE_UPLOAD
+      STORAGE_UPLOAD {
+        bucket : string
+        key : string
+        content : string
+        contentType : string
+        requestId : string
+      }
+      WorkspaceClient.STORAGE_DOWNLOAD -> STORAGE_DOWNLOAD
+      STORAGE_DOWNLOAD {
+        bucket : string
+        key : string!
+        requestId : string
+      }
+      WorkspaceClient.STORAGE_DELETE -> STORAGE_DELETE
+      STORAGE_DELETE {
+        bucket : string
+        key : string!
+        requestId : string
+      }
+      WorkspaceClient.STORAGE_LIST -> STORAGE_LIST
+      STORAGE_LIST {
+        bucket : string
+        prefix : string
+        maxKeys : number
+        continuationToken : string
+        requestId : string
+      }
+    }
+  }
+
+  page "/workspace" as WorkspacePage -> WorkspaceClient, WorkspaceStore
+}

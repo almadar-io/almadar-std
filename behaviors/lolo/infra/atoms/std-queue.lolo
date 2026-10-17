@@ -1,0 +1,718 @@
+app std-queue [
+  version: "2.0.0",
+  description: "std-queue — a durable job queue over a persisted job entity named by the jobEntity knob (the app's storage backend is the queue; the job's payload fields are the app's own, typed by that entity). Input events: ENQUEUE, DEQUEUE, JOB_STATUS, COMPLETE, FAIL, CANCEL, QUEUE_SIZE; each answers with a typed result event or QUEUE_FAILED. Jobs dequeue by highest priority, then oldest enqueuedAt, once availableAt (enqueuedAt + delay) has passed. Every claim is a conditional write: a create of QueueClaim row '<jobId>:<n>' (n = attempts + 1) fails duplicate-id on a taken id on every store, so exactly one consumer wins attempt n. A dequeued job is leased for leaseMs; after that DEQUEUE may take it over as attempt n + 1. COMPLETE and FAIL take the same next slot, so they race a takeover for one winner, and a settle that loses answers LEASE_LOST. A claim whose job update never landed (crash between the two writes) is recovered by the next DEQUEUE: it reads the claim row that holds the slot and, when that worker lease has expired, takes the next slot, or finishes the settle the claim row recorded."
+]
+orbital QueueOrbital {
+    type ENQUEUE = Event { queue : string!, job : @entity @config.jobEntity!, delay : number, priority : number } "Add a job to a queue; job carries the app's payload fields."
+
+    type DEQUEUE = Event { queue : string! } "Claim the next eligible job of a queue."
+
+    type JOB_STATUS = Event { jobId : string! } "Ask for one job's status."
+
+    type COMPLETE = Event { jobId : string!, attempt : number!, result : string } "Settle a leased job as completed."
+
+    type FAIL = Event { jobId : string!, attempt : number!, error : string } "Settle a leased job as failed."
+
+    type CANCEL = Event { jobId : string! } "Cancel a job that nobody has claimed."
+
+    type QUEUE_SIZE = Event { queue : string! } "Count a queue's pending and processing jobs."
+
+    type JOB_ENQUEUED = Event { jobId : string!, position : number! } "A job was added; position is the number of pending jobs ahead of it."
+
+    type JOB_DEQUEUED = Event { job : @entity @config.jobEntity!, attempt : number!, leaseExpiresAt : number! } "A job was leased to this consumer as attempt `attempt`."
+
+    type QUEUE_EMPTY = Event { queue : string! } "No job of the queue is eligible now."
+
+    type JOB_STATUS_REPORTED = Event { jobId : string!, status : "pending" | "processing" | "completed" | "failed", attempt : number!, leaseExpiresAt : number!, job : @entity @config.jobEntity! } "The job's current status."
+
+    type JOB_NOT_FOUND = Event { jobId : string! } "No job has that id."
+
+    type JOB_COMPLETED = Event { jobId : string!, completed : boolean! } "completed is false when the job is missing or not processing."
+
+    type JOB_FAILED = Event { jobId : string!, failed : boolean! } "failed is false when the job is missing or not processing."
+
+    type LEASE_LOST = Event { jobId : string!, attempt : number!, op : "complete" | "fail" } "The lease on this attempt expired or the job was taken over; the settle was not applied."
+
+    type JOB_CANCELLED = Event { jobId : string!, cancelled : boolean! } "cancelled is false when the job was missing or already claimed."
+
+    type QUEUE_SIZED = Event { queue : string!, size : number!, pending : number!, processing : number! } "A queue's counts."
+
+    type QUEUE_FAILED = Event { op : string!, error : string!, code : string } "A storage operation failed."
+
+    type EnqCreated = Event { id : string! } "Internal: the job row exists."
+
+    type EnqAheadLoaded = Event { data : [@entity @config.jobEntity] } "Internal: pending jobs ahead of the new job."
+
+    type EnqFailed = Event { error : string, code : string } "Internal: an enqueue step failed."
+
+    type CancelJobLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the job to cancel."
+
+    type CancelClaimed = Event { id : string! } "Internal: the cancel claim won."
+
+    type CancelDeleted = Event { id : string, deleted : boolean } "Internal: the cancelled job row was removed."
+
+    type CancelFailed = Event { error : string, code : string } "Internal: a cancel step failed."
+
+    type DeqTopLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the highest-priority eligible job."
+
+    type DeqCandLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the oldest eligible job at that priority."
+
+    type DeqClaimed = Event { id : string! } "Internal: the claim won."
+
+    type DeqMarked = Event { id : string!, attempts : number!, leaseExpiresAt : number! } "Internal: the claimed job carries its lease."
+
+    type DeqSlotLoaded = Event { data : [QueueClaim] } "Internal: the claim row that holds the slot this consumer lost."
+
+    type DeqHealed = Event { id : string! } "Internal: a half-written settle was finished."
+
+    type DeqFailed = Event { error : string, code : string } "Internal: a dequeue step failed."
+
+    type FinJobLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the job being settled."
+
+    type FinWon = Event { id : string! } "Internal: the settle claim won."
+
+    type FinMarked = Event { id : string! } "Internal: the job row carries its outcome."
+
+    type FinFailed = Event { error : string, code : string } "Internal: a settle step failed."
+
+    type StatJobLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the job asked about."
+
+    type SizeLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the live jobs of the queue."
+
+    type InspectFailed = Event { error : string, code : string } "Internal: an inspect step failed."
+
+  entity QueueJob [persistent: queue_jobs] {
+    id : string!
+    queue : string @description "Name of the queue the job belongs to." = ""
+    payload : string @description "Default job body; an app binds its own job entity with typed payload fields." = ""
+    priority : number @description "Higher values dequeue first." = 0
+    status : "pending" | "processing" | "completed" | "failed" = pending
+    enqueuedAt : number @description "Enqueue time, epoch milliseconds." = 0
+    availableAt : number @description "Earliest dequeue time, epoch milliseconds (enqueuedAt + delay)." = 0
+    attempts : number @description "Claims taken so far; the claim row of the next attempt is '<id>:<attempts + 1>'." = 0
+    leaseExpiresAt : number @description "When the current lease ends, epoch milliseconds." = 0
+    result : string @description "Result text set on completion." = ""
+    error : string @description "Failure reason set on failure." = ""
+  }
+
+  entity QueueClaim [persistent: queue_claims] {
+    id : string!
+    jobId : string = ""
+    attempt : number = 0
+    kind : "worker" | "cancel" | "completed" | "failed" = worker
+    claimedAt : number = 0
+    leaseExpiresAt : number @description "For a worker claim, when its lease ends." = 0
+    text : string @description "For a settle claim, the result or error text, so a half-written settle can be finished." = ""
+  }
+
+  entity QueueCursor [runtime] {
+    id : string!
+    wantQueue : string = ""
+    wantId : string = ""
+    wantPriority : number = 0
+    wantEnqueuedAt : number = 0
+    wantAttempt : number = 0
+    wantOutcome : "completed" | "failed" = completed
+    wantText : string = ""
+    skipIds : [string] = []
+  }
+
+  trait QueueProducer -> QueueCursor [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ENQUEUE -> idle
+        (set @entity.wantQueue ?queue)
+        (set @entity.wantPriority (math/default ?priority 0))
+        (set @entity.wantEnqueuedAt @now)
+        (persist create @config.jobEntity (object/merge ?job { queue: ?queue, priority: (math/default ?priority 0), status: "pending", enqueuedAt: @now, availableAt: ["+", @now, (math/default ?delay 0)], attempts: 0, leaseExpiresAt: 0 }) {
+          emit: { failure: EnqFailed, success: EnqCreated }
+        })
+      EnqCreated -> idle
+        (set @entity.wantId ?id)
+        (fetch @config.jobEntity {
+          emit: { failure: EnqFailed, success: EnqAheadLoaded }
+          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] ["=", (object/get @entity status), "pending"] (or [">", (object/get @entity priority), @entity.wantPriority] (and ["=", (object/get @entity priority), @entity.wantPriority] ["<", (object/get @entity enqueuedAt), @entity.wantEnqueuedAt])))
+        })
+      EnqAheadLoaded -> idle
+        (emit JOB_ENQUEUED { jobId: @entity.wantId, position: (array/len ?data) })
+      EnqFailed -> idle
+        (emit QUEUE_FAILED { op: "enqueue", error: ?error, code: ?code })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
+      CANCEL -> idle
+        (set @entity.wantId ?jobId)
+        (fetch @config.jobEntity {
+          emit: { failure: CancelFailed, success: CancelJobLoaded }
+          filter: ["=", (object/get @entity id), @entity.wantId]
+        })
+      CancelJobLoaded -> idle when ["=", (array/len ?data), 0]
+        (emit JOB_CANCELLED { jobId: @entity.wantId, cancelled: false })
+      CancelJobLoaded -> idle when (and [">", (array/len ?data), 0] ["!=", (object/get (array/first ?data) status), "pending"])
+        (emit JOB_CANCELLED { jobId: @entity.wantId, cancelled: false })
+      CancelJobLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) status), "pending"])
+        (persist create QueueClaim { id: (str/concat @entity.wantId ":1"), jobId: @entity.wantId, attempt: 1, kind: "cancel", claimedAt: @now } {
+          emit: { failure: CancelFailed, success: CancelClaimed }
+        })
+      CancelClaimed -> idle
+        (persist delete @config.jobEntity @entity.wantId {
+          emit: { failure: CancelFailed, success: CancelDeleted }
+        })
+      CancelDeleted -> idle
+        (emit JOB_CANCELLED { jobId: @entity.wantId, cancelled: true })
+      CancelFailed -> idle when ["=", ?code, "duplicate-id"]
+        (emit JOB_CANCELLED { jobId: @entity.wantId, cancelled: false })
+      CancelFailed -> idle when ["!=", ?code, "duplicate-id"]
+        (emit QUEUE_FAILED { op: "cancel", error: ?error, code: ?code })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
+    }
+
+    emits {
+      JOB_ENQUEUED -> external {
+        jobId : string!
+        position : number!
+      }
+        @description "A job was added to the queue."
+        @tier "domain"
+      JOB_CANCELLED -> external {
+        jobId : string!
+        cancelled : boolean!
+      }
+        @description "A cancel request was answered."
+        @tier "domain"
+      QUEUE_FAILED -> external {
+        op : string!
+        error : string!
+        code : string
+      }
+        @description "A queue storage operation failed."
+        @tier "domain"
+      EnqCreated {
+        id : string!
+      }
+      EnqAheadLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      EnqFailed {
+        error : string
+        code : string
+      }
+      CancelJobLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      CancelClaimed {
+        id : string!
+      }
+      CancelDeleted {
+        id : string
+        deleted : boolean
+      }
+      CancelFailed {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      ENQUEUE -> external {
+        queue : string!
+        job : @entity @config.jobEntity!
+        delay : number
+        priority : number
+      }
+        @description "Add a job to a queue, optionally delayed or prioritised."
+        @tier "domain"
+      CANCEL -> external {
+        jobId : string!
+      }
+        @description "Cancel a job that nobody has claimed."
+        @tier "domain"
+      EnqCreated {
+        id : string!
+      }
+      EnqAheadLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      EnqFailed {
+        error : string
+        code : string
+      }
+      CancelJobLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      CancelClaimed {
+        id : string!
+      }
+      CancelDeleted {
+        id : string
+        deleted : boolean
+      }
+      CancelFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      jobEntity : entity = QueueJob
+        @label "Job entity"
+        @description "The persisted job record. It must supply queue, priority, status (pending | processing | completed | failed), enqueuedAt, availableAt, attempts, leaseExpiresAt, result and error; its own fields (the payload) are whatever the app declares."
+        @synonyms "job record, task entity"
+        @tier "domain"
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable store; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+  }
+
+  trait QueueConsumer -> QueueCursor [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      DEQUEUE -> idle
+        (set @entity.wantQueue ?queue)
+        (set @entity.skipIds [])
+        (fetch @config.jobEntity {
+          emit: { failure: DeqFailed, success: DeqTopLoaded }
+          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] (not (array/includes @entity.skipIds (object/get @entity id))))
+          orderBy: "priority:desc"
+          limit: 1
+        })
+      DeqTopLoaded -> idle when ["=", (array/len ?data), 0]
+        (emit QUEUE_EMPTY { queue: @entity.wantQueue })
+      DeqTopLoaded -> idle when [">", (array/len ?data), 0]
+        (set @entity.wantPriority (object/get (array/first ?data) priority))
+        (fetch @config.jobEntity {
+          emit: { failure: DeqFailed, success: DeqCandLoaded }
+          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] ["=", (object/get @entity priority), @entity.wantPriority] (not (array/includes @entity.skipIds (object/get @entity id))))
+          orderBy: "enqueuedAt:asc"
+          limit: 1
+        })
+      DeqCandLoaded -> idle when ["=", (array/len ?data), 0]
+        (fetch @config.jobEntity {
+          emit: { failure: DeqFailed, success: DeqTopLoaded }
+          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] (not (array/includes @entity.skipIds (object/get @entity id))))
+          orderBy: "priority:desc"
+          limit: 1
+        })
+      DeqCandLoaded -> idle when [">", (array/len ?data), 0]
+        (set @entity.wantId (object/get (array/first ?data) id))
+        (set @entity.wantAttempt ["+", (object/get (array/first ?data) attempts), 1])
+        (persist create QueueClaim { id: (str/concat @entity.wantId ":" @entity.wantAttempt), jobId: @entity.wantId, attempt: @entity.wantAttempt, kind: "worker", claimedAt: @now, leaseExpiresAt: ["+", @now, @config.leaseMs] } {
+          emit: { failure: DeqFailed, success: DeqClaimed }
+        })
+      DeqClaimed -> idle
+        (persist update @config.jobEntity { id: @entity.wantId, status: "processing", attempts: @entity.wantAttempt, leaseExpiresAt: ["+", @now, @config.leaseMs] } {
+          emit: { failure: DeqFailed, success: DeqMarked }
+        })
+      DeqMarked -> idle
+        (emit JOB_DEQUEUED { job: @payload, attempt: ?attempts, leaseExpiresAt: ?leaseExpiresAt })
+      DeqFailed -> idle when ["=", ?code, "duplicate-id"]
+        (fetch QueueClaim {
+          emit: { failure: DeqFailed, success: DeqSlotLoaded }
+          filter: ["=", (object/get @entity id), (str/concat @entity.wantId ":" @entity.wantAttempt)]
+        })
+      DeqSlotLoaded -> idle when ["=", (array/len ?data), 0]
+        (set @entity.skipIds (array/append @entity.skipIds @entity.wantId))
+        (fetch @config.jobEntity {
+          emit: { failure: DeqFailed, success: DeqTopLoaded }
+          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] (not (array/includes @entity.skipIds (object/get @entity id))))
+          orderBy: "priority:desc"
+          limit: 1
+        })
+      DeqSlotLoaded -> idle when (and [">", (array/len ?data), 0] (or ["=", (object/get (array/first ?data) kind), "cancel"] (and ["=", (object/get (array/first ?data) kind), "worker"] [">", (object/get (array/first ?data) leaseExpiresAt), @now])))
+        (set @entity.skipIds (array/append @entity.skipIds @entity.wantId))
+        (fetch @config.jobEntity {
+          emit: { failure: DeqFailed, success: DeqTopLoaded }
+          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] (not (array/includes @entity.skipIds (object/get @entity id))))
+          orderBy: "priority:desc"
+          limit: 1
+        })
+      DeqSlotLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) kind), "worker"] ["<=", (object/get (array/first ?data) leaseExpiresAt), @now])
+        (set @entity.wantAttempt ["+", @entity.wantAttempt, 1])
+        (persist create QueueClaim { id: (str/concat @entity.wantId ":" @entity.wantAttempt), jobId: @entity.wantId, attempt: @entity.wantAttempt, kind: "worker", claimedAt: @now, leaseExpiresAt: ["+", @now, @config.leaseMs] } {
+          emit: { failure: DeqFailed, success: DeqClaimed }
+        })
+      DeqSlotLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) kind), "completed"])
+        (persist update @config.jobEntity { id: @entity.wantId, status: "completed", result: (object/get (array/first ?data) text) } {
+          emit: { failure: DeqFailed, success: DeqHealed }
+        })
+      DeqSlotLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) kind), "failed"])
+        (persist update @config.jobEntity { id: @entity.wantId, status: "failed", error: (object/get (array/first ?data) text) } {
+          emit: { failure: DeqFailed, success: DeqHealed }
+        })
+      DeqHealed -> idle
+        (set @entity.skipIds (array/append @entity.skipIds @entity.wantId))
+        (fetch @config.jobEntity {
+          emit: { failure: DeqFailed, success: DeqTopLoaded }
+          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] (and ["=", (object/get @entity status), "processing"] ["<=", (object/get @entity leaseExpiresAt), @now])) ["<=", (object/get @entity availableAt), @now] (not (array/includes @entity.skipIds (object/get @entity id))))
+          orderBy: "priority:desc"
+          limit: 1
+        })
+      DeqFailed -> idle when ["!=", ?code, "duplicate-id"]
+        (emit QUEUE_FAILED { op: "dequeue", error: ?error, code: ?code })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
+    }
+
+    emits {
+      JOB_DEQUEUED -> external {
+        job : @entity @config.jobEntity!
+        attempt : number!
+        leaseExpiresAt : number!
+      }
+        @description "This consumer leased a job."
+        @tier "domain"
+      QUEUE_EMPTY -> external {
+        queue : string!
+      }
+        @description "No job of the queue is eligible now."
+        @tier "domain"
+      QUEUE_FAILED -> external {
+        op : string!
+        error : string!
+        code : string
+      }
+        @description "A queue storage operation failed."
+        @tier "domain"
+      DeqTopLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      DeqCandLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      DeqClaimed {
+        id : string!
+      }
+      DeqMarked {
+        id : string!
+        attempts : number!
+        leaseExpiresAt : number!
+      }
+      DeqSlotLoaded {
+        data : [QueueClaim]
+      }
+      DeqHealed {
+        id : string!
+      }
+      DeqFailed {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      DEQUEUE -> external {
+        queue : string!
+      }
+        @description "Lease the next eligible job: highest priority, then oldest; an expired lease makes a job eligible again."
+        @tier "domain"
+      DeqTopLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      DeqCandLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      DeqClaimed {
+        id : string!
+      }
+      DeqMarked {
+        id : string!
+        attempts : number!
+        leaseExpiresAt : number!
+      }
+      DeqSlotLoaded {
+        data : [QueueClaim]
+      }
+      DeqHealed {
+        id : string!
+      }
+      DeqFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      jobEntity : entity = QueueJob
+        @label "Job entity"
+        @description "The persisted job record. It must supply queue, priority, status (pending | processing | completed | failed), enqueuedAt, availableAt, attempts, leaseExpiresAt, result and error; its own fields (the payload) are whatever the app declares."
+        @synonyms "job record, task entity"
+        @tier "domain"
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable store; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      leaseMs : number = 30000
+        @label "Lease length (ms)"
+        @description "How long a consumer holds a dequeued job before another DEQUEUE may take it over"
+        @synonyms "visibility timeout, lock time, claim timeout"
+        @tier "policy"
+    }
+  }
+
+  trait QueueFinisher -> QueueCursor [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      COMPLETE -> idle
+        (set @entity.wantId ?jobId)
+        (set @entity.wantAttempt ?attempt)
+        (set @entity.wantOutcome "completed")
+        (set @entity.wantText (str/default ?result ""))
+        (fetch @config.jobEntity {
+          emit: { failure: FinFailed, success: FinJobLoaded }
+          filter: ["=", (object/get @entity id), @entity.wantId]
+        })
+      FAIL -> idle
+        (set @entity.wantId ?jobId)
+        (set @entity.wantAttempt ?attempt)
+        (set @entity.wantOutcome "failed")
+        (set @entity.wantText (str/default ?error ""))
+        (fetch @config.jobEntity {
+          emit: { failure: FinFailed, success: FinJobLoaded }
+          filter: ["=", (object/get @entity id), @entity.wantId]
+        })
+      FinJobLoaded -> idle when (and (or ["=", (array/len ?data), 0] ["!=", (object/get (array/first ?data) status), "processing"]) ["=", @entity.wantOutcome, "completed"])
+        (emit JOB_COMPLETED { jobId: @entity.wantId, completed: false })
+      FinJobLoaded -> idle when (and (or ["=", (array/len ?data), 0] ["!=", (object/get (array/first ?data) status), "processing"]) ["=", @entity.wantOutcome, "failed"])
+        (emit JOB_FAILED { jobId: @entity.wantId, failed: false })
+      FinJobLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) status), "processing"] (or ["!=", (object/get (array/first ?data) attempts), @entity.wantAttempt] ["<=", (object/get (array/first ?data) leaseExpiresAt), @now]) ["=", @entity.wantOutcome, "completed"])
+        (emit LEASE_LOST { jobId: @entity.wantId, attempt: @entity.wantAttempt, op: "complete" })
+      FinJobLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) status), "processing"] (or ["!=", (object/get (array/first ?data) attempts), @entity.wantAttempt] ["<=", (object/get (array/first ?data) leaseExpiresAt), @now]) ["=", @entity.wantOutcome, "failed"])
+        (emit LEASE_LOST { jobId: @entity.wantId, attempt: @entity.wantAttempt, op: "fail" })
+      FinJobLoaded -> idle when (and [">", (array/len ?data), 0] ["=", (object/get (array/first ?data) status), "processing"] ["=", (object/get (array/first ?data) attempts), @entity.wantAttempt] [">", (object/get (array/first ?data) leaseExpiresAt), @now])
+        (persist create QueueClaim { id: (str/concat @entity.wantId ":" ["+", @entity.wantAttempt, 1]), jobId: @entity.wantId, attempt: ["+", @entity.wantAttempt, 1], kind: @entity.wantOutcome, claimedAt: @now, text: @entity.wantText } {
+          emit: { failure: FinFailed, success: FinWon }
+        })
+      FinWon -> idle when ["=", @entity.wantOutcome, "completed"]
+        (persist update @config.jobEntity { id: @entity.wantId, status: "completed", result: @entity.wantText } {
+          emit: { failure: FinFailed, success: FinMarked }
+        })
+      FinWon -> idle when ["=", @entity.wantOutcome, "failed"]
+        (persist update @config.jobEntity { id: @entity.wantId, status: "failed", error: @entity.wantText } {
+          emit: { failure: FinFailed, success: FinMarked }
+        })
+      FinMarked -> idle when ["=", @entity.wantOutcome, "completed"]
+        (emit JOB_COMPLETED { jobId: @entity.wantId, completed: true })
+      FinMarked -> idle when ["=", @entity.wantOutcome, "failed"]
+        (emit JOB_FAILED { jobId: @entity.wantId, failed: true })
+      FinFailed -> idle when (and ["=", ?code, "duplicate-id"] ["=", @entity.wantOutcome, "completed"])
+        (emit LEASE_LOST { jobId: @entity.wantId, attempt: @entity.wantAttempt, op: "complete" })
+      FinFailed -> idle when (and ["=", ?code, "duplicate-id"] ["=", @entity.wantOutcome, "failed"])
+        (emit LEASE_LOST { jobId: @entity.wantId, attempt: @entity.wantAttempt, op: "fail" })
+      FinFailed -> idle when ["!=", ?code, "duplicate-id"]
+        (emit QUEUE_FAILED { op: "settle", error: ?error, code: ?code })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
+    }
+
+    emits {
+      JOB_COMPLETED -> external {
+        jobId : string!
+        completed : boolean!
+      }
+        @description "A complete request was answered."
+        @tier "domain"
+      JOB_FAILED -> external {
+        jobId : string!
+        failed : boolean!
+      }
+        @description "A fail request was answered."
+        @tier "domain"
+      LEASE_LOST -> external {
+        jobId : string!
+        attempt : number!
+        op : "complete" | "fail"
+      }
+        @description "The settle was refused because the lease on that attempt is gone."
+        @tier "domain"
+      QUEUE_FAILED -> external {
+        op : string!
+        error : string!
+        code : string
+      }
+        @description "A queue storage operation failed."
+        @tier "domain"
+      FinJobLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      FinWon {
+        id : string!
+      }
+      FinMarked {
+        id : string!
+      }
+      FinFailed {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      COMPLETE -> external {
+        jobId : string!
+        attempt : number!
+        result : string
+      }
+        @description "Settle a leased job as completed."
+        @tier "domain"
+      FAIL -> external {
+        jobId : string!
+        attempt : number!
+        error : string
+      }
+        @description "Settle a leased job as failed."
+        @tier "domain"
+      FinJobLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      FinWon {
+        id : string!
+      }
+      FinMarked {
+        id : string!
+      }
+      FinFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      jobEntity : entity = QueueJob
+        @label "Job entity"
+        @description "The persisted job record. It must supply queue, priority, status (pending | processing | completed | failed), enqueuedAt, availableAt, attempts, leaseExpiresAt, result and error; its own fields (the payload) are whatever the app declares."
+        @synonyms "job record, task entity"
+        @tier "domain"
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable store; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+  }
+
+  trait QueueInspector -> QueueCursor [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      JOB_STATUS -> idle
+        (set @entity.wantId ?jobId)
+        (fetch @config.jobEntity {
+          emit: { failure: InspectFailed, success: StatJobLoaded }
+          filter: ["=", (object/get @entity id), @entity.wantId]
+        })
+      QUEUE_SIZE -> idle
+        (set @entity.wantQueue ?queue)
+        (fetch @config.jobEntity {
+          emit: { failure: InspectFailed, success: SizeLoaded }
+          filter: (and ["=", (object/get @entity queue), @entity.wantQueue] (or ["=", (object/get @entity status), "pending"] ["=", (object/get @entity status), "processing"]))
+        })
+      StatJobLoaded -> idle when ["=", (array/len ?data), 0]
+        (emit JOB_NOT_FOUND { jobId: @entity.wantId })
+      StatJobLoaded -> idle when [">", (array/len ?data), 0]
+        (emit JOB_STATUS_REPORTED {
+          jobId: @entity.wantId
+          status: (object/get (array/first ?data) status)
+          attempt: (object/get (array/first ?data) attempts)
+          leaseExpiresAt: (object/get (array/first ?data) leaseExpiresAt)
+          job: (array/first ?data)
+        })
+      SizeLoaded -> idle
+        (emit QUEUE_SIZED {
+          queue: @entity.wantQueue
+          size: (array/len ?data)
+          pending: (array/count ?data (fn row ["=", (object/get @row status), "pending"]))
+          processing: (array/count ?data (fn row ["=", (object/get @row status), "processing"]))
+        })
+      InspectFailed -> idle
+        (emit QUEUE_FAILED { op: "inspect", error: ?error, code: ?code })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Queue unavailable: " ?error) })
+    }
+
+    emits {
+      JOB_STATUS_REPORTED -> external {
+        jobId : string!
+        status : "pending" | "processing" | "completed" | "failed"
+        attempt : number!
+        leaseExpiresAt : number!
+        job : @entity @config.jobEntity!
+      }
+        @description "A job's current status."
+        @tier "domain"
+      JOB_NOT_FOUND -> external {
+        jobId : string!
+      }
+        @description "No job has that id."
+        @tier "domain"
+      QUEUE_SIZED -> external {
+        queue : string!
+        size : number!
+        pending : number!
+        processing : number!
+      }
+        @description "A queue's pending and processing counts."
+        @tier "domain"
+      QUEUE_FAILED -> external {
+        op : string!
+        error : string!
+        code : string
+      }
+        @description "A queue storage operation failed."
+        @tier "domain"
+      StatJobLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      SizeLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      InspectFailed {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      JOB_STATUS -> external {
+        jobId : string!
+      }
+        @description "Ask for one job's status."
+        @tier "domain"
+      QUEUE_SIZE -> external {
+        queue : string!
+      }
+        @description "Count a queue's pending and processing jobs."
+        @tier "domain"
+      StatJobLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      SizeLoaded {
+        data : [@entity @config.jobEntity]
+      }
+      InspectFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      jobEntity : entity = QueueJob
+        @label "Job entity"
+        @description "The persisted job record. It must supply queue, priority, status (pending | processing | completed | failed), enqueuedAt, availableAt, attempts, leaseExpiresAt, result and error; its own fields (the payload) are whatever the app declares."
+        @synonyms "job record, task entity"
+        @tier "domain"
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable store; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+  }
+
+  page "/queue" as QueuePage -> QueueProducer, QueueConsumer, QueueFinisher, QueueInspector
+}

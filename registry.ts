@@ -25,7 +25,6 @@ import { TIME_OPERATORS } from './modules/time.js';
 import { VALIDATE_OPERATORS } from './modules/validate.js';
 import { FORMAT_OPERATORS } from './modules/format.js';
 import { I18N_OPERATORS } from './modules/i18n.js';
-import { ASYNC_OPERATORS } from './modules/async.js';
 import { NN_OPERATORS } from './modules/nn.js';
 import { TENSOR_OPERATORS } from './modules/tensor.js';
 import { TRAIN_OPERATORS } from './modules/train.js';
@@ -52,6 +51,7 @@ import { MEMORY_OPERATORS } from './modules/memory.js';
 import { TRACE_OPERATORS } from './modules/trace.js';
 import { BEHAVIOR_OPERATORS } from './modules/behavior.js';
 import { PROGRAM_OPERATORS } from './modules/program.js';
+import { BYTES_OPERATORS } from './modules/bytes.js';
 import { BASE64_OPERATORS, HASH_OPERATORS, HMAC_OPERATORS } from './modules/codec.js';
 
 // ============================================================================
@@ -73,7 +73,6 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...VALIDATE_OPERATORS,
   ...FORMAT_OPERATORS,
   ...I18N_OPERATORS,
-  ...ASYNC_OPERATORS,
   ...NN_OPERATORS,
   ...TENSOR_OPERATORS,
   ...TRAIN_OPERATORS,
@@ -99,6 +98,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...TRACE_OPERATORS,
   ...BEHAVIOR_OPERATORS,
   ...PROGRAM_OPERATORS,
+  ...BYTES_OPERATORS,
   ...BASE64_OPERATORS,
   ...HASH_OPERATORS,
   ...HMAC_OPERATORS,
@@ -125,7 +125,6 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   validate: VALIDATE_OPERATORS,
   format: FORMAT_OPERATORS,
   i18n: I18N_OPERATORS,
-  async: ASYNC_OPERATORS,
   nn: NN_OPERATORS,
   tensor: TENSOR_OPERATORS,
   train: TRAIN_OPERATORS,
@@ -151,6 +150,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   trace: TRACE_OPERATORS,
   behavior: BEHAVIOR_OPERATORS,
   program: PROGRAM_OPERATORS,
+  bytes: BYTES_OPERATORS,
   base64: BASE64_OPERATORS,
   hash: HASH_OPERATORS,
   hmac: HMAC_OPERATORS,

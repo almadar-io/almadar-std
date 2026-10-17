@@ -1,0 +1,20 @@
+app retry-spec [
+  version: "1.0.0",
+  description: "Design contract for re-attempting a keyed call a bounded number of times: each attempt runs under the same CallKey, a failure schedules the next, and the last failure gives up."
+]
+
+orbital RetrySpec {
+  expects entity RetryRun [runtime] {
+    id : string!
+    key : CallKey
+    attempt : number
+    dueAt : number
+  }
+  expects trait Retry {
+    state idle { START -> running }
+    state running { FAILED -> backoff }
+    state backoff
+    emits { ATTEMPT RETRY_SCHEDULED COMPLETED GAVE_UP }
+  }
+  expects page "/retry" -> Retry
+}

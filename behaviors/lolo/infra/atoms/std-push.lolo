@@ -1,0 +1,139 @@
+app std-push [
+  version: "1.0.0",
+  description: "std-push — Web Push delivery to a browser PushSubscription: PUSH_SEND encrypts the notification (RFC 8291 aes128gcm), signs it with VAPID (RFC 8292) and posts it to the subscription endpoint. A push service reply answers PUSH_SEND_RESULT {statusCode, ok, expired} (expired when the subscription is gone, 404 or 410); a 5xx reply, a transport failure or an invalid subscription or VAPID setting answers PUSH_SEND_FAILED with the provider message. The request goes to the subscription endpoint, whose origin must be in the app egress list.",
+  egress: ["https://fcm.googleapis.com", "https://android.googleapis.com", "https://push.example.test", "https://push.example.test:8443"]
+]
+type PushKeys = { p256dh : string, auth : string }
+type PushSubscription = { endpoint : string, keys : PushKeys }
+orbital PushOrbital {
+  entity PushDelivery [runtime] {
+    id : string!
+  }
+
+  trait PushClient -> PushDelivery [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      PUSH_SEND -> idle when (not (and (str/startsWith (json/stringify (object/get @payload.subscription "endpoint" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.p256dh" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.auth" null)) "\"")))
+        (emit PUSH_SEND_FAILED { code: null, message: "push.send: subscription must be { endpoint, keys: { p256dh, auth } }" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Push notification not sent" })
+      PUSH_SEND -> idle when (and (and (str/startsWith (json/stringify (object/get @payload.subscription "endpoint" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.p256dh" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.auth" null)) "\"")) (= (object/get @payload.subscription "endpoint" null) ""))
+        (emit PUSH_SEND_FAILED { code: null, message: "You must pass in a subscription with at least an endpoint." })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Push notification not sent" })
+      PUSH_SEND -> idle when (and (and (str/startsWith (json/stringify (object/get @payload.subscription "endpoint" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.p256dh" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.auth" null)) "\"")) (!= (object/get @payload.subscription "endpoint" null) "") (or (= (object/get @payload.subscription "keys.p256dh" null) "") (= (object/get @payload.subscription "keys.auth" null) "")))
+        (emit PUSH_SEND_FAILED { code: null, message: "To send a message with a payload, the subscription must have 'auth' and 'p256dh' keys." })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Push notification not sent" })
+      PUSH_SEND -> idle when (and (and (str/startsWith (json/stringify (object/get @payload.subscription "endpoint" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.p256dh" null)) "\"") (str/startsWith (json/stringify (object/get @payload.subscription "keys.auth" null)) "\"")) (!= (object/get @payload.subscription "endpoint" null) "") (!= (object/get @payload.subscription "keys.p256dh" null) "") (!= (object/get @payload.subscription "keys.auth" null) ""))
+        (http POST (str/concat (array/nth (str/split @payload.subscription.endpoint "/") 0) "//" (array/nth (str/split @payload.subscription.endpoint "/") 2)) (str/slice @payload.subscription.endpoint (str/len (str/concat (array/nth (str/split @payload.subscription.endpoint "/") 0) "//" (array/nth (str/split @payload.subscription.endpoint "/") 2)))) {
+          webpush: {
+            subscription: { endpoint: @payload.subscription.endpoint, keys: { p256dh: @payload.subscription.keys.p256dh, auth: @payload.subscription.keys.auth } },
+            payload: (str/concat "{\"title\":" (json/stringify @payload.title) ",\"body\":" (json/stringify @payload.body) (if (and (!= @payload.url null) (!= @payload.url "")) (str/concat ",\"url\":" (json/stringify @payload.url)) "") (if (and (!= @payload.icon null) (!= @payload.icon "")) (str/concat ",\"icon\":" (json/stringify @payload.icon)) "") "}")
+          },
+          auth: { scheme: vapid, privateKey: @config.privateKeyCredential, publicKey: @config.vapidPublicKey, subject: @config.vapidSubject }
+        } { emit: { success: PUSH_SEND_REPLIED, failure: PUSH_SEND_HTTP_FAILED } })
+      PUSH_SEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit PUSH_SEND_RESULT { statusCode: @payload.status, ok: true, expired: false })
+      PUSH_SEND_REPLIED -> idle when (>= @payload.status 500)
+        (emit PUSH_SEND_FAILED { code: null, message: (str/concat "Push endpoint returned " @payload.status) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Push notification not sent" })
+      PUSH_SEND_REPLIED -> idle when (or (< @payload.status 200) (and (>= @payload.status 300) (< @payload.status 500)))
+        (emit PUSH_SEND_RESULT { statusCode: @payload.status, ok: false, expired: (or (= @payload.status 404) (= @payload.status 410)) })
+      PUSH_SEND_HTTP_FAILED -> idle when (= @payload.kind "timeout")
+        (emit PUSH_SEND_FAILED { code: null, message: "Socket timeout" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Push notification not sent" })
+      PUSH_SEND_HTTP_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @config.vapidSubject ""))
+        (emit PUSH_SEND_FAILED { code: null, message: "No subject set in vapidDetails.subject." })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Push notification not sent" })
+      PUSH_SEND_HTTP_FAILED -> idle when (and (= @payload.kind "unconfigured") (!= @config.vapidSubject "") (= @config.vapidPublicKey ""))
+        (emit PUSH_SEND_FAILED { code: null, message: "No key set vapidDetails.publicKey" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Push notification not sent" })
+      PUSH_SEND_HTTP_FAILED -> idle when (and (= @payload.kind "unconfigured") (!= @config.vapidSubject "") (!= @config.vapidPublicKey ""))
+        (emit PUSH_SEND_FAILED { code: null, message: "No key set in vapidDetails.privateKey" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Push notification not sent" })
+      PUSH_SEND_HTTP_FAILED -> idle when (and (!= @payload.kind "timeout") (!= @payload.kind "unconfigured"))
+        (emit PUSH_SEND_FAILED { code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Push notification not sent" })
+    }
+
+    emits {
+      PUSH_SEND_RESULT -> external {
+        statusCode : number!
+        ok : boolean!
+        expired : boolean!
+      }
+        @description "The push service answered below 500: statusCode is its HTTP status, ok is true for a 2xx, expired is true when the subscription is gone (404 or 410) and should be dropped."
+        @synonyms "push sent, notification delivered, push result"
+        @tier "primary"
+      PUSH_SEND_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "The notification was not sent: an invalid subscription, a missing or malformed VAPID setting, a timeout, a transport failure or a 5xx push service reply. message carries the provider text."
+        @synonyms "push failed, notification error, push rejected"
+        @tier "primary"
+      PUSH_SEND_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the push service's HTTP reply."
+        @tier "secondary"
+      PUSH_SEND_HTTP_FAILED {
+        error : string!
+        kind : string!
+        credential : string
+      }
+        @description "Internal: the push request never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      PUSH_SEND -> external {
+        subscription : PushSubscription!
+        title : string!
+        body : string!
+        url : string
+        icon : string
+      }
+        @description "Send a Web Push notification to a browser PushSubscription; url opens on click and icon is the notification icon, both dropped when empty."
+        @synonyms "send push notification, web push, browser notification, notify subscriber"
+      PUSH_SEND_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      PUSH_SEND_HTTP_FAILED {
+        error : string!
+        kind : string!
+        credential : string
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unsent notification; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      vapidPublicKey : string = ""
+        @label "VAPID public key"
+        @description "The URL-safe base64 VAPID public key (65 bytes decoded) sent as the k= parameter and in the signed token."
+        @synonyms "vapid key, application server key, public key"
+        @tier "infra"
+      vapidSubject : string = ""
+        @label "VAPID subject"
+        @description "The https: or mailto: contact URI claimed in the VAPID token."
+        @synonyms "vapid contact, mailto, sender contact"
+        @tier "infra"
+      privateKeyCredential : secret = "VAPID_PRIVATE_KEY"
+        @label "VAPID private key credential"
+        @description "Name of the credential holding the URL-safe base64 VAPID private key (32 bytes decoded)."
+        @synonyms "vapid private key, signing key"
+        @tier "infra"
+    }
+  }
+
+  page "/push" as PushPage -> PushClient
+}

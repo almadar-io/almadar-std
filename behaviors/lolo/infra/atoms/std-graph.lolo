@@ -1,0 +1,456 @@
+app std-graph [
+  version: "1.0.0",
+  description: "std-graph — a generic typed node and edge graph with CRUD and traversal. Rows are keyed by graph. Node types and edge types are config vocabularies. Edges of the order types mean the source depends on the target; every write of such an edge recomputes each node's depth and dependency closure with one Kahn pass and stores them on the node, so reads stay plain fetches. GRAPH_REACH answers descendants or ancestors and GRAPH_ORDER answers the topological order and any cycle."
+]
+type GraphPropertyValue = string | number | boolean | [string]
+type GraphStrings = [string]
+type GraphLayerRecord = { id : string, depth : number, deps : [string], closure : [string] }
+type GraphLayerRecords = [GraphLayerRecord]
+type GraphDepRow = { id : string, deps : [string] }
+type GraphDepRows = [GraphDepRow]
+type GraphNodeUpdate = { rowId : string, depth : number, dependencyIds : [string], dependencyClosure : [string] }
+orbital GraphOrbital {
+  entity GraphNode [persistent: graph_nodes] {
+    id : string!
+    graphId : string @description "The graph this node belongs to." @synonyms "graph, owner graph" = ""
+    nodeId : string @description "The node's own id inside its graph; the row id is graphId:nodeId." @synonyms "node key, local id" = ""
+    nodeType : string @description "A type from the nodeTypes vocabulary." @synonyms "type, kind, label" = ""
+    name : string @description "The node's display name." @synonyms "title, label" = ""
+    layer : number @description "An authored layer number, kept as written." @synonyms "level, tier" = 0
+    sequence : number @description "An authored position inside its layer." @synonyms "order, position, rank" = 0
+    depth : number @description "Computed on write: 0 with no dependencies, else 1 plus the deepest dependency." @synonyms "computed layer, topological depth" = 0
+    dependencyIds : [string] @description "Computed on write: the direct dependencies over the order edge types." @synonyms "prerequisites, direct dependencies"
+    dependencyClosure : [string] @description "Computed on write: every node this one depends on, transitively." @synonyms "prerequisite closure, transitive dependencies"
+    properties : Map string GraphPropertyValue @description "Domain properties of the node." @synonyms "attributes, fields, data"
+    embedding : [number] @description "The embedding of the node's text; nearest answers over it, so the field is literally named embedding." @synonyms "vector, meaning vector"
+    embeddedText : string @description "The exact text the embedding was made from." @synonyms "indexed text, document" = ""
+    embeddingModel : string @description "The model that made the embedding; a model change re-indexes every row before it is switched on." @synonyms "vector model, embedder" = ""
+    createdAt : string
+    updatedAt : string
+    reqOp : string @intrinsic = ""
+    reqGraphId : string @intrinsic = ""
+    reqNodeId : string @intrinsic = ""
+    reqSource : string @intrinsic = ""
+    reqTarget : string @intrinsic = ""
+    reqEdgeType : string @intrinsic = ""
+    reqDirection : string @intrinsic = ""
+    reqStrength : number @intrinsic = 0
+    reqMetadata : Map string string @intrinsic
+    reqEdgeTypes : [string] @intrinsic
+    scratchNodes : [GraphNode] @intrinsic
+    scratchEdges : [GraphEdge] @intrinsic
+    pendingUpdates : [GraphNodeUpdate] @intrinsic
+    engineCyclic : boolean @intrinsic = false
+    edgeEndpointsExist : boolean @intrinsic = false
+    edgeDuplicate : boolean @intrinsic = false
+    engineOrder : [string] @intrinsic
+    engineCyclicIds : [string] @intrinsic
+    reachIds : [string] @intrinsic
+  }
+
+  entity GraphEdge [persistent: graph_edges] {
+    id : string!
+    graphId : string @description "The graph this edge belongs to." @synonyms "graph" = ""
+    relId : string @description "The edge's own id, rel-{source}-{type}-{target}; the row id is graphId:relId." @synonyms "relationship id" = ""
+    source : string @description "The node the edge leaves; for an order type, the dependent." @synonyms "from, start" = ""
+    target : string @description "The node the edge enters; for an order type, the dependency." @synonyms "to, end" = ""
+    edgeType : string @description "A type from the edgeTypes vocabulary." @synonyms "type, kind, relation" = ""
+    direction : string @description "The edge's declared direction word." @synonyms "directed, directionality" = ""
+    strength : number @description "Optional weight of the edge." @synonyms "weight, score" = 0
+    metadata : Map string string @description "Free text details of the edge." @synonyms "extra, notes"
+    createdAt : string
+  }
+
+  trait GraphStore -> GraphNode [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      GRAPH_ADD_NODE -> writing when (array/includes @config.nodeTypes ?nodeType)
+        (set @entity.reqOp "addNode")
+        (set @entity.reqGraphId ?graphId)
+        (set @entity.reqNodeId ?nodeId)
+        (persist create GraphNode {
+          id: (str/concat ?graphId ":" ?nodeId)
+          graphId: ?graphId
+          nodeId: ?nodeId
+          nodeType: ?nodeType
+          name: ?name
+          layer: (if (= ?layer null) 0 ?layer)
+          sequence: (if (= ?sequence null) 0 ?sequence)
+          depth: 0
+          dependencyIds: []
+          dependencyClosure: []
+          properties: (if (= ?properties null) {} ?properties)
+        } { emit: { success: GraphWritten, failure: GraphFailed } })
+      GRAPH_ADD_NODE -> idle when (not (array/includes @config.nodeTypes ?nodeType))
+        (emit GRAPH_REJECTED { reason: "unknown-node-type", graphId: ?graphId, subject: ?nodeId })
+
+      GRAPH_UPDATE_NODE -> writing
+        (set @entity.reqOp "updateNode")
+        (set @entity.reqGraphId ?graphId)
+        (set @entity.reqNodeId ?nodeId)
+        (persist update GraphNode (object/merge { id: (str/concat ?graphId ":" ?nodeId) } (if (= ?name null) {} { name: ?name }) (if (= ?layer null) {} { layer: ?layer }) (if (= ?sequence null) {} { sequence: ?sequence }) (if (= ?properties null) {} { properties: ?properties })) { emit: { success: GraphWritten, failure: GraphFailed } })
+
+      GRAPH_ADD_EDGE -> idle when (= ?source ?target)
+        (emit GRAPH_REJECTED { reason: "self-edge", graphId: ?graphId, subject: ?source })
+      GRAPH_ADD_EDGE -> idle when (and (!= ?source ?target) (not (array/includes @config.edgeTypes ?edgeType)))
+        (emit GRAPH_REJECTED { reason: "unknown-edge-type", graphId: ?graphId, subject: ?edgeType })
+      GRAPH_ADD_EDGE -> loadingNodes when (and (!= ?source ?target) (array/includes @config.edgeTypes ?edgeType))
+        (set @entity.reqOp "addEdge")
+        (set @entity.reqGraphId ?graphId)
+        (set @entity.reqSource ?source)
+        (set @entity.reqTarget ?target)
+        (set @entity.reqEdgeType ?edgeType)
+        (set @entity.reqDirection (if (= ?direction null) "directed" ?direction))
+        (set @entity.reqStrength (if (= ?strength null) 0 ?strength))
+        (set @entity.reqMetadata (if (= ?metadata null) {} ?metadata))
+        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+
+      GRAPH_REMOVE_EDGE -> loadingNodes
+        (set @entity.reqOp "removeEdge")
+        (set @entity.reqGraphId ?graphId)
+        (set @entity.reqSource ?source)
+        (set @entity.reqTarget ?target)
+        (set @entity.reqEdgeType ?edgeType)
+        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+
+      GRAPH_REMOVE_NODE -> loadingNodes
+        (set @entity.reqOp "removeNode")
+        (set @entity.reqGraphId ?graphId)
+        (set @entity.reqNodeId ?nodeId)
+        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+
+      GRAPH_RECOMPUTE -> loadingNodes
+        (set @entity.reqOp "recompute")
+        (set @entity.reqGraphId ?graphId)
+        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+
+      GRAPH_ORDER -> loadingNodes
+        (set @entity.reqOp "order")
+        (set @entity.reqGraphId ?graphId)
+        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+
+      GRAPH_REACH -> loadingNodes
+        (set @entity.reqOp "reach")
+        (set @entity.reqGraphId ?graphId)
+        (set @entity.reqNodeId ?nodeId)
+        (set @entity.reqDirection ?direction)
+        (set @entity.reqEdgeTypes ?edgeTypes)
+        (fetch GraphNode { filter: ["=", (object/get @entity graphId), ?graphId], emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+    }
+
+    state loadingNodes {
+      INIT -> idle
+      GraphNodesLoaded -> loadingEdges
+        (set @entity.scratchNodes ?data)
+        (fetch GraphEdge { filter: ["=", (object/get @entity graphId), @entity.reqGraphId], emit: { success: GraphEdgesLoaded, failure: GraphFailed } })
+      GraphFailed -> idle
+        (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
+        (notify error (str/concat "The graph change failed: " ?error))
+    }
+
+    state loadingEdges {
+      INIT -> idle
+      GraphEdgesLoaded -> computed when (= @entity.reqOp "reach")
+        (set @entity.scratchEdges ?data)
+        (set @entity.reachIds
+          (array/reject
+            (object/get
+              (array/reduce (array/range 0 (+ (array/len ?data) 1)) { seen: (json/parse "[]" GraphStrings), frontier: [@entity.reqNodeId] }
+                (fn acc i
+                  (let ((seen (array/unique (array/concat (object/get @acc seen []) (object/get @acc frontier [])))))
+                    {
+                      seen: @seen
+                      frontier: (array/reject
+                        (array/unique
+                          (array/flatten
+                            (array/map (object/get @acc frontier [])
+                              (fn nid
+                                (array/map
+                                  (array/filter ?data
+                                    (fn e (and
+                                      (array/includes @entity.reqEdgeTypes (object/get @e edgeType ""))
+                                      (= (object/get @e (if (= @entity.reqDirection "descendants") "source" "target") "") @nid))))
+                                  (fn e (object/get @e (if (= @entity.reqDirection "descendants") "target" "source") "")))))))
+                        (fn nid (array/includes @seen @nid)))
+                    })))
+              seen [])
+            (fn nid (= @nid @entity.reqNodeId))))
+        (emit GraphComputed)
+      GraphEdgesLoaded -> computed when (!= @entity.reqOp "reach")
+        (set @entity.scratchEdges ?data)
+        (let ((nodeIds (array/map
+                (array/reject @entity.scratchNodes (fn n (and (= @entity.reqOp "removeNode") (= (object/get @n nodeId "") @entity.reqNodeId))))
+                (fn n (object/get @n nodeId "")))))
+          (let ((edges (array/filter
+                  (array/concat
+                    (array/reject ?data
+                      (fn e (or
+                        (and (= @entity.reqOp "removeEdge") (= (object/get @e source "") @entity.reqSource) (= (object/get @e target "") @entity.reqTarget) (= (object/get @e edgeType "") @entity.reqEdgeType))
+                        (and (= @entity.reqOp "removeNode") (or (= (object/get @e source "") @entity.reqNodeId) (= (object/get @e target "") @entity.reqNodeId))))))
+                    (if (= @entity.reqOp "addEdge")
+                      [{ id: "", graphId: @entity.reqGraphId, relId: "", source: @entity.reqSource, target: @entity.reqTarget, edgeType: @entity.reqEdgeType, direction: "", strength: 0, metadata: {} }]
+                      []))
+                  (fn e (and
+                    (array/includes @config.orderEdgeTypes (object/get @e edgeType ""))
+                    (array/includes @nodeIds (object/get @e source ""))
+                    (array/includes @nodeIds (object/get @e target "")))))))
+            (let ((run (array/reduce (array/range 0 (array/len @nodeIds)) {
+                    done: (json/parse "[]" GraphLayerRecords)
+                    remaining: (array/map (array/map (array/sort (array/reject @entity.scratchNodes (fn n (and (= @entity.reqOp "removeNode") (= (object/get @n nodeId "") @entity.reqNodeId)))) nodeId asc) (fn n (object/get @n nodeId "")))
+                      (fn nid { id: @nid, deps: (array/unique (array/map (array/filter @edges (fn e (= (object/get @e source "") @nid))) (fn e (object/get @e target "")))) }))
+                  }
+                  (fn acc i
+                    (let ((doneIds (array/map (object/get @acc done []) (fn r (object/get @r id "")))))
+                      (let ((ready (array/filter (object/get @acc remaining (json/parse "[]" GraphDepRows))
+                            (fn row (array/every (object/get @row deps (json/parse "[]" GraphStrings)) (fn d (array/includes @doneIds @d)))))))
+                        {
+                          done: (array/concat (object/get @acc done [])
+                            (array/map @ready
+                              (fn row {
+                                id: (object/get @row id "")
+                                depth: @i
+                                deps: (object/get @row deps (json/parse "[]" GraphStrings))
+                                closure: (array/unique (array/flatten (array/map (object/get @row deps (json/parse "[]" GraphStrings)) (fn d (array/prepend (object/get (array/find (object/get @acc done []) (fn r (= (object/get @r id "") @d))) closure []) @d)))))
+                              })))
+                          remaining: (array/reject (object/get @acc remaining (json/parse "[]" GraphDepRows)) (fn row (array/some @ready (fn q (= (object/get @q id "") (object/get @row id ""))))))
+                        }))))))
+              (do
+                (set @entity.edgeEndpointsExist (and (array/includes @nodeIds @entity.reqSource) (array/includes @nodeIds @entity.reqTarget)))
+                (set @entity.edgeDuplicate (array/some ?data (fn e (and (= (object/get @e source "") @entity.reqSource) (= (object/get @e target "") @entity.reqTarget) (= (object/get @e edgeType "") @entity.reqEdgeType)))))
+                (set @entity.engineOrder (array/map (object/get @run done []) (fn r (object/get @r id ""))))
+                (set @entity.engineCyclicIds (array/map (object/get @run remaining (json/parse "[]" GraphDepRows)) (fn row (object/get @row id ""))))
+                (set @entity.engineCyclic (> (array/len (object/get @run remaining (json/parse "[]" GraphDepRows))) 0))
+                (set @entity.pendingUpdates
+                  (array/map
+                    (array/filter (object/get @run done [])
+                      (fn r (let ((n (array/find @entity.scratchNodes (fn x (= (object/get @x nodeId "") (object/get @r id ""))))))
+                        (or
+                          (!= (object/get @n depth 0) (object/get @r depth 0))
+                          (not (and (= (array/len (object/get @n dependencyClosure [])) (array/len (object/get @r closure []))) (array/every (object/get @r closure []) (fn c (array/includes (object/get @n dependencyClosure []) @c)))))
+                          (not (and (= (array/len (object/get @n dependencyIds [])) (array/len (object/get @r deps []))) (array/every (object/get @r deps []) (fn c (array/includes (object/get @n dependencyIds []) @c)))))))))
+                    (fn r {
+                      rowId: (str/concat @entity.reqGraphId ":" (object/get @r id ""))
+                      depth: (object/get @r depth 0)
+                      dependencyIds: (object/get @r deps [])
+                      dependencyClosure: (object/get @r closure [])
+                    })))
+                (emit GraphComputed)))))
+      GraphFailed -> idle
+        (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
+        (notify error (str/concat "The graph change failed: " ?error))
+    }
+
+    state computed {
+      INIT -> idle
+
+      GraphComputed -> idle when (= @entity.reqOp "reach")
+        (emit GRAPH_REACHED { graphId: @entity.reqGraphId, nodeId: @entity.reqNodeId, direction: @entity.reqDirection, ids: @entity.reachIds })
+      GraphComputed -> idle when (= @entity.reqOp "order")
+        (emit GRAPH_ORDERED { graphId: @entity.reqGraphId, order: @entity.engineOrder, cyclic: @entity.engineCyclic, cyclicIds: @entity.engineCyclicIds })
+
+      GraphComputed -> idle when (and (= @entity.reqOp "addEdge") (not @entity.edgeEndpointsExist))
+        (emit GRAPH_REJECTED { reason: "missing-node", graphId: @entity.reqGraphId, subject: (str/concat @entity.reqSource " " @entity.reqTarget) })
+      GraphComputed -> idle when (and (= @entity.reqOp "addEdge") @entity.edgeEndpointsExist @entity.edgeDuplicate)
+        (emit GRAPH_REJECTED { reason: "duplicate-edge", graphId: @entity.reqGraphId, subject: (str/concat "rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget) })
+      GraphComputed -> idle when (and (= @entity.reqOp "addEdge") @entity.edgeEndpointsExist (not @entity.edgeDuplicate) @entity.engineCyclic)
+        (emit GRAPH_REJECTED { reason: "cycle", graphId: @entity.reqGraphId, subject: (str/concat "rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget) })
+      GraphComputed -> writing when (and (= @entity.reqOp "addEdge") (not @entity.engineCyclic) @entity.edgeEndpointsExist (not @entity.edgeDuplicate))
+        (persist batch (array/concat [["create" "GraphEdge" { id: (str/concat @entity.reqGraphId ":rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget), graphId: @entity.reqGraphId, relId: (str/concat "rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget), source: @entity.reqSource, target: @entity.reqTarget, edgeType: @entity.reqEdgeType, direction: @entity.reqDirection, strength: @entity.reqStrength, metadata: @entity.reqMetadata }]] (array/map @entity.pendingUpdates (fn u ["update" "GraphNode" (object/get @u rowId "") { depth: (object/get @u depth 0), dependencyIds: (object/get @u dependencyIds (json/parse "[]" GraphStrings)), dependencyClosure: (object/get @u dependencyClosure (json/parse "[]" GraphStrings)) }]))) { emit: { success: GraphWritten, failure: GraphFailed } })
+
+      GraphComputed -> writing when (and (= @entity.reqOp "removeEdge") @entity.edgeDuplicate)
+        (persist batch (array/concat [["delete" "GraphEdge" (str/concat @entity.reqGraphId ":rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget)]] (array/map @entity.pendingUpdates (fn u ["update" "GraphNode" (object/get @u rowId "") { depth: (object/get @u depth 0), dependencyIds: (object/get @u dependencyIds (json/parse "[]" GraphStrings)), dependencyClosure: (object/get @u dependencyClosure (json/parse "[]" GraphStrings)) }]))) { emit: { success: GraphWritten, failure: GraphFailed } })
+      GraphComputed -> idle when (and (= @entity.reqOp "removeEdge") (not @entity.edgeDuplicate))
+        (emit GRAPH_REJECTED { reason: "missing-edge", graphId: @entity.reqGraphId, subject: (str/concat "rel-" @entity.reqSource "-" @entity.reqEdgeType "-" @entity.reqTarget) })
+
+      GraphComputed -> writing when (= @entity.reqOp "removeNode")
+        (persist batch (array/concat (array/prepend (array/map (array/filter @entity.scratchEdges (fn e (or (= (object/get @e source "") @entity.reqNodeId) (= (object/get @e target "") @entity.reqNodeId)))) (fn e ["delete" "GraphEdge" (object/get @e id "")])) ["delete" "GraphNode" (str/concat @entity.reqGraphId ":" @entity.reqNodeId)]) (array/map @entity.pendingUpdates (fn u ["update" "GraphNode" (object/get @u rowId "") { depth: (object/get @u depth 0), dependencyIds: (object/get @u dependencyIds (json/parse "[]" GraphStrings)), dependencyClosure: (object/get @u dependencyClosure (json/parse "[]" GraphStrings)) }]))) { emit: { success: GraphWritten, failure: GraphFailed } })
+
+      GraphComputed -> writing when (and (= @entity.reqOp "recompute") (> (array/len @entity.pendingUpdates) 0))
+        (persist batch (array/map @entity.pendingUpdates (fn u ["update" "GraphNode" (object/get @u rowId "") { depth: (object/get @u depth 0), dependencyIds: (object/get @u dependencyIds (json/parse "[]" GraphStrings)), dependencyClosure: (object/get @u dependencyClosure (json/parse "[]" GraphStrings))}])) { emit: { success: GraphWritten, failure: GraphFailed } })
+      GraphComputed -> idle when (and (= @entity.reqOp "recompute") (= (array/len @entity.pendingUpdates) 0))
+        (emit GRAPH_WRITTEN { op: "recompute", graphId: @entity.reqGraphId })
+      GraphFailed -> idle
+        (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
+        (notify error (str/concat "The graph change failed: " ?error))
+    }
+
+    state writing {
+      INIT -> idle
+      GraphWritten -> idle
+        (emit GRAPH_WRITTEN { op: @entity.reqOp, graphId: @entity.reqGraphId })
+      GraphFailed -> idle
+        (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
+        (notify error (str/concat "The graph change failed: " ?error))
+    }
+
+    emits {
+      GRAPH_WRITTEN -> external {
+        op : string!
+        graphId : string!
+      }
+        @description "A graph write finished: addNode, updateNode, addEdge, removeEdge, removeNode or recompute."
+        @synonyms "graph saved, node saved, edge saved"
+        @tier "primary"
+      GRAPH_REJECTED -> external {
+        reason : string!
+        graphId : string!
+        subject : string!
+      }
+        @description "A write was refused: unknown-node-type, unknown-edge-type, self-edge, missing-node, duplicate-edge, cycle or missing-edge."
+        @synonyms "graph refused, invalid edge, cycle refused"
+        @tier "primary"
+      GRAPH_FAILED -> external {
+        error : string
+        graphId : string
+      }
+        @description "A load or write against the store failed."
+        @synonyms "graph error, store failure"
+        @tier "primary"
+      GRAPH_REACHED -> external {
+        graphId : string!
+        nodeId : string!
+        direction : string!
+        ids : [string]!
+      }
+        @description "The nodes reached from a start node: descendants follow edges forward, ancestors follow them back, over the asked edge types."
+        @synonyms "descendants, ancestors, reachable nodes, closure"
+        @tier "primary"
+      GRAPH_ORDERED -> external {
+        graphId : string!
+        order : [string]!
+        cyclic : boolean!
+        cyclicIds : [string]!
+      }
+        @description "The topological order of the graph over the order edge types, dependencies first, and the nodes it could not order (on a cycle or behind one)."
+        @synonyms "topo sort, topological order, cycle check"
+        @tier "primary"
+      GraphNodesLoaded {
+        data : [GraphNode]
+      }
+        @tier "internal"
+      GraphEdgesLoaded {
+        data : [GraphEdge]
+      }
+        @tier "internal"
+      GraphComputed
+        @tier "internal"
+      GraphWritten
+        @tier "internal"
+      GraphFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      GRAPH_ADD_NODE -> external {
+        graphId : string!
+        nodeId : string!
+        nodeType : string!
+        name : string!
+        layer : number
+        sequence : number
+        properties : Map string GraphPropertyValue
+      }
+        @description "Add a node of a declared type to a graph."
+        @synonyms "create node, add concept, add vertex"
+        @tier "domain"
+      GRAPH_UPDATE_NODE -> external {
+        graphId : string!
+        nodeId : string!
+        name : string
+        layer : number
+        sequence : number
+        properties : Map string GraphPropertyValue
+      }
+        @description "Change a node's name, layer, sequence or properties; only the fields sent change."
+        @synonyms "edit node, rename node"
+        @tier "domain"
+      GRAPH_REMOVE_NODE -> external {
+        graphId : string!
+        nodeId : string!
+      }
+        @description "Remove a node and every edge that touches it, then recompute depths and closures."
+        @synonyms "delete node, drop vertex"
+        @tier "domain"
+      GRAPH_ADD_EDGE -> external {
+        graphId : string!
+        source : string!
+        target : string!
+        edgeType : string!
+        direction : string
+        strength : number
+        metadata : Map string string
+      }
+        @description "Add an edge of a declared type; an order-type edge that would close a cycle is refused. The edge id is rel-{source}-{type}-{target}."
+        @synonyms "connect nodes, add relationship, link"
+        @tier "domain"
+      GRAPH_REMOVE_EDGE -> external {
+        graphId : string!
+        source : string!
+        target : string!
+        edgeType : string!
+      }
+        @description "Remove one edge, then recompute depths and closures."
+        @synonyms "disconnect, delete relationship, unlink"
+        @tier "domain"
+      GRAPH_REACH -> external {
+        graphId : string!
+        nodeId : string!
+        direction : "descendants" | "ancestors"!
+        edgeTypes : [string]!
+      }
+        @description "Find every node reached from a node over the given edge types, going forward (descendants) or backward (ancestors)."
+        @synonyms "descendants, ancestors, traverse, reachable"
+        @tier "domain"
+      GRAPH_ORDER -> external {
+        graphId : string!
+      }
+        @description "Topologically sort a graph over its order edge types and report the nodes on or behind a cycle."
+        @synonyms "topo sort, cycle check, dependency order"
+        @tier "domain"
+      GRAPH_RECOMPUTE -> external {
+        graphId : string!
+      }
+        @description "Recompute and store every node's depth and dependency closure; use after loading a graph in bulk."
+        @synonyms "rebuild closure, recompute layers, refresh depth"
+        @tier "domain"
+      GraphNodesLoaded {
+        data : [GraphNode]
+      }
+      GraphEdgesLoaded {
+        data : [GraphEdge]
+      }
+      GraphComputed
+      GraphWritten
+      GraphFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      nodeTypes : [string] = ["node"]
+        @label "Node types"
+        @description "The node type vocabulary; a node of any other type is refused."
+        @synonyms "node kinds, vertex types, entity types"
+        @tier "domain"
+      edgeTypes : [string] = ["depends-on", "related"]
+        @label "Edge types"
+        @description "The edge type vocabulary; an edge of any other type is refused."
+        @synonyms "relationship types, link kinds, relation types"
+        @tier "domain"
+      orderEdgeTypes : [string] = ["depends-on"]
+        @label "Order edge types"
+        @description "The edge types that order the graph: an edge from A to B means A depends on B. They must stay acyclic, and they drive each node's depth and dependency closure."
+        @synonyms "prerequisite edges, dependency edges, parent edges, acyclic types"
+        @tier "domain"
+    }
+  }
+
+  page "/graph" as GraphPage -> GraphStore
+}

@@ -1,0 +1,18 @@
+app label-capture-spec [
+  version: "1.0.0",
+  description: "Design contract for capturing labeled examples as training data: one stored row per example, keyed by its id. Shows the @key field mark."
+]
+
+orbital LabelCaptureSpec {
+  expects entity LabeledExample [persistent] {
+    id : string! @key
+    input : string
+    verdict : string
+    source : string
+    outcome : string
+    sink : string
+    recordedAt : number
+  }
+  expects trait LabelCaptureListener { state idle { CAPTURE -> idle } }
+  expects page "/ml-label-capture" -> LabelCaptureListener
+}

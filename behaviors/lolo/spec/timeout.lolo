@@ -1,0 +1,18 @@
+app timeout-spec [
+  version: "1.0.0",
+  description: "Design contract for racing one keyed call against a deadline: the ask runs under a CallKey the caller makes with the as cast, and ends as completed, failed, or timed out."
+]
+
+orbital TimeoutSpec {
+  expects entity TimeoutRun [runtime] {
+    id : string!
+    key : CallKey
+    deadline : number
+  }
+  expects trait Timeout {
+    state idle { START -> running }
+    state running { SUCCEEDED -> idle  TIMER_DUE -> idle }
+    emits { ASK_STARTED COMPLETED ASK_FAILED TIMED_OUT }
+  }
+  expects page "/timeout" -> Timeout
+}

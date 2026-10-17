@@ -1,0 +1,127 @@
+app std-bearer-api [
+  version: "1.0.0",
+  description: "std-bearer-api — a bearer-token HTTP API as one atom: BEARER_API_REQUEST carries a method (GET, POST, PUT, PATCH or DELETE), an endpoint path starting with / and an optional text body; the atom sends it to the origin knob authenticated with the bearer credential knob and answers BEARER_API_RESPONSE with the status, whether it was 2xx, and the reply body, whatever the status. POST, PUT and PATCH send the body as application/json text; GET and DELETE send none. A method outside the five or an endpoint without a leading / answers BEARER_API_FAILED with code VALIDATION_ERROR; an unreachable API answers BEARER_API_FAILED with the network error message and no code. Set the origin knob to the API and declare that origin in the app egress list.",
+  egress: ["https://api.example.com"]
+]
+orbital BearerApiOrbital {
+  entity BearerApiCall [runtime] {
+    id : string!
+  }
+
+  trait BearerApiClient -> BearerApiCall [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      BEARER_API_REQUEST -> idle when (and (= @payload.method "GET") (str/startsWith @payload.endpoint "/"))
+        (http GET @config.origin @payload.endpoint {
+          headers: { Accept: "application/json" },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
+      BEARER_API_REQUEST -> idle when (and (= @payload.method "DELETE") (str/startsWith @payload.endpoint "/"))
+        (http DELETE @config.origin @payload.endpoint {
+          headers: { Accept: "application/json" },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
+      BEARER_API_REQUEST -> idle when (and (= @payload.method "POST") (str/startsWith @payload.endpoint "/"))
+        (http POST @config.origin @payload.endpoint {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (or @payload.body ""),
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
+      BEARER_API_REQUEST -> idle when (and (= @payload.method "PUT") (str/startsWith @payload.endpoint "/"))
+        (http PUT @config.origin @payload.endpoint {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (or @payload.body ""),
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
+      BEARER_API_REQUEST -> idle when (and (= @payload.method "PATCH") (str/startsWith @payload.endpoint "/"))
+        (http PATCH @config.origin @payload.endpoint {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (or @payload.body ""),
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
+      BEARER_API_REQUEST -> idle when (not (array/includes ["GET", "POST", "PUT", "PATCH", "DELETE"] @payload.method))
+        (emit BEARER_API_FAILED { code: "VALIDATION_ERROR", message: "method must be one of GET, POST, PUT, PATCH, DELETE" })
+      BEARER_API_REQUEST -> idle when (and (array/includes ["GET", "POST", "PUT", "PATCH", "DELETE"] @payload.method) (not (str/startsWith @payload.endpoint "/")))
+        (emit BEARER_API_FAILED { code: "VALIDATION_ERROR", message: "endpoint must start with /" })
+      BEARER_API_REPLIED -> idle
+        (emit BEARER_API_RESPONSE { status: @payload.status, ok: (and (>= @payload.status 200) (< @payload.status 300)), body: @payload.body })
+      BEARER_API_UNREACHABLE -> idle
+        (emit BEARER_API_FAILED { code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "API unavailable: " @payload.error) })
+    }
+
+    emits {
+      BEARER_API_RESPONSE -> external {
+        status : number!
+        ok : boolean!
+        body : string!
+      }
+        @description "The API's reply to the request: its HTTP status, whether that status is 2xx, and the reply body text. A 4xx or 5xx is a response, not a failure."
+        @synonyms "api response, bearer response, http reply"
+        @tier "primary"
+      BEARER_API_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "The request was not sent or got no reply: VALIDATION_ERROR for a method outside GET, POST, PUT, PATCH, DELETE or an endpoint without a leading /, otherwise the network error message and no code."
+        @synonyms "api failed, bearer request failed, request error"
+        @tier "primary"
+      BEARER_API_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the request's HTTP reply."
+        @tier "secondary"
+      BEARER_API_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the request never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      BEARER_API_REQUEST -> external {
+        method : string!
+        endpoint : string!
+        body : string
+      }
+        @description "Send an authenticated request: the HTTP method, the endpoint path starting with /, and for POST, PUT and PATCH the JSON body text."
+        @synonyms "call api, bearer request, send authenticated request"
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable API; a page running it in the background keeps it in `system`."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "https://api.example.com"
+        @label "API origin"
+        @description "The API origin (scheme://host[:port], no path) every endpoint is appended to; the default is a placeholder, and the real origin must also be declared in the app egress list."
+        @synonyms "api url, base url, api host"
+        @tier "infra"
+      token : secret = "CUSTOM_BEARER_TOKEN"
+        @label "Bearer token"
+        @description "Name of the credential holding the bearer token sent as Authorization: Bearer on every request."
+        @synonyms "bearer token, api token, access token"
+        @tier "infra"
+      timeoutMs : number = 30000
+        @label "Request timeout (ms)"
+        @description "Milliseconds a request may take before it fails as unreachable."
+        @synonyms "timeout, request deadline, wait limit"
+        @tier "infra"
+    }
+  }
+
+  page "/bearer-api" as BearerApiPage -> BearerApiClient
+}

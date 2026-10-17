@@ -15,6 +15,7 @@ export const RECORD: Tagged<'record'> = { kind: 'record' };
 
 export const NUMBER: OperatorTypeRef = 'number';
 export const STRING: OperatorTypeRef = 'string';
+export const BYTES: OperatorTypeRef = 'bytes';
 export const BOOLEAN: OperatorTypeRef = 'boolean';
 export const VOID: OperatorTypeRef = 'void';
 export const SEXPR: OperatorTypeRef = { kind: 'sexpr' };

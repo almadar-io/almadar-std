@@ -1,6 +1,7 @@
 app std-migration-job [
-  version: "1.0.0",
-  description: "std-migration-job — one import run of external data into the host system, modeled as a persistent MigrationJob row with a lifecycle state machine: idle → fetching → mapping → reviewing → committing → done | failed. All source access goes through the migration service (call-service \"migration\" listDocuments / fetchDocument / commit) — the atom never talks to a source directly, and the host-injected service handler resolves credentials from the connectionRef knob (a reference, never the secret). Once documents are listed the atom asks the migration service to stage them (call-service \"migration\" stage — the source's stored profile replayed with no commit), whose result arrives as MIGRATION_STAGED with stats and the staged units/skipped/validationErrors rows; a host that stages through an agent may send MIGRATION_STAGED itself — when the rows are supplied, reviewing renders an ImportPreviewTree so the user can see what will commit before approving. The user approves (MIGRATION_APPROVED) and only then does commit run. Terminal runs persist the job row for provenance. Rebind the entity to a host-owned job entity via linkedEntity; target, connectionRef and reviewSlot are config knobs."
+  version: "2.0.0",
+  description: "std-migration-job — one import run of external data into the app, modeled as a persistent MigrationJob row with a lifecycle state machine: idle → fetching → mapping → reviewing → committing → done | failed. The source is a stored MigrationSourceProfile row, looked up by the picked source id: its http endpoints are read from the sourceOrigin knob with bearer auth named by the connectionRef secret knob (the secret itself never enters the run), each record the endpoints return becomes a document through the profile's shaping, and the profile's adapter parses the documents into target-neutral units — an adapter atom (std-migration-adapter-asana, -clockify, -slack, -markdown, -paste) answers MIGRATION_EXTRACT with MIGRATION_EXTRACTED. The profile's unitTargets and fieldMappings then map every unit onto a target entity deterministically: a slot with no mapping is ledgered in skipped, never dropped, and the staged rows are checked against the profile's captured target entities. Reviewing renders an ImportPreviewTree of the staged rows; once the user approves (MIGRATION_APPROVED) the job emits MIGRATION_COMMIT_REQUESTED with the typed staged units, and the importing app persists them with one explicit arm per target entity and answers MIGRATION_COMMIT_DONE. A host that stages itself may send MIGRATION_STAGED. Terminal runs persist the job row for provenance. A database source is a named seam awaiting the postgres effect. Rebind the entity to a host-owned job entity via linkedEntity; target, supportedAdapters, sourceOrigin, connectionRef and reviewSlot are config knobs.",
+  egress: ["https://api.example.com"]
 ]
 orbital MigrationJobOrbital {
 
@@ -12,21 +13,48 @@ orbital MigrationJobOrbital {
   type ImportFailure = { ref : string!, reason : string! }
   type ImportValidationError = { ref : string!, code : string!, field : string, message : string! }
   type MigrationStats = { committed : number, failed : [ImportFailure] }
+  type ImportRawDocument = { ref : string!, raw : string! }
+  type ImportDocument = { id : string, title : string, content : string }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, content : string, parentRef : string, metadata : Map string ImportFieldValue, source : string!, span : string }
+  type StagedUnit = { unit : ImportUnit, ledger : [ImportSkip] }
+  type SourceEndpoint = { name : string!, method : "GET" | "POST", path : string!, params : Map string string, headers : Map string string, recordsPath : string }
+  type TargetField = { name : string!, type : string!, required : boolean, hasDefault : boolean, values : [string], slots : number }
+  type TargetEntity = { name : string!, fields : [TargetField] }
+  type TargetRelation = { type : string!, from : string!, to : string! }
+  type SourceProfile = { id : string, adapter : string, accessKind : "http" | "database", endpoints : [SourceEndpoint], shaping : Map string string, unitTargets : Map string string, fieldMappings : Map string (Map string string), targetEntities : [TargetEntity], targetRelations : [TargetRelation] }
+  type SourceRecord = Map string ImportFieldValue
+  type SourceRecords = [SourceRecord]
+  type SourceEnvelope = Map string SourceRecords
 
   entity MigrationJob [persistent: migration_jobs] {
     id : string!
-    source : ImportSourceOption @description "ImportSource descriptor of the run (kind + options), supplied by the host." = {}
+    source : ImportSourceOption @description "ImportSource descriptor of the run (kind + options), supplied by the host; its id names the stored MigrationSourceProfile." = {}
     files : [MigrationFile] @description "Client-side file metadata for upload sources (name/size/type/lastModified)." = []
     target : string @description "Name of the host entity this import writes into." = ""
     status : "idle" | "fetching" | "mapping" | "reviewing" | "committing" | "done" | "failed" @description "Lifecycle position of the run." = idle
-    documents : [Map string ImportFieldValue] @description "Document metadata listed from the source — migration.listDocuments service result, never destructured by the atom." = []
-    document : Map string ImportFieldValue @description "Most recently fetched document content — migration.fetchDocument service result, never destructured by the atom." = {}
-    stats : MigrationStats @description "Staged/committed/failed/skipped counts — merged from host staging and migration.commit service results, never destructured by the atom." = {}
-    units : [ImportUnit] @description "Staged ImportUnits ready for review (ref/targetEntity/title/fields/parentRef), when the host stages the full rows rather than aggregate stats only." @synonyms "staged units, preview rows, import rows, staged rows" = []
-    skipped : [ImportSkip] @description "Source elements skipped during staging with a reason each, when the host stages the full rows rather than aggregate stats only." @synonyms "skipped rows, skipped elements, staging skips" = []
-    validationErrors : [ImportValidationError] @description "Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only." @synonyms "staging errors, validation issues, import errors" = []
+    profile : SourceProfile @description "The stored profile of the run, read once when the run starts." = {}
+    endpointIndex : number @description "Position of the profile endpoint the run is reading." = 0
+    documents : [ImportDocument] @description "Documents shaped from the source records: id, title and verbatim content." = []
+    document : ImportDocument @description "Most recently fetched document." = {}
+    stats : MigrationStats @description "Committed count and per-unit failures." = {}
+    staging : [StagedUnit] @description "Scratch: every extracted unit mapped onto its target entity, with the field slots it could not map." = []
+    units : [ImportUnit] @description "Staged ImportUnits ready for review (ref/targetEntity/title/fields/parentRef)." @synonyms "staged units, preview rows, import rows, staged rows" = []
+    skipped : [ImportSkip] @description "Source elements skipped during staging with a reason each." @synonyms "skipped rows, skipped elements, staging skips" = []
+    validationErrors : [ImportValidationError] @description "Staged rows that do not fit the profile's target entities." @synonyms "staging errors, validation issues, import errors" = []
     error : string @description "Failure detail when status is failed." = ""
     createdAt : number @description "Run start timestamp." = 0
+  }
+
+  entity MigrationSourceProfile [persistent: migration_source_profiles] {
+    id : string! @description "The source id the profile belongs to (an ImportSourceOption id)."
+    adapter : string @description "Adapter that parses the source documents: asana, clockify, slack, markdown or paste." = ""
+    accessKind : "http" | "database" @description "How the documents are read; database is a seam: std-postgres reads rows, but a database profile declares no queries yet and the job has no database fetch state." = http
+    endpoints : [SourceEndpoint] @description "The http endpoints read in order: a name, the GET or POST method, the path under the sourceOrigin knob, query params, headers, and the dot path of the record array in the JSON reply (empty when the reply is the array)." = []
+    shaping : Map string string @description "Record to document: which record key becomes the document title and which its content." = {}
+    unitTargets : Map string string @description "Extracted unit kind (root, folder, section, qa) to target entity; a kind left out maps to the root entity." = {}
+    fieldMappings : Map string (Map string string) @description "Target entity to unit slot (title, content or a metadata key) to target field." = {}
+    targetEntities : [TargetEntity] @description "Snapshot of the entities and fields the staged rows are checked against." = []
+    targetRelations : [TargetRelation] @description "Snapshot of the declared relationships between target entities, for hierarchy edges." = []
   }
 
   trait MigrationJobLifecycle -> @rebindable MigrationJob [lifecycle, instance] {
@@ -42,14 +70,15 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
+        (set @entity.staging [])
+        (set @entity.endpointIndex 0)
       MIGRATION_START -> fetching
         (set @entity.source ?source)
         (set @entity.files ?files)
         (set @entity.target @config.target)
         (set @entity.status fetching)
         (set @entity.createdAt (time/now))
-        (call-service "migration" "listDocuments" { connectionRef: @config.connectionRef, files: @entity.files, source: @entity.source }
-          { emit: { success: DOCUMENTS_LISTED, failure: MIGRATION_CALL_FAILED } })
+        (fetch MigrationSourceProfile { id: ?source.id, emit: { success: MIGRATION_PROFILE_LOADED, failure: MIGRATION_CALL_FAILED } })
     }
 
     state fetching {
@@ -62,12 +91,180 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
-      DOCUMENTS_LISTED -> mapping
-        (set @entity.documents ?documents)
+        (set @entity.staging [])
+        (set @entity.endpointIndex 0)
+      MIGRATION_PROFILE_LOADED -> fetching when (and (and (validate/string (object/get ?data "id")) (= (object/get ?data "id") (object/get @entity.source "id"))) (= ?data.accessKind "http") (array/includes @config.supportedAdapters (object/get ?data "adapter")))
+        (set
+          @entity.profile
+          {
+            id: (object/get ?data "id"),
+            adapter: (object/get ?data "adapter"),
+            accessKind: (object/get ?data "accessKind"),
+            endpoints: (object/get ?data "endpoints"),
+            shaping: (object/get ?data "shaping"),
+            unitTargets: (object/get ?data "unitTargets"),
+            fieldMappings: (object/get ?data "fieldMappings"),
+            targetEntities: (object/get ?data "targetEntities"),
+            targetRelations: (object/get ?data "targetRelations")
+          })
+        (set @entity.endpointIndex 0)
+        (set @entity.documents [])
+        (emit MIGRATION_SOURCE_NEXT { index: 0 })
+      MIGRATION_PROFILE_LOADED -> failed when (and (and (validate/string (object/get ?data "id")) (= (object/get ?data "id") (object/get @entity.source "id"))) (= ?data.accessKind "database"))
+        (set @entity.error "database sources are not wired yet: std-postgres can read the rows (PG_QUERY, PG_RESULT), but a database profile declares no queries and the job has no database fetch state")
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error "Couldn't list the source documents: database sources are not wired yet.")
+      MIGRATION_PROFILE_LOADED -> failed when (and (and (validate/string (object/get ?data "id")) (= (object/get ?data "id") (object/get @entity.source "id"))) (= ?data.accessKind "http") (not (array/includes @config.supportedAdapters (object/get ?data "adapter"))))
+        (set @entity.error (str/concat "profile '" ?data.id "' names adapter '" ?data.adapter "', which this app has not composed"))
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error "Couldn't list the source documents: the profile names an adapter this app has not composed.")
+      MIGRATION_PROFILE_LOADED -> failed when (not (and (validate/string (object/get ?data "id")) (= (object/get ?data "id") (object/get @entity.source "id"))))
+        (set @entity.error (str/concat "no migration profile stored for source '" @entity.source.id "'"))
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error "Couldn't list the source documents: no migration profile is stored for this source.")
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len @entity.profile.endpoints)) (= (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "method") "GET"))
+        (http
+          GET
+          @config.sourceOrigin
+          (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "path")
+          {
+            query: (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "params"),
+            headers: (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "headers"),
+            auth: { scheme: bearer, credential: @config.connectionRef },
+            timeoutMs: @config.timeoutMs
+          }
+          { emit: { success: MIGRATION_SOURCE_REPLIED, failure: MIGRATION_SOURCE_UNREACHABLE } })
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len @entity.profile.endpoints)) (= (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "method") "POST"))
+        (http
+          POST
+          @config.sourceOrigin
+          (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "path")
+          {
+            query: (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "params"),
+            headers: (object/get (array/nth (object/get @entity.profile "endpoints") ?index) "headers"),
+            auth: { scheme: bearer, credential: @config.connectionRef },
+            timeoutMs: @config.timeoutMs
+          }
+          { emit: { success: MIGRATION_SOURCE_REPLIED, failure: MIGRATION_SOURCE_UNREACHABLE } })
+      MIGRATION_SOURCE_REPLIED -> fetching when (and (>= ?status 200) (< ?status 300) (json/valid ?body))
+        (set @entity.documents (array/concat @entity.documents
+          (let ((records (if
+                          (=
+                            (object/get
+                              (array/nth (object/get @entity.profile "endpoints") @entity.endpointIndex)
+                              "recordsPath")
+                            "")
+                          (json/parse ?body SourceRecords)
+                          (object/get
+                            (json/parse ?body SourceEnvelope)
+                            (object/get
+                              (array/nth (object/get @entity.profile "endpoints") @entity.endpointIndex)
+                              "recordsPath"))))
+                (titleKey (object/get (object/get @entity.profile "shaping") "title"))
+                (contentKey (object/get (object/get @entity.profile "shaping") "content")))
+            (if
+              (validate/array @records)
+              (array/map
+                (array/filter
+                  (array/range (array/len @records))
+                  (fn i
+                    (and
+                      (validate/object (array/nth @records @i))
+                      (validate/string @titleKey)
+                      (validate/string
+                        (object/get
+                          (array/nth @records @i)
+                          (str/replaceAll (str/replaceAll @titleKey "\\" "\\\\") "." "\\."))))))
+                (fn i
+                  {
+                    id: (str/concat
+                          (object/get
+                            (array/nth (object/get @entity.profile "endpoints") @entity.endpointIndex)
+                            "name")
+                          ":"
+                          @i),
+                    title: (object/get
+                             (array/nth @records @i)
+                             (str/replaceAll (str/replaceAll @titleKey "\\" "\\\\") "." "\\.")),
+                    content: (if
+                               (and
+                                 (validate/string @contentKey)
+                                 (validate/string
+                                   (object/get
+                                     (array/nth @records @i)
+                                     (str/replaceAll (str/replaceAll @contentKey "\\" "\\\\") "." "\\."))))
+                               (object/get
+                                 (array/nth @records @i)
+                                 (str/replaceAll (str/replaceAll @contentKey "\\" "\\\\") "." "\\."))
+                               "")
+                  }))
+              []))))
+        (set @entity.endpointIndex (+ @entity.endpointIndex 1))
+        (emit MIGRATION_SOURCE_NEXT { index: @entity.endpointIndex })
+      MIGRATION_SOURCE_REPLIED -> failed when (or (< ?status 200) (>= ?status 300) (not (json/valid ?body)))
+        (set @entity.error (if (and (>= ?status 200) (< ?status 300)) "the source answered with a body that is not valid JSON" (str/concat "the source answered with HTTP status " ?status)))
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error (str/concat "Couldn't read the source — " @entity.error))
+      MIGRATION_SOURCE_NEXT -> mapping when (>= ?index (array/len @entity.profile.endpoints))
         (set @entity.status mapping)
         (emit MIGRATION_FETCHED { documents: @entity.documents })
-        (call-service "migration" "stage" { connectionRef: @config.connectionRef, documents: @entity.documents, source: @entity.source }
-          { emit: { success: MIGRATION_STAGED, failure: MIGRATION_CALL_FAILED } })
+        (emit
+          MIGRATION_EXTRACT
+          {
+            adapter: (object/get @entity.profile "adapter"),
+            documents: (array/map
+                         @entity.documents
+                         (fn d { ref: (object/get @d "id"), raw: (object/get @d "content") }))
+          })
+      MIGRATION_SOURCE_UNREACHABLE -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error (str/concat "Couldn't list the source documents — " ?error))
       ;; Self-loops so the validator sees in-atom listeners for the
       ;; externally-consumed staging events.
       MIGRATION_FETCHED -> mapping
@@ -97,12 +294,439 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
+        (set @entity.staging [])
+        (set @entity.endpointIndex 0)
       FETCH_DOCUMENT -> mapping
-        (call-service "migration" "fetchDocument" { connectionRef: @config.connectionRef, documentId: ?documentId, source: @entity.source }
-          { emit: { success: DOCUMENT_FETCHED, failure: MIGRATION_CALL_FAILED } })
-      DOCUMENT_FETCHED -> mapping
-        (set @entity.document ?document)
+        (set @entity.document (array/find @entity.documents (fn d (= (object/get @d id) ?documentId))))
         (emit MIGRATION_DOCUMENT { document: @entity.document })
+      MIGRATION_EXTRACTED -> reviewing
+        (set @entity.staging
+          (array/map
+            ?units
+            (fn u
+              (let ((te (object/get
+                         (object/get @entity.profile "unitTargets")
+                         (object/get @u "kind")
+                         (object/get (object/get @entity.profile "unitTargets") "root")))
+                    (fm (object/get (object/get @entity.profile "fieldMappings") @te {}))
+                    (slots (object/merge
+                            (object/fromEntries
+                              (array/map
+                                (array/filter
+                                  [
+                                   { k: "title", v: (object/get @u "title") },
+                                   { k: "content", v: (object/get @u "content") }
+                                  ]
+                                  (fn s (validate/string (object/get @s "v"))))
+                                (fn s [(object/get @s "k"), (object/get @s "v")])))
+                            (object/get @u "metadata")))
+                    (keys (object/keys @slots))
+                    (pairs (array/map
+                            (array/filter @keys (fn k (object/has @fm @k)))
+                            (fn k { t: (object/get @fm @k), v: (object/get @slots @k) })))
+                    (last (array/filter
+                           @pairs
+                           (fn p i
+                             (not
+                               (array/some
+                                 (array/drop @pairs (+ @i 1))
+                                 (fn x (= (object/get @x "t") (object/get @p "t"))))))))
+                    (merged (object/merge
+                             (object/fromEntries
+                               (array/map
+                                 (array/filter @last (fn p (validate/string (object/get @p "v"))))
+                                 (fn p [(object/get @p "t"), (object/get @p "v")])))
+                             (object/fromEntries
+                               (array/map
+                                 (array/filter @last (fn p (validate/number (object/get @p "v"))))
+                                 (fn p [(object/get @p "t"), (object/get @p "v")])))
+                             (object/fromEntries
+                               (array/map
+                                 (array/filter @last (fn p (validate/boolean (object/get @p "v"))))
+                                 (fn p [(object/get @p "t"), (object/get @p "v")]))))))
+                {
+                  unit: {
+                          ref: (object/get @u "ref"),
+                          targetEntity: @te,
+                          title: (object/get @u "title"),
+                          fields: (object/pick
+                                    @merged
+                                    (array/unique (array/map @pairs (fn p (object/get @p "t"))))),
+                          parentRef: (object/get @u "parentRef")
+                        },
+                  ledger: (array/map
+                            (array/filter @keys (fn k (not (object/has @fm @k))))
+                            (fn k
+                              {
+                                ref: (str/concat (object/get @u "ref") "#field:" @k),
+                                reason: (str/concat
+                                          "no field mapping declared for slot '"
+                                          @k
+                                          "' on entity '"
+                                          @te
+                                          "'")
+                              }))
+                }))))
+        (set @entity.units
+          (array/map @entity.staging (fn s (object/get @s "unit"))))
+        (set @entity.skipped (array/concat ?skipped
+          (array/flatten (array/map @entity.staging (fn s (object/get @s "ledger"))))
+          (array/flatten
+            (array/map
+              @entity.units
+              (fn u
+                (let ((parent (if
+                               (validate/string (object/get @u "parentRef"))
+                               (array/find
+                                 @entity.units
+                                 (fn p (= (object/get @p "ref") (object/get @u "parentRef"))))
+                               null)))
+                  (if
+                    (and
+                      (!= @parent null)
+                      (=
+                        (array/len
+                          (array/filter
+                            (object/get @entity.profile "targetRelations")
+                            (fn r
+                              (and
+                                (= (object/get @r "from") (object/get @parent "targetEntity"))
+                                (= (object/get @r "to") (object/get @u "targetEntity"))))))
+                        0))
+                    [
+                     {
+                       ref: (str/concat (object/get @parent "ref") "->" (object/get @u "ref")),
+                       reason: (str/concat
+                                 "no declared relationship from '"
+                                 (object/get @parent "targetEntity")
+                                 "' to '"
+                                 (object/get @u "targetEntity")
+                                 "' for hierarchy edge")
+                     }
+                    ]
+                    [])))))))
+        (set @entity.validationErrors
+          (array/flatten
+            (array/map
+              @entity.units
+              (fn u
+                (let ((ent (array/find
+                            (object/get @entity.profile "targetEntities")
+                            (fn e (= (object/get @e "name") (object/get @u "targetEntity"))))))
+                  (if
+                    (= @ent null)
+                    [
+                     {
+                       ref: (object/get @u "ref"),
+                       code: "unknown_entity",
+                       field: null,
+                       message: (str/concat "unknown target entity '" (object/get @u "targetEntity") "'")
+                     }
+                    ]
+                    (array/concat
+                      (array/flatten
+                        (array/map
+                          (object/keys (object/get @u "fields"))
+                          (fn name
+                            (let ((fd (array/find
+                                       (object/get @ent "fields")
+                                       (fn f (= (object/get @f "name") @name))))
+                                  (val (object/get
+                                        (object/get @u "fields")
+                                        (str/replaceAll (str/replaceAll @name "\\" "\\\\") "." "\\."))))
+                              (if
+                                (= @fd null)
+                                [
+                                 {
+                                   ref: (object/get @u "ref"),
+                                   code: "unknown_field",
+                                   field: @name,
+                                   message: (str/concat
+                                              "unknown field '"
+                                              @name
+                                              "' on entity '"
+                                              (object/get @ent "name")
+                                              "'")
+                                 }
+                                ]
+                                (let ((prob (if
+                                             (not
+                                               (or
+                                                 (validate/string @val)
+                                                 (validate/number @val)
+                                                 (validate/boolean @val)
+                                                 (validate/object @val)
+                                                 (validate/array @val)))
+                                             (if
+                                               (object/get @fd "required")
+                                               "value is null on a required field"
+                                               "")
+                                             (if
+                                               (array/includes
+                                                 ["string", "date", "timestamp", "datetime"]
+                                                 (object/get @fd "type"))
+                                               (if
+                                                 (validate/string @val)
+                                                 ""
+                                                 (str/concat
+                                                   "expected string, got "
+                                                   (if
+                                                     (validate/string @val)
+                                                     "string"
+                                                     (if
+                                                       (validate/number @val)
+                                                       "number"
+                                                       (if (validate/boolean @val) "boolean" "object")))))
+                                               (if
+                                                 (array/includes
+                                                   ["email", "url", "phone", "uuid", "image"]
+                                                   (object/get @fd "type"))
+                                                 (if
+                                                   (not (validate/string @val))
+                                                   (str/concat
+                                                     "expected string, got "
+                                                     (if
+                                                       (validate/string @val)
+                                                       "string"
+                                                       (if
+                                                         (validate/number @val)
+                                                         "number"
+                                                         (if (validate/boolean @val) "boolean" "object"))))
+                                                   (if
+                                                     (validate/pattern
+                                                       @val
+                                                       (if
+                                                         (= (object/get @fd "type") "email")
+                                                         "^[^\\s@]+@[^\\s@.]+\\.[^\\s@]+$"
+                                                         (if
+                                                           (= (object/get @fd "type") "phone")
+                                                           "^[+]?[\\d\\s().-]{7,}$"
+                                                           (if
+                                                             (= (object/get @fd "type") "uuid")
+                                                             "(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                                                             "^https?://[^\\s]+$"))))
+                                                     ""
+                                                     (str/concat
+                                                       "value is not a valid "
+                                                       (object/get @fd "type"))))
+                                                 (if
+                                                   (= (object/get @fd "type") "number")
+                                                   (if
+                                                     (validate/number @val)
+                                                     ""
+                                                     (str/concat
+                                                       "expected number, got "
+                                                       (if
+                                                         (validate/string @val)
+                                                         "string"
+                                                         (if
+                                                           (validate/number @val)
+                                                           "number"
+                                                           (if (validate/boolean @val) "boolean" "object")))))
+                                                   (if
+                                                     (= (object/get @fd "type") "money")
+                                                     (if
+                                                       (validate/number @val)
+                                                       ""
+                                                       (str/concat
+                                                         "expected number (money is numeric at rest), got "
+                                                         (if
+                                                           (validate/string @val)
+                                                           "string"
+                                                           (if
+                                                             (validate/number @val)
+                                                             "number"
+                                                             (if (validate/boolean @val) "boolean" "object")))))
+                                                     (if
+                                                       (= (object/get @fd "type") "boolean")
+                                                       (if
+                                                         (validate/boolean @val)
+                                                         ""
+                                                         (str/concat
+                                                           "expected boolean, got "
+                                                           (if
+                                                             (validate/string @val)
+                                                             "string"
+                                                             (if
+                                                               (validate/number @val)
+                                                               "number"
+                                                               (if (validate/boolean @val) "boolean" "object")))))
+                                                       (if
+                                                         (= (object/get @fd "type") "enum")
+                                                         (if
+                                                           (and
+                                                             (validate/string @val)
+                                                             (array/includes (object/get @fd "values") @val))
+                                                           ""
+                                                           (str/concat
+                                                             "expected one of ["
+                                                             (str/join (object/get @fd "values") ", ")
+                                                             "]"))
+                                                         (if
+                                                           (= (object/get @fd "type") "bytes")
+                                                           (if
+                                                             (and
+                                                               (validate/string @val)
+                                                               (validate/pattern
+                                                                 @val
+                                                                 "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"))
+                                                             ""
+                                                             "expected bytes as a standard padded base64 string")
+                                                           (if
+                                                             (= (object/get @fd "type") "relation")
+                                                             (if
+                                                               (validate/string @val)
+                                                               ""
+                                                               (str/concat
+                                                                 "expected string (related row id), got "
+                                                                 (if
+                                                                   (validate/string @val)
+                                                                   "string"
+                                                                   (if
+                                                                     (validate/number @val)
+                                                                     "number"
+                                                                     (if
+                                                                       (validate/boolean @val)
+                                                                       "boolean"
+                                                                       "object")))))
+                                                             (if
+                                                               (= (object/get @fd "type") "array")
+                                                               (if
+                                                                 (validate/array @val)
+                                                                 ""
+                                                                 (str/concat
+                                                                   "expected array, got "
+                                                                   (if
+                                                                     (validate/string @val)
+                                                                     "string"
+                                                                     (if
+                                                                       (validate/number @val)
+                                                                       "number"
+                                                                       (if
+                                                                         (validate/boolean @val)
+                                                                         "boolean"
+                                                                         "object")))))
+                                                               (if
+                                                                 (= (object/get @fd "type") "tuple")
+                                                                 (str/concat
+                                                                   "expected tuple of "
+                                                                   (object/get @fd "slots")
+                                                                   ", got "
+                                                                   (if
+                                                                     (validate/string @val)
+                                                                     "string"
+                                                                     (if
+                                                                       (validate/number @val)
+                                                                       "number"
+                                                                       (if
+                                                                         (validate/boolean @val)
+                                                                         "boolean"
+                                                                         "object"))))
+                                                                 (if
+                                                                   (= (object/get @fd "type") "object")
+                                                                   (if
+                                                                     (validate/object @val)
+                                                                     ""
+                                                                     "expected object")
+                                                                   (if
+                                                                     (= (object/get @fd "type") "union")
+                                                                     (if
+                                                                       (validate/object @val)
+                                                                       ""
+                                                                       "expected object (tagged union variant)")
+                                                                     (if
+                                                                       (= (object/get @fd "type") "file")
+                                                                       (if
+                                                                         (validate/object @val)
+                                                                         ""
+                                                                         "expected file struct { name, url, mimeType, sizeBytes }")
+                                                                       (str/concat
+                                                                         "field type '"
+                                                                         (object/get @fd "type")
+                                                                         "' is not importable data")))))))))))))))))
+                                  (if
+                                    (= @prob "")
+                                    []
+                                    [
+                                     {
+                                       ref: (object/get @u "ref"),
+                                       code: (if
+                                               (array/includes
+                                                 [
+                                                  "trait",
+                                                  "orbital",
+                                                  "slot",
+                                                  "pattern",
+                                                  "event",
+                                                  "EventAddress"
+                                                 ]
+                                                 (object/get @fd "type"))
+                                               "unsupported_field_type"
+                                               "type_mismatch"),
+                                       field: @name,
+                                       message: (str/concat "field '" @name "': " @prob)
+                                     }
+                                    ])))))))
+                      (array/map
+                        (array/filter
+                          (object/get @ent "fields")
+                          (fn f
+                            (and
+                              (object/get @f "required")
+                              (not (object/get @f "hasDefault"))
+                              (not
+                                (object/has
+                                  (object/get @u "fields")
+                                  (str/replaceAll
+                                    (str/replaceAll (object/get @f "name") "\\" "\\\\")
+                                    "."
+                                    "\\."))))))
+                        (fn f
+                          {
+                            ref: (object/get @u "ref"),
+                            code: "missing_required_field",
+                            field: (object/get @f "name"),
+                            message: (str/concat
+                                       "missing required field '"
+                                       (object/get @f "name")
+                                       "' on entity '"
+                                       (object/get @ent "name")
+                                       "'")
+                          }))
+                      (if
+                        (and
+                          (validate/string (object/get @u "parentRef"))
+                          (=
+                            (array/len
+                              (array/filter
+                                @entity.units
+                                (fn p (= (object/get @p "ref") (object/get @u "parentRef")))))
+                            0))
+                        [
+                         {
+                           ref: (object/get @u "ref"),
+                           code: "dangling_parent_ref",
+                           field: null,
+                           message: (str/concat
+                                      "parentRef '"
+                                      (object/get @u "parentRef")
+                                      "' does not match any staged unit")
+                         }
+                        ]
+                        []))))))))
+        (set @entity.stats { committed: 0, failed: [] })
+        (set @entity.status reviewing)
+        (render-ui @config.reviewSlot {
+          cancelLabel: Discard
+          confirmLabel: "Approve import"
+          entityDisplay: {}
+          onCancel: MIGRATION_DISCARDED
+          onConfirm: MIGRATION_APPROVED
+          skipped: @entity.skipped
+          type: import-preview-tree
+          units: @entity.units
+        })
+        (emit MIGRATION_REVIEW_READY { stats: @entity.stats, units: @entity.units, skipped: @entity.skipped, validationErrors: @entity.validationErrors })
       MIGRATION_STAGED -> reviewing
         (set @entity.stats ?stats)
         (set @entity.units (or ?units []))
@@ -128,6 +752,20 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
+        (set @entity.staging [])
+      MIGRATION_EXTRACT_FAILED -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (persist create MigrationJob {
+          createdAt: @entity.createdAt
+          error: @entity.error
+          source: @entity.source
+          stats: @entity.stats
+          status: @entity.status
+          target: @entity.target
+        })
+        (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error (str/concat "Couldn't stage the documents — " ?error))
       MIGRATION_CALL_FAILED -> failed
         (set @entity.error ?error)
         (set @entity.status failed)
@@ -140,7 +778,7 @@ orbital MigrationJobOrbital {
           target: @entity.target
         })
         (emit MIGRATION_FAILED { error: @entity.error })
-        (notify error (str/concat "Couldn't fetch the document — " ?error))
+        (notify error (str/concat "Couldn't stage the documents — " ?error))
     }
 
     state reviewing {
@@ -154,11 +792,12 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
+        (set @entity.staging [])
+        (set @entity.endpointIndex 0)
       MIGRATION_APPROVED -> committing
         (set @entity.status committing)
         (render-ui @config.reviewSlot null)
-        (call-service "migration" "commit" { jobId: @entity.id, units: (or ?units @entity.units) }
-          { emit: { success: COMMITTED, failure: MIGRATION_CALL_FAILED } })
+        (emit MIGRATION_COMMIT_REQUESTED { jobId: @entity.id, units: (or ?units @entity.units) })
       MIGRATION_REJECTED -> mapping
         (set @entity.status mapping)
         (render-ui @config.reviewSlot null)
@@ -171,6 +810,7 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
+        (set @entity.staging [])
         (render-ui @config.reviewSlot null)
       CLOSE -> idle
         (set @entity.status idle)
@@ -180,6 +820,7 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
+        (set @entity.staging [])
         (render-ui @config.reviewSlot null)
     }
 
@@ -193,7 +834,10 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
-      COMMITTED -> done
+        (set @entity.staging [])
+        (set @entity.endpointIndex 0)
+      MIGRATION_COMMIT_REQUESTED -> committing
+      MIGRATION_COMMIT_DONE -> done
         (set @entity.stats (object/merge @entity.stats { committed: ?committed, failed: ?failed }))
         (set @entity.status done)
         (persist create MigrationJob {
@@ -230,6 +874,8 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
+        (set @entity.staging [])
+        (set @entity.endpointIndex 0)
       RESET -> idle
         (set @entity.status idle)
         (set @entity.error "")
@@ -239,6 +885,8 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
+        (set @entity.staging [])
+        (set @entity.endpointIndex 0)
       ;; Self-loop so the validator sees an in-atom listener for the
       ;; externally-consumed completion event.
       MIGRATION_COMPLETED -> done
@@ -254,11 +902,12 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
+        (set @entity.staging [])
+        (set @entity.endpointIndex 0)
       MIGRATION_RETRY -> fetching
         (set @entity.status fetching)
         (set @entity.error "")
-        (call-service "migration" "listDocuments" { connectionRef: @config.connectionRef, files: @entity.files, source: @entity.source }
-          { emit: { success: DOCUMENTS_LISTED, failure: MIGRATION_CALL_FAILED } })
+        (fetch MigrationSourceProfile { id: @entity.source.id, emit: { success: MIGRATION_PROFILE_LOADED, failure: MIGRATION_CALL_FAILED } })
       RESET -> idle
         (set @entity.status idle)
         (set @entity.error "")
@@ -268,51 +917,66 @@ orbital MigrationJobOrbital {
         (set @entity.units [])
         (set @entity.skipped [])
         (set @entity.validationErrors [])
+        (set @entity.staging [])
+        (set @entity.endpointIndex 0)
       ;; Mirrors the done self-loop: MIGRATION_FAILED is emitted for
       ;; downstream consumers and listened to here for the validator.
       MIGRATION_FAILED -> failed
     }
 
     emits {
-      DOCUMENTS_LISTED {
-        documents : [Map string ImportFieldValue]!
+      MIGRATION_PROFILE_LOADED {
+        data : MigrationSourceProfile!
       }
-        @description "migration.listDocuments service result, flattened onto the payload by the call-service effect executor"
+        @description "Internal: the stored profile of the picked source."
         @tier "secondary"
-      MIGRATION_STAGED {
-        stats : MigrationStats!
-        units : [ImportUnit]
-        skipped : [ImportSkip]
-        validationErrors : [ImportValidationError]
+      MIGRATION_SOURCE_NEXT {
+        index : number!
       }
-        @description "migration.stage service result, flattened onto the payload by the call-service effect executor"
+        @description "Internal: read the profile endpoint at this position, or move on to staging when none is left."
         @tier "secondary"
-      DOCUMENT_FETCHED {
-        document : Map string ImportFieldValue!
+      MIGRATION_SOURCE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
       }
-        @description "migration.fetchDocument service result, flattened onto the payload by the call-service effect executor"
+        @description "Internal: a source endpoint's HTTP reply."
         @tier "secondary"
-      COMMITTED {
-        committed : number!
-        failed : [ImportFailure]!
+      MIGRATION_SOURCE_UNREACHABLE {
+        error : string!
+        kind : string!
       }
-        @description "migration.commit service result — committed count plus per-unit failures"
+        @description "Internal: a source endpoint produced no reply (timeout, refusal or network failure)."
         @tier "secondary"
       MIGRATION_CALL_FAILED {
         error : string!
       }
-        @description "migration service call failure signal — lands the run in failed, never a silent swallow"
+        @description "Internal: the profile could not be read — lands the run in failed, never a silent swallow"
         @tier "secondary"
-      MIGRATION_FETCHED -> external {
-        documents : [Map string ImportFieldValue]!
+      MIGRATION_EXTRACT -> external {
+        adapter : string!
+        documents : [ImportRawDocument]!
       }
-        @description "Source documents are listed and the run is ready for staging (deterministic pipeline or agent)"
+        @description "The fetched documents are handed to the profile's adapter atom, which answers MIGRATION_EXTRACTED (or MIGRATION_EXTRACT_FAILED)."
+        @synonyms "extract documents, parse source documents"
+        @tier "domain"
+      MIGRATION_COMMIT_REQUESTED -> external {
+        jobId : string
+        units : [ImportUnit]!
+      }
+        @description "The user approved the preview; units are the staged rows of every target entity. The importing app persists the rows of its own entity with an explicit arm and answers MIGRATION_COMMIT_DONE."
+        @synonyms "commit import, write staged rows, persist import"
+        @tier "domain"
+      MIGRATION_FETCHED -> external {
+        documents : [ImportDocument]!
+      }
+        @description "Source documents are fetched and the run is ready for staging"
         @synonyms "import fetched, source listed, documents ready"
         @tier "domain"
       MIGRATION_DOCUMENT -> external {
-        document : Map string ImportFieldValue!
+        document : ImportDocument!
       }
-        @description "A single fetched document's content, for the host staging layer to map into target units"
+        @description "A single fetched document's content, for a host staging layer"
         @synonyms "document loaded, content fetched"
         @tier "domain"
       MIGRATION_REVIEW_READY -> external {
@@ -321,19 +985,19 @@ orbital MigrationJobOrbital {
         skipped : [ImportSkip]
         validationErrors : [ImportValidationError]
       }
-        @description "Staging is complete; the preview is ready for the approval gate. units/skipped/validationErrors forward the full staged rows when the host staged them, for a review-before-commit UI; stats-only hosts leave them empty."
+        @description "Staging is complete; the preview is ready for the approval gate. units/skipped/validationErrors forward the full staged rows for a review-before-commit UI."
         @synonyms "preview ready, staging complete, review import"
         @tier "domain"
       MIGRATION_COMPLETED -> external {
         stats : MigrationStats!
       }
-        @description "The commit drained through the host sink; stats carry committed and per-unit failed counts"
+        @description "The importing app persisted the staged rows; stats carry committed and per-unit failed counts"
         @synonyms "import done, migration complete, data imported"
         @tier "domain"
       MIGRATION_FAILED -> external {
         error : string!
       }
-        @description "The run failed; error carries the service-reported detail and the terminal job row was persisted"
+        @description "The run failed; error carries the reported detail and the terminal job row was persisted"
         @synonyms "import failed, migration error"
         @tier "domain"
     }
@@ -343,13 +1007,24 @@ orbital MigrationJobOrbital {
         source : ImportSourceOption!
         files : [MigrationFile]
       }
-        @description "Starts an import run. source is the ImportSource descriptor; files carries client file metadata for upload sources. Also reached via a sibling std-import's IMPORT_REQUESTED."
+        @description "Starts an import run. source is the ImportSource descriptor, whose id names the stored profile; files carries client file metadata for upload sources. Also reached via a sibling std-import's IMPORT_REQUESTED."
         @synonyms "start import, run migration, import data"
         @tier "domain"
       FETCH_DOCUMENT {
         documentId : string!
       }
-        @description "Fetch one document's full content from the source during staging"
+        @description "Select one fetched document's content during staging"
+        @tier "internal"
+      MIGRATION_EXTRACTED {
+        units : [ExtractedUnit]!
+        skipped : [ImportSkip]!
+      }
+        @description "An adapter atom extracted the fetched documents: target-neutral units plus the elements it left out. The job maps them onto the profile's target entities."
+        @tier "internal"
+      MIGRATION_EXTRACT_FAILED {
+        error : string!
+      }
+        @description "The profile's adapter could not read the documents, so the run fails."
         @tier "internal"
       MIGRATION_STAGED {
         stats : MigrationStats!
@@ -357,13 +1032,20 @@ orbital MigrationJobOrbital {
         skipped : [ImportSkip]
         validationErrors : [ImportValidationError]
       }
-        @description "Staging finished — the migration service's `stage` result (the source's stored profile replayed over the listed documents, no commit), or a host that stages itself. units/skipped/validationErrors carry the staged rows (server ImportPreview shape) so reviewing renders an ImportPreviewTree."
+        @description "Staging finished by a host that stages itself. units/skipped/validationErrors carry the staged rows so reviewing renders an ImportPreviewTree."
         @tier "internal"
       MIGRATION_APPROVED {
         units : [ImportUnit]
       }
-        @description "The user approved the preview; units are the staged ImportUnits to commit through the host sink. Optional — the ImportPreviewTree's onConfirm fires with no payload, so commit falls back to the units already staged on the entity via MIGRATION_STAGED."
+        @description "The user approved the preview; units are the staged ImportUnits to commit. Optional — the ImportPreviewTree's onConfirm fires with no payload, so commit falls back to the units already staged on the entity."
         @synonyms "approve import, confirm migration"
+        @tier "domain"
+      MIGRATION_COMMIT_DONE {
+        committed : number!
+        failed : [ImportFailure]!
+      }
+        @description "The importing app persisted its staged rows: how many were written and which failed, with the reason for each."
+        @synonyms "import committed, rows written"
         @tier "domain"
       MIGRATION_REJECTED
         @description "The user sent the preview back for more staging"
@@ -382,17 +1064,32 @@ orbital MigrationJobOrbital {
     config {
       target : string = ""
         @label "Target entity"
-        @description "Name of the host entity this import writes into (e.g. the organism's own entity). The migration service derives the full target descriptor from the running app's schema."
+        @description "Name of the host entity this import writes into (e.g. the organism's own entity); recorded on the job row for provenance."
         @synonyms "destination, import into, target type"
         @tier "domain"
-      connectionRef : secret = ""
+      supportedAdapters : [string] = []
+        @label "Composed adapters"
+        @description "The adapter ids this app composes (asana, clockify, slack, markdown, paste). A profile naming any other adapter fails the run at the start with a clear message instead of waiting for an answer that never comes."
+        @synonyms "adapters, source formats, parsers"
+        @tier "domain"
+      sourceOrigin : url = "https://api.example.com"
+        @label "Source origin"
+        @description "The origin (scheme://host[:port], no path) the profile endpoint paths are read from; the default is a placeholder, and the real origin must also be declared in the app egress list."
+        @synonyms "source url, api origin, base url"
+        @tier "infra"
+      connectionRef : secret = "MIGRATION_SOURCE_TOKEN"
         @label "Connection reference"
-        @description "Secret-store / environment KEY holding the source credentials. The reference is stored; the secret itself never enters config, traces, or snapshots — the migration service resolves it at run time. (Typed `secret` — the config-field type that marks a credential reference; UI password-renders it and traces mask it.)"
-        @synonyms "credential key, connection string reference, secret name"
-        @tier "internal"
+        @description "Name of the credential holding the bearer token sent on every source request. The name is stored; the secret itself never enters config, traces, or snapshots."
+        @synonyms "credential key, source token, secret name"
+        @tier "infra"
+      timeoutMs : number = 30000
+        @label "Request timeout (ms)"
+        @description "Milliseconds a source request may take before the run fails."
+        @synonyms "timeout, request deadline, wait limit"
+        @tier "infra"
       reviewSlot : slot = modal
         @label "Review slot"
-        @description "UI slot the staged-import review renders into when the host stages the full units/skipped rows (not stats-only). Defaults to the modal overlay so a host that never places this trait on a page — or that only ever sends {stats} — stays effectively headless; the rendered tree's confirm/cancel wire to the atom's own MIGRATION_APPROVED/MIGRATION_DISCARDED events."
+        @description "UI slot the staged-import review renders into. Defaults to the modal overlay so a host that never places this trait on a page stays effectively headless; the rendered tree's confirm/cancel wire to the atom's own MIGRATION_APPROVED/MIGRATION_DISCARDED events."
         @synonyms "preview slot, review outlet, staging modal, import review slot"
         @tier "internal"
     }

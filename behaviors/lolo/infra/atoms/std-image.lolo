@@ -1,0 +1,337 @@
+app std-image [
+  version: "1.0.0",
+  description: "std-image — image generation over the OpenAI-compatible /images API, OpenRouter's /images and the local flux server: text-to-image and image-to-image with reference images, seed, steps, size and a transparent background. The provider, its origin, base path and default model are config knobs, never inferred; the credential is a secret knob naming the host env var (the local server has none). A request that cannot be answered ends in IMAGE_FAILED. A request marked `checked` on OpenRouter first reads the model's supported parameters and strips the ones it lacks (background, seed, steps, strength, references), naming them in `dropped`; on the local server the checked set is fixed. A fetch failure or a 5xx is retried twice on every provider but the local one.",
+  egress: ["https://openrouter.ai", "https://api.openai.com", "http://127.0.0.1:8180"]
+]
+type ImageRef = { url : string! }
+type ImageRequest = { prompt : string!, model : string, n : number, size : string, resolution : string, aspectRatio : string, quality : string, background : string, seed : number, steps : number, strength : number, references : [ImageRef], checked : boolean }
+type ImageJob = { request : ImageRequest!, attempt : number!, delayMs : number!, dropped : [string]!, supported : [string]! }
+type ImageDatum = { b64_json : string, media_type : string }
+type ImageUsage = { cost : number, total_tokens : number }
+type ImageErrorObject = { message : string }
+type ImageReply = { data : [ImageDatum], usage : ImageUsage, error : ImageErrorObject }
+type ImageEndpoint = { supported_parameters : [string] }
+type ImageEndpoints = { data : [ImageEndpoint], endpoints : [ImageEndpoint] }
+orbital ImageOrbital {
+
+  entity ImageCall [runtime] {
+    id : string!
+  }
+
+  trait ImageClient -> @rebindable ImageCall [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      IMAGE_GENERATE -> idle
+        (emit IMAGE_PREPARE {
+          job: (json/stringify {
+            request: {
+              prompt: @payload.prompt,
+              model: (if (and (!= @payload.model null) (!= @payload.model "")) @payload.model @config.model),
+              n: @payload.n, size: @payload.size, resolution: @payload.resolution, aspectRatio: @payload.aspectRatio,
+              quality: @payload.quality, background: @payload.background, seed: @payload.seed, steps: @payload.steps,
+              strength: @payload.strength,
+              references: (if (> (array/len (object/get @payload references [])) 0) @payload.references null),
+              checked: (= @payload.checked true)
+            },
+            attempt: 0, delayMs: 0, dropped: [], supported: []
+          })
+        })
+
+      IMAGE_PREPARE -> idle when (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) size null) null)
+          (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) aspectRatio null) null)))
+        (emit IMAGE_FAILED { code: "VALIDATION_ERROR", message: "ImageClient.generate: `size` cannot be combined with `resolution`/`aspectRatio` — pass one or the other" })
+      IMAGE_PREPARE -> idle when (and (= @config.provider "openrouter") (= (object/get (object/get (json/parse @payload.job ImageJob) request {}) checked false) true)
+          (not (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) size null) null)
+            (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) aspectRatio null) null)))))
+        (http GET @config.origin (str/concat @config.basePath "/images/models/" (object/get (object/get (json/parse @payload.job ImageJob) request {}) model "") "/endpoints") {
+          headers: { Accept: "application/json" },
+          auth: { scheme: bearer, credential: @config.apiKey },
+          timeoutMs: @config.timeoutMs
+        } { key: @payload.job, emit: { success: IMAGE_CAPS_HTTP_OK, failure: IMAGE_CAPS_HTTP_FAILED } })
+      IMAGE_PREPARE -> idle when (and (not (and (= @config.provider "openrouter") (= (object/get (object/get (json/parse @payload.job ImageJob) request {}) checked false) true)))
+          (not (and (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) size null) null)
+            (or (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) resolution null) null) (!= (object/get (object/get (json/parse @payload.job ImageJob) request {}) aspectRatio null) null)))))
+        (emit IMAGE_SEND {
+          job: (let ((j (json/parse @payload.job ImageJob)))
+            (json/stringify {
+              request: @j.request, attempt: 0, delayMs: 0, dropped: [],
+              supported: (if (= @config.provider "local") ["seed", "steps", "image_strength", "input_references"] ["background", "seed", "steps", "image_strength", "input_references"])
+            }))
+        })
+
+      IMAGE_CAPS_HTTP_FAILED -> idle
+        (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " capabilities request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Image generation unavailable: " @payload.error) })
+      IMAGE_CAPS_HTTP_OK -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " returned " @payload.status ": " @payload.body) })
+      IMAGE_CAPS_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit IMAGE_SEND {
+          job: (let ((j (json/parse @payload.key ImageJob)))
+            (json/stringify {
+              request: @j.request, attempt: 0, delayMs: 0, dropped: [],
+              supported: (array/flatten (array/map (array/concat (object/get (json/parse @payload.body ImageEndpoints) data []) (object/get (json/parse @payload.body ImageEndpoints) endpoints [])) (fn (e) (object/get @e supported_parameters []))))
+            }))
+        })
+
+      IMAGE_SEND -> idle
+        (emit IMAGE_STRIPPED {
+          job: (let ((j (json/parse @payload.job ImageJob)))
+            (let ((r @j.request) (names { background: "background", seed: "seed", steps: "steps", strength: "image_strength", references: "input_references" }))
+              (let ((gone (if (object/get @r checked false)
+                    (array/filter ["background", "seed", "steps", "strength", "references"] (fn (k) (and (!= (object/get @r @k null) null) (not (array/includes @j.supported (object/get @names @k ""))))))
+                    [])))
+                (json/stringify {
+                  request: (object/filter @r (fn (k v) (not (array/includes @gone @k)))),
+                  attempt: @j.attempt, delayMs: @j.delayMs, supported: @j.supported,
+                  dropped: (array/map @gone (fn (k) (object/get @names @k "")))
+                }))))
+        })
+
+      IMAGE_STRIPPED -> idle
+        (emit IMAGE_DISPATCH {
+          job: (let ((j (json/parse @payload.job ImageJob)))
+            (let ((r @j.request))
+              (let ((gone (match @config.provider
+                    ("local" (array/filter ["resolution", "aspectRatio", "quality", "background"] (fn (k) (!= (object/get @r @k null) null))))
+                    ("openai" (array/filter ["resolution", "aspectRatio", "seed", "steps", "strength", "references"] (fn (k) (!= (object/get @r @k null) null))))
+                    (_ []))))
+                (json/stringify {
+                  request: (object/filter @r (fn (k v) (not (array/includes @gone @k)))),
+                  attempt: @j.attempt, delayMs: @j.delayMs, supported: @j.supported,
+                  dropped: (array/concat @j.dropped @gone)
+                }))))
+        })
+
+      IMAGE_DISPATCH -> idle when (= @config.provider "openrouter")
+        (let ((j (json/parse @payload.job ImageJob)))
+          (http POST @config.origin (str/concat @config.basePath "/images") {
+            headers: { Accept: "application/json" },
+            json: (let ((r @j.request))
+              (object/omit {
+                model: @r.model, prompt: @r.prompt, output_format: "png",
+                n: (object/get @r n null),
+                size: (object/get @r size null),
+                resolution: (object/get @r resolution null),
+                aspect_ratio: (object/get @r aspectRatio null),
+                quality: (object/get @r quality null),
+                background: (object/get @r background null),
+                seed: (object/get @r seed null),
+                steps: (object/get @r steps null),
+                input_references: (if (!= (object/get @r references null) null) (array/map (object/get @r references []) (fn (ref) { type: "image_url", image_url: { url: @ref.url } })) null)
+              } (array/concat (if (= (object/get @r n null) null) ["n"] []) (if (= (object/get @r size null) null) ["size"] []) (if (= (object/get @r resolution null) null) ["resolution"] []) (if (= (object/get @r aspectRatio null) null) ["aspect_ratio"] []) (if (= (object/get @r quality null) null) ["quality"] []) (if (= (object/get @r background null) null) ["background"] []) (if (= (object/get @r seed null) null) ["seed"] []) (if (= (object/get @r steps null) null) ["steps"] []) (if (= (object/get @r references null) null) ["input_references"] [])))),
+            auth: { scheme: bearer, credential: @config.apiKey },
+            delayMs: @j.delayMs,
+            timeoutMs: @config.timeoutMs
+          } { key: @payload.job, emit: { success: IMAGE_HTTP_OK, failure: IMAGE_HTTP_FAILED } }))
+      IMAGE_DISPATCH -> idle when (= @config.provider "openai")
+        (let ((j (json/parse @payload.job ImageJob)))
+          (http POST @config.origin (str/concat @config.basePath "/images/generations") {
+            headers: { Accept: "application/json" },
+            json: (let ((r @j.request))
+              (object/omit {
+                model: @r.model, prompt: @r.prompt, output_format: "png",
+                n: (object/get @r n null),
+                size: (object/get @r size null),
+                quality: (object/get @r quality null),
+                background: (object/get @r background null)
+              } (array/concat (if (= (object/get @r n null) null) ["n"] []) (if (= (object/get @r size null) null) ["size"] []) (if (= (object/get @r quality null) null) ["quality"] []) (if (= (object/get @r background null) null) ["background"] [])))),
+            auth: { scheme: bearer, credential: @config.apiKey },
+            delayMs: @j.delayMs,
+            timeoutMs: @config.timeoutMs
+          } { key: @payload.job, emit: { success: IMAGE_HTTP_OK, failure: IMAGE_HTTP_FAILED } }))
+      IMAGE_DISPATCH -> idle when (= @config.provider "local")
+        (let ((j (json/parse @payload.job ImageJob)))
+          (http POST @config.origin (str/concat @config.basePath "/images/generations") {
+            headers: { Accept: "application/json" },
+            json: (let ((r @j.request))
+              (object/omit {
+                model: @r.model, prompt: @r.prompt,
+                n: (object/get @r n null),
+                size: (object/get @r size null),
+                seed: (object/get @r seed null),
+                steps: (object/get @r steps null),
+                image_strength: (object/get @r strength null),
+                input_references: (if (!= (object/get @r references null) null) (array/map (object/get @r references []) (fn (ref) { type: "image_url", image_url: { url: @ref.url } })) null)
+              } (array/concat (if (= (object/get @r n null) null) ["n"] []) (if (= (object/get @r size null) null) ["size"] []) (if (= (object/get @r seed null) null) ["seed"] []) (if (= (object/get @r steps null) null) ["steps"] []) (if (= (object/get @r strength null) null) ["image_strength"] []) (if (= (object/get @r references null) null) ["input_references"] [])))),
+            delayMs: @j.delayMs,
+            timeoutMs: @config.timeoutMs
+          } { key: @payload.job, emit: { success: IMAGE_HTTP_OK, failure: IMAGE_HTTP_FAILED } }))
+
+      IMAGE_HTTP_FAILED -> idle when (and (!= @config.provider "local") (< (object/get (json/parse @payload.key ImageJob) attempt 0) 2))
+        (emit IMAGE_DISPATCH {
+          job: (let ((j (json/parse @payload.key ImageJob)))
+            (json/stringify { request: @j.request, attempt: (+ @j.attempt 1), delayMs: (array/nth [500, 2000] @j.attempt), supported: @j.supported, dropped: @j.dropped }))
+        })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Image generation unavailable: " @payload.error) })
+      IMAGE_HTTP_FAILED -> idle when (or (= @config.provider "local") (>= (object/get (json/parse @payload.key ImageJob) attempt 0) 2))
+        (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Image generation unavailable: " @payload.error) })
+
+      IMAGE_HTTP_OK -> idle when (and (>= @payload.status 500) (!= @config.provider "local") (< (object/get (json/parse @payload.key ImageJob) attempt 0) 2))
+        (emit IMAGE_DISPATCH {
+          job: (let ((j (json/parse @payload.key ImageJob)))
+            (json/stringify { request: @j.request, attempt: (+ @j.attempt 1), delayMs: (array/nth [500, 2000] @j.attempt), supported: @j.supported, dropped: @j.dropped }))
+        })
+      IMAGE_HTTP_OK -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (and (>= @payload.status 500) (!= @config.provider "local") (< (object/get (json/parse @payload.key ImageJob) attempt 0) 2))))
+        (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " returned " @payload.status ": " @payload.body) })
+      IMAGE_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body ImageReply) null))
+        (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " returned unparseable body: " @payload.body) })
+      IMAGE_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ImageReply) null)
+          (!= (object/get (object/get (json/parse @payload.body ImageReply) error {}) message "") ""))
+        (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " returned an error: " (object/get (object/get (json/parse @payload.body ImageReply) error {}) message "")) })
+      IMAGE_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ImageReply) null)
+          (= (object/get (object/get (json/parse @payload.body ImageReply) error {}) message "") "")
+          (= (object/get (json/parse @payload.body ImageReply) data null) null))
+        (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " response has no `data` array: " @payload.body) })
+      IMAGE_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ImageReply) null)
+          (= (object/get (object/get (json/parse @payload.body ImageReply) error {}) message "") "")
+          (!= (object/get (json/parse @payload.body ImageReply) data null) null)
+          (> (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (= (object/get @d b64_json "") ""))) 0))
+        (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " response data is missing `b64_json`: " @payload.body) })
+      IMAGE_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ImageReply) null)
+          (= (object/get (object/get (json/parse @payload.body ImageReply) error {}) message "") "")
+          (!= (object/get (json/parse @payload.body ImageReply) data null) null)
+          (= (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (= (object/get @d b64_json "") ""))) 0))
+        (emit IMAGE_GENERATED {
+          images: (array/map (object/get (json/parse @payload.body ImageReply) data []) (fn (d) { data: @d.b64_json, mediaType: (str/default (object/get @d media_type "") "image/png") })),
+          model: (object/get (object/get (json/parse @payload.key ImageJob) request {}) model ""),
+          cost: (object/get (object/get (json/parse @payload.body ImageReply) usage {}) cost 0),
+          totalTokens: (object/get (object/get (json/parse @payload.body ImageReply) usage {}) total_tokens 0),
+          dropped: (object/get (json/parse @payload.key ImageJob) dropped [])
+        })
+    }
+
+    emits {
+      IMAGE_GENERATED -> external {
+        images : [{ data : string!, mediaType : string! }]!
+        model : string!
+        cost : number!
+        totalTokens : number!
+        dropped : [string]!
+      }
+        @description "The generated images as base64 data with their media type, the model that made them, the reported cost and tokens (zero when the provider reports none), and the request fields stripped before sending."
+        @synonyms "generated pictures, rendered images, image result"
+        @tier "primary"
+      IMAGE_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "The request could not be answered: invalid parameters, a transport failure, a provider error status or an unreadable reply."
+        @synonyms "image error, generation failed"
+        @tier "primary"
+      IMAGE_PREPARE {
+        job : string!
+      }
+        @description "Internal: a normalised request before its capabilities are known."
+        @tier "secondary"
+      IMAGE_SEND {
+        job : string!
+      }
+        @description "Internal: a request with the parameters its model supports."
+        @tier "secondary"
+      IMAGE_STRIPPED {
+        job : string!
+      }
+        @description "Internal: a request with the unsupported checked parameters removed."
+        @tier "secondary"
+      IMAGE_DISPATCH {
+        job : string!
+      }
+        @description "Internal: one attempt to send the request."
+        @tier "secondary"
+      IMAGE_CAPS_HTTP_OK {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: the capabilities call's HTTP reply."
+        @tier "secondary"
+      IMAGE_CAPS_HTTP_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: the capabilities call never produced a reply."
+        @tier "secondary"
+      IMAGE_HTTP_OK {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: the image call's HTTP reply."
+        @tier "secondary"
+      IMAGE_HTTP_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: the image call never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      IMAGE_GENERATE -> external {
+        prompt : string!
+        model : string
+        n : number
+        size : string
+        resolution : string
+        aspectRatio : string
+        quality : string
+        background : string
+        seed : number
+        steps : number
+        strength : number
+        references : [{ url : string! }]
+        checked : boolean
+      }
+        @description "Generate images from a prompt, optionally conditioned on reference images (https or data URLs). `size` is WIDTHxHEIGHT and cannot be combined with `resolution` or `aspectRatio`; `background` is auto, transparent or opaque; `strength` is the img2img denoise strength 0 to 1 on the local server. `checked` reads the model's supported parameters first (OpenRouter) and strips what it lacks."
+        @synonyms "text to image, draw, render image, image to image"
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable image call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      provider : "openrouter" | "openai" | "local" = openrouter
+        @label "Image provider"
+        @description "The image API: openrouter (POST /images), openai (POST /images/generations) or local (the unauthenticated flux server, POST /images/generations)."
+        @synonyms "image vendor"
+        @tier "infra"
+      origin : url = "https://openrouter.ai"
+        @label "Image origin"
+        @description "The image API origin (scheme://host[:port], no path); it must be declared in the app egress list."
+        @synonyms "api host, endpoint origin"
+        @tier "infra"
+      basePath : string = "/api/v1"
+        @label "Image base path"
+        @description "The path before /images, for example /api/v1 (OpenRouter) or /v1 (OpenAI and the local server)."
+        @synonyms "api prefix, version path"
+        @tier "infra"
+      model : string = "bytedance-seed/seedream-5-0-lite"
+        @label "Default image model"
+        @description "The model used when a request names none."
+        @synonyms "default model, model id"
+        @tier "infra"
+      apiKey : secret = "OPEN_ROUTER_API_KEY"
+        @label "Image API key"
+        @description "The name of the host environment variable holding the image API key; the local provider sends none."
+        @synonyms "api key, credential"
+        @tier "infra"
+      timeoutMs : number = 1800000
+        @label "Request timeout (ms)"
+        @description "Milliseconds one image request may take; a local generation can run for minutes."
+        @synonyms "timeout, request deadline"
+        @tier "infra"
+    }
+  }
+
+  page "/image" as ImagePage -> ImageClient
+}

@@ -37,6 +37,7 @@ orbital YoutubeOrbital {
       YOUTUBE_REQUEST -> idle when (and (= @payload.kind "search") (!= @payload.type ""))
         (http GET @config.origin "/youtube/v3/search" {
           query: { part: "snippet", q: @payload.query, maxResults: @payload.maxResults, type: @payload.type },
+          queryEncoding: rfc3986,
           headers: { Accept: "*/*" },
           auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
           timeoutMs: @config.timeoutMs
@@ -44,6 +45,7 @@ orbital YoutubeOrbital {
       YOUTUBE_REQUEST -> idle when (and (= @payload.kind "search") (= @payload.type ""))
         (http GET @config.origin "/youtube/v3/search" {
           query: { part: "snippet", q: @payload.query, maxResults: @payload.maxResults },
+          queryEncoding: rfc3986,
           headers: { Accept: "*/*" },
           auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
           timeoutMs: @config.timeoutMs
@@ -51,6 +53,7 @@ orbital YoutubeOrbital {
       YOUTUBE_REQUEST -> idle when (= @payload.kind "video")
         (http GET @config.origin "/youtube/v3/videos" {
           query: { part: ["snippet", "statistics"], id: @payload.id },
+          queryEncoding: rfc3986,
           headers: { Accept: "*/*" },
           auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
           timeoutMs: @config.timeoutMs
@@ -58,12 +61,19 @@ orbital YoutubeOrbital {
       YOUTUBE_REQUEST -> idle when (= @payload.kind "channel")
         (http GET @config.origin "/youtube/v3/channels" {
           query: { part: ["snippet", "statistics"], id: @payload.id },
+          queryEncoding: rfc3986,
           headers: { Accept: "*/*" },
           auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
           timeoutMs: @config.timeoutMs
         } { key: (json/stringify @payload), emit: { success: YOUTUBE_REPLIED, failure: YOUTUBE_UNREACHED } })
 
-      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "search"))
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "search") (not (json/valid @payload.body)))
+        (emit YOUTUBE_SEARCH_FAILED { code: "MALFORMED_REPLY", message: "YouTube API replied with a body that is not valid JSON" })
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "video") (not (json/valid @payload.body)))
+        (emit YOUTUBE_VIDEO_FAILED { code: "MALFORMED_REPLY", message: "YouTube API replied with a body that is not valid JSON" })
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "channel") (not (json/valid @payload.body)))
+        (emit YOUTUBE_CHANNEL_FAILED { code: "MALFORMED_REPLY", message: "YouTube API replied with a body that is not valid JSON" })
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "search") (json/valid @payload.body))
         (emit YOUTUBE_SEARCH_RESULT {
           items: (array/map (object/get (json/parse @payload.body YoutubeSearchReply) items [])
             (fn item (object/fromEntries (array/filter [
@@ -73,22 +83,22 @@ orbital YoutubeOrbital {
               ["description", (object/get @item "snippet.description" null)]
             ] (fn entry (!= (array/nth @entry 1) null))))))
         })
-      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "video") (> (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "video") (json/valid @payload.body) (> (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
         (emit YOUTUBE_VIDEO_RESULT (object/fromEntries (array/filter [
           ["title", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "snippet.title" null)],
           ["description", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "snippet.description" null)],
           ["viewCount", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "statistics.viewCount" null)],
           ["likeCount", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "statistics.likeCount" null)]
         ] (fn entry (!= (array/nth @entry 1) null)))))
-      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "video") (= (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "video") (json/valid @payload.body) (= (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
         (emit YOUTUBE_REJECTED { kind: "video", message: (str/concat "Video not found: " (object/get (json/parse @payload.key YoutubeCall) id "")) })
-      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "channel") (> (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "channel") (json/valid @payload.body) (> (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
         (emit YOUTUBE_CHANNEL_RESULT (object/fromEntries (array/filter [
           ["name", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "snippet.title" null)],
           ["description", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "snippet.description" null)],
           ["subscriberCount", (object/get (array/nth (object/get (json/parse @payload.body YoutubeResourceReply) items []) 0) "statistics.subscriberCount" null)]
         ] (fn entry (!= (array/nth @entry 1) null)))))
-      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "channel") (= (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
+      YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (= (object/get (json/parse @payload.key YoutubeCall) kind "") "channel") (json/valid @payload.body) (= (array/len (object/get (json/parse @payload.body YoutubeResourceReply) items [])) 0))
         (emit YOUTUBE_REJECTED { kind: "channel", message: (str/concat "Channel not found: " (object/get (json/parse @payload.key YoutubeCall) id "")) })
 
       YOUTUBE_REPLIED -> idle when (and (not (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304))) (or (< @payload.status 200) (= @payload.status 408) (= @payload.status 429) (>= @payload.status 500)) (< (object/get (json/parse @payload.key YoutubeCall) attempt 0) 3))
@@ -107,17 +117,17 @@ orbital YoutubeOrbital {
                 (if (>= @payload.status 400) @payload.body (str/concat "Request failed with status code " @payload.status))))
           }))
 
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (< (object/get (json/parse @payload.key YoutubeCall) attempt 0) 2))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "unconfigured") (< (object/get (json/parse @payload.key YoutubeCall) attempt 0) 2))
         (let ((call (json/parse @payload.key YoutubeCall)))
           (emit YOUTUBE_REQUEST { kind: (object/get @call kind ""), attempt: (+ (object/get @call attempt 0) 1), query: (object/get @call query ""), maxResults: (object/get @call maxResults 0), type: (object/get @call type ""), id: (object/get @call id "") }))
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (>= (object/get (json/parse @payload.key YoutubeCall) attempt 0) 2))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "unconfigured") (>= (object/get (json/parse @payload.key YoutubeCall) attempt 0) 2))
         (emit YOUTUBE_REJECTED { kind: (object/get (json/parse @payload.key YoutubeCall) kind ""), message: @payload.error })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
-      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "refused") (str/startsWith @payload.error "credential missing: "))
-        (emit YOUTUBE_REJECTED { kind: (object/get (json/parse @payload.key YoutubeCall) kind ""), message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
+      YOUTUBE_UNREACHED -> idle when (= @payload.kind "unconfigured")
+        (emit YOUTUBE_REJECTED { kind: (object/get (json/parse @payload.key YoutubeCall) kind ""), message: (str/concat @payload.credential " not configured") })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
-      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "refused") (not (str/startsWith @payload.error "credential missing: ")))
+      YOUTUBE_UNREACHED -> idle when (= @payload.kind "refused")
         (emit YOUTUBE_REJECTED { kind: (object/get (json/parse @payload.key YoutubeCall) kind ""), message: @payload.error })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "YouTube unreachable: " @payload.error) })
 
@@ -198,6 +208,7 @@ orbital YoutubeOrbital {
       YOUTUBE_UNREACHED {
         error : string!
         kind : string!
+        credential : string
         key : string!
       }
         @description "Internal: a Data API call never produced a reply."
@@ -249,6 +260,7 @@ orbital YoutubeOrbital {
       YOUTUBE_UNREACHED {
         error : string!
         kind : string!
+        credential : string
         key : string!
       }
     }

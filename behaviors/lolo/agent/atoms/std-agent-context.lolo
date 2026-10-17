@@ -1,6 +1,7 @@
 app std-agent-context [
   version: "2.0.0",
-  description: "std-agent-context — keeps what an in-app assistant sends the model bounded. COMPACT { messages } passes a conversation of at most `keepMessages` turns straight through as COMPACTED; a longer one has its older turns summarized with `call-service llm summarize` into one leading note and keeps the last `keepMessages` turns verbatim. If summarizing fails, the older turns are dropped and the recent ones still go through, with a visible warning — a summarizer outage never blocks the assistant. Headless. Nothing is persisted: the conversation itself lives in std-agent-session."
+  description: "std-agent-context — keeps what an in-app assistant sends the model bounded. COMPACT { messages } passes a conversation of at most `keepMessages` turns straight through as COMPACTED; a longer one has its older turns summarized with std-llm (LLM_SUMMARIZE) into one leading note and keeps the last `keepMessages` turns verbatim. If summarizing fails, the older turns are dropped and the recent ones still go through, with a visible warning — a summarizer outage never blocks the assistant. Headless. Nothing is persisted: the conversation itself lives in std-agent-session.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 
 type AgentChatMessage = {
@@ -22,9 +23,9 @@ type AgentToolInputData = {
 }
 type AgentToolData = AgentToolScope | AgentToolInputData | AgentToolRead
 
+uses Llm from "std/behaviors/std-llm"
+
 orbital AgentContextOrbital {
-  type ContextSummarized = Event { summary : string, keyPoints : [string] } "Fired when the older turns have been summarized"
-  type ContextSummarizeFailed = Event { error : string } "Fired when summarizing fails"
 
   entity AgentContextWindow [runtime] {
     id : string!
@@ -33,6 +34,12 @@ orbital AgentContextOrbital {
     pendingInstructions : string @description "The ephemeral conversation's own instructions, carried through a summarizing." = ""
     pendingTools : [AgentToolData] @description "The ephemeral conversation's own tools, carried through a summarizing." = []
     pendingEphemeral : boolean @description "The conversation being compacted is ephemeral." = false
+  }
+
+  trait ContextSummarizerLlm = Llm.traits.LlmClient {
+    listens {
+      AgentContextCompactor.LLM_SUMMARIZE -> LLM_SUMMARIZE
+    }
   }
 
   trait AgentContextCompactor -> AgentContextWindow [interaction] {
@@ -57,10 +64,8 @@ orbital AgentContextOrbital {
         (set @entity.pendingInstructions (str/default ?instructions ""))
         (set @entity.pendingTools (object/get ? tools []))
         (set @entity.pendingEphemeral (if ?ephemeral true false))
-        (call-service llm summarize {
+        (emit LLM_SUMMARIZE {
           text: (str/join (array/map (array/dropLast ?messages @config.keepMessages) (fn item (str/concat @item.role ": " @item.content))) "\n")
-        } {
-          emit: { failure: ContextSummarizeFailed, success: ContextSummarized }
         })
     }
 
@@ -77,7 +82,7 @@ orbital AgentContextOrbital {
       ContextSummarizeFailed -> ready
         (emit COMPACTED { messages: (array/takeLast @entity.pendingMessages @config.keepMessages), instructions: @entity.pendingInstructions, tools: @entity.pendingTools, ephemeral: @entity.pendingEphemeral })
         (render-ui toast {
-          message: ?error
+          message: ?message
           type: alert
           variant: warning
         })
@@ -93,18 +98,24 @@ orbital AgentContextOrbital {
         @description "The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation's own `instructions`, `tools` and `ephemeral` flag pass through untouched."
         @synonyms "compacted, trimmed, bounded"
         @tier "domain"
-      ContextSummarized -> internal {
-        summary : string
-        keyPoints : [string]
+      LLM_SUMMARIZE -> external {
+        text : string!
       }
-        @tier "internal"
-      ContextSummarizeFailed -> internal {
-        error : string
-      }
+        @description "Ask std-llm to summarize the older turns."
         @tier "internal"
     }
 
     listens {
+      ContextSummarizerLlm.LLM_SUMMARIZE_RESULT -> ContextSummarized
+      ContextSummarizerLlm.LLM_FAILED -> ContextSummarizeFailed
+      ContextSummarized {
+        summary : string!
+        keyPoints : [string]!
+      }
+      ContextSummarizeFailed {
+        code : string
+        message : string!
+      }
       COMPACT {
         messages : [AgentChatMessage]!
         instructions : string
@@ -115,5 +126,5 @@ orbital AgentContextOrbital {
     }
   }
 
-  page "/agent-context" as AgentContextPage -> AgentContextCompactor
+  page "/agent-context" as AgentContextPage -> AgentContextCompactor, ContextSummarizerLlm
 }

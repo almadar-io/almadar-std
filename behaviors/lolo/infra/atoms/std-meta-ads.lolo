@@ -83,7 +83,11 @@ orbital MetaAdsOrbital {
         (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API returned " (format/number @payload.status)) })
       META_ADS_CAMPAIGNS_REPLIED -> idle when (and (< @payload.status 500) (or (< @payload.status 200) (>= @payload.status 300)))
         (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
-      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
+        (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with a body that is not valid JSON" })
+      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (not (validate/array (or (object/get (json/parse @payload.body MetaCampaignsReply) data []) []))))
+        (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with campaigns that are not a list" })
+      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (validate/array (or (object/get (json/parse @payload.body MetaCampaignsReply) data []) [])))
         (emit META_ADS_CAMPAIGNS_RESULT {
           campaigns: (array/map (or (object/get (json/parse @payload.body MetaCampaignsReply) data []) []) (fn row {
             id: (object/get @row id ""),
@@ -123,7 +127,7 @@ orbital MetaAdsOrbital {
         code : string
         message : string!
       }
-        @description "The Meta Graph call failed: no ad account, missing access token, unreachable API, a 5xx reply or a Graph API error message."
+        @description "The Meta Graph call failed: no ad account, missing access token, unreachable API, a 5xx reply, a Graph API error message, or a 2xx campaigns reply that is not valid JSON or not a list (code MALFORMED_REPLY)."
         @synonyms "meta ads error, graph api failure"
         @tier "primary"
       META_ADS_SPEND_REPLIED {

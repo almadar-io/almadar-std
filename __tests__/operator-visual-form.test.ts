@@ -16,8 +16,6 @@ describe('operatorVisualForm — the circuit form every operator declares or der
     expect(operatorVisualForm('let')).toBe('scope');
     expect(operatorVisualForm('fn')).toBe('template');
     expect(operatorVisualForm('do')).toBe('ladder');
-    expect(operatorVisualForm('async/delay')).toBe('delay');
-    expect(operatorVisualForm('async/race')).toBe('parallel');
   });
 
   it('derives the rest from declared metadata: lambdas convey, effects actuate, the rest are blocks', () => {

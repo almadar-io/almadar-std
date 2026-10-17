@@ -1,0 +1,188 @@
+app std-webhook [
+  version: "1.0.0",
+  description: "std-webhook — a signed outbound webhook POST. WEBHOOK_SEND carries the destination url, the event name, the payload as JSON text and an optional per-call signing secret; the atom posts {event, payload, timestamp} as JSON with X-Almadar-Event, signed X-Almadar-Signature: sha256=<hex HMAC-SHA256 of the exact body> when a per-call secret is given. Without one, the signingSecret credential signs the body the same way when `signed` is on. A reply below 500 answers WEBHOOK_RESULT {status, ok, durationMs} (a 4xx is a result, not a failure); a 5xx reply or an unreachable endpoint is retried with exponential backoff by std-retry and, once the attempts are spent, answers WEBHOOK_FAILED. Apps declare every destination origin in their own egress list; the entry in this file is a placeholder, and a send to an undeclared origin is refused at send time by the kernel and answers WEBHOOK_FAILED (the atom does not check origins itself).",
+  egress: ["https://hooks.example.test"]
+]
+orbital WebhookOrbital {
+  uses Retry from "std/behaviors/std-retry"
+
+  entity WebhookCall [runtime] {
+    id : string!
+    key : CallKey @description "The call key every attempt runs under; set per send."
+    seq : number @description "Sends accepted so far; makes each call key unique." = 0
+    url : string @description "The destination URL of the send in flight." = ""
+    event : string @description "The event name of the send in flight." = ""
+    payload : string @description "The payload of the send in flight, as JSON text." = "{}"
+    secret : string @description "The per-call signing secret of the send in flight; empty when none." = ""
+    attempts : number @description "Attempts made for the send in flight." = 0
+    lastError : string @description "The latest attempt's error message." = ""
+    startedAt : number @description "Epoch milliseconds at which the latest attempt was sent." = 0
+  }
+
+  trait WebhookRetry = Retry.traits.Retry {
+    listens {
+      WebhookClient.WEBHOOK_RETRY_START -> START
+      WebhookClient.WEBHOOK_RETRY_SUCCEEDED -> SUCCEEDED
+      WebhookClient.WEBHOOK_RETRY_FAILED -> FAILED
+    }
+    config {
+      maxAttempts: 3
+      baseDelayMs: 1000
+      multiplier: 2
+      maxDelayMs: 30000
+    }
+  }
+
+  trait WebhookClient (p : Type = string) -> WebhookCall [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      WEBHOOK_SEND -> sending when (and (or (str/startsWith @payload.url "https://") (str/startsWith @payload.url "http://")) (!= @payload.event ""))
+        (set @entity.seq (+ @entity.seq 1))
+        (set @entity.key (as (str/concat "webhook:" (+ @entity.seq 1)) CallKey))
+        (set @entity.url @payload.url)
+        (set @entity.event @payload.event)
+        (set @entity.payload (json/stringify @payload.payload))
+        (set @entity.secret (or @payload.secret ""))
+        (set @entity.attempts 0)
+        (emit WEBHOOK_RETRY_START { key: (as (str/concat "webhook:" (+ @entity.seq 1)) CallKey) })
+      WEBHOOK_SEND -> idle when (not (and (or (str/startsWith @payload.url "https://") (str/startsWith @payload.url "http://")) (!= @payload.event "")))
+        (emit WEBHOOK_FAILED { code: null, message: "Invalid URL", attempts: 0 })
+    }
+
+    state sending {
+      INIT -> idle
+
+      WEBHOOK_ATTEMPT -> sending when (!= @entity.secret "")
+        (set @entity.startedAt @now)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
+          (http POST (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)) (if (= (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)))) "") "/" (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2))))) {
+            headers: { Accept: "*/*", Content-Type: "application/json", X-Almadar-Event: @entity.event, X-Almadar-Signature: (str/concat "sha256=" (hmac/sha256 @entity.secret @body "hex")) },
+            text: @body,
+            timeoutMs: @config.timeoutMs
+          } { key: @entity.key, emit: { success: WEBHOOK_REPLIED, failure: WEBHOOK_UNREACHABLE } }))
+      WEBHOOK_ATTEMPT -> sending when (and (= @entity.secret "") @config.signed)
+        (set @entity.startedAt @now)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
+          (http POST (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)) (if (= (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)))) "") "/" (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2))))) {
+            headers: { Accept: "*/*", Content-Type: "application/json", X-Almadar-Event: @entity.event },
+            text: @body,
+            auth: { scheme: hmac-sha256, credential: @config.signingSecret, name: "X-Almadar-Signature", signs: @body, encoding: hex, prefix: "sha256=" },
+            timeoutMs: @config.timeoutMs
+          } { key: @entity.key, emit: { success: WEBHOOK_REPLIED, failure: WEBHOOK_UNREACHABLE } }))
+      WEBHOOK_ATTEMPT -> sending when (and (= @entity.secret "") (not @config.signed))
+        (set @entity.startedAt @now)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
+          (http POST (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)) (if (= (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)))) "") "/" (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2))))) {
+            headers: { Accept: "*/*", Content-Type: "application/json", X-Almadar-Event: @entity.event },
+            text: @body,
+            timeoutMs: @config.timeoutMs
+          } { key: @entity.key, emit: { success: WEBHOOK_REPLIED, failure: WEBHOOK_UNREACHABLE } }))
+
+      WEBHOOK_REPLIED -> sending when (>= @payload.status 500)
+        (set @entity.lastError (str/concat "Webhook endpoint returned " @payload.status))
+        (emit WEBHOOK_RETRY_FAILED { key: @entity.key, error: (str/concat "Webhook endpoint returned " @payload.status) })
+      WEBHOOK_REPLIED -> idle when (< @payload.status 500)
+        (emit WEBHOOK_RETRY_SUCCEEDED { key: @entity.key })
+        (emit WEBHOOK_RESULT { status: @payload.status, ok: (and (>= @payload.status 200) (< @payload.status 300)), durationMs: (- @now @entity.startedAt) })
+      WEBHOOK_UNREACHABLE -> sending
+        (set @entity.lastError @payload.error)
+        (emit WEBHOOK_RETRY_FAILED { key: @entity.key, error: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Webhook unreachable: " @payload.error) })
+      WEBHOOK_GAVE_UP -> idle
+        (emit WEBHOOK_FAILED { code: null, message: @entity.lastError, attempts: @entity.attempts })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Webhook not delivered: " @entity.lastError) })
+    }
+
+    emits {
+      WEBHOOK_RESULT -> external {
+        status : number!
+        ok : boolean!
+        durationMs : number!
+      }
+        @description "The endpoint answered below 500: its status, whether that status is 2xx, and the milliseconds the successful attempt took. A 4xx is a result, not a failure."
+        @synonyms "webhook delivered, webhook answered, delivery result"
+        @tier "primary"
+      WEBHOOK_FAILED -> external {
+        code : string
+        message : string!
+        attempts : number!
+      }
+        @description "The webhook was not delivered: an invalid URL, or a 5xx reply or unreachable endpoint on every allowed attempt; the message is the last attempt's error."
+        @synonyms "webhook failed, delivery failed, endpoint down"
+        @tier "primary"
+      WEBHOOK_RETRY_START -> external {
+        key : CallKey!
+      }
+        @description "Internal: hand a send to std-retry under its call key."
+        @tier "internal"
+      WEBHOOK_RETRY_SUCCEEDED -> external {
+        key : CallKey!
+      }
+        @description "Internal: tell std-retry the attempt succeeded."
+        @tier "internal"
+      WEBHOOK_RETRY_FAILED -> external {
+        key : CallKey!
+        error : string
+      }
+        @description "Internal: tell std-retry the attempt failed."
+        @tier "internal"
+      WEBHOOK_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the webhook call's HTTP reply."
+        @tier "secondary"
+      WEBHOOK_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the webhook call never produced a reply."
+        @tier "secondary"
+    }
+
+    listens {
+      WEBHOOK_SEND {
+        url : string!
+        event : string!
+        payload : p!
+        secret : string
+      }
+        @description "Post one webhook: the destination url, the event name, the payload (any type the caller binds to `p` with `::`, stringified into the body) and an optional per-call signing secret."
+        @synonyms "send webhook, notify endpoint, post event"
+      WebhookRetry.ATTEMPT -> WEBHOOK_ATTEMPT
+      WebhookRetry.GAVE_UP -> WEBHOOK_GAVE_UP
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an unreachable or undelivered webhook; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      signed : boolean = false
+        @label "Sign with the configured secret"
+        @description "Sign sends that carry no per-call secret with the signingSecret credential. Off sends them unsigned."
+        @synonyms "sign requests, hmac, signature"
+        @tier "infra"
+      signingSecret : secret = "WEBHOOK_SIGNING_SECRET"
+        @label "Signing secret"
+        @description "Name of the credential holding the HMAC-SHA256 signing secret."
+        @synonyms "webhook secret, signing key, hmac key"
+        @tier "infra"
+      timeoutMs : number = 10000
+        @label "Request timeout (ms)"
+        @description "Milliseconds one attempt may take before it fails."
+        @synonyms "timeout, deadline"
+        @tier "infra"
+    }
+  }
+
+  page "/webhook" as WebhookPage -> WebhookClient, WebhookRetry
+}

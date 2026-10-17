@@ -1,0 +1,319 @@
+app std-migration-adapter-firestore [
+  version: "1.0.0",
+  description: "std-migration-adapter-firestore — the Firestore REST source adapter of a migration run. Each fetched document of the job carries a Firestore document resource name (projects/p/databases/(default)/documents/users/u/knowledgeGraphs/g); the adapter reads every document with a bearer-authenticated GET on sourceOrigin and decodes the typed values. A recipe, chosen by the profile's adapter id, names what the documents yield: the document itself as one unit (documentUnit, kind documentKind), each entry of a nodes map as one unit of the kind its node type names (nodeKinds), and each entry of a relationships list as one unit of edgeKind. A scalar field becomes a metadata slot of the same name; a map or list field becomes the slot of the same name holding the Firestore value as JSON text, and the slot composite lists those names as JSON text. A node adds nodeId, nodeType and its own scalar fields as node_<field>; every unit carries documentId and documentPath. A relationship whose source or target is not an emitted node of its document is ledgered in skipped. A document that cannot be read is ledgered in skipped, or fails the run with MIGRATION_EXTRACT_FAILED when it is the only one. Answers std-migration-job's MIGRATION_EXTRACT when a recipe carries the profile's adapter.",
+  egress: ["https://firestore.googleapis.com"]
+]
+orbital MigrationAdapterFirestoreOrbital {
+  type ImportFieldValue = string | number | boolean
+  type ImportRawDocument = { ref : string!, raw : string! }
+  type ImportSkip = { ref : string!, reason : string! }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, content : string, parentRef : string, metadata : Map string ImportFieldValue, source : string!, span : string }
+  type FirestoreFields = Map string FirestoreValue
+  type FirestoreMap = { fields : FirestoreFields }
+  type FirestoreArray = { values : [FirestoreValue] }
+  type FirestoreValue = { stringValue : string, integerValue : string, doubleValue : number, booleanValue : boolean, nullValue : string, timestampValue : string, mapValue : FirestoreMap, arrayValue : FirestoreArray }
+  type FirestoreDocument = { name : string!, fields : FirestoreFields, createTime : string, updateTime : string }
+  type FirestoreDocuments = [FirestoreDocument]
+  type FirestoreNodeKind = { nodeType : string!, kind : "root" | "folder" | "section" | "qa" }
+  type FirestoreRecipe = { adapterId : string!, documentUnit : boolean!, documentKind : "root" | "folder" | "section" | "qa", nodesField : string, nodeKinds : [FirestoreNodeKind], edgesField : string, edgeKind : "root" | "folder" | "section" | "qa" }
+  type FirestoreUnitSet = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, span : string, extra : Map string ImportFieldValue, fields : FirestoreFields, hidden : [string] }
+  type FirestoreStrings = [string]
+
+  entity MigrationAdapterFirestoreRun [runtime] {
+    id : string!
+    adapter : string = ""
+    recipe : FirestoreRecipe = {}
+    refs : [ImportRawDocument] = []
+    cursor : number = 0
+    docs : [FirestoreDocument] = []
+    unreadable : [ImportSkip] = []
+    docSets : [FirestoreUnitSet] = []
+    nodeSets : [FirestoreUnitSet] = []
+    edgeSets : [FirestoreUnitSet] = []
+    sets : [FirestoreUnitSet] = []
+    ledger : [ImportSkip] = []
+  }
+
+  trait MigrationAdapterFirestore -> MigrationAdapterFirestoreRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.refs [])
+        (set @entity.cursor 0)
+        (set @entity.docs [])
+        (set @entity.unreadable [])
+
+      MIGRATION_EXTRACT -> reading when (array/some @config.recipes (fn r (= (object/get @r adapterId) ?adapter)))
+        (set @entity.adapter ?adapter)
+        (set @entity.recipe (array/find @config.recipes (fn r (= (object/get @r adapterId) ?adapter))))
+        (set @entity.refs ?documents)
+        (set @entity.cursor 0)
+        (set @entity.docs [])
+        (set @entity.unreadable [])
+        (emit FIRESTORE_NEXT {})
+    }
+
+    state reading {
+      INIT -> idle
+      FIRESTORE_NEXT -> reading when (< @entity.cursor (array/len @entity.refs))
+        (http
+          GET
+          @config.sourceOrigin
+          (str/concat "/v1/" (object/get (array/nth @entity.refs @entity.cursor) "raw"))
+          {
+            auth: { scheme: bearer, credential: @config.connectionRef },
+            timeoutMs: @config.timeoutMs
+          }
+          { emit: { success: FIRESTORE_REPLIED, failure: FIRESTORE_UNREACHABLE } })
+      FIRESTORE_REPLIED -> reading when (and (>= ?status 200) (< ?status 300) (json/valid ?body))
+        (set @entity.docs (array/append @entity.docs (json/parse ?body FirestoreDocument)))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit FIRESTORE_NEXT {})
+      FIRESTORE_REPLIED -> reading when (or (< ?status 200) (>= ?status 300) (not (json/valid ?body)))
+        (set @entity.unreadable
+          (array/append
+            @entity.unreadable
+            {
+              ref: (object/get (array/nth @entity.refs @entity.cursor) "raw"),
+              reason: (if (and (>= ?status 200) (< ?status 300)) "the Firestore reply is not valid JSON" (str/concat "Firestore answered with HTTP status " ?status))
+            }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit FIRESTORE_NEXT {})
+      FIRESTORE_UNREACHABLE -> reading
+        (set @entity.unreadable
+          (array/append
+            @entity.unreadable
+            { ref: (object/get (array/nth @entity.refs @entity.cursor) "raw"), reason: ?error }))
+        (notify error (str/concat "Couldn't read a Firestore document — " ?error))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit FIRESTORE_NEXT {})
+      FIRESTORE_NEXT -> idle when (and (>= @entity.cursor (array/len @entity.refs)) (= (array/len @entity.refs) 1) (= (array/len @entity.docs) 0))
+        (emit MIGRATION_EXTRACT_FAILED { error: (object/get (array/first @entity.unreadable) "reason") })
+      FIRESTORE_NEXT -> building when (and (>= @entity.cursor (array/len @entity.refs)) (or (!= (array/len @entity.refs) 1) (> (array/len @entity.docs) 0)))
+        (set @entity.docSets
+          (if
+            (object/get @entity.recipe "documentUnit")
+            (array/map
+              @entity.docs
+              (fn d
+                (let ((path (array/nth (str/split (object/get @d "name") "/documents/") 1)))
+                  {
+                    ref: (str/concat "fs:" @path),
+                    kind: (object/get @entity.recipe "documentKind"),
+                    title: null,
+                    span: @path,
+                    extra: { documentId: (array/last (str/split @path "/")), documentPath: @path },
+                    fields: (object/get @d "fields"),
+                    hidden: (array/filter [(object/get @entity.recipe "nodesField"), (object/get @entity.recipe "edgesField")] (fn h (!= @h "")))
+                  })))
+            []))
+        (set @entity.nodeSets
+          (array/flatten
+            (array/map
+              @entity.docs
+              (fn d
+                (let ((path (array/nth (str/split (object/get @d "name") "/documents/") 1))
+                      (nodes (object/entries (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {}))))
+                  (array/map
+                    (array/filter
+                      @nodes
+                      (fn e (array/some (object/get @entity.recipe "nodeKinds") (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" ""))))))
+                    (fn e
+                      {
+                        ref: (str/concat "fs:" @path "#node:" (object/get @e "0")),
+                        kind: (object/get (array/find (object/get @entity.recipe "nodeKinds") (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))) "kind"),
+                        title: null,
+                        span: (str/concat @path "#" (object/get @e "0")),
+                        extra: {
+                          documentId: (array/last (str/split @path "/")),
+                          documentPath: @path,
+                          nodeId: (object/get @e "0"),
+                          nodeType: (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")
+                        },
+                        fields: (object/merge
+                                  (object/get (object/get @e "1") "mapValue.fields.properties.mapValue.fields" {})
+                                  (object/mapKeys
+                                    (object/omit (object/get (object/get @e "1") "mapValue.fields" {}) ["id", "type", "properties"])
+                                    (fn k (str/concat "node_" @k)))),
+                        hidden: []
+                      })))))))
+        (set @entity.edgeSets
+          (array/flatten
+            (array/map
+              @entity.docs
+              (fn d
+                (let ((path (array/nth (str/split (object/get @d "name") "/documents/") 1))
+                      (nodeIds (object/keys (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})))
+                      (emitted (array/map (array/filter (object/entries (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})) (fn e (array/some (object/get @entity.recipe "nodeKinds") (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))))) (fn e (object/get @e "0")))))
+                  (array/map
+                    (array/filter
+                      (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "edgesField") {}) "arrayValue.values" [])
+                      (fn v
+                        (and
+                          (array/includes @emitted (object/get @v "mapValue.fields.source.stringValue" ""))
+                          (array/includes @emitted (object/get @v "mapValue.fields.target.stringValue" "")))))
+                    (fn v
+                      {
+                        ref: (str/concat "fs:" @path "#edge:" (object/get @v "mapValue.fields.id.stringValue" "")),
+                        kind: (object/get @entity.recipe "edgeKind"),
+                        title: null,
+                        span: @path,
+                        extra: { documentId: (array/last (str/split @path "/")), documentPath: @path },
+                        fields: (object/get @v "mapValue.fields" {}),
+                        hidden: []
+                      })))))))
+        (set @entity.sets (array/concat @entity.docSets @entity.nodeSets @entity.edgeSets))
+        (set @entity.ledger
+          (array/flatten
+            (array/map
+              @entity.docs
+              (fn d
+                (let ((path (array/nth (str/split (object/get @d "name") "/documents/") 1))
+                      (emitted (array/map (array/filter (object/entries (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})) (fn e (array/some (object/get @entity.recipe "nodeKinds") (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))))) (fn e (object/get @e "0")))))
+                  (array/map
+                    (array/filter
+                      (object/get (object/get (object/get @d "fields") (object/get @entity.recipe "edgesField") {}) "arrayValue.values" [])
+                      (fn v
+                        (not
+                          (and
+                            (array/includes @emitted (object/get @v "mapValue.fields.source.stringValue" ""))
+                            (array/includes @emitted (object/get @v "mapValue.fields.target.stringValue" ""))))))
+                    (fn v
+                      {
+                        ref: (str/concat "fs:" @path "#edge:" (object/get @v "mapValue.fields.id.stringValue" "")),
+                        reason: (str/concat "relationship from '" (object/get @v "mapValue.fields.source.stringValue" "") "' to '" (object/get @v "mapValue.fields.target.stringValue" "") "' has an endpoint that is not an emitted node of its document")
+                      })))))))
+        (emit FIRESTORE_BUILT {})
+    }
+
+    state building {
+      INIT -> idle
+      FIRESTORE_BUILT -> idle
+        (emit
+          MIGRATION_EXTRACTED
+          {
+            units: (array/map
+                     @entity.sets
+                     (fn s
+                       (let ((entries (object/entries (object/omit (object/get @s "fields") (object/get @s "hidden")))))
+                         {
+                           ref: (object/get @s "ref"),
+                           kind: (object/get @s "kind"),
+                           title: (object/get @s "title"),
+                           content: null,
+                           parentRef: null,
+                           source: "firestore",
+                           span: (object/get @s "span"),
+                           metadata: (object/merge
+                                       (object/get @s "extra")
+                                       (object/fromEntries
+                                         (array/map
+                                           (array/filter @entries (fn e (validate/string (object/get (object/get @e "1") "stringValue"))))
+                                           (fn e [(object/get @e "0"), (object/get (object/get @e "1") "stringValue")])))
+                                       (object/fromEntries
+                                         (array/map
+                                           (array/filter @entries (fn e (validate/string (object/get (object/get @e "1") "timestampValue"))))
+                                           (fn e [(object/get @e "0"), (object/get (object/get @e "1") "timestampValue")])))
+                                       (object/fromEntries
+                                         (array/map
+                                           (array/filter @entries (fn e (validate/string (object/get (object/get @e "1") "integerValue"))))
+                                           (fn e [(object/get @e "0"), (str/to-number (object/get (object/get @e "1") "integerValue"))])))
+                                       (object/fromEntries
+                                         (array/map
+                                           (array/filter @entries (fn e (validate/number (object/get (object/get @e "1") "doubleValue"))))
+                                           (fn e [(object/get @e "0"), (object/get (object/get @e "1") "doubleValue")])))
+                                       (object/fromEntries
+                                         (array/map
+                                           (array/filter @entries (fn e (validate/boolean (object/get (object/get @e "1") "booleanValue"))))
+                                           (fn e [(object/get @e "0"), (object/get (object/get @e "1") "booleanValue")])))
+                                       (object/fromEntries
+                                         (array/map
+                                           (array/filter
+                                             @entries
+                                             (fn e (or (validate/object (object/get (object/get @e "1") "mapValue")) (validate/object (object/get (object/get @e "1") "arrayValue")))))
+                                           (fn e [(object/get @e "0"), (json/stringify (object/get @e "1"))])))
+                                       {
+                                         composite: (json/stringify
+                                                      (array/map
+                                                        (array/filter
+                                                          @entries
+                                                          (fn e (or (validate/object (object/get (object/get @e "1") "mapValue")) (validate/object (object/get (object/get @e "1") "arrayValue")))))
+                                                        (fn e (object/get @e "0"))))
+                                       })
+                         })))
+            skipped: (array/concat @entity.unreadable @entity.ledger)
+          })
+    }
+
+    emits {
+      FIRESTORE_NEXT
+        @description "Internal: read the next fetched document, or move on to building the units when none is left."
+        @tier "secondary"
+      FIRESTORE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: a Firestore document reply."
+        @tier "secondary"
+      FIRESTORE_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: a document read produced no reply (timeout, refusal or network failure)."
+        @tier "secondary"
+      FIRESTORE_BUILT
+        @description "Internal: the documents are decoded into unit sets."
+        @tier "secondary"
+      MIGRATION_EXTRACTED -> external {
+        units : [ExtractedUnit]!
+        skipped : [ImportSkip]!
+      }
+        @description "The Firestore documents extracted into document, node and relationship units plus the ledger of documents that could not be read."
+        @synonyms "firestore extracted, firestore staging, document units"
+        @tier "domain"
+      MIGRATION_EXTRACT_FAILED -> external {
+        error : string!
+      }
+        @description "The single document could not be read, so the run cannot stage."
+        @synonyms "firestore read failed, document unreadable"
+        @tier "domain"
+    }
+
+    listens {
+      MIGRATION_EXTRACT -> external {
+        adapter : string!
+        documents : [ImportRawDocument]!
+      }
+        @description "A migration run asks its profile's adapter to extract the fetched documents; this adapter answers when a recipe carries that adapter id and ignores every other adapter."
+        @synonyms "extract documents, parse fetched documents"
+        @tier "domain"
+    }
+
+    config {
+      recipes : [FirestoreRecipe] = []
+        @label "Recipes"
+        @description "One recipe per adapter id: documentUnit and documentKind make each document one unit; nodesField names the map of nodes and nodeKinds names the unit kind of each node type (a node type left out is not emitted); edgesField names the list of relationships and edgeKind its unit kind. An empty field name turns that part off."
+        @synonyms "document recipes, node kinds, source shapes"
+        @tier "domain"
+      sourceOrigin : url = "https://firestore.googleapis.com"
+        @label "Source origin"
+        @description "The origin (scheme://host[:port], no path) the Firestore REST API answers on; it must also be declared in the app egress list."
+        @synonyms "firestore host, api origin"
+        @tier "infra"
+      connectionRef : secret = "MIGRATION_SOURCE_TOKEN"
+        @label "Connection reference"
+        @description "Name of the credential holding the bearer token sent on every read. The name is stored; the secret itself never enters config, traces, or snapshots."
+        @synonyms "credential key, source token"
+        @tier "infra"
+      timeoutMs : number = 30000
+        @label "Request timeout (ms)"
+        @description "Milliseconds a read may take before the document is ledgered as unreadable."
+        @synonyms "timeout, request deadline"
+        @tier "infra"
+    }
+  }
+
+  page "/migration-adapter-firestore" as MigrationAdapterFirestorePage -> MigrationAdapterFirestore
+}

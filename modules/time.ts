@@ -50,6 +50,20 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'str', type: 'string', description: 'ISO 8601 date or date-time, e.g. 2024-01-18 or 2024-01-18T09:30:00+02:00' },
     ],
     example: '["time/parse", "2024-01-18T09:30:00Z"]',
+    exampleSource: 'module',
+  },
+  'time/valid': {
+    module: 'time',
+    category: 'std-time',
+    minArity: 1,
+    maxArity: 1,
+    description: 'True iff time/parse would succeed on the string (an ISO 8601 / RFC 3339 date or date-time); null is false',
+    hasSideEffects: false,
+    returnType: 'boolean',
+    params: [
+      { name: 'str', type: 'string', description: 'ISO 8601 date or date-time to check' },
+    ],
+    example: '["time/valid", "2024-01-18T09:30:00Z"] // => true',
   },
   'time/format': {
     module: 'time',

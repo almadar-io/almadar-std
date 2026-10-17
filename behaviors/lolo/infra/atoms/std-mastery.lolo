@@ -1,0 +1,354 @@
+app std-mastery [
+  version: "1.0.0",
+  description: "std-mastery — a learner's mastery of items and the learner's preferences. MASTERY_RECORD folds an activation answer, a reflection or a Bloom answer into the item's mastery (0 to 3) and stamps the next review time from the interval knobs; MASTERY_MARK_LEARNED sets it outright. PREFS_SET and PREFS_GET keep the model choices a generation step reads (fetch LearnerPreferences by the learner's id; expandModel and explainModel are plain fields)."
+]
+type MasteryStrings = [string]
+type MasteryFlags = Map string boolean
+orbital MasteryOrbital {
+  entity LearnerProgress [persistent: learner_progress] {
+    id : string!
+    learnerId : string @description "The learner this progress belongs to." @synonyms "student, user" = ""
+    groupId : string @description "The group the item sits in, such as a path or a course." @synonyms "graph, path, course" = ""
+    itemId : string @description "The item studied." @synonyms "concept, lesson, topic" = ""
+    masteryLevel : number @description "0 unseen, 1 touched, 2 understood, 3 learned." @synonyms "level, score, mastery" = 0
+    bloomAnswered : MasteryFlags @description "Bloom level answered, true when answered correctly." @synonyms "answers, bloom answers"
+    bloomLevelsCompleted : [string] @description "Bloom levels answered correctly." @synonyms "completed levels"
+    activationResponse : string @description "The learner's answer to the activation prompt." @synonyms "prior knowledge answer" = ""
+    reflectionNotes : string @description "The learner's reflections, one per line." @synonyms "notes, reflection" = ""
+    lastStudied : number @description "Epoch milliseconds of the last study." @synonyms "last seen, last studied at" = 0
+    dueAt : number @description "Epoch milliseconds when the item is due for review; 0 when it is not scheduled." @synonyms "review due, next review" = 0
+    reqOp : string @intrinsic = ""
+    reqLearner : string @intrinsic = ""
+    reqGroup : string @intrinsic = ""
+    reqItem : string @intrinsic = ""
+    reqActivation : string @intrinsic = ""
+    reqReflection : string @intrinsic = ""
+    reqBloomLevel : string @intrinsic = ""
+    reqCorrect : boolean @intrinsic = false
+    reqLearned : boolean @intrinsic = false
+    resultLevel : number @intrinsic = 0
+    resultDue : number @intrinsic = 0
+  }
+
+  entity LearnerPreferences [persistent: learner_preferences] {
+    id : string!
+    expandModel : string @description "The model chosen for expanding a path." @synonyms "expansion model, path model" = ""
+    explainModel : string @description "The model chosen for explaining a concept." @synonyms "explanation model, lesson model" = ""
+    interests : [string] @description "What the learner is interested in." @synonyms "topics, likes"
+    dailyLessonGoal : number @description "Lessons the learner aims for each day." @synonyms "daily goal" = 0
+    learningStyle : string @description "How the learner likes to learn." @synonyms "style" = ""
+    timePerWeek : number @description "Hours per week the learner can give." @synonyms "weekly time" = 0
+    reqLearner : string @intrinsic = ""
+    reqExpandModel : string @intrinsic = ""
+    reqExplainModel : string @intrinsic = ""
+  }
+
+  trait MasteryTracker -> LearnerProgress [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      MASTERY_RECORD -> loading
+        (set @entity.reqOp "record")
+        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqGroup ?groupId)
+        (set @entity.reqItem ?itemId)
+        (set @entity.reqActivation (if (= ?activationResponse null) "" ?activationResponse))
+        (set @entity.reqReflection (if (= ?reflection null) "" ?reflection))
+        (set @entity.reqBloomLevel (if (= ?bloomLevel null) "" ?bloomLevel))
+        (set @entity.reqCorrect (= ?correct true))
+        (fetch LearnerProgress { filter: ["=", (object/get @entity id), (str/concat ?learnerId ":" ?groupId ":" ?itemId)], emit: { success: MasteryLoaded, failure: MasteryFailed } })
+
+      MASTERY_MARK_LEARNED -> loading
+        (set @entity.reqOp "learned")
+        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqGroup ?groupId)
+        (set @entity.reqItem ?itemId)
+        (set @entity.reqLearned ?learned)
+        (fetch LearnerProgress { filter: ["=", (object/get @entity id), (str/concat ?learnerId ":" ?groupId ":" ?itemId)], emit: { success: MasteryLoaded, failure: MasteryFailed } })
+    }
+
+    state loading {
+      INIT -> idle
+
+      MasteryLoaded -> saving when (= @entity.reqOp "record")
+        (let ((ex (array/first ?data)))
+          (let ((answered (if (= @entity.reqBloomLevel "") (object/get @ex bloomAnswered (json/parse "{}" MasteryFlags)) (object/set (object/get @ex bloomAnswered (json/parse "{}" MasteryFlags)) @entity.reqBloomLevel @entity.reqCorrect)))
+                (activation (if (= @entity.reqActivation "") (object/get @ex activationResponse "") @entity.reqActivation))
+                (notes (if (= @entity.reqReflection "") (object/get @ex reflectionNotes "") (if (= (object/get @ex reflectionNotes "") "") @entity.reqReflection (str/concat (object/get @ex reflectionNotes "") "\n" @entity.reqReflection)))))
+            (let ((score (+ (if (!= @activation "") 1 0) (if (!= @notes "") 1 0) (if (> (array/len (object/keys @answered)) 0) 1 0) (if (>= (array/len (object/keys @answered)) 3) 1 0))))
+              (let ((level (if (>= (object/get @ex masteryLevel 0) 2) (object/get @ex masteryLevel 0) (if (<= @score 1) @score (if (<= @score 3) 2 3)))))
+                (do
+                  (set @entity.resultLevel @level)
+                  (set @entity.resultDue (if (> (array/nth @config.reviewIntervalDays @level) 0) (+ @now (* (array/nth @config.reviewIntervalDays @level) 86400000)) 0))
+                  (persist upsert LearnerProgress {
+                    id: (str/concat @entity.reqLearner ":" @entity.reqGroup ":" @entity.reqItem)
+                    learnerId: @entity.reqLearner
+                    groupId: @entity.reqGroup
+                    itemId: @entity.reqItem
+                    masteryLevel: @level
+                    bloomAnswered: @answered
+                    bloomLevelsCompleted: (if (and (!= @entity.reqBloomLevel "") @entity.reqCorrect (not (array/includes (object/get @ex bloomLevelsCompleted (json/parse "[]" MasteryStrings)) @entity.reqBloomLevel))) (array/append (object/get @ex bloomLevelsCompleted (json/parse "[]" MasteryStrings)) @entity.reqBloomLevel) (object/get @ex bloomLevelsCompleted (json/parse "[]" MasteryStrings)))
+                    activationResponse: @activation
+                    reflectionNotes: @notes
+                    lastStudied: @now
+                    dueAt: (if (> (array/nth @config.reviewIntervalDays @level) 0) (+ @now (* (array/nth @config.reviewIntervalDays @level) 86400000)) 0)
+                  } { emit: { success: MasteryStored, failure: MasteryFailed } }))))))
+
+      MasteryLoaded -> saving when (= @entity.reqOp "learned")
+        (let ((ex (array/first ?data)))
+          (let ((level (if @entity.reqLearned 3 0)))
+            (do
+              (set @entity.resultLevel @level)
+                  (set @entity.resultDue (if (> (array/nth @config.reviewIntervalDays @level) 0) (+ @now (* (array/nth @config.reviewIntervalDays @level) 86400000)) 0))
+              (persist upsert LearnerProgress {
+                id: (str/concat @entity.reqLearner ":" @entity.reqGroup ":" @entity.reqItem)
+                learnerId: @entity.reqLearner
+                groupId: @entity.reqGroup
+                itemId: @entity.reqItem
+                masteryLevel: @level
+                bloomAnswered: (object/get @ex bloomAnswered (json/parse "{}" MasteryFlags))
+                bloomLevelsCompleted: (object/get @ex bloomLevelsCompleted (json/parse "[]" MasteryStrings))
+                activationResponse: (object/get @ex activationResponse "")
+                reflectionNotes: (object/get @ex reflectionNotes "")
+                lastStudied: @now
+                dueAt: (if (> (array/nth @config.reviewIntervalDays @level) 0) (+ @now (* (array/nth @config.reviewIntervalDays @level) 86400000)) 0)
+              } { emit: { success: MasteryStored, failure: MasteryFailed } }))))
+
+      MasteryFailed -> idle
+        (emit MASTERY_FAILED { error: ?error, groupId: @entity.reqGroup, itemId: @entity.reqItem })
+        (notify error (str/concat "The progress could not be saved: " ?error))
+    }
+
+    state saving {
+      INIT -> idle
+      MasteryStored -> idle
+        (emit MASTERY_RECORDED { groupId: @entity.reqGroup, itemId: @entity.reqItem, masteryLevel: @entity.resultLevel, dueAt: @entity.resultDue })
+      MasteryFailed -> idle
+        (emit MASTERY_FAILED { error: ?error, groupId: @entity.reqGroup, itemId: @entity.reqItem })
+        (notify error (str/concat "The progress could not be saved: " ?error))
+    }
+
+    emits {
+      MASTERY_RECORDED -> external {
+        groupId : string!
+        itemId : string!
+        masteryLevel : number!
+        dueAt : number!
+      }
+        @description "An item's mastery was saved, with the level it now stands at (0 to 3) and when it is next due for review (0 when it is not scheduled)."
+        @synonyms "progress saved, mastery updated, lesson progress"
+        @tier "primary"
+      MASTERY_FAILED -> external {
+        error : string
+        groupId : string
+        itemId : string
+      }
+        @description "The mastery could not be read or saved."
+        @synonyms "progress failure"
+        @tier "primary"
+      MasteryLoaded {
+        data : [LearnerProgress]
+      }
+        @tier "internal"
+      MasteryStored
+        @tier "internal"
+      MasteryFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      MASTERY_RECORD -> external {
+        learnerId : string!
+        groupId : string!
+        itemId : string!
+        activationResponse : string
+        reflection : string
+        bloomLevel : string
+        correct : boolean
+      }
+        @description "Fold what the learner just did into the item's mastery: an activation answer, a reflection, a Bloom answer. A level of 2 or more is kept."
+        @synonyms "record progress, lesson progress, answer, reflect"
+        @tier "domain"
+      MASTERY_MARK_LEARNED -> external {
+        learnerId : string!
+        groupId : string!
+        itemId : string!
+        learned : boolean!
+      }
+        @description "Mark an item learned (level 3) or unlearned (level 0)."
+        @synonyms "mark learned, mark done, unlearn"
+        @tier "domain"
+      MasteryLoaded {
+        data : [LearnerProgress]
+      }
+      MasteryStored
+      MasteryFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      reviewIntervalDays : [number] = [0, 1, 3, 10]
+        @label "Review intervals in days"
+        @description "Days after a study until the item is due again, listed by mastery level 0 to 3. Zero means the level is not scheduled."
+        @synonyms "spaced repetition, review schedule, revisit after"
+        @tier "domain"
+    }
+  }
+
+  trait PreferencesStore -> LearnerPreferences [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      PREFS_GET -> loading
+        (set @entity.reqLearner ?learnerId)
+        (fetch LearnerPreferences { filter: ["=", (object/get @entity id), ?learnerId], emit: { success: PrefsRead, failure: PrefsFailed } })
+
+      PREFS_SET -> idle when (and (= ?expandModel null) (= ?explainModel null))
+        (emit PREFS_REJECTED { reason: "model-required" })
+      PREFS_SET -> idle when (and (!= ?expandModel null) (not (array/includes @config.modelOptions ?expandModel)))
+        (emit PREFS_REJECTED { reason: "unknown-expand-model" })
+      PREFS_SET -> idle when (and (!= ?explainModel null) (not (array/includes @config.modelOptions ?explainModel)))
+        (emit PREFS_REJECTED { reason: "unknown-explain-model" })
+      PREFS_SET -> saving when (and (or (!= ?expandModel null) (!= ?explainModel null)) (or (= ?expandModel null) (array/includes @config.modelOptions ?expandModel)) (or (= ?explainModel null) (array/includes @config.modelOptions ?explainModel)))
+        (set @entity.reqLearner ?learnerId)
+        (set @entity.reqExpandModel (if (= ?expandModel null) "" ?expandModel))
+        (set @entity.reqExplainModel (if (= ?explainModel null) "" ?explainModel))
+        (fetch LearnerPreferences { filter: ["=", (object/get @entity id), ?learnerId], emit: { success: PrefsMerge, failure: PrefsFailed } })
+    }
+
+    state loading {
+      INIT -> idle
+      PrefsRead -> idle
+        (let ((ex (array/first ?data)))
+          (emit PREFS_READ {
+            learnerId: @entity.reqLearner
+            expandModel: (if (array/includes @config.modelOptions (object/get @ex expandModel "")) (object/get @ex expandModel "") @config.defaultExpandModel)
+            explainModel: (if (array/includes @config.modelOptions (object/get @ex explainModel "")) (object/get @ex explainModel "") @config.defaultExplainModel)
+          }))
+      PrefsFailed -> idle
+        (emit PREFS_FAILED { error: ?error })
+        (notify error (str/concat "The preferences could not be read: " ?error))
+    }
+
+    state saving {
+      INIT -> idle
+      PrefsMerge -> saving
+        (let ((ex (array/first ?data)))
+          (persist upsert LearnerPreferences {
+            id: @entity.reqLearner
+            expandModel: (if (= @entity.reqExpandModel "") (object/get @ex expandModel "") @entity.reqExpandModel)
+            explainModel: (if (= @entity.reqExplainModel "") (object/get @ex explainModel "") @entity.reqExplainModel)
+            interests: (object/get @ex interests (json/parse "[]" MasteryStrings))
+            dailyLessonGoal: (object/get @ex dailyLessonGoal 0)
+            learningStyle: (object/get @ex learningStyle "")
+            timePerWeek: (object/get @ex timePerWeek 0)
+          } { emit: { success: PrefsStored, failure: PrefsFailed } }))
+      PrefsStored -> idle
+        (emit PREFS_SAVED { learnerId: @entity.reqLearner })
+      PrefsFailed -> idle
+        (emit PREFS_FAILED { error: ?error })
+        (notify error (str/concat "The preferences could not be saved: " ?error))
+    }
+
+    emits {
+      PREFS_READ -> external {
+        learnerId : string!
+        expandModel : string!
+        explainModel : string!
+      }
+        @description "The learner's chosen models; a model never chosen, or no longer offered, reads as the default."
+        @synonyms "preferences, chosen model, learner settings"
+        @tier "primary"
+      PREFS_SAVED -> external {
+        learnerId : string!
+      }
+        @description "The learner's model choices were saved."
+        @synonyms "preferences saved, settings saved"
+        @tier "primary"
+      PREFS_REJECTED -> external {
+        reason : string!
+      }
+        @description "A save was refused: model-required, unknown-expand-model or unknown-explain-model."
+        @synonyms "preferences refused"
+        @tier "primary"
+      PREFS_FAILED -> external {
+        error : string
+      }
+        @description "The preferences could not be read or saved."
+        @synonyms "preferences failure"
+        @tier "primary"
+      PrefsRead {
+        data : [LearnerPreferences]
+      }
+        @tier "internal"
+      PrefsMerge {
+        data : [LearnerPreferences]
+      }
+        @tier "internal"
+      PrefsStored
+        @tier "internal"
+      PrefsFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      PREFS_GET -> external {
+        learnerId : string!
+      }
+        @description "Read the learner's chosen models."
+        @synonyms "get preferences, read settings"
+        @tier "domain"
+      PREFS_SET -> external {
+        learnerId : string!
+        expandModel : string
+        explainModel : string
+      }
+        @description "Choose the model for expanding a path, for explaining a concept, or both; at least one is required and each must be an offered model."
+        @synonyms "set preferences, choose model, save settings"
+        @tier "domain"
+      PrefsRead {
+        data : [LearnerPreferences]
+      }
+      PrefsMerge {
+        data : [LearnerPreferences]
+      }
+      PrefsStored
+      PrefsFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      modelOptions : [string] = ["qwen3-30b-a3b", "deepseek-v4-flash"]
+        @label "Offered models"
+        @description "The models a learner may choose; any other value is refused on save and read as the default."
+        @synonyms "model list, allowed models, available models"
+        @tier "domain"
+      defaultExpandModel : string = "qwen3-30b-a3b"
+        @label "Default expansion model"
+        @description "The model used for expanding a path when the learner has not chosen one."
+        @synonyms "expand model default"
+        @tier "domain"
+      defaultExplainModel : string = "deepseek-v4-flash"
+        @label "Default explanation model"
+        @description "The model used for explaining a concept when the learner has not chosen one."
+        @synonyms "explain model default"
+        @tier "domain"
+    }
+  }
+
+  page "/mastery" as MasteryPage -> MasteryTracker, PreferencesStore
+}

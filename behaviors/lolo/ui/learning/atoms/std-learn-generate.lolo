@@ -1,6 +1,7 @@
 app std-learn-generate [
   version: "1.0.0",
-  description: "Generic instrument generator — GENERATE { subject, context } picks one learning instrument for a subject and writes its roster. It lists the installed behaviors under `scope` (optionally narrowed to the `instruments` allow-list), keeps those whose trait listens for ROSTER_LOADED (an instrument that takes its roster at runtime), asks the model to CHOOSE one, then to FILL a roster whose fields are exactly that instrument's ROSTER_LOADED payload; the tool loop checks the roster against those declared fields before it is accepted. GENERATED { behavior, mode, roster } carries the instrument, its mode (the behavior's name, the matchMode a lab router uses) and the roster as JSON, ready to send as that instrument's ROSTER_LOADED. It never writes a program: when no instrument in scope fits or the roster cannot be filled, it emits GENERATE_FAILED { error }. The instrument list is read once and kept for later requests."
+  description: "Generic instrument generator — GENERATE { subject, context } picks one learning instrument for a subject and writes its roster. It lists the installed behaviors under `scope` (optionally narrowed to the `instruments` allow-list), keeps those whose trait listens for ROSTER_LOADED (an instrument that takes its roster at runtime), asks the model to CHOOSE one, then to FILL a roster whose fields are exactly that instrument's ROSTER_LOADED payload; the tool loop checks the roster against those declared fields before it is accepted. GENERATED { behavior, mode, roster } carries the instrument, its mode (the behavior's name, the matchMode a lab router uses) and the roster as JSON, ready to send as that instrument's ROSTER_LOADED. It never writes a program: when no instrument in scope fits or the roster cannot be filled, it emits GENERATE_FAILED { error }. The instrument list is read once and kept for later requests.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 
 ;; @capabilities "pick a learning instrument for a subject, write an instrument's roster, generate an interactive visualisation for a concept"
@@ -49,7 +50,56 @@ type LearnInstrument = {
   fields : [AgentToolField]!
 }
 
+type LlmToolCall = { id : string!, name : string!, arguments : string! }
+type AgentToolKind = "input" | "read" | "invalid"
+type AgentToolCallActivity = {
+  type : "tool_call"!
+  tool : string!
+  kind : AgentToolKind
+  argsText : string!
+  timestamp : number!
+  isExecuting : boolean
+}
+type AgentToolResultActivity = {
+  type : "tool_result"!
+  tool : string!
+  kind : AgentToolKind
+  success : boolean!
+  detail : string
+  rows : number
+  resultText : string!
+  timestamp : number!
+}
+type AgentLlmCall = {
+  service : string!
+  provider : string!
+  model : string!
+  systemPrompt : string!
+  userPrompt : string!
+  toolCallsJson : string
+  attempt : number
+  durationMs : number!
+  promptTokens : number
+  completionTokens : number
+  cachedPromptTokens : number
+  costUSD : number
+}
+type AgentLlmResponseActivity = {
+  type : "llm_response"!
+  content : string!
+  llm : AgentLlmCall
+  timestamp : number!
+}
+type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
+type AgentUsage = {
+  promptTokens : number!
+  completionTokens : number!
+  totalTokens : number!
+  modelCalls : number!
+}
+
 uses ToolLoop from "std/behaviors/std-agent-tool-loop"
+uses Llm from "std/behaviors/std-llm"
 
 orbital LearnGenerateOrbital {
 
@@ -343,12 +393,43 @@ orbital LearnGenerateOrbital {
     config {
       quiet: true
       maxSteps: 4
-      cancelKey: "std-learn-generate"
     }
     listens {
       LearnGenerate.CONVERSE -> CONVERSE
+      LearnGenerateLlm.LLM_TOOLS_REQUESTED -> ToolsRequested
+      LearnGenerateLlm.LLM_TOOLS_STEP -> ToolsStep
+      LearnGenerateLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
+      LearnGenerateLlm.LLM_FAILED -> ToolsFailed
+      LearnGenerateLlm.LLM_CANCELLED -> ToolsCancelled
+      ToolsRequested {
+        session : string!
+        calls : [LlmToolCall]!
+      }
+      ToolsStep {
+        activity : AgentActivity!
+      }
+      ToolsReplied {
+        reply : string!
+        steps : [AgentActivity]!
+        usage : AgentUsage!
+      }
+      ToolsFailed {
+        code : string
+        message : string!
+      }
+      ToolsCancelled {
+        key : string!
+      }
     }
   }
 
-  page "/learn-generate" as LearnGeneratePage -> LearnGenerate, LearnGenerateTools
+  trait LearnGenerateLlm = Llm.traits.LlmClient {
+    listens {
+      LearnGenerateTools.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
+      LearnGenerateTools.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
+      LearnGenerateTools.LLM_CANCEL -> LLM_CANCEL
+    }
+  }
+
+  page "/learn-generate" as LearnGeneratePage -> LearnGenerate, LearnGenerateTools, LearnGenerateLlm
 }

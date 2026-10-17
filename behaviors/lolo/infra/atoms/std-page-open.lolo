@@ -1,6 +1,6 @@
 app std-page-open [
   version: "1.0.0",
-  description: "std-page-open — opens a URL in a new, focused browser tab and reports the tab. Wire OPEN to something the person does (a button or a row action), so a page only ever opens because they asked for it. Needs a host with the `page` service (a browser extension)."
+  description: "std-page-open — opens a URL in a new, focused browser tab and reports the tab. Wire OPEN to something the person does (a button or a row action), so a page only ever opens because they asked for it. Needs a host with browser tabs (a browser extension)."
 ]
 
 orbital PageOpenOrbital {
@@ -24,7 +24,7 @@ orbital PageOpenOrbital {
       INIT -> ready
         (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Ready to open pages" })
       OPEN -> ready
-        (call-service "page" "openTab" { url: ?url, active: true }
+        (browser/tab-open { url: ?url, active: true }
           { emit: { success: TAB_OPENED, failure: OPEN_CALL_FAILED } })
       TAB_OPENED -> ready
         (set @entity.opened (+ @entity.opened 1))
@@ -37,10 +37,10 @@ orbital PageOpenOrbital {
 
     emits {
       TAB_OPENED { tab : number! }
-        @description "The page service opened the tab"
+        @description "The browser opened the tab"
         @tier "secondary"
       OPEN_CALL_FAILED { error : string! }
-        @description "The page service could not open the tab"
+        @description "The browser could not open the tab"
         @tier "secondary"
       OPENED -> external { tab : number! }
         @description "The page is open in a new, focused tab"

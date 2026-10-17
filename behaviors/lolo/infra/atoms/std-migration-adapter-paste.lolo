@@ -1,0 +1,53 @@
+app std-migration-adapter-paste [
+  version: "1.0.0",
+  description: "std-migration-adapter-paste — the paste source adapter of a migration run: each fetched document becomes one root unit that carries the pasted text verbatim, titled with the document ref and annotated with its line count; no structure is inferred. A document with no non-blank character is left out of the units and ledgered in skipped with the reason. Answers std-migration-job's MIGRATION_EXTRACT when the profile's adapter is paste."
+]
+orbital MigrationAdapterPasteOrbital {
+  type ImportFieldValue = string | number | boolean
+  type ImportRawDocument = { ref : string!, raw : string! }
+  type ImportSkip = { ref : string!, reason : string! }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, content : string, parentRef : string, metadata : Map string ImportFieldValue, source : string!, span : string }
+
+  entity MigrationAdapterPasteRun [runtime] {
+    id : string!
+  }
+
+  trait MigrationAdapterPaste -> MigrationAdapterPasteRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      MIGRATION_EXTRACT -> idle when (= ?adapter "paste")
+        (emit MIGRATION_EXTRACTED {
+          units: (array/map (array/filter ?documents (fn d (!= (str/trim (object/get @d raw)) "")))
+            (fn d { ref: (str/concat "doc:" (object/get @d ref)), kind: root, title: (object/get @d ref), content: (object/get @d raw), parentRef: null, source: "paste", span: null,
+              metadata: { lineCount: (array/len (str/split (object/get @d raw) "\n")) } })),
+          skipped: (array/map (array/filter ?documents (fn d (= (str/trim (object/get @d raw)) "")))
+            (fn d { ref: (str/concat "doc:" (object/get @d ref)), reason: "empty document: no content" }))
+        })
+    }
+
+    emits {
+      MIGRATION_EXTRACTED -> external {
+        units : [ExtractedUnit]!
+        skipped : [ImportSkip]!
+      }
+        @description "The pasted documents extracted into target-neutral units plus the ledger of documents left out, in the order the documents arrived."
+        @synonyms "paste extracted, pasted text units, paste staging"
+        @tier "domain"
+    }
+
+    listens {
+      MIGRATION_EXTRACT -> external {
+        adapter : string!
+        documents : [ImportRawDocument]!
+      }
+        @description "A migration run asks its profile's adapter to extract the fetched documents; this adapter answers when adapter is paste and ignores every other adapter."
+        @synonyms "extract documents, parse fetched documents"
+        @tier "domain"
+    }
+  }
+
+  page "/migration-adapter-paste" as MigrationAdapterPastePage -> MigrationAdapterPaste
+}

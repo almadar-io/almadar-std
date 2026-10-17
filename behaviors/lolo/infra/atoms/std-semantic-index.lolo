@@ -1,0 +1,532 @@
+app std-semantic-index [
+  version: "1.0.0",
+  description: "std-semantic-index — meaning search over the vectors stored on graph rows. SEMANTIC_INDEX embeds each indexed row from a config recipe (ordered parts of name, description, numbers and lists, each with its label) through std-llm and stores the vector and the embedded text on the row; it re-embeds on every call, so a caller indexes after every write. SEMANTIC_SEARCH embeds a query and answers the nearest rows by cosine, optionally pre-filtered by graph and node type, dropping hits below the search floor. SEMANTIC_CANONICAL looks each item up among the rows of other graphs and adopts the best match when its cosine reaches the canonical threshold. SEMANTIC_PAIRS embeds texts and answers every pair at or above the pair floor. The embedding provider, model and origin are std-llm knobs set on the composed trait. One request runs at a time; a request that arrives meanwhile is refused with SEMANTIC_REJECTED.",
+  egress: ["http://127.0.0.1:1234", "https://openrouter.ai", "https://api.openai.com"]
+]
+
+type SemanticItem = { id : string!, graphId : string, nodeType : string!, name : string, texts : Map string string, numbers : Map string number, lists : Map string [string] }
+type SemanticItems = [SemanticItem]
+type SemanticTextItem = { id : string!, text : string! }
+type SemanticHit = { id : string!, graphId : string!, nodeId : string!, nodeType : string!, name : string!, score : number! }
+type SemanticHits = [SemanticHit]
+type SemanticResolution = { id : string!, adopted : boolean!, matchId : string!, matchName : string!, score : number! }
+type SemanticResolutions = [SemanticResolution]
+type SemanticPair = { a : string!, b : string!, score : number! }
+type SemanticPairs = [SemanticPair]
+type SemanticPartKind = "text" | "number" | "list"
+type SemanticStrings = [string]
+type SemanticRowShape = { id : string!, graphId : string, nodeId : string, nodeType : string, name : string, embedding : [number], embeddedText : string, embeddingModel : string }
+
+uses Llm from "std/behaviors/std-llm"
+
+orbital SemanticIndexOrbital {
+  config {
+    embedProvider : "openrouter" | "openai" | "lmstudio" = lmstudio
+      @label "Embedding provider"
+      @description "The embeddings provider the composed std-llm uses; lmstudio is keyless and local, production sets openrouter."
+      @synonyms "embedding vendor"
+      @tier "infra"
+    embedOrigin : url = "http://127.0.0.1:1234"
+      @label "Embeddings origin"
+      @description "The embeddings API origin (scheme://host, no path); it must be declared in the app egress list."
+      @synonyms "embedding host"
+      @tier "infra"
+    embedBasePath : string = "/v1"
+      @label "Embeddings base path"
+      @description "The path before /embeddings, for example /v1 or /api/v1."
+      @synonyms "embedding prefix"
+      @tier "infra"
+    embedModel : string = "text-embedding-bge-base-en-v1.5"
+      @label "Embedding model"
+      @description "The embedding model the composed std-llm asks for; std-llm reports the model that made the vectors and the atom stores it on every row as embeddingModel. Changing it needs a re-index of every row before the new model is switched on, because a stored vector of another length fails a search."
+      @synonyms "embedding model id"
+      @tier "infra"
+  }
+
+  entity SemanticRow [persistent: semantic_rows] {
+    id : string!
+    graphId : string @description "The graph this row belongs to." @synonyms "graph, owner graph" = ""
+    nodeId : string @description "The row's own id inside its graph." @synonyms "node key, local id" = ""
+    nodeType : string @description "The node type; only the indexed types are embedded." @synonyms "type, kind" = ""
+    name : string @description "The row's display name." @synonyms "title, label" = ""
+    embedding : [number] @description "The embedding of the row's text; nearest answers over it, so the field is literally named embedding." @synonyms "vector, meaning vector"
+    embeddedText : string @description "The exact text the embedding was made from." @synonyms "indexed text, document" = ""
+    embeddingModel : string @description "The model that made the embedding; a model change re-indexes every row before it is switched on." @synonyms "vector model, embedder" = ""
+    semOp : string @intrinsic = ""
+    semModel : string @intrinsic = ""
+    semKey : string @intrinsic = ""
+    semPhase : string @intrinsic = ""
+    semK : number @intrinsic = 0
+    semQuery : string @intrinsic = ""
+    semFloor : number @intrinsic = 0
+    semGraphIds : [string] @intrinsic
+    semNodeTypes : [string] @intrinsic
+    semAnyGraph : boolean @intrinsic = true
+    semAnyType : boolean @intrinsic = true
+    semItems : [SemanticItem] @intrinsic
+    semSkipped : [string] @intrinsic
+    semTexts : [SemanticTextItem] @intrinsic
+    semQueryVector : [number] @intrinsic
+    semVectors : [[number]] @intrinsic
+    semCursor : number @intrinsic = 0
+    semResolutions : [SemanticResolution] @intrinsic
+    semPendingId : string @intrinsic = ""
+    semReply : string @intrinsic = ""
+    semReplyMessage : string @intrinsic = ""
+    semEmbeddings : [[number]] @intrinsic
+  }
+
+  entity SemanticPending [runtime] {
+    id : string! @description "The call key the request runs under; the embedding reply finds the row by it." @synonyms "request key, correlation key"
+    op : string @description "index, canonical, search or pairs." @synonyms "request kind" = ""
+    items : [SemanticItem] @description "The items of an index or canonical request." @synonyms "rows to embed"
+    skipped : [string] @description "The ids an index request skipped." @synonyms "skipped ids"
+    texts : [SemanticTextItem] @description "The texts being embedded, in order." @synonyms "embedded texts"
+    query : string @description "The query of a search." @synonyms "search text" = ""
+    k : number @description "How many rows a search wants." @synonyms "top k" = 0
+    graphIds : [string] @description "The graphs a search or canonical lookup is limited to." @synonyms "graph filter"
+    nodeTypes : [string] @description "The node types a search or canonical lookup is limited to." @synonyms "type filter"
+    anyGraph : boolean @description "True when the graph filter is off." @synonyms "all graphs" = true
+    anyType : boolean @description "True when the node type filter is off." @synonyms "all types" = true
+  }
+
+  trait SemanticIndexLlm = Llm.traits.LlmClient {
+    config {
+      embedProvider: @config.embedProvider
+      embedOrigin: @config.embedOrigin
+      embedBasePath: @config.embedBasePath
+      embedModel: @config.embedModel
+    }
+    listens {
+      SemanticIndex.LLM_EMBED -> LLM_EMBED
+    }
+  }
+
+  trait SemanticIndex -> @rebindable SemanticRow [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      SEMANTIC_INDEX -> idle when (= (array/len (array/filter ?items (fn it (array/includes @config.indexedTypes @it.nodeType)))) 0)
+        (emit SEMANTIC_INDEXED { ids: [], skipped: (array/map ?items (fn it @it.id)), key: ?key, promptTokens: 0 })
+      SEMANTIC_INDEX -> working when (> (array/len (array/filter ?items (fn it (array/includes @config.indexedTypes @it.nodeType)))) 0)
+        (set @entity.semOp "index")
+        (set @entity.semKey ?key)
+        (set @entity.semPhase "prepare")
+        (set @entity.semItems (array/filter ?items (fn it (array/includes @config.indexedTypes @it.nodeType))))
+        (set @entity.semSkipped (array/map (array/reject ?items (fn it (array/includes @config.indexedTypes @it.nodeType))) (fn it @it.id)))
+        (emit SEMANTIC_PREPARE)
+
+      SEMANTIC_CANONICAL -> idle when (= (array/len ?items) 0)
+        (emit SEMANTIC_CANONICAL_RESOLVED { resolutions: [], key: ?key })
+      SEMANTIC_CANONICAL -> working when (> (array/len ?items) 0)
+        (set @entity.semOp "canonical")
+        (set @entity.semKey ?key)
+        (set @entity.semPhase "prepare")
+        (set @entity.semItems ?items)
+        (set @entity.semGraphIds (if (= ?otherGraphIds null) (json/parse "[]" SemanticStrings) ?otherGraphIds))
+        (set @entity.semNodeTypes @config.canonicalTypes)
+        (set @entity.semAnyGraph false)
+        (set @entity.semAnyType (= (array/len @config.canonicalTypes) 0))
+        (set @entity.semResolutions [])
+        (set @entity.semCursor 0)
+        (emit SEMANTIC_PREPARE)
+
+      SEMANTIC_SEARCH -> idle when (= (str/len (str/trim ?query)) 0)
+        (emit SEMANTIC_RESULTS { hits: [], key: ?key, query: ?query })
+      SEMANTIC_SEARCH -> working when (> (str/len (str/trim ?query)) 0)
+        (set @entity.semOp "search")
+        (set @entity.semKey ?key)
+        (set @entity.semPhase "embed")
+        (set @entity.semQuery ?query)
+        (set @entity.semFloor (if (= ?floor null) @config.searchFloor ?floor))
+        (set @entity.semK (math/clamp (if (= ?k null) @config.searchK ?k) 1 @config.maxK))
+        (set @entity.semGraphIds (if (= ?graphIds null) (json/parse "[]" SemanticStrings) ?graphIds))
+        (set @entity.semNodeTypes (if (= ?nodeTypes null) (json/parse "[]" SemanticStrings) ?nodeTypes))
+        (set @entity.semAnyGraph (or (= ?graphIds null) (= (array/len ?graphIds) 0)))
+        (set @entity.semAnyType (or (= ?nodeTypes null) (= (array/len ?nodeTypes) 0)))
+        (set @entity.semTexts [{ id: "query", text: ?query }])
+        (emit SemanticStage)
+
+      SEMANTIC_PAIRS -> idle when (< (array/len ?items) 2)
+        (emit SEMANTIC_PAIRS_RESULT { pairs: [], key: ?key })
+      SEMANTIC_PAIRS -> working when (>= (array/len ?items) 2)
+        (set @entity.semOp "pairs")
+        (set @entity.semKey ?key)
+        (set @entity.semPhase "embed")
+        (set @entity.semTexts ?items)
+        (emit SemanticStage)
+
+      SemanticEmbedded -> loadingPending
+        (set @entity.semReply "ok")
+        (set @entity.semKey ?key)
+        (set @entity.semModel (str/default ?model ""))
+        (set @entity.semEmbeddings ?embeddings)
+        (fetch SemanticPending { filter: ["=", (object/get @entity id), ?key], emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
+      SemanticEmbedFailed -> loadingPending
+        (set @entity.semReply "failed")
+        (set @entity.semKey ?key)
+        (set @entity.semReplyMessage ?message)
+        (fetch SemanticPending { filter: ["=", (object/get @entity id), ?key], emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
+      SemanticStoreFailed -> idle
+        (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
+        (render-ui toast { message: ?error, type: alert, variant: error })
+    }
+
+    state loadingPending {
+      INIT -> idle
+      SemanticPendingLoaded -> idle when (= (array/len ?data) 0)
+        (emit SEMANTIC_REJECTED { reason: "unknown-key", key: @entity.semKey })
+      SemanticPendingLoaded -> consuming when (> (array/len ?data) 0)
+        (set @entity.semOp (object/get (array/first ?data) op ""))
+        (set @entity.semPhase "embed")
+        (set @entity.semItems (object/get (array/first ?data) items (json/parse "[]" SemanticItems)))
+        (set @entity.semSkipped (object/get (array/first ?data) skipped (json/parse "[]" SemanticStrings)))
+        (set @entity.semTexts (object/get (array/first ?data) texts (json/parse "[]" SemanticTextItems)))
+        (set @entity.semQuery (object/get (array/first ?data) query ""))
+        (set @entity.semK (object/get (array/first ?data) k 0))
+        (set @entity.semGraphIds (object/get (array/first ?data) graphIds (json/parse "[]" SemanticStrings)))
+        (set @entity.semNodeTypes (object/get (array/first ?data) nodeTypes (json/parse "[]" SemanticStrings)))
+        (set @entity.semAnyGraph (object/get (array/first ?data) anyGraph true))
+        (set @entity.semAnyType (object/get (array/first ?data) anyType true))
+        (set @entity.semResolutions (json/parse "[]" SemanticResolutions))
+        (set @entity.semCursor 0)
+        (set @entity.semPendingId (object/get (array/first ?data) id ""))
+        (persist delete SemanticPending @entity.semPendingId { emit: { success: SemanticPendingDeleted, failure: SemanticStoreFailed } })
+      SemanticStoreFailed -> idle
+        (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
+        (render-ui toast { message: ?error, type: alert, variant: error })
+    }
+
+    state consuming {
+      INIT -> idle
+      SemanticPendingDeleted -> working when (= @entity.semReply "ok")
+        (emit SemanticResume { embeddings: @entity.semEmbeddings, model: @entity.semModel })
+      SemanticPendingDeleted -> idle when (= @entity.semReply "failed")
+        (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: @entity.semReplyMessage })
+        (render-ui toast { message: @entity.semReplyMessage, type: alert, variant: error })
+      SemanticStoreFailed -> idle
+        (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
+        (render-ui toast { message: ?error, type: alert, variant: error })
+    }
+
+    state working {
+      INIT -> idle
+
+      SemanticStage -> working
+        (persist create SemanticPending { id: @entity.semKey, op: @entity.semOp, items: @entity.semItems, skipped: @entity.semSkipped, texts: @entity.semTexts, query: @entity.semQuery, k: @entity.semK, graphIds: @entity.semGraphIds, nodeTypes: @entity.semNodeTypes, anyGraph: @entity.semAnyGraph, anyType: @entity.semAnyType } { emit: { success: SemanticStaged, failure: SemanticPendingFailed } })
+      SemanticStaged -> idle
+        (emit LLM_EMBED { texts: (array/map ?texts (fn t @t.text)), key: (as ?id CallKey) })
+      SemanticPendingFailed -> idle when (= ?code "duplicate-id")
+        (emit SEMANTIC_REJECTED { reason: "key-in-use", key: @entity.semKey })
+      SemanticPendingFailed -> idle when (!= ?code "duplicate-id")
+        (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
+        (render-ui toast { message: ?error, type: alert, variant: error })
+
+      SEMANTIC_PREPARE -> working when (= @entity.semPhase "prepare")
+        (set @entity.semPhase "embed")
+        (set @entity.semTexts
+          (array/map @entity.semItems
+            (fn it {
+              id: @it.id,
+              text: (let ((parts (array/reject
+                        (array/map (array/range 0 (array/len @config.partKinds))
+                          (fn i
+                            (let ((keys (array/nth @config.partKeys @i)) (label (array/nth @config.partLabels @i)) (kind (array/nth @config.partKinds @i)))
+                              (if (= @kind "text")
+                                (let ((v (str/default (array/first (array/filter (array/map @keys (fn k (str/trim (object/get @it.texts @k "")))) (fn s (> (str/len @s) 0)))) "")))
+                                  (if (> (str/len @v) 0) (str/concat @label @v) ""))
+                                (if (= @kind "number")
+                                  (let ((hits (array/filter @keys (fn k (object/has @it.numbers @k)))))
+                                    (if (> (array/len @hits) 0) (str/concat @label (object/get @it.numbers (array/first @hits) 0)) ""))
+                                  (let ((vals (array/reject (array/flatten (array/map @keys (fn k (object/get @it.lists @k [])))) (fn s (= (str/len (str/trim @s)) 0)))))
+                                    (if (> (array/len @vals) 0) (str/concat @label (str/join @vals ", ")) "")))))))
+                        (fn s (= (str/len @s) 0)))))
+                (if (> (array/len @parts) 0) (str/trim (str/join @parts "\n\n")) (if (> (str/len (str/trim @it.name)) 0) @it.name @it.id)))
+            })))
+        (emit SemanticStage)
+
+      SemanticResume -> idle when (and (= @entity.semPhase "embed") (!= (array/len ?embeddings) (array/len @entity.semTexts)) (!= @entity.semOp "search"))
+        (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: (str/concat "the embedding provider returned " (array/len ?embeddings) " vectors for " (array/len @entity.semTexts) " texts") })
+      SemanticResume -> idle when (and (= @entity.semPhase "embed") (= @entity.semOp "search") (= (array/len ?embeddings) 0))
+        (emit SEMANTIC_FAILED { op: "search", key: @entity.semKey, message: "the embedding provider returned no vector for the query" })
+
+      SemanticResume -> working when (and (= @entity.semPhase "embed") (= @entity.semOp "index") (= (array/len ?embeddings) (array/len @entity.semTexts)))
+        (set @entity.semPhase "write")
+        (set @entity.semModel (str/default ?model ""))
+        (set @entity.semVectors ?embeddings)
+        (persist batch (array/map (array/range 0 (array/len @entity.semItems)) (fn i ["update" "SemanticRow" (object/get (array/nth @entity.semItems @i) id "") { embedding: (array/nth ?embeddings @i), embeddedText: (object/get (array/nth @entity.semTexts @i) text ""), embeddingModel: @entity.semModel }])) { emit: { success: SemanticWritten, failure: SemanticStoreFailed } })
+
+      SemanticResume -> working when (and (= @entity.semPhase "embed") (= @entity.semOp "search") (> (array/len ?embeddings) 0))
+        (set @entity.semPhase "search")
+        (set @entity.semQueryVector (array/first ?embeddings))
+        (fetch SemanticRow {
+          filter: ["and", ["or", @entity.semAnyGraph, ["array/includes", @entity.semGraphIds, (object/get @entity graphId)]], ["or", @entity.semAnyType, ["array/includes", @entity.semNodeTypes, (object/get @entity nodeType)]]],
+          nearest: { field: "embedding", vector: (array/first ?embeddings), k: @entity.semK },
+          emit: { success: SemanticFetched, failure: SemanticStoreFailed }
+        })
+
+      SemanticResume -> idle when (and (= @entity.semPhase "embed") (= @entity.semOp "pairs") (= (array/len ?embeddings) (array/len @entity.semTexts)))
+        (emit SEMANTIC_PAIRS_RESULT {
+          key: @entity.semKey,
+          pairs: (array/filter
+            (array/flatten
+              (array/map (array/range 0 (array/len ?embeddings))
+                (fn i (array/map (array/range (+ @i 1) (array/len ?embeddings))
+                  (fn j { a: (object/get (array/nth @entity.semTexts @i) id ""), b: (object/get (array/nth @entity.semTexts @j) id ""), score: (array/cosine (array/nth ?embeddings @i) (array/nth ?embeddings @j)) })))))
+            (fn p (>= @p.score @config.pairFloor)))
+        })
+
+      SemanticResume -> working when (and (= @entity.semPhase "embed") (= @entity.semOp "canonical") (= (array/len ?embeddings) (array/len @entity.semTexts)))
+        (set @entity.semPhase "canonical")
+        (set @entity.semVectors ?embeddings)
+        (emit SEMANTIC_NEXT { index: @entity.semCursor })
+
+      SEMANTIC_NEXT -> idle when (and (= @entity.semPhase "canonical") (>= @entity.semCursor (array/len @entity.semItems)))
+        (emit SEMANTIC_CANONICAL_RESOLVED { resolutions: @entity.semResolutions, key: @entity.semKey })
+      SEMANTIC_NEXT -> working when (and (= @entity.semPhase "canonical") (< @entity.semCursor (array/len @entity.semItems)) (> (array/len (array/nth @entity.semVectors @entity.semCursor)) 0))
+        (fetch SemanticRow {
+          filter: ["and", ["array/includes", @entity.semGraphIds, (object/get @entity graphId)], ["or", @entity.semAnyType, ["array/includes", @entity.semNodeTypes, (object/get @entity nodeType)]]],
+          nearest: { field: "embedding", vector: (array/nth @entity.semVectors @entity.semCursor), k: @config.canonicalK },
+          emit: { success: SemanticFetched, failure: SemanticStoreFailed }
+        })
+      SEMANTIC_NEXT -> working when (and (= @entity.semPhase "canonical") (< @entity.semCursor (array/len @entity.semItems)) (= (array/len (array/nth @entity.semVectors @entity.semCursor)) 0))
+        (set @entity.semResolutions (array/concat @entity.semResolutions [{ id: (object/get (array/nth @entity.semItems @entity.semCursor) id ""), adopted: false, matchId: "", matchName: "", score: 0 }]))
+        (set @entity.semCursor (+ @entity.semCursor 1))
+        (emit SEMANTIC_NEXT { index: @entity.semCursor })
+
+      SemanticWritten -> idle when (and (= @entity.semPhase "write") (= @entity.semOp "index"))
+        (emit SEMANTIC_INDEXED { ids: (array/map @entity.semItems (fn it @it.id)), skipped: @entity.semSkipped, key: @entity.semKey, promptTokens: 0 })
+
+      SemanticFetched -> idle when (and (= @entity.semPhase "search") (= @entity.semOp "search"))
+        (emit SEMANTIC_RESULTS {
+          key: @entity.semKey,
+          query: @entity.semQuery,
+          hits: (array/filter
+            (array/map ?data (fn r { id: @r.id, graphId: @r.graphId, nodeId: @r.nodeId, nodeType: @r.nodeType, name: @r.name, score: (array/cosine @r.embedding @entity.semQueryVector) }))
+            (fn h (>= @h.score @entity.semFloor)))
+        })
+
+      SemanticFetched -> working when (and (= @entity.semPhase "canonical") (= @entity.semOp "canonical"))
+        (set @entity.semResolutions
+          (array/concat @entity.semResolutions
+            [(let ((best (array/first ?data)) (rid (object/get (array/nth @entity.semItems @entity.semCursor) id "")))
+              (if (= (array/len ?data) 0)
+                { id: @rid, adopted: false, matchId: "", matchName: "", score: 0 }
+                (let ((score (array/cosine (object/get @best embedding []) (array/nth @entity.semVectors @entity.semCursor))))
+                  { id: @rid, adopted: (>= @score @config.canonicalThreshold), matchId: (object/get @best id ""), matchName: (object/get @best name ""), score: @score })))]))
+        (set @entity.semCursor (+ @entity.semCursor 1))
+        (emit SEMANTIC_NEXT { index: @entity.semCursor })
+
+      SemanticStoreFailed -> idle
+        (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
+        (render-ui toast { message: ?error, type: alert, variant: error })
+    }
+
+    emits {
+      LLM_EMBED -> external {
+        texts : [string]!
+        key : CallKey!
+      }
+        @description "Ask std-llm to embed the texts of the request that runs under this key; the result and the failure echo the key."
+        @tier "internal"
+      SEMANTIC_INDEXED -> external {
+        ids : [string]!
+        skipped : [string]!
+        key : string
+        promptTokens : number
+      }
+        @description "The rows whose vector and text were stored, and the ids skipped because their node type is not indexed."
+        @synonyms "indexed, embedded, vectors stored"
+        @tier "domain"
+      SEMANTIC_RESULTS -> external {
+        hits : [SemanticHit]!
+        query : string!
+        key : string
+      }
+        @description "The nearest rows to the query, best first, each with its cosine score; hits under the search floor are dropped."
+        @synonyms "search results, matches, nearest rows"
+        @tier "domain"
+      SEMANTIC_CANONICAL_RESOLVED -> external {
+        resolutions : [SemanticResolution]!
+        key : string
+      }
+        @description "For each item, the best match among the other graphs and whether its score reached the canonical threshold, in item order."
+        @synonyms "canonical match, adopted concept, dedupe"
+        @tier "domain"
+      SEMANTIC_PAIRS_RESULT -> external {
+        pairs : [SemanticPair]!
+        key : string
+      }
+        @description "Every pair of the given texts whose cosine reaches the pair floor."
+        @synonyms "similar pairs, similarity matrix"
+        @tier "domain"
+      SEMANTIC_FAILED -> external {
+        op : string!
+        message : string!
+        key : string
+      }
+        @description "The request ended without an answer: the embedding or the row store failed."
+        @synonyms "index failed, search failed"
+        @tier "domain"
+      SEMANTIC_REJECTED -> external {
+        reason : string!
+        key : string
+      }
+        @description "The request was not started: key-in-use (another outstanding request already runs under this key) or unknown-key (an embedding reply carried a key no outstanding request holds, for example a replayed one)."
+        @synonyms "refused, duplicate key, stale reply"
+        @tier "domain"
+      SemanticStage
+      SemanticStaged {
+        id : string!
+        texts : [SemanticTextItem]
+      }
+      SemanticPendingFailed {
+        error : string
+        code : string
+      }
+      SemanticPendingLoaded {
+        data : [SemanticPending]
+      }
+      SemanticPendingDeleted
+      SemanticResume {
+        embeddings : [[number]]
+        model : string
+      }
+      SEMANTIC_PREPARE
+      SEMANTIC_NEXT {
+        index : number
+      }
+      SemanticWritten
+      SemanticFetched {
+        data : [SemanticRowShape]
+      }
+      SemanticStoreFailed {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      SemanticIndexLlm.LLM_EMBED_RESULT -> SemanticEmbedded
+      SemanticIndexLlm.LLM_FAILED -> SemanticEmbedFailed
+      SemanticEmbedded {
+        embeddings : [[number]]
+        key : string
+        model : string
+      }
+      SemanticStage
+      SemanticStaged {
+        id : string!
+        texts : [SemanticTextItem]
+      }
+      SemanticPendingFailed {
+        error : string
+        code : string
+      }
+      SemanticPendingLoaded {
+        data : [SemanticPending]
+      }
+      SemanticPendingDeleted
+      SemanticResume {
+        embeddings : [[number]]
+        model : string
+      }
+      SemanticEmbedFailed {
+        code : string
+        message : string!
+        key : string
+      }
+      SEMANTIC_INDEX {
+        items : [SemanticItem]!
+        key : CallKey!
+      }
+        @description "Embed each row of an indexed node type from the recipe and store the vector on the row; call it after every write of such a row. A node of another type is skipped."
+        @synonyms "embed rows, reindex, update vectors"
+      SEMANTIC_SEARCH {
+        query : string!
+        k : number
+        floor : number
+        graphIds : [string]
+        nodeTypes : [string]
+        key : CallKey!
+      }
+        @description "Find the rows nearest in meaning to the query, optionally only in the listed graphs and node types. A hit under the call's floor is dropped; without a floor the search floor knob applies."
+        @synonyms "semantic search, find similar, nearest"
+      SEMANTIC_CANONICAL {
+        items : [SemanticItem]!
+        otherGraphIds : [string]!
+        key : CallKey!
+      }
+        @description "Look each item up among the rows of the other graphs (the canonical node types) and adopt the best match when it is close enough."
+        @synonyms "canonicalize, dedupe concepts, adopt existing"
+      SEMANTIC_PAIRS {
+        items : [SemanticTextItem]!
+        key : CallKey!
+      }
+        @description "Embed the texts and answer every pair whose cosine reaches the pair floor; nothing is stored."
+        @synonyms "pairwise similarity, similar paths"
+    }
+
+    config {
+      indexedTypes : [string] = ["Concept", "Lesson", "PracticeExercise", "LearningGoal", "Milestone"]
+        @label "Indexed node types"
+        @description "The node types that are embedded; a row of any other type is skipped by SEMANTIC_INDEX."
+        @synonyms "embedded types, vector types"
+        @tier "domain"
+      canonicalTypes : [string] = ["Concept"]
+        @label "Canonical node types"
+        @description "The node types SEMANTIC_CANONICAL looks up among the other graphs."
+        @synonyms "dedupe types"
+        @tier "domain"
+      partKinds : [SemanticPartKind] = ["text", "text", "text", "text", "text", "number", "number", "list", "list", "list"]
+        @label "Recipe part kinds"
+        @description "The embedding text recipe, one entry per part in order: text reads a text value, number reads a number, list reads a list of strings and joins it with a comma."
+        @synonyms "recipe kinds, text recipe"
+        @tier "domain"
+      partKeys : [[string]] = [["name", "title"], ["description"], ["narrative"], ["goal"], ["focus"], ["layerNumber"], ["sequence"], ["tags"], ["conceptsCovered"], ["keywords"]]
+        @label "Recipe part keys"
+        @description "For each recipe part, the item keys it reads; the first key that has a value wins. The keys are looked up in the item's texts, numbers or lists by the part kind."
+        @synonyms "recipe fields"
+        @tier "domain"
+      partLabels : [string] = ["", "", "", "Goal: ", "Focus: ", "Layer ", "Sequence ", "Tags: ", "Concepts covered: ", "Keywords: "]
+        @label "Recipe part labels"
+        @description "For each recipe part, the label put before its value. Parts are joined by a blank line; an item with no part falls back to its name, then its id."
+        @synonyms "recipe prefixes"
+        @tier "domain"
+      searchK : number = 40
+        @label "Search results wanted"
+        @description "How many nearest rows a search asks for when it names none."
+        @synonyms "top k, result count"
+        @tier "policy"
+      maxK : number = 50
+        @label "Largest search"
+        @description "The most rows one search may ask for."
+        @synonyms "top k cap"
+        @tier "policy"
+      searchFloor : number = 0.6
+        @label "Search score floor"
+        @description "A search hit with a cosine score below this is dropped. Pending owner approval: measured on text-embedding-bge-base-en-v1.5."
+        @synonyms "minimum similarity, relevance floor"
+        @tier "policy"
+      pairFloor : number = 0.2
+        @label "Pair score floor"
+        @description "A text pair with a cosine score below this is not reported. The value is the one the provider already applied to true cosine; pending owner approval after measuring on text-embedding-bge-base-en-v1.5."
+        @synonyms "similarity floor, path similarity floor"
+        @tier "policy"
+      canonicalK : number = 3
+        @label "Canonical candidates"
+        @description "How many nearest rows of the other graphs a canonical lookup reads."
+        @synonyms "neighbours"
+        @tier "policy"
+      canonicalThreshold : number = 0.95
+        @label "Canonical adoption threshold"
+        @description "A canonical match is adopted when its cosine score reaches this. Pending owner approval: measured on text-embedding-bge-base-en-v1.5."
+        @synonyms "adoption threshold, same concept threshold"
+        @tier "policy"
+    }
+  }
+
+  page "/semantic-index" as SemanticIndexPage -> SemanticIndex, SemanticIndexLlm
+}

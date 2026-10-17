@@ -8,25 +8,20 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./package.json": "./package.json",
     "./modules/*": {
+      "types": "./dist/modules/*.d.ts",
       "import": "./dist/modules/*.js",
-      "require": "./dist/modules/*.js",
-      "types": "./dist/modules/*.d.ts"
-    },
-    "./behaviors/*": {
-      "import": "./dist/behaviors/*.js",
-      "require": "./dist/behaviors/*.js",
-      "types": "./dist/behaviors/*.d.ts"
+      "require": "./dist/modules/*.js"
     },
     "./registry": {
+      "types": "./dist/registry.d.ts",
       "import": "./dist/registry.js",
-      "require": "./dist/registry.js",
-      "types": "./dist/registry.d.ts"
+      "require": "./dist/registry.js"
     },
     "./canonical-operators.json": "./canonical-operators.json"
   },
@@ -43,6 +38,7 @@
     "behaviors/lolo/agent",
     "behaviors/lolo/infra",
     "behaviors/lolo/ml",
+    "behaviors/lolo/spec",
     "behaviors/lolo/ui/core",
     "behaviors/lolo/ui/game",
     "behaviors/lolo/ui/avl",
@@ -56,12 +52,6 @@
   "orb": {
     "prefix": "almadar-std",
     "source": "behaviors/lolo",
-    "index": "dist/behaviors-registry.json",
-    "loloContracts": "behaviors/lolo-behavior-contracts.json",
-    "embeddings": [
-      "dist/behaviors-embeddings.json",
-      "dist/knob-embeddings.json"
-    ],
     "compiler": ">=4.10.0"
   },
   "orbLanguage": {
@@ -72,17 +62,13 @@
     "node": ">=22"
   },
   "scripts": {
-    "build:embeddings": "node scripts/embed.mjs",
-    "build:knob-embeddings": "node scripts/embed.mjs",
-    "build": "pnpm run build:embeddings && tsup",
-    "build:data": "node scripts/copy-dist-sidecars.mjs",
+    "build": "tsup",
     "generate:operators": "tsx scripts/generate-rust.ts",
     "build:watch": "tsup --watch",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm run build",
     "prepare": "git config core.hooksPath .githooks",
-    "build:loaders": "tsup --config tsup.loaders.config.ts",
     "materialize": "node scripts/materialize-registry.mjs"
   },
   "dependencies": {

@@ -68,7 +68,7 @@ orbital GithubOrbital {
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
       GITHUB_LIST_ISSUES -> idle when (and (!= @config.owner "") (!= @config.repo ""))
-        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues?state=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (if (= @payload.state null) "open" @payload.state)) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29") "&per_page=" (math/min (if (= @payload.per_page null) 30 @payload.per_page) 100) (if (> (array/len (or @payload.labels [])) 0) (str/concat "&labels=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/join (or @payload.labels []) ",")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) "")) {
+        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues?state=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (if (not (validate/required @payload.state)) "open" @payload.state)) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29") "&per_page=" (math/min (if (= @payload.per_page null) 30 @payload.per_page) 100) (if (> (array/len (or @payload.labels [])) 0) (str/concat "&labels=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/join (or @payload.labels []) ",")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) "")) {
           headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
           auth: { scheme: bearer, credential: @config.token },
           timeoutMs: @config.timeoutMs
@@ -91,7 +91,7 @@ orbital GithubOrbital {
           headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
           auth: { scheme: bearer, credential: @config.token },
           timeoutMs: @config.timeoutMs
-        } { key: @payload.issueNumber, emit: { success: GITHUB_GET_ISSUE_REPLIED, failure: GITHUB_GET_ISSUE_UNREACHABLE } })
+        } { key: (str/concat @payload.issueNumber), emit: { success: GITHUB_GET_ISSUE_REPLIED, failure: GITHUB_GET_ISSUE_UNREACHABLE } })
       GITHUB_GET_ISSUE -> idle when (or (= @config.owner "") (= @config.repo ""))
         (emit GITHUB_GET_ISSUE_FAILED { code: null, message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_GET_ISSUE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
@@ -159,7 +159,7 @@ orbital GithubOrbital {
       GITHUB_CREATE_ISSUE -> idle
         (http POST @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/issues") {
           headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion, Content-Type: "text/plain;charset=UTF-8" },
-          text: (json/stringify (object/merge { title: @payload.title } (if (= @payload.body null) {} { body: @payload.body }) (if (= @payload.labels null) {} { labels: @payload.labels }))),
+          text: (json/stringify (object/merge { title: @payload.title } (if (not (validate/required @payload.body)) {} { body: @payload.body }) (if (= @payload.labels null) {} { labels: @payload.labels }))),
           auth: { scheme: bearer, credential: @config.token },
           timeoutMs: @config.timeoutMs
         } { emit: { success: GITHUB_CREATE_ISSUE_REPLIED, failure: GITHUB_CREATE_ISSUE_UNREACHABLE } })

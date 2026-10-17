@@ -1,0 +1,290 @@
+app std-concept-persona [
+  version: "1.0.0",
+  description: "std-concept-persona — turns a concept label into the real person behind it, for an in-character chat. CONCEPT_PERSONA drafts the originator with the model (DeepSeek), asks again when the draft echoes the concept, grounds the person on their Wikipedia page (description, Commons portrait, lead extract) and answers CONCEPT_PERSONA_RESULT with name, description, portraitUrl, greeting and the chat's system instructions. A draft that still echoes the concept becomes a tutor persona with no Wikipedia lookup. Every persona is cached per label and subject, so a repeat is answered from the cache.",
+  egress: ["https://api.deepseek.com", "https://en.wikipedia.org", "https://openrouter.ai"]
+]
+type PersonaDraft = { name : string, description : string, greeting : string }
+orbital ConceptPersonaOrbital {
+  uses Llm from "std/behaviors/std-llm"
+  uses WikiApi from "std/behaviors/std-wikimedia"
+
+  entity ConceptPersonaLookup [runtime] {
+    id : string!
+    label : string = ""
+    context : string = ""
+    key : string = ""
+    base : string = ""
+    prompt : string = ""
+    correction : string = ""
+    attempts : number = 0
+    draftName : string = ""
+    draftDescription : string = ""
+    draftGreeting : string = ""
+    resultName : string = ""
+    resultDescription : string = ""
+    resultPortrait : string = ""
+    resultGreeting : string = ""
+    resultBio : string = ""
+  }
+
+  entity ConceptPersonaCache [persistent: concept-personas] {
+    id : string!
+    name : string
+    description : string
+    portraitUrl : string
+    greeting : string
+    bio : string
+    cachedAt : number!
+  }
+
+  trait ConceptPersonaResolver -> ConceptPersonaLookup [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      CONCEPT_PERSONA -> idle when (= (str/trim ?conceptLabel) "")
+        (emit CONCEPT_PERSONA_FAILED { code: "VALIDATION_ERROR", message: "conceptLabel: String must contain at least 1 character(s)" })
+      CONCEPT_PERSONA -> idle when (and (!= (str/trim ?conceptLabel) "") (!= ?context null) (= (str/trim ?context) ""))
+        (emit CONCEPT_PERSONA_FAILED { code: "VALIDATION_ERROR", message: "context: String must contain at least 1 character(s)" })
+      CONCEPT_PERSONA -> idle when (and (!= (str/trim ?conceptLabel) "") (or (= ?context null) (!= (str/trim ?context) "")) (or (validate/pattern (str/trim ?conceptLabel) "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-") (validate/pattern (str/trim ?conceptLabel) "^[0-9]+$")))
+        (emit CONCEPT_PERSONA_FAILED { code: "VALIDATION_ERROR", message: "conceptLabel must be a human-readable concept name" })
+      CONCEPT_PERSONA -> caching when (and (!= (str/trim ?conceptLabel) "") (or (= ?context null) (!= (str/trim ?context) "")) (not (or (validate/pattern (str/trim ?conceptLabel) "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-") (validate/pattern (str/trim ?conceptLabel) "^[0-9]+$"))))
+        (set @entity.label (str/trim ?conceptLabel))
+        (set @entity.context (if (= ?context null) "" (str/trim ?context)))
+        (set @entity.key (str/concat "c:" (str/encode-uri-component (str/lower @entity.label)) (if (= @entity.context "") "" (str/concat "|" (str/encode-uri-component (str/lower @entity.context))))))
+        (fetch ConceptPersonaCache {
+          filter: ["=", (object/get @entity id), @entity.key],
+          emit: { success: CONCEPT_PERSONA_CACHE_LOADED, failure: CONCEPT_PERSONA_CACHE_FAILED }
+        })
+    }
+
+    state caching {
+      INIT -> idle
+      CONCEPT_PERSONA -> caching
+        (emit CONCEPT_PERSONA_FAILED { code: "CONFLICT", message: "A concept persona lookup is already running" })
+      CONCEPT_PERSONA_CACHE_FAILED -> idle
+        (emit CONCEPT_PERSONA_FAILED { code: "SERVICE_ERROR", message: ?error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Concept persona unavailable: " ?error) })
+      CONCEPT_PERSONA_CACHE_LOADED -> answering when (> (array/len ?data) 0)
+        (set @entity.resultName (object/get (array/first ?data) name ""))
+        (set @entity.resultDescription (object/get (array/first ?data) description ""))
+        (set @entity.resultPortrait (object/get (array/first ?data) portraitUrl ""))
+        (set @entity.resultGreeting (object/get (array/first ?data) greeting ""))
+        (set @entity.resultBio (object/get (array/first ?data) bio ""))
+        (emit CONCEPT_PERSONA_ANSWER {})
+      CONCEPT_PERSONA_CACHE_LOADED -> drafting when (= (array/len ?data) 0)
+        (set @entity.base (if (= @entity.context "") (str/concat "Concept: " @entity.label) (str/concat "Concept: " @entity.label "\nThe learner is studying: " @entity.context)))
+        (set @entity.prompt @entity.base)
+        (set @entity.correction "")
+        (set @entity.attempts 0)
+        (emit LLM_EXTRACT { text: @entity.prompt, schema: "{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"greeting\":{\"type\":\"string\"}},\"required\":[\"name\",\"description\",\"greeting\"]}", systemPrompt: @config.systemPrompt, temperature: 0.3 })
+    }
+
+    state drafting {
+      INIT -> idle
+      CONCEPT_PERSONA -> drafting
+        (emit CONCEPT_PERSONA_FAILED { code: "CONFLICT", message: "A concept persona lookup is already running" })
+      CONCEPT_PERSONA_DRAFT_FAILED -> idle
+        (emit CONCEPT_PERSONA_FAILED { code: "SERVICE_ERROR", message: ?message })
+      CONCEPT_PERSONA_DRAFTED -> drafting when (and (not (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) "")))) (< @entity.attempts 2))
+        (set @entity.attempts (+ @entity.attempts 1))
+        (emit LLM_EXTRACT { text: (str/concat @entity.prompt "\n\n[Previous attempt failed with: The persona draft needs a non-empty name, description and greeting]\nPlease output valid JSON that matches the expected schema."), schema: "{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"greeting\":{\"type\":\"string\"}},\"required\":[\"name\",\"description\",\"greeting\"]}", systemPrompt: @config.systemPrompt, temperature: (if (= @entity.correction "") 0.3 0.2) })
+      CONCEPT_PERSONA_DRAFTED -> idle when (and (not (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) "")))) (>= @entity.attempts 2))
+        (emit CONCEPT_PERSONA_FAILED { code: "SERVICE_ERROR", message: "The persona draft needs a non-empty name, description and greeting" })
+      CONCEPT_PERSONA_DRAFTED -> drafting when (and (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) ""))) (= (str/replace-pattern (str/lower (str/trim (object/get (json/parse ?json PersonaDraft) name ""))) "[^\\p{L}\\p{N}]" "") (str/replace-pattern (str/lower @entity.label) "[^\\p{L}\\p{N}]" "")) (= @entity.correction ""))
+        (set @entity.correction (str/trim (object/get (json/parse ?json PersonaDraft) name "")))
+        (set @entity.prompt (str/concat @entity.base "\n\nIMPORTANT: \"" @entity.correction "\" is the concept itself, not a person. You MUST name the real human being who created or pioneered \"" @entity.label "\"."))
+        (set @entity.attempts 0)
+        (emit LLM_EXTRACT { text: @entity.prompt, schema: "{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"greeting\":{\"type\":\"string\"}},\"required\":[\"name\",\"description\",\"greeting\"]}", systemPrompt: @config.systemPrompt, temperature: 0.2 })
+      CONCEPT_PERSONA_DRAFTED -> storing when (and (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) ""))) (= (str/replace-pattern (str/lower (str/trim (object/get (json/parse ?json PersonaDraft) name ""))) "[^\\p{L}\\p{N}]" "") (str/replace-pattern (str/lower @entity.label) "[^\\p{L}\\p{N}]" "")) (!= @entity.correction ""))
+        (set @entity.resultName (str/concat @entity.label " Tutor"))
+        (set @entity.resultDescription (str/concat "Your AI tutor for " @entity.label "."))
+        (set @entity.resultPortrait "")
+        (set @entity.resultGreeting (str/trim (object/get (json/parse ?json PersonaDraft) greeting "")))
+        (set @entity.resultBio "")
+        (persist create ConceptPersonaCache { id: @entity.key, name: @entity.resultName, description: @entity.resultDescription, portraitUrl: "", greeting: @entity.resultGreeting, bio: "", cachedAt: @now } {
+          emit: { success: CONCEPT_PERSONA_STORED, failure: CONCEPT_PERSONA_STORE_FAILED }
+        })
+      CONCEPT_PERSONA_DRAFTED -> wiki when (and (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) ""))) (!= (str/replace-pattern (str/lower (str/trim (object/get (json/parse ?json PersonaDraft) name ""))) "[^\\p{L}\\p{N}]" "") (str/replace-pattern (str/lower @entity.label) "[^\\p{L}\\p{N}]" "")))
+        (set @entity.draftName (str/trim (object/get (json/parse ?json PersonaDraft) name "")))
+        (set @entity.draftDescription (str/trim (object/get (json/parse ?json PersonaDraft) description "")))
+        (set @entity.draftGreeting (str/trim (object/get (json/parse ?json PersonaDraft) greeting "")))
+        (emit WIKIMEDIA_GET_PAGE { title: @entity.draftName })
+    }
+
+    state wiki {
+      INIT -> idle
+      CONCEPT_PERSONA -> wiki
+        (emit CONCEPT_PERSONA_FAILED { code: "CONFLICT", message: "A concept persona lookup is already running" })
+      CONCEPT_PERSONA_WIKI_FAILED -> wiki
+        (emit CONCEPT_PERSONA_WIKI {})
+      CONCEPT_PERSONA_WIKI -> storing
+        (set @entity.resultName @entity.draftName)
+        (set @entity.resultDescription (if (!= ?description null) ?description @entity.draftDescription))
+        (set @entity.resultPortrait (if (!= ?portraitUrl null) ?portraitUrl ""))
+        (set @entity.resultGreeting @entity.draftGreeting)
+        (set @entity.resultBio (if (!= ?extract null) ?extract ""))
+        (persist create ConceptPersonaCache { id: @entity.key, name: @entity.resultName, description: @entity.resultDescription, portraitUrl: @entity.resultPortrait, greeting: @entity.resultGreeting, bio: @entity.resultBio, cachedAt: @now } {
+          emit: { success: CONCEPT_PERSONA_STORED, failure: CONCEPT_PERSONA_STORE_FAILED }
+        })
+    }
+
+    state storing {
+      INIT -> idle
+      CONCEPT_PERSONA -> storing
+        (emit CONCEPT_PERSONA_FAILED { code: "CONFLICT", message: "A concept persona lookup is already running" })
+      CONCEPT_PERSONA_STORED -> answering
+        (emit CONCEPT_PERSONA_ANSWER {})
+      CONCEPT_PERSONA_STORE_FAILED -> answering
+        (emit CONCEPT_PERSONA_ANSWER {})
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Concept persona not cached: " ?error) })
+    }
+
+    state answering {
+      INIT -> idle
+      CONCEPT_PERSONA -> answering
+        (emit CONCEPT_PERSONA_FAILED { code: "CONFLICT", message: "A concept persona lookup is already running" })
+      CONCEPT_PERSONA_ANSWER -> idle
+        (emit CONCEPT_PERSONA_RESULT {
+          name: @entity.resultName,
+          description: @entity.resultDescription,
+          portraitUrl: @entity.resultPortrait,
+          greeting: @entity.resultGreeting,
+          instructions: (str/concat "You are " @entity.resultName ". " @entity.resultDescription "\n\nYour biography (factual grounding, from Wikipedia):\n" (if (> (str/len @entity.resultBio) 0) @entity.resultBio "(no biography available)") "\n\nA learner is studying \"" @entity.label "\"." (if (= @entity.context "") "" (str/concat " The learner's wider subject is \"" @entity.context "\".")) " Reply in first person, in character as " @entity.resultName ", warmly and concisely (max ~120 words). Draw on your real life and contributions above. Stay factual to the biography; if asked something outside it, say plainly that you do not know rather than invent. Keep the conversation on \"" @entity.label "\" and bring the learner back to it if they drift. Do not break character.")
+        })
+    }
+
+    emits {
+      CONCEPT_PERSONA_RESULT -> external {
+        name : string!
+        description : string!
+        portraitUrl : string!
+        greeting : string!
+        instructions : string!
+      }
+        @description "The real person behind the concept: name, one-line description, Wikipedia portrait URL (empty when none), the in-character greeting and the system instructions for an in-character chat grounded in their Wikipedia biography."
+        @synonyms "concept originator, concept persona, originator chat, inventor persona"
+        @tier "primary"
+      CONCEPT_PERSONA_FAILED -> external {
+        code : string!
+        message : string!
+      }
+        @description "The lookup could not run: VALIDATION_ERROR for a blank label, a blank subject or a label that is an id, CONFLICT while another lookup is running, SERVICE_ERROR when the persona cache or the model failed."
+        @synonyms "persona lookup failed, originator error"
+        @tier "primary"
+      LLM_EXTRACT -> external {
+        text : string!
+        schema : string!
+        systemPrompt : string
+        temperature : number
+      }
+        @description "Internal: ask the model client for the persona draft."
+        @tier "secondary"
+      WIKIMEDIA_GET_PAGE -> external {
+        title : string!
+      }
+        @description "Internal: ask the Wikimedia client for the drafted person's page."
+        @tier "secondary"
+      CONCEPT_PERSONA_CACHE_LOADED {
+        data : [ConceptPersonaCache]
+      }
+        @description "Internal: the cached persona row for the label and subject, if any."
+        @tier "secondary"
+      CONCEPT_PERSONA_CACHE_FAILED {
+        error : string
+      }
+        @description "Internal: the persona cache could not be read."
+        @tier "secondary"
+      CONCEPT_PERSONA_WIKI {
+        title : string
+        description : string
+        portraitUrl : string
+        extract : string
+      }
+        @description "Internal: the drafted person's Wikipedia page, empty when there is none."
+        @tier "secondary"
+      CONCEPT_PERSONA_STORED {
+        id : string
+      }
+        @description "Internal: the persona was cached."
+        @tier "secondary"
+      CONCEPT_PERSONA_STORE_FAILED {
+        error : string
+      }
+        @description "Internal: the persona could not be cached; the answer is still given."
+        @tier "secondary"
+      CONCEPT_PERSONA_ANSWER {
+      }
+        @description "Internal: the persona is settled and is answered."
+        @tier "secondary"
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the resolver reports a persona cache that could not be read; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      systemPrompt : string = "You identify the single most historically credited HUMAN originator, inventor, or creator of a learning concept, then greet a learner in their voice. The concept may be a programming language, framework, library, algorithm, data structure, mathematical/scientific concept, theory, or technique. Use the concept name alone to determine the DISCIPLINE and disambiguate it. Reply ONLY with compact JSON: {\"name\":<a SPECIFIC REAL HUMAN BEING's full canonical name as it would title a Wikipedia article, e.g. \"Isaac Newton\", \"Brendan Eich\">,\"description\":<one sentence, max ~20 words: who they are + key contribution>,\"greeting\":<one warm first-person sentence, in character, mentioning the concept>}. HARD RULES: \"name\" MUST be a human being. It must NEVER be the concept name itself, nor an animal, object, place, or product. If the concept is an invention, name its inventor/creator. If no single person is credited, name the most iconic human contributor or the field's founder. Never invent a fictional person."
+        @label "Persona drafting prompt"
+        @description "The system prompt that makes the model name the single most credited human originator of the concept and greet the learner in their voice; it must ask for compact JSON with name, description and greeting."
+        @synonyms "originator prompt, persona instructions"
+        @tier "domain"
+    }
+
+    listens {
+      CONCEPT_PERSONA -> external {
+        conceptLabel : string!
+        context : string
+      }
+        @description "Resolve a concept label to the real person behind it; the optional context is the learner's subject, so an ambiguous concept resolves in the right field."
+        @synonyms "find concept originator, who invented, persona for concept"
+      PersonaLlmApi.LLM_EXTRACT_RESULT -> CONCEPT_PERSONA_DRAFTED
+      CONCEPT_PERSONA_DRAFTED {
+        json : string!
+      }
+      PersonaLlmApi.LLM_FAILED -> CONCEPT_PERSONA_DRAFT_FAILED
+      CONCEPT_PERSONA_DRAFT_FAILED {
+        code : string
+        message : string!
+      }
+      PersonaWikiApi.WIKIMEDIA_PAGE_RESULT -> CONCEPT_PERSONA_WIKI
+      PersonaWikiApi.WIKIMEDIA_PAGE_FAILURE -> CONCEPT_PERSONA_WIKI_FAILED
+      CONCEPT_PERSONA_WIKI_FAILED {
+        error : string!
+        kind : string!
+      }
+    }
+  }
+
+  trait PersonaLlmApi = Llm.traits.LlmClient {
+    config {
+      provider: deepseek
+      origin: "https://api.deepseek.com"
+      basePath: "/v1"
+      model: "deepseek-v4-flash"
+      apiKey: "DEEPSEEK_API_KEY"
+    }
+    listens {
+      ConceptPersonaResolver.LLM_EXTRACT -> LLM_EXTRACT
+    }
+  }
+
+  trait PersonaWikiApi = WikiApi.traits.WikimediaClient {
+    listens {
+      ConceptPersonaResolver.WIKIMEDIA_GET_PAGE -> WIKIMEDIA_GET_PAGE
+      WIKIMEDIA_PAGE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      WIKIMEDIA_PAGE_FAILED {
+        error : string!
+        kind : string!
+      }
+    }
+  }
+
+  page "/concept-persona" as ConceptPersonaPage -> ConceptPersonaResolver, PersonaLlmApi, PersonaWikiApi
+}

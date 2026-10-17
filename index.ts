@@ -13,7 +13,6 @@
  * - time: Date/time operations (now, format, diff, isPast, etc.)
  * - validate: Input validation (required, email, minLength, etc.)
  * - format: Display formatting (currency, percent, bytes, etc.)
- * - async: Async operations (delay, debounce, retry, etc.)
  *
  * @packageDocumentation
  */
@@ -85,81 +84,7 @@ export {
   TIME_OPERATORS,
   VALIDATE_OPERATORS,
   FORMAT_OPERATORS,
-  ASYNC_OPERATORS,
   getCoreOperators,
 } from './modules/index.js';
 
-// Standard Behaviors (programs read from the package registry)
-export {
-  // Types
-  type BehaviorTrait,
-  type BehaviorMetadata,
-  type ItemAction,
-  type Trait,
-  type StateMachine,
-  type State,
-  type Event,
-  type Transition,
-  type TraitTick,
-  type TraitDataEntity,
-  type TraitEntityField,
-  type TraitCategory,
-  getBehaviorMetadata,
-  validateBehaviorStructure,
-  validateBehaviorEvents,
-  validateBehaviorStates,
-  // Golden .orb exports reader
-  type BehaviorLevel,
-  getAllBehaviorNames,
-  getAllBehaviors,
-  getBehaviorsByLevel,
-  loadGoldenOrb,
-  hasGoldenOrb,
-  // Query helpers
-  type RegistryEntry,
-  type BehaviorSummary,
-  getBehaviorRegistry,
-  getBehaviorsByDomain,
-  getBehaviorsByOperations,
-  searchBehaviors,
-  getBehaviorSummary,
-  // Embeddings (publish-time bake)
-  type BehaviorEmbeddingsManifest,
-  getBehaviorEmbeddings,
-  getBehaviorEmbedding,
-  // Per-knob embeddings (publish-time bake)
-  type KnobEmbeddingsManifest,
-  getKnobEmbeddings,
-} from './behaviors/index.js';
 
-// Phase 5.3: human-authoring primitive for decomposing a behavior's
-// composition into its flat TraitReference list. Not exposed to the agent/LLM.
-export { explodeBehaviorComposition } from './behaviors/explode-behavior-composition.js';
-
-// Documentation Generator
-export {
-  // Types
-  type ModuleInfo,
-  type CategoryInfo,
-  type OperatorDoc,
-  type ModuleDoc,
-  type BehaviorDoc,
-  type CategoryDoc,
-  type DocsStats,
-  type StdLibDocs,
-  type BehaviorsDocs,
-  // Domain language mappings
-  MODULE_DESCRIPTIONS,
-  BEHAVIOR_CATEGORY_DESCRIPTIONS,
-  // Transform functions
-  humanizeOperatorName,
-  humanizeReturnType,
-  formatArity,
-  // Generation functions
-  generateOperatorDoc,
-  generateModuleDoc,
-  generateBehaviorDoc,
-  generateModulesDocs,
-  generateBehaviorsDocs,
-  generateStdLibDocs,
-} from './docs-generator.js';

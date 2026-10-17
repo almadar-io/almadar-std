@@ -1,6 +1,7 @@
 app std-agent-pool [
   version: "1.0.0",
-  description: "std-agent-pool — a shared pool of generated behaviors that every user of the app draws from. WRITE { value, name, kind, topic, fields, description } takes a behavior already built and validated (a `program/eval` result), keeps its source durably (`behavior/source` → `program/print` → the `storage` service; the provider is the deployment's), embeds its description (`llm embed`) and records a PoolEntry; any failure on the way leaves no entry (WRITE_FAILED). SEARCH { vector, kinds, exclude, take } ranks the live entries of this pool by cosine similarity to the vector, nudged by their quality, and answers POOL_FOUND with the best ones, no model call. SIGNAL { id, signal } counts a play, like, hide, right or wrong answer on an entry and retires it once it has been played enough and most of its outcomes are hides or wrong answers. The pool name, kinds, bucket and key prefix and the quality knobs are config, so the same mechanism serves any app that pools generated behaviors."
+  description: "std-agent-pool — a shared pool of generated behaviors that every user of the app draws from. WRITE { value, name, kind, topic, fields, description } takes a behavior already built and validated (a `program/eval` result), keeps its source durably (`behavior/source` → `program/print` → the `storage` service; the provider is the deployment's), embeds its description (`llm embed`) and records a PoolEntry; any failure on the way leaves no entry (WRITE_FAILED). SEARCH { vector, kinds, exclude, take } ranks the live entries of this pool by cosine similarity to the vector, nudged by their quality, and answers POOL_FOUND with the best ones, no model call. SIGNAL { id, signal } counts a play, like, hide, right or wrong answer on an entry and retires it once it has been played enough and most of its outcomes are hides or wrong answers. The pool name, kinds, bucket and key prefix and the quality knobs are config, so the same mechanism serves any app that pools generated behaviors.",
+  egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:9000", "https://s3.us-east-1.amazonaws.com"]
 ]
 ;; @capabilities "behavior pool, shared generated content, retrieve by meaning, reuse generated behaviors, quality signals, retire bad content"
 
@@ -27,6 +28,9 @@ type PoolWrite = {
   key : string
   value : behavior
 }
+
+uses Llm from "std/behaviors/std-llm"
+uses Storage from "std/behaviors/std-storage"
 
 orbital AgentPoolOrbital {
   config {
@@ -90,6 +94,91 @@ orbital AgentPoolOrbital {
     createdAt : number = 0
   }
 
+  trait AgentPoolLlm = Llm.traits.LlmClient {
+    listens {
+      AgentPoolWriter.LLM_EMBED -> LLM_EMBED
+    }
+  }
+
+  trait AgentPoolStorage = Storage.traits.StorageClient {
+    listens {
+      AgentPoolWriter.STORAGE_UPLOAD -> STORAGE_UPLOAD
+      STORAGE_RESOLVE {
+        mode : string!
+        bucket : string!
+        hasFile : boolean!
+        fileName : string!
+        fileSize : number!
+        fileType : string!
+        hasContent : boolean!
+        raw : string!
+        key : string!
+        contentType : string!
+        acl : string!
+        maxSize : number!
+        batch : string!
+      }
+      STORAGE_PUT {
+        mode : string!
+        bucket : string!
+        key : string!
+        b64 : string!
+        contentType : string!
+        size : number!
+        isPublic : boolean!
+        fileName : string!
+        fileSize : number!
+        fileKind : string!
+        batch : string!
+      }
+      STORAGE_PUT_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      STORAGE_PUT_PRESIGNED {
+        url : string!
+        key : string!
+      }
+      STORAGE_PUT_DONE {
+        url : string!
+        state : string!
+      }
+      STORAGE_BATCH_NEXT {
+        batch : string!
+      }
+      STORAGE_DOWNLOAD_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      STORAGE_LIST_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      STORAGE_DELETE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      STORAGE_SIGNED_REPLIED {
+        url : string!
+        key : string
+      }
+      STORAGE_HTTP_ERROR {
+        text : string!
+      }
+      STORAGE_HTTP_FAILED {
+        error : string!
+        kind : string!
+        credential : string
+        key : string
+      }
+    }
+  }
+
   trait AgentPoolWriter -> AgentPoolHost [lifecycle, instance] {
     initial: ready
 
@@ -118,13 +207,12 @@ orbital AgentPoolOrbital {
     state keeping {
       INIT -> ready
       PRINTED -> keeping
-        (call-service storage upload { bucket: @config.bucketName, key: @entity.pending.key, content: ?result, contentType: "text/plain" } {
-          emit: { failure: STEP_FAILED, success: UPLOADED }
-        })
+        (emit STORAGE_UPLOAD { bucket: @config.bucketName, key: @entity.pending.key, content: ?result, contentType: "text/plain" })
       UPLOADED -> indexing
-        (call-service llm embed { texts: [@entity.pending.description] } {
-          emit: { failure: STEP_FAILED, success: EMBEDDED }
-        })
+        (emit LLM_EMBED { texts: (array/prepend [] @entity.pending.description) })
+      STORAGE_REJECTED -> ready
+        (emit WRITE_FAILED { name: @entity.pending.name, error: ?message })
+        (render-ui toast { message: ?message, type: alert, variant: warning })
       STEP_FAILED -> ready
         (emit WRITE_FAILED { name: @entity.pending.name, error: ?error })
         (render-ui toast { message: ?error, type: alert, variant: warning })
@@ -152,6 +240,9 @@ orbital AgentPoolOrbital {
         (emit WRITE_FAILED { name: @entity.pending.name, error: "The model returned no embedding" })
         (render-ui toast { message: "The model returned no embedding", type: alert, variant: warning })
       POOL_WRITTEN -> ready
+      EMBED_FAILED -> ready
+        (emit WRITE_FAILED { name: @entity.pending.name, error: ?message })
+        (render-ui toast { message: ?message, type: alert, variant: warning })
       STEP_FAILED -> ready
         (emit WRITE_FAILED { name: @entity.pending.name, error: ?error })
         (render-ui toast { message: ?error, type: alert, variant: warning })
@@ -190,13 +281,18 @@ orbital AgentPoolOrbital {
         result : string!
       }
         @tier "internal"
-      UPLOADED {
+      STORAGE_UPLOAD -> external {
+        bucket : string
         key : string
+        content : string
+        contentType : string
       }
+        @description "Ask std-storage to keep the pooled behavior's printed source."
         @tier "internal"
-      EMBEDDED {
-        embeddings : [[number]]!
+      LLM_EMBED -> external {
+        texts : [string]!
       }
+        @description "Ask std-llm to embed the pooled behavior's description."
         @tier "internal"
       STEP_FAILED {
         error : string!
@@ -215,6 +311,24 @@ orbital AgentPoolOrbital {
       }
         @description "Pool a behavior that was just built and validated: its value, its name, its kind, what it is about, the extra fields its build wrote and the description its vector embeds."
         @synonyms "pool, save generated, keep behavior"
+      AgentPoolLlm.LLM_EMBED_RESULT -> EMBEDDED
+      AgentPoolLlm.LLM_FAILED -> EMBED_FAILED
+      AgentPoolStorage.STORAGE_UPLOADED -> UPLOADED
+      AgentPoolStorage.STORAGE_FAILED -> STORAGE_REJECTED
+      UPLOADED {
+        key : string!
+      }
+      STORAGE_REJECTED {
+        code : string
+        message : string!
+      }
+      EMBEDDED {
+        embeddings : [[number]]!
+      }
+      EMBED_FAILED {
+        code : string
+        message : string!
+      }
     }
   }
 
@@ -351,5 +465,5 @@ orbital AgentPoolOrbital {
     }
   }
 
-  page "/agent-pool" as AgentPoolPage -> AgentPoolWriter, AgentPoolSearch, AgentPoolSignal
+  page "/agent-pool" as AgentPoolPage -> AgentPoolWriter, AgentPoolSearch, AgentPoolSignal, AgentPoolLlm, AgentPoolStorage
 }

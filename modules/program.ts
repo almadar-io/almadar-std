@@ -3,8 +3,8 @@
  *
  * A program is a quoted S-expression (`quote` / `quasiquote`). `program/read`
  * parses `.lolo` text into one, `program/print` formats one back to `.lolo`, and
- * `program/eval` validates one (the same 0-error / 0-warning gate as
- * `orb validate`) and writes it into the workspace, returning its traits as
+ * `program/validate` reports whether one passes the same 0-error / 0-warning gate as
+ * `orb validate` without writing, `program/eval` validates one and writes it into the workspace, returning its traits as
  * values or the validator's errors as data. `program/compose` assembles several
  * programs into one app (core `composeAppFromFiles`: pages, layout, wiring, nav).
  * A program is `.orb` IR; an orbital value at `orbitals[i]` stands for its import
@@ -16,7 +16,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { EMIT_ENVELOPE, list } from '../signature.js';
+import { BOOLEAN, EMIT_ENVELOPE, NUMBER, STRING, list, openShape, shape } from '../signature.js';
 
 const EMIT_OPTIONS: NonNullable<StdOperatorMeta['params']>[number] = { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true };
 
@@ -58,6 +58,25 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["program/eval", "@entity.program", { "emit": { "success": "BUILT", "failure": "BUILD_FAILED" } }]',
   },
+  'program/validate': {
+    module: 'program', category: 'std-program',
+    minArity: 1, maxArity: 3,
+    description: 'Validate a program (`.orb` IR) at the same 0-error / 0-warning bar as `program/eval`, without writing anything. Success always carries `{ valid, errors, warnings }`: `valid` is true only when both lists are empty, each finding is `{ code, message, path?, line?, column? }`. A `prior` program keeps ids stable, and `final` checks it as a finished app.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: shape({
+      valid: BOOLEAN,
+      errors: list(openShape({ code: STRING, message: STRING })),
+      warnings: list(openShape({ code: STRING, message: STRING })),
+    }),
+    params: [
+      { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
+      { name: 'options', type: EMIT_ENVELOPE, description: 'An optional prior program (`prior`) and `final` flag', optional: true },
+      EMIT_OPTIONS,
+    ],
+    example: '["program/validate", "@entity.program", { "emit": { "success": "CHECKED", "failure": "CHECK_FAILED" } }]',
+  },
   'program/step': {
     module: 'program', category: 'std-program',
     minArity: 2, maxArity: 3,
@@ -72,6 +91,54 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       EMIT_OPTIONS,
     ],
     example: '["program/step", "@entity.program", [{ "orbital": "Editor", "trait": "Modes", "from": "NORMAL", "event": "KEY", "payload": { "key": "i" } }], { "emit": { "success": "STEPPED", "failure": "STEP_FAILED" } }]',
+  },
+  'program/inputs': {
+    module: 'program', category: 'std-program',
+    minArity: 0, maxArity: 2,
+    description: 'Reflect the running program\'s declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: shape({
+      inputs: list(openShape({ orbital: STRING, trait: STRING, event: STRING, address: STRING, payloadSchema: list(openShape({ name: STRING, type: STRING })), parameters: openShape({ type: STRING }) })),
+      entities: list(STRING),
+      selected: list(openShape({ orbital: STRING, trait: STRING, event: STRING, address: STRING, payloadSchema: list(openShape({ name: STRING, type: STRING })), parameters: openShape({ type: STRING }) })),
+    }),
+    params: [
+      { name: 'options', type: openShape({ select: list(openShape({ event: STRING })) }), description: 'An optional selection (`select`) of inputs to reflect with a stated payload', optional: true },
+      EMIT_OPTIONS,
+    ],
+    example: '["program/inputs", { "select": [{ "event": "Chat.ADD_NOTE" }] }, { "emit": { "success": "INPUTS_KNOWN", "failure": "INPUTS_FAILED" } }]',
+  },
+  'program/dispatch': {
+    module: 'program', category: 'std-program',
+    minArity: 1, maxArity: 4,
+    description: 'Dispatch one declared external input AS THE CURRENT USER, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition).',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: openShape({ ok: BOOLEAN, error: STRING, emitted: list(openShape({ event: STRING })) }),
+    params: [
+      { name: 'address', type: STRING, description: 'The input to dispatch: `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`' },
+      { name: 'arguments', type: STRING, description: 'The payload as JSON text, as a model sends it (a payload object is accepted too); absent or empty is no payload', optional: true },
+      { name: 'options', type: openShape({ schema: list(openShape({ name: STRING, type: STRING })) }), description: 'An optional stated payload (`schema`) the arguments are checked against before dispatch', optional: true },
+      EMIT_OPTIONS,
+    ],
+    example: '["program/dispatch", "@payload.address", "@payload.arguments", { "emit": { "success": "DISPATCHED", "failure": "DISPATCH_FAILED" } }]',
+  },
+  'persist/read-named': {
+    module: 'program', category: 'std-program',
+    minArity: 1, maxArity: 2,
+    description: 'Read the rows of a persisted entity chosen at run time, through its `@read` policy for the current user (only the rows they may read), oldest first. The name must be one of the program\'s persisted entities, otherwise the effect fails with a typed `unknown-entity` error in `errors`. Success carries `{ result: { entity, count, rows }, text }`.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: shape({ entity: STRING, count: NUMBER, rows: list(openShape({ id: STRING })) }),
+    params: [
+      { name: 'entity', type: STRING, description: 'The persisted entity to read, by name' },
+      EMIT_OPTIONS,
+    ],
+    example: '["persist/read-named", "@payload.entity", { "emit": { "success": "ROWS_READ", "failure": "ROWS_REFUSED" } }]',
   },
   'program/compose': {
     module: 'program', category: 'std-program',

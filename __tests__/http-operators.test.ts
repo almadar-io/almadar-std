@@ -15,7 +15,12 @@ describe('http effect', () => {
     expect(http.effect?.kind).toBe('http');
     expect(http.effect?.produces).toEqual({
       kind: 'object',
-      fields: { status: 'number', headers: { kind: 'map', key: 'string', value: 'string' }, body: 'string' },
+      fields: {
+        status: 'number',
+        headers: { kind: 'map', key: 'string', value: 'string' },
+        body: 'string',
+        key: { kind: 'union', of: ['string', { kind: 'literal', value: null }] },
+      },
     });
   });
 
@@ -44,9 +49,11 @@ describe('codec operators', () => {
   const encoding = { kind: 'union', of: [{ kind: 'literal', value: 'hex' }, { kind: 'literal', value: 'base64' }] };
   const cases: Array<[string, number, string[]]> = [
     ['str/encode-uri-component', 1, ['s']],
+    ['str/decode-uri-component', 1, ['s']],
     ['base64/encode', 1, ['s']],
     ['base64/decode', 1, ['s']],
     ['hash/sha256', 2, ['s', 'encoding']],
+    ['hash/md5', 2, ['bytes', 'encoding']],
     ['hmac/sha256', 3, ['key', 'message', 'encoding']],
   ];
 
@@ -66,10 +73,66 @@ describe('codec operators', () => {
 
   it('types the encoding argument as the hex|base64 literal union', () => {
     expect(STD_OPERATORS['hash/sha256'].params?.[1]?.type).toEqual(encoding);
+    expect(STD_OPERATORS['hash/md5'].params?.[1]?.type).toEqual(encoding);
     expect(STD_OPERATORS['hmac/sha256'].params?.[2]?.type).toEqual(encoding);
   });
 
   it('control: an unregistered sibling is absent', () => {
-    expect(STD_OPERATORS['hash/md5']).toBeUndefined();
+    expect(STD_OPERATORS['hash/md4']).toBeUndefined();
+  });
+});
+
+describe('redis effect', () => {
+  const redis = STD_OPERATORS['redis'];
+  const params = redis.params ?? [];
+
+  it('is a server effect of arity 2-4 over a list of text, producing a reply and its key', () => {
+    expect(redis.category).toBe('effect');
+    expect(redis.hasSideEffects).toBe(true);
+    expect(getOperatorRunsOn('redis')).toBe('server');
+    expect([redis.minArity, redis.maxArity]).toEqual([2, 4]);
+    expect(params.map((p) => p.name)).toEqual(['origin', 'command', 'options', 'more']);
+    expect(params[1].type).toEqual({ kind: 'array', of: 'string' });
+    expect(redis.effect?.kind).toBe('redis');
+    const produces = redis.effect?.produces;
+    expect(typeof produces === 'object' && produces.kind === 'object' ? Object.keys(produces.fields) : []).toEqual(['reply', 'key']);
+  });
+
+  it('types the reply as a union of text, number, null and lists nested three deep, never a generic type', () => {
+    const text = JSON.stringify(redis.effect?.produces);
+    expect(text).not.toMatch(/"(any|unknown|json)"/);
+    expect(text.match(/"kind":"array"/g)).toHaveLength(3);
+    expect(text).toContain('"number"');
+  });
+
+  it('control: only the connection and routing options are accepted, the cancelled route is not one', () => {
+    const options = JSON.stringify(params[2].type);
+    for (const name of ['auth', 'user', 'db', 'key', 'success', 'failure']) expect(options).toContain(`"${name}"`);
+    expect(options).not.toContain('cancelled');
+    expect(params[2].optional).toBe(true);
+  });
+});
+
+describe('postgres effect', () => {
+  const postgres = STD_OPERATORS['postgres'];
+  const params = postgres.params ?? [];
+
+  it('is a server effect of arity 3-5 over a statement and its bind list, producing rows, a count, columns and a key', () => {
+    expect(postgres.category).toBe('effect');
+    expect(postgres.hasSideEffects).toBe(true);
+    expect(getOperatorRunsOn('postgres')).toBe('server');
+    expect([postgres.minArity, postgres.maxArity]).toEqual([3, 5]);
+    expect(params.map((p) => p.name)).toEqual(['origin', 'sql', 'params', 'options', 'more']);
+    expect(postgres.effect?.kind).toBe('postgres');
+    const produces = postgres.effect?.produces;
+    expect(typeof produces === 'object' && produces.kind === 'object' ? Object.keys(produces.fields) : []).toEqual(['rows', 'rowCount', 'columns', 'key']);
+  });
+
+  it('types the options without a cancelled route and the rows without a generic type', () => {
+    const options = JSON.stringify(params[3].type);
+    for (const name of ['auth', 'user', 'database', 'tls', 'timeoutMs', 'key', 'success', 'failure']) expect(options).toContain(`"${name}"`);
+    expect(options).not.toContain('cancelled');
+    expect(JSON.stringify(postgres.effect?.produces)).not.toMatch(/"(any|unknown|json)"/);
+    expect(params[3].optional).toBe(true);
   });
 });

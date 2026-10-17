@@ -1,0 +1,101 @@
+app std-race [
+  version: "1.0.0",
+  description: "std-race — first outcome wins. START names the keys of the asks the caller has started; the first ITEM_SUCCEEDED ends the race with WON and every other key is cancelled. With ignoreFailures on, a failure only drops its key and the race fails with ALL_FAILED when none is left; with it off, the first failure ends the race as LOST. Replaces the retired async/race operator."
+]
+orbital RaceOrbital {
+  entity RaceRun [runtime] {
+    id : string!
+    runningKeys : [CallKey] @description "Keys started and not yet settled." = []
+    lastError : string @description "The latest failure's error." = ""
+  }
+
+  trait Race -> @rebindable RaceRun [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.runningKeys [])
+        (set @entity.lastError "")
+      START -> racing when (> (array/len ?keys) 0)
+        (set @entity.runningKeys ?keys)
+        (set @entity.lastError "")
+    }
+
+    state racing {
+      INIT -> idle
+        (set @entity.runningKeys [])
+        (set @entity.lastError "")
+      ITEM_SUCCEEDED -> idle when (array/includes @entity.runningKeys ?key)
+        (emit WON { key: ?key })
+        (cancel-call (array/removeItem @entity.runningKeys ?key))
+        (set @entity.runningKeys [])
+      ITEM_FAILED -> idle when (and (array/includes @entity.runningKeys ?key) (not @config.ignoreFailures))
+        (emit LOST { key: ?key, error: ?error })
+        (cancel-call (array/removeItem @entity.runningKeys ?key))
+        (set @entity.runningKeys [])
+      ITEM_FAILED -> racing when (and (array/includes @entity.runningKeys ?key) @config.ignoreFailures (> (array/len @entity.runningKeys) 1))
+        (set @entity.runningKeys (array/removeItem @entity.runningKeys ?key))
+        (set @entity.lastError ?error)
+      ITEM_FAILED -> idle when (and (array/includes @entity.runningKeys ?key) @config.ignoreFailures (== (array/len @entity.runningKeys) 1))
+        (emit ALL_FAILED { error: ?error })
+        (set @entity.runningKeys [])
+      CANCEL -> idle
+        (cancel-call @entity.runningKeys)
+        (set @entity.runningKeys [])
+    }
+
+    emits {
+      WON -> external {
+        key : CallKey!
+      }
+        @description "This key succeeded first."
+        @synonyms "winner, first, fastest"
+        @tier "domain"
+      LOST -> external {
+        key : CallKey!
+        error : string
+      }
+        @description "This key failed first and failures are not ignored."
+        @synonyms "first failure, aborted"
+        @tier "domain"
+      ALL_FAILED -> external {
+        error : string
+      }
+        @description "Every key failed; error is the last failure's."
+        @synonyms "none won, everything failed"
+        @tier "domain"
+    }
+
+    listens {
+      START {
+        keys : [CallKey]!
+      }
+        @description "Begin the race over the keys the caller has just started."
+        @synonyms "begin, run, compete"
+      ITEM_SUCCEEDED {
+        key : CallKey!
+      }
+        @description "One ask's success outcome."
+        @synonyms "one done, resolved"
+      ITEM_FAILED {
+        key : CallKey!
+        error : string
+      }
+        @description "One ask's failure outcome."
+        @synonyms "one failed, rejected"
+      CANCEL { }
+        @description "Abandon the race; every ask still running is cancelled."
+        @synonyms "stop, abort"
+    }
+
+    config {
+      ignoreFailures : boolean = true
+        @label "Skip failures?"
+        @description "On: a failure only removes its key; the race fails when no key is left. Off: the first failure ends the race."
+        @synonyms "tolerate errors, first success"
+        @tier "policy"
+    }
+  }
+
+  page "/race" as RacePage -> Race
+}

@@ -1,6 +1,7 @@
 app std-behavior-catalog [
   version: "1.3.0",
-  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the query is embedded with `call-service llm embed` and ranked by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block."
+  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the query is embedded with std-llm (LLM_EMBED) and ranked by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind"
 
@@ -40,6 +41,8 @@ type BehaviorDescription = {
   orbitals : [DescribedOrbital]!
 }
 
+uses Llm from "std/behaviors/std-llm"
+
 orbital BehaviorCatalogOrbital {
 
   entity BehaviorCatalogView [runtime] {
@@ -52,6 +55,12 @@ orbital BehaviorCatalogOrbital {
     error : string = ""
     selected : [string] = []
     status : "loading" | "ready" | "searching" | "describing" | "failed" = loading
+  }
+
+  trait BehaviorCatalogLlm = Llm.traits.LlmClient {
+    listens {
+      BehaviorCatalog.LLM_EMBED -> LLM_EMBED
+    }
   }
 
   trait BehaviorCatalog -> @rebindable BehaviorCatalogView [interaction, instance] {
@@ -222,9 +231,7 @@ orbital BehaviorCatalogOrbital {
       SEARCH -> searching when (!= ?searchTerm "")
         (set @entity.query ?searchTerm)
         (set @entity.status searching)
-        (call-service llm embed { texts: [?searchTerm] } {
-          emit: { success: EMBEDDED, failure: SEARCH_FAILED }
-        })
+        (emit LLM_EMBED { texts: (array/prepend [] ?searchTerm) })
       PICK -> ready
         (emit PICKED { behavior: ?behavior, description: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) description ""), trait: (array/first (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) traits [])), value: (object/get (array/find @entity.entries (fn e (= @e.behavior ?behavior))) value) })
       TOGGLE -> ready when ?checked
@@ -263,9 +270,9 @@ orbital BehaviorCatalogOrbital {
         (render-ui toast { type: alert, variant: error, message: "Search is unavailable: the model returned no embedding." })
         (emit CATALOG_SHOWN {})
       SEARCH_FAILED -> ready
-        (set @entity.error ?error)
+        (set @entity.error ?message)
         (set @entity.status ready)
-        (render-ui toast { type: alert, variant: error, message: (str/concat "Search failed: " ?error) })
+        (render-ui toast { type: alert, variant: error, message: (str/concat "Search failed: " ?message) })
         (emit CATALOG_SHOWN {})
     }
 
@@ -321,12 +328,11 @@ orbital BehaviorCatalogOrbital {
       LIST_FAILED {
         error : string!
       }
-      EMBEDDED {
-        embeddings : [[number]]!
+      LLM_EMBED -> external {
+        texts : [string]!
       }
-      SEARCH_FAILED {
-        error : string!
-      }
+        @description "Ask std-llm to embed the search query."
+        @tier "internal"
       DESCRIBED {
         result : BehaviorDescription!
       }
@@ -336,6 +342,15 @@ orbital BehaviorCatalogOrbital {
     }
 
     listens {
+      BehaviorCatalogLlm.LLM_EMBED_RESULT -> EMBEDDED
+      BehaviorCatalogLlm.LLM_FAILED -> SEARCH_FAILED
+      EMBEDDED {
+        embeddings : [[number]]!
+      }
+      SEARCH_FAILED {
+        code : string
+        message : string!
+      }
       SEARCH {
         searchTerm : string!
       }
@@ -356,5 +371,5 @@ orbital BehaviorCatalogOrbital {
     }
   }
 
-  page "/behavior-catalog" as BehaviorCatalogPage -> BehaviorCatalog
+  page "/behavior-catalog" as BehaviorCatalogPage -> BehaviorCatalog, BehaviorCatalogLlm
 }

@@ -1,6 +1,7 @@
 app std-agent-suggestions [
   version: "1.0.0",
-  description: "std-agent-suggestions — an agent that proactively proposes things to the signed-in person, who accepts or dismisses each one. The agent proposes through one declared input, PROPOSE_SUGGESTION (its @description is the tool text): a kind, a title, a body that gives its reasoning, an optional action (a name the app routes) with a payload, an optional href, and a subject (what it is about). A suggestion's signature is kind:action:subject; a signature that was ever proposed to this person, accepted or dismissed included, is never stored again (SUGGESTION_DUPLICATE), and no more than `maxPending` wait at once (SUGGESTION_LIMIT_REACHED). `kinds` and `actions`, when listed, are the only values accepted (SUGGESTION_REJECTED). The agent runs on its own: any trait emitting SUGGESTIONS_TRIGGERED (or an app event routed into AgentSuggestionTrigger's TRIGGERED by re-binding that trait in the import body with `omit { AgentSuggestionTrigger }` and its own `listens`) asks for a run, and once `cooldownMinutes` have passed since this person's last run a second std-agent-tool-loop answers `prompt` with `tools` as the signed-in person — `quiet`, so it streams no live steps and toasts no failure, and its reply and failure are renamed PROACTIVE_REPLIED / PROACTIVE_FAILED so they never reach the assistant's chat. AgentSuggestionInbox lists the pending suggestions with Accept and Dismiss and an empty state that offers to look again (SUGGESTIONS_ANALYZE_REQUESTED). Accept stores accepted, emits SUGGESTION_ACCEPTED { action, payload, href, … } for the app to route (and navigates to `href` when the suggestion has one); Dismiss stores dismissed and emits SUGGESTION_DISMISSED. The inbox renders into `panelSlot`: `main` inline (the content of a std-panel-launcher), or `modal`/`drawer` opened with OPEN and closed with CLOSE (set std-app-layout's notificationClickEvent, or a topBarActions event, to SUGGESTIONS_OPEN_REQUESTED). Import the orbital once per app: `orbital Suggestions = Suggest.orbitals.AgentSuggestionsOrbital { entity MySuggestion  entities { AgentSuggestionRun: MySuggestionRun } config { … } }`, retargeting the records onto owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create/@update); a suggestion's proposer, inbox and trigger read only the rows whose ownerId is the signed-in person. PROPOSE_SUGGESTION's refusals (SUGGESTION_DUPLICATE, SUGGESTION_LIMIT_REACHED, SUGGESTION_REJECTED) are the agent's tool response; no trait listens to them. Suggestion kinds, actions and prompts are the app's vocabulary, declared in config."
+  description: "std-agent-suggestions — an agent that proactively proposes things to the signed-in person, who accepts or dismisses each one. The agent proposes through one declared input, PROPOSE_SUGGESTION (its @description is the tool text): a kind, a title, a body that gives its reasoning, an optional action (a name the app routes) with a payload, an optional href, and a subject (what it is about). A suggestion's signature is kind:action:subject; a signature that was ever proposed to this person, accepted or dismissed included, is never stored again (SUGGESTION_DUPLICATE), and no more than `maxPending` wait at once (SUGGESTION_LIMIT_REACHED). `kinds` and `actions`, when listed, are the only values accepted (SUGGESTION_REJECTED). The agent runs on its own: any trait emitting SUGGESTIONS_TRIGGERED (or an app event routed into AgentSuggestionTrigger's TRIGGERED by re-binding that trait in the import body with `omit { AgentSuggestionTrigger }` and its own `listens`) asks for a run, and once `cooldownMinutes` have passed since this person's last run a second std-agent-tool-loop answers `prompt` with `tools` as the signed-in person — `quiet`, so it streams no live steps and toasts no failure, and its reply and failure are renamed PROACTIVE_REPLIED / PROACTIVE_FAILED so they never reach the assistant's chat. AgentSuggestionInbox lists the pending suggestions with Accept and Dismiss and an empty state that offers to look again (SUGGESTIONS_ANALYZE_REQUESTED). Accept stores accepted, emits SUGGESTION_ACCEPTED { action, payload, href, … } for the app to route (and navigates to `href` when the suggestion has one); Dismiss stores dismissed and emits SUGGESTION_DISMISSED. The inbox renders into `panelSlot`: `main` inline (the content of a std-panel-launcher), or `modal`/`drawer` opened with OPEN and closed with CLOSE (set std-app-layout's notificationClickEvent, or a topBarActions event, to SUGGESTIONS_OPEN_REQUESTED). Import the orbital once per app: `orbital Suggestions = Suggest.orbitals.AgentSuggestionsOrbital { entity MySuggestion  entities { AgentSuggestionRun: MySuggestionRun } config { … } }`, retargeting the records onto owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create/@update); a suggestion's proposer, inbox and trigger read only the rows whose ownerId is the signed-in person. PROPOSE_SUGGESTION's refusals (SUGGESTION_DUPLICATE, SUGGESTION_LIMIT_REACHED, SUGGESTION_REJECTED) are the agent's tool response; no trait listens to them. Suggestion kinds, actions and prompts are the app's vocabulary, declared in config.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "proactive suggestions, agent recommendations, suggestion inbox, next best action, accept or dismiss suggestions, notification bell suggestions, agent proposals"
 
@@ -50,8 +51,57 @@ type RunRow = {
   ranAt : number
 }
 
+type LlmToolCall = { id : string!, name : string!, arguments : string! }
+type AgentToolKind = "input" | "read" | "invalid"
+type AgentToolCallActivity = {
+  type : "tool_call"!
+  tool : string!
+  kind : AgentToolKind
+  argsText : string!
+  timestamp : number!
+  isExecuting : boolean
+}
+type AgentToolResultActivity = {
+  type : "tool_result"!
+  tool : string!
+  kind : AgentToolKind
+  success : boolean!
+  detail : string
+  rows : number
+  resultText : string!
+  timestamp : number!
+}
+type AgentLlmCall = {
+  service : string!
+  provider : string!
+  model : string!
+  systemPrompt : string!
+  userPrompt : string!
+  toolCallsJson : string
+  attempt : number
+  durationMs : number!
+  promptTokens : number
+  completionTokens : number
+  cachedPromptTokens : number
+  costUSD : number
+}
+type AgentLlmResponseActivity = {
+  type : "llm_response"!
+  content : string!
+  llm : AgentLlmCall
+  timestamp : number!
+}
+type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
+type AgentUsage = {
+  promptTokens : number!
+  completionTokens : number!
+  totalTokens : number!
+  modelCalls : number!
+}
+
 orbital AgentSuggestionsOrbital {
   uses Loop from "std/behaviors/std-agent-tool-loop"
+  uses Llm from "std/behaviors/std-llm"
 
   type SuggestionsLoaded = Event { data : [SuggestionRow] } "Fired when the person's suggestions finish loading"
   type SuggestionsLoadFailed = Event { error : string, code : string } "Fired when the suggestions fail to load"
@@ -770,7 +820,6 @@ orbital AgentSuggestionsOrbital {
       instructions: @config.instructions
       maxSteps: @config.maxSteps
       quiet: true
-      cancelKey: "agent-suggestions"
     }
     events {
       ASSISTANT_REPLIED: PROACTIVE_REPLIED
@@ -778,10 +827,42 @@ orbital AgentSuggestionsOrbital {
     }
     listens {
       AgentSuggestionRunner.SUGGESTION_RUN_STARTED -> CONVERSE
+      AgentSuggestionLlm.LLM_TOOLS_REQUESTED -> ToolsRequested
+      AgentSuggestionLlm.LLM_TOOLS_STEP -> ToolsStep
+      AgentSuggestionLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
+      AgentSuggestionLlm.LLM_FAILED -> ToolsFailed
+      AgentSuggestionLlm.LLM_CANCELLED -> ToolsCancelled
+      ToolsRequested {
+        session : string!
+        calls : [LlmToolCall]!
+      }
+      ToolsStep {
+        activity : AgentActivity!
+      }
+      ToolsReplied {
+        reply : string!
+        steps : [AgentActivity]!
+        usage : AgentUsage!
+      }
+      ToolsFailed {
+        code : string
+        message : string!
+      }
+      ToolsCancelled {
+        key : string!
+      }
     }
   }
 
-  page "/agent-suggestions" as AgentSuggestionsPage -> AgentSuggestionInbox, AgentSuggestionProposer, AgentSuggestionTrigger, AgentSuggestionRunner, AgentSuggestionLoop
+  trait AgentSuggestionLlm = Llm.traits.LlmClient {
+    listens {
+      AgentSuggestionLoop.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
+      AgentSuggestionLoop.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
+      AgentSuggestionLoop.LLM_CANCEL -> LLM_CANCEL
+    }
+  }
+
+  page "/agent-suggestions" as AgentSuggestionsPage -> AgentSuggestionInbox, AgentSuggestionProposer, AgentSuggestionTrigger, AgentSuggestionRunner, AgentSuggestionLoop, AgentSuggestionLlm
 }
 
 ;; The suggestions and run records live outside AgentSuggestionsOrbital, so a consumer

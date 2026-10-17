@@ -1,0 +1,83 @@
+app std-debounce [
+  version: "1.0.0",
+  description: "std-debounce — collapse a burst of INPUTs into one SETTLED emitted after quietMs without a new INPUT. maxWaitMs bounds how long a steady burst may postpone it (0 = unbounded). Replaces the retired async/debounce and os/debounce operators."
+]
+orbital DebounceOrbital {
+  entity DebounceBurst [runtime] {
+    id : string!
+    deadline : number @description "Epoch milliseconds at which SETTLED fires; 0 while idle." = 0
+    firstAt : number @description "Epoch milliseconds of the first INPUT in the burst." = 0
+    count : number @description "INPUTs absorbed by the burst." = 0
+  }
+
+  trait Debounce -> @rebindable DebounceBurst [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.deadline 0)
+        (set @entity.count 0)
+      INPUT -> pending
+        (set @entity.firstAt @now)
+        (set @entity.count 1)
+        (set @entity.deadline (+ @now @config.quietMs))
+    }
+
+    state pending {
+      INIT -> idle
+        (set @entity.deadline 0)
+        (set @entity.count 0)
+      INPUT -> pending
+        (set @entity.count (+ @entity.count 1))
+        (set @entity.deadline (if (> @config.maxWaitMs 0) (math/min (+ @now @config.quietMs) (+ @entity.firstAt @config.maxWaitMs)) (+ @now @config.quietMs)))
+      CANCEL -> idle
+        (set @entity.deadline 0)
+        (set @entity.count 0)
+      TIMER_DUE -> idle
+        (emit SETTLED { count: @entity.count })
+        (set @entity.deadline 0)
+        (set @entity.count 0)
+    }
+
+    emits {
+      SETTLED -> external {
+        count : number!
+      }
+        @description "The burst went quiet (or hit maxWaitMs); count is how many INPUTs it absorbed."
+        @synonyms "quiet, done typing, burst over"
+        @tier "domain"
+      TIMER_DUE -> internal { }
+        @tier "internal"
+    }
+
+    listens {
+      INPUT { }
+        @description "One event of the burst; each restarts the quiet period."
+        @synonyms "keystroke, change, trigger"
+      CANCEL { }
+        @description "Drop the pending burst without emitting SETTLED."
+        @synonyms "stop, abort, flush away"
+    }
+
+    ticks {
+      quietCheck every 100ms
+        when (and (> @entity.deadline 0) (>= @now @entity.deadline))
+        (emit TIMER_DUE { })
+    }
+
+    config {
+      quietMs : number = 300
+        @label "Quiet period (ms)"
+        @description "Silence required after the last INPUT before SETTLED. Resolution is the 100ms deadline check."
+        @synonyms "wait, delay, idle time"
+        @tier "domain"
+      maxWaitMs : number = 0
+        @label "Longest postponement (ms)"
+        @description "Upper bound from the first INPUT to SETTLED; 0 disables the bound."
+        @synonyms "max wait, cap"
+        @tier "policy"
+    }
+  }
+
+  page "/debounce" as DebouncePage -> Debounce
+}

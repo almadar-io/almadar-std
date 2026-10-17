@@ -1,0 +1,191 @@
+app std-feed-ranking [
+  version: "1.0.0",
+  description: "std-feed-ranking — pages a ranked feed from candidates the caller supplies. FEED_RANK sorts the due items (most overdue first), the frontier (unlearned, every prerequisite learned enough, by layer then sequence then name) and the explore items into three buckets, lifts the neighbours of liked items, skips hidden and already-served items, interleaves the buckets by the mix and answers one page with a cursor for the next."
+]
+type FeedStrings = [string]
+type FeedCandidate = { key : string, name : string, layer : number, sequence : number, mastery : number, dueAt : number?, prerequisites : [string], neighbours : [string], liked : boolean, hidden : boolean, lastSeen : number? }
+type FeedCandidates = [FeedCandidate]
+type FeedExploreItem = { key : string, name : string }
+type FeedExploreItems = [FeedExploreItem]
+type FeedMix = { review : number, frontier : number, explore : number }
+type FeedPick = { key : string, source : string }
+type FeedPicks = [FeedPick]
+type FeedCursor = { seen : [string], asOf : number }
+type FeedRound = { picks : [FeedPick], r : number, f : number, e : number }
+orbital FeedRankingOrbital {
+  entity FeedRun [runtime] {
+    id : string!
+  }
+
+  trait FeedRanker -> FeedRun [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      FEED_RANK -> idle
+        (let ((limit (if (= ?limit null) @config.defaultLimit ?limit))
+              (mix (if (= ?mix null) { review: @config.mixReview, frontier: @config.mixFrontier, explore: @config.mixExplore } ?mix)))
+          (let ((b64 (if (= ?cursor null) "" (str/padEnd (str/replaceAll (str/replaceAll ?cursor "-" "+") "_" "/") (* 4 (math/ceil (/ (str/len ?cursor) 4))) "="))))
+            (let ((cursorOk (or (= ?cursor null) (and (base64/valid @b64) (!= (json/parse (base64/decode @b64) FeedCursor) null)))))
+              (let ((decoded (if (and (!= ?cursor null) @cursorOk) (json/parse (base64/decode @b64) FeedCursor) null)))
+                (emit FeedPrepared {
+                  reason: (if (not (and (= @limit (math/floor @limit)) (>= @limit @config.limitMin) (<= @limit @config.limitMax))) "bad-limit" (if (or (< (object/get @mix review 0) 0) (< (object/get @mix frontier 0) 0) (< (object/get @mix explore 0) 0)) "bad-mix" (if @cursorOk "" "bad-cursor")))
+                  candidates: ?candidates
+                  explore: (if (= ?explore null) (json/parse "[]" FeedExploreItems) ?explore)
+                  limit: @limit
+                  mix: @mix
+                  seen: (if (= @decoded null) (json/parse "[]" FeedStrings) (object/get @decoded seen (json/parse "[]" FeedStrings)))
+                  asOf: (if (= @decoded null) @now (object/get @decoded asOf 0))
+                })))))
+      FeedPrepared -> idle when (!= ?reason "")
+        (emit FEED_REJECTED { reason: ?reason })
+      FeedPrepared -> idle when (= ?reason "")
+        (let ((liftedKeys (array/unique (array/flatten (array/map (array/filter ?candidates (fn c (object/get @c liked false))) (fn c (object/get @c neighbours (json/parse "[]" FeedStrings)))))))
+              (cooldownMs (* @config.seenCooldownHours 3600000)))
+          (let ((revList (let ((due (array/sort
+                      (array/filter ?candidates (fn c (and
+                        (not (object/get @c hidden false))
+                        (not (array/includes ?seen (object/get @c key "")))
+                        (!= (object/get @c dueAt null) null)
+                        (>= ?asOf (object/get @c dueAt 0)))))
+                      dueAt asc)))
+                    (array/concat
+                      (array/filter @due (fn c (array/includes @liftedKeys (object/get @c key ""))))
+                      (array/reject @due (fn c (array/includes @liftedKeys (object/get @c key "")))))))
+                (frList (let ((ranked (array/sort (array/sort (array/sort
+                      (array/map (array/filter ?candidates (fn c (and
+                        (not (object/get @c hidden false))
+                        (not (array/includes ?seen (object/get @c key "")))
+                        (not (and (!= (object/get @c lastSeen null) null) (< (- ?asOf (object/get @c lastSeen 0)) @cooldownMs)))
+                        (= (object/get @c mastery 0) @config.frontierMastery)
+                        (array/every (object/get @c prerequisites (json/parse "[]" FeedStrings))
+                          (fn p (>= (object/get (array/find ?candidates (fn x (= (object/get @x key "") @p))) mastery 0) @config.prerequisiteMastery))))))
+                      (fn c (object/merge @c { nameKey: (str/collate-key (object/get @c name "")) }))) nameKey asc) sequence asc) layer asc)))
+                    (array/concat
+                      (array/filter @ranked (fn c (array/includes @liftedKeys (object/get @c key ""))))
+                      (array/reject @ranked (fn c (array/includes @liftedKeys (object/get @c key ""))))))))
+            (let ((offered (array/reject ?explore (fn x (array/includes ?seen (object/get @x key ""))))))
+              (let ((run (array/reduce (array/range 0 ?limit) { picks: (json/parse "[]" FeedPicks), r: 0, f: 0, e: 0 }
+                    (fn acc i
+                      (let ((picks0 (object/get @acc picks (json/parse "[]" FeedPicks)))
+                            (r0 (object/get @acc r 0))
+                            (f0 (object/get @acc f 0))
+                            (e0 (object/get @acc e 0)))
+                        (let ((nr (math/max 0 (math/min (object/get ?mix review 0) (- (array/len @revList) @r0) (- ?limit (array/len @picks0))))))
+                          (let ((p1 (array/concat @picks0 (array/map (array/slice @revList @r0 (+ @r0 @nr)) (fn c { key: (object/get @c key ""), source: "review" })))))
+                            (let ((nf (math/max 0 (math/min (object/get ?mix frontier 0) (- (array/len @frList) @f0) (- ?limit (array/len @p1))))))
+                              (let ((p2 (array/concat @p1 (array/map (array/slice @frList @f0 (+ @f0 @nf)) (fn c { key: (object/get @c key ""), source: "frontier" })))))
+                                (let ((ne (math/max 0 (math/min (object/get ?mix explore 0) (- (array/len @offered) @e0) (- ?limit (array/len @p2))))))
+                                  {
+                                    picks: (array/concat @p2 (array/map (array/slice @offered @e0 (+ @e0 @ne)) (fn c { key: (object/get @c key ""), source: "explore" })))
+                                    r: (+ @r0 @nr)
+                                    f: (+ @f0 @nf)
+                                    e: (+ @e0 @ne)
+                                  }))))))))))
+                (emit FEED_RANKED {
+                  picks: (object/get @run picks (json/parse "[]" FeedPicks))
+                  nextCursor: (if (or (< (object/get @run r 0) (array/len @revList)) (< (object/get @run f 0) (array/len @frList)) (< (object/get @run e 0) (array/len @offered)))
+                    (str/replaceAll (str/replaceAll (str/replaceAll (base64/encode (str/concat "{\"seen\":" (json/stringify (array/concat ?seen (array/map (object/get @run picks (json/parse "[]" FeedPicks)) (fn p (object/get @p key ""))))) ",\"asOf\":" ?asOf "}")) "+" "-") "/" "_") "=" "")
+                    null)
+                })))))
+
+    emits {
+      FEED_RANKED -> external {
+        picks : [FeedPick]!
+        nextCursor : string
+      }
+        @description "One page of the feed: the picked item keys, each tagged review, frontier or explore, in serving order, and a cursor for the next page (absent when nothing is left)."
+        @synonyms "feed page, ranked items, next cards"
+        @tier "primary"
+      FEED_REJECTED -> external {
+        reason : string!
+      }
+        @description "The request was refused: bad-limit, bad-mix or bad-cursor."
+        @synonyms "feed refused, invalid cursor"
+        @tier "primary"
+      FeedPrepared {
+        reason : string!
+        candidates : [FeedCandidate]!
+        explore : [FeedExploreItem]!
+        limit : number!
+        mix : FeedMix!
+        seen : [string]!
+        asOf : number!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      FEED_RANK -> external {
+        candidates : [FeedCandidate]!
+        explore : [FeedExploreItem]
+        limit : number
+        mix : FeedMix
+        cursor : string
+      }
+        @description "Rank the supplied candidates and answer one page; send the cursor of the previous page to continue, and the same candidates."
+        @synonyms "rank feed, next page, build feed"
+        @tier "domain"
+      FeedPrepared {
+        reason : string!
+        candidates : [FeedCandidate]!
+        explore : [FeedExploreItem]!
+        limit : number!
+        mix : FeedMix!
+        seen : [string]!
+        asOf : number!
+      }
+    }
+
+    config {
+      defaultLimit : number = 8
+        @label "Default page size"
+        @description "Items per page when the request names no limit."
+        @synonyms "page size, cards per page"
+        @tier "domain"
+      limitMin : number = 1
+        @label "Smallest page size"
+        @description "A request limit below this is refused."
+        @synonyms "minimum limit"
+        @tier "domain"
+      limitMax : number = 20
+        @label "Largest page size"
+        @description "A request limit above this is refused."
+        @synonyms "maximum limit"
+        @tier "domain"
+      mixReview : number = 3
+        @label "Due items per round"
+        @description "How many due items each round of the interleave takes."
+        @synonyms "review share, review weight"
+        @tier "domain"
+      mixFrontier : number = 4
+        @label "Frontier items per round"
+        @description "How many frontier items each round takes."
+        @synonyms "frontier share, next-up weight"
+        @tier "domain"
+      mixExplore : number = 1
+        @label "Explore items per round"
+        @description "How many explore items each round takes."
+        @synonyms "explore share, discovery weight"
+        @tier "domain"
+      seenCooldownHours : number = 12
+        @label "Seen cooldown in hours"
+        @description "A frontier item seen more recently than this is held back."
+        @synonyms "repeat gap, resurface delay"
+        @tier "domain"
+      frontierMastery : number = 0
+        @label "Frontier mastery"
+        @description "The mastery level an item must be at to be a frontier item."
+        @synonyms "unlearned level"
+        @tier "domain"
+      prerequisiteMastery : number = 2
+        @label "Prerequisite mastery"
+        @description "The mastery every prerequisite of a frontier item must have reached."
+        @synonyms "ready level, required mastery"
+        @tier "domain"
+    }
+  }
+
+  page "/feed-ranking" as FeedRankingPage -> FeedRanker
+}

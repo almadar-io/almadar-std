@@ -1,7 +1,10 @@
 app std-ml-classify [
   version: "1.0.0",
-  description: "Generative rung (R5) — structured LLM verdict from a closed category set, via the llm.classify service seam. Bottom of the fall-through: always answers or fails, never abstains."
+  description: "Generative rung (R5) — structured LLM verdict from a closed category set, through std-llm (LLM_CLASSIFY). Bottom of the fall-through: always answers or fails, never abstains.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
+
+uses Llm from "std/behaviors/std-llm"
 
 orbital MlClassifyOrbital {
 
@@ -22,6 +25,12 @@ orbital MlClassifyOrbital {
     errorMessage : string   = ""
     request      : DecisionRequest = {}
     status       : "idle" | "classifying" | "done" = idle
+  }
+
+  trait ClassifyLlm = Llm.traits.LlmClient {
+    listens {
+      ClassifyRun.LLM_CLASSIFY -> LLM_CLASSIFY
+    }
   }
 
   trait ClassifyRun -> ClassifierVerdict [lifecycle, instance] {
@@ -52,8 +61,7 @@ orbital MlClassifyOrbital {
         (set @entity.text ?text)
         (set @entity.request ?request)
         (set @entity.status classifying)
-        (call-service "llm" "classify" { text: ?text, categories: @config.categories, model: @config.model }
-          { emit: { success: CLASSIFIED_RAW, failure: CLASSIFY_CALL_FAILED } })
+        (emit LLM_CLASSIFY { text: ?text, categories: @config.categories, model: @config.model })
     }
 
     state classifying {
@@ -76,10 +84,10 @@ orbital MlClassifyOrbital {
         (set @entity.category "")
         (set @entity.confidence 0)
         (set @entity.reasoning "")
-        (set @entity.errorMessage ?error)
+        (set @entity.errorMessage ?message)
         (set @entity.status done)
         (emit CLASSIFY_FAILED { error: @entity.errorMessage })
-        (notify error (str/concat "Couldn't classify — " ?error))
+        (notify error (str/concat "Couldn't classify — " ?message))
     }
 
     state done {
@@ -96,18 +104,12 @@ orbital MlClassifyOrbital {
     }
 
     emits {
-      CLASSIFIED_RAW {
-        category   : string!
-        confidence : number!
-        reasoning  : string!
+      LLM_CLASSIFY -> external {
+        text : string!
+        categories : [string]!
+        model : string
       }
-        @description "Raw llm.classify service result, flattened onto the payload by the call-service effect executor"
-        @tier "secondary"
-
-      CLASSIFY_CALL_FAILED {
-        error : string!
-      }
-        @description "call-service classify failure signal"
+        @description "Ask std-llm to classify the text into the closed category set"
         @tier "secondary"
 
       CLASSIFIED -> external {
@@ -126,6 +128,17 @@ orbital MlClassifyOrbital {
     }
 
     listens {
+      ClassifyLlm.LLM_CLASSIFY_RESULT -> CLASSIFIED_RAW
+      ClassifyLlm.LLM_FAILED -> CLASSIFY_CALL_FAILED
+      CLASSIFIED_RAW {
+        category   : string!
+        confidence : number!
+        reasoning  : string!
+      }
+      CLASSIFY_CALL_FAILED {
+        code : string
+        message : string!
+      }
       CLASSIFY {
         text : string!
         request : DecisionRequest
@@ -133,5 +146,5 @@ orbital MlClassifyOrbital {
     }
   }
 
-  page "/ml-classify" as MlClassifyPage -> ClassifyRun
+  page "/ml-classify" as MlClassifyPage -> ClassifyRun, ClassifyLlm
 }

@@ -1,0 +1,152 @@
+app std-api-keys [
+  version: "1.0.0",
+  description: "std-api-keys — mints an API key. MINT_KEY carries the key row's own fields as name/value pairs (owner, label, creator: whatever the keyEntity requires); the atom draws 32 bytes from the host CSPRNG, derives the plaintext as the prefix plus the sha256 hex of the draw (64 hex characters), hashes it with scrypt (N 16384, r 8, p 1, 32 bytes) over the salt exactly as @almadar/auth hashes a presented bearer, persists the row with id = that hash and lastFour set, and answers API_KEY_MINTED {plaintext, keyHash, lastFour} once: the plaintext is never stored. The salt is a secret knob: the kernel resolves its value inside hash/scrypt, so the program never holds it. A missing or malformed salt, a failed draw or a failed write answers API_KEY_FAILED with the cause. Verification stays in @almadar/auth (apiKeyVerifier), which accepts every key minted here."
+]
+type KeyField = { name : string!, value : string! }
+orbital ApiKeysOrbital {
+    type MINT_KEY = Event { extra : [KeyField]! } "Mint one key: extra holds the key row's own fields as name/value pairs; id and lastFour are set by the atom."
+
+    type API_KEY_MINTED = Event { plaintext : string!, keyHash : string!, lastFour : string! } "A key was minted and its row persisted; plaintext is shown to its owner once and never stored."
+
+    type API_KEY_FAILED = Event { code : string, message : string! } "No key was minted: the salt credential is missing or not hex, the draw failed or the row could not be written."
+
+  entity ApiKeyRecord [persistent: api_keys] {
+    id : string! @description "The key's scrypt hash: what a presented bearer is looked up by."
+    lastFour : string @description "The key's last four characters, shown to tell keys apart; the key itself is never stored." = ""
+    label : string @description "A name the owner gave the key." = ""
+    owner : string @description "Who the key acts as." = ""
+    revoked : boolean @description "Whether the key has been revoked and no longer works." = false
+    expiresAt : number @description "When the key stops working, in epoch milliseconds; 0 means never." = 0
+  }
+
+  entity ApiKeyMint [runtime] {
+    id : string!
+    extra : [KeyField] @description "The row fields of the mint in flight." = []
+    plaintext : string @description "The new key until API_KEY_MINTED carries it; cleared right after." = ""
+    keyHash : string @description "The new key's hash." = ""
+    lastFour : string @description "The new key's last four characters." = ""
+  }
+
+  trait ApiKeyMinter -> ApiKeyMint [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      MINT_KEY -> drawing
+        (set @entity.extra ?extra)
+        (random-bytes 32 { emit: { success: SEED_DRAWN, failure: SEED_FAILED } })
+    }
+
+    state drawing {
+      INIT -> idle
+
+      SEED_DRAWN -> saving
+        (let (
+            (plaintext (str/concat @config.prefix (hash/sha256 ?value "hex")))
+            (keyHash (hash/scrypt (str/concat @config.prefix (hash/sha256 ?value "hex")) @config.salt)))
+          (if (= @keyHash null)
+            (emit SALT_UNUSABLE {})
+            (do
+              (set @entity.plaintext @plaintext)
+              (set @entity.keyHash @keyHash)
+              (set @entity.lastFour (str/slice @plaintext (- (str/len @plaintext) 4)))
+              (persist create @config.keyEntity (array/reduce @entity.extra { id: @keyHash, lastFour: (str/slice @plaintext (- (str/len @plaintext) 4)) } (fn (row field) (object/set @row (object/get @field name) (object/get @field value)))) {
+                emit: { success: KEY_SAVED, failure: KEY_NOT_SAVED }
+              }))))
+      SEED_FAILED -> idle
+        (emit API_KEY_FAILED { code: null, message: ?error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "API key not minted: " ?error) })
+    }
+
+    state saving {
+      INIT -> idle
+
+      SALT_UNUSABLE -> idle
+        (emit API_KEY_FAILED { code: null, message: "The API key salt credential is missing or is not non-empty hex" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key not minted: the salt credential is missing or not hex" })
+      KEY_SAVED -> idle
+        (emit API_KEY_MINTED { plaintext: @entity.plaintext, keyHash: @entity.keyHash, lastFour: @entity.lastFour })
+        (set @entity.plaintext "")
+      KEY_NOT_SAVED -> idle
+        (set @entity.plaintext "")
+        (emit API_KEY_FAILED { code: ?code, message: ?error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "API key not minted: " ?error) })
+    }
+
+    emits {
+      API_KEY_MINTED -> external {
+        plaintext : string!
+        keyHash : string!
+        lastFour : string!
+      }
+        @description "A key was minted and its row persisted. The plaintext is carried once; the owner must copy it now."
+        @synonyms "api key created, key minted, new api key"
+        @tier "primary"
+      API_KEY_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "No key was minted: the salt credential is missing or not hex, the CSPRNG draw failed, or the row could not be written."
+        @synonyms "api key failed, mint failed"
+        @tier "primary"
+      SEED_DRAWN {
+        value : string!
+      }
+        @description "Internal: 32 CSPRNG bytes, base64url."
+        @tier "secondary"
+      SEED_FAILED {
+        error : string!
+      }
+        @description "Internal: the draw failed."
+        @tier "secondary"
+      SALT_UNUSABLE
+        @description "Internal: the salt credential is missing or not hex, so no hash was made."
+        @tier "secondary"
+      KEY_SAVED {
+        id : string!
+      }
+        @description "Internal: the key row is persisted."
+        @tier "secondary"
+      KEY_NOT_SAVED {
+        error : string!
+        code : string
+      }
+        @description "Internal: the key row could not be written."
+        @tier "secondary"
+    }
+
+    listens {
+      MINT_KEY {
+        extra : [KeyField]!
+      }
+        @description "Mint one API key; extra holds the key row's own fields as name/value pairs."
+        @synonyms "create api key, mint key, new api key"
+    }
+
+    config {
+      keyEntity : entity = ApiKeyRecord
+        @label "Key entity"
+        @description "The persisted key row. It must supply id and lastFour; every other field arrives in MINT_KEY's extra pairs, as text."
+        @synonyms "key record, api key row"
+        @tier "domain"
+      salt : secret = "ALMADAR_API_KEY_SALT"
+        @label "Hash salt"
+        @description "Name of the credential holding the hex salt API keys are hashed with. The server verifying keys (apiKeyVerifier) must hold the same value."
+        @synonyms "api key salt, hashing salt"
+        @tier "infra"
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a key it could not mint; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      prefix : string = "sk_live_"
+        @label "Key prefix"
+        @description "What every key starts with; a presented bearer with this prefix is routed to the key verifier."
+        @synonyms "key prefix, bearer prefix"
+        @tier "infra"
+    }
+  }
+
+  page "/keys" as ApiKeysPage -> ApiKeyMinter
+}

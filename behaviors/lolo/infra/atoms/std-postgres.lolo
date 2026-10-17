@@ -1,0 +1,136 @@
+app std-postgres [
+  version: "1.0.0",
+  description: "std-postgres — one read-only SQL query on a real Postgres server, through the kernel's postgres effect (the wire protocol over the host's raw TCP; TLS when `tls` is on). PG_QUERY carries one SELECT (or WITH ... SELECT) and its bind values for $1, $2, ...; the kernel's read-only guard refuses anything that writes before it connects. PG_RESULT answers the rows (maps of column name to value), the row count and the columns with their type OIDs. A statement that is refused, a server error (with its SQLSTATE), an unreachable server or a rejected login answers PG_FAILED. Values: booleans, numbers, null, text and lists of those; an int8 past 2^53, numeric, json, jsonb, uuid, date, time, timestamp and every other type arrive as the text Postgres prints, timestamptz as UTC ISO text and bytea as base64. Apps declare their Postgres origin in their own egress list; the entry in this file is a placeholder, and a call to an undeclared origin is refused by the kernel and answers PG_FAILED.",
+  egress: ["postgres://postgres.example.test:5432"]
+]
+type PgScalar = string | number | boolean
+type PgCell = PgScalar | [PgScalar] | [[PgScalar]] | [[[PgScalar]]]
+type PgColumn = { name : string, typeOid : number }
+orbital PostgresOrbital {
+  entity PostgresCall [runtime] {
+    id : string!
+  }
+
+  trait PostgresClient -> PostgresCall [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      PG_QUERY -> idle when (!= @payload.sql "")
+        (if @config.authenticated
+          (postgres @config.origin @payload.sql (or @payload.params []) { auth: @config.password, user: @config.user, database: (if (!= @config.database "") @config.database null), tls: @config.tls, timeoutMs: @config.statementTimeoutMs } { key: "query", emit: { success: PG_QUERIED, failure: PG_CALL_FAILED } })
+          (postgres @config.origin @payload.sql (or @payload.params []) { user: @config.user, database: (if (!= @config.database "") @config.database null), tls: @config.tls, timeoutMs: @config.statementTimeoutMs } { key: "query", emit: { success: PG_QUERIED, failure: PG_CALL_FAILED } }))
+      PG_QUERY -> idle when (= @payload.sql "")
+        (emit PG_FAILED { kind: "refused", code: null, message: "sql is required" })
+      PG_QUERIED -> idle
+        (emit PG_RESULT { rows: @payload.rows, rowCount: @payload.rowCount, columns: @payload.columns })
+      PG_CALL_FAILED -> idle
+        (emit PG_FAILED { kind: @payload.kind, code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Postgres unavailable: " @payload.error) })
+    }
+
+    emits {
+      PG_RESULT -> external {
+        rows : [Map string PgCell]!
+        rowCount : number!
+        columns : [PgColumn]!
+      }
+        @description "The statement ran: the rows as maps of column name to value, how many rows the command counted and the result columns in order with their Postgres type OIDs."
+        @synonyms "query result, rows returned, select result"
+        @tier "primary"
+      PG_FAILED -> external {
+        kind : string!
+        code : string
+        message : string!
+      }
+        @description "The query did not complete: the kind (refused for an empty or non-read-only statement, unconfigured, timeout, failed, protocol, unsupported, postgres), the SQLSTATE when the server answered an error (42P01, 57014, 28P01, ...) and the message."
+        @synonyms "query failed, database error, read-only violation, statement timeout"
+        @tier "primary"
+      PG_QUERIED {
+        rows : [Map string PgCell]!
+        rowCount : number!
+        columns : [PgColumn]!
+        key : string!
+      }
+        @description "Internal: the postgres effect's result."
+        @tier "secondary"
+      PG_CALL_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        credential : string
+        key : string!
+      }
+        @description "Internal: the postgres effect's failure."
+        @tier "secondary"
+    }
+
+    listens {
+      PG_QUERY -> external {
+        sql : string!
+        params : [PgCell]
+      }
+        @description "Run one read-only SELECT; params bind $1, $2, ... in order."
+        @synonyms "run query, select rows, read from database"
+      PG_QUERIED {
+        rows : [Map string PgCell]!
+        rowCount : number!
+        columns : [PgColumn]!
+        key : string!
+      }
+      PG_CALL_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        credential : string
+        key : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a failed query; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "postgres://postgres.example.test:5432"
+        @label "Postgres origin"
+        @description "The Postgres server as postgres://host[:port] (no path). Must be declared in the app egress list."
+        @synonyms "database url, postgres host, database server"
+        @tier "infra"
+      authenticated : boolean = true
+        @label "Authenticate"
+        @description "Answer the server's password request with the password credential; when false the server must trust the connection and the credential is not read."
+        @synonyms "use password, require auth, protected server"
+        @tier "infra"
+      password : secret = "PG_PASSWORD"
+        @label "Password credential"
+        @description "The credential name the host resolves to the role's password (cleartext, MD5 and SCRAM-SHA-256 logins); required when authenticated is true."
+        @synonyms "database password, connection ref, auth secret"
+        @tier "infra"
+      user : string = "postgres"
+        @label "Role"
+        @description "The Postgres role to log in as."
+        @synonyms "database user, role, username"
+        @tier "infra"
+      database : string = ""
+        @label "Database"
+        @description "The database to connect to; empty uses the role's own name."
+        @synonyms "database name, schema database"
+        @tier "infra"
+      tls : boolean = false
+        @label "TLS"
+        @description "Ask the server for TLS (SSLRequest) and encrypt the connection with the kernel's TLS before logging in."
+        @synonyms "ssl, encrypted connection, secure database"
+        @tier "infra"
+      statementTimeoutMs : number = 10000
+        @label "Statement timeout (ms)"
+        @description "Milliseconds the server lets a statement run before it cancels it (SQLSTATE 57014)."
+        @synonyms "query timeout, statement timeout"
+        @tier "infra"
+    }
+  }
+
+  page "/postgres" as PostgresPage -> PostgresClient
+}

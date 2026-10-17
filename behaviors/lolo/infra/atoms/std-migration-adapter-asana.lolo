@@ -1,0 +1,305 @@
+app std-migration-adapter-asana [
+  version: "1.0.0",
+  description: "std-migration-adapter-asana — the Asana project-export adapter of a migration run. Each fetched document is Asana's JSON project export: a bare task array, or an object { data: [...], name } whose name titles the project. The project becomes a folder unit (titled with the export name, or the document ref when it has none, carrying the top-level task count); each task becomes a root unit under it and each subtask, at any depth, a section unit under its parent task, carrying the notes as content and source, completed, dueOn, assignee and section as metadata. Units come out in document order, a task before its subtasks. A task with no name, subtasks included, is left out of the units and ledgered in skipped with the reason. A document that is not a task array or a data object fails the whole run with MIGRATION_EXTRACT_FAILED. Answers std-migration-job's MIGRATION_EXTRACT when the profile's adapter is asana."
+]
+orbital MigrationAdapterAsanaOrbital {
+  type ImportFieldValue = string | number | boolean
+  type ImportRawDocument = { ref : string!, raw : string! }
+  type ImportSkip = { ref : string!, reason : string! }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, content : string, parentRef : string, metadata : Map string ImportFieldValue, source : string!, span : string }
+  type AsanaSection = { name : string }
+  type AsanaMembership = { section : AsanaSection }
+  type AsanaAssignee = { name : string }
+  type AsanaTask = { gid : string, name : string, notes : string, completed : boolean, due_on : string, assignee : AsanaAssignee, memberships : [AsanaMembership], subtasks : [AsanaTask], num_subtasks : number }
+  type AsanaTasks = [AsanaTask]
+  type AsanaEnvelope = { data : [AsanaTask], name : string }
+  type AsanaDocument = { ref : string!, ok : boolean!, valid : boolean!, projectName : string, tasks : [AsanaTask] }
+  type AsanaFrame = { task : AsanaTask, index : number!, parentRef : string!, kind : "root" | "section", docRef : string!, key : string! }
+  type AsanaRow = { key : string!, unit : ExtractedUnit }
+  type AsanaSkipRow = { key : string!, skip : ImportSkip }
+
+  entity MigrationAdapterAsanaRun [runtime] {
+    id : string!
+    documents : [AsanaDocument] = []
+    frontier : [AsanaFrame] = []
+    rows : [AsanaRow] = []
+    skips : [AsanaSkipRow] = []
+    level : number = 0
+  }
+
+  trait MigrationAdapterAsana -> MigrationAdapterAsanaRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.documents [])
+        (set @entity.frontier [])
+        (set @entity.rows [])
+        (set @entity.skips [])
+        (set @entity.level 0)
+
+      MIGRATION_EXTRACT -> idle when (= ?adapter "asana")
+        (set
+          @entity.documents
+          (array/map
+            ?documents
+            (fn d
+              (if
+                (not (json/valid (object/get @d raw)))
+                { ref: (object/get @d ref), ok: false, valid: false, projectName: "", tasks: [] }
+                (if
+                  (str/startsWith (str/trim (object/get @d raw)) "[")
+                  {
+                    ref: (object/get @d ref),
+                    ok: true,
+                    valid: true,
+                    projectName: "",
+                    tasks: (json/parse (object/get @d raw) AsanaTasks)
+                  }
+                  (if
+                    (str/startsWith (str/trim (object/get @d raw)) "{")
+                    (let ((env (json/parse (object/get @d raw) AsanaEnvelope)))
+                      {
+                        ref: (object/get @d ref),
+                        ok: (validate/array (object/get @env data)),
+                        valid: true,
+                        projectName: (if (validate/string (object/get @env name)) (object/get @env name) ""),
+                        tasks: (if (validate/array (object/get @env data)) (object/get @env data) [])
+                      })
+                    { ref: (object/get @d ref), ok: false, valid: true, projectName: "", tasks: [] }))))))
+        (emit ASANA_PARSED {})
+
+      ASANA_PARSED -> idle when (array/some @entity.documents (fn d (not (object/get @d ok))))
+        (emit MIGRATION_EXTRACT_FAILED { error: (if (object/get (array/find @entity.documents (fn d (not (object/get @d ok)))) valid) "Asana export must be a task array or { data: Task[] }" "Asana export is not valid JSON") })
+
+      ASANA_PARSED -> walking when (array/every @entity.documents (fn d (object/get @d ok)))
+        (set
+          @entity.rows
+          (array/map
+            @entity.documents
+            (fn d p
+              {
+                key: (str/padStart (str/concat @p) 8 "0"),
+                unit: {
+                        ref: (str/concat "asana:" (object/get @d ref)),
+                        kind: folder,
+                        title: (if
+                                 (!= (object/get @d projectName) "")
+                                 (object/get @d projectName)
+                                 (object/get @d ref)),
+                        content: null,
+                        parentRef: null,
+                        source: "asana",
+                        span: (object/get @d ref),
+                        metadata: { source: "asana", taskCount: (array/len (object/get @d tasks)) }
+                      }
+              })))
+        (set @entity.skips [])
+        (set
+          @entity.frontier
+          (array/flatten
+            (array/map
+              @entity.documents
+              (fn d p
+                (array/map
+                  (array/range (array/len (object/get @d tasks)))
+                  (fn i
+                    {
+                      task: (array/nth (object/get @d tasks) @i),
+                      index: @i,
+                      parentRef: (str/concat "asana:" (object/get @d ref)),
+                      kind: root,
+                      docRef: (object/get @d ref),
+                      key: (str/concat
+                             (str/padStart (str/concat @p) 8 "0")
+                             "."
+                             (str/padStart (str/concat @i) 8 "0"))
+                    }))))))
+        (set @entity.level 0)
+        (emit ASANA_STEP { level: 0 })
+    }
+
+    state walking {
+      INIT -> idle
+        (set @entity.documents [])
+        (set @entity.frontier [])
+        (set @entity.rows [])
+        (set @entity.skips [])
+        (set @entity.level 0)
+
+      ASANA_STEP -> walking when (> (array/len @entity.frontier) 0)
+        (set
+          @entity.rows
+          (array/concat
+            @entity.rows
+            (array/map
+              (array/filter
+                @entity.frontier
+                (fn f
+                  (and
+                    (and
+                      (!= (object/get (object/get @f task) name "") null)
+                      (!= (object/get (object/get @f task) name "") ""))
+                    (!= (str/trim (object/get (object/get @f task) name "")) ""))))
+              (fn f
+                (let ((t (object/get @f task)))
+                  {
+                    key: (object/get @f key),
+                    unit: {
+                            ref: (str/concat
+                                   "asana:"
+                                   (object/get @f docRef)
+                                   ":"
+                                   (if
+                                     (validate/string (object/get (object/get @f task) gid))
+                                     (object/get (object/get @f task) gid)
+                                     (str/concat "task-" (object/get @f index)))),
+                            kind: (object/get @f kind),
+                            title: (object/get @t name),
+                            content: (if
+                                       (and
+                                         (validate/required (object/get @t notes ""))
+                                         (!= (object/get @t notes "") ""))
+                                       (object/get @t notes)
+                                       null),
+                            parentRef: (object/get @f parentRef),
+                            source: "asana",
+                            span: (str/concat
+                                    (object/get @f docRef)
+                                    "#"
+                                    (if
+                                      (validate/string (object/get (object/get @f task) gid))
+                                      (object/get (object/get @f task) gid)
+                                      (str/concat (object/get @f index)))),
+                            metadata: (object/merge
+                                        {
+                                          source: "asana",
+                                          completed: (not (not (object/get @t completed false)))
+                                        }
+                                        (object/fromEntries
+                                          (array/map
+                                            (array/filter
+                                              [
+                                               { k: "dueOn", v: (object/get @t due_on "") },
+                                               { k: "assignee", v: (object/get @t "assignee.name" "") },
+                                               {
+                                                 k: "section",
+                                                 v: (object/get @t "memberships.0.section.name" "")
+                                               }
+                                              ]
+                                              (fn q
+                                                (and (!= (object/get @q v) null) (!= (object/get @q v) ""))))
+                                            (fn q [(object/get @q k), (object/get @q v)]))))
+                          }
+                  })))))
+        (set
+          @entity.skips
+          (array/concat
+            @entity.skips
+            (array/map
+              (array/filter
+                @entity.frontier
+                (fn f
+                  (not
+                    (and
+                      (and
+                        (!= (object/get (object/get @f task) name "") null)
+                        (!= (object/get (object/get @f task) name "") ""))
+                      (!= (str/trim (object/get (object/get @f task) name "")) "")))))
+              (fn f
+                {
+                  key: (object/get @f key),
+                  skip: {
+                          ref: (str/concat
+                                 "asana:"
+                                 (object/get @f docRef)
+                                 ":"
+                                 (if
+                                   (validate/string (object/get (object/get @f task) gid))
+                                   (object/get (object/get @f task) gid)
+                                   (str/concat "task-" (object/get @f index)))),
+                          reason: "task has no name"
+                        }
+                }))))
+        (set
+          @entity.frontier
+          (array/flatten
+            (array/map
+              (array/filter
+                @entity.frontier
+                (fn f
+                  (and
+                    (and
+                      (!= (object/get (object/get @f task) name "") null)
+                      (!= (object/get (object/get @f task) name "") ""))
+                    (!= (str/trim (object/get (object/get @f task) name "")) ""))))
+              (fn f
+                (array/map
+                  (array/range (array/len (object/get (object/get @f task) subtasks [])))
+                  (fn j
+                    {
+                      task: (array/nth (object/get (object/get @f task) subtasks []) @j),
+                      index: @j,
+                      parentRef: (str/concat
+                                   "asana:"
+                                   (object/get @f docRef)
+                                   ":"
+                                   (if
+                                     (validate/string (object/get (object/get @f task) gid))
+                                     (object/get (object/get @f task) gid)
+                                     (str/concat "task-" (object/get @f index)))),
+                      kind: section,
+                      docRef: (object/get @f docRef),
+                      key: (str/concat (object/get @f key) "." (str/padStart (str/concat @j) 8 "0"))
+                    }))))))
+        (set @entity.level (+ @entity.level 1))
+        (emit ASANA_STEP { level: @entity.level })
+
+      ASANA_STEP -> idle when (= (array/len @entity.frontier) 0)
+        (emit
+          MIGRATION_EXTRACTED
+          {
+            units: (array/map (array/sort @entity.rows "key") (fn r (object/get @r unit))),
+            skipped: (array/map (array/sort @entity.skips "key") (fn r (object/get @r skip)))
+          })
+    }
+
+    emits {
+      ASANA_PARSED {
+        ok : boolean
+      }
+        @description "Internal: the fetched documents are parsed into task lists and checked."
+        @tier "secondary"
+      ASANA_STEP {
+        level : number!
+      }
+        @description "Internal: one level of the task tree is turned into units and the next level's subtasks are queued; the run ends when no subtask is left."
+        @tier "secondary"
+      MIGRATION_EXTRACTED -> external {
+        units : [ExtractedUnit]!
+        skipped : [ImportSkip]!
+      }
+        @description "The Asana project extracted into a project folder, task units and nested subtask units, plus the ledger of tasks left out, in document order."
+        @synonyms "asana extracted, asana staging, asana units"
+        @tier "domain"
+      MIGRATION_EXTRACT_FAILED -> external {
+        error : string!
+      }
+        @description "A document is not an Asana project export, so the run cannot stage."
+        @synonyms "asana export invalid, asana parse failed"
+        @tier "domain"
+    }
+
+    listens {
+      MIGRATION_EXTRACT -> external {
+        adapter : string!
+        documents : [ImportRawDocument]!
+      }
+        @description "A migration run asks its profile's adapter to extract the fetched documents; this adapter answers when adapter is asana and ignores every other adapter."
+        @synonyms "extract documents, parse fetched documents"
+        @tier "domain"
+    }
+  }
+
+  page "/migration-adapter-asana" as MigrationAdapterAsanaPage -> MigrationAdapterAsana
+}

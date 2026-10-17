@@ -1,0 +1,974 @@
+app std-migration-adapter-markdown [
+  version: "1.0.0",
+  description: "std-migration-adapter-markdown — the markdown source adapter of a migration run. Each fetched document is one markdown file. A document becomes a root unit titled with its first level-1 heading (the document ref when a collection has none, 'document' for a lone document), whose content is the text before the first heading plus, when a single level-1 heading heads the file, the text under it; each further heading becomes a section unit nested by heading depth under the nearest shallower heading, with its own text as content, a slug (repeated slugs get -2, -3) and its line span as provenance. Headings inside fenced code blocks are text. Explicit pairs lift out of any body into qa units under their section and leave the body text: a Q:: line followed by an optional A:: line, and a **term** — definition line. Given several documents, the directory part of each ref becomes folder units, created once and nested, and a document nests under its directory's folder. A document with no title, body or heading is left out of the units and ledgered in skipped. Answers std-migration-job's MIGRATION_EXTRACT when the profile's adapter is markdown."
+]
+orbital MigrationAdapterMarkdownOrbital {
+  type ImportFieldValue = string | number | boolean
+  type ImportRawDocument = { ref : string!, raw : string! }
+  type ImportSkip = { ref : string!, reason : string! }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, content : string, parentRef : string, metadata : Map string ImportFieldValue, source : string!, span : string }
+  type MarkdownPair = { front : string!, back : string!, line : number! }
+  type MarkdownQa = { pairs : [MarkdownPair], remaining : string! }
+  type MarkdownSection = { heading : string!, depth : number!, headingLine : number!, bodyStartLine : number!, bodyEndLine : number!, body : string!, slug : string!, ref : string!, parentRef : string!, qa : MarkdownQa }
+  type MarkdownFolder = { path : string!, title : string!, parentRef : string }
+  type MarkdownDocument = { ref : string!, lineCount : number!, title : string!, titleFromHeading : boolean!, preamble : string!, titleBody : string!, titleBodyStart : number!, folderParent : string, newFolders : [MarkdownFolder], preQa : MarkdownQa, bodyQa : MarkdownQa, sections : [MarkdownSection] }
+
+  entity MigrationAdapterMarkdownRun [runtime] {
+    id : string!
+    documents : [MarkdownDocument] = []
+  }
+
+  trait MigrationAdapterMarkdown -> MigrationAdapterMarkdownRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.documents [])
+
+      MIGRATION_EXTRACT -> idle when (= ?adapter "markdown")
+        (set
+          @entity.documents
+          (array/map
+            ?documents
+            (fn d p
+              (let ((lines (str/split (object/get @d "raw") "\n"))
+                    (n (array/len @lines))
+                    (collection (> (array/len ?documents) 1))
+                    (docRef (str/concat "doc:" (object/get @d "ref")))
+                    (scan (array/reduce
+                           (array/range @n)
+                           { inFence: false, marker: "", heads: [] }
+                           (fn acc i
+                             (let ((line (array/nth @lines @i))
+                                   (tl (str/trimStart (array/nth @lines @i)))
+                                   (mk (str/slice @tl 0 3))
+                                   (isFence (or (str/startsWith @tl "```") (str/startsWith @tl "~~~"))))
+                               (if
+                                 @isFence
+                                 (if
+                                   (not (object/get @acc "inFence"))
+                                   { inFence: true, marker: @mk, heads: (object/get @acc "heads") }
+                                   (if
+                                     (= @mk (object/get @acc "marker"))
+                                     {
+                                       inFence: false,
+                                       marker: (object/get @acc "marker"),
+                                       heads: (object/get @acc "heads")
+                                     }
+                                     @acc))
+                                 (if
+                                   (object/get @acc "inFence")
+                                   @acc
+                                   (if
+                                     (validate/pattern @line "^#{1,6}\\s+[^\\r\\n\\u2028\\u2029]*?\\s*$")
+                                     (let ((depth (+
+                                                   1
+                                                   (array/count
+                                                     ["##", "###", "####", "#####", "######"]
+                                                     (fn pp (str/startsWith @line @pp))))))
+                                       {
+                                         inFence: false,
+                                         marker: (object/get @acc "marker"),
+                                         heads: (array/append
+                                                  (object/get @acc "heads")
+                                                  {
+                                                    heading: (str/trim (str/slice @line @depth)),
+                                                    depth: @depth,
+                                                    headingLine: (+ @i 1)
+                                                  })
+                                       })
+                                     @acc)))))))
+                    (heads (object/get @scan "heads"))
+                    (m (array/len @heads))
+                    (promote (and
+                              (> @m 0)
+                              (= (object/get (array/nth @heads 0) "depth") 1)
+                              (= (array/count @heads (fn x (= (object/get @x "depth") 1))) 1)))
+                    (startK (if @promote 1 0))
+                    (h1 (array/find @heads (fn x (= (object/get @x "depth") 1))))
+                    (fromHeading (and (!= @h1 null) (!= (object/get @h1 "heading" "") "")))
+                    (title (if
+                            @fromHeading
+                            (object/get @h1 "heading")
+                            (if @collection (object/get @d "ref") "document")))
+                    (firstHeadingLine (if (> @m 0) (object/get (array/nth @heads 0) "headingLine") (+ @n 1)))
+                    (preRaw (str/join (array/slice @lines 0 (- @firstHeadingLine 1)) "\n"))
+                    (secs (array/reduce
+                           (array/range @startK @m)
+                           { items: [], bases: [] }
+                           (fn acc k
+                             (let ((base (let ((s1 (str/replace-pattern
+                                                   (str/lower (object/get (array/nth @heads @k) "heading"))
+                                                   "[^a-z0-9]+"
+                                                   "-"))
+                                              (s2 (str/replace-pattern @s1 "^-+|-+$" "")))
+                                          (if (> (str/len @s2) 0) @s2 "section")))
+                                   (pidx (let ((c (array/filter
+                                                  (array/range @startK @k)
+                                                  (fn j
+                                                    (<
+                                                      (object/get (array/nth @heads @j) "depth")
+                                                      (object/get (array/nth @heads @k) "depth"))))))
+                                          (if (> (array/len @c) 0) (array/last @c) (- 0 1))))
+                                   (seen (array/count (object/get @acc "bases") (fn b (= @b @base))))
+                                   (parentRef (if
+                                               (< @pidx 0)
+                                               @docRef
+                                               (object/get
+                                                 (array/find
+                                                   (object/get @acc "items")
+                                                   (fn it (= (object/get @it "k") @pidx)))
+                                                 "ref")))
+                                   (slug (if (= @seen 0) @base (str/concat @base "-" (+ @seen 1)))))
+                               {
+                                 items: (array/append
+                                          (object/get @acc "items")
+                                          {
+                                            k: @k,
+                                            slug: @slug,
+                                            ref: (str/concat @parentRef "/h:" @slug),
+                                            parentRef: @parentRef
+                                          }),
+                                 bases: (array/append (object/get @acc "bases") @base)
+                               })))))
+                {
+                  ref: (object/get @d "ref"),
+                  lineCount: @n,
+                  title: @title,
+                  titleFromHeading: @fromHeading,
+                  preamble: (if (= (str/trim @preRaw) "") "" (str/replace-pattern @preRaw "^\\n+|\\n+$" "")),
+                  titleBody: (if
+                               @promote
+                               (str/replace-pattern
+                                 (str/join
+                                   (array/slice
+                                     @lines
+                                     (object/get (array/nth @heads 0) "headingLine")
+                                     (if
+                                       (< (+ 0 1) @m)
+                                       (- (object/get (array/nth @heads (+ 0 1)) "headingLine") 1)
+                                       @n))
+                                   "\n")
+                                 "\\n+$"
+                                 "")
+                               ""),
+                  titleBodyStart: (if @promote (+ (object/get (array/nth @heads 0) "headingLine") 1) 1),
+                  folderParent: (if
+                                  (and
+                                    @collection
+                                    (>
+                                      (array/len
+                                        (array/take
+                                          (array/filter
+                                            (str/split (object/get @d "ref") "/")
+                                            (fn s (!= @s "")))
+                                          (math/max
+                                            0
+                                            (-
+                                              (array/len
+                                                (array/filter
+                                                  (str/split (object/get @d "ref") "/")
+                                                  (fn s (!= @s ""))))
+                                              1))))
+                                      0))
+                                  (str/concat
+                                    "folder:"
+                                    (str/join
+                                      (array/take
+                                        (array/filter (str/split (object/get @d "ref") "/") (fn s (!= @s "")))
+                                        (math/max
+                                          0
+                                          (-
+                                            (array/len
+                                              (array/filter
+                                                (str/split (object/get @d "ref") "/")
+                                                (fn s (!= @s ""))))
+                                            1)))
+                                      "/"))
+                                  null),
+                  newFolders: (if
+                                @collection
+                                (array/map
+                                  (array/filter
+                                    (array/range
+                                      (array/len
+                                        (array/take
+                                          (array/filter
+                                            (str/split (object/get @d "ref") "/")
+                                            (fn s (!= @s "")))
+                                          (math/max
+                                            0
+                                            (-
+                                              (array/len
+                                                (array/filter
+                                                  (str/split (object/get @d "ref") "/")
+                                                  (fn s (!= @s ""))))
+                                              1)))))
+                                    (fn i
+                                      (not
+                                        (array/includes
+                                          (array/flatten
+                                            (array/map
+                                              (array/take ?documents @p)
+                                              (fn x
+                                                (array/map
+                                                  (array/range
+                                                    (array/len
+                                                      (array/take
+                                                        (array/filter
+                                                          (str/split (object/get @x "ref") "/")
+                                                          (fn s (!= @s "")))
+                                                        (math/max
+                                                          0
+                                                          (-
+                                                            (array/len
+                                                              (array/filter
+                                                                (str/split (object/get @x "ref") "/")
+                                                                (fn s (!= @s ""))))
+                                                            1)))))
+                                                  (fn i
+                                                    (str/join
+                                                      (array/take
+                                                        (array/take
+                                                          (array/filter
+                                                            (str/split (object/get @x "ref") "/")
+                                                            (fn s (!= @s "")))
+                                                          (math/max
+                                                            0
+                                                            (-
+                                                              (array/len
+                                                                (array/filter
+                                                                  (str/split (object/get @x "ref") "/")
+                                                                  (fn s (!= @s ""))))
+                                                              1)))
+                                                        (+ @i 1))
+                                                      "/"))))))
+                                          (str/join
+                                            (array/take
+                                              (array/take
+                                                (array/filter
+                                                  (str/split (object/get @d "ref") "/")
+                                                  (fn s (!= @s "")))
+                                                (math/max
+                                                  0
+                                                  (-
+                                                    (array/len
+                                                      (array/filter
+                                                        (str/split (object/get @d "ref") "/")
+                                                        (fn s (!= @s ""))))
+                                                    1)))
+                                              (+ @i 1))
+                                            "/")))))
+                                  (fn i
+                                    {
+                                      path: (str/join
+                                              (array/take
+                                                (array/take
+                                                  (array/filter
+                                                    (str/split (object/get @d "ref") "/")
+                                                    (fn s (!= @s "")))
+                                                  (math/max
+                                                    0
+                                                    (-
+                                                      (array/len
+                                                        (array/filter
+                                                          (str/split (object/get @d "ref") "/")
+                                                          (fn s (!= @s ""))))
+                                                      1)))
+                                                (+ @i 1))
+                                              "/"),
+                                      title: (array/nth
+                                               (array/take
+                                                 (array/filter
+                                                   (str/split (object/get @d "ref") "/")
+                                                   (fn s (!= @s "")))
+                                                 (math/max
+                                                   0
+                                                   (-
+                                                     (array/len
+                                                       (array/filter
+                                                         (str/split (object/get @d "ref") "/")
+                                                         (fn s (!= @s ""))))
+                                                     1)))
+                                               @i),
+                                      parentRef: (if
+                                                   (> @i 0)
+                                                   (str/concat
+                                                     "folder:"
+                                                     (str/join
+                                                       (array/take
+                                                         (array/take
+                                                           (array/filter
+                                                             (str/split (object/get @d "ref") "/")
+                                                             (fn s (!= @s "")))
+                                                           (math/max
+                                                             0
+                                                             (-
+                                                               (array/len
+                                                                 (array/filter
+                                                                   (str/split (object/get @d "ref") "/")
+                                                                   (fn s (!= @s ""))))
+                                                               1)))
+                                                         @i)
+                                                       "/"))
+                                                   null)
+                                    }))
+                                []),
+                  preQa: { pairs: [], remaining: "" },
+                  bodyQa: { pairs: [], remaining: "" },
+                  sections: (array/map
+                              (object/get @secs "items")
+                              (fn it
+                                (let ((k (object/get @it "k")))
+                                  {
+                                    heading: (object/get (array/nth @heads @k) "heading"),
+                                    depth: (object/get (array/nth @heads @k) "depth"),
+                                    headingLine: (object/get (array/nth @heads @k) "headingLine"),
+                                    bodyStartLine: (+ (object/get (array/nth @heads @k) "headingLine") 1),
+                                    bodyEndLine: (if
+                                                   (< (+ @k 1) @m)
+                                                   (-
+                                                     (object/get (array/nth @heads (+ @k 1)) "headingLine")
+                                                     1)
+                                                   @n),
+                                    body: (str/replace-pattern
+                                            (str/join
+                                              (array/slice
+                                                @lines
+                                                (object/get (array/nth @heads @k) "headingLine")
+                                                (if
+                                                  (< (+ @k 1) @m)
+                                                  (- (object/get (array/nth @heads (+ @k 1)) "headingLine") 1)
+                                                  @n))
+                                              "\n")
+                                            "\\n+$"
+                                            ""),
+                                    slug: (object/get @it "slug"),
+                                    ref: (object/get @it "ref"),
+                                    parentRef: (object/get @it "parentRef"),
+                                    qa: { pairs: [], remaining: "" }
+                                  })))
+                }))))
+        (set
+          @entity.documents
+          (array/map
+            @entity.documents
+            (fn d
+              (object/merge
+                @d
+                {
+                  preQa: (let ((ls (str/split (object/get @d "preamble") "\n"))
+                               (n (array/len @ls)))
+                           {
+                             pairs: (array/map
+                                      (array/filter
+                                        (array/range @n)
+                                        (fn i
+                                          (or
+                                            (validate/pattern
+                                              (array/nth @ls @i)
+                                              "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
+                                            (validate/pattern
+                                              (array/nth @ls @i)
+                                              "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
+                                      (fn i
+                                        (if
+                                          (validate/pattern
+                                            (array/nth @ls @i)
+                                            "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
+                                          {
+                                            front: (let ((rest (str/slice (array/nth @ls @i) 3)))
+                                                     (if
+                                                       (= (str/trim @rest) "")
+                                                       (str/slice
+                                                         (str/replace-pattern
+                                                           @rest
+                                                           "[\\r\\u2028\\u2029]+$"
+                                                           "")
+                                                         (-
+                                                           (str/len
+                                                             (str/replace-pattern
+                                                               @rest
+                                                               "[\\r\\u2028\\u2029]+$"
+                                                               ""))
+                                                           1))
+                                                       (str/trim @rest))),
+                                            back: (if
+                                                    (and
+                                                      (< (+ @i 1) @n)
+                                                      (validate/pattern
+                                                        (array/nth @ls (+ @i 1))
+                                                        "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
+                                                    (let ((rest (str/slice (array/nth @ls (+ @i 1)) 3)))
+                                                      (if
+                                                        (= (str/trim @rest) "")
+                                                        (str/slice
+                                                          (str/replace-pattern
+                                                            @rest
+                                                            "[\\r\\u2028\\u2029]+$"
+                                                            "")
+                                                          (-
+                                                            (str/len
+                                                              (str/replace-pattern
+                                                                @rest
+                                                                "[\\r\\u2028\\u2029]+$"
+                                                                ""))
+                                                            1))
+                                                        (str/trim @rest)))
+                                                    ""),
+                                            line: (+ 1 @i)
+                                          }
+                                          (let ((line (array/nth @ls @i))
+                                                (k (array/find
+                                                    (array/range 1 (str/len (array/nth @ls @i)))
+                                                    (fn k
+                                                      (validate/pattern
+                                                        (str/slice (array/nth @ls @i) (+ 2 @k))
+                                                        "^\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
+                                                (after (str/slice @line (+ 2 @k)))
+                                                (stripped (str/replace-pattern @after "^\\*\\*\\s+—\\s+" "")))
+                                            {
+                                              front: (str/slice @line 2 (+ 2 @k)),
+                                              back: (if
+                                                      (= (str/trim @stripped) "")
+                                                      (str/slice
+                                                        (str/replace-pattern
+                                                          @after
+                                                          "[\\r\\u2028\\u2029]+$"
+                                                          "")
+                                                        (-
+                                                          (str/len
+                                                            (str/replace-pattern
+                                                              @after
+                                                              "[\\r\\u2028\\u2029]+$"
+                                                              ""))
+                                                          1))
+                                                      (str/trim @stripped)),
+                                              line: (+ 1 @i)
+                                            })))),
+                             remaining: (str/replace-pattern
+                                          (str/join
+                                            (array/map
+                                              (array/filter
+                                                (array/range @n)
+                                                (fn i
+                                                  (and
+                                                    (not
+                                                      (validate/pattern
+                                                        (array/nth @ls @i)
+                                                        "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
+                                                    (not
+                                                      (validate/pattern
+                                                        (array/nth @ls @i)
+                                                        "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))
+                                                    (not
+                                                      (and
+                                                        (> @i 0)
+                                                        (validate/pattern
+                                                          (array/nth @ls @i)
+                                                          "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
+                                                        (validate/pattern
+                                                          (array/nth @ls (- @i 1))
+                                                          "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))))))
+                                              (fn i (array/nth @ls @i)))
+                                            "\n")
+                                          "^\\n+|\\n+$"
+                                          "")
+                           }),
+                  bodyQa: (let ((ls (str/split (object/get @d "titleBody") "\n"))
+                                (n (array/len @ls)))
+                            {
+                              pairs: (array/map
+                                       (array/filter
+                                         (array/range @n)
+                                         (fn i
+                                           (or
+                                             (validate/pattern
+                                               (array/nth @ls @i)
+                                               "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
+                                             (validate/pattern
+                                               (array/nth @ls @i)
+                                               "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
+                                       (fn i
+                                         (if
+                                           (validate/pattern
+                                             (array/nth @ls @i)
+                                             "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
+                                           {
+                                             front: (let ((rest (str/slice (array/nth @ls @i) 3)))
+                                                      (if
+                                                        (= (str/trim @rest) "")
+                                                        (str/slice
+                                                          (str/replace-pattern
+                                                            @rest
+                                                            "[\\r\\u2028\\u2029]+$"
+                                                            "")
+                                                          (-
+                                                            (str/len
+                                                              (str/replace-pattern
+                                                                @rest
+                                                                "[\\r\\u2028\\u2029]+$"
+                                                                ""))
+                                                            1))
+                                                        (str/trim @rest))),
+                                             back: (if
+                                                     (and
+                                                       (< (+ @i 1) @n)
+                                                       (validate/pattern
+                                                         (array/nth @ls (+ @i 1))
+                                                         "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
+                                                     (let ((rest (str/slice (array/nth @ls (+ @i 1)) 3)))
+                                                       (if
+                                                         (= (str/trim @rest) "")
+                                                         (str/slice
+                                                           (str/replace-pattern
+                                                             @rest
+                                                             "[\\r\\u2028\\u2029]+$"
+                                                             "")
+                                                           (-
+                                                             (str/len
+                                                               (str/replace-pattern
+                                                                 @rest
+                                                                 "[\\r\\u2028\\u2029]+$"
+                                                                 ""))
+                                                             1))
+                                                         (str/trim @rest)))
+                                                     ""),
+                                             line: (+ (object/get @d "titleBodyStart") @i)
+                                           }
+                                           (let ((line (array/nth @ls @i))
+                                                 (k (array/find
+                                                     (array/range 1 (str/len (array/nth @ls @i)))
+                                                     (fn k
+                                                       (validate/pattern
+                                                         (str/slice (array/nth @ls @i) (+ 2 @k))
+                                                         "^\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
+                                                 (after (str/slice @line (+ 2 @k)))
+                                                 (stripped (str/replace-pattern @after "^\\*\\*\\s+—\\s+" "")))
+                                             {
+                                               front: (str/slice @line 2 (+ 2 @k)),
+                                               back: (if
+                                                       (= (str/trim @stripped) "")
+                                                       (str/slice
+                                                         (str/replace-pattern
+                                                           @after
+                                                           "[\\r\\u2028\\u2029]+$"
+                                                           "")
+                                                         (-
+                                                           (str/len
+                                                             (str/replace-pattern
+                                                               @after
+                                                               "[\\r\\u2028\\u2029]+$"
+                                                               ""))
+                                                           1))
+                                                       (str/trim @stripped)),
+                                               line: (+ (object/get @d "titleBodyStart") @i)
+                                             })))),
+                              remaining: (str/replace-pattern
+                                           (str/join
+                                             (array/map
+                                               (array/filter
+                                                 (array/range @n)
+                                                 (fn i
+                                                   (and
+                                                     (not
+                                                       (validate/pattern
+                                                         (array/nth @ls @i)
+                                                         "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
+                                                     (not
+                                                       (validate/pattern
+                                                         (array/nth @ls @i)
+                                                         "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))
+                                                     (not
+                                                       (and
+                                                         (> @i 0)
+                                                         (validate/pattern
+                                                           (array/nth @ls @i)
+                                                           "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
+                                                         (validate/pattern
+                                                           (array/nth @ls (- @i 1))
+                                                           "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))))))
+                                               (fn i (array/nth @ls @i)))
+                                             "\n")
+                                           "^\\n+|\\n+$"
+                                           "")
+                            }),
+                  sections: (array/map
+                              (object/get @d "sections")
+                              (fn s
+                                (object/merge
+                                  @s
+                                  {
+                                    qa: (let ((ls (str/split (object/get @s "body") "\n"))
+                                              (n (array/len @ls)))
+                                          {
+                                            pairs: (array/map
+                                                     (array/filter
+                                                       (array/range @n)
+                                                       (fn i
+                                                         (or
+                                                           (validate/pattern
+                                                             (array/nth @ls @i)
+                                                             "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
+                                                           (validate/pattern
+                                                             (array/nth @ls @i)
+                                                             "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
+                                                     (fn i
+                                                       (if
+                                                         (validate/pattern
+                                                           (array/nth @ls @i)
+                                                           "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
+                                                         {
+                                                           front: (let ((rest (str/slice (array/nth @ls @i) 3)))
+                                                                    (if
+                                                                      (= (str/trim @rest) "")
+                                                                      (str/slice
+                                                                        (str/replace-pattern
+                                                                          @rest
+                                                                          "[\\r\\u2028\\u2029]+$"
+                                                                          "")
+                                                                        (-
+                                                                          (str/len
+                                                                            (str/replace-pattern
+                                                                              @rest
+                                                                              "[\\r\\u2028\\u2029]+$"
+                                                                              ""))
+                                                                          1))
+                                                                      (str/trim @rest))),
+                                                           back: (if
+                                                                   (and
+                                                                     (< (+ @i 1) @n)
+                                                                     (validate/pattern
+                                                                       (array/nth @ls (+ @i 1))
+                                                                       "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
+                                                                   (let ((rest (str/slice
+                                                                                (array/nth @ls (+ @i 1))
+                                                                                3)))
+                                                                     (if
+                                                                       (= (str/trim @rest) "")
+                                                                       (str/slice
+                                                                         (str/replace-pattern
+                                                                           @rest
+                                                                           "[\\r\\u2028\\u2029]+$"
+                                                                           "")
+                                                                         (-
+                                                                           (str/len
+                                                                             (str/replace-pattern
+                                                                               @rest
+                                                                               "[\\r\\u2028\\u2029]+$"
+                                                                               ""))
+                                                                           1))
+                                                                       (str/trim @rest)))
+                                                                   ""),
+                                                           line: (+ (object/get @s "bodyStartLine") @i)
+                                                         }
+                                                         (let ((line (array/nth @ls @i))
+                                                               (k (array/find
+                                                                   (array/range
+                                                                     1
+                                                                     (str/len (array/nth @ls @i)))
+                                                                   (fn k
+                                                                     (validate/pattern
+                                                                       (str/slice (array/nth @ls @i) (+ 2 @k))
+                                                                       "^\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
+                                                               (after (str/slice @line (+ 2 @k)))
+                                                               (stripped (str/replace-pattern
+                                                                          @after
+                                                                          "^\\*\\*\\s+—\\s+"
+                                                                          "")))
+                                                           {
+                                                             front: (str/slice @line 2 (+ 2 @k)),
+                                                             back: (if
+                                                                     (= (str/trim @stripped) "")
+                                                                     (str/slice
+                                                                       (str/replace-pattern
+                                                                         @after
+                                                                         "[\\r\\u2028\\u2029]+$"
+                                                                         "")
+                                                                       (-
+                                                                         (str/len
+                                                                           (str/replace-pattern
+                                                                             @after
+                                                                             "[\\r\\u2028\\u2029]+$"
+                                                                             ""))
+                                                                         1))
+                                                                     (str/trim @stripped)),
+                                                             line: (+ (object/get @s "bodyStartLine") @i)
+                                                           })))),
+                                            remaining: (str/replace-pattern
+                                                         (str/join
+                                                           (array/map
+                                                             (array/filter
+                                                               (array/range @n)
+                                                               (fn i
+                                                                 (and
+                                                                   (not
+                                                                     (validate/pattern
+                                                                       (array/nth @ls @i)
+                                                                       "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
+                                                                   (not
+                                                                     (validate/pattern
+                                                                       (array/nth @ls @i)
+                                                                       "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))
+                                                                   (not
+                                                                     (and
+                                                                       (> @i 0)
+                                                                       (validate/pattern
+                                                                         (array/nth @ls @i)
+                                                                         "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
+                                                                       (validate/pattern
+                                                                         (array/nth @ls (- @i 1))
+                                                                         "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))))))
+                                                             (fn i (array/nth @ls @i)))
+                                                           "\n")
+                                                         "^\\n+|\\n+$"
+                                                         "")
+                                          })
+                                  })))
+                }))))
+        (emit
+          MIGRATION_EXTRACTED
+          {
+            units: (array/flatten
+                     (array/map
+                       @entity.documents
+                       (fn d
+                         (array/concat
+                           (array/map
+                             (object/get @d "newFolders")
+                             (fn f
+                               {
+                                 ref: (str/concat "folder:" (object/get @f "path")),
+                                 kind: folder,
+                                 title: (object/get @f "title"),
+                                 content: null,
+                                 parentRef: (object/get @f "parentRef"),
+                                 source: "markdown",
+                                 span: null,
+                                 metadata: { path: (object/get @f "path") }
+                               }))
+                           (if
+                             (and
+                               (= (object/get @d "preamble") "")
+                               (= (object/get @d "titleBody") "")
+                               (= (array/len (object/get @d "sections")) 0)
+                               (not (object/get @d "titleFromHeading")))
+                             []
+                             (array/concat
+                               [
+                                (let ((rc (str/join
+                                           (array/filter
+                                             [
+                                              (object/get (object/get @d "preQa") "remaining"),
+                                              (object/get (object/get @d "bodyQa") "remaining")
+                                             ]
+                                             (fn x (!= @x "")))
+                                           "\n\n")))
+                                  {
+                                    ref: (str/concat "doc:" (object/get @d "ref")),
+                                    kind: root,
+                                    title: (object/get @d "title"),
+                                    content: (if (!= @rc "") @rc null),
+                                    parentRef: (object/get @d "folderParent"),
+                                    source: "markdown",
+                                    span: (str/concat "L1-L" (object/get @d "lineCount")),
+                                    metadata: { lineCount: (object/get @d "lineCount") }
+                                  })
+                               ]
+                               (array/map
+                                 (array/range
+                                   (array/len
+                                     (array/concat
+                                       (object/get (object/get @d "preQa") "pairs")
+                                       (object/get (object/get @d "bodyQa") "pairs"))))
+                                 (fn i
+                                   {
+                                     ref: (str/concat "doc:" (object/get @d "ref") "#qa:" (+ @i 1)),
+                                     kind: qa,
+                                     title: (object/get
+                                              (array/nth
+                                                (array/concat
+                                                  (object/get (object/get @d "preQa") "pairs")
+                                                  (object/get (object/get @d "bodyQa") "pairs"))
+                                                @i)
+                                              "front"),
+                                     content: (if
+                                                (!=
+                                                  (object/get
+                                                    (array/nth
+                                                      (array/concat
+                                                        (object/get (object/get @d "preQa") "pairs")
+                                                        (object/get (object/get @d "bodyQa") "pairs"))
+                                                      @i)
+                                                    "back")
+                                                  "")
+                                                (object/get
+                                                  (array/nth
+                                                    (array/concat
+                                                      (object/get (object/get @d "preQa") "pairs")
+                                                      (object/get (object/get @d "bodyQa") "pairs"))
+                                                    @i)
+                                                  "back")
+                                                null),
+                                     parentRef: (str/concat "doc:" (object/get @d "ref")),
+                                     source: "markdown",
+                                     span: (str/concat
+                                             "L"
+                                             (object/get
+                                               (array/nth
+                                                 (array/concat
+                                                   (object/get (object/get @d "preQa") "pairs")
+                                                   (object/get (object/get @d "bodyQa") "pairs"))
+                                                 @i)
+                                               "line")),
+                                     metadata: {
+                                                 front: (object/get
+                                                          (array/nth
+                                                            (array/concat
+                                                              (object/get (object/get @d "preQa") "pairs")
+                                                              (object/get (object/get @d "bodyQa") "pairs"))
+                                                            @i)
+                                                          "front"),
+                                                 back: (object/get
+                                                         (array/nth
+                                                           (array/concat
+                                                             (object/get (object/get @d "preQa") "pairs")
+                                                             (object/get (object/get @d "bodyQa") "pairs"))
+                                                           @i)
+                                                         "back")
+                                               }
+                                   }))
+                               (array/flatten
+                                 (array/map
+                                   (object/get @d "sections")
+                                   (fn s k
+                                     (let ((offset (+
+                                                    (array/len
+                                                      (array/concat
+                                                        (object/get (object/get @d "preQa") "pairs")
+                                                        (object/get (object/get @d "bodyQa") "pairs")))
+                                                    (array/sum
+                                                      (array/map
+                                                        (array/take (object/get @d "sections") @k)
+                                                        (fn x
+                                                          (array/len
+                                                            (object/get (object/get @x "qa") "pairs"))))))))
+                                       (array/concat
+                                         [
+                                          {
+                                            ref: (object/get @s "ref"),
+                                            kind: section,
+                                            title: (object/get @s "heading"),
+                                            content: (if
+                                                       (!= (object/get (object/get @s "qa") "remaining") "")
+                                                       (object/get (object/get @s "qa") "remaining")
+                                                       null),
+                                            parentRef: (object/get @s "parentRef"),
+                                            source: "markdown",
+                                            span: (str/concat
+                                                    "L"
+                                                    (object/get @s "headingLine")
+                                                    "-L"
+                                                    (object/get @s "bodyEndLine")),
+                                            metadata: {
+                                                        depth: (object/get @s "depth"),
+                                                        slug: (object/get @s "slug")
+                                                      }
+                                          }
+                                         ]
+                                         (array/map
+                                           (array/range (array/len (object/get (object/get @s "qa") "pairs")))
+                                           (fn i
+                                             {
+                                               ref: (str/concat
+                                                      "doc:"
+                                                      (object/get @d "ref")
+                                                      "#qa:"
+                                                      (+ @offset @i 1)),
+                                               kind: qa,
+                                               title: (object/get
+                                                        (array/nth
+                                                          (object/get (object/get @s "qa") "pairs")
+                                                          @i)
+                                                        "front"),
+                                               content: (if
+                                                          (!=
+                                                            (object/get
+                                                              (array/nth
+                                                                (object/get (object/get @s "qa") "pairs")
+                                                                @i)
+                                                              "back")
+                                                            "")
+                                                          (object/get
+                                                            (array/nth
+                                                              (object/get (object/get @s "qa") "pairs")
+                                                              @i)
+                                                            "back")
+                                                          null),
+                                               parentRef: (object/get @s "ref"),
+                                               source: "markdown",
+                                               span: (str/concat
+                                                       "L"
+                                                       (object/get
+                                                         (array/nth
+                                                           (object/get (object/get @s "qa") "pairs")
+                                                           @i)
+                                                         "line")),
+                                               metadata: {
+                                                           front: (object/get
+                                                                    (array/nth
+                                                                      (object/get
+                                                                        (object/get @s "qa")
+                                                                        "pairs")
+                                                                      @i)
+                                                                    "front"),
+                                                           back: (object/get
+                                                                   (array/nth
+                                                                     (object/get (object/get @s "qa") "pairs")
+                                                                     @i)
+                                                                   "back")
+                                                         }
+                                             }))))))))))))),
+            skipped: (array/flatten
+                       (array/map
+                         @entity.documents
+                         (fn d
+                           (if
+                             (and
+                               (= (object/get @d "preamble") "")
+                               (= (object/get @d "titleBody") "")
+                               (= (array/len (object/get @d "sections")) 0)
+                               (not (object/get @d "titleFromHeading")))
+                             [
+                              {
+                                ref: (str/concat "doc:" (object/get @d "ref")),
+                                reason: "empty document: no title, no body, no headings"
+                              }
+                             ]
+                             []))))
+          })
+    }
+
+    emits {
+      MIGRATION_EXTRACTED -> external {
+        units : [ExtractedUnit]!
+        skipped : [ImportSkip]!
+      }
+        @description "The markdown documents extracted into root, section and question-answer units, plus folders for a collection and the ledger of empty documents, in document order."
+        @synonyms "markdown extracted, markdown staging, markdown units"
+        @tier "domain"
+    }
+
+    listens {
+      MIGRATION_EXTRACT -> external {
+        adapter : string!
+        documents : [ImportRawDocument]!
+      }
+        @description "A migration run asks its profile's adapter to extract the fetched documents; this adapter answers when adapter is markdown and ignores every other adapter."
+        @synonyms "extract documents, parse fetched documents"
+        @tier "domain"
+    }
+  }
+
+  page "/migration-adapter-markdown" as MigrationAdapterMarkdownPage -> MigrationAdapterMarkdown
+}

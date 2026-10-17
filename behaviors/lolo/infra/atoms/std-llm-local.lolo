@@ -1,0 +1,310 @@
+app std-llm-local [
+  version: "1.0.0",
+  description: "std-llm-local — classification and embeddings on the device's own model and embedder (browser/prompt, browser/embed), with std-llm's request, result and failure events for classify, classifyMany and embed. The host plugs its model in; a host with none ends a request in LLM_FAILED with code NOT_CONFIGURED, one whose model cannot answer now with MODEL_UNAVAILABLE. A request that carries a key can be cancelled by LLM_CANCEL or by (cancel-call key) and ends in LLM_CANCELLED; a reply that arrives after the cancel is dropped."
+]
+type LocalJob = { action : string!, categories : [string], itemIds : [string], count : number, callKey : string }
+type LocalPending = { key : string!, job : string! }
+type LocalClassification = { category : string!, confidence : number!, reasoning : string! }
+type LocalVerdict = { id : string!, category : string!, confidence : number! }
+type LocalVerdicts = { verdicts : [LocalVerdict]! }
+orbital LlmLocalOrbital {
+  entity LlmLocalCall [runtime] {
+    id : string!
+    pending : [LocalPending] = []
+  }
+
+  trait LlmLocalClient -> @rebindable LlmLocalCall [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      LLM_CLASSIFY -> idle when (= (array/len @payload.categories) 0)
+        (emit LLM_FAILED { code: "VALIDATION_ERROR", message: "Param 'categories' must name at least one category", key: (if (!= @payload.key null) @payload.key ""), action: "classify" })
+      LLM_CLASSIFY -> idle when (> (array/len @payload.categories) 0)
+        (emit LLM_LOCAL_ASK {
+          job: (json/stringify { action: "classify", categories: @payload.categories, itemIds: [], count: 0, callKey: (if (!= @payload.key null) @payload.key "") }),
+          text: (str/join ["Classify the text into exactly one of these categories:" (str/join (array/map @payload.categories (fn c (str/concat "- " @c))) "\n") "Answer with the category, your confidence from 0 to 1, and one short sentence of reasoning." "" (str/concat "Text: " @payload.text)] "\n"),
+          schema: (json/stringify {
+            type: "object",
+            properties: {
+              category: { type: "string", enum: @payload.categories },
+              confidence: { type: "number", minimum: 0, maximum: 1 },
+              reasoning: { type: "string" }
+            },
+            required: ["category", "confidence", "reasoning"]
+          })
+        })
+
+      LLM_CLASSIFY_MANY -> idle when (!= (array/len (array/unique (array/map @payload.items (fn it @it.id)))) (array/len @payload.items))
+        (emit LLM_FAILED {
+          code: "VALIDATION_ERROR",
+          message: (str/concat "Param 'items' must be a list with distinct ids; '"
+            (array/find (array/map @payload.items (fn it @it.id)) (fn id (> (array/count (array/map @payload.items (fn it @it.id)) (fn x (= @x @id))) 1)))
+            "' appears twice"),
+          key: (if (!= @payload.key null) @payload.key ""),
+          action: "classifyMany"
+        })
+      LLM_CLASSIFY_MANY -> idle when (and (= (array/len @payload.categories) 0) (= (array/len (array/unique (array/map @payload.items (fn it @it.id)))) (array/len @payload.items)))
+        (emit LLM_FAILED { code: "VALIDATION_ERROR", message: "Param 'categories' must name at least one category", key: (if (!= @payload.key null) @payload.key ""), action: "classifyMany" })
+      LLM_CLASSIFY_MANY -> idle when (and (> (array/len @payload.categories) 0) (= (array/len @payload.items) 0))
+        (emit LLM_CLASSIFY_MANY_RESULT { verdicts: [] })
+      LLM_CLASSIFY_MANY -> idle when (and (> (array/len @payload.categories) 0) (> (array/len @payload.items) 0) (= (array/len (array/unique (array/map @payload.items (fn it @it.id)))) (array/len @payload.items)))
+        (emit LLM_LOCAL_ASK {
+          job: (json/stringify { action: "classifyMany", categories: @payload.categories, itemIds: (array/map @payload.items (fn it @it.id)), count: 0, callKey: (if (!= @payload.key null) @payload.key "") }),
+          text: (str/concat
+            (str/join ["Classify each item below into exactly one of these categories:" (str/join (array/map @payload.categories (fn c (str/concat "- " @c))) "\n") "Answer with one verdict per item: its id, the category, and your confidence from 0 to 1."] "\n")
+            "\n\n"
+            (str/join (array/map @payload.items (fn it (str/concat "[" (+ @index 1) "] " @it.text))) "\n")),
+          schema: (json/stringify {
+            type: "object",
+            properties: {
+              verdicts: {
+                type: "array",
+                minItems: (array/len @payload.items),
+                maxItems: (array/len @payload.items),
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string", enum: (array/map @payload.items (fn it (str/concat (+ @index 1) ""))) },
+                    category: { type: "string", enum: @payload.categories },
+                    confidence: { type: "number", minimum: 0, maximum: 1 }
+                  },
+                  required: ["id", "category", "confidence"]
+                }
+              }
+            },
+            required: ["verdicts"]
+          })
+        })
+
+      LLM_EMBED -> idle when (= (array/len @payload.texts) 0)
+        (emit LLM_EMBED_RESULT { embeddings: [] })
+      LLM_EMBED -> idle when (> (array/len @payload.texts) 0)
+        (emit LLM_LOCAL_EMBED_ASK {
+          job: (json/stringify { action: "embed", categories: [], itemIds: [], count: (array/len @payload.texts), callKey: (if (!= @payload.key null) @payload.key "") }),
+          texts: @payload.texts
+        })
+
+      LLM_CANCEL -> idle
+        (cancel-call @payload.key)
+
+      LLM_LOCAL_ASK -> idle
+        (set @entity.pending (let ((k (object/get (json/parse @payload.job LocalJob) callKey ""))) (if (= @k "") @entity.pending (array/append (array/filter @entity.pending (fn p (!= @p.key @k))) { key: @k, job: @payload.job }))))
+        (browser/prompt @payload.text @payload.schema {
+          key: (let ((k (object/get (json/parse @payload.job LocalJob) callKey ""))) (if (= @k "") @payload.job @k)),
+          emit: { success: LLM_LOCAL_PROMPTED, failure: LLM_LOCAL_FAILED, cancelled: LLM_LOCAL_CANCELLED }
+        })
+      LLM_LOCAL_EMBED_ASK -> idle
+        (set @entity.pending (let ((k (object/get (json/parse @payload.job LocalJob) callKey ""))) (if (= @k "") @entity.pending (array/append (array/filter @entity.pending (fn p (!= @p.key @k))) { key: @k, job: @payload.job }))))
+        (browser/embed @payload.texts {
+          key: (let ((k (object/get (json/parse @payload.job LocalJob) callKey ""))) (if (= @k "") @payload.job @k)),
+          emit: { success: LLM_LOCAL_EMBEDDED, failure: LLM_LOCAL_FAILED, cancelled: LLM_LOCAL_CANCELLED }
+        })
+
+      LLM_LOCAL_FAILED -> idle
+        (emit LLM_FAILED {
+          code: (match @payload.kind ("unconfigured" "NOT_CONFIGURED") ("unavailable" "MODEL_UNAVAILABLE") (_ null)),
+          message: @payload.error,
+          key: (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) callKey ""),
+          action: (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) action "")
+        })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "On-device model " @payload.kind ": " @payload.error) })
+
+      LLM_LOCAL_CANCELLED -> idle
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+        (emit LLM_CANCELLED { key: @payload.key })
+
+      LLM_LOCAL_PROMPTED -> idle
+        (emit LLM_LOCAL_REPLIED {
+          job: (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))),
+          reply: @payload.reply
+        })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+
+      LLM_LOCAL_REPLIED -> idle when (= (object/get (json/parse @payload.job LocalJob) action "") "classify")
+        (emit LLM_LOCAL_CHECKED {
+          job: @payload.job, reply: @payload.reply,
+          problem: (let ((c (json/parse @payload.reply LocalClassification)) (cats (object/get (json/parse @payload.job LocalJob) categories [])))
+            (if (not (validate/object @c)) "The on-device model replied outside the declared shape"
+              (if (not (and (validate/string (object/get @c category null)) (validate/number (object/get @c confidence null)) (validate/string (object/get @c reasoning null)))) "The on-device model replied outside the declared shape"
+                (if (or (< (object/get @c confidence 0) 0) (> (object/get @c confidence 0) 1)) "The on-device model replied outside the declared shape"
+                  (if (array/includes @cats (object/get @c category "")) ""
+                    (str/concat "The on-device model chose '" (object/get @c category "") "', not a declared category"))))))
+        })
+      LLM_LOCAL_REPLIED -> idle when (= (object/get (json/parse @payload.job LocalJob) action "") "classifyMany")
+        (emit LLM_LOCAL_CHECKED {
+          job: @payload.job, reply: @payload.reply,
+          problem: (let ((p (json/parse @payload.reply LocalVerdicts)) (ids (object/get (json/parse @payload.job LocalJob) itemIds [])) (cats (object/get (json/parse @payload.job LocalJob) categories [])))
+            (if (not (validate/object @p)) "The on-device model replied outside the declared shape"
+              (if (not (validate/array (object/get @p verdicts null))) "The on-device model replied outside the declared shape"
+                (let ((vs (object/get @p verdicts [])))
+                  (if (not (array/every @vs (fn v (if (validate/object @v) (and (validate/string (object/get @v id null)) (validate/string (object/get @v category null)) (validate/number (object/get @v confidence null))) false)))) "The on-device model replied outside the declared shape"
+                    (let ((labels (array/map @ids (fn x (str/concat (+ @index 1) "")))) (verdictIds (array/map @vs (fn v (object/get @v id "")))))
+                      (let ((errs (array/map @vs (fn v (let ((k @index))
+                          (if (not (array/includes @labels (object/get @v id ""))) (str/concat "The model gave a verdict for item '" (object/get @v id "") "', which was not sent")
+                            (if (!= (array/findIndex @vs (fn x (= (object/get @x id "") (object/get @v id "")))) @k) (str/concat "The model gave item '" (object/get @v id "") "' two verdicts")
+                              (if (not (array/includes @cats (object/get @v category ""))) (str/concat "The model chose '" (object/get @v category "") "' for item '" (object/get @v id "") "', not a declared category") ""))))))))
+                        (let ((missing (array/filter @ids (fn itemId (not (array/includes @verdictIds (str/concat (+ @index 1) "")))))))
+                          (if (> (array/count @errs (fn e (!= @e ""))) 0) (array/find @errs (fn e (!= @e ""))) (if (> (array/len @missing) 0) (str/concat "The model gave no verdict for " (str/join @missing ", ")) ""))))))))))
+        })
+      LLM_LOCAL_CHECKED -> idle when (!= @payload.problem "")
+        (emit LLM_FAILED { code: "SERVICE_ERROR", message: @payload.problem, key: (object/get (json/parse @payload.job LocalJob) callKey ""), action: (object/get (json/parse @payload.job LocalJob) action "") })
+      LLM_LOCAL_CHECKED -> idle when (and (= @payload.problem "") (= (object/get (json/parse @payload.job LocalJob) action "") "classify"))
+        (emit LLM_CLASSIFY_RESULT {
+          category: (object/get (json/parse @payload.reply LocalClassification) category ""),
+          confidence: (object/get (json/parse @payload.reply LocalClassification) confidence 0),
+          reasoning: (object/get (json/parse @payload.reply LocalClassification) reasoning "")
+        })
+      LLM_LOCAL_CHECKED -> idle when (and (= @payload.problem "") (= (object/get (json/parse @payload.job LocalJob) action "") "classifyMany"))
+        (let ((ids (object/get (json/parse @payload.job LocalJob) itemIds [])) (vs (object/get (json/parse @payload.reply LocalVerdicts) verdicts [])))
+          (emit LLM_CLASSIFY_MANY_RESULT {
+            verdicts: (array/map @ids (fn itemId (let ((k @index))
+              (let ((v (array/find @vs (fn x (= (object/get @x id "") (str/concat (+ @k 1) ""))))))
+                { id: @itemId, category: (object/get @v category ""), confidence: (object/get @v confidence 0) }))))
+          }))
+
+      LLM_LOCAL_EMBEDDED -> idle when (!= (array/len @payload.embeddings) (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) count 0))
+        (emit LLM_FAILED {
+          code: "SERVICE_ERROR",
+          message: (str/concat "The on-device embedder returned " (array/len @payload.embeddings) " vectors for " (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) count 0) " texts"),
+          key: (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) callKey ""),
+          action: "embed"
+        })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+      LLM_LOCAL_EMBEDDED -> idle when (= (array/len @payload.embeddings) (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) count 0))
+        (emit LLM_EMBED_RESULT { embeddings: @payload.embeddings })
+        (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
+    }
+
+    emits {
+      LLM_CLASSIFY_RESULT -> external {
+        category : string!
+        confidence : number!
+        reasoning : string!
+      }
+        @description "The declared category the on-device model chose for the text, its confidence from 0 to 1 and its reasoning."
+        @synonyms "classification, label, category verdict"
+        @tier "primary"
+      LLM_CLASSIFY_MANY_RESULT -> external {
+        verdicts : [{ id : string!, category : string!, confidence : number! }]!
+      }
+        @description "One verdict per item, under the caller's id, with a declared category and a confidence from 0 to 1."
+        @synonyms "batch classification, many labels, verdicts"
+        @tier "primary"
+      LLM_EMBED_RESULT -> external {
+        embeddings : [[number]]!
+      }
+        @description "One embedding vector per input text, in input order."
+        @synonyms "vectors, text embeddings"
+        @tier "primary"
+      LLM_CANCELLED -> external {
+        key : string!
+      }
+        @description "A keyed classify, classifyMany or embed was cancelled before it answered: the key it carried. It ends in no result and no LLM_FAILED, and a reply that arrives later is dropped."
+        @synonyms "llm cancelled, request aborted"
+        @tier "primary"
+      LLM_FAILED -> external {
+        code : string
+        message : string!
+        key : string
+        action : string
+      }
+        @description "A request that ended without an answer: the message, with a code when the atom or the model's reply is at fault (VALIDATION_ERROR, SERVICE_ERROR), the host has no model (NOT_CONFIGURED) or its model cannot answer now (MODEL_UNAVAILABLE); the key the request carried (empty when it had none) and the action it asked for (classify, classifyMany or embed)."
+        @synonyms "llm error, request failed"
+        @tier "primary"
+      LLM_LOCAL_ASK {
+        job : string!
+        text : string!
+        schema : string!
+      }
+        @description "Internal: one prompt for the on-device model, carried with its JSON job."
+        @tier "secondary"
+      LLM_LOCAL_EMBED_ASK {
+        job : string!
+        texts : [string]!
+      }
+        @description "Internal: one embed for the on-device embedder, carried with its JSON job."
+        @tier "secondary"
+      LLM_LOCAL_PROMPTED {
+        reply : string!
+        key : string!
+      }
+        @description "Internal: the on-device model's reply text."
+        @tier "secondary"
+      LLM_LOCAL_EMBEDDED {
+        embeddings : [[number]]!
+        key : string!
+      }
+        @description "Internal: the on-device embedder's vectors."
+        @tier "secondary"
+      LLM_LOCAL_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: the on-device model or embedder gave no answer."
+        @tier "secondary"
+      LLM_LOCAL_CANCELLED {
+        key : string!
+      }
+        @description "Internal: the on-device call was cancelled."
+        @tier "secondary"
+      LLM_LOCAL_REPLIED {
+        job : string!
+        reply : string!
+      }
+        @description "Internal: the model's reply with the job it answers."
+        @tier "secondary"
+      LLM_LOCAL_CHECKED {
+        job : string!
+        reply : string!
+        problem : string!
+      }
+        @description "Internal: the reply's first problem against the request, empty when it fits."
+        @tier "secondary"
+    }
+
+    listens {
+      LLM_CLASSIFY -> external {
+        text : string!
+        categories : [string]!
+        model : string
+        key : string
+      }
+        @description "Classify a text into one of the given categories on the device's model. An optional key names the call for LLM_CANCEL."
+        @synonyms "label text, categorize"
+      LLM_CLASSIFY_MANY -> external {
+        items : [{ id : string!, text : string! }]!
+        categories : [string]!
+        model : string
+        key : string
+      }
+        @description "Classify many texts in one model call on the device's model; every item's id comes back once with a declared category. An optional key names the call for LLM_CANCEL."
+        @synonyms "batch classify, label many"
+      LLM_EMBED -> external {
+        texts : [string]!
+        model : string
+        key : string
+      }
+        @description "Embed texts into vectors on the device's embedder. An optional key names the call for LLM_CANCEL."
+        @synonyms "vectorize, text embedding"
+      LLM_CANCEL -> external {
+        key : string!
+      }
+        @description "Abort the classify, classifyMany or embed that carries this key and is still waiting for the device; it ends in LLM_CANCELLED. A key with nothing in flight is a no-op."
+        @synonyms "abort, stop request, cancel call"
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports an on-device call that gave no answer; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+  }
+
+  page "/llm-local" as LlmLocalPage -> LlmLocalClient
+}

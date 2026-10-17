@@ -1,8 +1,9 @@
 app std-analytics [
   version: "1.0.0",
-  description: "std-analytics — cookieless first-party analytics for one page: on entry it reports a pageview of `path` to the collector at `endpoint`, and each TRACK it hears reports a named event (a download, a sign-up) with its properties. Calls run in the browser through the `analytics` service; an empty `endpoint` or a local host sends nothing. Compose one per tracked page, listed in that page's traits."
+  description: "std-analytics — cookieless first-party analytics for one page: on entry it reports a pageview of `path` to the collector at `endpoint`, and each TRACK it hears reports a named event (a download, a sign-up) with its properties. The page host, referrer and screen width are read in the browser and each report goes out as a browser beacon (the beacon queue, with one keepalive fetch fallback, so it survives page unload); a local host or an `endpoint` that is not an absolute http(s) URL in the egress list sends nothing or fails. Compose one per tracked page, listed in that page's traits.",
+  egress: ["https://almadar-analytics--kflow-b3a39.europe-west4.hosted.app"]
 ]
-
+type AnalyticsCtx = { path : string, domain : string, name : string, hasProps : boolean, props : Map string (string | number | boolean) }
 orbital AnalyticsOrbital {
   entity AnalyticsRecord [runtime] {
     reported : number @description "How many pageviews and events the collector accepted" @synonyms "sent, count, beacons" = 0
@@ -19,9 +20,9 @@ orbital AnalyticsOrbital {
         @description "Where the atom shows its one-line status; a page running it in the background sends it to `system`"
         @synonyms "status area, slot"
         @tier "presentation"
-      endpoint : string = ""
+      endpoint : url
         @label "Collector endpoint"
-        @description "The analytics collector's ingest URL (`POST`); empty sends nothing"
+        @description "The analytics collector's absolute ingest URL (`POST`, text/plain); Its origin must be declared in the app egress list."
         @synonyms "analytics url, collector, stats endpoint, beacon url"
         @tier "domain"
       path : string = "/"
@@ -38,35 +39,140 @@ orbital AnalyticsOrbital {
 
     state active {
       INIT -> active
-        (call-service "analytics" "pageview" { endpoint: @config.endpoint, path: @config.path, domain: @config.domain }
-          { emit: { success: REPORTED, failure: REPORT_FAILED } })
+        (emit ANALYTICS_PAGEVIEW { path: @config.path, domain: @config.domain })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reporting this visit…" })
       TRACK -> active
-        (call-service "analytics" "track" { endpoint: @config.endpoint, name: ?name, path: @config.path, props: ?props, domain: @config.domain }
-          { emit: { success: REPORTED, failure: REPORT_FAILED } })
+        (emit ANALYTICS_TRACK { name: ?name, path: @config.path, props: ?props, domain: @config.domain })
+      ANALYTICS_PAGEVIEW -> active when (not (str/startsWith @payload.path "/"))
+        (emit ANALYTICS_FAILED { code: "VALIDATION_ERROR", message: (str/concat "Param 'path' must start with \"/\", got '" @payload.path "'") })
+      ANALYTICS_PAGEVIEW -> active when (and (str/startsWith @payload.path "/") (= @config.endpoint ""))
+        (emit REPORTED { sent: false })
+      ANALYTICS_PAGEVIEW -> active when (and (str/startsWith @payload.path "/") (!= @config.endpoint ""))
+        (browser/page-facts [referrer, screenWidth, hostname] { key: (json/stringify { path: @payload.path, domain: (or @payload.domain ""), name: "", hasProps: false, props: {} }), emit: { success: ANALYTICS_PAGEVIEW_FACTS, failure: ANALYTICS_FACTS_FAILED } })
+      ANALYTICS_PAGEVIEW_FACTS -> active when (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))
+        (emit REPORTED { sent: false })
+      ANALYTICS_PAGEVIEW_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (and (= @payload.referrer "") (= @payload.screenWidth null)))
+        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/") }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+      ANALYTICS_PAGEVIEW_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (and (!= @payload.referrer "") (= @payload.screenWidth null)))
+        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/"), r: @payload.referrer }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+      ANALYTICS_PAGEVIEW_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (and (= @payload.referrer "") (!= @payload.screenWidth null)))
+        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/"), w: @payload.screenWidth }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+      ANALYTICS_PAGEVIEW_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (and (!= @payload.referrer "") (!= @payload.screenWidth null)))
+        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/"), r: @payload.referrer, w: @payload.screenWidth }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+
+      ANALYTICS_TRACK -> active when (= @payload.name "pageview")
+        (emit ANALYTICS_FAILED { code: "VALIDATION_ERROR", message: "Event name 'pageview' is reserved; call pageview" })
+      ANALYTICS_TRACK -> active when (and (!= @payload.name "pageview") (not (str/startsWith @payload.path "/")))
+        (emit ANALYTICS_FAILED { code: "VALIDATION_ERROR", message: (str/concat "Param 'path' must start with \"/\", got '" @payload.path "'") })
+      ANALYTICS_TRACK -> active when (and (!= @payload.name "pageview") (str/startsWith @payload.path "/") (= @config.endpoint ""))
+        (emit REPORTED { sent: false })
+      ANALYTICS_TRACK -> active when (and (!= @payload.name "pageview") (str/startsWith @payload.path "/") (!= @config.endpoint ""))
+        (browser/page-facts [hostname] { key: (json/stringify { path: @payload.path, domain: (or @payload.domain ""), name: @payload.name, hasProps: (!= @payload.props null), props: (or @payload.props {}) }), emit: { success: ANALYTICS_TRACK_FACTS, failure: ANALYTICS_FACTS_FAILED } })
+      ANALYTICS_TRACK_FACTS -> active when (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))
+        (emit REPORTED { sent: false })
+      ANALYTICS_TRACK_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (not (object/get (json/parse @payload.key AnalyticsCtx) hasProps false)))
+        (browser/beacon @config.endpoint { text: (json/stringify { n: (object/get (json/parse @payload.key AnalyticsCtx) name ""), d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/") }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+      ANALYTICS_TRACK_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (object/get (json/parse @payload.key AnalyticsCtx) hasProps false))
+        (browser/beacon @config.endpoint { text: (json/stringify { n: (object/get (json/parse @payload.key AnalyticsCtx) name ""), d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/"), p: (object/get (json/parse @payload.key AnalyticsCtx) props {}) }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+
+      ANALYTICS_BEACON_DONE -> active
+        (emit REPORTED { sent: @payload.sent })
+      ANALYTICS_BEACON_FAILED -> active
+        (emit ANALYTICS_FAILED { code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Not reported: " @payload.error) })
+      ANALYTICS_FACTS_FAILED -> active
+        (emit ANALYTICS_FAILED { code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Not reported: " @payload.error) })
       REPORTED -> active
         (set @entity.status (if ?sent reported skipped))
         (set @entity.reported (if ?sent (+ @entity.reported 1) @entity.reported))
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (if ?sent "Visit reported" "Not reported here") })
-      REPORT_FAILED -> active
+      ANALYTICS_FAILED -> active
         (set @entity.status failed)
-        (set @entity.errorMessage ?error)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Not reported: " ?error) })
+        (set @entity.errorMessage ?message)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Not reported: " ?message) })
+        (emit REPORT_FAILED { error: ?message })
     }
 
     emits {
       REPORTED { sent : boolean! }
-        @description "The report was handed to the collector (`sent`), or skipped (no endpoint, or a local host)"
+        @description "The report was handed to the collector (`sent`), or skipped (no endpoint, a local host, or the collector refused it)"
         @tier "secondary"
       REPORT_FAILED -> external { error : string! }
-        @description "The report could not be sent (a bad event name, or no analytics service on this host)"
+        @description "The report could not be made (a bad event name or path, an endpoint that is not an absolute http(s) URL in the egress list, no beacon port on this host)"
         @tier "secondary"
+      ANALYTICS_FAILED { code : string, message : string! }
+        @description "Internal: the report failed with a code and message."
+        @tier "secondary"
+      ANALYTICS_PAGEVIEW { path : string!, domain : string }
+        @description "Internal: report a pageview of the path."
+        @tier "secondary"
+      ANALYTICS_TRACK { name : string!, path : string!, props : Map string (string | number | boolean), domain : string }
+        @description "Internal: report a named event on the path."
+        @tier "secondary"
+      ANALYTICS_PAGEVIEW_FACTS {
+        available : boolean!
+        hostname : string!
+        referrer : string!
+        screenWidth : number
+        key : string
+      }
+      ANALYTICS_TRACK_FACTS {
+        available : boolean!
+        hostname : string!
+        key : string
+      }
+      ANALYTICS_FACTS_FAILED {
+        error : string!
+        key : string
+      }
+      ANALYTICS_BEACON_DONE {
+        sent : boolean!
+        via : string!
+        status : number
+        key : string
+      }
+      ANALYTICS_BEACON_FAILED {
+        error : string!
+        kind : string!
+        key : string
+      }
     }
 
     listens {
-      TRACK -> external { name : string!, props : Map string string }
+      TRACK -> external { name : string!, props : Map string (string | number | boolean) }
         @description "Report a named event on this page, with its properties"
         @synonyms "track event, log event, record click, analytics event"
+      ANALYTICS_PAGEVIEW { path : string!, domain : string }
+      ANALYTICS_TRACK { name : string!, path : string!, props : Map string (string | number | boolean), domain : string }
+      ANALYTICS_PAGEVIEW_FACTS {
+        available : boolean!
+        hostname : string!
+        referrer : string!
+        screenWidth : number
+        key : string
+      }
+      ANALYTICS_TRACK_FACTS {
+        available : boolean!
+        hostname : string!
+        key : string
+      }
+      ANALYTICS_FACTS_FAILED {
+        error : string!
+        key : string
+      }
+      ANALYTICS_BEACON_DONE {
+        sent : boolean!
+        via : string!
+        status : number
+        key : string
+      }
+      ANALYTICS_BEACON_FAILED {
+        error : string!
+        kind : string!
+        key : string
+      }
+      ANALYTICS_FAILED { code : string, message : string! }
     }
   }
 

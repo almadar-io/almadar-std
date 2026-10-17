@@ -17,7 +17,7 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
-import { BOOLEAN, each, STRING, SEXPR, bindingOf, fn, lit, list, mapOf, openShape, rec, sexprOf, shape, tv, union } from '../signature.js';
+import { BOOLEAN, each, SHAPE, STRING, SEXPR, bindingOf, fn, lit, list, mapOf, nullable, openShape, rec, sexprOf, shape, tv, union } from '../signature.js';
 
 // ============================================================================
 // Shared type refs
@@ -40,20 +40,115 @@ const HOST_CALL_ENVELOPE: OperatorTypeRef = openShape({
   emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
 });
 
-const HTTP_METHOD: OperatorTypeRef = union(lit('GET'), lit('POST'), lit('PUT'), lit('PATCH'), lit('DELETE'));
+const RESP_SCALAR: OperatorTypeRef = union(STRING, NUMBER, lit(null));
 
-const HTTP_AUTH: OperatorTypeRef = openShape({
-  scheme: union(lit('bearer'), lit('api-key'), lit('basic'), lit('oauth2-client'), lit('hmac-sha256')),
-  credential: STRING,
-  name: STRING,
-  in: union(lit('header'), lit('query')),
+/** A redis reply: a scalar or a list nested up to three levels (`REDIS_REPLY_DEPTH` in the kernel). */
+const REDIS_REPLY: OperatorTypeRef = union(RESP_SCALAR, list(union(RESP_SCALAR, list(union(RESP_SCALAR, list(RESP_SCALAR))))));
+
+const REDIS_OPTIONS: OperatorTypeRef = openShape({
+  auth: union(STRING, openShape({ credential: STRING, scope: union(lit('app'), lit('user')) })),
   user: STRING,
-  tokenUrl: STRING,
+  db: NUMBER,
+  key: STRING,
+  emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
+});
+
+const PG_SCALAR: OperatorTypeRef = union(STRING, NUMBER, BOOLEAN, lit(null));
+
+/** A postgres result value: a scalar or an array nested up to three levels (`POSTGRES_ARRAY_DEPTH` in the kernel). */
+const PG_VALUE: OperatorTypeRef = union(PG_SCALAR, list(union(PG_SCALAR, list(union(PG_SCALAR, list(PG_SCALAR))))));
+
+/** A bind value: a scalar, or a list of them (a Postgres array). */
+const PG_BIND: OperatorTypeRef = union(PG_SCALAR, list(PG_SCALAR));
+
+const PG_OPTIONS: OperatorTypeRef = openShape({
+  auth: union(STRING, openShape({ credential: STRING, scope: union(lit('app'), lit('user')) })),
+  user: STRING,
+  database: STRING,
+  tls: BOOLEAN,
+  timeoutMs: NUMBER,
+  key: STRING,
+  emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }),
+});
+
+const OAUTH_PROVIDER: OperatorTypeRef = union(lit('google'), lit('github'), lit('auth0'));
+
+const OAUTH_CLIENT: OperatorTypeRef = openShape({
+  tag: OAUTH_PROVIDER,
+  mode: union(lit('real'), lit('mock')),
+  issuer: STRING,
+  endpoints: openShape({ authorization: STRING, token: STRING, revocation: STRING, userinfo: STRING }),
   clientId: STRING,
   clientSecret: STRING,
+  clientAuth: union(lit('basic'), lit('post'), lit('none')),
+});
+
+const OAUTH_CONNECTION: OperatorTypeRef = shape({
+  provider: OAUTH_PROVIDER,
+  connected: BOOLEAN,
+  account: STRING,
+  avatarUrl: STRING,
+  scope: list(STRING),
+  connectedAt: STRING,
+});
+
+const HTTP_METHOD: OperatorTypeRef = union(lit('GET'), lit('POST'), lit('PUT'), lit('PATCH'), lit('DELETE'));
+const HTTP_CREDENTIAL_SLOT: OperatorTypeRef = union(STRING, openShape({ credential: STRING, scope: union(lit('app'), lit('user')) }));
+
+const HTTP_RETRY: OperatorTypeRef = shape({
+  max: NUMBER,
+  on: list(union(lit('1xx'), lit('408'), lit('5xx'), lit('429'), lit('timeout'), lit('failed'), NUMBER)),
+  backoffMs: NUMBER,
+  scheduleMs: list(NUMBER),
+  noResponseMax: NUMBER,
+});
+
+const HTTP_GRANT_REQUEST: OperatorTypeRef = shape({
+  headers: mapOf(STRING, STRING),
+  timeoutMs: nullable(NUMBER),
+  retry: HTTP_RETRY,
+});
+
+const HTTP_AUTH: OperatorTypeRef = openShape({
+  scheme: union(lit('bearer'), lit('api-key'), lit('basic'), lit('oauth2-client'), lit('hmac-sha256'), lit('token-exchange'), lit('jwt-bearer'), lit('aws-sigv4'), lit('vapid'), lit('oauth-client')),
+  credential: HTTP_CREDENTIAL_SLOT,
+  name: STRING,
+  in: union(lit('header'), lit('query')),
+  user: HTTP_CREDENTIAL_SLOT,
+  tokenUrl: STRING,
+  grantRequest: HTTP_GRANT_REQUEST,
+  clientId: HTTP_CREDENTIAL_SLOT,
+  clientSecret: HTTP_CREDENTIAL_SLOT,
   scope: STRING,
   signs: STRING,
+  prefix: STRING,
   encoding: union(lit('hex'), lit('base64')),
+  grant: STRING,
+  body: openShape({ json: rec('A'), form: rec('A') }),
+  clientAuth: union(lit('basic'), lit('post')),
+  op: union(lit('discovery'), lit('code'), lit('connect'), lit('refresh'), lit('revoke'), lit('userinfo')),
+  client: OAUTH_CLIENT,
+  code: STRING,
+  state: STRING,
+  provider: OAUTH_PROVIDER,
+  refreshToken: STRING,
+  token: STRING,
+  accessToken: STRING,
+  accessField: STRING,
+  expiresField: STRING,
+  expiresMarginMs: NUMBER,
+  storeAs: openShape({ name: STRING, scope: union(lit('app'), lit('user')) }),
+  key: HTTP_CREDENTIAL_SLOT,
+  alg: union(lit('RS256'), lit('ES256')),
+  claims: rec('A'),
+  accessKeyId: HTTP_CREDENTIAL_SLOT,
+  secretAccessKey: HTTP_CREDENTIAL_SLOT,
+  sessionToken: HTTP_CREDENTIAL_SLOT,
+  region: STRING,
+  service: STRING,
+  privateKey: HTTP_CREDENTIAL_SLOT,
+  publicKey: STRING,
+  subject: STRING,
 });
 
 const HTTP_PAGINATE: OperatorTypeRef = openShape({
@@ -71,8 +166,14 @@ const HTTP_REQUEST: OperatorTypeRef = openShape({
   form: rec('S'),
   text: STRING,
   bytes: STRING,
+  multipart: openShape({ kind: union(lit('related'), lit('form-data')), parts: list(openShape({ headers: mapOf(STRING, STRING), text: STRING, bytes: STRING })) }),
+  webpush: openShape({ subscription: openShape({ endpoint: STRING, keys: openShape({ p256dh: STRING, auth: STRING }) }), payload: STRING, ttl: NUMBER, urgency: union(lit('very-low'), lit('low'), lit('normal'), lit('high')) }),
+  retry: HTTP_RETRY,
+  presign: openShape({ expiresSec: NUMBER }),
+  formEncoding: union(lit('html'), lit('rfc3986')),
   auth: HTTP_AUTH,
-  timeoutMs: NUMBER,
+  timeoutMs: nullable(NUMBER),
+  delayMs: nullable(NUMBER),
   responseAs: union(lit('text'), lit('bytes')),
   paginate: HTTP_PAGINATE,
   stream: union(lit('sse'), lit('json-lines')),
@@ -338,6 +439,22 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'else', type: tv('T'), description: 'Value or effect if false' },
     ],
     example: '["if", [">", 5, 0], "alive", "dead"]',
+  },
+
+  as: {
+    module: 'core',
+    category: 'logic',
+    minArity: 2,
+    maxArity: 2,
+    description:
+      'Explicit cast: the value, converted to the named type. Legal only where the type relation allows the conversion with a cast (a string to CallKey); plain assignment never makes it. A CallKey is a string at rest, so the value is unchanged; an empty string is invalid.',
+    hasSideEffects: false,
+    returnType: SHAPE,
+    params: [
+      { name: 'value', type: tv('T'), description: 'The value to convert' },
+      { name: 'type', type: SHAPE, description: 'The name of the type to convert to' },
+    ],
+    example: '["as", "search", "CallKey"] // => "search"',
   },
 
   // --- control ----------------------------------------------------------------
@@ -921,7 +1038,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         optional: true,
       },
     ],
-    example: '["call-service", "llm", "generate", { "userPrompt": "Hello" }, { "emit": { "success": "LlmCompleted", "failure": "LlmFailed" } }]',
+    example: '["call-service", "my-service", "run", { "target": "https://example.com/hook", "event": "order.placed" }, { "emit": { "success": "Done", "failure": "Failed" } }]',
     effect: {
       kind: 'call-service',
       // TODO(entity-v2): narrow to the declared service return type once
@@ -936,18 +1053,18 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 3,
     maxArity: 5,
     description:
-      'Send one HTTP request from the server: (http METHOD origin path request? options?). The origin must be declared in the app egress list; credentials are named secret knobs resolved by the host. The reply { status, headers, body } is the success payload (a non-2xx status is a success reply); failures carry { error, kind }. Optional trailing { key, emit: { success, failure, cancelled, onMessage } } routes the result like call-service.',
+      'Send HTTP through the shared kernel: (http METHOD origin path request? options?). The origin, optionally including a path prefix, must be declared in egress; credentials are host-resolved named secret knobs. Keyless calls can run on client/extension; auth requires server execution. Replies carry { status, headers, body, key } (non-2xx is a success reply); failures carry { error, kind, credential, key }. Optional trailing { key, emit: { success, failure, cancelled, onMessage } } routes the result like call-service. An oauth-client auth runs one OAuth op end to end: discovery against a literal origin, and code, connect, refresh, revoke and userinfo against (http METHOD oauth-endpoint token|revocation|userinfo …), whose URL comes from the client metadata; failures carry { error, kind: oauth, code, reason }.',
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'method', type: HTTP_METHOD, description: 'HTTP method word: GET, POST, PUT, PATCH or DELETE' },
-      { name: 'origin', type: STRING, description: 'Origin (scheme://host[:port], no path): a string literal or a url-typed @config knob' },
+      { name: 'origin', type: STRING, description: 'Origin with optional path prefix: a string literal or a url-typed @config knob' },
       { name: 'path', type: STRING, description: 'Request path, starting with "/"' },
       {
         name: 'request',
         type: HTTP_REQUEST,
-        description: 'Request parts: query, headers, at most one body (json | form | text | bytes), auth, timeoutMs, responseAs, paginate, stream',
+        description: 'Request parts: query, headers, at most one body (json | form | text | bytes | multipart | webpush), auth, formEncoding, retry, presign, timeoutMs, delayMs (the host waits that many milliseconds before it sends; cancel-call aborts the wait), responseAs, paginate, stream',
         optional: true,
       },
       {
@@ -960,8 +1077,67 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["http", "GET", "https://api.example.com", "/items", { "query": { "limit": 10 } }, { "emit": { "success": "ITEMS_LOADED", "failure": "ITEMS_FAILED" } }]',
     effect: {
       kind: 'http',
-      produces: shape({ status: NUMBER, headers: mapOf(STRING, STRING), body: STRING }),
+      produces: shape({ status: NUMBER, headers: mapOf(STRING, STRING), body: STRING, key: union(STRING, lit(null)) }),
     },
+  },
+  redis: {
+    module: 'core',
+    category: 'effect',
+    minArity: 2,
+    maxArity: 4,
+    description:
+      'Run one redis command through the shared kernel: (redis origin command options? options?). The kernel speaks RESP over the host\'s raw TCP (TLS for rediss://); the origin must be a redis:// or rediss:// origin declared in egress. command is a list of text items (the command name first). One connection serves one call: AUTH (an ACL user with auth + user) and SELECT (db) go out as one pipeline whose replies are checked before the command runs. The success payload is { reply, key }: reply is the server\'s answer as text, a number or null, or a list of those nested up to 3 lists deep (a deeper reply fails). The failure payload is { error, kind, code, credential, key }: kind is refused (egress, grant or an invalid call), unconfigured (the auth credential is not held), timeout, failed, protocol, unsupported or redis (the server answered an error; code is its error word such as WRONGTYPE).',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'origin', type: STRING, description: 'A redis:// or rediss:// origin: a string literal or a url-typed @config knob' },
+      { name: 'command', type: list(STRING), description: 'The command as text items, name first: ["SET", "k", "v", "PX", "1000"]' },
+      {
+        name: 'options',
+        type: REDIS_OPTIONS,
+        description: 'Optional trailing options: auth (a secret-typed knob naming the password credential), user (the ACL user), db (the database to SELECT), key (a non-empty string echoed as key), emit: { success, failure }',
+        optional: true,
+      },
+      {
+        name: 'more',
+        type: REDIS_OPTIONS,
+        description: 'Optional second options object; the two share one namespace, so a key may sit in either',
+        optional: true,
+      },
+    ],
+    example: '["redis", "redis://cache.internal:6379", ["GET", "@payload.key"], { "auth": "@config.password" }, { "emit": { "success": "GOT", "failure": "GET_FAILED" } }]',
+    effect: { kind: 'redis', produces: shape({ reply: REDIS_REPLY, key: nullable(STRING) }) },
+  },
+  postgres: {
+    module: 'core',
+    category: 'effect',
+    minArity: 3,
+    maxArity: 5,
+    description:
+      'Run one read-only SQL statement through the shared kernel: (postgres origin sql params options? options?). The kernel speaks the Postgres wire protocol over the host\'s raw TCP (an in-band SSLRequest and the kernel TLS when tls is true); the origin must be a postgres:// or postgresql:// origin declared in egress. sql is exactly one SELECT (or WITH ... SELECT): the kernel\'s read-only guard, the same one orb validate applies to a literal statement, refuses anything else before it connects. params are the bind values $1, $2, ... sent as text for the server to type. options: auth (a secret-typed knob naming the password credential; cleartext, MD5 and SCRAM-SHA-256 logins), user (required), database (default: the user), tls, timeoutMs (the statement timeout), key, emit: { success, failure }. One call is one connection. The success payload is { rows, rowCount, columns, key }: rows are maps of column name to value (booleans, numbers, null, text, lists of those; an int8 past 2^53, numeric, json, jsonb, uuid, date, time, timestamp and every other type as the text Postgres prints; timestamptz as UTC ISO text; bytea as base64), columns are { name, typeOid }. The failure payload is { error, kind, code, credential, key }: kind is refused (egress, grant, the read-only guard or an invalid call), unconfigured, timeout, failed, protocol, unsupported or postgres (the server answered an error; code is its SQLSTATE such as 42P01).',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'origin', type: STRING, description: 'A postgres:// or postgresql:// origin: a string literal or a url-typed @config knob' },
+      { name: 'sql', type: STRING, description: 'One read-only SELECT statement, with $1, $2, ... placeholders' },
+      { name: 'params', type: list(PG_BIND), description: 'The bind values for the placeholders, in order; null is SQL NULL, a list a Postgres array, an object JSON' },
+      {
+        name: 'options',
+        type: PG_OPTIONS,
+        description: 'Options: auth (secret knob), user (required), database, tls, timeoutMs, key, emit: { success, failure }',
+        optional: true,
+      },
+      {
+        name: 'more',
+        type: PG_OPTIONS,
+        description: 'Optional second options object; the two share one namespace, so a key may sit in either',
+        optional: true,
+      },
+    ],
+    example: '["postgres", "postgres://db.internal:5432", "SELECT id, name FROM users WHERE id = $1", ["@payload.id"], { "auth": "@config.password", "user": "app" }, { "emit": { "success": "ROWS", "failure": "QUERY_FAILED" } }]',
+    effect: { kind: 'postgres', produces: shape({ rows: list(mapOf(STRING, PG_VALUE)), rowCount: NUMBER, columns: list(shape({ name: STRING, typeOid: NUMBER })), key: nullable(STRING) }) },
   },
   'cancel-call': {
     module: 'core',
@@ -969,11 +1145,11 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1,
     maxArity: 1,
     description:
-      'Abort the in-flight call-service started with this key in the same running app; a no-op when none is in flight. The cancelled call emits its declared emit.cancelled event with { key }, never success or failure.',
+      'Abort the in-flight keyed call started with this key in the same running app: a call-service, an http, a browser/prompt or a browser/embed; a no-op when none is in flight. A list of keys aborts each in turn. The cancelled call emits its declared emit.cancelled event with { key }, never success or failure, and a reply that arrives later is dropped.',
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'void',
-    params: [{ name: 'key', type: STRING, description: 'The key the call-service declared in its options' }],
+    params: [{ name: 'key', type: union(STRING, list(STRING)), description: 'The key the call declared in its options, or a list of keys' }],
     example: '["cancel-call", "@entity.id"]',
     effect: { kind: 'cancel-call' },
   },
@@ -983,7 +1159,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1,
     maxArity: 2,
     description:
-      'Draw n bytes from the host CSPRNG (journaled, so a replay sees the same bytes). The success payload is { value }: the bytes as base64url without padding, for an OAuth state or a PKCE verifier. n is an integer from 1 to 1024.',
+      'Draw n bytes from the host CSPRNG (journaled, so a replay sees the same bytes). The success payload is { value }: the bytes as base64url without padding, for an OAuth state or a PKCE verifier. n is an integer from 1 to 1024. An optional key (a non-empty string expression) is echoed as key in the success and failure payloads, so a caller can carry its request context through the draw.',
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'void',
@@ -991,8 +1167,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'bytes', type: NUMBER, description: 'How many random bytes to draw (1 to 1024)' },
       {
         name: 'options',
-        type: HOST_CALL_ENVELOPE,
-        description: 'Optional trailing options: { emit: { success, failure } } routes the { value } payload and the { error } failure',
+        type: openShape({ key: STRING, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }) }),
+        description: 'Optional trailing options: { key } is a non-empty string echoed as key in the success and failure payloads (absent: no key field); { emit: { success, failure } } routes the { value } payload and the { error } failure',
         optional: true,
       },
     ],
@@ -1005,12 +1181,12 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1,
     maxArity: 2,
     description:
-      'Whether the signed-in viewer has connected the credential named by a secret knob: the success payload is { connected }. Fails when nobody is signed in. The credential value is never readable.',
+      'A bare secret knob checks the signed-in user credential; { credential: knob, scope: app | user } explicitly selects a scope. App checks need no viewer and treat absent or empty values as disconnected. User checks require a signed-in viewer and never fall back to app credentials. Success is { connected }; the credential value is never readable.',
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'void',
     params: [
-      { name: 'credential', type: STRING, description: 'A secret-typed @config knob whose value names the credential' },
+      { name: 'credential', type: union(STRING, shape({ credential: STRING, scope: union(lit('app'), lit('user')) })), description: 'A secret-typed @config knob (user scope), or a closed credential/scope object with an explicit app or user scope' },
       {
         name: 'options',
         type: HOST_CALL_ENVELOPE,
@@ -1018,7 +1194,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         optional: true,
       },
     ],
-    example: '["credential-status", "@config.googleToken", { "emit": { "success": "STATUS_KNOWN" } }]',
+    example: '["credential-status", { "credential": "@config.apiKey", "scope": "app" }, { "emit": { "success": "STATUS_KNOWN" } }]',
     effect: { kind: 'credential-status', produces: shape({ connected: BOOLEAN }) },
   },
   'credential-forget': {
@@ -1042,6 +1218,209 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["credential-forget", "@config.googleToken", { "emit": { "success": "DISCONNECTED" } }]',
     effect: { kind: 'credential-forget', produces: shape({ connected: BOOLEAN }) },
+  },
+  'credential-list': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      "Masked credential inventory: whether the host's credential store can encrypt, the integrations mode, each service's status and every declared credential's source (store, env or none) with its last four characters, never the value. The declared names are the registry's remaining services plus the secret knobs the running program reads. Open to every caller. The success payload is { enabled, mode, services, entries }.",
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'request', type: openShape({ service: STRING }), description: 'An optional { service } filter' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the result payload and the { error, code } failure',
+        optional: true,
+      },
+    ],
+    example: '["credential-list", { "service": "llm" }, { "emit": { "success": "LISTED" } }]',
+    effect: { kind: 'credential-list', produces: shape({ enabled: BOOLEAN, mode: STRING, services: list(openShape({ id: STRING, service: STRING, configured: BOOLEAN, mocked: BOOLEAN, status: STRING, backend: STRING, needs: STRING })), entries: list(openShape({ id: STRING, service: STRING, envVar: STRING, required: BOOLEAN, description: STRING, configured: BOOLEAN, source: STRING, last4: STRING })) }) },
+  },
+  'credential-set': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      "Store a credential value encrypted in the host's credential store; only a credential the named service or program group declares is accepted. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { saved, service, envVar, last4 }; the value is never echoed or logged.",
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'request', type: shape({ service: STRING, envVar: STRING, value: STRING }), description: '{ service, envVar, value }' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the result payload and the { error, code } failure',
+        optional: true,
+      },
+    ],
+    example: '["credential-set", { "service": "KeysOrbital", "envVar": "ALMADAR_API_KEY_SALT", "value": "@payload.value" }, { "emit": { "success": "SAVED" } }]',
+    effect: { kind: 'credential-set', produces: shape({ saved: BOOLEAN, service: STRING, envVar: STRING, last4: STRING }) },
+  },
+  'credential-remove': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      "Delete a stored credential row so resolution falls back to the environment; only a declared credential is accepted. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { removed }.",
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'request', type: shape({ service: STRING, envVar: STRING }), description: '{ service, envVar }' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the result payload and the { error, code } failure',
+        optional: true,
+      },
+    ],
+    example: '["credential-remove", { "service": "KeysOrbital", "envVar": "ALMADAR_API_KEY_SALT" }, { "emit": { "success": "REMOVED" } }]',
+    effect: { kind: 'credential-remove', produces: shape({ removed: BOOLEAN }) },
+  },
+  'credential-test': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      "Credential presence check for a service or program group: the required declared credentials the store or the environment do not hold. Presence only, never a live probe. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { service, configured, missing, probed, ok, message }.",
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'request', type: shape({ service: STRING }), description: '{ service }' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the result payload and the { error, code } failure',
+        optional: true,
+      },
+    ],
+    example: '["credential-test", { "service": "LlmOrbital" }, { "emit": { "success": "TESTED" } }]',
+    effect: { kind: 'credential-test', produces: shape({ service: STRING, configured: BOOLEAN, missing: list(STRING), probed: BOOLEAN, ok: BOOLEAN, message: STRING }) },
+  },
+  'credential-mode': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      'Switch the host\'s integrations mode flag between "mock" and "real"; the host may refuse (mock under production). Requires the caller\'s @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { mode }.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'request', type: shape({ mode: union(lit('mock'), lit('real')) }), description: '{ mode: "mock" | "real" }' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the result payload and the { error, code } failure',
+        optional: true,
+      },
+    ],
+    example: '["credential-mode", { "mode": "real" }, { "emit": { "success": "MODE_SET" } }]',
+    effect: { kind: 'credential-mode', produces: shape({ mode: STRING }) },
+  },
+  'credential-rotate': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      "Re-encrypt every stored credential row under the current master key. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { rotated, alreadyCurrent, unreadable }.",
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'request', type: openShape({}), description: 'An empty request object' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } } routes the result payload and the { error, code } failure',
+        optional: true,
+      },
+    ],
+    example: '["credential-rotate", {}, { "emit": { "success": "ROTATED" } }]',
+    effect: { kind: 'credential-rotate', produces: shape({ rotated: NUMBER, alreadyCurrent: NUMBER, unreadable: NUMBER }) },
+  },
+  'oauth-authorize': {
+    module: 'core',
+    category: 'effect',
+    minArity: 2,
+    maxArity: 3,
+    description:
+      'Start an OAuth authorization for a client: (oauth-authorize CLIENT { redirectUri, scope?, subject?, params? } { emit }). The state and the PKCE verifier are drawn from the host CSPRNG (journaled); the pending grant, verifier included, stays with the host and is consumed once by an oauth-client connect or code. A client described by an issuer needs its discovery to have run first. The success payload is { authUrl, state }; the failure payload is { error, code, reason }.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'client', type: OAUTH_CLIENT, description: 'The OAuth client: tag, mode, issuer XOR endpoints, secret-knob clientId / clientSecret, clientAuth' },
+      {
+        name: 'authorize',
+        type: openShape({ redirectUri: STRING, scope: union(STRING, list(STRING)), subject: STRING, params: mapOf(STRING, STRING) }),
+        description: 'The redirect URI, the scopes, the subject that must complete the grant, extra authorization parameters',
+      },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } }',
+        optional: true,
+      },
+    ],
+    example: '["oauth-authorize", { "tag": "google", "mode": "real", "issuer": "@config.issuer", "clientId": "@config.id", "clientSecret": "@config.secret", "clientAuth": "post" }, { "redirectUri": "https://app.example.com/cb", "scope": ["openid"] }, { "emit": { "success": "AUTH_URL" } }]',
+    effect: { kind: 'oauth-authorize', produces: shape({ authUrl: STRING, state: STRING }) },
+  },
+  'oauth-connection-status': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      'The signed-in viewer\'s connection to a provider (google, github or auth0): (oauth-connection-status PROVIDER { emit }). The success payload is the connection row { provider, connected, account, avatarUrl, scope, connectedAt }; the tokens are never readable. Fails not-signed-in when nobody is signed in.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'provider', type: OAUTH_PROVIDER, description: 'google, github or auth0' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } }',
+        optional: true,
+      },
+    ],
+    example: '["oauth-connection-status", "google", { "emit": { "success": "CONNECTION" } }]',
+    effect: { kind: 'oauth-connection-status', produces: OAUTH_CONNECTION },
+  },
+  'oauth-connection-forget': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      'Drop the signed-in viewer\'s connection to a provider: (oauth-connection-forget PROVIDER { emit }). The success payload is the disconnected connection row. Fails not-signed-in when nobody is signed in.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'provider', type: OAUTH_PROVIDER, description: 'google, github or auth0' },
+      {
+        name: 'options',
+        type: HOST_CALL_ENVELOPE,
+        description: 'Optional trailing options: { emit: { success, failure } }',
+        optional: true,
+      },
+    ],
+    example: '["oauth-connection-forget", "google", { "emit": { "success": "DISCONNECTED" } }]',
+    effect: { kind: 'oauth-connection-forget', produces: OAUTH_CONNECTION },
   },
   'render-ui': {
     module: 'core',

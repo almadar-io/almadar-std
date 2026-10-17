@@ -1,0 +1,80 @@
+app std-throttle [
+  version: "1.0.0",
+  description: "std-throttle — pass at most one INPUT per intervalMs. The first INPUT passes at once as PASSED and opens the interval; INPUTs inside it count as suppressed. With trailing on, the last interval that suppressed anything ends with one more PASSED. Replaces the retired async/throttle operator."
+]
+orbital ThrottleOrbital {
+  entity ThrottleGate [runtime] {
+    id : string!
+    openAt : number @description "Epoch milliseconds at which the interval ends; 0 while open." = 0
+    suppressed : number @description "INPUTs dropped inside the current interval." = 0
+  }
+
+  trait Throttle -> @rebindable ThrottleGate [lifecycle, instance] {
+    initial: open
+
+    state open {
+      INIT -> open
+        (set @entity.openAt 0)
+        (set @entity.suppressed 0)
+      INPUT -> cooling
+        (set @entity.openAt (+ @now @config.intervalMs))
+        (set @entity.suppressed 0)
+        (emit PASSED { trailing: false, suppressed: 0 })
+    }
+
+    state cooling {
+      INIT -> open
+        (set @entity.openAt 0)
+        (set @entity.suppressed 0)
+      INPUT -> cooling
+        (set @entity.suppressed (+ @entity.suppressed 1))
+      TIMER_DUE -> cooling when (and @config.trailing (> @entity.suppressed 0))
+        (emit PASSED { trailing: true, suppressed: @entity.suppressed })
+        (set @entity.openAt (+ @now @config.intervalMs))
+        (set @entity.suppressed 0)
+      TIMER_DUE -> open when (not (and @config.trailing (> @entity.suppressed 0)))
+        (set @entity.openAt 0)
+        (set @entity.suppressed 0)
+    }
+
+    emits {
+      PASSED -> external {
+        trailing : boolean!
+        suppressed : number!
+      }
+        @description "An INPUT was let through; suppressed counts the INPUTs the closing interval dropped."
+        @synonyms "allowed, admitted, go ahead"
+        @tier "domain"
+      TIMER_DUE -> internal { }
+        @tier "internal"
+    }
+
+    listens {
+      INPUT { }
+        @description "One event offered to the gate."
+        @synonyms "trigger, request, scroll, resize"
+      TIMER_DUE { }
+    }
+
+    ticks {
+      intervalCheck every 100ms
+        when (and (> @entity.openAt 0) (>= @now @entity.openAt))
+        (emit TIMER_DUE { })
+    }
+
+    config {
+      intervalMs : number = 1000
+        @label "Interval (ms)"
+        @description "Minimum spacing between PASSED events. Resolution is the 100ms interval check."
+        @synonyms "rate, spacing, period"
+        @tier "domain"
+      trailing : boolean = false
+        @label "Pass the trailing INPUT?"
+        @description "When on, an interval that suppressed INPUTs ends with one more PASSED (trailing: true) and opens a new interval."
+        @synonyms "trailing edge, last call"
+        @tier "policy"
+    }
+  }
+
+  page "/throttle" as ThrottlePage -> Throttle
+}

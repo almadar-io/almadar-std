@@ -55,12 +55,12 @@ orbital FxNarrativeOrbital {
         (set @entity.lastText "")
 
       NARRATE -> active when @config.running
-        (let ((styleKey (if (== (object/get @payload style) null) "fact" (object/get @payload style)))
+        (let ((styleKey (if (not (validate/required (object/get @payload style))) "fact" (object/get @payload style)))
               (styleDef (object/get @config.styles @styleKey))
               (ttl (if (== (object/get @payload ttl) null) (object/get @styleDef ttl) (object/get @payload ttl)))
               (x (if (== (object/get @payload x) null) 0.5 (object/get @payload x)))
               (y (if (== (object/get @payload y) null) 0.25 (object/get @payload y)))
-              (space (if (== (object/get @payload space) null) "world" (object/get @payload space)))
+              (space (if (not (validate/required (object/get @payload space))) "world" (object/get @payload space)))
               (text (object/get @payload text)))
           (do
             (set @entity.seq (+ @entity.seq 1))

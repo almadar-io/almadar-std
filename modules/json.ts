@@ -13,6 +13,17 @@ import type { StdOperatorMeta } from '../types.js';
 import { SHAPE, tv } from '../signature.js';
 
 export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
+  'json/valid': {
+    module: 'json',
+    category: 'std-json',
+    minArity: 1,
+    maxArity: 1,
+    description: 'Test whether a string is syntactically valid JSON; valid null returns true and malformed JSON returns false',
+    hasSideEffects: false,
+    returnType: 'boolean',
+    params: [{ name: 's', type: 'string', description: 'The JSON string to validate' }],
+    example: '["json/valid", "null"] // => true',
+  },
   'json/parse': {
     module: 'json',
     category: 'std-json',

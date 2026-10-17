@@ -1,0 +1,25 @@
+app approval-gate-spec [
+  version: "1.0.0",
+  description: "Design contract for a generic approval gate: an action waits in a review queue until a privileged reviewer approves or denies it. Names and types only; the atom that satisfies it owns the topology."
+]
+
+orbital ApprovalGateSpec {
+  expects entity ApprovalRequest [persistent] {
+    @read none "reviewers and submitters share one queue; decision authority is enforced at the review transitions"
+    id : string!
+    gatedEvent : string
+    subjectLabel : string
+    subjectId : string
+    requestedBy : string
+    status : "pending" | "approved" | "denied"
+    reviewer : string
+    notes : string
+  }
+  expects trait ApprovalGateReview {
+    state idle { OPEN -> loading }
+    state reviewing
+    state denying
+    emits { APPROVE DENY }
+  }
+  expects page "/approvals/queue" -> ApprovalGateReview
+}

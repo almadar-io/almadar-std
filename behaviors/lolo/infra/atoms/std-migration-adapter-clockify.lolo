@@ -1,0 +1,297 @@
+app std-migration-adapter-clockify [
+  version: "1.0.0",
+  description: "std-migration-adapter-clockify — the Clockify report-export adapter of a migration run. Each fetched document is Clockify's detailed-report JSON: a bare entry array, or an object holding the entries under timeentries (or timeEntries). Entries group under one folder unit per project, created just before the project's first entry (an entry with no project name groups under '(no project)'); each entry becomes a root unit titled with its description ('(no description)' when blank), nested under its project folder, and carrying start, end, duration (as text), user, client and billable. An entry without timeInterval.start is left out of the units and ledgered in skipped with the reason. A document that is not a JSON entry array or timeentries object fails the whole run with MIGRATION_EXTRACT_FAILED. Answers std-migration-job's MIGRATION_EXTRACT when the profile's adapter is clockify."
+]
+orbital MigrationAdapterClockifyOrbital {
+  type ImportFieldValue = string | number | boolean
+  type ImportRawDocument = { ref : string!, raw : string! }
+  type ImportSkip = { ref : string!, reason : string! }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, content : string, parentRef : string, metadata : Map string ImportFieldValue, source : string!, span : string }
+  type ClockifyInterval = { start : string, end : string, duration : string | number }
+  type ClockifyEntry = { _id : string, id : string, description : string, projectName : string, clientName : string, userName : string, billable : boolean, timeInterval : ClockifyInterval }
+  type ClockifyList = [ClockifyEntry]
+  type ClockifyReport = { timeentries : [ClockifyEntry], timeEntries : [ClockifyEntry] }
+  type ClockifyDocument = { ref : string!, ok : boolean!, valid : boolean!, entries : [ClockifyEntry] }
+
+  entity MigrationAdapterClockifyRun [runtime] {
+    id : string!
+    documents : [ClockifyDocument] = []
+  }
+
+  trait MigrationAdapterClockify -> MigrationAdapterClockifyRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.documents [])
+
+      MIGRATION_EXTRACT -> idle when (= ?adapter "clockify")
+        (set
+          @entity.documents
+          (array/map
+            ?documents
+            (fn d
+              (if
+                (not (json/valid (object/get @d raw)))
+                { ref: (object/get @d ref), ok: false, valid: false, entries: [] }
+                (if
+                  (str/startsWith (str/trim (object/get @d raw)) "[")
+                  {
+                    ref: (object/get @d ref),
+                    ok: true,
+                    valid: true,
+                    entries: (json/parse (object/get @d raw) ClockifyList)
+                  }
+                  (if
+                    (str/startsWith (str/trim (object/get @d raw)) "{")
+                    (let ((report (json/parse (object/get @d raw) ClockifyReport)))
+                      (if
+                        (!= (object/get @report timeentries) null)
+                        {
+                          ref: (object/get @d ref),
+                          ok: (validate/array (object/get @report timeentries)),
+                          valid: true,
+                          entries: (object/get @report timeentries)
+                        }
+                        {
+                          ref: (object/get @d ref),
+                          ok: (validate/array (object/get @report timeEntries)),
+                          valid: true,
+                          entries: (object/get @report timeEntries)
+                        }))
+                    { ref: (object/get @d ref), ok: false, valid: true, entries: [] }))))))
+        (emit CLOCKIFY_PARSED {})
+
+      CLOCKIFY_PARSED -> idle when (array/some @entity.documents (fn d (not (object/get @d ok))))
+        (emit MIGRATION_EXTRACT_FAILED { error: (if (object/get (array/find @entity.documents (fn d (not (object/get @d ok)))) valid) "Clockify export must be an entry array or { timeentries: [...] }" "Clockify export is not valid JSON") })
+
+      CLOCKIFY_PARSED -> idle when (array/every @entity.documents (fn d (object/get @d ok)))
+        (emit
+          MIGRATION_EXTRACTED
+          {
+            units: (array/flatten
+                     (array/map
+                       @entity.documents
+                       (fn d
+                         (let ((okIdx (array/filter
+                                       (array/range (array/len (object/get @d entries)))
+                                       (fn i
+                                         (and
+                                           (!=
+                                             (object/get
+                                               (array/nth (object/get @d entries) @i)
+                                               "timeInterval.start"
+                                               "")
+                                             null)
+                                           (!=
+                                             (object/get
+                                               (array/nth (object/get @d entries) @i)
+                                               "timeInterval.start"
+                                               "")
+                                             ""))))))
+                           (array/flatten
+                             (array/map
+                               @okIdx
+                               (fn i p
+                                 (let ((e (array/nth (object/get @d entries) @i))
+                                       (proj (if
+                                              (and
+                                                (validate/required (object/get @e projectName ""))
+                                                (!= (object/get @e projectName "") ""))
+                                              (object/get @e projectName "")
+                                              "(no project)")))
+                                   (array/concat
+                                     (if
+                                       (array/some
+                                         (array/take @okIdx @p)
+                                         (fn j
+                                           (=
+                                             (if
+                                               (and
+                                                 (!=
+                                                   (object/get
+                                                     (array/nth (object/get @d entries) @j)
+                                                     projectName
+                                                     "")
+                                                   null)
+                                                 (!=
+                                                   (object/get
+                                                     (array/nth (object/get @d entries) @j)
+                                                     projectName
+                                                     "")
+                                                   ""))
+                                               (object/get
+                                                 (array/nth (object/get @d entries) @j)
+                                                 projectName
+                                                 "")
+                                               "(no project)")
+                                             @proj)))
+                                       []
+                                       [
+                                        {
+                                          ref: (str/concat
+                                                 "clockify:"
+                                                 (object/get @d ref)
+                                                 ":project:"
+                                                 (str/replace-pattern (str/lower @proj) "[^a-z0-9]+" "-")),
+                                          kind: folder,
+                                          title: @proj,
+                                          content: null,
+                                          parentRef: null,
+                                          source: "clockify",
+                                          span: (object/get @d ref),
+                                          metadata: { source: "clockify" }
+                                        }
+                                       ])
+                                     [
+                                      {
+                                        ref: (str/concat
+                                               "clockify:"
+                                               (object/get @d ref)
+                                               ":"
+                                               (if
+                                                 (validate/string (object/get @e _id))
+                                                 (object/get @e _id)
+                                                 (if
+                                                   (validate/string (object/get @e id))
+                                                   (object/get @e id)
+                                                   (str/concat "entry-" @i)))),
+                                        kind: root,
+                                        title: (if
+                                                 (and
+                                                   (validate/required (object/get @e description ""))
+                                                   (!= (object/get @e description "") ""))
+                                                 (object/get @e description "")
+                                                 "(no description)"),
+                                        content: null,
+                                        parentRef: (str/concat
+                                                     "clockify:"
+                                                     (object/get @d ref)
+                                                     ":project:"
+                                                     (str/replace-pattern (str/lower @proj) "[^a-z0-9]+" "-")),
+                                        source: "clockify",
+                                        span: (str/concat (object/get @d ref) "#" @i),
+                                        metadata: (object/merge
+                                                    {
+                                                      source: "clockify",
+                                                      start: (object/get @e "timeInterval.start")
+                                                    }
+                                                    (object/fromEntries
+                                                      (array/map
+                                                        (array/filter
+                                                          [
+                                                           {
+                                                             k: "end",
+                                                             v: (str/default
+                                                                  (object/get @e "timeInterval.end" "")
+                                                                  "")
+                                                           }
+                                                          ]
+                                                          (fn q (!= (object/get @q v) "")))
+                                                        (fn q [(object/get @q k), (object/get @q v)])))
+                                                    (object/fromEntries
+                                                      (array/map
+                                                        (array/filter
+                                                          [
+                                                           {
+                                                             k: "duration",
+                                                             v: (str/concat
+                                                                  (object/get @e "timeInterval.duration"))
+                                                           }
+                                                          ]
+                                                          (fn q (object/has @e "timeInterval.duration")))
+                                                        (fn q [(object/get @q k), (object/get @q v)])))
+                                                    (object/fromEntries
+                                                      (array/map
+                                                        (array/filter
+                                                          [
+                                                           {
+                                                             k: "user",
+                                                             v: (str/default (object/get @e userName "") "")
+                                                           },
+                                                           {
+                                                             k: "client",
+                                                             v: (str/default (object/get @e clientName "") "")
+                                                           }
+                                                          ]
+                                                          (fn q (!= (object/get @q v) "")))
+                                                        (fn q [(object/get @q k), (object/get @q v)])))
+                                                    { billable: (not (not (object/get @e billable false))) })
+                                      }
+                                     ]))))))))),
+            skipped: (array/flatten
+                       (array/map
+                         @entity.documents
+                         (fn d
+                           (array/map
+                             (array/filter
+                               (array/range (array/len (object/get @d entries)))
+                               (fn i
+                                 (not
+                                   (and
+                                     (!=
+                                       (object/get
+                                         (array/nth (object/get @d entries) @i)
+                                         "timeInterval.start"
+                                         "")
+                                       null)
+                                     (!=
+                                       (object/get
+                                         (array/nth (object/get @d entries) @i)
+                                         "timeInterval.start"
+                                         "")
+                                       "")))))
+                             (fn i
+                               {
+                                 ref: (str/concat
+                                        "clockify:"
+                                        (object/get @d ref)
+                                        ":"
+                                        (if
+                                          (validate/string
+                                            (object/get (array/nth (object/get @d entries) @i) _id))
+                                          (object/get (array/nth (object/get @d entries) @i) _id)
+                                          (if
+                                            (validate/string
+                                              (object/get (array/nth (object/get @d entries) @i) id))
+                                            (object/get (array/nth (object/get @d entries) @i) id)
+                                            (str/concat "entry-" @i)))),
+                                 reason: "entry has no timeInterval.start"
+                               })))))
+          })
+    }
+
+    emits {
+      CLOCKIFY_PARSED {
+        ok : boolean
+      }
+        @description "Internal: the fetched documents are parsed into entry lists and checked."
+        @tier "secondary"
+      MIGRATION_EXTRACTED -> external {
+        units : [ExtractedUnit]!
+        skipped : [ImportSkip]!
+      }
+        @description "The Clockify entries extracted into project folders and entry units, plus the ledger of entries left out, in document order."
+        @synonyms "clockify extracted, clockify staging, clockify units"
+        @tier "domain"
+      MIGRATION_EXTRACT_FAILED -> external {
+        error : string!
+      }
+        @description "A document is not a Clockify report export, so the run cannot stage."
+        @synonyms "clockify export invalid, clockify parse failed"
+        @tier "domain"
+    }
+
+    listens {
+      MIGRATION_EXTRACT -> external {
+        adapter : string!
+        documents : [ImportRawDocument]!
+      }
+        @description "A migration run asks its profile's adapter to extract the fetched documents; this adapter answers when adapter is clockify and ignores every other adapter."
+        @synonyms "extract documents, parse fetched documents"
+        @tier "domain"
+    }
+  }
+
+  page "/migration-adapter-clockify" as MigrationAdapterClockifyPage -> MigrationAdapterClockify
+}

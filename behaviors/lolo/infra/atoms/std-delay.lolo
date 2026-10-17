@@ -1,0 +1,74 @@
+app std-delay [
+  version: "1.0.0",
+  description: "std-delay — wait a declared number of milliseconds, then emit one event. START arms the deadline, CANCEL disarms it, ELAPSED fires once when the deadline passes. Replaces the retired async/delay operator."
+]
+orbital DelayOrbital {
+  entity DelayTimer [runtime] {
+    id : string!
+    deadline : number @description "Epoch milliseconds at which ELAPSED fires; 0 while idle." = 0
+    waitedMs : number @description "Milliseconds the armed wait was set to." = 0
+  }
+
+  trait Delay -> @rebindable DelayTimer [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.deadline 0)
+      START -> waiting
+        (set @entity.waitedMs (if (== ?delayMs null) @config.delayMs ?delayMs))
+        (set @entity.deadline (+ @now @entity.waitedMs))
+    }
+
+    state waiting {
+      INIT -> idle
+        (set @entity.deadline 0)
+      START -> waiting
+        (set @entity.waitedMs (if (== ?delayMs null) @config.delayMs ?delayMs))
+        (set @entity.deadline (+ @now @entity.waitedMs))
+      CANCEL -> idle
+        (set @entity.deadline 0)
+      TIMER_DUE -> idle
+        (set @entity.deadline 0)
+        (emit ELAPSED { waitedMs: @entity.waitedMs })
+    }
+
+    emits {
+      ELAPSED -> external {
+        waitedMs : number!
+      }
+        @description "The wait ended."
+        @synonyms "done, elapsed, time up, fired"
+        @tier "domain"
+      TIMER_DUE -> internal { }
+        @tier "internal"
+    }
+
+    listens {
+      START {
+        delayMs : number
+      }
+        @description "Arm the wait; delayMs overrides the configured delay. Re-arming restarts it."
+        @synonyms "begin, wait, schedule"
+      CANCEL { }
+        @description "Disarm the wait; ELAPSED does not fire."
+        @synonyms "stop, abort"
+    }
+
+    ticks {
+      deadlineCheck every 100ms
+        when (and (> @entity.deadline 0) (>= @now @entity.deadline))
+        (emit TIMER_DUE { })
+    }
+
+    config {
+      delayMs : number = 1000
+        @label "Delay (ms)"
+        @description "Milliseconds between START and ELAPSED when START carries no delayMs. Resolution is the 100ms deadline check."
+        @synonyms "wait, sleep, pause, timeout"
+        @tier "domain"
+    }
+  }
+
+  page "/delay" as DelayPage -> Delay
+}

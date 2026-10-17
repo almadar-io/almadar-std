@@ -1,8 +1,10 @@
 app std-image-upload-multi [
   version: "1.0.0",
-  description: "std-image-upload-multi — multi-image upload with drop zone, gallery preview, and per-batch progress."
+  description: "std-image-upload-multi — multi-image upload with drop zone, gallery preview, and per-batch progress.",
+  egress: ["http://127.0.0.1:9000", "https://s3.us-east-1.amazonaws.com"]
 ]
 orbital UploadedImageOrbital {
+  uses Storage from "std/behaviors/std-storage"
     type UploadBatchFile = { name : string!, size : number, type : string, content : string }
 
     type StoredImageItem = { id : string!, key : string, url : string, name : string, sizeBytes : number, mimeType : string }
@@ -88,13 +90,11 @@ orbital UploadedImageOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
       UPLOAD -> uploading
-        (call-service storage uploadMany {
-          acl: public
+        (emit STORAGE_UPLOAD_MANY {
+          acl: "public"
           bucket: @config.bucket
           files: ?files
           maxSize: @config.maxBytesPerImage
-        } {
-          emit: { failure: UploadedImageUploadFailed, success: UploadedImageStored }
         })
         (render-ui main {
           align: center
@@ -130,6 +130,8 @@ orbital UploadedImageOrbital {
     }
 
     state uploading {
+      UploadedImageStorageFailed -> uploading
+        (emit UploadedImageUploadFailed { error: ?message, code: ?code })
       INIT -> loading
         (fetch UploadedImage {
           emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
@@ -215,6 +217,14 @@ orbital UploadedImageOrbital {
     }
 
     emits {
+      STORAGE_UPLOAD_MANY -> external {
+        acl : string
+        bucket : string
+        files : [UploadBatchFile]
+        maxSize : number
+      }
+        @description "Ask the storage atom to store the batch."
+        @tier "internal"
       UPLOAD {
         files : [UploadBatchFile]!
       }
@@ -238,13 +248,6 @@ orbital UploadedImageOrbital {
         @description "A new image has been successfully uploaded."
         @synonyms "added, new, received"
         @tier "domain"
-      UploadedImageStored {
-        items : [StoredImageItem]
-        count : number
-      }
-        @description "The storage service accepted the whole batch; items carry each file's stored address and metadata, ready to persist."
-        @synonyms "uploaded, stored, saved to storage"
-        @tier "internal"
       UploadedImageUploadFailed {
         error : string
         code : string
@@ -268,6 +271,12 @@ orbital UploadedImageOrbital {
     }
 
     listens {
+      UploadedImageStorage.STORAGE_UPLOADED_MANY -> UploadedImageStored
+      UploadedImageStorageFailed {
+        message : string
+        code : string
+      }
+      UploadedImageStorage.STORAGE_FAILED -> UploadedImageStorageFailed
       UPLOAD {
         files : [UploadBatchFile]!
       }
@@ -350,5 +359,84 @@ orbital UploadedImageOrbital {
     }
   }
 
-  page "/uploadedimages/upload" as UploadedImageUploadPage -> UploadedImageUpload
+  trait UploadedImageStorage = Storage.traits.StorageClient {
+    listens {
+      UploadedImageUpload.STORAGE_UPLOAD_MANY -> STORAGE_UPLOAD_MANY
+      STORAGE_RESOLVE {
+        mode : string!
+        bucket : string!
+        hasFile : boolean!
+        fileName : string!
+        fileSize : number!
+        fileType : string!
+        hasContent : boolean!
+        raw : string!
+        key : string!
+        contentType : string!
+        acl : string!
+        maxSize : number!
+        batch : string!
+      }
+      STORAGE_PUT {
+        mode : string!
+        bucket : string!
+        key : string!
+        b64 : string!
+        contentType : string!
+        size : number!
+        isPublic : boolean!
+        fileName : string!
+        fileSize : number!
+        fileKind : string!
+        batch : string!
+      }
+      STORAGE_PUT_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      STORAGE_PUT_PRESIGNED {
+        url : string!
+        key : string!
+      }
+      STORAGE_PUT_DONE {
+        url : string!
+        state : string!
+      }
+      STORAGE_BATCH_NEXT {
+        batch : string!
+      }
+      STORAGE_DOWNLOAD_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      STORAGE_LIST_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      STORAGE_DELETE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      STORAGE_SIGNED_REPLIED {
+        url : string!
+        key : string
+      }
+      STORAGE_HTTP_ERROR {
+        text : string!
+      }
+      STORAGE_HTTP_FAILED {
+        error : string!
+        kind : string!
+        credential : string
+        key : string
+      }
+    }
+  }
+
+  page "/uploadedimages/upload" as UploadedImageUploadPage -> UploadedImageUpload, UploadedImageStorage
 }

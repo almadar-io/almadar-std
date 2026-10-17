@@ -9,7 +9,7 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
-import { STRING, lit, union } from '../signature.js';
+import { STRING, lit, nullable, union } from '../signature.js';
 
 const DIGEST_ENCODING: OperatorTypeRef = union(lit('hex'), lit('base64'));
 
@@ -36,6 +36,17 @@ export const BASE64_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [{ name: 's', type: STRING, description: 'The base64 text' }],
     example: '["base64/decode", "Zm9vYmFy"] // => "foobar"',
   },
+  'base64/valid': {
+    module: 'base64',
+    category: 'std-codec',
+    minArity: 1,
+    maxArity: 1,
+    description: 'True iff base64/decode would succeed on the string (standard base64 decoding to valid UTF-8); null is false',
+    hasSideEffects: false,
+    returnType: 'boolean',
+    params: [{ name: 's', type: STRING, description: 'The base64 text to check' }],
+    example: '["base64/valid", "Zm9vYmFy"] // => true',
+  },
 };
 
 export const HASH_OPERATORS: Record<string, StdOperatorMeta> = {
@@ -52,6 +63,35 @@ export const HASH_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'encoding', type: DIGEST_ENCODING, description: 'Digest encoding: "hex" or "base64"' },
     ],
     example: '["hash/sha256", "abc", "hex"] // => "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"',
+  },
+  'hash/md5': {
+    module: 'hash',
+    category: 'std-codec',
+    minArity: 2,
+    maxArity: 2,
+    description: 'MD5 digest of binary data given as standard padded base64 (decoded once, hashed as bytes), as lower-case hex or standard base64 (RFC 1321)',
+    hasSideEffects: false,
+    returnType: 'string',
+    params: [
+      { name: 'bytes', type: STRING, description: 'The data as standard padded base64 (RFC 4648)' },
+      { name: 'encoding', type: DIGEST_ENCODING, description: 'Digest encoding: "hex" or "base64"' },
+    ],
+    example: '["hash/md5", "YWJj", "hex"] // => "900150983cd24fb0d6963f7d28e17f72"',
+  },
+  'hash/scrypt': {
+    module: 'hash',
+    category: 'std-codec',
+    minArity: 2,
+    maxArity: 2,
+    description:
+      'scrypt (RFC 7914) of a string (its UTF-8 bytes) at the cost @almadar/auth hashes api keys with (N 16384, r 8, p 1, 32 bytes), as lower-case hex. The salt argument is a credential slot: a secret-typed @config knob naming the credential that holds the hex salt. The kernel resolves its value into the evaluation, so the program never receives it; the result is null when the credential is not held or is not non-empty hex. Runs only in the kernel.',
+    hasSideEffects: false,
+    returnType: nullable(STRING),
+    params: [
+      { name: 's', type: STRING, description: 'The string to hash' },
+      { name: 'salt', type: STRING, description: 'A secret-typed @config knob naming the credential that holds the hex salt' },
+    ],
+    example: '["hash/scrypt", "sk_live_", "@config.salt"] // => "010bbcf1a211930bca10afa35c740b1c70dcb058711e165c9918f1137c97b940" when the salt credential holds 00112233445566778899',
   },
 };
 

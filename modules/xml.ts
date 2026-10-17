@@ -12,22 +12,34 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { SHAPE } from '../signature.js';
+import { SHAPE, STRING, list } from '../signature.js';
 
 export const XML_OPERATORS: Record<string, StdOperatorMeta> = {
+  'xml/valid': {
+    module: 'xml',
+    category: 'std-codec',
+    minArity: 1,
+    maxArity: 1,
+    description: 'Test whether the XML parser accepts a complete document; valid empty or text-only elements return true and malformed XML returns false',
+    hasSideEffects: false,
+    returnType: 'boolean',
+    params: [{ name: 's', type: 'string', description: 'The XML document to validate' }],
+    example: '["xml/valid", "<a/>"] // => true',
+  },
   'xml/parse': {
     module: 'xml',
     category: 'std-codec',
     minArity: 2,
-    maxArity: 2,
-    description: 'Parse XML text into a value of the declared shape (the second argument names a type): namespaces are ignored by local name, an attribute is the field "@name", a repeated child element is a list, an element with no attributes or children is its text (whitespace collapsed, trimmed), other elements are objects with "#text" for their own text; malformed XML is an evaluation error, a null input is null',
+    maxArity: 3,
+    description: 'Parse XML text into a value of the declared shape (the second argument names a type): namespaces are ignored by local name, an attribute is the field "@name" (declare it in the shape as a quoted field, \`{ "@href" : string }\`, and read it with \`(object/get @x (quote "@href"))\`), a repeated child element is a list (a field the shape declares as a list is one even with a single child), an element with no attributes or children is its text (whitespace collapsed, trimmed), other elements are objects with "#text" for their own text; malformed XML is an evaluation error, a null input is null',
     hasSideEffects: false,
     returnType: SHAPE,
     params: [
       { name: 's', type: 'string', description: 'The XML text' },
       { name: 'shape', type: SHAPE, description: 'The name of the type the parsed value has' },
+      { name: 'listPaths', type: list(list(STRING)), description: 'Written by the compiler, never by hand: every field path of the shape whose declared type is a list; each such path always reads as a list (one child becomes a one-element list, an absent one stays absent)', optional: true },
     ],
-    example: '["xml/parse", "<a id=\\"1\\"><b>x</b></a>", "Row"] // => {"@id": "1", b: "x"}',
+    example: '["xml/parse", "<a id=\\"1\\"><b>x</b></a>", "Row"] // => {"@id": "1", b: "x"}; read the attribute with (object/get @row (quote "@id"))',
   },
 };
 

@@ -1,0 +1,11 @@
+app audit-trail-spec [
+  version: "1.0.0",
+  description: "Design contract for a generic audit trail: every change another module reports is recorded as a row with who, what, which record, and the before and after states. Builds on the audit-entry spec, so it owes that entity too."
+]
+
+orbital AuditTrailSpec {
+  uses Entry from "almadar-std/audit-entry"
+
+  expects trait AuditCaptureListener { emits { AuditRecorded } }
+  expects page "/audit-capture" -> AuditCaptureListener
+}

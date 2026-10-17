@@ -3,6 +3,7 @@ app std-stripe [
   description: "std-stripe — payments and subscriptions through the Stripe API (api.stripe.com, version 2025-02-24.acacia): PaymentIntents, refunds, customers, hosted Checkout and Billing Portal sessions, and subscription read, create, update and cancel. Requests are form-encoded with bearer auth and an idempotency key on every POST. Every failure answers STRIPE_FAILED with Stripe's own message.",
   egress: ["https://api.stripe.com"]
 ]
+type StripeDraw = { path : string, text : string, call : string }
 type StripeKey = { action : string, customerId : string, subscriptionId : string, quantity : number, cancelAtPeriodEnd : boolean }
 type StripeApiError = { type : string, code : string, message : string, param : string }
 type StripeErrorReply = { error : StripeApiError }
@@ -29,51 +30,27 @@ orbital StripeOrbital {
       INIT -> idle
 
       STRIPE_CREATE_PAYMENT_INTENT -> idle
-        (http POST @config.origin "/v1/payment_intents" {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
-          text: (str/join (array/map (array/filter (array/concat [{ k: "amount", v: (str/concat @payload.amount) }, { k: "currency", v: @payload.currency }] (array/map (object/entries (or @payload.metadata {})) (fn e { k: (str/concat "metadata[" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "createPaymentIntent" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((p "/v1/payment_intents") (t (str/join (array/map (array/filter (array/concat [{ k: "amount", v: (str/concat @payload.amount) }, { k: "currency", v: @payload.currency }] (array/map (object/entries (or @payload.metadata {})) (fn e { k: (str/concat "metadata[" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
+          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "createPaymentIntent" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
       STRIPE_CONFIRM_PAYMENT -> idle
-        (http POST @config.origin (str/concat "/v1/payment_intents/" (str/encode-uri-component @payload.paymentIntentId) "/confirm") {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
-          text: (str/join (array/map (array/filter [] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "confirmPayment" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((p (str/concat "/v1/payment_intents/" (str/encode-uri-component @payload.paymentIntentId) "/confirm")) (t ""))
+          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "confirmPayment" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
       STRIPE_REFUND -> idle
-        (http POST @config.origin "/v1/refunds" {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
-          text: (str/join (array/map (array/filter [{ k: "payment_intent", v: @payload.paymentIntentId }, { k: "amount", v: (if (validate/number @payload.amount) (str/concat @payload.amount) null) }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "refund" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((p "/v1/refunds") (t (str/join (array/map (array/filter [{ k: "payment_intent", v: @payload.paymentIntentId }, { k: "amount", v: (if (validate/number @payload.amount) (str/concat @payload.amount) null) }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
+          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "refund" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
       STRIPE_CREATE_CUSTOMER -> idle
-        (http POST @config.origin "/v1/customers" {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
-          text: (str/join (array/map (array/filter [{ k: "email", v: @payload.email }, { k: "name", v: @payload.displayName }, { k: "metadata[almadarUid]", v: @payload.almadarUid }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "createCustomer" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((p "/v1/customers") (t (str/join (array/map (array/filter [{ k: "email", v: @payload.email }, { k: "name", v: @payload.displayName }, { k: "metadata[almadarUid]", v: @payload.almadarUid }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
+          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "createCustomer" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
       STRIPE_CREATE_CHECKOUT_SESSION -> idle when (not (or (= @payload.tier "solo") (= @payload.tier "teams")))
         (emit STRIPE_FAILED { code: null, message: "tier must be \"solo\" or \"teams\"" })
       STRIPE_CREATE_CHECKOUT_SESSION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
         (emit STRIPE_FAILED { code: null, message: (str/concat "STRIPE_PRICE_" (str/upper @payload.tier) " not configured") })
       STRIPE_CREATE_CHECKOUT_SESSION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (!= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
-        (http POST @config.origin "/v1/checkout/sessions" {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
-          text: (str/join (array/map (array/filter (array/concat (array/concat [{ k: "mode", v: "subscription" }, { k: "customer", v: (if (validate/required @payload.customerId) @payload.customerId null) }, { k: "line_items[0][price]", v: (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) }, { k: "line_items[0][quantity]", v: (str/concat @payload.quantity) }, { k: "success_url", v: @payload.successUrl }, { k: "cancel_url", v: @payload.cancelUrl }] (array/map (object/entries (or @payload.metadata {})) (fn e { k: (str/concat "subscription_data[metadata][" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) [{ k: "automatic_tax[enabled]", v: "true" }, { k: "allow_promotion_codes", v: "true" }]) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "createCheckoutSession" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((p "/v1/checkout/sessions") (t (str/join (array/map (array/filter (array/concat (array/concat [{ k: "mode", v: "subscription" }, { k: "customer", v: (if (validate/required @payload.customerId) @payload.customerId null) }, { k: "line_items[0][price]", v: (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) }, { k: "line_items[0][quantity]", v: (str/concat @payload.quantity) }, { k: "success_url", v: @payload.successUrl }, { k: "cancel_url", v: @payload.cancelUrl }] (array/map (object/entries (or @payload.metadata {})) (fn e { k: (str/concat "subscription_data[metadata][" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) [{ k: "automatic_tax[enabled]", v: "true" }, { k: "allow_promotion_codes", v: "true" }]) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
+          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "createCheckoutSession" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
       STRIPE_CREATE_PORTAL_SESSION -> idle
-        (http POST @config.origin "/v1/billing_portal/sessions" {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
-          text: (str/join (array/map (array/filter [{ k: "customer", v: @payload.customerId }, { k: "return_url", v: @payload.returnUrl }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "createPortalSession", customerId: @payload.customerId }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((p "/v1/billing_portal/sessions") (t (str/join (array/map (array/filter [{ k: "customer", v: @payload.customerId }, { k: "return_url", v: @payload.returnUrl }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
+          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "createPortalSession", customerId: @payload.customerId }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
       STRIPE_GET_SUBSCRIPTION -> idle
         (http GET @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
           headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
@@ -85,12 +62,8 @@ orbital StripeOrbital {
       STRIPE_CREATE_SUBSCRIPTION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
         (emit STRIPE_FAILED { code: null, message: (str/concat "STRIPE_PRICE_" (str/upper @payload.tier) " not configured") })
       STRIPE_CREATE_SUBSCRIPTION -> idle when (and (or (= @payload.tier "solo") (= @payload.tier "teams")) (!= (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) ""))
-        (http POST @config.origin "/v1/subscriptions" {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
-          text: (str/join (array/map (array/filter (array/concat (array/concat [{ k: "customer", v: @payload.customerId }, { k: "items[0][price]", v: (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) }, { k: "items[0][quantity]", v: (str/concat @payload.quantity) }] (array/map (object/entries (or @payload.metadata {})) (fn e { k: (str/concat "metadata[" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) [{ k: "proration_behavior", v: "create_prorations" }, { k: "automatic_tax[enabled]", v: "true" }]) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "createSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((p "/v1/subscriptions") (t (str/join (array/map (array/filter (array/concat (array/concat [{ k: "customer", v: @payload.customerId }, { k: "items[0][price]", v: (if (= @payload.tier "solo") @config.priceSolo @config.priceTeams) }, { k: "items[0][quantity]", v: (str/concat @payload.quantity) }] (array/map (object/entries (or @payload.metadata {})) (fn e { k: (str/concat "metadata[" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (array/nth @e 0)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "]"), v: (array/nth @e 1) }))) [{ k: "proration_behavior", v: "create_prorations" }, { k: "automatic_tax[enabled]", v: "true" }]) (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
+          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "createSubscription" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
       STRIPE_UPDATE_SUBSCRIPTION -> idle when (validate/number @payload.quantity)
         (http GET @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
           headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
@@ -100,30 +73,33 @@ orbital StripeOrbital {
       STRIPE_UPDATE_SUBSCRIPTION -> idle when (not (validate/number @payload.quantity))
         (emit STRIPE_UPDATE_READY { subscriptionId: @payload.subscriptionId, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd })
       STRIPE_UPDATE_READY -> idle
-        (http POST @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
-          text: (str/join (array/map (array/filter [{ k: "proration_behavior", v: "create_prorations" }, { k: "items[0][id]", v: @payload.itemId }, { k: "items[0][quantity]", v: (if (validate/required @payload.itemId) (str/concat @payload.quantity) null) }, { k: "cancel_at_period_end", v: (if (= @payload.cancelAtPeriodEnd null) null (if @payload.cancelAtPeriodEnd "true" "false")) }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "updateSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((p (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId))) (t (str/join (array/map (array/filter [{ k: "proration_behavior", v: "create_prorations" }, { k: "items[0][id]", v: @payload.itemId }, { k: "items[0][quantity]", v: (if (validate/required @payload.itemId) (str/concat @payload.quantity) null) }, { k: "cancel_at_period_end", v: (if (= @payload.cancelAtPeriodEnd null) null (if @payload.cancelAtPeriodEnd "true" "false")) }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
+          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "updateSubscription" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
       STRIPE_CANCEL_SUBSCRIPTION -> idle when (!= @payload.atPeriodEnd false)
-        (http POST @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
-          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (hash/sha256 (str/concat @now "-" (math/random)) "hex")) },
-          text: (str/join (array/map (array/filter [{ k: "cancel_at_period_end", v: "true" }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&"),
-          auth: { scheme: bearer, credential: @config.secretKey },
-          timeoutMs: @config.timeoutMs
-        } { key: (json/stringify { action: "cancelSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+        (let ((p (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId))) (t (str/join (array/map (array/filter [{ k: "cancel_at_period_end", v: "true" }] (fn p (!= (object/get @p v null) null))) (fn p (str/concat (object/get @p k "") "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (object/get @p v "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")))) "&")))
+          (random-bytes 16 { key: (json/stringify { path: @p, text: @t, call: (json/stringify { action: "cancelSubscription" }) }), emit: { success: STRIPE_KEY_DRAWN, failure: STRIPE_RANDOM_FAILED } }))
       STRIPE_CANCEL_SUBSCRIPTION -> idle when (= @payload.atPeriodEnd false)
         (http DELETE @config.origin (str/concat "/v1/subscriptions/" (str/encode-uri-component @payload.subscriptionId)) {
           headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion },
           auth: { scheme: bearer, credential: @config.secretKey },
           timeoutMs: @config.timeoutMs
         } { key: (json/stringify { action: "cancelSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
+      STRIPE_KEY_DRAWN -> idle
+        (let ((h (hash/sha256 @payload.value "hex")))
+          (http POST @config.origin (object/get (json/parse @payload.key StripeDraw) path "") {
+          headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (str/slice @h 0 8) "-" (str/slice @h 8 12) "-4" (str/slice @h 13 16) "-" (array/nth ["8", "9", "a", "b"] (math/mod (array/indexOf ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"] (str/slice @h 16 17)) 4)) (str/slice @h 17 20) "-" (str/slice @h 20 32)) },
+          text: (object/get (json/parse @payload.key StripeDraw) text ""),
+          auth: { scheme: bearer, credential: @config.secretKey },
+          timeoutMs: @config.timeoutMs
+        } { key: (object/get (json/parse @payload.key StripeDraw) call ""), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } }))
+      STRIPE_RANDOM_FAILED -> idle
+        (emit STRIPE_FAILED { code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Stripe unavailable: " @payload.error) })
       STRIPE_REPLIED -> idle when (not (!= (json/parse @payload.body StripeErrorReply) null))
         (emit STRIPE_FAILED { code: null, message: "Invalid JSON received from the Stripe API" })
-      STRIPE_REPLIED -> idle when (and (!= (json/parse @payload.body StripeErrorReply) null) (and (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) null) (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) "")))
+      STRIPE_REPLIED -> idle when (and (!= (json/parse @payload.body StripeErrorReply) null) (and (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) null) (not (and (validate/string (object/get (json/parse @payload.body StripeOauthErrorReply) error null)) (= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) "")))))
         (emit STRIPE_FAILED { code: null, message: (if (validate/string (object/get (json/parse @payload.body StripeOauthErrorReply) error null)) (object/get (json/parse @payload.body StripeOauthErrorReply) error_description "") (object/get (json/parse @payload.body StripeErrorReply) "error.message" "")) })
-      STRIPE_REPLIED -> idle when (and (!= (json/parse @payload.body StripeErrorReply) null) (not (and (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) null) (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) ""))))
+      STRIPE_REPLIED -> idle when (and (!= (json/parse @payload.body StripeErrorReply) null) (not (and (!= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) null) (not (and (validate/string (object/get (json/parse @payload.body StripeOauthErrorReply) error null)) (= (object/get (json/parse @payload.body StripeOauthErrorReply) error null) ""))))))
         (emit STRIPE_OK { key: @payload.key, body: @payload.body })
       STRIPE_HTTP_FAILED -> idle
         (emit STRIPE_FAILED { code: null, message: @payload.error })
@@ -287,6 +263,18 @@ orbital StripeOrbital {
         @description "Any Stripe call that failed: Stripe's error message, a configuration error (unknown tier, price id not set), an unreadable reply or an unreachable Stripe (code is null)."
         @synonyms "stripe error, payment failed, billing error"
         @tier "primary"
+      STRIPE_KEY_DRAWN {
+        value : string!
+        key : string!
+      }
+        @description "Internal: the journaled random bytes that form a POST's idempotency key."
+        @tier "secondary"
+      STRIPE_RANDOM_FAILED {
+        error : string!
+        key : string
+      }
+        @description "Internal: the host could not supply random bytes for an idempotency key."
+        @tier "secondary"
       STRIPE_REPLIED {
         status : number!
         headers : Map string string

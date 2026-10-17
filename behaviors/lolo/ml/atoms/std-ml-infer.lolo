@@ -1,7 +1,10 @@
 app std-ml-infer [
   version: "1.0.0",
-  description: "std-ml-infer — the learned rung (R4) of the intelligence ladder, and the seam between a .lolo circuit and a trained model deployed on masar (or off-the-shelf HuggingFace weights) reached through the ml service. Sends the caller-supplied input straight to call-service ml infer, then guards the raw output before it ever becomes an effect: validates it against the declared outputContract, clamps it into range, and only then decides. Emits INFERRED when the output satisfies the contract and confidence clears confidenceFloor — carrying the clamped output, confidence, and an empty violations list. Otherwise abstains with INFER_ABSTAINED, whose reason is one of: low confidence (contract satisfied but below floor, violations empty), contract violation (violations populated via contract/violations for diagnosis), or unavailable (the service call itself failed — a masar cold start or a down endpoint, never surfaced as a user-visible error). Use when a numeric or tensor-shaped model answer needs a licensed guard before becoming a decision — classification scores, regressions, embedding-derived predictions — and the next rung (R5 generative) should take over on any abstain."
+  description: "std-ml-infer — the learned rung (R4) of the intelligence ladder, and the seam between a .lolo circuit and a trained model deployed on masar (or off-the-shelf HuggingFace weights) reached through std-ml. Sends the caller-supplied input straight to std-ml (ML_INFER), then guards the raw output before it ever becomes an effect: validates it against the declared outputContract, clamps it into range, and only then decides. Emits INFERRED when the output satisfies the contract and confidence clears confidenceFloor — carrying the clamped output, confidence, and an empty violations list. Otherwise abstains with INFER_ABSTAINED, whose reason is one of: low confidence (contract satisfied but below floor, violations empty), contract violation (violations populated via contract/violations for diagnosis), or unavailable (the inference call itself failed — a masar cold start or a down endpoint, never surfaced as a user-visible error). Use when a numeric or tensor-shaped model answer needs a licensed guard before becoming a decision — classification scores, regressions, embedding-derived predictions — and the next rung (R5 generative) should take over on any abstain.",
+  egress: ["http://localhost:3000"]
 ]
+
+uses Ml from "std/behaviors/std-ml"
 
 type Range = { min: float!, max: float! }
 ;; The caller-supplied request, echoed untouched through INFER_ABSTAINED so a composing
@@ -28,6 +31,12 @@ orbital MlInferOrbital {
     reason     : string   = ""
     request    : DecisionRequest = {}
     status     : "idle" | "inferring" | "resolved" = idle
+  }
+
+  trait InferMl = Ml.traits.MlClient {
+    listens {
+      InferenceRun.ML_INFER -> ML_INFER
+    }
   }
 
   trait InferenceRun -> Inference [lifecycle, instance] {
@@ -62,8 +71,7 @@ orbital MlInferOrbital {
         (set @entity.input ?input)
         (set @entity.request ?request)
         (set @entity.status inferring)
-        (call-service "ml" "infer" { model: @config.model, input: @entity.input }
-          { emit: { success: INFERRED_RAW, failure: INFER_CALL_FAILED } })
+        (emit ML_INFER { model: @config.model, input: @entity.input })
     }
 
     state inferring {
@@ -105,7 +113,7 @@ orbital MlInferOrbital {
         (set @entity.reason "unavailable")
         (set @entity.status resolved)
         (emit INFER_ABSTAINED { reason: "unavailable", violations: @entity.violations, request: @entity.request })
-        (notify error (str/concat "Couldn't run inference — " ?error))
+        (notify error (str/concat "Couldn't run inference — " ?message))
     }
 
     state resolved {
@@ -122,17 +130,11 @@ orbital MlInferOrbital {
     }
 
     emits {
-      INFERRED_RAW {
-        output     : [float]!
-        confidence : number!
+      ML_INFER -> external {
+        model : string!
+        input : Map string string!
       }
-        @description "Raw ml.infer service result, flattened onto the payload by the call-service effect executor"
-        @tier "secondary"
-
-      INFER_CALL_FAILED {
-        error : string!
-      }
-        @description "call-service infer failure signal — a masar cold start or a down endpoint lands here, not as a user-visible error"
+        @description "Ask std-ml to run the model on the input"
         @tier "secondary"
 
       INFERRED -> external {
@@ -153,6 +155,16 @@ orbital MlInferOrbital {
     }
 
     listens {
+      InferMl.ML_INFERRED -> INFERRED_RAW
+      InferMl.ML_INFER_FAILED -> INFER_CALL_FAILED
+      INFERRED_RAW {
+        output     : [float]!
+        confidence : number!
+      }
+      INFER_CALL_FAILED {
+        code : string
+        message : string!
+      }
       INFER {
         input : Map string string!
         request : DecisionRequest
@@ -160,5 +172,5 @@ orbital MlInferOrbital {
     }
   }
 
-  page "/ml-infer" as MlInferPage -> InferenceRun
+  page "/ml-infer" as MlInferPage -> InferenceRun, InferMl
 }

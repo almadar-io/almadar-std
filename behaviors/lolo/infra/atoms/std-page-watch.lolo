@@ -1,6 +1,6 @@
 app std-page-watch [
   version: "1.0.0",
-  description: "std-page-watch — watches every browser tab whose URL matches `match` for elements matching `itemSelector`, and reports each element once as ITEM with the `fields` read from it, now and as the page changes. Needs a host with the `page` service (a browser extension, which asks for access to exactly the `match` pages). Each item carries its tab and element id; compose std-page-treat to hide, blur, highlight or label it."
+  description: "std-page-watch — watches every browser tab whose URL matches `match` for elements matching `itemSelector`, and reports each element once as ITEM with the `fields` read from it, now and as the page changes. Needs a host with browser tabs (a browser extension, which asks for access to exactly the `match` pages). Each item carries its tab and element id; compose std-page-treat to hide, blur, highlight or label it."
 ]
 
 orbital PageWatchOrbital {
@@ -51,7 +51,7 @@ orbital PageWatchOrbital {
 
     state active {
       INIT -> active
-        (call-service "page" "watch" { match: @config.match, selector: @config.itemSelector, fields: @config.fields, event: @config.itemEvent }
+        (browser/tab-watch { match: @config.match, selector: @config.itemSelector, fields: @config.fields, event: @config.itemEvent }
           { emit: { success: WATCHING, failure: WATCH_FAILED } })
         (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Connecting to the pages…" })
       WATCHING -> active
@@ -72,7 +72,7 @@ orbital PageWatchOrbital {
         @description "The watch is attached"
         @tier "secondary"
       WATCH_FAILED -> external { error : string! }
-        @description "The watch could not be attached (no page service, or no access to the pages)"
+        @description "The watch could not be attached (no browser tabs, or no access to the pages)"
         @tier "primary"
       ITEM -> external { tab : number!, elementId : string!, url : string!, fields : Map string string }
         @description "One matching element, reported once, with the fields read from it"
@@ -82,7 +82,7 @@ orbital PageWatchOrbital {
 
     listens {
       ITEM_FOUND -> external { tab : number!, elementId : string!, url : string!, fields : Map string string }
-        @description "One matching element, delivered by the page service"
+        @description "One matching element, delivered by the browser"
     }
   }
 

@@ -1,18 +1,10 @@
 import { defineConfig } from 'tsup';
-import { copyDistSidecars } from './scripts/copy-dist-sidecars.mjs';
 
 export default defineConfig({
   entry: [
     'index.ts',
     'registry.ts',
     'modules/*.ts',
-    'behaviors/index.ts',
-    'behaviors/types.ts',
-    'behaviors/exports-reader.ts',
-    'behaviors/query.ts',
-    'behaviors/data-dir.ts',
-    'behaviors/embeddings.ts',
-    'behaviors/knob-embeddings.ts',
   ],
   format: ['esm'],
   // The DTS type-check dominates build time but the runtime (interpreter / runtime-verify)
@@ -25,10 +17,4 @@ export default defineConfig({
   sourcemap: false,
   splitting: true,
   treeshake: true,
-  // The data sidecars (registry .orb tree + JSON catalogs) are copied by the shared
-  // `copyDistSidecars` helper — the same one the `build:data` fast-refresh script calls,
-  // so the full build and the dev-loop refresh can never diverge on what lands in dist/.
-  onSuccess: async () => {
-    copyDistSidecars();
-  },
 });

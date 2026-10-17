@@ -1,6 +1,6 @@
 app std-behavior-tour [
   version: "1.0.0",
-  description: "std-behavior-tour — plays a real behavior through a scripted sequence so people can watch it work: a guided demo on a website, or a step-by-step tutorial. The composing program embeds the running behavior in the `demo` slot and lists `events` (the event each step sends) and `captions` (what is shown while it plays; only ever rendered, so they may be translated). The composed std-learn-transport owns Play / Pause / Step / Reset and the clock; on every step the tour emits TOUR_STEP { index, event } and shows that step's caption, and the program routes TOUR_STEP to the behavior's own events with a filtered listen (`Tour.TOUR_STEP -> MOVE when (= ?event \"MOVE\")`). Reset emits TOUR_RESET. `loop` quietly resets the demo after the last step (TOUR_RESET, intro caption) and plays again. `playWhenVisible` starts it the first time it scrolls into view (never under reduced motion), and `compact` keeps only Play / Pause and Reset, and `demoTheme` shows the demo in its own theme so it stands apart from the page. Pick to demonstrate or teach a behavior."
+  description: "std-behavior-tour — plays a real behavior through a scripted sequence so people can watch it work: a guided demo on a website, or a step-by-step tutorial. The composing program embeds the running behavior in the `demo` slot and lists `events` (the event each step sends) and `captions` (what is shown while it plays; only ever rendered, so they may be translated). The composed std-learn-transport owns Play / Pause / Step / Reset and the clock; on every step the tour emits TOUR_STEP { index, event } and shows that step's caption, and the program routes TOUR_STEP to the behavior's own events with a filtered listen (`Tour.TOUR_STEP -> MOVE when (= ?event \"MOVE\")`). Reset emits TOUR_RESET. `loop` quietly resets the demo after the last step (TOUR_RESET, intro caption) and plays again. `playWhenVisible` starts it the first time it scrolls into view (never under reduced motion), and `compact` keeps only Play / Pause and Reset, and `demoTheme` shows the demo in its own theme so it stands apart from the page. `presentation: \"image\"` shows a captured `poster` of the demo instead of running it (a light page stays fast on phones); `orb verify --compiled --screenshot-frames` captures that poster from the live demo before its first step. Pick to demonstrate or teach a behavior."
 ]
 
 orbital BehaviorTourOrbital {
@@ -188,6 +188,27 @@ orbital BehaviorTourOrbital {
         @label "Controls position"
         @description "Where Play / Pause and Reset sit: below the demo, or over its top corner, shown while the demo is hovered or focused, so the demo starts level with whatever sits beside it"
         @tier "presentation"
+      presentation : "live" | "image" = live
+        @label "Presentation"
+        @description "live runs the demo on the page; image shows its captured poster instead, with no demo running"
+        @synonyms "poster, screenshot, static preview"
+        @tier "presentation"
+      poster : string = ""
+        @label "Poster"
+        @description "Path of the demo's captured poster image (WebP), shown when presentation is image; orb verify --compiled --screenshot-frames writes it from the live demo"
+        @tier "presentation"
+      posterDark : string = ""
+        @label "Dark poster"
+        @description "Path of the poster captured in dark mode, shown instead of the poster under a dark theme; empty uses the poster in both"
+        @tier "presentation"
+      posterAlt : string = ""
+        @label "Poster description"
+        @description "What the demo shows, in a sentence: the poster's alt text and the live demo region's name"
+        @tier "presentation"
+      posterAspect : "auto" | "1/1" | "4/3" | "3/2" | "16/9" | "21/9" = auto
+        @label "Poster aspect"
+        @description "Space reserved for the poster before it loads; auto keeps the image's own"
+        @tier "presentation"
       compact : boolean = true
         @label "Compact controls"
         @description "Show only Play / Pause and Reset"
@@ -230,7 +251,27 @@ orbital BehaviorTourOrbital {
         type: stack
         direction: vertical
         gap: md
-        children: [{
+        children: [(if (== @config.presentation "image") {
+          type: box
+          className: "rounded-container overflow-hidden"
+          children: [{
+            type: image
+            src: @config.poster
+            alt: @config.posterAlt
+            aspect: @config.posterAspect
+            fit: contain
+            rounded: none
+            className: (if (== @config.posterDark "") "w-full" "w-full dark:hidden")
+          }, (if (== @config.posterDark "") null {
+            type: image
+            src: @config.posterDark
+            alt: @config.posterAlt
+            aspect: @config.posterAspect
+            fit: contain
+            rounded: none
+            className: "hidden w-full dark:block"
+          })]
+        } {
           type: box
           className: "relative group"
           children: [(if (== @config.controlsAt "corner") {
@@ -247,6 +288,8 @@ orbital BehaviorTourOrbital {
           leaveEvent: TOUR_HIDDEN
           children: [{
             type: box
+            role: region
+            aria-label: @config.posterAlt
             data-theme: @config.demoTheme
             animateChanges: true
             className: (if @config.desktopFrame "rounded-container overflow-hidden border border-border shadow-elevation-popover bg-background" "rounded-container")
@@ -277,7 +320,7 @@ orbital BehaviorTourOrbital {
             })]
           }]
         }]
-        }, {
+        }), (if (== @config.presentation "image") null {
           type: box
           animateChanges: true
           children: [{
@@ -297,7 +340,7 @@ orbital BehaviorTourOrbital {
               content: (if (< @entity.shown 0) @config.introCaption (array/nth @config.captions @entity.shown))
             }]
           }]
-        }, (if (== @config.controlsAt "below") @trait.TourTransport null)]
+        }), (if (and (== @config.controlsAt "below") (== @config.presentation "live")) @trait.TourTransport null)]
       }
         @label "Tour layout"
         @tier "internal"

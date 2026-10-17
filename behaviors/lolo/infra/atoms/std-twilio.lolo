@@ -39,7 +39,7 @@ orbital TwilioOrbital {
           (if (= (json/parse @payload.body TwilioError) null) (str/concat "[HTTP " @payload.status "] Failed to execute request") (object/get (json/parse @payload.body TwilioError) message ""))) })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Twilio rejected the message" })
       TWILIO_SMS_HTTP_FAILED -> idle
-        (emit TWILIO_SMS_FAILED { code: null, message: (if (= @payload.kind "refused") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
+        (emit TWILIO_SMS_FAILED { code: null, message: (if (= @payload.kind "unconfigured") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Twilio unavailable: " @payload.error) })
 
       TWILIO_SEND_WHATSAPP -> idle when (= @config.accountSid "")
@@ -65,7 +65,7 @@ orbital TwilioOrbital {
           (if (= (json/parse @payload.body TwilioError) null) (str/concat "[HTTP " @payload.status "] Failed to execute request") (object/get (json/parse @payload.body TwilioError) message ""))) })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Twilio rejected the message" })
       TWILIO_WHATSAPP_HTTP_FAILED -> idle
-        (emit TWILIO_WHATSAPP_FAILED { code: null, message: (if (= @payload.kind "refused") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
+        (emit TWILIO_WHATSAPP_FAILED { code: null, message: (if (= @payload.kind "unconfigured") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Twilio unavailable: " @payload.error) })
     }
 

@@ -1,10 +1,19 @@
 app std-notify-on-event [
   version: "2.0.0",
-  description: "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise. Skips dispatch when the recipient is in `suppressionList`. Delivery consults std-notification-center data before dispatching: per-person NotificationPreference rows (matched on `personId` = recipient and `eventKey` = this listener's `eventKey`, blank = all) can mute (`mode: off`), defer to the digest drain (`mode: digest`), override the channel, or impose per-user quiet hours (a 'HH:MM-HH:MM' window, blank = none); the atom-level `quietStartHour`/`quietEndHour` window and the `frequencyCapPerWeek` rolling cap (counted against dispatched NotificationRecord audit rows for the same recipient + channel) suppress likewise. Every suppression persists an honest audit row (`dispatched: false` with the reason in `error`: quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription) which std-notification-center's digest cycle drains later. Channels: `in-app` emits the `notify` toast; `email`/`sms`/`webhook` dispatch through call-service (email.send / twilio.sendSMS / webhook.send); `push` looks up the recipient's PushSubscription row (owned by std-notification-center) and dispatches web-push via push.send (`pushTitle` falls back to `template`; `pushDeepLink`/`pushIcon` optional). The audit row's `dispatched` flag is honest — true only once the service call succeeds."
+  description: "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise. Skips dispatch when the recipient is in `suppressionList`. Delivery consults std-notification-center data before dispatching: per-person NotificationPreference rows (matched on `personId` = recipient and `eventKey` = this listener's `eventKey`, blank = all) can mute (`mode: off`), defer to the digest drain (`mode: digest`), override the channel, or impose per-user quiet hours (a 'HH:MM-HH:MM' window, blank = none); the atom-level `quietStartHour`/`quietEndHour` window and the `frequencyCapPerWeek` rolling cap (counted against dispatched NotificationRecord audit rows for the same recipient + channel) suppress likewise. Every suppression persists an honest audit row (`dispatched: false` with the reason in `error`: quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription) which std-notification-center's digest cycle drains later. Channels: `in-app` emits the `notify` toast; `email` and `sms` dispatch through std-email (EMAIL_SEND) and std-twilio (TWILIO_SEND_SMS), `webhook` through call-service (webhook.send); `push` looks up the recipient's PushSubscription row (owned by std-notification-center) and dispatches web-push through std-push (PUSH_SEND) (`pushTitle` falls back to `template`; `pushDeepLink`/`pushIcon` optional). The audit row's `dispatched` flag is honest — true only once the service call succeeds.",
+  egress: ["https://api.sendgrid.com", "https://api.resend.com", "https://api.twilio.com", "https://fcm.googleapis.com", "https://android.googleapis.com"]
 ]
 type PrefRow = { personId : string, eventKey : string, mode : string, channel : string, quietHours : string }
 type AuditRow = { recipient : string, channel : string, dispatched : boolean, recordedAt : number }
+type NotifyWebhookPayload = { message : string, recipient : string, severity : string }
+type PushKeysTarget = { p256dh : string, auth : string }
+type PushTarget = { endpoint : string, keys : PushKeysTarget }
 type SubRow = { userId : string, endpoint : string, p256dh : string, auth : string }
+uses Email from "std/behaviors/std-email"
+uses Twilio from "std/behaviors/std-twilio"
+uses Push from "std/behaviors/std-push"
+uses Webhook from "std/behaviors/std-webhook"
+
 orbital NotifyOnEventOrbital {
     type EventOccurred = Event { data : @entity @config.sourceEntity, status : string, id : string } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification. The optional `status` field lets `triggerStatus` gate dispatch to a single status-change value."
 
@@ -45,6 +54,50 @@ orbital NotifyOnEventOrbital {
     p256dh : string @description "Client public key (p256dh) of the subscription." @synonyms "public key" = ""
     auth : string @description "Auth secret of the subscription." @synonyms "auth secret" = ""
     createdAt : number @description "When this subscription was captured." @synonyms "subscribed at, created" = 0
+  }
+
+  trait NotifyEmailApi = Email.traits.EmailSender {
+    listens {
+      NotifyOnEventListener.EMAIL_SEND -> EMAIL_SEND
+    }
+  }
+
+  trait NotifySmsApi = Twilio.traits.TwilioClient {
+    listens {
+      NotifyOnEventListener.TWILIO_SEND_SMS -> TWILIO_SEND_SMS
+    }
+  }
+
+  trait NotifyPushApi = Push.traits.PushClient {
+    listens {
+      NotifyOnEventListener.PUSH_SEND -> PUSH_SEND
+      PUSH_SEND_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      PUSH_SEND_HTTP_FAILED {
+        error : string!
+        kind : string!
+        credential : string
+      }
+    }
+  }
+
+  trait NotifyWebhookApi :: p NotifyWebhookPayload = Webhook.traits.WebhookClient {
+    listens {
+      NotifyOnEventListener.WEBHOOK_SEND -> WEBHOOK_SEND
+      NotifyWebhookRetry.ATTEMPT -> WEBHOOK_ATTEMPT
+      NotifyWebhookRetry.GAVE_UP -> WEBHOOK_GAVE_UP
+    }
+  }
+
+  trait NotifyWebhookRetry = Webhook.traits.WebhookRetry {
+    listens {
+      NotifyWebhookApi.WEBHOOK_RETRY_START -> START
+      NotifyWebhookApi.WEBHOOK_RETRY_SUCCEEDED -> SUCCEEDED
+      NotifyWebhookApi.WEBHOOK_RETRY_FAILED -> FAILED
+    }
   }
 
   trait NotifyOnEventListener -> NotificationRecord [lifecycle, instance] {
@@ -115,27 +168,19 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if ["=", @entity.channel, email] (call-service "email" "send" {
+        }) (if ["=", @entity.channel, email] (emit EMAIL_SEND {
           body: @entity.message
-          from: ""
           subject: (if ["=", @config.emailSubject, ""] @entity.message @config.emailSubject)
           to: @entity.recipient
-        } { emit: { failure: NOTIFY_EMAIL_FAILED, success: NOTIFY_EMAIL_SENT } }) (if ["=", @entity.channel, sms] (call-service "twilio" "sendSMS" {
+        }) (if ["=", @entity.channel, sms] (emit TWILIO_SEND_SMS {
           body: @entity.message
           to: @entity.recipient
-        } { emit: { failure: NOTIFY_SMS_FAILED, success: NOTIFY_SMS_SENT } }) (if ["=", @entity.channel, push] (fetch PushSubscription { emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PUSH_SUBS } }) (if (not ["=", @config.webhookUrl, ""]) (call-service "webhook" "send" {
+        }) (if ["=", @entity.channel, push] (fetch PushSubscription { emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PUSH_SUBS } }) (emit WEBHOOK_SEND {
           event: @entity.message
           payload: { message: @entity.message, recipient: @entity.recipient, severity: @entity.severity }
           secret: @config.webhookSecret
           url: @config.webhookUrl
-        } { emit: { failure: NOTIFY_WEBHOOK_FAILED, success: NOTIFY_WEBHOOK_SENT } }) (persist create NotificationRecord {
-          channel: @entity.channel
-          dispatched: false
-          message: @entity.message
-          recipient: @entity.recipient
-          recordedAt: @now
-          severity: @entity.severity
-        }))))))
+        })))))
       NOTIFY_PUSH_SUBS -> idle
         (set @entity.pushEndpoint (if ["=", (array/len (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))), 0] "" (object/get (array/first (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))) endpoint)))
         (set @entity.pushP256dh (if ["=", (array/len (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))), 0] "" (object/get (array/first (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))) p256dh)))
@@ -148,13 +193,13 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (call-service "push" "send" {
+        }) (emit PUSH_SEND {
           subscription: { endpoint: @entity.pushEndpoint, keys: { auth: @entity.pushAuth, p256dh: @entity.pushP256dh } }
           title: (if ["=", @config.pushTitle, ""] @entity.message @config.pushTitle)
           body: @entity.message
           url: @config.pushDeepLink
           icon: @config.pushIcon
-        } { emit: { failure: NOTIFY_PUSH_FAILED, success: NOTIFY_PUSH_SENT } }))
+        }))
       NOTIFY_EMAIL_SENT -> idle
         (set @entity.dispatched true)
         (persist create NotificationRecord {
@@ -167,7 +212,7 @@ orbital NotifyOnEventOrbital {
         })
       NOTIFY_EMAIL_FAILED -> idle
         (set @entity.dispatched false)
-        (set @entity.error ?error)
+        (set @entity.error ?message)
         (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
@@ -177,7 +222,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
-        (notify error (str/concat "Couldn't send the email notification — " ?error))
+        (notify error (str/concat "Couldn't send the email notification — " ?message))
       NOTIFY_SMS_SENT -> idle
         (set @entity.dispatched true)
         (persist create NotificationRecord {
@@ -190,7 +235,7 @@ orbital NotifyOnEventOrbital {
         })
       NOTIFY_SMS_FAILED -> idle
         (set @entity.dispatched false)
-        (set @entity.error ?error)
+        (set @entity.error ?message)
         (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
@@ -200,7 +245,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
-        (notify error (str/concat "Couldn't send the text message — " ?error))
+        (notify error (str/concat "Couldn't send the text message — " ?message))
       NOTIFY_WEBHOOK_SENT -> idle when (not ["=", @config.webhookUrl, ""])
         (set @entity.dispatched true)
         (persist create NotificationRecord {
@@ -211,9 +256,18 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
+      NOTIFY_WEBHOOK_FAILED -> idle when ["=", @config.webhookUrl, ""]
+        (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: @now
+          severity: @entity.severity
+        })
       NOTIFY_WEBHOOK_FAILED -> idle when (not ["=", @config.webhookUrl, ""])
         (set @entity.dispatched false)
-        (set @entity.error ?error)
+        (set @entity.error ?message)
         (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
@@ -223,7 +277,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
-        (notify error (str/concat "Couldn't send the webhook notification — " ?error))
+        (notify error (str/concat "Couldn't send the webhook notification — " ?message))
       NOTIFY_PUSH_SENT -> idle
         (set @entity.dispatched true)
         (persist create NotificationRecord {
@@ -236,7 +290,7 @@ orbital NotifyOnEventOrbital {
         })
       NOTIFY_PUSH_FAILED -> idle
         (set @entity.dispatched false)
-        (set @entity.error ?error)
+        (set @entity.error ?message)
         (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
@@ -246,7 +300,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
-        (notify error (str/concat "Couldn't send the push notification — " ?error))
+        (notify error (str/concat "Couldn't send the push notification — " ?message))
       NOTIFY_LOOKUP_FAILED -> idle
         (set @entity.dispatched false)
         (set @entity.error ?error)
@@ -284,51 +338,35 @@ orbital NotifyOnEventOrbital {
       }
         @description "PushSubscription rows loaded; the arm picks the recipient's subscription and dispatches push.send"
         @tier "secondary"
-      NOTIFY_EMAIL_SENT {
-        id : string!
-        status : string!
+      EMAIL_SEND -> external {
+        to : string!
+        subject : string!
+        body : string!
       }
-        @description "email.send service result, flattened onto the payload by the call-service effect executor"
+        @description "Ask std-email to send the email-channel notification."
         @tier "secondary"
-      NOTIFY_EMAIL_FAILED {
-        error : string!
+      TWILIO_SEND_SMS -> external {
+        to : string!
+        body : string!
       }
-        @description "email.send service call failed — dispatched lands false and error carries the service detail"
+        @description "Ask std-twilio to send the sms-channel notification."
         @tier "secondary"
-      NOTIFY_SMS_SENT {
-        sid : string!
-        status : string!
+      WEBHOOK_SEND -> external {
+        url : string!
+        event : string!
+        payload : NotifyWebhookPayload!
+        secret : string
       }
-        @description "twilio.sendSMS service result, flattened onto the payload by the call-service effect executor"
+        @description "Ask std-webhook to post the webhook-channel notification."
         @tier "secondary"
-      NOTIFY_SMS_FAILED {
-        error : string!
+      PUSH_SEND -> external {
+        subscription : PushTarget!
+        title : string!
+        body : string!
+        url : string
+        icon : string
       }
-        @description "twilio.sendSMS service call failed — dispatched lands false and error carries the service detail"
-        @tier "secondary"
-      NOTIFY_WEBHOOK_SENT {
-        status : number!
-        ok : boolean!
-        durationMs : number!
-      }
-        @description "webhook.send service result, flattened onto the payload by the call-service effect executor"
-        @tier "secondary"
-      NOTIFY_WEBHOOK_FAILED {
-        error : string!
-      }
-        @description "webhook.send service call failed — dispatched lands false and error carries the service detail"
-        @tier "secondary"
-      NOTIFY_PUSH_SENT {
-        statusCode : number!
-        ok : boolean!
-        expired : boolean!
-      }
-        @description "push.send service result — expired:true means the subscription is gone and should be pruned"
-        @tier "secondary"
-      NOTIFY_PUSH_FAILED {
-        error : string!
-      }
-        @description "push.send service call failed — dispatched lands false and error carries the service detail"
+        @description "Ask std-push to send the push-channel notification."
         @tier "secondary"
       NOTIFY_LOOKUP_FAILED {
         error : string!
@@ -338,6 +376,49 @@ orbital NotifyOnEventOrbital {
     }
 
     listens {
+      NotifyEmailApi.EMAIL_SENT -> NOTIFY_EMAIL_SENT
+      NotifyEmailApi.EMAIL_SEND_FAILED -> NOTIFY_EMAIL_FAILED
+      NotifySmsApi.TWILIO_SMS_RESULT -> NOTIFY_SMS_SENT
+      NotifySmsApi.TWILIO_SMS_FAILED -> NOTIFY_SMS_FAILED
+      NotifyPushApi.PUSH_SEND_RESULT -> NOTIFY_PUSH_SENT
+      NotifyPushApi.PUSH_SEND_FAILED -> NOTIFY_PUSH_FAILED
+      NotifyWebhookApi.WEBHOOK_RESULT -> NOTIFY_WEBHOOK_SENT
+      NotifyWebhookApi.WEBHOOK_FAILED -> NOTIFY_WEBHOOK_FAILED
+      NOTIFY_WEBHOOK_SENT {
+        status : number!
+        ok : boolean!
+        durationMs : number!
+      }
+      NOTIFY_WEBHOOK_FAILED {
+        code : string
+        message : string!
+        attempts : number!
+      }
+      NOTIFY_PUSH_SENT {
+        statusCode : number!
+        ok : boolean!
+        expired : boolean!
+      }
+      NOTIFY_PUSH_FAILED {
+        code : string
+        message : string!
+      }
+      NOTIFY_EMAIL_SENT {
+        id : string
+        status : string!
+      }
+      NOTIFY_EMAIL_FAILED {
+        code : string
+        message : string!
+      }
+      NOTIFY_SMS_SENT {
+        sid : string!
+        status : string
+      }
+      NOTIFY_SMS_FAILED {
+        code : string
+        message : string!
+      }
       EventOccurred {
         data : @entity @config.sourceEntity
         status : string
@@ -397,7 +478,7 @@ orbital NotifyOnEventOrbital {
         @tier "policy"
       notifyChannel : "in-app" | "email" | "sms" | "push" | "webhook" = in-app
         @label "Channel"
-        @description "Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient's PushSubscription row (captured by std-notification-center's subscribe flow) and dispatches web-push via push.send — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row's `channel` overrides this value for that recipient."
+        @description "Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email` and `sms` dispatch through std-email (EMAIL_SEND) and std-twilio (TWILIO_SEND_SMS), `webhook` through call-service (webhook.send), at event time and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient's PushSubscription row (captured by std-notification-center's subscribe flow) and dispatches web-push through std-push (PUSH_SEND) — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row's `channel` overrides this value for that recipient."
         @synonyms "delivery method, notification channel, send via, dispatch through, push notification, web push"
         @tier "policy"
       emailSubject : string = ""
@@ -473,5 +554,5 @@ orbital NotifyOnEventOrbital {
     }
   }
 
-  page "/notify-on-event" as NotifyOnEventPage -> NotifyOnEventListener
+  page "/notify-on-event" as NotifyOnEventPage -> NotifyOnEventListener, NotifyEmailApi, NotifySmsApi, NotifyPushApi, NotifyWebhookApi, NotifyWebhookRetry
 }

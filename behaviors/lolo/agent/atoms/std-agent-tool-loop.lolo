@@ -1,6 +1,7 @@
 app std-agent-tool-loop [
-  version: "2.0.0",
-  description: "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through `call-service llm call-tools`. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`) and entities to read; each input fires as the signed-in user through the ordinary dispatch (guards and entity policies apply) and each read returns only the rows the caller may read. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast, unless `quiet` is on (a background run nobody is watching: no live steps and no toast). CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. Compose with std-agent-session (the conversation) and std-agent-trace (the step record)."
+  version: "3.0.0",
+  description: "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through std-llm's tool loop. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`, optionally with the `payload` the model is shown and held to) and entities to read. The program reflects its own inputs (`program/inputs`); each tool call the model makes fires as the signed-in user through the ordinary dispatch (`program/dispatch`: guards, grants and entity policies apply) and each read returns only the rows the caller may read (`persist/read-named`); a refused or unknown tool is answered to the model as an explicit refusal. Headless: the conversation UI (std-agent-session) shows the reply; a failure shows as a toast, unless `quiet` is on (a background run nobody is watching: no live steps and no toast). CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. The model side is a std-llm LlmClient trait that listens to the loop's LLM_CALL_TOOLS and LLM_TOOLS_ANSWERED and is heard through LLM_TOOLS_REQUESTED, LLM_TOOLS_STEP, LLM_CALL_TOOLS_RESULT and LLM_FAILED; a composer wires its own. CANCEL aborts the model call at its provider (std-llm's LLM_CANCEL, under the key `agent-tool-loop`) and stops any tool call not yet started; nothing is replied and no failure is reported, and a new CONVERSE is refused until std-llm confirms the cancel (LLM_CANCELLED). Compose with std-agent-session (the conversation) and std-agent-trace (the step record).",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 
 type AgentToolScope = {
@@ -22,6 +23,11 @@ type AgentToolRead = {
   read : string!
 }
 type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
+type AgentToolInputData = {
+  event : string!
+  payload : [AgentToolField]
+}
+type AgentToolData = AgentToolScope | AgentToolInputData | AgentToolRead
 type AgentChatMessage = {
   role : "user" | "assistant"
   content : string!
@@ -72,6 +78,52 @@ type AgentUsage = {
   totalTokens : number!
   modelCalls : number!
 }
+type LlmSchema = { type : string, additionalProperties : boolean, properties : Map string LlmSchema, required : [string], enum : [string], items : LlmSchema }
+type LlmToolDef = { name : string!, description : string!, parameters : LlmSchema! }
+type LlmToolCall = { id : string!, name : string!, arguments : string! }
+type LlmToolOutcome = { id : string!, tool : string!, kind : "input" | "read" | "invalid"!, success : boolean!, detail : string, rows : number, content : string!, startedAt : number!, endedAt : number! }
+type AgentToolBinding = {
+  name : string!
+  description : string!
+  parameters : LlmSchema!
+  label : string!
+  kind : "input" | "read"!
+  address : string
+  entity : string
+  readAny : boolean
+  contract : [AgentToolField]
+  contracted : boolean
+}
+type AgentReflectedInput = {
+  orbital : string!
+  trait : string!
+  event : string!
+  address : string!
+  description : string
+  parameters : LlmSchema!
+}
+type AgentReflection = {
+  inputs : [AgentReflectedInput]!
+  entities : [string]!
+  selected : [AgentReflectedInput]!
+}
+type AgentDispatchAnswer = {
+  ok : boolean!
+  error : string
+}
+type AgentReadAnswer = {
+  entity : string!
+  count : number!
+}
+type AgentPortIssue = {
+  code : string!
+  message : string!
+}
+type AgentReadArguments = {
+  entity : string
+}
+
+uses Llm from "std/behaviors/std-llm"
 
 orbital AgentToolLoopOrbital {
   entity AgentTurn [runtime] {
@@ -80,13 +132,34 @@ orbital AgentToolLoopOrbital {
     reply : string @description "The last reply." = ""
     error : string @description "Why the last turn failed." = ""
     ephemeral : boolean @description "The current turn belongs to an ephemeral conversation." = false
+    live : boolean @description "The current turn streams its steps to the asking tab." = false
+    cancelled : boolean @description "The current turn was cancelled while the model was answering: its late outcome is dropped." = false
+    turnMessages : [AgentChatMessage] @description "The conversation being answered." = []
+    turnInstructions : string @description "The instructions sent with the current turn." = ""
+    turnTools : [AgentToolData] @description "The tools the current turn may use." = []
+    table : [AgentToolBinding] @description "The tools offered to the model, by name." = []
+    session : string @description "The model's tool run the calls being executed belong to." = ""
+    calls : [LlmToolCall] @description "The tool calls the model asked for." = []
+    cursor : number @description "The call being executed." = 0
+    results : [LlmToolOutcome] @description "What the calls answered so far." = []
+    current : LlmToolCall @description "The call being executed."
+    binding : AgentToolBinding @description "The tool the call being executed names."
+    callStartedAt : number @description "When the call being executed began." = 0
+  }
+
+  trait LoopLlm = Llm.traits.LlmClient {
+    listens {
+      AgentToolLoop.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
+      AgentToolLoop.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
+      AgentToolLoop.LLM_CANCEL -> LLM_CANCEL
+    }
   }
 
   trait AgentToolLoop -> AgentTurn [interaction] {
     config {
       tools : [AgentTool] = []
         @label "What may the assistant do?"
-        @description "The declared inputs it may fire (`{ event: Trait.EVENT }`) and the entities it may read (`{ read: Entity }`), as the signed-in user."
+        @description "The declared inputs it may fire (`{ event: Trait.EVENT }`, optionally with the `payload` the model is shown and held to) and the entities it may read (`{ read: Entity }`), as the signed-in user."
         @synonyms "allowlist, abilities, actions, permissions"
         @tier "domain"
       instructions : string = "You operate this app for the signed-in user. Use the tools to act and to look things up; when a tool reports that something was refused or denied, say so plainly."
@@ -103,67 +176,66 @@ orbital AgentToolLoopOrbital {
         @description "No live ASSISTANT_STEP stream and no failure toast: the request is reported only through ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED. For a run nobody is watching, such as one the app starts on its own."
         @synonyms "silent, background, no toast, suppress errors, headless run"
         @tier "policy"
-      cancelKey : string = "agent-tool-loop"
-        @label "Cancel key"
-        @description "The key this instance's model call runs under, so CANCEL aborts it. Give each instance of the loop in one app its own."
-        @synonyms "call key, abort key"
-        @tier "internal"
     }
     initial: idle
 
     state idle {
       INIT -> idle
         (set @entity.status idle)
-      CONVERSE -> thinking when (and (not @config.quiet) (not ?ephemeral))
+      CONVERSE -> preparing when (not ?ephemeral)
         (set @entity.status thinking)
         (set @entity.ephemeral false)
-        (call-service llm call-tools {
-          messages: ?messages
-          tools: @config.tools
-          instructions: (if ["=", (str/default ?context ""), ""] @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" ?context))
-          maxSteps: @config.maxSteps
-        } {
-          key: @config.cancelKey, emit: { failure: ASK_FAILED, success: ANSWERED, onMessage: ASSISTANT_STEP }
-        })
-      CONVERSE -> thinking when (and @config.quiet (not ?ephemeral))
-        (set @entity.status thinking)
-        (set @entity.ephemeral false)
-        (call-service llm call-tools {
-          messages: ?messages
-          tools: @config.tools
-          instructions: (if ["=", (str/default ?context ""), ""] @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" ?context))
-          maxSteps: @config.maxSteps
-        } {
-          key: @config.cancelKey, emit: { failure: ASK_FAILED, success: ANSWERED }
-        })
-      CONVERSE -> thinking when ?ephemeral
+        (set @entity.cancelled false)
+        (set @entity.live (not @config.quiet))
+        (set @entity.turnMessages ?messages)
+        (set @entity.turnInstructions (if ["=", (str/default ?context ""), ""] @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" ?context)))
+        (set @entity.turnTools @config.tools)
+        (program/inputs { select: (array/filter @config.tools (fn t (object/has @t event))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
+      CONVERSE -> preparing when ?ephemeral
         (set @entity.status thinking)
         (set @entity.ephemeral true)
-        (call-service llm call-tools {
-          messages: ?messages
-          tools: (object/get ? tools [])
-          instructions: (if ["=", (str/default ?instructions ""), ""] @config.instructions ?instructions)
-          maxSteps: @config.maxSteps
-        } {
-          key: @config.cancelKey, emit: { failure: ASK_FAILED, success: ANSWERED }
-        })
+        (set @entity.cancelled false)
+        (set @entity.live false)
+        (set @entity.turnMessages ?messages)
+        (set @entity.turnInstructions (if ["=", (str/default ?instructions ""), ""] @config.instructions ?instructions))
+        (set @entity.turnTools (object/get ? tools []))
+        (program/inputs { select: (array/filter (object/get ? tools []) (fn t (object/has @t event))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
     }
 
-    state thinking {
+    state preparing {
       INIT -> idle
         (set @entity.status idle)
       CANCEL -> idle
-        (cancel-call @config.cancelKey)
         (set @entity.status idle)
-      ANSWERED -> idle
-        (set @entity.status answered)
-        (set @entity.reply ?reply)
-        (emit ASSISTANT_REPLIED { reply: ?reply, steps: ?steps, usage: ?usage, ephemeral: @entity.ephemeral })
-      ASK_FAILED -> idle when (or @config.quiet @entity.ephemeral)
+      INPUTS_KNOWN -> thinking
+        (let ((table (array/flatten (array/map (array/range 0 (array/len @entity.turnTools) 1) (fn i
+            (let ((t (array/nth @entity.turnTools @i)))
+              (if (object/has @t scope)
+                (array/concat
+                  (array/map (array/range 0 (array/len @payload.result.inputs) 1) (fn k
+                    (let ((x (array/nth @payload.result.inputs @k)))
+                      { name: (str/concat @x.event "_" (+ @k 1)), description: (str/concat (str/default @x.description @x.event) " (" @x.orbital " → " @x.trait ")"), parameters: @x.parameters, label: @x.address, kind: input, address: @x.address, contracted: false })))
+                  (if (> (array/len @payload.result.entities) 0)
+                    [{ name: "read", description: "Read the rows of an entity that you may see", parameters: { type: "object", properties: { entity: { type: "string", enum: @payload.result.entities } }, required: ["entity"] }, label: "read", kind: read, readAny: true }]
+                    []))
+                (if (object/has @t read)
+                  [{ name: (str/concat "read__" @t.read), description: (str/concat "Read the " @t.read " rows you may see"), parameters: { type: "object", properties: {} }, label: @t.read, kind: read, entity: @t.read }]
+                  (let ((s (array/nth @payload.result.selected (array/count (array/take @entity.turnTools @i) (fn y (object/has @y event))))))
+                    [{ name: (str/replaceAll @t.event "." "__"), description: (str/default @s.description @t.event), parameters: @s.parameters, label: @t.event, kind: input, address: @s.address, contract: (object/get @t payload []), contracted: (object/has @t payload) }])))))))))
+          (do
+            (set @entity.table @table)
+            (emit LLM_CALL_TOOLS {
+              messages: @entity.turnMessages
+              tools: (array/map @table (fn b { name: @b.name, description: @b.description, parameters: @b.parameters }))
+              instructions: @entity.turnInstructions
+              maxSteps: @config.maxSteps
+              key: "agent-tool-loop"
+            })))
+      INPUTS_FAILED -> idle when (or @config.quiet @entity.ephemeral)
         (set @entity.status failed)
         (set @entity.error ?error)
         (emit ASSISTANT_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral })
-      ASK_FAILED -> idle when (and (not @config.quiet) (not @entity.ephemeral))
+      INPUTS_FAILED -> idle when (and (not @config.quiet) (not @entity.ephemeral))
         (set @entity.status failed)
         (set @entity.error ?error)
         (emit ASSISTANT_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral })
@@ -172,6 +244,112 @@ orbital AgentToolLoopOrbital {
           type: alert
           variant: error
         })
+    }
+
+    state thinking {
+      INIT -> idle
+        (set @entity.status idle)
+      CANCEL -> thinking
+        (set @entity.cancelled true)
+        (set @entity.status idle)
+        (emit LLM_CANCEL { key: "agent-tool-loop" })
+      ToolsCancelled -> idle when (and @entity.cancelled (= ?key "agent-tool-loop"))
+        (set @entity.cancelled false)
+      CONVERSE -> thinking when @entity.cancelled
+        (emit ASSISTANT_REPLY_FAILED { error: "The previous request is still being cancelled; ask again in a moment.", ephemeral: (if ?ephemeral true false) })
+      ToolsStep -> thinking when (and @entity.live (not @entity.cancelled))
+        (emit ASSISTANT_STEP { activity: ?activity })
+      ToolsStep -> thinking when (or (not @entity.live) @entity.cancelled)
+      ToolsRequested -> running when (not @entity.cancelled)
+        (set @entity.session ?session)
+        (set @entity.calls ?calls)
+        (set @entity.cursor 0)
+        (set @entity.results [])
+        (emit RUN_NEXT {})
+      ToolsRequested -> idle when @entity.cancelled
+        (set @entity.cancelled false)
+      ToolsReplied -> idle when (not @entity.cancelled)
+        (set @entity.status answered)
+        (set @entity.reply ?reply)
+        (emit ASSISTANT_REPLIED { reply: ?reply, steps: ?steps, usage: ?usage, ephemeral: @entity.ephemeral })
+      ToolsReplied -> idle when @entity.cancelled
+        (set @entity.cancelled false)
+      ToolsFailed -> idle when @entity.cancelled
+        (set @entity.cancelled false)
+      ToolsFailed -> idle when (and (not @entity.cancelled) (or @config.quiet @entity.ephemeral))
+        (set @entity.status failed)
+        (set @entity.error ?message)
+        (emit ASSISTANT_REPLY_FAILED { error: ?message, ephemeral: @entity.ephemeral })
+      ToolsFailed -> idle when (and (not @entity.cancelled) (not @config.quiet) (not @entity.ephemeral))
+        (set @entity.status failed)
+        (set @entity.error ?message)
+        (emit ASSISTANT_REPLY_FAILED { error: ?message, ephemeral: @entity.ephemeral })
+        (render-ui toast {
+          message: ?message
+          type: alert
+          variant: error
+        })
+    }
+
+    state running {
+      INIT -> idle
+        (set @entity.status idle)
+      CANCEL -> idle
+        (set @entity.status idle)
+      RUN_NEXT -> thinking when (>= @entity.cursor (array/len @entity.calls))
+        (emit LLM_TOOLS_ANSWERED { session: @entity.session, results: @entity.results })
+      RUN_NEXT -> running when (< @entity.cursor (array/len @entity.calls))
+        (set @entity.current (array/nth @entity.calls @entity.cursor))
+        (set @entity.callStartedAt (time/now))
+        (emit CALL_BEGIN {})
+      CALL_BEGIN -> running when (= (array/count @entity.table (fn x (= @x.name @entity.current.name))) 0)
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.current.name, kind: invalid, success: false, detail: "not an allowed tool", content: (json/stringify { error: (str/concat "'" @entity.current.name "' is not one of your tools"), tools: (array/map @entity.table (fn x @x.name)) }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") (not @b.contracted)))
+        (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
+          (do
+            (set @entity.binding @b)
+            (program/dispatch @b.address @entity.current.arguments { emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") @b.contracted))
+        (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
+          (do
+            (set @entity.binding @b)
+            (program/dispatch @b.address @entity.current.arguments { schema: @b.contract } { emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "read") (not @b.readAny)))
+        (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
+          (do
+            (set @entity.binding @b)
+            (persist/read-named @b.entity { emit: { success: READ_DONE, failure: READ_FAILED } })))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "read") @b.readAny))
+        (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
+          (do
+            (set @entity.binding @b)
+            (persist/read-named (object/get (json/parse @entity.current.arguments AgentReadArguments) entity "") { emit: { success: READ_DONE, failure: READ_FAILED } })))
+      DISPATCHED -> running when @payload.result.ok
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      DISPATCHED -> running when (not @payload.result.ok)
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (str/default @payload.result.error "dispatch failed"), content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      DISPATCH_FAILED -> running
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: ?error, content: (json/stringify { ok: false, error: ?error }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      READ_DONE -> running
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @payload.result.entity, kind: read, success: true, rows: @payload.result.count, content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      READ_FAILED -> running when (> (array/count ?errors (fn e (= @e.code "unknown-entity"))) 0)
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: read, success: false, detail: "not a readable entity", content: (json/stringify { error: "not an entity you can read" }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      READ_FAILED -> running when (= (array/count ?errors (fn e (= @e.code "unknown-entity"))) 0)
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: read, success: false, detail: ?error, content: (json/stringify { error: ?error }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
     }
 
     emits {
@@ -197,16 +375,51 @@ orbital AgentToolLoopOrbital {
         @description "The assistant could not answer (model unavailable, or out of steps)."
         @synonyms "failed, error, gave up"
         @tier "domain"
-      ANSWERED -> internal {
-        reply : string!
-        steps : [AgentActivity]!
-        usage : AgentUsage!
+      LLM_CALL_TOOLS -> external {
+        messages : [AgentChatMessage]!
+        tools : [LlmToolDef]!
+        instructions : string
+        maxSteps : number
+        key : string
       }
+        @description "Ask std-llm to run the model's tool loop for this conversation, under the key LLM_CANCEL aborts it by."
         @tier "internal"
-      ASK_FAILED -> internal {
+      LLM_TOOLS_ANSWERED -> external {
+        session : string!
+        results : [LlmToolOutcome]!
+      }
+        @description "Answer std-llm's tool calls with what each one came to."
+        @tier "internal"
+      LLM_CANCEL -> external {
+        key : string!
+      }
+        @description "Ask std-llm to abort the model call of a cancelled run."
+        @tier "internal"
+      INPUTS_KNOWN {
+        result : AgentReflection!
+        text : string!
+      }
+      INPUTS_FAILED {
         error : string!
       }
-        @tier "internal"
+      RUN_NEXT
+      CALL_BEGIN
+      DISPATCHED {
+        result : AgentDispatchAnswer!
+        text : string!
+      }
+      DISPATCH_FAILED {
+        error : string!
+        errors : [AgentPortIssue]
+      }
+      READ_DONE {
+        result : AgentReadAnswer!
+        text : string!
+      }
+      READ_FAILED {
+        error : string!
+        errors : [AgentPortIssue]
+      }
     }
 
     listens {
@@ -223,8 +436,32 @@ orbital AgentToolLoopOrbital {
       }
         @description "Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant. An `ephemeral` conversation runs under its own `instructions` (empty: the configured ones) and exactly its own `tools` (absent or `[]`: none, never the configured ones), streams no live steps and shows no failure toast."
         @synonyms "ask, chat, request"
+      LoopLlm.LLM_TOOLS_REQUESTED -> ToolsRequested
+      LoopLlm.LLM_TOOLS_STEP -> ToolsStep
+      LoopLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
+      LoopLlm.LLM_FAILED -> ToolsFailed
+      LoopLlm.LLM_CANCELLED -> ToolsCancelled
+      ToolsRequested {
+        session : string!
+        calls : [LlmToolCall]!
+      }
+      ToolsStep {
+        activity : AgentActivity!
+      }
+      ToolsReplied {
+        reply : string!
+        steps : [AgentActivity]!
+        usage : AgentUsage!
+      }
+      ToolsFailed {
+        code : string
+        message : string!
+      }
+      ToolsCancelled {
+        key : string!
+      }
     }
   }
 
-  page "/agent-tool-loop" as AgentToolLoopPage -> AgentToolLoop
+  page "/agent-tool-loop" as AgentToolLoopPage -> AgentToolLoop, LoopLlm
 }

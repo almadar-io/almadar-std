@@ -1,6 +1,6 @@
 app std-page-search [
   version: "1.0.0",
-  description: "std-page-search — runs one search on a site in a background tab: opens `searchUrl` with the query as the `queryParam` parameter, reads up to `maxResults` elements matching `resultSelector` (waiting up to `waitMs` for the results to appear), closes the tab, and reports RESULTS with the fields read from each. One search at a time: SEARCH is accepted again once RESULTS or SEARCH_FAILED is reported. It never clicks anything. Needs a host with the `page` service (a browser extension with access to the search pages)."
+  description: "std-page-search — runs one search on a site in a background tab: opens `searchUrl` with the query as the `queryParam` parameter, reads up to `maxResults` elements matching `resultSelector` (waiting up to `waitMs` for the results to appear), closes the tab, and reports RESULTS with the fields read from each. One search at a time: SEARCH is accepted again once RESULTS or SEARCH_FAILED is reported. It never clicks anything. Needs a host with browser tabs (a browser extension with access to the search pages)."
 ]
 
 orbital PageSearchOrbital {
@@ -77,7 +77,7 @@ orbital PageSearchOrbital {
         (set @entity.query ?query)
         (set @entity.tab 0)
         (set @entity.status searching)
-        (call-service "page" "openTab" { url: @config.searchUrl, params: (object/set {} @config.queryParam ?query), match: @config.resultsMatch, active: false }
+        (browser/tab-open { url: @config.searchUrl, params: (object/set {} @config.queryParam ?query), match: @config.resultsMatch, active: false }
           { emit: { success: TAB_OPENED, failure: SEARCH_CALL_FAILED } })
         (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Searching for " ?query) })
     }
@@ -87,16 +87,16 @@ orbital PageSearchOrbital {
         (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Searching for " @entity.query) })
       TAB_OPENED -> searching
         (set @entity.tab ?tab)
-        (call-service "page" "query" { tab: ?tab, selector: @config.resultSelector, fields: @config.fields, limit: @config.maxResults, waitMs: @config.waitMs }
+        (browser/tab-query { tab: ?tab, selector: @config.resultSelector, fields: @config.fields, limit: @config.maxResults, waitMs: @config.waitMs }
           { emit: { success: RESULTS_READ, failure: SEARCH_CALL_FAILED } })
       RESULTS_READ -> idle
-        (call-service "page" "closeTab" { tab: ?tab })
+        (browser/tab-close { tab: ?tab })
         (set @entity.tab 0)
         (set @entity.status idle)
         (emit RESULTS { query: @entity.query, results: ?elements })
         (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Searched for " @entity.query) })
       SEARCH_CALL_FAILED -> idle when (> @entity.tab 0)
-        (call-service "page" "closeTab" { tab: @entity.tab })
+        (browser/tab-close { tab: @entity.tab })
         (set @entity.tab 0)
         (set @entity.errorMessage ?error)
         (set @entity.status idle)

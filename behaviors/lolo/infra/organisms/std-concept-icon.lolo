@@ -1,0 +1,245 @@
+app std-concept-icon [
+  version: "1.0.0",
+  description: "std-concept-icon — turns a concept label into a brand icon id and tone through the keyless Iconify API, cached per label. CONCEPT_ICON probes devicon/<slug>.svg, falls back to the first Iconify search hit, resolves the icon's SVG body and classifies its tone (themed when it uses currentColor, else light or dark by the mean luminance of its #rrggbb fills). A lookup with no icon is cached as a miss and answers CONCEPT_ICON_RESULT with an empty icon and tone none.",
+  egress: ["https://api.iconify.design"]
+]
+orbital ConceptIconOrbital {
+  uses IconApi from "std/behaviors/std-iconify"
+
+  entity ConceptIconLookup [runtime] {
+    id : string!
+    term : string = ""
+    slug : string = ""
+    fills : [string] = []
+    key : string = ""
+    iconId : string = ""
+    resultIcon : string = ""
+    resultTone : string = "none"
+  }
+
+  entity ConceptIconCache [persistent: concept-icons] {
+    id : string!
+    label : string!
+    icon : string
+    tone : string
+    fetchedAt : number!
+  }
+
+  trait ConceptIconResolver -> ConceptIconLookup [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      CONCEPT_ICON -> idle when (= (str/trim ?label) "")
+        (emit CONCEPT_ICON_FAILED { code: "VALIDATION_ERROR", message: "label: String must contain at least 1 character(s)" })
+      CONCEPT_ICON -> caching when (!= (str/trim ?label) "")
+        (set @entity.term (str/trim ?label))
+        (set @entity.slug (object/get { "c++": "cpp", "cpp": "cpp", "c#": "csharp", "csharp": "csharp", "nodejs": "nodejs", "node": "nodejs", "dotnet": "dotnet", ".net": "dotnet", "golang": "go", "typescript": "typescript", "javascript": "javascript", "objective-c": "objectivec" } (str/lower (str/trim ?label)) (str/join (array/filter (array/map (array/range (str/len (str/trim ?label))) (fn n (str/slice (str/lower (str/trim ?label)) @n (+ @n 1)))) (fn c (str/includes "abcdefghijklmnopqrstuvwxyz0123456789" @c))) "")))
+        (set @entity.key (str/concat "i:" (str/encode-uri-component (str/lower (str/trim ?label)))))
+        (fetch ConceptIconCache {
+          filter: ["=", (object/get @entity id), @entity.key],
+          emit: { success: CONCEPT_ICON_CACHE_LOADED, failure: CONCEPT_ICON_CACHE_FAILED }
+        })
+    }
+
+    state caching {
+      INIT -> idle
+      CONCEPT_ICON -> caching
+        (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
+      CONCEPT_ICON_CACHE_FAILED -> idle
+        (emit CONCEPT_ICON_FAILED { code: "SERVICE_ERROR", message: ?error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Concept icon unavailable: " ?error) })
+      CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (!= (or (object/get (array/first ?data) icon "") "") ""))
+        (emit CONCEPT_ICON_RESULT { icon: (object/get (array/first ?data) icon ""), tone: (object/get (array/first ?data) tone "none") })
+      CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (= (or (object/get (array/first ?data) icon "") "") ""))
+        (emit CONCEPT_ICON_RESULT { icon: "", tone: "none" })
+      CONCEPT_ICON_CACHE_LOADED -> probing when (and (= (array/len ?data) 0) (!= @entity.slug ""))
+        (set @entity.iconId (str/concat "devicon:" @entity.slug))
+        (emit ICONIFY_SVG_EXISTS { path: (str/concat "devicon/" @entity.slug ".svg") })
+      CONCEPT_ICON_CACHE_LOADED -> searching when (and (= (array/len ?data) 0) (= @entity.slug ""))
+        (emit ICONIFY_SEARCH { query: @entity.term, limit: 1 })
+    }
+
+    state probing {
+      INIT -> idle
+      CONCEPT_ICON -> probing
+        (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
+      CONCEPT_ICON_PROBED -> bodying when ?exists
+        (emit ICONIFY_GET_ICON_BODY { iconId: @entity.iconId })
+      CONCEPT_ICON_PROBED -> searching when (not ?exists)
+        (emit ICONIFY_SEARCH { query: @entity.term, limit: 1 })
+    }
+
+    state searching {
+      INIT -> idle
+      CONCEPT_ICON -> searching
+        (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
+      CONCEPT_ICON_SEARCHED -> bodying when (> (array/len ?icons) 0)
+        (set @entity.iconId (array/first ?icons))
+        (emit ICONIFY_GET_ICON_BODY { iconId: (array/first ?icons) })
+      CONCEPT_ICON_SEARCHED -> storing when (= (array/len ?icons) 0)
+        (set @entity.resultIcon "")
+        (set @entity.resultTone "none")
+        (persist create ConceptIconCache { id: @entity.key, label: @entity.term, icon: null, tone: null, fetchedAt: @now } {
+          emit: { success: CONCEPT_ICON_STORED, failure: CONCEPT_ICON_STORE_FAILED }
+        })
+    }
+
+    state bodying {
+      INIT -> idle
+      CONCEPT_ICON -> bodying
+        (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
+      CONCEPT_ICON_BODIED -> storing when (= ?body null)
+        (set @entity.resultIcon "")
+        (set @entity.resultTone "none")
+        (persist create ConceptIconCache { id: @entity.key, label: @entity.term, icon: null, tone: null, fetchedAt: @now } {
+          emit: { success: CONCEPT_ICON_STORED, failure: CONCEPT_ICON_STORE_FAILED }
+        })
+      CONCEPT_ICON_BODIED -> storing when (!= ?body null)
+        (set @entity.resultIcon @entity.iconId)
+        (set @entity.fills (array/filter (array/drop (str/split ?body "#") 1) (fn s
+          (and (>= (str/len @s) 6)
+            (array/every (array/map (array/range 6) (fn n (str/slice @s @n (+ @n 1)))) (fn c (str/includes "0123456789abcdefABCDEF" @c)))
+            (or (= (str/slice @s 6 7) "") (not (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_" (str/slice @s 6 7))))))))
+        (set @entity.resultTone
+          (if (str/includes (str/lower ?body) "currentcolor") "themed"
+            (if (= (array/len @entity.fills) 0) "dark"
+              (if (>= (/ (array/reduce @entity.fills 0 (fn acc s (+ @acc (+ (+ (* 0.299 (str/to-number (str/concat "0x" (str/slice @s 0 2)))) (* 0.587 (str/to-number (str/concat "0x" (str/slice @s 2 4))))) (* 0.114 (str/to-number (str/concat "0x" (str/slice @s 4 6)))))))) (array/len @entity.fills)) 170) "light" "dark"))))
+        (persist create ConceptIconCache { id: @entity.key, label: @entity.term, icon: @entity.iconId, tone: @entity.resultTone, fetchedAt: @now } {
+          emit: { success: CONCEPT_ICON_STORED, failure: CONCEPT_ICON_STORE_FAILED }
+        })
+    }
+
+    state storing {
+      INIT -> idle
+      CONCEPT_ICON -> storing
+        (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
+      CONCEPT_ICON_STORED -> idle
+        (emit CONCEPT_ICON_RESULT { icon: @entity.resultIcon, tone: @entity.resultTone })
+      CONCEPT_ICON_STORE_FAILED -> idle
+        (emit CONCEPT_ICON_FAILED { code: "SERVICE_ERROR", message: ?error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Concept icon unavailable: " ?error) })
+    }
+
+    emits {
+      CONCEPT_ICON_RESULT -> external {
+        icon : string!
+        tone : string!
+      }
+        @description "The concept's brand icon id (prefix:name) and tone: themed (uses currentColor), dark, light, or none with an empty icon when no icon exists for the label."
+        @synonyms "concept icon, brand icon, icon for topic, topic logo"
+        @tier "primary"
+      CONCEPT_ICON_FAILED -> external {
+        code : string!
+        message : string!
+      }
+        @description "The lookup could not run: VALIDATION_ERROR for a blank label, CONFLICT while another lookup is running, SERVICE_ERROR when the icon cache could not be read or written."
+        @synonyms "icon lookup failed, concept icon error"
+        @tier "primary"
+      ICONIFY_SVG_EXISTS -> external {
+        path : string!
+      }
+        @description "Internal: ask the Iconify client whether the devicon path exists."
+        @tier "secondary"
+      ICONIFY_SEARCH -> external {
+        query : string!
+        limit : number
+      }
+        @description "Internal: ask the Iconify client for the first icon matching the label."
+        @tier "secondary"
+      ICONIFY_GET_ICON_BODY -> external {
+        iconId : string!
+      }
+        @description "Internal: ask the Iconify client for the icon's SVG body."
+        @tier "secondary"
+      CONCEPT_ICON_CACHE_LOADED {
+        data : [ConceptIconCache]
+      }
+        @description "Internal: the cached icon row for the label, if any."
+        @tier "secondary"
+      CONCEPT_ICON_CACHE_FAILED {
+        error : string
+      }
+        @description "Internal: the icon cache could not be read."
+        @tier "secondary"
+      CONCEPT_ICON_STORED {
+        id : string
+      }
+        @description "Internal: the lookup outcome was cached."
+        @tier "secondary"
+      CONCEPT_ICON_STORE_FAILED {
+        error : string
+      }
+        @description "Internal: the lookup outcome could not be cached."
+        @tier "secondary"
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the resolver reports an icon cache that could not be read or written; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+
+    listens {
+      CONCEPT_ICON -> external {
+        label : string!
+      }
+        @description "Resolve a concept label to a brand icon and tone."
+        @synonyms "find concept icon, icon for concept, topic icon"
+      ConceptIconApi.ICONIFY_SVG_EXISTS_RESULT -> CONCEPT_ICON_PROBED
+      CONCEPT_ICON_PROBED {
+        exists : boolean!
+      }
+      ConceptIconApi.ICONIFY_SEARCH_RESULT -> CONCEPT_ICON_SEARCHED
+      CONCEPT_ICON_SEARCHED {
+        icons : [string]!
+      }
+      ConceptIconApi.ICONIFY_ICON_BODY_RESULT -> CONCEPT_ICON_BODIED
+      CONCEPT_ICON_BODIED {
+        body : string
+      }
+    }
+  }
+
+  trait ConceptIconApi = IconApi.traits.IconifyClient {
+    listens {
+      ConceptIconResolver.ICONIFY_SVG_EXISTS -> ICONIFY_SVG_EXISTS
+      ConceptIconResolver.ICONIFY_SEARCH -> ICONIFY_SEARCH
+      ConceptIconResolver.ICONIFY_GET_ICON_BODY -> ICONIFY_GET_ICON_BODY
+      ICONIFY_SVG_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      ICONIFY_SVG_FAILED {
+        error : string!
+        kind : string!
+      }
+      ICONIFY_SEARCH_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      ICONIFY_SEARCH_FAILED {
+        error : string!
+        kind : string!
+      }
+      ICONIFY_BODY_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      ICONIFY_BODY_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+    }
+  }
+
+  page "/concept-icon" as ConceptIconPage -> ConceptIconResolver, ConceptIconApi
+}

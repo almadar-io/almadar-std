@@ -8,6 +8,7 @@
  * @packageDocumentation
  */
 
+import { SEMANTIC_STRING_PATTERNS } from '@almadar/core';
 import type { StdOperatorMeta } from '../types.js';
 import { BOOLEAN, STRING, fn, list, rec, shape, tv, union } from '../signature.js';
 
@@ -90,6 +91,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is a valid email format',
     hasSideEffects: false,
     returnType: 'boolean',
+    pattern: SEMANTIC_STRING_PATTERNS.email,
     params: [{ name: 'value', type: 'string', description: 'Email to validate' }],
     example: '["validate/email", "ann@example.com"]',
   },
@@ -101,6 +103,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is a valid URL format',
     hasSideEffects: false,
     returnType: 'boolean',
+    pattern: SEMANTIC_STRING_PATTERNS.url,
     params: [{ name: 'value', type: 'string', description: 'URL to validate' }],
     example: '["validate/url", "https://example.com"]',
   },
@@ -112,6 +115,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is a valid UUID',
     hasSideEffects: false,
     returnType: 'boolean',
+    pattern: SEMANTIC_STRING_PATTERNS.uuid,
     params: [{ name: 'value', type: 'string', description: 'UUID to validate' }],
     example: '["validate/uuid", "550e8400-e29b-41d4-a716-446655440000"]',
   },
@@ -123,6 +127,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Check if value is a valid phone number',
     hasSideEffects: false,
     returnType: 'boolean',
+    pattern: SEMANTIC_STRING_PATTERNS.phone,
     params: [{ name: 'value', type: 'string', description: 'Phone number to validate' }],
     example: '["validate/phone", "+15551234567"]',
   },
@@ -238,7 +243,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-validate',
     minArity: 2,
     maxArity: 2,
-    description: 'Check if string matches regex pattern',
+    description: 'Check if string matches a regex pattern of the shared dialect (the subset ECMAScript and the Rust regex crate evaluate identically: no lookaround, backreferences, named groups or inline flags; \\d \\w \\b are ASCII; \\p{L} \\p{N} general categories are supported). A non-string value, or an invalid or unsupported pattern, is false',
     hasSideEffects: false,
     returnType: 'boolean',
     params: [

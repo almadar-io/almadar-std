@@ -18,7 +18,6 @@ export { TIME_OPERATORS, getTimeOperators } from './time.js';
 export { VALIDATE_OPERATORS, getValidateOperators } from './validate.js';
 export { FORMAT_OPERATORS, getFormatOperators } from './format.js';
 export { I18N_OPERATORS, getI18nOperators } from './i18n.js';
-export { ASYNC_OPERATORS, getAsyncOperators } from './async.js';
 
 // Neural Network / ML modules
 export { NN_OPERATORS, getNnOperators } from './nn.js';
@@ -39,6 +38,9 @@ export { PROB_OPERATORS, getProbOperators } from './prob.js';
 
 // OS triggers module
 export { OS_OPERATORS } from './os.js';
+
+// Bytes module (pure binary operators)
+export { BYTES_OPERATORS } from './bytes.js';
 
 // Browser device module (client host path)
 export { BROWSER_OPERATORS } from './browser.js';

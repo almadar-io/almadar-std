@@ -1,0 +1,367 @@
+app std-redis [
+  version: "1.0.0",
+  description: "std-redis — a cache, counter, lock and message channel on a real Redis server, through the kernel's redis effect (RESP over the host's raw TCP; rediss:// for TLS). REDIS_GET, REDIS_SET (ttl in seconds), REDIS_DELETE, REDIS_INCREMENT (INCRBY), REDIS_EXPIRE (seconds, PEXPIRE), REDIS_PUBLISH, REDIS_LOCK (SET NX PX, ttl in milliseconds; the lock id is drawn from the host CSPRNG) and REDIS_UNLOCK (EVAL of the compare-and-delete script, so only the holder releases). Values are text. Every failure answers REDIS_FAILED with the action, the failure kind (refused, unconfigured, timeout, failed, protocol, unsupported, redis), the server's error word when it answered one, and the message. Subscribing needs a long-lived stream the host does not offer yet (G-ORB-307), so there is no REDIS_SUBSCRIBE. Apps declare their Redis origin in their own egress list; the entry in this file is a placeholder, and a call to an undeclared origin is refused by the kernel and answers REDIS_FAILED.",
+  egress: ["redis://redis.example.test:6379"]
+]
+type RedisLockRequest = { key : string, ttl : number }
+orbital RedisOrbital {
+  entity RedisCall [runtime] {
+    id : string!
+  }
+
+  trait RedisClient -> RedisCall [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      REDIS_GET -> idle when (!= @payload.key "")
+        (if @config.authenticated (redis @config.origin ["GET", @payload.key] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "get", emit: { success: REDIS_GET_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["GET", @payload.key] { db: (if (> @config.db 0) @config.db null) } { key: "get", emit: { success: REDIS_GET_REPLIED, failure: REDIS_CALL_FAILED } }))
+      REDIS_GET -> idle when (= @payload.key "")
+        (emit REDIS_FAILED { action: "get", kind: "refused", code: null, message: "key is required" })
+      REDIS_GET_REPLIED -> idle
+        (emit REDIS_GOT { value: @payload.reply })
+
+      REDIS_SET -> idle when (and (!= @payload.key "") (> (or @payload.ttl 0) 0))
+        (if @config.authenticated (redis @config.origin ["SET", @payload.key, @payload.value, "EX", (str/concat @payload.ttl)] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "set", emit: { success: REDIS_SET_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["SET", @payload.key, @payload.value, "EX", (str/concat @payload.ttl)] { db: (if (> @config.db 0) @config.db null) } { key: "set", emit: { success: REDIS_SET_REPLIED, failure: REDIS_CALL_FAILED } }))
+      REDIS_SET -> idle when (and (!= @payload.key "") (<= (or @payload.ttl 0) 0))
+        (if @config.authenticated (redis @config.origin ["SET", @payload.key, @payload.value] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "set", emit: { success: REDIS_SET_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["SET", @payload.key, @payload.value] { db: (if (> @config.db 0) @config.db null) } { key: "set", emit: { success: REDIS_SET_REPLIED, failure: REDIS_CALL_FAILED } }))
+      REDIS_SET -> idle when (= @payload.key "")
+        (emit REDIS_FAILED { action: "set", kind: "refused", code: null, message: "key is required" })
+      REDIS_SET_REPLIED -> idle
+        (emit REDIS_SET_DONE { ok: (= @payload.reply "OK") })
+
+      REDIS_DELETE -> idle when (!= @payload.key "")
+        (if @config.authenticated (redis @config.origin ["DEL", @payload.key] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "delete", emit: { success: REDIS_DELETE_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["DEL", @payload.key] { db: (if (> @config.db 0) @config.db null) } { key: "delete", emit: { success: REDIS_DELETE_REPLIED, failure: REDIS_CALL_FAILED } }))
+      REDIS_DELETE -> idle when (= @payload.key "")
+        (emit REDIS_FAILED { action: "delete", kind: "refused", code: null, message: "key is required" })
+      REDIS_DELETE_REPLIED -> idle
+        (emit REDIS_DELETED { deleted: (> @payload.reply 0) })
+
+      REDIS_INCREMENT -> idle when (!= @payload.key "")
+        (if @config.authenticated (redis @config.origin ["INCRBY", @payload.key, (str/concat (or @payload.by 1))] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "increment", emit: { success: REDIS_INCREMENT_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["INCRBY", @payload.key, (str/concat (or @payload.by 1))] { db: (if (> @config.db 0) @config.db null) } { key: "increment", emit: { success: REDIS_INCREMENT_REPLIED, failure: REDIS_CALL_FAILED } }))
+      REDIS_INCREMENT -> idle when (= @payload.key "")
+        (emit REDIS_FAILED { action: "increment", kind: "refused", code: null, message: "key is required" })
+      REDIS_INCREMENT_REPLIED -> idle
+        (emit REDIS_INCREMENTED { value: @payload.reply })
+
+      REDIS_EXPIRE -> idle when (!= @payload.key "")
+        (if @config.authenticated (redis @config.origin ["PEXPIRE", @payload.key, (str/concat (* @payload.ttl 1000))] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "expire", emit: { success: REDIS_EXPIRE_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["PEXPIRE", @payload.key, (str/concat (* @payload.ttl 1000))] { db: (if (> @config.db 0) @config.db null) } { key: "expire", emit: { success: REDIS_EXPIRE_REPLIED, failure: REDIS_CALL_FAILED } }))
+      REDIS_EXPIRE -> idle when (= @payload.key "")
+        (emit REDIS_FAILED { action: "expire", kind: "refused", code: null, message: "key is required" })
+      REDIS_EXPIRE_REPLIED -> idle
+        (emit REDIS_EXPIRED { set: (= @payload.reply 1) })
+
+      REDIS_PUBLISH -> idle when (!= @payload.channel "")
+        (if @config.authenticated (redis @config.origin ["PUBLISH", @payload.channel, @payload.message] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "publish", emit: { success: REDIS_PUBLISH_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["PUBLISH", @payload.channel, @payload.message] { db: (if (> @config.db 0) @config.db null) } { key: "publish", emit: { success: REDIS_PUBLISH_REPLIED, failure: REDIS_CALL_FAILED } }))
+      REDIS_PUBLISH -> idle when (= @payload.channel "")
+        (emit REDIS_FAILED { action: "publish", kind: "refused", code: null, message: "channel is required" })
+      REDIS_PUBLISH_REPLIED -> idle
+        (emit REDIS_PUBLISHED { receivers: @payload.reply })
+
+      REDIS_LOCK -> idle when (!= @payload.key "")
+        (random-bytes 16 { key: (json/stringify { key: @payload.key, ttl: (or @payload.ttl 30000) }), emit: { success: REDIS_LOCK_ID_DRAWN, failure: REDIS_LOCK_ID_FAILED } })
+      REDIS_LOCK -> idle when (= @payload.key "")
+        (emit REDIS_FAILED { action: "lock", kind: "refused", code: null, message: "key is required" })
+      REDIS_LOCK_ID_DRAWN -> idle
+        (if @config.authenticated (redis @config.origin ["SET", (object/get (json/parse @payload.key RedisLockRequest) key ""), @payload.value, "NX", "PX", (str/concat (object/get (json/parse @payload.key RedisLockRequest) ttl 30000))] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: @payload.value, emit: { success: REDIS_LOCK_REPLIED, failure: REDIS_LOCK_CALL_FAILED } }) (redis @config.origin ["SET", (object/get (json/parse @payload.key RedisLockRequest) key ""), @payload.value, "NX", "PX", (str/concat (object/get (json/parse @payload.key RedisLockRequest) ttl 30000))] { db: (if (> @config.db 0) @config.db null) } { key: @payload.value, emit: { success: REDIS_LOCK_REPLIED, failure: REDIS_LOCK_CALL_FAILED } }))
+      REDIS_LOCK_ID_FAILED -> idle
+        (emit REDIS_FAILED { action: "lock", kind: "failed", code: null, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Redis unavailable: " @payload.error) })
+      REDIS_LOCK_REPLIED -> idle when (= @payload.reply "OK")
+        (emit REDIS_LOCKED { acquired: true, lockId: @payload.key })
+      REDIS_LOCK_REPLIED -> idle when (!= @payload.reply "OK")
+        (emit REDIS_LOCKED { acquired: false, lockId: "" })
+      REDIS_LOCK_CALL_FAILED -> idle
+        (emit REDIS_FAILED { action: "lock", kind: @payload.kind, code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Redis unavailable: " @payload.error) })
+
+      REDIS_UNLOCK -> idle when (and (!= @payload.key "") (!= @payload.lockId ""))
+        (if @config.authenticated (redis @config.origin ["EVAL", "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end", "1", @payload.key, @payload.lockId] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "unlock", emit: { success: REDIS_UNLOCK_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["EVAL", "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end", "1", @payload.key, @payload.lockId] { db: (if (> @config.db 0) @config.db null) } { key: "unlock", emit: { success: REDIS_UNLOCK_REPLIED, failure: REDIS_CALL_FAILED } }))
+      REDIS_UNLOCK -> idle when (or (= @payload.key "") (= @payload.lockId ""))
+        (emit REDIS_FAILED { action: "unlock", kind: "refused", code: null, message: "key and lockId are required" })
+      REDIS_UNLOCK_REPLIED -> idle
+        (emit REDIS_UNLOCKED { released: (= @payload.reply 1) })
+
+      REDIS_CALL_FAILED -> idle
+        (emit REDIS_FAILED { action: @payload.key, kind: @payload.kind, code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Redis unavailable: " @payload.error) })
+    }
+
+    emits {
+      REDIS_GOT -> external {
+        value : string
+      }
+        @description "The value stored at the key as text; null when the key does not exist."
+        @synonyms "cache hit, value read, key value"
+        @tier "primary"
+      REDIS_SET_DONE -> external {
+        ok : boolean!
+      }
+        @description "The key was set; ok is true when the server answered OK."
+        @synonyms "cache stored, value written"
+        @tier "primary"
+      REDIS_DELETED -> external {
+        deleted : boolean!
+      }
+        @description "Whether the key existed and was removed."
+        @synonyms "cache evicted, key removed"
+        @tier "primary"
+      REDIS_INCREMENTED -> external {
+        value : number!
+      }
+        @description "The counter's value after INCRBY; a missing key starts at 0."
+        @synonyms "counter incremented, count after increase"
+        @tier "primary"
+      REDIS_EXPIRED -> external {
+        set : boolean!
+      }
+        @description "Whether the key existed and now expires after the given seconds."
+        @synonyms "expiry set, ttl applied"
+        @tier "primary"
+      REDIS_PUBLISHED -> external {
+        receivers : number!
+      }
+        @description "How many subscribers received the message."
+        @synonyms "message published, subscribers reached"
+        @tier "primary"
+      REDIS_LOCKED -> external {
+        acquired : boolean!
+        lockId : string!
+      }
+        @description "Whether the lock was taken and, when it was, the id that releases it; empty when another holder has it."
+        @synonyms "lock acquired, mutex taken"
+        @tier "primary"
+      REDIS_UNLOCKED -> external {
+        released : boolean!
+      }
+        @description "Whether the lock was held under that id and is now released; false when it expired or another holder has it."
+        @synonyms "lock released, mutex freed"
+        @tier "primary"
+      REDIS_FAILED -> external {
+        action : string!
+        kind : string!
+        code : string
+        message : string!
+      }
+        @description "A call did not complete: the action, the kind (refused, unconfigured, timeout, failed, protocol, unsupported, redis), the Redis error word when the server answered one (WRONGTYPE, NOAUTH, ...) and the message."
+        @synonyms "cache failed, redis unreachable, wrong password"
+        @tier "primary"
+      REDIS_GET_REPLIED {
+        reply : string
+        key : string!
+      }
+        @description "Internal: the GET reply."
+        @tier "secondary"
+      REDIS_SET_REPLIED {
+        reply : string
+        key : string!
+      }
+        @description "Internal: the SET reply."
+        @tier "secondary"
+      REDIS_DELETE_REPLIED {
+        reply : number!
+        key : string!
+      }
+        @description "Internal: the DEL reply."
+        @tier "secondary"
+      REDIS_INCREMENT_REPLIED {
+        reply : number!
+        key : string!
+      }
+        @description "Internal: the INCRBY reply."
+        @tier "secondary"
+      REDIS_EXPIRE_REPLIED {
+        reply : number!
+        key : string!
+      }
+        @description "Internal: the PEXPIRE reply."
+        @tier "secondary"
+      REDIS_PUBLISH_REPLIED {
+        reply : number!
+        key : string!
+      }
+        @description "Internal: the PUBLISH reply."
+        @tier "secondary"
+      REDIS_LOCK_REPLIED {
+        reply : string
+        key : string!
+      }
+        @description "Internal: the SET NX PX reply; OK when the lock was taken, null when it was not. The key is the lock id."
+        @tier "secondary"
+      REDIS_UNLOCK_REPLIED {
+        reply : number!
+        key : string!
+      }
+        @description "Internal: the compare-and-delete reply; 1 when the lock was released."
+        @tier "secondary"
+      REDIS_CALL_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        credential : string
+        key : string!
+      }
+        @description "Internal: a call failed; the key is the action."
+        @tier "secondary"
+      REDIS_LOCK_CALL_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        credential : string
+        key : string!
+      }
+        @description "Internal: the lock call failed; the key is the lock id."
+        @tier "secondary"
+      REDIS_LOCK_ID_DRAWN {
+        value : string!
+        key : string!
+      }
+        @description "Internal: the lock id was drawn from the host CSPRNG; the key carries the lock request."
+        @tier "secondary"
+      REDIS_LOCK_ID_FAILED {
+        error : string!
+      }
+        @description "Internal: the host could not draw a lock id."
+        @tier "secondary"
+    }
+
+    listens {
+      REDIS_GET -> external {
+        key : string!
+      }
+        @description "Read the text value stored at a key."
+        @synonyms "cache get, read key, fetch cached value"
+      REDIS_SET -> external {
+        key : string!
+        value : string!
+        ttl : number
+      }
+        @description "Store a text value at a key; ttl is seconds, none keeps it until removed."
+        @synonyms "cache set, write key, store value"
+      REDIS_DELETE -> external {
+        key : string!
+      }
+        @description "Remove a key."
+        @synonyms "cache delete, evict key, remove value"
+      REDIS_INCREMENT -> external {
+        key : string!
+        by : number
+      }
+        @description "Add to a counter (INCRBY); by defaults to 1 and a missing key starts at 0."
+        @synonyms "counter increment, count up, add to counter"
+      REDIS_EXPIRE -> external {
+        key : string!
+        ttl : number!
+      }
+        @description "Make a key expire after ttl seconds."
+        @synonyms "set expiry, time to live, expire key"
+      REDIS_PUBLISH -> external {
+        channel : string!
+        message : string!
+      }
+        @description "Publish a text message on a channel."
+        @synonyms "publish message, broadcast, send to channel"
+      REDIS_LOCK -> external {
+        key : string!
+        ttl : number
+      }
+        @description "Take a lock on a key for ttl milliseconds (default 30000); the answer carries the id that releases it."
+        @synonyms "acquire lock, mutex, take lock"
+      REDIS_UNLOCK -> external {
+        key : string!
+        lockId : string!
+      }
+        @description "Release a lock held under lockId; only the holder releases it."
+        @synonyms "release lock, free mutex, drop lock"
+      REDIS_GET_REPLIED {
+        reply : string
+        key : string!
+      }
+      REDIS_SET_REPLIED {
+        reply : string
+        key : string!
+      }
+      REDIS_DELETE_REPLIED {
+        reply : number!
+        key : string!
+      }
+      REDIS_INCREMENT_REPLIED {
+        reply : number!
+        key : string!
+      }
+      REDIS_EXPIRE_REPLIED {
+        reply : number!
+        key : string!
+      }
+      REDIS_PUBLISH_REPLIED {
+        reply : number!
+        key : string!
+      }
+      REDIS_LOCK_REPLIED {
+        reply : string
+        key : string!
+      }
+      REDIS_UNLOCK_REPLIED {
+        reply : number!
+        key : string!
+      }
+      REDIS_CALL_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        credential : string
+        key : string!
+      }
+      REDIS_LOCK_CALL_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        credential : string
+        key : string!
+      }
+      REDIS_LOCK_ID_DRAWN {
+        value : string!
+        key : string!
+      }
+      REDIS_LOCK_ID_FAILED {
+        error : string!
+      }
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a failed Redis call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "redis://redis.example.test:6379"
+        @label "Redis origin"
+        @description "The Redis server as redis://host[:port], or rediss://host[:port] for TLS (no path). Must be declared in the app egress list."
+        @synonyms "redis url, cache host, redis server"
+        @tier "infra"
+      authenticated : boolean = true
+        @label "Authenticate"
+        @description "Send AUTH before every command; when false no AUTH is sent and the password credential is not read."
+        @synonyms "use password, require auth, protected server"
+        @tier "infra"
+      password : secret = "REDIS_PASSWORD"
+        @label "Password credential"
+        @description "The credential name the host resolves to the Redis password; required when authenticated is true."
+        @synonyms "redis password, auth secret, cache credential"
+        @tier "infra"
+      user : string = ""
+        @label "ACL user"
+        @description "The Redis ACL user to log in as with the password; empty uses the default user."
+        @synonyms "redis user, acl user, username"
+        @tier "infra"
+      db : number = 0
+        @label "Database"
+        @description "The logical database to SELECT before each command; 0 sends no SELECT."
+        @synonyms "redis database, db index, keyspace"
+        @tier "infra"
+    }
+  }
+
+  page "/redis" as RedisPage -> RedisClient
+}

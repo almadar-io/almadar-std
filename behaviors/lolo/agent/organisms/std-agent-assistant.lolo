@@ -1,6 +1,7 @@
 app std-agent-assistant [
   version: "2.0.0",
-  description: "std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. Each section's floating button opens it in a side panel docked beside the page (std-panel-launcher; a side sheet on small screens), where the conversation shows every step the assistant takes live as it works; /assistant is the same conversation as a full page, in the app's own shell (pass `appName` and `navItems`); past conversations and what the assistant remembers open in place from its toolbar (Back returns to the chat), on either surface. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through `call-service llm call-tools`, firing only the inputs and reading only the entities its `tools` allow, as the signed-in user → ASSISTANT_REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). By default the tools are the program's own declarations: every `-> external` input (its @description is the tool text) and a read over every persisted entity, so composing building blocks composes the assistant's abilities. Any section's page gets the assistant with two traits, `XAssistant = AgentSession.traits.AgentConversation` and a std-panel-launcher dock: the conversation speaks the ASSISTANT_* contract from any orbital, so the assistant needs no per-section wiring. Import the orbital once per app: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: …, AgentChat: … }`. The conversation is kept across pages and reloads (each person's most recently used conversation is the current one);"
+  description: "std-agent-assistant — an in-app assistant that operates the running app for the signed-in user. Each section's floating button opens it in a side panel docked beside the page (std-panel-launcher; a side sheet on small screens), where the conversation shows every step the assistant takes live as it works; /assistant is the same conversation as a full page, in the app's own shell (pass `appName` and `navItems`); past conversations and what the assistant remembers open in place from its toolbar (Back returns to the chat), on either surface. One request flows down a chain of std agent atoms on the bus: the conversation (std-agent-session) SENDs → CONVERSE → std-agent-context bounds it → std-agent-memory adds what it recalls → std-agent-tool-loop answers it through std-llm's tool loop, firing only the inputs and reading only the entities its `tools` allow, as the signed-in user → ASSISTANT_REPLIED goes back to the conversation, to memory (remembered) and to std-agent-trace (the run record). By default the tools are the program's own declarations: every `-> external` input (its @description is the tool text) and a read over every persisted entity, so composing building blocks composes the assistant's abilities. Any section's page gets the assistant with two traits, `XAssistant = AgentSession.traits.AgentConversation` and a std-panel-launcher dock: the conversation speaks the ASSISTANT_* contract from any orbital, so the assistant needs no per-section wiring. Import the orbital once per app: `orbital Assistant = Agent.orbitals.AgentAssistantOrbital { config { instructions: \"…\" } }`. The conversation, memory and run records live in AgentRecordsOrbital; retarget them onto your own owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create) with `entities { AgentMessage: …, AgentMemory: …, AgentRun: …, AgentChat: … }`. The conversation is kept across pages and reloads (each person's most recently used conversation is the current one);",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 
 type AgentToolScope = {
@@ -19,10 +20,59 @@ type AgentLink = {
 }
 type NavItem = { label : string!, href : string!, icon : string, badge : string, children : [NavItem], roles : [string] }
 
+type LlmToolCall = { id : string!, name : string!, arguments : string! }
+type AgentToolKind = "input" | "read" | "invalid"
+type AgentToolCallActivity = {
+  type : "tool_call"!
+  tool : string!
+  kind : AgentToolKind
+  argsText : string!
+  timestamp : number!
+  isExecuting : boolean
+}
+type AgentToolResultActivity = {
+  type : "tool_result"!
+  tool : string!
+  kind : AgentToolKind
+  success : boolean!
+  detail : string
+  rows : number
+  resultText : string!
+  timestamp : number!
+}
+type AgentLlmCall = {
+  service : string!
+  provider : string!
+  model : string!
+  systemPrompt : string!
+  userPrompt : string!
+  toolCallsJson : string
+  attempt : number
+  durationMs : number!
+  promptTokens : number
+  completionTokens : number
+  cachedPromptTokens : number
+  costUSD : number
+}
+type AgentLlmResponseActivity = {
+  type : "llm_response"!
+  content : string!
+  llm : AgentLlmCall
+  timestamp : number!
+}
+type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
+type AgentUsage = {
+  promptTokens : number!
+  completionTokens : number!
+  totalTokens : number!
+  modelCalls : number!
+}
+
 orbital AgentAssistantOrbital {
   uses Session from "std/behaviors/std-agent-session"
   uses Context from "std/behaviors/std-agent-context"
   uses Memory from "std/behaviors/std-agent-memory"
+  uses Llm from "std/behaviors/std-llm"
   uses Loop from "std/behaviors/std-agent-tool-loop"
   uses Trace from "std/behaviors/std-agent-trace"
   uses Shell from "std/behaviors/std-app-layout"
@@ -118,6 +168,26 @@ orbital AgentAssistantOrbital {
     listens {
       AssistantThread.REQUEST_CONTEXT -> COMPACT
       *.ASSISTANT_EPHEMERAL_SEND -> COMPACT
+      AssistantLlm.LLM_SUMMARIZE_RESULT -> ContextSummarized
+      AssistantLlm.LLM_FAILED -> ContextSummarizeFailed
+      ContextSummarized {
+        summary : string!
+        keyPoints : [string]!
+      }
+      ContextSummarizeFailed {
+        code : string
+        message : string!
+      }
+    }
+  }
+
+  trait AssistantLlm = Llm.traits.LlmClient {
+    listens {
+      AssistantContext.LLM_SUMMARIZE -> LLM_SUMMARIZE
+      AssistantMemory.LLM_EMBED -> LLM_EMBED
+      AssistantLoop.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
+      AssistantLoop.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
+      AssistantLoop.LLM_CANCEL -> LLM_CANCEL
     }
   }
 
@@ -129,6 +199,15 @@ orbital AgentAssistantOrbital {
       AssistantContext.COMPACTED -> RECALL
       AssistantLoop.ASSISTANT_REPLIED -> REMEMBER
       *.ASSISTANT_MEMORIES_REQUESTED -> LIST
+      AssistantLlm.LLM_EMBED_RESULT -> MemoryEmbedded
+      AssistantLlm.LLM_FAILED -> MemoryEmbedFailed
+      MemoryEmbedded {
+        embeddings : [[number]]
+      }
+      MemoryEmbedFailed {
+        code : string
+        message : string!
+      }
     }
   }
 
@@ -140,6 +219,30 @@ orbital AgentAssistantOrbital {
     }
     listens {
       AssistantMemory.RECALLED -> CONVERSE
+      AssistantLlm.LLM_TOOLS_REQUESTED -> ToolsRequested
+      AssistantLlm.LLM_TOOLS_STEP -> ToolsStep
+      AssistantLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
+      AssistantLlm.LLM_FAILED -> ToolsFailed
+      AssistantLlm.LLM_CANCELLED -> ToolsCancelled
+      ToolsRequested {
+        session : string!
+        calls : [LlmToolCall]!
+      }
+      ToolsStep {
+        activity : AgentActivity!
+      }
+      ToolsReplied {
+        reply : string!
+        steps : [AgentActivity]!
+        usage : AgentUsage!
+      }
+      ToolsFailed {
+        code : string
+        message : string!
+      }
+      ToolsCancelled {
+        key : string!
+      }
     }
   }
 
@@ -150,7 +253,7 @@ orbital AgentAssistantOrbital {
     }
   }
 
-  page "/assistant" as AssistantPage -> AssistantLayout, AssistantThread, AssistantChatKeeper, AssistantContext, AssistantMemory, AssistantLoop, AssistantTrace
+  page "/assistant" as AssistantPage -> AssistantLayout, AssistantThread, AssistantChatKeeper, AssistantContext, AssistantMemory, AssistantLlm, AssistantLoop, AssistantTrace
 }
 
 ;; The assistant's records live outside AgentAssistantOrbital, so a consumer

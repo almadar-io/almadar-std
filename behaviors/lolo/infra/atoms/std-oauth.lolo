@@ -1,0 +1,741 @@
+app std-oauth [
+  version: "1.0.0",
+  description: "std-oauth — OAuth 2 / OpenID Connect authorization-code flow with PKCE for Google, GitHub and Auth0, on the canonical oauth-client auth. OAUTH_AUTHORIZE starts an authorization (authUrl + state), OAUTH_TOKEN and OAUTH_CONNECT complete it once, OAUTH_REFRESH, OAUTH_REVOKE and OAUTH_USERINFO act on a token, OAUTH_CONNECTION and OAUTH_DISCONNECT read and drop the signed-in caller's provider connection. OAUTH_CONNECT keeps the exchanged tokens with the host and answers only the connection row. Without client credentials, or with mode mock, the atom runs the in-memory mock backend. Every failure answers the action's OAUTH_<ACTION>_ERROR ({code, message}); no token, verifier or vendor body reaches a failure.",
+  egress: ["https://accounts.google.com", "https://oauth2.googleapis.com", "https://openidconnect.googleapis.com", "https://github.com"]
+]
+type OAuthCall = { a : string, b : string, c : string, subject : string, hasSubject : boolean }
+type OAuthAuthCall = { provider : string, redirectUri : string, subject : string, hasSubject : boolean, scopes : [string] }
+orbital OAuthOrbital {
+  entity OAuthFlow [runtime] {
+    id : string!
+  }
+
+  trait OAuthClient -> OAuthFlow [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      OAUTH_AUTHORIZE -> idle when (not (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")))
+        (emit OAUTH_AUTHORIZE_ERROR { code: "VALIDATION_ERROR", message: (str/concat "Invalid enum value. Expected 'google' | 'github' | 'auth0', received '" @payload.provider "'") })
+      OAUTH_AUTHORIZE -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (= @config.mode "mock"))
+        (emit OAUTH_AUTHORIZE_MOCK { provider: @payload.provider, scopes: @payload.scopes, redirectUri: @payload.redirectUri, subject: @payload.subject, hasSubject: (validate/required @payload.subject) })
+      OAUTH_AUTHORIZE -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (!= @config.mode "mock") (and (= @payload.provider "github") (= @config.issuerUrl "")))
+        (emit OAUTH_AUTHORIZE_STATIC { provider: @payload.provider, scopes: @payload.scopes, redirectUri: @payload.redirectUri, subject: @payload.subject, hasSubject: (validate/required @payload.subject) })
+      OAUTH_AUTHORIZE -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (!= @config.mode "mock") (= @payload.provider "auth0") (= @config.issuerUrl ""))
+        (emit OAUTH_AUTHORIZE_ERROR { code: null, message: "Provider \"auth0\" has no OIDC issuer — set OIDC_ISSUER_URL to an OIDC-compliant issuer, or use OAUTH_MODE=mock" })
+      OAUTH_AUTHORIZE -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (!= @config.mode "mock") (or (= @payload.provider "google") (!= @config.issuerUrl "")))
+        (http GET (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com") "/.well-known/openid-configuration" { auth: { scheme: oauth-client, op: discovery, client: { tag: @payload.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } } } { key: (json/stringify { provider: @payload.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: (validate/required @payload.subject), scopes: @payload.scopes }), emit: { success: OAUTH_DISCOVERED, failure: OAUTH_DISCOVERY_FAILED } })
+      OAUTH_DISCOVERED -> idle
+        (let ((st (json/parse @payload.key OAuthAuthCall)))
+          (emit OAUTH_AUTHORIZE_ISSUER { provider: (object/get @st provider ""), scopes: (object/get @st scopes []), redirectUri: (object/get @st redirectUri ""), subject: (if (object/get @st hasSubject false) (object/get @st subject "") null), hasSubject: (object/get @st hasSubject false) }))
+      OAUTH_DISCOVERY_FAILED -> idle when (= @payload.reason "unconfigured-client")
+        (let ((st (json/parse @payload.key OAuthAuthCall)))
+          (emit OAUTH_AUTHORIZE_MOCK { provider: (object/get @st provider ""), scopes: (object/get @st scopes []), redirectUri: (object/get @st redirectUri ""), subject: (if (object/get @st hasSubject false) (object/get @st subject "") null), hasSubject: (object/get @st hasSubject false) }))
+      OAUTH_DISCOVERY_FAILED -> idle when (!= @payload.reason "unconfigured-client")
+        (emit OAUTH_AUTHORIZE_ERROR { code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
+      OAUTH_AUTHORIZE_FAILED -> idle when (= @payload.reason "unconfigured-client")
+        (let ((st (json/parse @payload.key OAuthAuthCall)))
+          (emit OAUTH_AUTHORIZE_MOCK { provider: (object/get @st provider ""), scopes: (object/get @st scopes []), redirectUri: (object/get @st redirectUri ""), subject: (if (object/get @st hasSubject false) (object/get @st subject "") null), hasSubject: (object/get @st hasSubject false) }))
+      OAUTH_AUTHORIZE_FAILED -> idle when (!= @payload.reason "unconfigured-client")
+        (emit OAUTH_AUTHORIZE_ERROR { code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
+      OAUTH_AUTHORIZE_MOCK -> idle
+        (oauth-authorize { tag: @payload.provider, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } { redirectUri: @payload.redirectUri, scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null) } { key: (json/stringify { provider: @payload.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
+      OAUTH_AUTHORIZE_STATIC -> idle
+        (oauth-authorize { tag: github, mode: real, endpoints: { authorization: "https://github.com/login/oauth/authorize", token: "https://github.com/login/oauth/access_token" }, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null) } { key: (json/stringify { provider: @payload.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
+      OAUTH_AUTHORIZE_ISSUER -> idle when (= @payload.provider "google")
+        (oauth-authorize { tag: @payload.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null), params: { access_type: "offline", prompt: "consent" } } { key: (json/stringify { provider: @payload.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
+      OAUTH_AUTHORIZE_ISSUER -> idle when (!= @payload.provider "google")
+        (oauth-authorize { tag: @payload.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } { redirectUri: (if (= @payload.redirectUri "") @config.redirectUri @payload.redirectUri), scope: @payload.scopes, subject: (if @payload.hasSubject @payload.subject null) } { key: (json/stringify { provider: @payload.provider, redirectUri: @payload.redirectUri, subject: (or @payload.subject ""), hasSubject: @payload.hasSubject, scopes: @payload.scopes }), emit: { success: OAUTH_AUTHORIZE_REPLIED, failure: OAUTH_AUTHORIZE_FAILED } })
+      OAUTH_AUTHORIZE_REPLIED -> idle
+        (emit OAUTH_AUTHORIZED { authUrl: @payload.authUrl, state: @payload.state })
+      OAUTH_TOKEN -> idle when (= @config.mode "mock")
+        (emit OAUTH_TOKEN_MOCK { code: @payload.code, state: @payload.state, subject: @payload.subject, hasSubject: (validate/required @payload.subject) })
+      OAUTH_TOKEN -> idle when (and (!= @config.mode "mock") (= @config.issuerUrl "") (validate/required @payload.subject))
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: code, clients: { google: { tag: google, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, github: { tag: github, mode: real, endpoints: { authorization: "https://github.com/login/oauth/authorize", token: "https://github.com/login/oauth/access_token" }, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, auth0: { tag: auth0, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } }, code: @payload.code, state: @payload.state, subject: @payload.subject } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: "", subject: (or @payload.subject ""), hasSubject: true }), emit: { success: OAUTH_TOKEN_REPLIED, failure: OAUTH_TOKEN_FAILED } })
+      OAUTH_TOKEN -> idle when (and (!= @config.mode "mock") (= @config.issuerUrl "") (not (validate/required @payload.subject)))
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: code, clients: { google: { tag: google, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, github: { tag: github, mode: real, endpoints: { authorization: "https://github.com/login/oauth/authorize", token: "https://github.com/login/oauth/access_token" }, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, auth0: { tag: auth0, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } }, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_TOKEN_REPLIED, failure: OAUTH_TOKEN_FAILED } })
+      OAUTH_TOKEN -> idle when (and (!= @config.mode "mock") (!= @config.issuerUrl "") (validate/required @payload.subject))
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: code, clients: { google: { tag: google, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, github: { tag: github, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, auth0: { tag: auth0, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } }, code: @payload.code, state: @payload.state, subject: @payload.subject } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: "", subject: (or @payload.subject ""), hasSubject: true }), emit: { success: OAUTH_TOKEN_REPLIED, failure: OAUTH_TOKEN_FAILED } })
+      OAUTH_TOKEN -> idle when (and (!= @config.mode "mock") (!= @config.issuerUrl "") (not (validate/required @payload.subject)))
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: code, clients: { google: { tag: google, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, github: { tag: github, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, auth0: { tag: auth0, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } }, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_TOKEN_REPLIED, failure: OAUTH_TOKEN_FAILED } })
+      OAUTH_TOKEN_MOCK -> idle when @payload.hasSubject
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: code, clients: { google: { tag: google, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, github: { tag: github, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, auth0: { tag: auth0, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } }, code: @payload.code, state: @payload.state, subject: @payload.subject } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: "", subject: (or @payload.subject ""), hasSubject: true }), emit: { success: OAUTH_TOKEN_REPLIED, failure: OAUTH_TOKEN_FAILED } })
+      OAUTH_TOKEN_MOCK -> idle when (not @payload.hasSubject)
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: code, clients: { google: { tag: google, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, github: { tag: github, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, auth0: { tag: auth0, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post } }, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_TOKEN_REPLIED, failure: OAUTH_TOKEN_FAILED } })
+      OAUTH_TOKEN_REPLIED -> idle when (not (validate/required @payload.subject))
+        (emit OAUTH_TOKEN_RESULT { accessToken: @payload.accessToken, refreshToken: (or @payload.refreshToken ""), expiresIn: @payload.expiresIn, tokenType: @payload.tokenType, scope: @payload.scope })
+      OAUTH_TOKEN_REPLIED -> idle when (validate/required @payload.subject)
+        (emit OAUTH_TOKEN_RESULT { accessToken: @payload.accessToken, refreshToken: (or @payload.refreshToken ""), expiresIn: @payload.expiresIn, tokenType: @payload.tokenType, scope: @payload.scope, subject: @payload.subject })
+      OAUTH_TOKEN_FAILED -> idle when (= @payload.reason "unconfigured-client")
+        (let ((st (json/parse @payload.key OAuthCall)))
+          (emit OAUTH_TOKEN_MOCK { code: (object/get @st a ""), state: (object/get @st b ""), subject: (if (object/get @st hasSubject false) (object/get @st subject "") null), hasSubject: (object/get @st hasSubject false) }))
+      OAUTH_TOKEN_FAILED -> idle when (!= @payload.reason "unconfigured-client")
+        (emit OAUTH_TOKEN_ERROR { code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
+      OAUTH_REFRESH -> idle when (= @config.mode "mock")
+        (emit OAUTH_REFRESH_MOCK { refreshToken: @payload.refreshToken })
+      OAUTH_REFRESH -> idle when (!= @config.mode "mock")
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: refresh, client: { tag: google, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, refreshToken: @payload.refreshToken } } { key: (json/stringify { a: @payload.refreshToken, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_REFRESH_REPLIED, failure: OAUTH_REFRESH_FAILED } })
+      OAUTH_REFRESH_MOCK -> idle
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: refresh, client: { tag: google, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, refreshToken: @payload.refreshToken } } { key: (json/stringify { a: @payload.refreshToken, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_REFRESH_REPLIED, failure: OAUTH_REFRESH_FAILED } })
+      OAUTH_REFRESH_REPLIED -> idle
+        (emit OAUTH_REFRESHED { accessToken: @payload.accessToken, expiresIn: @payload.expiresIn })
+      OAUTH_REFRESH_FAILED -> idle when (= @payload.reason "unconfigured-client")
+        (let ((st (json/parse @payload.key OAuthCall)))
+          (emit OAUTH_REFRESH_MOCK { refreshToken: (object/get @st a "") }))
+      OAUTH_REFRESH_FAILED -> idle when (!= @payload.reason "unconfigured-client")
+        (emit OAUTH_REFRESH_ERROR { code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
+      OAUTH_REVOKE -> idle when (= @config.mode "mock")
+        (emit OAUTH_REVOKE_MOCK { token: @payload.token })
+      OAUTH_REVOKE -> idle when (!= @config.mode "mock")
+        (http POST oauth-endpoint revocation { auth: { scheme: oauth-client, op: revoke, client: { tag: google, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, token: @payload.token } } { key: (json/stringify { a: @payload.token, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_REVOKE_REPLIED, failure: OAUTH_REVOKE_FAILED } })
+      OAUTH_REVOKE_MOCK -> idle
+        (http POST oauth-endpoint revocation { auth: { scheme: oauth-client, op: revoke, client: { tag: google, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, token: @payload.token } } { key: (json/stringify { a: @payload.token, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_REVOKE_REPLIED, failure: OAUTH_REVOKE_FAILED } })
+      OAUTH_REVOKE_REPLIED -> idle
+        (emit OAUTH_REVOKED { revoked: @payload.revoked })
+      OAUTH_REVOKE_FAILED -> idle when (= @payload.reason "unconfigured-client")
+        (let ((st (json/parse @payload.key OAuthCall)))
+          (emit OAUTH_REVOKE_MOCK { token: (object/get @st a "") }))
+      OAUTH_REVOKE_FAILED -> idle when (!= @payload.reason "unconfigured-client")
+        (emit OAUTH_REVOKE_ERROR { code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
+      OAUTH_USERINFO -> idle when (= @config.mode "mock")
+        (emit OAUTH_USERINFO_MOCK { accessToken: @payload.accessToken })
+      OAUTH_USERINFO -> idle when (!= @config.mode "mock")
+        (http GET oauth-endpoint userinfo { auth: { scheme: oauth-client, op: userinfo, client: { tag: google, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, accessToken: @payload.accessToken } } { key: (json/stringify { a: @payload.accessToken, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_USERINFO_REPLIED, failure: OAUTH_USERINFO_FAILED } })
+      OAUTH_USERINFO_MOCK -> idle
+        (http GET oauth-endpoint userinfo { auth: { scheme: oauth-client, op: userinfo, client: { tag: google, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, accessToken: @payload.accessToken } } { key: (json/stringify { a: @payload.accessToken, b: "", c: "", subject: "", hasSubject: false }), emit: { success: OAUTH_USERINFO_REPLIED, failure: OAUTH_USERINFO_FAILED } })
+      OAUTH_USERINFO_REPLIED -> idle
+        (emit OAUTH_USERINFO_RESULT { sub: @payload.sub, email: @payload.email, name: @payload.name, picture: @payload.picture })
+      OAUTH_USERINFO_FAILED -> idle when (= @payload.reason "unconfigured-client")
+        (let ((st (json/parse @payload.key OAuthCall)))
+          (emit OAUTH_USERINFO_MOCK { accessToken: (object/get @st a "") }))
+      OAUTH_USERINFO_FAILED -> idle when (!= @payload.reason "unconfigured-client")
+        (emit OAUTH_USERINFO_ERROR { code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
+      OAUTH_CONNECT -> idle when (not (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")))
+        (emit OAUTH_CONNECT_ERROR { code: "VALIDATION_ERROR", message: (str/concat "Invalid enum value. Expected 'google' | 'github' | 'auth0', received '" @payload.provider "'") })
+      OAUTH_CONNECT -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (= @config.mode "mock"))
+        (emit OAUTH_CONNECT_MOCK { provider: @payload.provider, code: @payload.code, state: @payload.state })
+      OAUTH_CONNECT -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (!= @config.mode "mock") (and (= @payload.provider "github") (= @config.issuerUrl "")))
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: connect, client: { tag: github, mode: real, endpoints: { authorization: "https://github.com/login/oauth/authorize", token: "https://github.com/login/oauth/access_token" }, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, provider: @payload.provider, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: @payload.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_CONNECT_REPLIED, failure: OAUTH_CONNECT_FAILED } })
+      OAUTH_CONNECT -> idle when (and (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")) (!= @config.mode "mock") (not (and (= @payload.provider "github") (= @config.issuerUrl ""))))
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: connect, client: { tag: @payload.provider, mode: real, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, provider: @payload.provider, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: @payload.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_CONNECT_REPLIED, failure: OAUTH_CONNECT_FAILED } })
+      OAUTH_CONNECT_MOCK -> idle
+        (http POST oauth-endpoint token { auth: { scheme: oauth-client, op: connect, client: { tag: @payload.provider, mode: mock, issuer: (if (!= @config.issuerUrl "") @config.issuerUrl "https://accounts.google.com"), clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: post }, provider: @payload.provider, code: @payload.code, state: @payload.state } } { key: (json/stringify { a: @payload.code, b: @payload.state, c: @payload.provider, subject: "", hasSubject: false }), emit: { success: OAUTH_CONNECT_REPLIED, failure: OAUTH_CONNECT_FAILED } })
+      OAUTH_CONNECT_REPLIED -> idle
+        (emit OAUTH_CONNECTED { provider: @payload.provider, connected: @payload.connected, account: @payload.account, avatarUrl: @payload.avatarUrl, scope: @payload.scope, connectedAt: @payload.connectedAt })
+      OAUTH_CONNECT_FAILED -> idle when (= @payload.reason "unconfigured-client")
+        (let ((st (json/parse @payload.key OAuthCall)))
+          (emit OAUTH_CONNECT_MOCK { provider: (object/get @st c ""), code: (object/get @st a ""), state: (object/get @st b "") }))
+      OAUTH_CONNECT_FAILED -> idle when (!= @payload.reason "unconfigured-client")
+        (emit OAUTH_CONNECT_ERROR { code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
+      OAUTH_CONNECTION -> idle when (not (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")))
+        (emit OAUTH_CONNECTION_ERROR { code: "VALIDATION_ERROR", message: (str/concat "Invalid enum value. Expected 'google' | 'github' | 'auth0', received '" @payload.provider "'") })
+      OAUTH_CONNECTION -> idle when (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0"))
+        (oauth-connection-status @payload.provider { emit: { success: OAUTH_CONNECTION_REPLIED, failure: OAUTH_CONNECTION_FAILED } })
+      OAUTH_CONNECTION_REPLIED -> idle
+        (emit OAUTH_CONNECTION_RESULT { provider: @payload.provider, connected: @payload.connected, account: @payload.account, avatarUrl: @payload.avatarUrl, scope: @payload.scope, connectedAt: @payload.connectedAt })
+      OAUTH_DISCONNECT -> idle when (not (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0")))
+        (emit OAUTH_DISCONNECT_ERROR { code: "VALIDATION_ERROR", message: (str/concat "Invalid enum value. Expected 'google' | 'github' | 'auth0', received '" @payload.provider "'") })
+      OAUTH_DISCONNECT -> idle when (or (= @payload.provider "google") (= @payload.provider "github") (= @payload.provider "auth0"))
+        (oauth-connection-forget @payload.provider { emit: { success: OAUTH_DISCONNECT_REPLIED, failure: OAUTH_DISCONNECT_FAILED } })
+      OAUTH_DISCONNECT_REPLIED -> idle
+        (emit OAUTH_DISCONNECTED { provider: @payload.provider, connected: @payload.connected, account: @payload.account, avatarUrl: @payload.avatarUrl, scope: @payload.scope, connectedAt: @payload.connectedAt })
+      OAUTH_CONNECTION_FAILED -> idle
+        (emit OAUTH_CONNECTION_ERROR { code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
+      OAUTH_DISCONNECT_FAILED -> idle
+        (emit OAUTH_DISCONNECT_ERROR { code: @payload.code, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Sign-in unavailable: " @payload.error) })
+    }
+    emits {
+      OAUTH_AUTHORIZED -> external {
+        authUrl : string!
+        state : string!
+      }
+        @description "The authorization URL to send the user to and the state its callback returns; the pending grant stays with the host."
+        @synonyms "authorization url, login link, start sign-in"
+        @tier "primary"
+      OAUTH_TOKEN_RESULT -> external {
+        accessToken : string!
+        refreshToken : string!
+        expiresIn : number!
+        tokenType : string!
+        scope : [string]!
+        subject : string
+      }
+        @description "The tokens a completed authorization exchanged; subject is present when the authorization was bound to one."
+        @synonyms "oauth tokens, access token, completed sign-in"
+        @tier "primary"
+      OAUTH_REFRESHED -> external {
+        accessToken : string!
+        expiresIn : number!
+      }
+        @description "A fresh access token for a refresh token."
+        @synonyms "refreshed token, new access token"
+        @tier "primary"
+      OAUTH_REVOKED -> external {
+        revoked : boolean!
+      }
+        @description "Whether the token was revoked; false only on the mock backend for an unknown token."
+        @synonyms "token revoked, sign out token"
+        @tier "primary"
+      OAUTH_USERINFO_RESULT -> external {
+        sub : string!
+        email : string!
+        name : string!
+        picture : string!
+      }
+        @description "The signed-in account behind an access token; fields the provider omits are empty text."
+        @synonyms "user profile, account info"
+        @tier "primary"
+      OAUTH_CONNECTED -> external {
+        provider : string!
+        connected : boolean!
+        account : string!
+        avatarUrl : string!
+        scope : [string]
+        connectedAt : string!
+      }
+        @description "The caller's provider connection after a completed connect; the tokens stay with the host and are never in this payload."
+        @synonyms "provider connected, account linked"
+        @tier "primary"
+      OAUTH_CONNECTION_RESULT -> external {
+        provider : string!
+        connected : boolean!
+        account : string!
+        avatarUrl : string!
+        scope : [string]
+        connectedAt : string!
+      }
+        @description "The signed-in caller's connection to a provider, connected false when there is none."
+        @synonyms "connection status, linked account"
+        @tier "primary"
+      OAUTH_DISCONNECTED -> external {
+        provider : string!
+        connected : boolean!
+        account : string!
+        avatarUrl : string!
+        scope : [string]
+        connectedAt : string!
+      }
+        @description "The caller's connection to a provider after it was dropped (connected false)."
+        @synonyms "provider disconnected, account unlinked"
+        @tier "primary"
+      OAUTH_AUTHORIZE_ERROR -> external {
+        code : string
+        message : string!
+      }
+        @description "The authorize action failed: code is AUTH_ERROR, NOT_CONFIGURED, SERVICE_ERROR or VALIDATION_ERROR for a typed failure, null for a transport failure; message is the fixed safe text, never a token or a vendor body."
+        @synonyms "oauth failed, authorize failed"
+        @tier "primary"
+      OAUTH_TOKEN_ERROR -> external {
+        code : string
+        message : string!
+      }
+        @description "The token action failed: code is AUTH_ERROR, NOT_CONFIGURED, SERVICE_ERROR or VALIDATION_ERROR for a typed failure, null for a transport failure; message is the fixed safe text, never a token or a vendor body."
+        @synonyms "oauth failed, token failed"
+        @tier "primary"
+      OAUTH_REFRESH_ERROR -> external {
+        code : string
+        message : string!
+      }
+        @description "The refresh action failed: code is AUTH_ERROR, NOT_CONFIGURED, SERVICE_ERROR or VALIDATION_ERROR for a typed failure, null for a transport failure; message is the fixed safe text, never a token or a vendor body."
+        @synonyms "oauth failed, refresh failed"
+        @tier "primary"
+      OAUTH_REVOKE_ERROR -> external {
+        code : string
+        message : string!
+      }
+        @description "The revoke action failed: code is AUTH_ERROR, NOT_CONFIGURED, SERVICE_ERROR or VALIDATION_ERROR for a typed failure, null for a transport failure; message is the fixed safe text, never a token or a vendor body."
+        @synonyms "oauth failed, revoke failed"
+        @tier "primary"
+      OAUTH_USERINFO_ERROR -> external {
+        code : string
+        message : string!
+      }
+        @description "The userinfo action failed: code is AUTH_ERROR, NOT_CONFIGURED, SERVICE_ERROR or VALIDATION_ERROR for a typed failure, null for a transport failure; message is the fixed safe text, never a token or a vendor body."
+        @synonyms "oauth failed, userinfo failed"
+        @tier "primary"
+      OAUTH_CONNECT_ERROR -> external {
+        code : string
+        message : string!
+      }
+        @description "The connect action failed: code is AUTH_ERROR, NOT_CONFIGURED, SERVICE_ERROR or VALIDATION_ERROR for a typed failure, null for a transport failure; message is the fixed safe text, never a token or a vendor body."
+        @synonyms "oauth failed, connect failed"
+        @tier "primary"
+      OAUTH_CONNECTION_ERROR -> external {
+        code : string
+        message : string!
+      }
+        @description "The connection action failed: code is AUTH_ERROR, NOT_CONFIGURED, SERVICE_ERROR or VALIDATION_ERROR for a typed failure, null for a transport failure; message is the fixed safe text, never a token or a vendor body."
+        @synonyms "oauth failed, connection failed"
+        @tier "primary"
+      OAUTH_DISCONNECT_ERROR -> external {
+        code : string
+        message : string!
+      }
+        @description "The disconnect action failed: code is AUTH_ERROR, NOT_CONFIGURED, SERVICE_ERROR or VALIDATION_ERROR for a typed failure, null for a transport failure; message is the fixed safe text, never a token or a vendor body."
+        @synonyms "oauth failed, disconnect failed"
+        @tier "primary"
+      OAUTH_AUTHORIZE_MOCK {
+        provider : string!
+        scopes : [string]!
+        redirectUri : string!
+        subject : string
+        hasSubject : boolean!
+      }
+        @description "Internal: authorize against the mock backend."
+        @tier "secondary"
+      OAUTH_AUTHORIZE_STATIC {
+        provider : string!
+        scopes : [string]!
+        redirectUri : string!
+        subject : string
+        hasSubject : boolean!
+      }
+        @description "Internal: authorize against GitHub's static OAuth 2 endpoints (no discovery document)."
+        @tier "secondary"
+      OAUTH_AUTHORIZE_ISSUER {
+        provider : string!
+        scopes : [string]!
+        redirectUri : string!
+        subject : string
+        hasSubject : boolean!
+      }
+        @description "Internal: authorize against a discovered issuer, after its metadata is cached."
+        @tier "secondary"
+      OAUTH_DISCOVERED {
+        issuer : string
+        key : string!
+      }
+        @description "Internal: the issuer metadata is discovered and cached with the host."
+        @tier "secondary"
+      OAUTH_DISCOVERY_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+        @description "Internal: the issuer discovery did not complete."
+        @tier "secondary"
+      OAUTH_AUTHORIZE_REPLIED {
+        authUrl : string!
+        state : string!
+        key : string!
+      }
+        @description "Internal: an authorization is pending with the host."
+        @tier "secondary"
+      OAUTH_AUTHORIZE_FAILED {
+        error : string!
+        code : string
+        reason : string
+        key : string!
+      }
+        @description "Internal: the authorization could not be started."
+        @tier "secondary"
+      OAUTH_TOKEN_MOCK {
+        code : string!
+        state : string!
+        subject : string
+        hasSubject : boolean!
+      }
+        @description "Internal: a code exchange against the mock backend."
+        @tier "secondary"
+      OAUTH_TOKEN_REPLIED {
+        accessToken : string!
+        refreshToken : string
+        expiresIn : number!
+        tokenType : string!
+        scope : [string]
+        subject : string
+        key : string!
+      }
+        @description "Internal: the code exchange answered."
+        @tier "secondary"
+      OAUTH_TOKEN_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+        @description "Internal: the code exchange failed."
+        @tier "secondary"
+      OAUTH_REFRESH_MOCK {
+        refreshToken : string!
+      }
+        @description "Internal: a refresh against the mock backend."
+        @tier "secondary"
+      OAUTH_REFRESH_REPLIED {
+        accessToken : string!
+        expiresIn : number!
+        key : string!
+      }
+        @description "Internal: the refresh answered."
+        @tier "secondary"
+      OAUTH_REFRESH_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+        @description "Internal: the refresh failed."
+        @tier "secondary"
+      OAUTH_REVOKE_MOCK {
+        token : string!
+      }
+        @description "Internal: a revocation against the mock backend."
+        @tier "secondary"
+      OAUTH_REVOKE_REPLIED {
+        revoked : boolean!
+        key : string!
+      }
+        @description "Internal: the revocation answered."
+        @tier "secondary"
+      OAUTH_REVOKE_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+        @description "Internal: the revocation failed."
+        @tier "secondary"
+      OAUTH_USERINFO_MOCK {
+        accessToken : string!
+      }
+        @description "Internal: a userinfo lookup against the mock backend."
+        @tier "secondary"
+      OAUTH_USERINFO_REPLIED {
+        sub : string!
+        email : string!
+        name : string!
+        picture : string!
+        key : string!
+      }
+        @description "Internal: the userinfo lookup answered."
+        @tier "secondary"
+      OAUTH_USERINFO_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+        @description "Internal: the userinfo lookup failed."
+        @tier "secondary"
+      OAUTH_CONNECT_MOCK {
+        provider : string!
+        code : string!
+        state : string!
+      }
+        @description "Internal: a connect against the mock backend."
+        @tier "secondary"
+      OAUTH_CONNECT_REPLIED {
+        provider : string!
+        connected : boolean!
+        account : string!
+        avatarUrl : string!
+        scope : [string]
+        connectedAt : string!
+        key : string!
+      }
+        @description "Internal: the connect answered with the connection row."
+        @tier "secondary"
+      OAUTH_CONNECT_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+        @description "Internal: the connect failed."
+        @tier "secondary"
+      OAUTH_CONNECTION_REPLIED {
+        provider : string!
+        connected : boolean!
+        account : string!
+        avatarUrl : string!
+        scope : [string]
+        connectedAt : string!
+      }
+        @description "Internal: the connection status answered."
+        @tier "secondary"
+      OAUTH_DISCONNECT_REPLIED {
+        provider : string!
+        connected : boolean!
+        account : string!
+        avatarUrl : string!
+        scope : [string]
+        connectedAt : string!
+      }
+        @description "Internal: the connection removal answered."
+        @tier "secondary"
+      OAUTH_CONNECTION_FAILED {
+        error : string!
+        code : string
+        reason : string
+      }
+        @description "Internal: the connection status failed."
+        @tier "secondary"
+      OAUTH_DISCONNECT_FAILED {
+        error : string!
+        code : string
+        reason : string
+      }
+        @description "Internal: the connection removal failed."
+        @tier "secondary"
+    }
+
+    listens {
+      OAUTH_AUTHORIZE -> external {
+        provider : string!
+        scopes : [string]!
+        redirectUri : string!
+        subject : string
+      }
+        @description "Start an authorization for google, github or auth0; an empty redirectUri uses the configured default. subject binds the grant to the user who must complete it."
+        @synonyms "authorize, sign in with provider, start oauth"
+      OAUTH_TOKEN -> external {
+        code : string!
+        state : string!
+        subject : string
+      }
+        @description "Complete an authorization: exchange the callback code once. subject must equal the one given at authorize. The pending grant selects the provider."
+        @synonyms "exchange code, complete sign-in"
+      OAUTH_REFRESH -> external {
+        refreshToken : string!
+      }
+        @description "Exchange a refresh token for a fresh access token."
+        @synonyms "refresh token, renew access"
+      OAUTH_REVOKE -> external {
+        token : string!
+      }
+        @description "Revoke an access or refresh token."
+        @synonyms "revoke token, sign out"
+      OAUTH_USERINFO -> external {
+        accessToken : string!
+      }
+        @description "Read the account behind an access token."
+        @synonyms "user info, who am i"
+      OAUTH_CONNECT -> external {
+        provider : string!
+        code : string!
+        state : string!
+      }
+        @description "Complete an authorization for the signed-in caller and keep the tokens with the host; only the connection row is answered."
+        @synonyms "connect account, link provider"
+      OAUTH_CONNECTION -> external {
+        provider : string!
+      }
+        @description "Read the signed-in caller's connection to a provider."
+        @synonyms "connection status, is connected"
+      OAUTH_DISCONNECT -> external {
+        provider : string!
+      }
+        @description "Drop the signed-in caller's connection to a provider."
+        @synonyms "disconnect account, unlink provider"
+      OAUTH_AUTHORIZE_MOCK {
+        provider : string!
+        scopes : [string]!
+        redirectUri : string!
+        subject : string
+        hasSubject : boolean!
+      }
+      OAUTH_AUTHORIZE_STATIC {
+        provider : string!
+        scopes : [string]!
+        redirectUri : string!
+        subject : string
+        hasSubject : boolean!
+      }
+      OAUTH_AUTHORIZE_ISSUER {
+        provider : string!
+        scopes : [string]!
+        redirectUri : string!
+        subject : string
+        hasSubject : boolean!
+      }
+      OAUTH_DISCOVERED {
+        issuer : string
+        key : string!
+      }
+      OAUTH_DISCOVERY_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+      OAUTH_AUTHORIZE_REPLIED {
+        authUrl : string!
+        state : string!
+        key : string!
+      }
+      OAUTH_AUTHORIZE_FAILED {
+        error : string!
+        code : string
+        reason : string
+        key : string!
+      }
+      OAUTH_TOKEN_MOCK {
+        code : string!
+        state : string!
+        subject : string
+        hasSubject : boolean!
+      }
+      OAUTH_TOKEN_REPLIED {
+        accessToken : string!
+        refreshToken : string
+        expiresIn : number!
+        tokenType : string!
+        scope : [string]
+        subject : string
+        key : string!
+      }
+      OAUTH_TOKEN_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+      OAUTH_REFRESH_MOCK {
+        refreshToken : string!
+      }
+      OAUTH_REFRESH_REPLIED {
+        accessToken : string!
+        expiresIn : number!
+        key : string!
+      }
+      OAUTH_REFRESH_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+      OAUTH_REVOKE_MOCK {
+        token : string!
+      }
+      OAUTH_REVOKE_REPLIED {
+        revoked : boolean!
+        key : string!
+      }
+      OAUTH_REVOKE_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+      OAUTH_USERINFO_MOCK {
+        accessToken : string!
+      }
+      OAUTH_USERINFO_REPLIED {
+        sub : string!
+        email : string!
+        name : string!
+        picture : string!
+        key : string!
+      }
+      OAUTH_USERINFO_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+      OAUTH_CONNECT_MOCK {
+        provider : string!
+        code : string!
+        state : string!
+      }
+      OAUTH_CONNECT_REPLIED {
+        provider : string!
+        connected : boolean!
+        account : string!
+        avatarUrl : string!
+        scope : [string]
+        connectedAt : string!
+        key : string!
+      }
+      OAUTH_CONNECT_FAILED {
+        error : string!
+        kind : string!
+        code : string
+        reason : string
+        key : string!
+      }
+      OAUTH_CONNECTION_REPLIED {
+        provider : string!
+        connected : boolean!
+        account : string!
+        avatarUrl : string!
+        scope : [string]
+        connectedAt : string!
+      }
+      OAUTH_DISCONNECT_REPLIED {
+        provider : string!
+        connected : boolean!
+        account : string!
+        avatarUrl : string!
+        scope : [string]
+        connectedAt : string!
+      }
+      OAUTH_CONNECTION_FAILED {
+        error : string!
+        code : string
+        reason : string
+      }
+      OAUTH_DISCONNECT_FAILED {
+        error : string!
+        code : string
+        reason : string
+      }
+    }
+
+    config {
+      mode : string = "real"
+        @label "Backend mode"
+        @description "mock runs every action against the in-memory mock backend; real uses the configured client credentials and falls back to the mock backend when they are not all set."
+        @synonyms "oauth mode, mock mode, backend"
+        @tier "infra"
+      clientId : secret = "OAUTH_CLIENT_ID"
+        @label "OAuth client id credential"
+        @description "Name of the credential holding the OAuth client id."
+        @synonyms "client id"
+        @tier "infra"
+      clientSecret : secret = "OAUTH_CLIENT_SECRET"
+        @label "OAuth client secret credential"
+        @description "Name of the credential holding the OAuth client secret."
+        @synonyms "client secret"
+        @tier "infra"
+      redirectUri : string = ""
+        @label "Default redirect URI"
+        @description "The callback used when an authorize call gives an empty redirectUri."
+        @synonyms "callback url, default redirect"
+        @tier "infra"
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a failed OAuth call; a page running it in the background keeps it in `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      issuerUrl : string = ""
+        @label "OIDC issuer"
+        @description "An OIDC-compliant issuer used for every provider instead of Google's and GitHub's built-in servers; required for auth0. It must be declared in the app egress list."
+        @synonyms "issuer url, identity provider, oidc issuer"
+        @tier "infra"
+    }
+  }
+
+  page "/oauth" as OAuthPage -> OAuthClient
+}

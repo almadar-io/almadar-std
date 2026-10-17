@@ -1,6 +1,7 @@
 app std-agent-proposal [
   version: "1.0.0",
-  description: "std-agent-proposal — an agent that reads what the person hands over, works out a structured proposal, and commits nothing until they approve it. The app starts it with PROPOSAL_REQUESTED { input, context } (any trait emitting it, or the person typing into the start form when `showInputForm` is on). A second std-agent-tool-loop answers with `instructions`, `prompt` and `tools` as the signed-in person — `quiet`, its reply and failure renamed PROPOSAL_LOOP_REPLIED / PROPOSAL_LOOP_FAILED so they never reach the assistant's chat — and submits its proposal through one declared input, PROPOSE (its @description is the tool text): a summary and a list of items, each a flat map of scalar values the app names. The person reviews it (the summary, the items drawn with `itemPattern` and `itemFields`) and chooses: Approve emits PROPOSAL_APPROVED { proposal } for the app to commit (the app owns the commit; this atom writes nothing); Revise sends their written feedback back to the agent, which proposes again; Discard emits PROPOSAL_DISCARDED. Cancel while the agent works aborts its model call and emits PROPOSAL_CANCELLED. A run that fails, or ends without proposing, shows its error with Retry and Discard. The panel renders into `panelSlot`. Import the orbital once per app: `orbital Proposal = Proposal.orbitals.AgentProposalOrbital { config { instructions: \"…\", prompt: \"…\", itemFields: […] } }`, restating `tools` with PROPOSE addressed by its local orbital name (`{ event: Proposal.AgentProposalWorkflow.PROPOSE }`). Instructions, prompts, item fields and labels are the app's vocabulary, declared in config."
+  description: "std-agent-proposal — an agent that reads what the person hands over, works out a structured proposal, and commits nothing until they approve it. The app starts it with PROPOSAL_REQUESTED { input, context } (any trait emitting it, or the person typing into the start form when `showInputForm` is on). A second std-agent-tool-loop answers with `instructions`, `prompt` and `tools` as the signed-in person — `quiet`, its reply and failure renamed PROPOSAL_LOOP_REPLIED / PROPOSAL_LOOP_FAILED so they never reach the assistant's chat — and submits its proposal through one declared input, PROPOSE (its @description is the tool text): a summary and a list of items, each a flat map of scalar values the app names. The person reviews it (the summary, the items drawn with `itemPattern` and `itemFields`) and chooses: Approve emits PROPOSAL_APPROVED { proposal } for the app to commit (the app owns the commit; this atom writes nothing); Revise sends their written feedback back to the agent, which proposes again; Discard emits PROPOSAL_DISCARDED. Cancel while the agent works aborts its model call and emits PROPOSAL_CANCELLED. A run that fails, or ends without proposing, shows its error with Retry and Discard. The panel renders into `panelSlot`. Import the orbital once per app: `orbital Proposal = Proposal.orbitals.AgentProposalOrbital { config { instructions: \"…\", prompt: \"…\", itemFields: […] } }`, restating `tools` with PROPOSE addressed by its local orbital name (`{ event: Proposal.AgentProposalWorkflow.PROPOSE }`). Instructions, prompts, item fields and labels are the app's vocabulary, declared in config.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "agent proposal, review before commit, human approval of agent output, approve or revise agent suggestions, structured proposal review, ai drafts for approval, extract then confirm"
 
@@ -28,8 +29,57 @@ type ProposalPayload = {
   items : [Map string string]
 }
 
+type LlmToolCall = { id : string!, name : string!, arguments : string! }
+type AgentToolKind = "input" | "read" | "invalid"
+type AgentToolCallActivity = {
+  type : "tool_call"!
+  tool : string!
+  kind : AgentToolKind
+  argsText : string!
+  timestamp : number!
+  isExecuting : boolean
+}
+type AgentToolResultActivity = {
+  type : "tool_result"!
+  tool : string!
+  kind : AgentToolKind
+  success : boolean!
+  detail : string
+  rows : number
+  resultText : string!
+  timestamp : number!
+}
+type AgentLlmCall = {
+  service : string!
+  provider : string!
+  model : string!
+  systemPrompt : string!
+  userPrompt : string!
+  toolCallsJson : string
+  attempt : number
+  durationMs : number!
+  promptTokens : number
+  completionTokens : number
+  cachedPromptTokens : number
+  costUSD : number
+}
+type AgentLlmResponseActivity = {
+  type : "llm_response"!
+  content : string!
+  llm : AgentLlmCall
+  timestamp : number!
+}
+type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
+type AgentUsage = {
+  promptTokens : number!
+  completionTokens : number!
+  totalTokens : number!
+  modelCalls : number!
+}
+
 orbital AgentProposalOrbital {
   uses Loop from "std/behaviors/std-agent-tool-loop"
+  uses Llm from "std/behaviors/std-llm"
 
   config {
     instructions : string = "You turn what the person hands over into one structured proposal. Look things up with the tools if you need to, then call the proposal tool exactly once with a short summary and the list of items. Do not call it again unless asked to revise."
@@ -634,7 +684,6 @@ orbital AgentProposalOrbital {
       instructions: @config.instructions
       maxSteps: @config.maxSteps
       quiet: true
-      cancelKey: "agent-proposal"
     }
     events {
       ASSISTANT_REPLIED: PROPOSAL_LOOP_REPLIED
@@ -643,8 +692,40 @@ orbital AgentProposalOrbital {
     listens {
       AgentProposalWorkflow.PROPOSAL_RUN_REQUESTED -> CONVERSE
       AgentProposalWorkflow.PROPOSAL_CANCELLED -> CANCEL
+      AgentProposalLlm.LLM_TOOLS_REQUESTED -> ToolsRequested
+      AgentProposalLlm.LLM_TOOLS_STEP -> ToolsStep
+      AgentProposalLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
+      AgentProposalLlm.LLM_FAILED -> ToolsFailed
+      AgentProposalLlm.LLM_CANCELLED -> ToolsCancelled
+      ToolsRequested {
+        session : string!
+        calls : [LlmToolCall]!
+      }
+      ToolsStep {
+        activity : AgentActivity!
+      }
+      ToolsReplied {
+        reply : string!
+        steps : [AgentActivity]!
+        usage : AgentUsage!
+      }
+      ToolsFailed {
+        code : string
+        message : string!
+      }
+      ToolsCancelled {
+        key : string!
+      }
     }
   }
 
-  page "/agent-proposal" as AgentProposalPage -> AgentProposalWorkflow, AgentProposalLoop
+  trait AgentProposalLlm = Llm.traits.LlmClient {
+    listens {
+      AgentProposalLoop.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
+      AgentProposalLoop.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
+      AgentProposalLoop.LLM_CANCEL -> LLM_CANCEL
+    }
+  }
+
+  page "/agent-proposal" as AgentProposalPage -> AgentProposalWorkflow, AgentProposalLoop, AgentProposalLlm
 }

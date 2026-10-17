@@ -14,6 +14,17 @@ import { BOOLEAN, NUMBER, PRIMITIVE_VALUE, STRING, list, rec, tv, union } from '
  * All operators return strings (or boolean for checks) and have no side effects.
  */
 export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
+  'str/to-number': {
+    module: 'str',
+    category: 'std-str',
+    minArity: 1,
+    maxArity: 1,
+    description: 'Convert a string using JavaScript Number semantics; malformed text returns NaN',
+    hasSideEffects: false,
+    returnType: NUMBER,
+    params: [{ name: 's', type: STRING, description: 'The numeric string' }],
+    example: '["str/to-number", "0x10"] // => 16',
+  },
   'str/len': {
     module: 'str',
     category: 'std-str',
@@ -96,7 +107,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-str',
     minArity: 2,
     maxArity: 2,
-    description: 'Split string into array by delimiter',
+    description: 'Split string into array by delimiter. An empty delimiter splits by Unicode scalar value',
     hasSideEffects: false,
     returnType: list(STRING),
     params: [
@@ -148,6 +159,21 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'replace', type: 'string', description: 'Replacement' },
     ],
     example: '["str/replace", "hello world", "world", "there"] // => "hello there"',
+  },
+  'str/replace-pattern': {
+    module: 'str',
+    category: 'std-str',
+    minArity: 3,
+    maxArity: 3,
+    description: 'Replace every match of a regex pattern of the shared dialect (see validate/pattern; Unicode mode, so \\p{L} and \\p{N} work). The replacement is literal: $ has no meaning. An invalid or unsupported pattern is an error',
+    hasSideEffects: false,
+    returnType: 'string',
+    params: [
+      { name: 's', type: 'string', description: 'The string' },
+      { name: 'pattern', type: 'string', description: 'Regex pattern' },
+      { name: 'replace', type: 'string', description: 'Literal replacement' },
+    ],
+    example: '["str/replace-pattern", "a1, b2!", "[^\\\\p{L}\\\\p{N}]", ""] // => "a1b2"',
   },
   'str/replaceAll': {
     module: 'str',
@@ -369,6 +395,53 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'string',
     params: [{ name: 's', type: 'string', description: 'The string to encode' }],
     example: '["str/encode-uri-component", "a b&c"] // => "a%20b%26c"',
+  },
+  'str/decode-uri-component': {
+    module: 'str',
+    category: 'std-str',
+    minArity: 1,
+    maxArity: 1,
+    description: 'Decode a percent-encoded URI component (JavaScript decodeURIComponent; %XX sequences as UTF-8, + is not a space, malformed input is an evaluation error, null yields null)',
+    hasSideEffects: false,
+    returnType: 'string',
+    params: [{ name: 's', type: 'string', description: 'The percent-encoded string to decode' }],
+    example: '["str/decode-uri-component", "a%20b%26c"] // => "a b&c"',
+  },
+  'str/uri-component-valid': {
+    module: 'str',
+    category: 'std-str',
+    minArity: 1,
+    maxArity: 1,
+    description: 'True iff str/decode-uri-component would succeed on the string (well-formed percent escapes decoding to valid UTF-8); null is false',
+    hasSideEffects: false,
+    returnType: 'boolean',
+    params: [{ name: 's', type: 'string', description: 'The string to check' }],
+    example: '["str/uri-component-valid", "a%20b"] // => true',
+  },
+  'str/collate': {
+    module: 'str',
+    category: 'std-str',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Compare two strings by the CLDR root collation (Unicode Collation Algorithm, tertiary strength): -1, 0 or 1. Case-insensitive first, accents beside their letter, the same on every execution path; null on either side is null',
+    hasSideEffects: false,
+    returnType: 'number',
+    params: [
+      { name: 'a', type: 'string', description: 'The left string' },
+      { name: 'b', type: 'string', description: 'The right string' },
+    ],
+    example: '["str/collate", "apple", "Banana"] // => -1',
+  },
+  'str/collate-key': {
+    module: 'str',
+    category: 'std-str',
+    minArity: 1,
+    maxArity: 1,
+    description: 'A sort key of the string under the CLDR root collation: a string (lowercase hex) whose code-point order is the collation order, so array/sort by a field holding it sorts by collation; null is null',
+    hasSideEffects: false,
+    returnType: 'string',
+    params: [{ name: 's', type: 'string', description: 'The string to key' }],
+    example: '["array/sort", [{"k": ["str/collate-key", "écrou"]}, {"k": ["str/collate-key", "Zed"]}], "k"]',
   },
 };
 

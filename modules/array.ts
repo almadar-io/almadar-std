@@ -10,7 +10,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, NUMBER, STRING, fn, keyOf, list, mapOf, nullable, shape, tuple, tv, union } from '../signature.js';
+import { BOOLEAN, NUMBER, STRING, each, fn, keyOf, list, mapOf, nullable, shape, tuple, tv, union } from '../signature.js';
 
 /**
  * Array module operators.
@@ -70,11 +70,11 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-array',
     minArity: 2,
     maxArity: 2,
-    description: 'Get element at index (element type of input array, may be undefined out-of-bounds)',
+    description: 'Get element at index (element type of input array, may be undefined out-of-bounds). A pair or tuple of unlike types (an entry of object/entries) is indexed too; its element type is then not determined',
     hasSideEffects: false,
     returnType: tv('T'),
     params: [
-      { name: 'arr', type: list(tv('T')), description: 'The array' },
+      { name: 'arr', type: union(list(tv('T')), list(each('E'))), description: 'The array, or a tuple of unlike types' },
       { name: 'index', type: 'number', description: 'Index (0-based)' },
     ],
     example: '["array/nth", [1, 2, 3], 1] // => 2',

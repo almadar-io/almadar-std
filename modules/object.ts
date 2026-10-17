@@ -8,7 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, RECORD, STRING, eachRec, fieldOf, fn, keyOf, list, mapOf, mergeOf, omitOf, pickOf, rec, tuple, tv, union } from '../signature.js';
+import { BOOLEAN, RECORD, STRING, each, eachRec, fieldOf, fn, keyOf, list, mapOf, mergeOf, omitOf, pickOf, rec, tuple, tv, union } from '../signature.js';
 
 /**
  * Object module operators.
@@ -56,7 +56,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Create object from [key, value] pairs',
     hasSideEffects: false,
     returnType: mapOf(tv('K'), tv('V')),
-    params: [{ name: 'entries', type: list(tuple(tv('K'), tv('V'))), description: 'Array of [key, value] pairs' }],
+    params: [{ name: 'entries', type: list(tuple(tv('K'), each('V'))), description: 'Array of [key, value] pairs; the values may differ in type (a record)' }],
     example: '["object/fromEntries", [["a", 1], ["b", 2]]] // => {"a": 1, "b": 2}',
   },
   'object/get': {
@@ -68,7 +68,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: fieldOf('R'),
     params: [
-      { name: 'obj', type: tv('R', union(RECORD, list(tv('E')))), description: 'The record (or a list or tuple, addressed by index)' },
+      { name: 'obj', type: tv('R', union(RECORD, list(each('E')))), description: 'The record (or a list or tuple, addressed by index)' },
       { name: 'path', type: keyOf('R'), description: 'Dot-separated path (e.g., "user.name", "items.0")' },
       { name: 'default', type: fieldOf('R'), description: 'Default if path not found', optional: true },
     ],

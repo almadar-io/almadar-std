@@ -31,7 +31,6 @@ export const OPERATOR_CATEGORIES = [
   'std-time',
   'std-format',
   'std-i18n',
-  'std-async',
   'std-nn',
   'std-tensor',
   'std-train',
@@ -101,7 +100,7 @@ export type ReturnSemantics =
 export type RunsOn = 'client' | 'server' | 'any';
 
 /** A host outside the runtime that executes an effect. */
-export type EffectHost = 'program';
+export type EffectHost = 'program' | 'os';
 
 export interface OperatorMeta {
   /** Operator category */
@@ -127,7 +126,7 @@ export interface OperatorMeta {
   returnSemantics?: ReturnSemantics;
   /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
   runsOn?: RunsOn;
-  /** The host that executes this effect: `program` = the shared program host (`@almadar/integrations/program` `runProgramEffect`), on both execution paths. Absent for effects the runtime executes itself. */
+  /** The host that executes this effect: `program` = the shared program host (`@almadar/integrations/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. Absent for effects the runtime executes itself. */
   host?: EffectHost;
 }
 
@@ -152,7 +151,6 @@ export const STD_MODULES = [
   'validate',
   'format',
   'i18n',
-  'async',
   'nn',
   'tensor',
   'train',
@@ -178,6 +176,7 @@ export const STD_MODULES = [
   'trace',
   'behavior',
   'program',
+  'bytes',
   'base64',
   'hash',
   'hmac',
@@ -201,7 +200,6 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-validate',
   'std-format',
   'std-i18n',
-  'std-async',
   'std-nn',
   'std-tensor',
   'std-train',
@@ -317,10 +315,21 @@ export interface OperatorEffectMeta {
     | 'set'
     | 'call-service'
     | 'http'
+    | 'redis'
+    | 'postgres'
     | 'cancel-call'
     | 'random-bytes'
     | 'credential-status'
     | 'credential-forget'
+    | 'credential-list'
+    | 'credential-set'
+    | 'credential-remove'
+    | 'credential-test'
+    | 'credential-mode'
+    | 'credential-rotate'
+    | 'oauth-authorize'
+    | 'oauth-connection-status'
+    | 'oauth-connection-forget'
     | 'log'
     | 'send-server'
     | 'custom';
@@ -336,7 +345,7 @@ export interface OperatorEffectMeta {
  */
 /** How an operator is drawn in the AVL circuit notation (evaluation as signal flow). */
 export const OPERATOR_VISUAL_FORMS = [
-  'block', 'series', 'parallel', 'invert', 'branch', 'scope', 'template', 'conveyor', 'ladder', 'actuator', 'delay',
+  'block', 'series', 'parallel', 'invert', 'branch', 'scope', 'template', 'conveyor', 'ladder', 'actuator',
 ] as const;
 
 export type OperatorVisualForm = (typeof OPERATOR_VISUAL_FORMS)[number];
@@ -354,6 +363,7 @@ export interface StdOperatorMeta extends OperatorMeta {
   }[];
   /** Example usage */
   example?: string;
+  exampleSource?: 'module';
   /** Whether this operator accepts a lambda expression argument */
   acceptsLambda?: boolean;
   /** Position of the lambda argument (0-indexed) */
@@ -364,6 +374,8 @@ export interface StdOperatorMeta extends OperatorMeta {
    * data effect on a client-resident entity runs on the client.
    */
   entityArgPosition?: number;
+  /** The regex (shared dialect) a value must match: the one definition a `validate/<semantic type>` operator reads; owned by @almadar/core `SEMANTIC_STRING_PATTERNS`. */
+  pattern?: string;
   /** Compile-time operator (resolved during .lolo lowering, not at runtime) */
   compileTime?: boolean;
   /** Schema v2: structured metadata for effect operators */

@@ -1,11 +1,15 @@
 app std-calendar-sync [
   version: "1.0.0",
-  description: "std-calendar-sync — two-way Google Calendar synchronization engine. PUSH: a 15-minute cron scan (and the user-addressable SYNC_NOW) walks `targetEntity` rows whose `externalEventId` marker is blank and creates a remote event per row through calendar.createEvent, reading the summary/start/end via the configured field mapping (`titleField`/`startField`/`endField`/`durationMinutes` fallback/`locationField`/`descriptionField`) — so ANY event-shaped host entity pushes, provided it declares the two marker columns `externalEventId : string` and `syncedAt : number` (the remindedAt precedent). PULL: `CAL_REMOTE_CHANGED` (delivered by the shared /api/hooks/google-calendar ingress from a calendar.watch channel) or the same cycle after a clean push lists remote events (incremental via the in-memory sync token; a restart falls back to a full window list) and upserts each into the atom's own canonical `CalendarEvent` store, matched by `externalEventId` — pulls land in the canonical store, NOT the arbitrary target, because persist keys are static in the language; bind calendar UI to `CalendarEvent` to surface remote events. Conflict detection (local-newer-than-remote) needs a local-modified marker convention and is a recorded gap, not a decorative state. Composes with std-notify-on-event via CAL_SYNCED / CAL_SYNC_FAILED."
+  description: "std-calendar-sync — two-way Google Calendar synchronization engine. PUSH: a 15-minute cron scan (and the user-addressable SYNC_NOW) walks `targetEntity` rows whose `externalEventId` marker is blank and creates a remote event per row through calendar.createEvent, reading the summary/start/end via the configured field mapping (`titleField`/`startField`/`endField`/`durationMinutes` fallback/`locationField`/`descriptionField`) — so ANY event-shaped host entity pushes, provided it declares the two marker columns `externalEventId : string` and `syncedAt : number` (the remindedAt precedent). PULL: `CAL_REMOTE_CHANGED` (emitted by the google-calendar inbound hook, /api/hooks/google-calendar, for a calendar.watch channel) or the same cycle after a clean push lists remote events (incremental via the in-memory sync token; a restart falls back to a full window list) and upserts each into the atom's own canonical `CalendarEvent` store, matched by `externalEventId` — pulls land in the canonical store, NOT the arbitrary target, because persist keys are static in the language; bind calendar UI to `CalendarEvent` to surface remote events. Conflict detection (local-newer-than-remote) needs a local-modified marker convention and is a recorded gap, not a decorative state. Composes with std-notify-on-event via CAL_SYNCED / CAL_SYNC_FAILED.",
+  egress: ["https://www.googleapis.com"],
+  inbound: ["google-calendar"]
 ]
 type RemoteEvent = { id : string, summary : string, description : string, location : string, start : string, end : string, status : string, updated : string }
 type TargetRow = { id : string, externalEventId : string }
 orbital CalendarSyncOrbital {
-    type CAL_REMOTE_CHANGED = Event { channelId : string, resourceId : string, resourceState : string } "Google watch-channel push notification, delivered by the /api/hooks/google-calendar ingress."
+  uses CalendarApi from "std/behaviors/std-google-calendar"
+
+    type CAL_REMOTE_CHANGED = Event { channelId : string, resourceId : string, resourceState : string } "Google watch-channel push notification, delivered by the google-calendar inbound hook (/api/hooks/google-calendar)."
 
   entity CalendarSyncRun [persistent: calendarSyncState] {
     id : string!
@@ -28,6 +32,30 @@ orbital CalendarSyncOrbital {
     syncedAt : number @description "When this row last synced with the remote calendar; 0 = never." @synonyms "last sync, synced" = 0
   }
 
+  trait CalendarSyncApi = CalendarApi.traits.CalendarClient {
+    listens {
+      CalendarSync.CALENDAR_LIST_EVENTS -> CALENDAR_LIST_EVENTS
+      CalendarSync.CALENDAR_CREATE_EVENT -> CALENDAR_CREATE_EVENT
+      CALENDAR_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      CALENDAR_REQUEST_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+        phase : string
+        grantStatus : number
+        grantBody : string
+      }
+    }
+  }
+
+  trait CalendarSyncInbound = CalendarApi.traits.CalendarPushInbound {
+  }
+
   trait CalendarSync -> CalendarSyncRun [lifecycle, instance] {
     initial: idle
 
@@ -39,13 +67,13 @@ orbital CalendarSyncOrbital {
           filter: ["=", (object/get @entity externalEventId), ""]
         })
       CAL_REMOTE_CHANGED -> idle when @config.enabled
-        (call-service "calendar" "listEvents" {
+        (emit CALENDAR_LIST_EVENTS {
           calendarId: @config.calendarId
           syncToken: @entity.syncToken
-        } { emit: { failure: CAL_SYNC_FAILED, success: CAL_REMOTE_LISTED } })
+        })
       PUSH_ROWS_LOADED -> pushing when (and @config.enabled [">", (array/len ?data), 0])
         (set @entity.headId (object/get (array/first ?data) id))
-        (call-service "calendar" "createEvent" {
+        (emit CALENDAR_CREATE_EVENT {
           calendarId: @config.calendarId
           summary: (object/get (array/first ?data) @config.titleField)
           description: (if ["=", @config.descriptionField, ""] "" (object/get (array/first ?data) @config.descriptionField))
@@ -53,12 +81,12 @@ orbital CalendarSyncOrbital {
           start: (object/get (array/first ?data) @config.startField)
           end: (if ["=", @config.endField, ""] "" (object/get (array/first ?data) @config.endField))
           durationMinutes: (if ["=", @config.durationField, ""] @config.durationMinutes (object/get (array/first ?data) @config.durationField))
-        } { emit: { failure: CAL_SYNC_FAILED, success: CAL_EVENT_CREATED } })
+        })
       PUSH_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
-        (call-service "calendar" "listEvents" {
+        (emit CALENDAR_LIST_EVENTS {
           calendarId: @config.calendarId
           syncToken: @entity.syncToken
-        } { emit: { failure: CAL_SYNC_FAILED, success: CAL_REMOTE_LISTED } })
+        })
       CAL_REMOTE_LISTED -> pulling when [">", (array/len ?events), 0]
         (set @entity.pending ?events)
         (set @entity.syncToken (str/default ?nextSyncToken ""))
@@ -72,6 +100,9 @@ orbital CalendarSyncOrbital {
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
         (notify error (str/concat "Couldn't sync the calendar — " ?error))
+      CAL_CALENDAR_FAILED -> idle
+        (set @entity.lastError ?message)
+        (notify error (str/concat "Couldn't sync the calendar — " ?message))
     }
 
     state pushing {
@@ -86,7 +117,7 @@ orbital CalendarSyncOrbital {
         })
       PUSH_ROWS_LOADED -> pushing when [">", (array/len ?data), 0]
         (set @entity.headId (object/get (array/first ?data) id))
-        (call-service "calendar" "createEvent" {
+        (emit CALENDAR_CREATE_EVENT {
           calendarId: @config.calendarId
           summary: (object/get (array/first ?data) @config.titleField)
           description: (if ["=", @config.descriptionField, ""] "" (object/get (array/first ?data) @config.descriptionField))
@@ -94,15 +125,18 @@ orbital CalendarSyncOrbital {
           start: (object/get (array/first ?data) @config.startField)
           end: (if ["=", @config.endField, ""] "" (object/get (array/first ?data) @config.endField))
           durationMinutes: (if ["=", @config.durationField, ""] @config.durationMinutes (object/get (array/first ?data) @config.durationField))
-        } { emit: { failure: CAL_SYNC_FAILED, success: CAL_EVENT_CREATED } })
+        })
       PUSH_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
-        (call-service "calendar" "listEvents" {
+        (emit CALENDAR_LIST_EVENTS {
           calendarId: @config.calendarId
           syncToken: @entity.syncToken
-        } { emit: { failure: CAL_SYNC_FAILED, success: CAL_REMOTE_LISTED } })
+        })
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
         (notify error (str/concat "Couldn't sync the calendar — " ?error))
+      CAL_CALENDAR_FAILED -> idle
+        (set @entity.lastError ?message)
+        (notify error (str/concat "Couldn't sync the calendar — " ?message))
     }
 
     state pulling {
@@ -143,9 +177,29 @@ orbital CalendarSyncOrbital {
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
         (notify error (str/concat "Couldn't sync the calendar — " ?error))
+      CAL_CALENDAR_FAILED -> idle
+        (set @entity.lastError ?message)
+        (notify error (str/concat "Couldn't sync the calendar — " ?message))
     }
 
     emits {
+      CALENDAR_LIST_EVENTS -> external {
+        calendarId : string
+        syncToken : string
+      }
+        @description "Ask the Google Calendar client to list remote events (incrementally when syncToken is set)."
+        @tier "internal"
+      CALENDAR_CREATE_EVENT -> external {
+        calendarId : string
+        summary : string!
+        description : string
+        location : string
+        start : string!
+        end : string
+        durationMinutes : number
+      }
+        @description "Ask the Google Calendar client to create a remote event for the row being pushed."
+        @tier "internal"
       CAL_SYNCED -> external {
         syncedAt : number
       }
@@ -160,23 +214,10 @@ orbital CalendarSyncOrbital {
       }
         @description "Target rows with a blank externalEventId marker — the remaining local→remote export queue."
         @tier "secondary"
-      CAL_EVENT_CREATED {
-        id : string!
-        status : string!
-        htmlLink : string!
-      }
-        @description "calendar.createEvent result, flattened onto the payload by the call-service effect executor."
-        @tier "secondary"
       PUSH_STEPPED {
         id : string!
       }
         @description "Target row stamped with its new externalEventId; drives the next push pass."
-        @tier "secondary"
-      CAL_REMOTE_LISTED {
-        events : [RemoteEvent]
-        nextSyncToken : string
-      }
-        @description "calendar.listEvents result — the remote change set for the pull-upsert loop."
         @tier "secondary"
       PULL_TARGET_LOADED {
         data : [TargetRow]
@@ -196,6 +237,15 @@ orbital CalendarSyncOrbital {
     }
 
     listens {
+      CalendarSyncApi.CALENDAR_EVENTS_LISTED -> CAL_REMOTE_LISTED
+      CalendarSyncApi.CALENDAR_EVENT_CREATED -> CAL_EVENT_CREATED
+      CalendarSyncApi.CALENDAR_LIST_EVENTS_FAILED -> CAL_CALENDAR_FAILED
+      CalendarSyncApi.CALENDAR_CREATE_EVENT_FAILED -> CAL_CALENDAR_FAILED
+      CalendarSyncInbound.CAL_REMOTE_CHANGED -> CAL_REMOTE_CHANGED
+      CAL_CALENDAR_FAILED {
+        code : string
+        message : string!
+      }
       SYNC_NOW {
       }
       CAL_REMOTE_CHANGED {
@@ -292,5 +342,5 @@ orbital CalendarSyncOrbital {
     }
   }
 
-  page "/calendar-sync" as CalendarSyncPage -> CalendarSync
+  page "/calendar-sync" as CalendarSyncPage -> CalendarSync, CalendarSyncApi, CalendarSyncInbound
 }

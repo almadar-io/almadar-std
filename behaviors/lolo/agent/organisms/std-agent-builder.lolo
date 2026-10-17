@@ -1,6 +1,7 @@
 app std-agent-builder [
   version: "3.0.0",
-  description: "Agent builder — turns a request into a behavior by walking a ladder of caching tiers, cheapest first. START { request, orbitalName, context } embeds the request (`call-service llm embed`) and walks `ladder`: each step ranks its source by cosine similarity — installed behaviors under its registry folders (`behavior/catalog`), or a pool (POOL_SEARCH, answered by POOL_FOUND from std-agent-pool) — and when the best match reaches the step's threshold runs the step's action, otherwise goes to the next step. Actions: `mount` builds a page around the best match's first trait (`program/eval`); `adopt` serves the best match as it is, no model call; `fill` describes the best match (`behavior/describe`), asks the model once to set its knobs and the extra `fillFields`, applies them (`behavior/apply`) and evaluates the result (`program/eval`, final), feeding validator issues back for up to `maxRepairs` repair turns. BUILD_PROGRESS streams each step; BUILD_COMPLETE { orbitalName, behavior, value, tier, fields } carries the behavior and the step that served it; BUILD_REJECTED { error, errors } follows an exhausted ladder or a failed build. The default ladder mounts the closest UI molecule, as earlier versions did."
+  description: "Agent builder — turns a request into a behavior by walking a ladder of caching tiers, cheapest first. START { request, orbitalName, context } embeds the request with std-llm (LLM_EMBED) and walks `ladder`: each step ranks its source by cosine similarity — installed behaviors under its registry folders (`behavior/catalog`), or a pool (POOL_SEARCH, answered by POOL_FOUND from std-agent-pool) — and when the best match reaches the step's threshold runs the step's action, otherwise goes to the next step. Actions: `mount` builds a page around the best match's first trait (`program/eval`); `adopt` serves the best match as it is, no model call; `fill` describes the best match (`behavior/describe`), asks the model once to set its knobs and the extra `fillFields`, applies them (`behavior/apply`) and evaluates the result (`program/eval`, final), feeding validator issues back for up to `maxRepairs` repair turns. BUILD_PROGRESS streams each step; BUILD_COMPLETE { orbitalName, behavior, value, tier, fields } carries the behavior and the step that served it; BUILD_REJECTED { error, errors } follows an exhausted ladder or a failed build. The default ladder mounts the closest UI molecule, as earlier versions did.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "build a behavior from a request, caching tiers, retrieve before generating, adopt an existing behavior, fill a behavior's knobs, pick a behavior by meaning, program evaluation"
 
@@ -95,7 +96,57 @@ type FilledTrait = {
   config : Map string SExpr
 }
 
+type LlmToolCall = { id : string!, name : string!, arguments : string! }
+type AgentToolKind = "input" | "read" | "invalid"
+type AgentToolCallActivity = {
+  type : "tool_call"!
+  tool : string!
+  kind : AgentToolKind
+  argsText : string!
+  timestamp : number!
+  isExecuting : boolean
+}
+type AgentToolResultActivity = {
+  type : "tool_result"!
+  tool : string!
+  kind : AgentToolKind
+  success : boolean!
+  detail : string
+  rows : number
+  resultText : string!
+  timestamp : number!
+}
+type AgentLlmCall = {
+  service : string!
+  provider : string!
+  model : string!
+  systemPrompt : string!
+  userPrompt : string!
+  toolCallsJson : string
+  attempt : number
+  durationMs : number!
+  promptTokens : number
+  completionTokens : number
+  cachedPromptTokens : number
+  costUSD : number
+}
+type AgentLlmResponseActivity = {
+  type : "llm_response"!
+  content : string!
+  llm : AgentLlmCall
+  timestamp : number!
+}
+type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
+type AgentUsage = {
+  promptTokens : number!
+  completionTokens : number!
+  totalTokens : number!
+  modelCalls : number!
+}
+
 uses ToolLoop from "std/behaviors/std-agent-tool-loop"
+
+uses Llm from "std/behaviors/std-llm"
 
 orbital AgentBuilderOrbital {
 
@@ -186,9 +237,7 @@ orbital AgentBuilderOrbital {
         (set @entity.repairs 0)
         (set @entity.status searching)
         (emit BUILD_PROGRESS { status: "searching", tier: "" })
-        (call-service llm embed { texts: [?request] } {
-          emit: { failure: BUILD_FAILED, success: REQUEST_EMBEDDED }
-        })
+        (emit LLM_EMBED { texts: (array/prepend [] ?request) })
       FILL -> idle
       PICK -> idle
       CONVERSE -> idle
@@ -270,9 +319,7 @@ orbital AgentBuilderOrbital {
         (set @entity.pickedFields {})
         (set @entity.status choosing)
         (emit BUILD_PROGRESS { status: "choosing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
-        (call-service llm choose { state: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)), instructions: @config.pickQuestion, options: (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r { value: @r.behavior, description: (object/get @r description "") })) } {
-          emit: { failure: BUILD_FAILED, success: CHOSEN }
-        })
+        (emit LLM_CHOOSE { state: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)), instructions: @config.pickQuestion, options: (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r { value: @r.behavior, description: (object/get @r description "") })) })
       RANKED -> choosing when (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill"))) (and (> (object/get (array/nth @config.ladder @entity.step) take 1) 1) (and (> (array/len @entity.ranked) 1) (= @config.pickDecider "chat"))))
         (set @entity.chosen "")
         (set @entity.pickedFields {})
@@ -289,6 +336,11 @@ orbital AgentBuilderOrbital {
         (set @entity.status failed)
         (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
         (emit BUILD_REJECTED { error: ?error, errors: [] })
+      LLM_REQUEST_FAILED -> failed
+        (set @entity.error ?message)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?message)} variant="caption" />)
+        (emit BUILD_REJECTED { error: ?message, errors: [] })
     }
 
     state choosing {
@@ -312,6 +364,11 @@ orbital AgentBuilderOrbital {
         (set @entity.status failed)
         (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?error)} variant="caption" />)
         (emit BUILD_REJECTED { error: ?error, errors: [] })
+      LLM_REQUEST_FAILED -> failed
+        (set @entity.error ?message)
+        (set @entity.status failed)
+        (render-ui @config.statusSlot <typography content={(str/concat "Build failed: " ?message)} variant="caption" />)
+        (emit BUILD_REJECTED { error: ?message, errors: [] })
       PICK -> choosing
         (set @entity.chosen (str/default ?behavior ""))
         (set @entity.pickedFields (if (== ?fields null) {} ?fields))
@@ -436,9 +493,7 @@ orbital AgentBuilderOrbital {
         (set @entity.repairs 0)
         (set @entity.status searching)
         (emit BUILD_PROGRESS { status: "searching", tier: "" })
-        (call-service llm embed { texts: [?request] } {
-          emit: { failure: BUILD_FAILED, success: REQUEST_EMBEDDED }
-        })
+        (emit LLM_EMBED { texts: (array/prepend [] ?request) })
     }
 
     state failed {
@@ -456,9 +511,7 @@ orbital AgentBuilderOrbital {
         (set @entity.repairs 0)
         (set @entity.status searching)
         (emit BUILD_PROGRESS { status: "searching", tier: "" })
-        (call-service llm embed { texts: [?request] } {
-          emit: { failure: BUILD_FAILED, success: REQUEST_EMBEDDED }
-        })
+        (emit LLM_EMBED { texts: (array/prepend [] ?request) })
     }
 
     emits {
@@ -502,9 +555,17 @@ orbital AgentBuilderOrbital {
       RANKED {
       }
         @tier "internal"
-      REQUEST_EMBEDDED {
-        embeddings : [[number]]!
+      LLM_EMBED -> external {
+        texts : [string]!
       }
+        @description "Ask std-llm to embed the request."
+        @tier "internal"
+      LLM_CHOOSE -> external {
+        state : string!
+        instructions : string!
+        options : [{ value : string!, description : string! }]!
+      }
+        @description "Ask std-llm's decision model to pick one of the ranked building blocks."
         @tier "internal"
       CATALOG_LISTED {
         result : [CatalogHit]!
@@ -512,11 +573,6 @@ orbital AgentBuilderOrbital {
         @tier "internal"
       DESCRIBED {
         result : BehaviorDescription!
-      }
-        @tier "internal"
-      CHOSEN {
-        choice : string!
-        confidence : number!
       }
         @tier "internal"
       BUILT {
@@ -557,6 +613,20 @@ orbital AgentBuilderOrbital {
       ASSISTANT_REPLIED {
         reply : string
       }
+      BuilderLlm.LLM_EMBED_RESULT -> REQUEST_EMBEDDED
+      BuilderLlm.LLM_CHOOSE_RESULT -> CHOSEN
+      BuilderLlm.LLM_FAILED -> LLM_REQUEST_FAILED
+      REQUEST_EMBEDDED {
+        embeddings : [[number]]!
+      }
+      CHOSEN {
+        choice : string!
+        confidence : number!
+      }
+      LLM_REQUEST_FAILED {
+        code : string
+        message : string!
+      }
       BuilderTools.ASSISTANT_REPLY_FAILED -> TOOLS_FAILED
       TOOLS_FAILED {
         error : string!
@@ -564,16 +634,49 @@ orbital AgentBuilderOrbital {
     }
   }
 
+  trait BuilderLlm = Llm.traits.LlmClient {
+    listens {
+      BuilderPipeline.LLM_EMBED -> LLM_EMBED
+      BuilderPipeline.LLM_CHOOSE -> LLM_CHOOSE
+      BuilderTools.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
+      BuilderTools.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
+      BuilderTools.LLM_CANCEL -> LLM_CANCEL
+    }
+  }
+
   trait BuilderTools = ToolLoop.traits.AgentToolLoop {
     config {
       quiet: true
       maxSteps: 4
-      cancelKey: "std-agent-builder"
     }
     listens {
       BuilderPipeline.CONVERSE -> CONVERSE
+      BuilderLlm.LLM_TOOLS_REQUESTED -> ToolsRequested
+      BuilderLlm.LLM_TOOLS_STEP -> ToolsStep
+      BuilderLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
+      BuilderLlm.LLM_FAILED -> ToolsFailed
+      BuilderLlm.LLM_CANCELLED -> ToolsCancelled
+      ToolsRequested {
+        session : string!
+        calls : [LlmToolCall]!
+      }
+      ToolsStep {
+        activity : AgentActivity!
+      }
+      ToolsReplied {
+        reply : string!
+        steps : [AgentActivity]!
+        usage : AgentUsage!
+      }
+      ToolsFailed {
+        code : string
+        message : string!
+      }
+      ToolsCancelled {
+        key : string!
+      }
     }
   }
 
-  page "/agent-builder" as AgentBuilderPage -> BuilderPipeline, BuilderTools
+  page "/agent-builder" as AgentBuilderPage -> BuilderPipeline, BuilderTools, BuilderLlm
 }

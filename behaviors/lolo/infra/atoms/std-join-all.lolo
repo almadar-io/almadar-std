@@ -1,0 +1,120 @@
+app std-join-all [
+  version: "1.0.0",
+  description: "std-join-all — count the outcomes of a fan-out. The caller starts N keyed asks and sends START with the keys it started; each ITEM_SUCCEEDED or ITEM_FAILED settles one key once (a repeat or an unknown key is ignored). With failFast on, the first failure ends the join with JOIN_FAILED; with it off, the join waits for every key and fails if any failed. All succeeded emits JOINED. Replaces the retired async/all operator."
+]
+orbital JoinAllOrbital {
+  entity JoinRun [runtime] {
+    id : string!
+    pendingKeys : [CallKey] @description "Keys started and not yet settled." = []
+    failedKeys : [CallKey] @description "Keys that failed." = []
+    succeeded : number @description "Keys that succeeded." = 0
+    firstError : string @description "The first failure's error." = ""
+  }
+
+  trait JoinAll -> @rebindable JoinRun [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.pendingKeys [])
+        (set @entity.failedKeys [])
+        (set @entity.succeeded 0)
+        (set @entity.firstError "")
+      START -> waiting when (> (array/len ?keys) 0)
+        (set @entity.pendingKeys ?keys)
+        (set @entity.failedKeys [])
+        (set @entity.succeeded 0)
+        (set @entity.firstError "")
+      START -> idle when (== (array/len ?keys) 0)
+        (emit JOINED { settled: 0 })
+    }
+
+    state waiting {
+      INIT -> idle
+        (set @entity.pendingKeys [])
+        (set @entity.failedKeys [])
+        (set @entity.succeeded 0)
+        (set @entity.firstError "")
+      ITEM_SUCCEEDED -> waiting when (and (array/includes @entity.pendingKeys ?key) (> (array/len @entity.pendingKeys) 1))
+        (set @entity.pendingKeys (array/removeItem @entity.pendingKeys ?key))
+        (set @entity.succeeded (+ @entity.succeeded 1))
+      ITEM_SUCCEEDED -> idle when (and (array/includes @entity.pendingKeys ?key) (== (array/len @entity.pendingKeys) 1) (== (array/len @entity.failedKeys) 0))
+        (emit JOINED { settled: (+ @entity.succeeded 1) })
+        (set @entity.pendingKeys [])
+        (set @entity.succeeded 0)
+      ITEM_SUCCEEDED -> idle when (and (array/includes @entity.pendingKeys ?key) (== (array/len @entity.pendingKeys) 1) (> (array/len @entity.failedKeys) 0))
+        (emit JOIN_FAILED { failed: @entity.failedKeys, succeeded: (+ @entity.succeeded 1), error: @entity.firstError })
+        (set @entity.pendingKeys [])
+        (set @entity.succeeded 0)
+      ITEM_FAILED -> idle when (and (array/includes @entity.pendingKeys ?key) @config.failFast)
+        (emit JOIN_FAILED { failed: (array/append @entity.failedKeys ?key), succeeded: @entity.succeeded, error: (if (== (array/len @entity.failedKeys) 0) ?error @entity.firstError) })
+        (cancel-call (array/removeItem @entity.pendingKeys ?key))
+        (set @entity.pendingKeys [])
+        (set @entity.failedKeys [])
+        (set @entity.succeeded 0)
+      ITEM_FAILED -> waiting when (and (array/includes @entity.pendingKeys ?key) (not @config.failFast) (> (array/len @entity.pendingKeys) 1))
+        (set @entity.pendingKeys (array/removeItem @entity.pendingKeys ?key))
+        (set @entity.firstError (if (== (array/len @entity.failedKeys) 0) ?error @entity.firstError))
+        (set @entity.failedKeys (array/append @entity.failedKeys ?key))
+      ITEM_FAILED -> idle when (and (array/includes @entity.pendingKeys ?key) (not @config.failFast) (== (array/len @entity.pendingKeys) 1))
+        (emit JOIN_FAILED { failed: (array/append @entity.failedKeys ?key), succeeded: @entity.succeeded, error: (if (== (array/len @entity.failedKeys) 0) ?error @entity.firstError) })
+        (set @entity.pendingKeys [])
+        (set @entity.failedKeys [])
+        (set @entity.succeeded 0)
+      CANCEL -> idle
+        (cancel-call @entity.pendingKeys)
+        (set @entity.pendingKeys [])
+        (set @entity.failedKeys [])
+        (set @entity.succeeded 0)
+    }
+
+    emits {
+      JOINED -> external {
+        settled : number!
+      }
+        @description "Every started key succeeded."
+        @synonyms "all done, all succeeded, complete"
+        @tier "domain"
+      JOIN_FAILED -> external {
+        failed : [CallKey]!
+        succeeded : number!
+        error : string
+      }
+        @description "At least one key failed; error is the first failure's."
+        @synonyms "some failed, aborted"
+        @tier "domain"
+    }
+
+    listens {
+      START {
+        keys : [CallKey]!
+      }
+        @description "Begin the join over the keys the caller has just started."
+        @synonyms "fan out, begin, collect"
+      ITEM_SUCCEEDED {
+        key : CallKey!
+      }
+        @description "One ask's success outcome."
+        @synonyms "one done, resolved"
+      ITEM_FAILED {
+        key : CallKey!
+        error : string
+      }
+        @description "One ask's failure outcome."
+        @synonyms "one failed, rejected"
+      CANCEL { }
+        @description "Abandon the join; the asks still running are cancelled."
+        @synonyms "stop, abort"
+    }
+
+    config {
+      failFast : boolean = true
+        @label "Fail on the first failure?"
+        @description "On: the first failure ends the join and the rest are cancelledmes the rest. Off: wait for every key, then fail if any failed."
+        @synonyms "abort early, short circuit"
+        @tier "policy"
+    }
+  }
+
+  page "/join-all" as JoinAllPage -> JoinAll
+}

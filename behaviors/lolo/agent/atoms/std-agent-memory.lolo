@@ -1,6 +1,7 @@
 app std-agent-memory [
   version: "2.0.0",
-  description: "std-agent-memory — what an in-app assistant remembers across conversations. Owns AgentMemory rows (content + its embedding, ownerId = the real @user). RECALL { messages } embeds the last turn with `call-service llm embed`, ranks the stored memories whose embedding is comparable (same length as the query's) by cosine similarity and emits RECALLED { messages, context } with the closest `recallLimit` memories joined into one context string (empty when nothing is stored); if embedding fails it emits RECALLED with an empty context, so a memory outage never blocks the assistant. REMEMBER { reply } stores the exchange it just recalled for (asked + answered) with its embedding. AgentMemoryRecall is headless (failures show as toasts); AgentMemoryBrowse is the list view. Rows are meant to be private to their owner: the binding organism declares the @read scoping."
+  description: "std-agent-memory — what an in-app assistant remembers across conversations. Owns AgentMemory rows (content + its embedding, ownerId = the real @user). RECALL { messages } embeds the last turn with std-llm (LLM_EMBED), ranks the stored memories whose embedding is comparable (same length as the query's) by cosine similarity and emits RECALLED { messages, context } with the closest `recallLimit` memories joined into one context string (empty when nothing is stored); if embedding fails it emits RECALLED with an empty context, so a memory outage never blocks the assistant. REMEMBER { reply } stores the exchange it just recalled for (asked + answered) with its embedding. AgentMemoryRecall is headless (failures show as toasts); AgentMemoryBrowse is the list view. Rows are meant to be private to their owner: the binding organism declares the @read scoping.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 
 type AgentChatMessage = {
@@ -23,11 +24,13 @@ type AgentMemoryRow = {
   createdAt : number
 }
 
+uses Llm from "std/behaviors/std-llm"
+
 orbital AgentMemoryOrbital {
   type AgentMemoriesLoaded = Event { data : [AgentMemory] } "Fired when the stored memories finish loading"
   type AgentMemoriesLoadFailed = Event { error : string, code : string } "Fired when the stored memories fail to load"
   type MemoryEmbedded = Event { embeddings : [[number]] } "Fired when a memory or query has been embedded"
-  type MemoryEmbedFailed = Event { error : string } "Fired when embedding fails"
+  type MemoryEmbedFailed = Event { code : string, message : string! } "Fired when embedding fails"
 
   entity AgentMemory [persistent: agentMemories] {
     id : string!
@@ -39,6 +42,12 @@ orbital AgentMemoryOrbital {
     pendingQuery : string @intrinsic @description "The turn a recall is running for." = ""
     pendingContent : string @intrinsic @description "The exchange being remembered." = ""
     queryVector : [number] @intrinsic @description "The recall query's embedding." = []
+  }
+
+  trait AgentMemoryLlm = Llm.traits.LlmClient {
+    listens {
+      AgentMemoryRecall.LLM_EMBED -> LLM_EMBED
+    }
   }
 
   trait AgentMemoryRecall -> @rebindable AgentMemory [lifecycle] {
@@ -73,18 +82,14 @@ orbital AgentMemoryOrbital {
       RECALL -> recalling when (not ?ephemeral)
         (set @entity.pendingMessages ?messages)
         (set @entity.pendingQuery (object/get (array/last ?messages) content))
-        (call-service llm embed {
-          texts: [(object/get (array/last ?messages) content)]
-        } {
-          emit: { failure: MemoryEmbedFailed, success: MemoryEmbedded }
+        (emit LLM_EMBED {
+          texts: (array/prepend [] (object/get (array/last ?messages) content))
         })
       REMEMBER -> ready when ?ephemeral
       REMEMBER -> remembering when (not ?ephemeral)
         (set @entity.pendingContent (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
-        (call-service llm embed {
-          texts: [(str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply)]
-        } {
-          emit: { failure: MemoryEmbedFailed, success: MemoryEmbedded }
+        (emit LLM_EMBED {
+          texts: (array/prepend [] (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
         })
     }
 
@@ -104,7 +109,7 @@ orbital AgentMemoryOrbital {
       MemoryEmbedFailed -> ready
         (emit RECALLED { messages: @entity.pendingMessages, context: "" })
         (render-ui toast {
-          message: ?error
+          message: ?message
           type: alert
           variant: warning
         })
@@ -131,7 +136,7 @@ orbital AgentMemoryOrbital {
         })
       MemoryEmbedFailed -> ready
         (render-ui toast {
-          message: ?error
+          message: ?message
           type: alert
           variant: warning
         })
@@ -176,18 +181,24 @@ orbital AgentMemoryOrbital {
         data : [AgentMemory]
       }
         @tier "internal"
-      MemoryEmbedded -> internal {
-        embeddings : [[number]]
+      LLM_EMBED -> external {
+        texts : [string]!
       }
-        @tier "internal"
-      MemoryEmbedFailed -> internal {
-        error : string
-      }
+        @description "Ask std-llm to embed the recall query or the exchange being remembered."
         @tier "internal"
     }
 
     listens {
       *.ASSISTANT_MEMORIES_REQUESTED -> LIST
+      AgentMemoryLlm.LLM_EMBED_RESULT -> MemoryEmbedded
+      AgentMemoryLlm.LLM_FAILED -> MemoryEmbedFailed
+      MemoryEmbedded {
+        embeddings : [[number]]
+      }
+      MemoryEmbedFailed {
+        code : string
+        message : string!
+      }
       LIST {
       }
         @description "List what the assistant remembers for this person."
@@ -258,5 +269,5 @@ orbital AgentMemoryOrbital {
     }
   }
 
-  page "/agent-memory" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryRecall
+  page "/agent-memory" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryRecall, AgentMemoryLlm
 }

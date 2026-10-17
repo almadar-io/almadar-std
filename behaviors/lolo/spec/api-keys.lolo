@@ -1,0 +1,22 @@
+app api-keys-spec [
+  version: "1.0.0",
+  description: "Design contract for minting an API key: the key row is stored hashed, and the plaintext leaves exactly once, in the event that reports the mint. Shows event payload obligations: field names, types and which are required."
+]
+
+orbital ApiKeysSpec {
+  expects entity ApiKeyRecord [persistent] {
+    id : string!
+    lastFour : string
+    label : string
+    owner : string
+    revoked : boolean
+    expiresAt : number
+  }
+  expects trait ApiKeyMinter {
+    emits {
+      API_KEY_MINTED { plaintext : string!  keyHash : string!  lastFour : string! }
+      API_KEY_FAILED { code : string  message : string! }
+    }
+  }
+  expects page "/keys" -> ApiKeyMinter
+}
