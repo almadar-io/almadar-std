@@ -14,8 +14,8 @@ orbital MigrationAdapterFirestoreOrbital {
   type FirestoreValue = { stringValue : string, integerValue : string, doubleValue : number, booleanValue : boolean, nullValue : string, timestampValue : string, mapValue : FirestoreMap, arrayValue : FirestoreArray }
   type FirestoreDocument = { name : string!, fields : FirestoreFields, createTime : string, updateTime : string }
   type FirestoreDocuments = [FirestoreDocument]
-  type FirestoreNodeKind = { nodeType : string!, kind : "root" | "folder" | "section" | "qa" }
-  type FirestoreRecipe = { adapterId : string!, documentUnit : boolean!, documentKind : "root" | "folder" | "section" | "qa", nodesField : string, nodeKinds : [FirestoreNodeKind], edgesField : string, edgeKind : "root" | "folder" | "section" | "qa" }
+  type FirestoreNodeKind = { nodeType : string!, kind : "root" | "folder" | "section" | "qa", slots : [string] }
+  type FirestoreRecipe = { adapterId : string!, documentUnit : boolean!, documentKind : "root" | "folder" | "section" | "qa", documentSlots : [string], nodesField : string, nodeKinds : [FirestoreNodeKind], edgesField : string, edgeKind : "root" | "folder" | "section" | "qa", edgeSlots : [string] }
   type FirestoreUnitSet = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, span : string, extra : Map string ImportFieldValue, fields : FirestoreFields, hidden : [string] }
   type FirestoreStrings = [string]
 
@@ -104,7 +104,7 @@ orbital MigrationAdapterFirestoreOrbital {
                     title: null,
                     span: @path,
                     extra: { documentId: (array/last (str/split @path "/")), documentPath: @path },
-                    fields: (object/get @d "fields"),
+                    fields: (if (> (array/len (object/get @entity.recipe "documentSlots")) 0) (object/pick (object/get @d "fields") (object/get @entity.recipe "documentSlots")) (object/get @d "fields")),
                     hidden: (array/filter [(object/get @entity.recipe "nodesField"), (object/get @entity.recipe "edgesField")] (fn h (!= @h "")))
                   })))
             []))
@@ -131,11 +131,13 @@ orbital MigrationAdapterFirestoreOrbital {
                           nodeId: (object/get @e "0"),
                           nodeType: (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")
                         },
-                        fields: (object/merge
-                                  (object/get (object/get @e "1") "mapValue.fields.properties.mapValue.fields" {})
-                                  (object/mapKeys
-                                    (object/omit (object/get (object/get @e "1") "mapValue.fields" {}) ["id", "type", "properties"])
-                                    (fn k (str/concat "node_" @k)))),
+                        fields: (let ((all (object/merge
+                                            (object/get (object/get @e "1") "mapValue.fields.properties.mapValue.fields" {})
+                                            (object/mapKeys
+                                              (object/omit (object/get (object/get @e "1") "mapValue.fields" {}) ["id", "type", "properties"])
+                                              (fn k (str/concat "node_" @k)))))
+                                       (slots (object/get (array/find (object/get @entity.recipe "nodeKinds") (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))) "slots" [])))
+                                  (if (> (array/len @slots) 0) (object/pick @all @slots) @all)),
                         hidden: []
                       })))))))
         (set @entity.edgeSets
@@ -160,7 +162,7 @@ orbital MigrationAdapterFirestoreOrbital {
                         title: null,
                         span: @path,
                         extra: { documentId: (array/last (str/split @path "/")), documentPath: @path },
-                        fields: (object/get @v "mapValue.fields" {}),
+                        fields: (if (> (array/len (object/get @entity.recipe "edgeSlots")) 0) (object/pick (object/get @v "mapValue.fields" {}) (object/get @entity.recipe "edgeSlots")) (object/get @v "mapValue.fields" {})),
                         hidden: []
                       })))))))
         (set @entity.sets (array/concat @entity.docSets @entity.nodeSets @entity.edgeSets))
@@ -294,7 +296,7 @@ orbital MigrationAdapterFirestoreOrbital {
     config {
       recipes : [FirestoreRecipe] = []
         @label "Recipes"
-        @description "One recipe per adapter id: documentUnit and documentKind make each document one unit; nodesField names the map of nodes and nodeKinds names the unit kind of each node type (a node type left out is not emitted); edgesField names the list of relationships and edgeKind its unit kind. An empty field name turns that part off."
+        @description "One recipe per adapter id: documentUnit and documentKind make each document one unit; nodesField names the map of nodes and nodeKinds names the unit kind of each node type (a node type left out is not emitted); edgesField names the list of relationships and edgeKind its unit kind. An empty field name turns that part off. documentSlots, edgeSlots and a node kind's slots name the fields that become slots; an empty list keeps every field, so a field no profile maps is ledgered by the job."
         @synonyms "document recipes, node kinds, source shapes"
         @tier "domain"
       sourceOrigin : url = "https://firestore.googleapis.com"
