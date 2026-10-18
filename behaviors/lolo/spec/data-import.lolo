@@ -1,0 +1,17 @@
+app data-import-spec [
+  version: "1.0.0",
+  description: "Design contract for a staged data import: a batch never reports a negative row count."
+]
+
+orbital DataImportSpec {
+  expects entity ImportBatch [persistent] {
+    id : string!
+    sourceName : string
+    status : "uploaded" | "staged" | "confirmed" | "failed"
+    rowCount : number
+    errorCount : number
+    mappingJson : string
+    createdAt : number
+    @invariant (>= @entity.rowCount 0)
+  }
+}

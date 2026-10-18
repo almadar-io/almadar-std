@@ -46,13 +46,14 @@ describe('xml/valid source contract', () => {
     expect(getOperatorRunsOn('xml/valid')).toBeUndefined();
   });
 
-  it('control: xml/parse keeps its two-argument declared-shape contract', () => {
+  it('control: xml/parse keeps its declared-shape contract plus the compiler-written listPaths', () => {
     const operator = XML_OPERATORS['xml/parse'];
-    expect([operator.minArity, operator.maxArity]).toEqual([2, 2]);
+    expect([operator.minArity, operator.maxArity]).toEqual([2, 3]);
     expect(operator.returnType).toEqual(SHAPE);
     expect(operator.params?.map(({ name, type, optional }) => ({ name, type, optional: optional === true }))).toEqual([
       { name: 's', type: 'string', optional: false },
       { name: 'shape', type: SHAPE, optional: false },
+      { name: 'listPaths', type: { kind: 'array', of: { kind: 'array', of: 'string' } }, optional: true },
     ]);
     expect(operator.hasSideEffects).toBe(false);
     expect(getOperatorRunsOn('xml/parse')).toBeUndefined();

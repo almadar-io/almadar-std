@@ -11,9 +11,13 @@ orbital ApprovalGateSpec {
     subjectLabel : string
     subjectId : string
     requestedBy : string
-    status : "pending" | "approved" | "denied"
+    status : "pending" | "approved" | "denied" | "escalated"
     reviewer : string
+    requestedAt : number
+    decidedAt : number
+    escalatedAt : number
     notes : string
+    @invariant (or (and (!= @entity.status "approved") (!= @entity.status "denied")) (> @entity.decidedAt 0))
   }
   expects trait ApprovalGateReview {
     state idle { OPEN -> loading }

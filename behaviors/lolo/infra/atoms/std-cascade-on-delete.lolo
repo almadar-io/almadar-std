@@ -5,7 +5,7 @@ app std-cascade-on-delete [
 orbital CascadeOnDeleteOrbital {
     type ParentDeleted = Event { data : @entity @config.parentEntity } "Rename via traitOverrides.events to the upstream parent-deleted event (e.g. ContactDeleted). `data.id` carries the parent's primary key."
 
-    type DepsLoaded = Event { data : [@entity @config.dependentEntity] } "Internal: dependent rows fetched for the deleted parent."
+    type DepsLoaded = Event { data : [@entity @config.dependentEntity]! } "Internal: dependent rows fetched for the deleted parent."
 
     type CascadeStepped = Event { id : string } "Internal: one dependent deleted; drives the next loop pass."
 
@@ -67,7 +67,7 @@ orbital CascadeOnDeleteOrbital {
         parentId : string
       }
       DepsLoaded {
-        data : [@entity @config.dependentEntity]
+        data : [@entity @config.dependentEntity]!
       }
       CascadeStepped {
         id : string
@@ -83,7 +83,7 @@ orbital CascadeOnDeleteOrbital {
         data : @entity @config.parentEntity
       }
       DepsLoaded {
-        data : [@entity @config.dependentEntity]
+        data : [@entity @config.dependentEntity]!
       }
       CascadeStepped {
         id : string

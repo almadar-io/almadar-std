@@ -10,7 +10,7 @@
 
 import { SEMANTIC_STRING_PATTERNS } from '@almadar/core';
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, STRING, fn, list, rec, shape, tv, union } from '../signature.js';
+import { BOOLEAN, STRING, list, rec, shape, tv, union } from '../signature.js';
 
 /**
  * Validate module operators.
@@ -299,12 +299,12 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-validate',
     minArity: 2,
     maxArity: 2,
-    description: 'Run multiple validation rules, return { valid, errors }',
+    description: 'Run validation rules by field over a value, return { valid, errors } with one `field: rule validation failed` per broken rule. The rules are read as data: `{ field: [[rule, args…], …] }`. Rules: required string number boolean email minLength maxLength min max range pattern oneOf; an unknown rule is skipped',
     hasSideEffects: false,
     returnType: shape({ valid: BOOLEAN, errors: list(STRING) }),
     params: [
       { name: 'value', type: tv('T'), description: 'Value or object to validate' },
-      { name: 'rules', type: union(rec('V'), fn([tv('T')], BOOLEAN)), description: 'Validation rules by field (orbital-core takes a predicate function instead)' },
+      { name: 'rules', type: rec('V'), description: 'Validation rules by field; a predicate function is not accepted' },
     ],
     example: '["validate/check", {"name": "Ann", "email": "ann@example.com", "age": 20}, {"name": [["required"], ["minLength", 2], ["maxLength", 50]], "email": [["required"], ["email"]], "age": [["number"]]}]',
   },

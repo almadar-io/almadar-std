@@ -1181,7 +1181,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1,
     maxArity: 2,
     description:
-      'A bare secret knob checks the signed-in user credential; { credential: knob, scope: app | user } explicitly selects a scope. App checks need no viewer and treat absent or empty values as disconnected. User checks require a signed-in viewer and never fall back to app credentials. Success is { connected }; the credential value is never readable.',
+      'A bare secret knob checks the signed-in user credential; { credential: knob, scope: app | user } explicitly selects a scope. App checks need no viewer and treat absent or empty values as disconnected. User checks require a signed-in viewer and never fall back to app credentials. Success is { connected, label }: label is the non-secret account name stored beside the credential (the email it was signed in as), empty text when it has none; the credential value is never readable.',
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'void',
@@ -1195,7 +1195,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
     ],
     example: '["credential-status", { "credential": "@config.apiKey", "scope": "app" }, { "emit": { "success": "STATUS_KNOWN" } }]',
-    effect: { kind: 'credential-status', produces: shape({ connected: BOOLEAN }) },
+    effect: { kind: 'credential-status', produces: shape({ connected: BOOLEAN, label: STRING }) },
   },
   'credential-forget': {
     module: 'core',
@@ -1203,7 +1203,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1,
     maxArity: 2,
     description:
-      'Drop the signed-in viewer\'s stored credential named by a secret knob; the success payload is { connected: false }. Fails when nobody is signed in.',
+      'Drop the signed-in viewer\'s stored credential named by a secret knob; the success payload is { connected: false, label: "" }. Fails when nobody is signed in.',
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'void',
@@ -1217,7 +1217,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
     ],
     example: '["credential-forget", "@config.googleToken", { "emit": { "success": "DISCONNECTED" } }]',
-    effect: { kind: 'credential-forget', produces: shape({ connected: BOOLEAN }) },
+    effect: { kind: 'credential-forget', produces: shape({ connected: BOOLEAN, label: STRING }) },
   },
   'credential-list': {
     module: 'core',
@@ -1332,15 +1332,14 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   'credential-rotate': {
     module: 'core',
     category: 'effect',
-    minArity: 1,
-    maxArity: 2,
+    minArity: 0,
+    maxArity: 1,
     description:
-      "Re-encrypt every stored credential row under the current master key. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { rotated, alreadyCurrent, unreadable }.",
+      "Re-encrypt every stored credential row under the current master key. It takes no request, only the optional options. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { rotated, alreadyCurrent, unreadable }.",
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'void',
     params: [
-      { name: 'request', type: openShape({}), description: 'An empty request object' },
       {
         name: 'options',
         type: HOST_CALL_ENVELOPE,
@@ -1348,7 +1347,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         optional: true,
       },
     ],
-    example: '["credential-rotate", {}, { "emit": { "success": "ROTATED" } }]',
+    example: '["credential-rotate", { "emit": { "success": "ROTATED" } }]',
     effect: { kind: 'credential-rotate', produces: shape({ rotated: NUMBER, alreadyCurrent: NUMBER, unreadable: NUMBER }) },
   },
   'oauth-authorize': {
@@ -1357,7 +1356,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 2,
     maxArity: 3,
     description:
-      'Start an OAuth authorization for a client: (oauth-authorize CLIENT { redirectUri, scope?, subject?, params? } { emit }). The state and the PKCE verifier are drawn from the host CSPRNG (journaled); the pending grant, verifier included, stays with the host and is consumed once by an oauth-client connect or code. A client described by an issuer needs its discovery to have run first. The success payload is { authUrl, state }; the failure payload is { error, code, reason }.',
+      'Start an OAuth authorization for a client: (oauth-authorize CLIENT { redirectUri, scope?, subject?, params? } { emit }). The state and the PKCE verifier are drawn from the host CSPRNG (journaled); the pending grant, verifier included, stays with the host and is consumed once by an oauth-client connect or code. A client described by an issuer needs its discovery to have run first. A host that can open the consent page for the person (a browser extension) does so and returns the authorization code it got in code; every other host answers code as empty text and the program carries authUrl to the person. The success payload is { authUrl, state, code }; the failure payload is { error, code, reason }.',
     hasSideEffects: true,
     runsOn: 'server',
     returnType: 'void',
@@ -1376,7 +1375,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
     ],
     example: '["oauth-authorize", { "tag": "google", "mode": "real", "issuer": "@config.issuer", "clientId": "@config.id", "clientSecret": "@config.secret", "clientAuth": "post" }, { "redirectUri": "https://app.example.com/cb", "scope": ["openid"] }, { "emit": { "success": "AUTH_URL" } }]',
-    effect: { kind: 'oauth-authorize', produces: shape({ authUrl: STRING, state: STRING }) },
+    effect: { kind: 'oauth-authorize', produces: shape({ authUrl: STRING, state: STRING, code: STRING }) },
   },
   'oauth-connection-status': {
     module: 'core',

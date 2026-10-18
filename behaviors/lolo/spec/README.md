@@ -14,6 +14,13 @@ Flow: spec → `almadar-std` atom → (organism) → `almadar-behaviors` spec �
 | `label-capture.lolo` | `std-ml-label-capture` |
 | `gallery.lolo` | `std-gallery` |
 | `audit-entry.lolo` | any program with the audit row (`std-audit-capture`, `std-document-mgmt`) |
+| `throttle.lolo` | `std-throttle` (bound; proves `open ⇒ suppressed = 0`) |
+| `cooldown.lolo` | `std-cooldown` (bound; proves the remaining time is never negative) |
+| `circuit-breaker.lolo` | `std-circuit-breaker` (not bound: `std-api-gateway` composes it under another trait name, G-ORB-378; holds when bound in a scratch copy) |
+| `rate-limiter.lolo` | `std-rate-limiter` (not bound, same reason; holds when bound in a scratch copy) |
+| `score.lolo` | `std-score` (bound; score never negative) |
+| `lifecycle.lolo` | `std-lifecycle` (bound; a dry run never reaches the writing state) |
+| `data-import.lolo` | `std-data-import` (not bound: it fails `project-friday`'s foreign writer, G-ORB-378) |
 
 One spec per atom: a spec binds to the whole program that imports it, so a spec covering two atoms fails until both are composed.
 
@@ -50,3 +57,7 @@ Each line below, changed in the spec (or the provider), makes `orb validate` fai
 | `[runtime, local]` in `gallery` | `ORB_S_EXPECTATION_PROVIDER_MISMATCH` |
 | `ApiKeyRecord [runtime]` in `api-keys` | `ORB_S_EXPECTATION_PROVIDER_MISMATCH` |
 | `CAPTURE -> done` in `label-capture` | `ORB_S_EXPECTATION_UNSATISFIED` |
+
+## Proof specs
+
+`@invariant` and `@holds` lines make `orb validate` prove the program keeps them (`docs/Almadar_LOLO_Spec_Proposal.md` §7). A bound spec is imposed on every composer, so bind a proof spec in an atom only when every organism that composes it keeps its trait name and entity (G-ORB-378). `retry.lolo` and `approval-gate.lolo` carry propositions but stay unbound for that reason. Proofs are over the configured program, so an atom's default knobs decide which transitions are checked (G-ORB-376).

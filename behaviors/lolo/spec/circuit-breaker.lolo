@@ -1,0 +1,12 @@
+app circuit-breaker-spec [
+  version: "1.0.0",
+  description: "Design contract for a circuit breaker: in every state the threshold is positive and the failure count is not negative."
+]
+
+orbital CircuitBreakerSpec {
+  expects trait ServiceNodeCircuitBreaker {
+    state closed @holds (and (> @entity.threshold 0) (>= @entity.failureCount 0))
+    state open @holds (and (> @entity.threshold 0) (>= @entity.failureCount 0))
+    state halfOpen @holds (and (> @entity.threshold 0) (>= @entity.failureCount 0))
+  }
+}

@@ -3,6 +3,9 @@
  *
  * Provides date manipulation, formatting, and comparison functions.
  *
+ * Every operator here reads and writes UTC, on every execution path: the host's timezone never changes a result.
+ * A value shown in a viewer's zone needs a format operator that names its timezone explicitly.
+ *
  * Time units: 'year', 'month', 'week', 'day', 'hour', 'minute', 'second', 'ms'
  * Format tokens: 'YYYY', 'MM', 'DD', 'HH', 'mm', 'ss', 'ddd', 'MMM'
  *
@@ -32,7 +35,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 0,
     maxArity: 0,
-    description: 'Today at midnight (local time)',
+    description: 'Today at midnight UTC (the host timezone is never read)',
     hasSideEffects: false,
     returnType: 'number',
     params: [],
@@ -70,7 +73,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 2,
     maxArity: 2,
-    description: 'Format timestamp to string',
+    description: 'Format timestamp to string, in UTC',
     hasSideEffects: false,
     returnType: 'string',
     params: [
@@ -84,7 +87,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'Get year from timestamp',
+    description: 'Get year from timestamp (UTC)',
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
@@ -95,7 +98,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'Get month from timestamp (1-12)',
+    description: 'Get month from timestamp (UTC, 1-12)',
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
@@ -106,7 +109,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'Get day of month from timestamp (1-31)',
+    description: 'Get day of month from timestamp (UTC, 1-31)',
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
@@ -117,7 +120,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'Get day of week (0=Sunday, 6=Saturday)',
+    description: 'Get day of week (UTC, 0=Sunday, 6=Saturday)',
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
@@ -128,7 +131,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'Get hour from timestamp (0-23)',
+    description: 'Get hour from timestamp (UTC, 0-23)',
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
@@ -139,7 +142,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'Get minute from timestamp (0-59)',
+    description: 'Get minute from timestamp (UTC, 0-59)',
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
@@ -150,7 +153,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'Get second from timestamp (0-59)',
+    description: 'Get second from timestamp (UTC, 0-59)',
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
@@ -161,7 +164,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 3,
     maxArity: 3,
-    description: 'Add time to timestamp',
+    description: 'Add time to timestamp (calendar units in UTC)',
     hasSideEffects: false,
     returnType: 'number',
     params: [
@@ -176,7 +179,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 3,
     maxArity: 3,
-    description: 'Subtract time from timestamp',
+    description: 'Subtract time from timestamp (calendar units in UTC)',
     hasSideEffects: false,
     returnType: 'number',
     params: [
@@ -206,7 +209,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 2,
     maxArity: 2,
-    description: 'Get start of time period',
+    description: 'Get start of time period (UTC)',
     hasSideEffects: false,
     returnType: 'number',
     params: [
@@ -220,7 +223,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 2,
     maxArity: 2,
-    description: 'Get end of time period',
+    description: 'Get end of time period (UTC)',
     hasSideEffects: false,
     returnType: 'number',
     params: [
@@ -277,7 +280,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 2,
     maxArity: 3,
-    description: 'Check if timestamps are same (optionally by unit)',
+    description: 'Check if timestamps are same (optionally by unit, compared in UTC)',
     hasSideEffects: false,
     returnType: 'boolean',
     params: [
@@ -314,7 +317,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'Check if timestamp is today',
+    description: 'Check if timestamp falls on today\'s UTC date',
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],

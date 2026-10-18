@@ -5,8 +5,8 @@ app std-social-graph [
 type SocialStrings = [string]
 type SocialBadge = { id : string, label : string, kind : string }
 type SocialBadges = [SocialBadge]
-type SocialMemberSet = { memberId : string, names : [string], completed : number }
-type SocialMemberSets = [SocialMemberSet]
+type SocialMemberStat = { memberId : string, completed : number, convergencePct : number }
+type SocialMemberStats = [SocialMemberStat]
 type SocialPeer = { peerRef : string, handle : string, conceptsCompleted : number, convergencePct : number, activeNow : boolean }
 type SocialPeers = [SocialPeer]
 type SocialViewBadge = { id : string, label : string, kind : string, active : boolean }
@@ -19,8 +19,7 @@ orbital SocialGraphOrbital {
     lastSeenOnNode : number @description "Epoch milliseconds of the last visit." @synonyms "last seen, presence" = 0
     reqLearner : string @intrinsic = ""
     reqKey : string @intrinsic = ""
-    reqNames : [string] @intrinsic
-    reqSets : [SocialMemberSet] @intrinsic
+    reqStats : [SocialMemberStat] @intrinsic
     reqMembers : [NodePresence] @intrinsic
     reqRandom : string @intrinsic = ""
   }
@@ -58,7 +57,7 @@ orbital SocialGraphOrbital {
     reqLabels : [string] @intrinsic
     reqScore : number @intrinsic = 0
     reqReason : string @intrinsic = ""
-    scratchConn : [SocialConnection] @intrinsic
+    scratchConn : [SocialConnection] @intrinsic = []
     scratchStatus : string @intrinsic = ""
     resultMessage : string @intrinsic = ""
   }
@@ -101,8 +100,7 @@ orbital SocialGraphOrbital {
       SOCIAL_PEERS -> loadingMembers when (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1)))))
         (set @entity.reqLearner ?learnerId)
         (set @entity.reqKey ?nodeKey)
-        (set @entity.reqNames ?callerNames)
-        (set @entity.reqSets (if (= ?memberSets null) (json/parse "[]" SocialMemberSets) ?memberSets))
+        (set @entity.reqStats (if (= ?memberStats null) (json/parse "[]" SocialMemberStats) ?memberStats))
         (fetch NodePresence { filter: ["and", ["=", (object/get @entity nodeKey), ?nodeKey], [">=", (object/get @entity lastSeenOnNode), (- @now (* @config.peerWindowDays 86400000))]], emit: { success: PresenceLoaded, failure: PeerFailed } })
       SOCIAL_PEERS -> idle when (not (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1))))))
         (emit SOCIAL_REJECTED { reason: "bad-node-key" })
@@ -146,18 +144,16 @@ orbital SocialGraphOrbital {
           peers: (array/map (array/sort
             (array/map (array/range 0 (array/len @entity.reqMembers))
               (fn i (let ((vm (array/nth @entity.reqMembers @i))
-                          (vset (array/find @entity.reqSets (fn s (= (object/get @s memberId "") (object/get (array/nth @entity.reqMembers @i) memberId ""))))))
-                (let ((vnames (array/unique (object/get @vset names (json/parse "[]" SocialStrings))))
-                      (vcaller (array/unique @entity.reqNames)))
-                  (let ((vinter (array/len (array/filter @vcaller (fn n (array/includes @vnames @n))))))
-                    {
-                      peerRef: (str/slice @entity.reqRandom (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3))))
-                      handle: (str/concat "peer-" (str/slice (hash/sha256 (object/get @vm memberId "") "hex") 0 6))
-                      conceptsCompleted: (object/get @vset completed 0)
-                      convergencePct: (if (or (= (array/len @vcaller) 0) (= (array/len @vnames) 0)) 0 (math/round (* 100 (/ @vinter (- (+ (array/len @vcaller) (array/len @vnames)) @vinter)))))
-                      activeNow: (<= (- @now (object/get @vm lastSeenOnNode 0)) (* @config.activeNowMinutes 60000))
-                      rank: (+ (* 2 (if (or (= (array/len @vcaller) 0) (= (array/len @vnames) 0)) 0 (math/round (* 100 (/ @vinter (- (+ (array/len @vcaller) (array/len @vnames)) @vinter)))))) (if (<= (- @now (object/get @vm lastSeenOnNode 0)) (* @config.activeNowMinutes 60000)) 1 0))
-                    })))))
+                          (vstat (array/find @entity.reqStats (fn s (= (object/get @s memberId "") (object/get (array/nth @entity.reqMembers @i) memberId ""))))))
+                (let ((vpct (object/get @vstat convergencePct 0)))
+                  {
+                    peerRef: (str/slice @entity.reqRandom (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3))))
+                    handle: (str/concat "peer-" (str/slice (hash/sha256 (object/get @vm memberId "") "hex") 0 6))
+                    conceptsCompleted: (object/get @vstat completed 0)
+                    convergencePct: @vpct
+                    activeNow: (<= (- @now (object/get @vm lastSeenOnNode 0)) (* @config.activeNowMinutes 60000))
+                    rank: (+ (* 2 @vpct) (if (<= (- @now (object/get @vm lastSeenOnNode 0)) (* @config.activeNowMinutes 60000)) 1 0))
+                  }))))
             rank desc) (fn p { peerRef: (object/get @p peerRef ""), handle: (object/get @p handle ""), conceptsCompleted: (object/get @p conceptsCompleted 0), convergencePct: (object/get @p convergencePct 0), activeNow: (object/get @p activeNow false) }))
         })
       PeerFailed -> idle
@@ -192,7 +188,7 @@ orbital SocialGraphOrbital {
       PresenceStored
         @tier "internal"
       PresenceLoaded {
-        data : [NodePresence]
+        data : [NodePresence]!
       }
         @tier "internal"
       TokensDrawn {
@@ -218,15 +214,14 @@ orbital SocialGraphOrbital {
       SOCIAL_PEERS -> external {
         learnerId : string!
         nodeKey : string!
-        callerNames : [string]!
-        memberSets : [SocialMemberSet]
+        memberStats : [SocialMemberStat]
       }
-        @description "List the peers active on a node. callerNames is the caller's canonical concept names and memberSets holds the same for each member to compare."
+        @description "List the peers active on a node. memberStats holds, for each member, how many concepts they hold and the overlap percentage with the caller, computed by the caller's side; concept names never cross this event."
         @synonyms "find peers, who else is here, match learners"
         @tier "domain"
       PresenceStored
       PresenceLoaded {
-        data : [NodePresence]
+        data : [NodePresence]!
       }
       TokensDrawn {
         value : string!
@@ -567,7 +562,7 @@ orbital SocialGraphOrbital {
       }
         @tier "internal"
       PendingLoaded {
-        data : [SocialPending]
+        data : [SocialPending]!
       }
         @tier "internal"
       PendingDeleted
@@ -575,7 +570,7 @@ orbital SocialGraphOrbital {
       TokenDeleted
         @tier "internal"
       TokenLoaded {
-        data : [PeerToken]
+        data : [PeerToken]!
       }
         @tier "internal"
       BadgesReady {
@@ -587,7 +582,7 @@ orbital SocialGraphOrbital {
       }
         @tier "internal"
       ConnLoaded {
-        data : [SocialConnection]
+        data : [SocialConnection]!
       }
         @tier "internal"
       ConnArchived
@@ -595,7 +590,7 @@ orbital SocialGraphOrbital {
       ConnReady
         @tier "internal"
       MessagesLoaded {
-        data : [SocialMessage]
+        data : [SocialMessage]!
       }
         @tier "internal"
       BadgeStored
@@ -681,12 +676,12 @@ orbital SocialGraphOrbital {
         badgeLabel : string
       }
       PendingLoaded {
-        data : [SocialPending]
+        data : [SocialPending]!
       }
       PendingDeleted
       TokenDeleted
       TokenLoaded {
-        data : [PeerToken]
+        data : [PeerToken]!
       }
       BadgesReady {
         labels : [string]!
@@ -695,12 +690,12 @@ orbital SocialGraphOrbital {
         id : string!
       }
       ConnLoaded {
-        data : [SocialConnection]
+        data : [SocialConnection]!
       }
       ConnArchived
       ConnReady
       MessagesLoaded {
-        data : [SocialMessage]
+        data : [SocialMessage]!
       }
       BadgeStored
       MessageCreated {

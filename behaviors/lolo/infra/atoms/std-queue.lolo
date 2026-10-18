@@ -41,11 +41,11 @@ orbital QueueOrbital {
 
     type EnqCreated = Event { id : string! } "Internal: the job row exists."
 
-    type EnqAheadLoaded = Event { data : [@entity @config.jobEntity] } "Internal: pending jobs ahead of the new job."
+    type EnqAheadLoaded = Event { data : [@entity @config.jobEntity]! } "Internal: pending jobs ahead of the new job."
 
     type EnqFailed = Event { error : string, code : string } "Internal: an enqueue step failed."
 
-    type CancelJobLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the job to cancel."
+    type CancelJobLoaded = Event { data : [@entity @config.jobEntity]! } "Internal: the job to cancel."
 
     type CancelClaimed = Event { id : string! } "Internal: the cancel claim won."
 
@@ -53,21 +53,21 @@ orbital QueueOrbital {
 
     type CancelFailed = Event { error : string, code : string } "Internal: a cancel step failed."
 
-    type DeqTopLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the highest-priority eligible job."
+    type DeqTopLoaded = Event { data : [@entity @config.jobEntity]! } "Internal: the highest-priority eligible job."
 
-    type DeqCandLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the oldest eligible job at that priority."
+    type DeqCandLoaded = Event { data : [@entity @config.jobEntity]! } "Internal: the oldest eligible job at that priority."
 
     type DeqClaimed = Event { id : string! } "Internal: the claim won."
 
     type DeqMarked = Event { id : string!, attempts : number!, leaseExpiresAt : number! } "Internal: the claimed job carries its lease."
 
-    type DeqSlotLoaded = Event { data : [QueueClaim] } "Internal: the claim row that holds the slot this consumer lost."
+    type DeqSlotLoaded = Event { data : [QueueClaim]! } "Internal: the claim row that holds the slot this consumer lost."
 
     type DeqHealed = Event { id : string! } "Internal: a half-written settle was finished."
 
     type DeqFailed = Event { error : string, code : string } "Internal: a dequeue step failed."
 
-    type FinJobLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the job being settled."
+    type FinJobLoaded = Event { data : [@entity @config.jobEntity]! } "Internal: the job being settled."
 
     type FinWon = Event { id : string! } "Internal: the settle claim won."
 
@@ -75,9 +75,9 @@ orbital QueueOrbital {
 
     type FinFailed = Event { error : string, code : string } "Internal: a settle step failed."
 
-    type StatJobLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the job asked about."
+    type StatJobLoaded = Event { data : [@entity @config.jobEntity]! } "Internal: the job asked about."
 
-    type SizeLoaded = Event { data : [@entity @config.jobEntity] } "Internal: the live jobs of the queue."
+    type SizeLoaded = Event { data : [@entity @config.jobEntity]! } "Internal: the live jobs of the queue."
 
     type InspectFailed = Event { error : string, code : string } "Internal: an inspect step failed."
 
@@ -191,14 +191,14 @@ orbital QueueOrbital {
         id : string!
       }
       EnqAheadLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       EnqFailed {
         error : string
         code : string
       }
       CancelJobLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       CancelClaimed {
         id : string!
@@ -231,14 +231,14 @@ orbital QueueOrbital {
         id : string!
       }
       EnqAheadLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       EnqFailed {
         error : string
         code : string
       }
       CancelJobLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       CancelClaimed {
         id : string!
@@ -378,10 +378,10 @@ orbital QueueOrbital {
         @description "A queue storage operation failed."
         @tier "domain"
       DeqTopLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       DeqCandLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       DeqClaimed {
         id : string!
@@ -392,7 +392,7 @@ orbital QueueOrbital {
         leaseExpiresAt : number!
       }
       DeqSlotLoaded {
-        data : [QueueClaim]
+        data : [QueueClaim]!
       }
       DeqHealed {
         id : string!
@@ -410,10 +410,10 @@ orbital QueueOrbital {
         @description "Lease the next eligible job: highest priority, then oldest; an expired lease makes a job eligible again."
         @tier "domain"
       DeqTopLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       DeqCandLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       DeqClaimed {
         id : string!
@@ -424,7 +424,7 @@ orbital QueueOrbital {
         leaseExpiresAt : number!
       }
       DeqSlotLoaded {
-        data : [QueueClaim]
+        data : [QueueClaim]!
       }
       DeqHealed {
         id : string!
@@ -538,7 +538,7 @@ orbital QueueOrbital {
         @description "A queue storage operation failed."
         @tier "domain"
       FinJobLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       FinWon {
         id : string!
@@ -568,7 +568,7 @@ orbital QueueOrbital {
         @description "Settle a leased job as failed."
         @tier "domain"
       FinJobLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       FinWon {
         id : string!
@@ -666,10 +666,10 @@ orbital QueueOrbital {
         @description "A queue storage operation failed."
         @tier "domain"
       StatJobLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       SizeLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       InspectFailed {
         error : string
@@ -689,10 +689,10 @@ orbital QueueOrbital {
         @description "Count a queue's pending and processing jobs."
         @tier "domain"
       StatJobLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       SizeLoaded {
-        data : [@entity @config.jobEntity]
+        data : [@entity @config.jobEntity]!
       }
       InspectFailed {
         error : string

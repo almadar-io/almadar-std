@@ -11,9 +11,11 @@ orbital RetrySpec {
     dueAt : number
   }
   expects trait Retry {
+    state idle
+    state running @holds (>= @entity.attempt 1)
+    state backoff @holds (>= @entity.attempt 1)
     state idle { START -> running }
     state running { FAILED -> backoff }
-    state backoff
     emits { ATTEMPT RETRY_SCHEDULED COMPLETED GAVE_UP }
   }
   expects page "/retry" -> Retry

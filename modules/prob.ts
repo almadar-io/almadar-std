@@ -4,6 +4,10 @@
  * Provides distribution sampling, Bayesian inference via rejection sampling,
  * and statistical summary functions.
  *
+ * The random stream is Mulberry32. `prob/seed` fixes it; without one, a dispatch seeds the stream from one journaled
+ * `Random` ask, so replaying the journal draws the same values. A pure evaluation with neither (`orb evaluate`,
+ * `evaluateMany`) raises an error naming `prob/seed`.
+ *
  * @packageDocumentation
  */
 
@@ -22,7 +26,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-prob',
     minArity: 1,
     maxArity: 1,
-    description: 'Set seeded PRNG for deterministic probabilistic sampling',
+    description: 'Set seeded PRNG for deterministic probabilistic sampling; without it a dispatch seeds the stream from one journaled Random ask and a pure evaluation raises',
     hasSideEffects: true,
     runsOn: 'any',
     returnType: 'void',

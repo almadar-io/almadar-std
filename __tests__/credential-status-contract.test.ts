@@ -22,7 +22,7 @@ describe('credential-status scope contract', () => {
 
   it('keeps server residence, arity, payload and user-only forget unchanged', () => {
     expect(STD_OPERATORS['credential-status']).toMatchObject({ minArity: 1, maxArity: 2, runsOn: 'server', returnType: 'void' });
-    expect(STD_OPERATORS['credential-status'].effect?.produces).toEqual({ kind: 'object', fields: { connected: 'boolean' } });
+    expect(STD_OPERATORS['credential-status'].effect?.produces).toEqual({ kind: 'object', fields: { connected: 'boolean', label: 'string' } });
     expect(STD_OPERATORS['credential-forget'].params?.[0]?.type).toBe('string');
     expect(STD_OPERATORS['credential-forget'].description).toMatch(/signed-in viewer/i);
   });
@@ -31,9 +31,10 @@ describe('credential-status scope contract', () => {
 describe('credential administration effects', () => {
   const admin = ['credential-list', 'credential-set', 'credential-remove', 'credential-test', 'credential-mode', 'credential-rotate'] as const;
 
-  it('are server effects with one request argument, optional routes and the payload the kernel answers', () => {
+  it('are server effects with one request argument (none for rotate), optional routes and the payload the kernel answers', () => {
     for (const name of admin) {
-      expect(STD_OPERATORS[name], name).toMatchObject({ minArity: 1, maxArity: 2, runsOn: 'server', hasSideEffects: true, returnType: 'void' });
+      const arity = name === 'credential-rotate' ? { minArity: 0, maxArity: 1 } : { minArity: 1, maxArity: 2 };
+      expect(STD_OPERATORS[name], name).toMatchObject({ ...arity, runsOn: 'server', hasSideEffects: true, returnType: 'void' });
       expect(STD_OPERATORS[name].effect?.kind).toBe(name);
       expect(canonical.operators[name].params).toEqual(STD_OPERATORS[name].params);
     }

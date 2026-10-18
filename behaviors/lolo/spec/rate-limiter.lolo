@@ -1,0 +1,11 @@
+app rate-limiter-spec [
+  version: "1.0.0",
+  description: "Design contract for a rate limiter: the request count is never negative, open or throttled."
+]
+
+orbital RateLimiterSpec {
+  expects trait RateBucketRateLimiter {
+    state open @holds (>= @entity.count 0)
+    state throttled @holds (>= @entity.count 0)
+  }
+}

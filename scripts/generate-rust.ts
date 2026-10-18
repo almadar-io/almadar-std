@@ -37,7 +37,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-validate': { description: 'Validation utilities', target: ['ts', 'rust'] },
     'std-format': { description: 'Formatting utilities', target: ['ts', 'rust'] },
     'std-i18n': { description: 'Message catalogs', target: ['ts', 'rust'] },
-    'std-prob': { description: 'Probabilistic programming', target: ['ts'] },
+    'std-prob': { description: 'Probabilistic programming', target: ['ts', 'rust'] },
     'std-os': { description: 'OS-level event watchers for system triggers', target: ['ts'] },
     'std-browser': { description: 'Browser device APIs (file picker, clipboard, geolocation) — client host effects', target: ['ts'] },
       'std-composition': { description: 'Behavior composition (compile-time)', target: ['ts', 'rust'] },
@@ -112,7 +112,7 @@ interface CanonicalOperatorEntry {
     pattern?: string;
     /** Enrichment (docs): human title, parameter docs, lolo examples, provenance. */
     title?: string;
-    params?: { name: string; type: unknown; description?: string }[];
+    params?: { name: string; type: unknown; description?: string; optional?: boolean; defaultValue?: unknown; rejectsNull?: boolean }[];
     examples?: string[];
     docsSource?: string;
 }
