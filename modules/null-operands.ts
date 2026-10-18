@@ -2,7 +2,7 @@
  * Null Operands - the operand positions the kernel raises on when the value is null.
  *
  * The kernel keeps null strict: these operators raise on a null operand rather than read it as a default. The table is
- * pinned to the kernel by the shared fixture `null-operands.json` (`@almadar-io/parity`): the kernel test runs every entry
+ * pinned to the kernel by the shared fixture `null-operands.json` (orbital-core): the kernel test runs every entry
  * with a null at its position, and this package's test holds this table equal to the fixture. `orb validate` reads the
  * flag (`rejectsNull` on the declared parameter) and refuses a value that can be missing at such a position.
  *

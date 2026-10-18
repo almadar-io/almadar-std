@@ -6,7 +6,7 @@ app std-llm [
 type LlmImage = { mediaType : string!, data : string! }
 type LlmJob = { stream : boolean, action : string!, attempt : number!, system : string!, user : string!, base : string!, model : string!, temperature : number!, maxTokens : number!, categories : [string], itemIds : [string], callKey : string, images : [LlmImage] }
 type LlmInFlight = { key : string!, httpKey : string! }
-type LlmStreamed = { key : string!, text : string!, inputTokens : number!, outputTokens : number! }
+type LlmStreamed = { key : string!, text : string!, inputTokens : number, outputTokens : number }
 type StreamDelta = { content : string, text : string }
 type StreamChoice = { delta : StreamDelta }
 type StreamUsage = { prompt_tokens : number, completion_tokens : number, input_tokens : number, output_tokens : number, cache_creation_input_tokens : number, cache_read_input_tokens : number }
@@ -244,18 +244,18 @@ orbital LlmOrbital {
         } { key: @payload.job, emit: { success: LLM_CHAT_HTTP_OK, failure: LLM_CHAT_HTTP_FAILED, cancelled: LLM_CHAT_HTTP_CANCELLED, onMessage: LLM_CHAT_STREAM_MSG } })
 
       LLM_CHAT_STREAM_MSG -> idle when (and (= @config.provider "anthropic") (> (str/len (object/get (object/get (json/parse @payload.data StreamEvent) delta {}) text "")) 0))
-        (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key))))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (str/concat (if (= @cur null) "" @cur.text) (object/get (object/get (json/parse @payload.data StreamEvent) delta {}) text "")), inputTokens: (if (= @cur null) 0 @cur.inputTokens), outputTokens: (if (= @cur null) 0 @cur.outputTokens) })))
+        (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key))))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (str/concat (if (= @cur null) "" @cur.text) (object/get (object/get (json/parse @payload.data StreamEvent) delta {}) text "")), inputTokens: (if (= @cur null) null @cur.inputTokens), outputTokens: (if (= @cur null) null @cur.outputTokens) })))
         (emit LLM_GENERATE_DELTA { key: (object/get (json/parse @payload.key LlmJob) callKey ""), delta: (object/get (object/get (json/parse @payload.data StreamEvent) delta {}) text ""), text: (object/get (array/find @entity.streamed (fn c (= @c.key @payload.key))) text "") })
       LLM_CHAT_STREAM_MSG -> idle when (and (= @config.provider "anthropic") (= (str/len (object/get (object/get (json/parse @payload.data StreamEvent) delta {}) text "")) 0))
-        (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key)))) (ev (json/parse @payload.data StreamEvent))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (if (= @cur null) "" @cur.text), inputTokens: (if (= (object/get @ev type "") "message_start") (+ (object/get (object/get (object/get @ev message {}) usage {}) input_tokens 0) (object/get (object/get (object/get @ev message {}) usage {}) cache_creation_input_tokens 0) (object/get (object/get (object/get @ev message {}) usage {}) cache_read_input_tokens 0)) (if (= @cur null) 0 @cur.inputTokens)), outputTokens: (if (= (object/get @ev type "") "message_delta") (object/get (object/get @ev usage {}) output_tokens 0) (if (= @cur null) 0 @cur.outputTokens)) })))
+        (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key)))) (ev (json/parse @payload.data StreamEvent))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (if (= @cur null) "" @cur.text), inputTokens: (if (and (= (object/get @ev type "") "message_start") (!= (object/get (object/get (object/get @ev message {}) usage {}) input_tokens null) null)) (+ (object/get (object/get (object/get @ev message {}) usage {}) input_tokens 0) (object/get (object/get (object/get @ev message {}) usage {}) cache_creation_input_tokens 0) (object/get (object/get (object/get @ev message {}) usage {}) cache_read_input_tokens 0)) (if (= @cur null) null @cur.inputTokens)), outputTokens: (if (and (= (object/get @ev type "") "message_delta") (!= (object/get (object/get @ev usage {}) output_tokens null) null)) (object/get (object/get @ev usage {}) output_tokens 0) (if (= @cur null) null @cur.outputTokens)) })))
       LLM_CHAT_STREAM_MSG -> idle when (and (!= @config.provider "anthropic") (> (str/len (object/get (object/get (array/first (object/get (json/parse @payload.data StreamEvent) choices [])) delta {}) content "")) 0))
-        (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key))))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (str/concat (if (= @cur null) "" @cur.text) (object/get (object/get (array/first (object/get (json/parse @payload.data StreamEvent) choices [])) delta {}) content "")), inputTokens: (if (= @cur null) 0 @cur.inputTokens), outputTokens: (if (= @cur null) 0 @cur.outputTokens) })))
+        (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key))))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (str/concat (if (= @cur null) "" @cur.text) (object/get (object/get (array/first (object/get (json/parse @payload.data StreamEvent) choices [])) delta {}) content "")), inputTokens: (if (= @cur null) null @cur.inputTokens), outputTokens: (if (= @cur null) null @cur.outputTokens) })))
         (emit LLM_GENERATE_DELTA { key: (object/get (json/parse @payload.key LlmJob) callKey ""), delta: (object/get (object/get (array/first (object/get (json/parse @payload.data StreamEvent) choices [])) delta {}) content ""), text: (object/get (array/find @entity.streamed (fn c (= @c.key @payload.key))) text "") })
       LLM_CHAT_STREAM_MSG -> idle when (and (!= @config.provider "anthropic") (= (str/len (object/get (object/get (array/first (object/get (json/parse @payload.data StreamEvent) choices [])) delta {}) content "")) 0))
-        (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key)))) (u (object/get (json/parse @payload.data StreamEvent) usage {}))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (if (= @cur null) "" @cur.text), inputTokens: (if (> (object/get @u prompt_tokens 0) 0) (object/get @u prompt_tokens 0) (if (= @cur null) 0 @cur.inputTokens)), outputTokens: (if (> (object/get @u completion_tokens 0) 0) (object/get @u completion_tokens 0) (if (= @cur null) 0 @cur.outputTokens)) })))
+        (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key)))) (u (object/get (json/parse @payload.data StreamEvent) usage {}))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (if (= @cur null) "" @cur.text), inputTokens: (if (> (object/get @u prompt_tokens 0) 0) (object/get @u prompt_tokens 0) (if (= @cur null) null @cur.inputTokens)), outputTokens: (if (> (object/get @u completion_tokens 0) 0) (object/get @u completion_tokens 0) (if (= @cur null) null @cur.outputTokens)) })))
 
       LLM_CHAT_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (object/get (json/parse @payload.key LlmJob) stream false))
-        (emit LLM_CHAT_CONTENT { job: @payload.key, content: (object/get (array/find @entity.streamed (fn c (= @c.key @payload.key))) text ""), inputTokens: (object/get (array/find @entity.streamed (fn c (= @c.key @payload.key))) inputTokens 0), outputTokens: (object/get (array/find @entity.streamed (fn c (= @c.key @payload.key))) outputTokens 0) })
+        (emit LLM_CHAT_CONTENT { job: @payload.key, content: (object/get (array/find @entity.streamed (fn c (= @c.key @payload.key))) text ""), inputTokens: (object/get (array/find @entity.streamed (fn c (= @c.key @payload.key))) inputTokens null), outputTokens: (object/get (array/find @entity.streamed (fn c (= @c.key @payload.key))) outputTokens null) })
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
         (set @entity.streamed (array/filter @entity.streamed (fn c (!= @c.key @payload.key))))
       LLM_CHAT_HTTP_OK -> idle when (not (and (>= @payload.status 200) (< @payload.status 300) (object/get (json/parse @payload.key LlmJob) stream false)))
@@ -283,8 +283,8 @@ orbital LlmOrbital {
         (emit LLM_CHAT_CONTENT {
           job: @payload.key,
           content: (object/get (object/get (array/first (object/get (json/parse @payload.body OpenaiReply) choices [])) message {}) content ""),
-          inputTokens: (object/get (object/get (json/parse @payload.body OpenaiReply) usage {}) prompt_tokens 0),
-          outputTokens: (object/get (object/get (json/parse @payload.body OpenaiReply) usage {}) completion_tokens 0)
+          inputTokens: (object/get (object/get (json/parse @payload.body OpenaiReply) usage {}) prompt_tokens null),
+          outputTokens: (object/get (object/get (json/parse @payload.body OpenaiReply) usage {}) completion_tokens null)
         })
       LLM_CHAT_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= @config.provider "anthropic") (= (json/parse @payload.body AnthropicReply) null))
         (emit LLM_CHAT_ERROR { job: @payload.key, message: (str/concat (object/get (json/parse @payload.key LlmJob) model "") " returned an unreadable body") })
@@ -295,11 +295,12 @@ orbital LlmOrbital {
             (if (and (= (array/len @blocks) 1) (= (object/get (array/first @blocks) type "") "text"))
               (object/get (array/first @blocks) text "")
               (json/stringify @blocks))),
-          inputTokens: (+
-            (object/get (object/get (json/parse @payload.body AnthropicReply) usage {}) input_tokens 0)
-            (object/get (object/get (json/parse @payload.body AnthropicReply) usage {}) cache_creation_input_tokens 0)
-            (object/get (object/get (json/parse @payload.body AnthropicReply) usage {}) cache_read_input_tokens 0)),
-          outputTokens: (object/get (object/get (json/parse @payload.body AnthropicReply) usage {}) output_tokens 0)
+          inputTokens: (if (= (object/get (object/get (json/parse @payload.body AnthropicReply) usage {}) input_tokens null) null) null
+            (+
+              (object/get (object/get (json/parse @payload.body AnthropicReply) usage {}) input_tokens 0)
+              (object/get (object/get (json/parse @payload.body AnthropicReply) usage {}) cache_creation_input_tokens 0)
+              (object/get (object/get (json/parse @payload.body AnthropicReply) usage {}) cache_read_input_tokens 0))),
+          outputTokens: (object/get (object/get (json/parse @payload.body AnthropicReply) usage {}) output_tokens null)
         })
       LLM_CHAT_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (!= @config.provider "anthropic"))
         (let ((parsed (json/parse @payload.body OpenaiErrorBody)))
@@ -360,7 +361,18 @@ orbital LlmOrbital {
       LLM_CHAT_CONTENT -> idle when (= (object/get (json/parse @payload.job LlmJob) action "") "generate")
         (emit LLM_GENERATE_RESULT {
           content: @payload.content,
-          usage: { promptTokens: @payload.inputTokens, completionTokens: @payload.outputTokens, totalTokens: (+ @payload.inputTokens @payload.outputTokens) }
+          usage: {
+            promptTokens: (if (= @payload.inputTokens null) 0 @payload.inputTokens),
+            completionTokens: (if (= @payload.outputTokens null) 0 @payload.outputTokens),
+            totalTokens: (+ (if (= @payload.inputTokens null) 0 @payload.inputTokens) (if (= @payload.outputTokens null) 0 @payload.outputTokens))
+          }
+        })
+        (emit LLM_USAGE_REPORTED {
+          provider: @config.provider,
+          model: (object/get (json/parse @payload.job LlmJob) model ""),
+          action: "generate",
+          inputTokens: @payload.inputTokens,
+          outputTokens: @payload.outputTokens
         })
       LLM_CHAT_CONTENT -> idle when (!= (object/get (json/parse @payload.job LlmJob) action "") "generate")
         (emit LLM_CHAT_STRIPPED {
@@ -370,6 +382,13 @@ orbital LlmOrbital {
               (let ((i @index))
                 (let ((seg (if (> @i 0) (str/trimStart @p) @p)))
                   (if (< @i (- (array/len @parts) 1)) (array/first (str/split @seg "<think>")) @seg))))) "")))
+        })
+        (emit LLM_USAGE_REPORTED {
+          provider: @config.provider,
+          model: (object/get (json/parse @payload.job LlmJob) model ""),
+          action: (object/get (json/parse @payload.job LlmJob) action ""),
+          inputTokens: @payload.inputTokens,
+          outputTokens: @payload.outputTokens
         })
 
       LLM_CHAT_STRIPPED -> idle
@@ -666,6 +685,13 @@ orbital LlmOrbital {
                     }
                   }))))))
         })
+        (emit LLM_USAGE_REPORTED {
+          provider: @config.provider,
+          model: (object/get (json/parse @payload.key ToolsSession) model ""),
+          action: "call-tools",
+          inputTokens: (object/get (object/get (json/parse @payload.body ToolsReply) usage {}) prompt_tokens null),
+          outputTokens: (object/get (object/get (json/parse @payload.body ToolsReply) usage {}) completion_tokens null)
+        })
 
       LLM_TOOLS_TURN -> idle when (= (array/len (object/get (array/last (object/get (json/parse @payload.session ToolsSession) messages [])) tool_calls [])) 0)
         (emit LLM_TOOLS_STEP { activity: (array/last (object/get (json/parse @payload.session ToolsSession) steps [])) })
@@ -797,6 +823,12 @@ orbital LlmOrbital {
           key: (object/get (json/parse @payload.key EmbedJob) callKey ""),
           model: (object/get (json/parse @payload.key EmbedJob) model "")
         })
+        (emit LLM_USAGE_REPORTED {
+          provider: @config.embedProvider,
+          model: (object/get (json/parse @payload.key EmbedJob) model ""),
+          action: "embed",
+          inputTokens: (object/get (object/get (json/parse @payload.body EmbedReply) usage {}) prompt_tokens null)
+        })
       LLM_EMBED_ERROR -> idle when (or (str/includes (str/lower @payload.message) "context length") (str/includes (str/lower @payload.message) "maximum input length") (str/includes (str/lower @payload.message) "reduce the length of the input") (str/includes (str/lower @payload.message) "input_tokens"))
         (emit LLM_FAILED { code: null, message: @payload.message, key: (object/get (json/parse @payload.job EmbedJob) callKey "") })
       LLM_EMBED_ERROR -> idle when (and (= @payload.status 429) (>= (object/get (json/parse @payload.job EmbedJob) limited 0) 3)
@@ -825,6 +857,16 @@ orbital LlmOrbital {
         @description "The generated text and its token usage; the usage is zero when the provider reports none."
         @synonyms "completion, model reply, generated text"
         @tier "primary"
+      LLM_USAGE_REPORTED -> external {
+        provider : string!
+        model : string!
+        action : string!
+        inputTokens : number
+        outputTokens : number
+      }
+        @description "The token counts one provider reply reported, with the provider and the requested model; a count the provider did not report is absent, never zero. The kernel trace records it with the dispatch."
+        @synonyms "token usage, usage report, tokens spent"
+        @tier "secondary"
       LLM_GENERATE_DELTA -> external {
         key : string
         delta : string!
@@ -975,10 +1017,10 @@ orbital LlmOrbital {
       LLM_CHAT_CONTENT {
         job : string!
         content : string!
-        inputTokens : number!
-        outputTokens : number!
+        inputTokens : number
+        outputTokens : number
       }
-        @description "Internal: the model's text and token counts."
+        @description "Internal: the model's text and the token counts the provider reported (absent when it reported none)."
         @tier "secondary"
       LLM_CHAT_STRIPPED {
         job : string!

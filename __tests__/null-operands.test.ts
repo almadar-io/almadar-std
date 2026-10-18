@@ -10,7 +10,7 @@ interface Probe {
 }
 
 const mirror = new URL('./fixtures/null-operands.json', import.meta.url);
-const canonical = new URL('../../almadar-parity/fixtures/operators/null-operands.json', import.meta.url);
+const canonical = new URL('../../../orbital-rust/crates/orbital-core/tests/fixtures/operators/null-operands.json', import.meta.url);
 const probes: Probe[] = JSON.parse(readFileSync(mirror, 'utf8'));
 
 function flagged(operator: string, position: number): boolean {

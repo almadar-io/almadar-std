@@ -1,7 +1,7 @@
 /**
  * LLM Module - LLM generation, tool-calling, embeddings, and context management.
  *
- * Backed by @almadar/llm (LLMClient). Operators resolve at runtime via
+ * Operators resolve at runtime via
  * EvaluationContextExtensions.llm → LlmContext.
  *
  * @packageDocumentation

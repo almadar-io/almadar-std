@@ -126,7 +126,7 @@ export interface OperatorMeta {
   returnSemantics?: ReturnSemantics;
   /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
   runsOn?: RunsOn;
-  /** The host that executes this effect: `program` = the shared program host (`@almadar/integrations/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. Absent for effects the runtime executes itself. */
+  /** The host that executes this effect: `program` = the shared program host (`@almadar/runtime` `host/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. Absent for effects the runtime executes itself. */
   host?: EffectHost;
 }
 
