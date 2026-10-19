@@ -1,0 +1,30 @@
+app llm-spend-board-spec [
+  version: "1.0.0",
+  description: "Design contract for an LLM spend board: each configured provider's balance (absent when its key is not configured), the spend measured from kept balance snapshots, and the token usage a kernel server's dispatch trace reports, priced from price rows. A load within the cache window answers the cached board; a refresh always reads."
+]
+
+orbital LlmSpendBoardSpec {
+  expects entity LlmBalanceSnapshot [persistent] {
+    id : string!
+    provider : string
+    balance : number
+  }
+  expects entity LlmPrice [persistent] {
+    id : string!
+    provider : string
+    model : string
+  }
+  expects trait LlmSpend {
+    state idle {
+      LLM_SPEND_LOAD -> reading
+      LLM_SPEND_REFRESH -> reading
+    }
+    state reading {
+      LLM_SPEND_LOAD -> reading
+    }
+    emits {
+      LLM_SPEND { fetchedAt : string! }
+    }
+  }
+  expects page "/llm-spend-board" -> LlmSpend
+}
