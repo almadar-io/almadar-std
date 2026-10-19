@@ -1,0 +1,26 @@
+app cloud-run-board-spec [
+  version: "1.0.0",
+  description: "Design contract for a Google Cloud board: a project's Cloud Run services with their configured resources, this month's measured usage and billed cost, and the month's cost per Google Cloud service. A load within the cache window answers the cached board; a refresh always reads. A part that cannot be read is marked unavailable, never filled with guessed values."
+]
+
+orbital CloudRunBoardSpec {
+  expects entity CloudRunBoard [runtime] {
+    id : string!
+    cachedAt : number
+    loading : boolean
+  }
+  expects trait CloudRunStatus {
+    state idle {
+      CLOUD_RUN_LOAD -> reading
+      CLOUD_RUN_REFRESH -> reading
+    }
+    state reading {
+      CLOUD_RUN_LOAD -> reading
+      CLOUD_RUN_REFRESH -> reading
+    }
+    emits {
+      CLOUD_RUN_BOARD { fetchedAt : string! }
+    }
+  }
+  expects page "/cloud-run-board" -> CloudRunStatus
+}

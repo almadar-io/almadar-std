@@ -1,0 +1,26 @@
+app github-billing-spec [
+  version: "1.0.0",
+  description: "Design contract for a GitHub billing board: this month's enhanced billing usage of each listed organization and user, summed per account (gross, net, discount), per product, per SKU with its cost category, per repository and per category. A load within the cache window answers the cached board; a refresh always reads. An account whose usage cannot be read is shown unavailable with the reason, never left out."
+]
+
+orbital GithubBillingSpec {
+  expects entity GithubBillingBoard [runtime] {
+    id : string!
+    cachedAt : number
+    loading : boolean
+  }
+  expects trait GithubBilling {
+    state idle {
+      BILLING_LOAD -> reading
+      BILLING_REFRESH -> reading
+    }
+    state reading {
+      BILLING_LOAD -> reading
+      BILLING_REFRESH -> reading
+    }
+    emits {
+      BILLING { period : string!  totalGrossUsd : number!  totalNetUsd : number!  fetchedAt : string! }
+    }
+  }
+  expects page "/github-billing" -> GithubBilling
+}

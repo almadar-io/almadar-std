@@ -1,0 +1,152 @@
+app std-ci-run-logs [
+  version: "1.0.0",
+  description: "std-ci-run-logs — the log of one GitHub Actions run, read through the gh CLI (std-cli, command gh, with the host's PATH and HOME passed through so gh finds its login). CI_LOGS_LOAD { owner, repo, runId } lists the run's jobs; for each job whose conclusion is failure, in order, it reads the job's log and answers its lines, each trimmed, with the leading timestamp removed and blank lines left out: a line that starts with GitHub's ##[error] or ##[warning] workflow marker is level error or warning with the marker removed, every other line is level info. A job whose log cannot be read is left out. When no job failed, or the job list cannot be read or is not JSON, it answers the lines of the run summary (gh run view; its stderr when stdout is empty), all info. CI_LOGS answers { repo, runId, lines }; CI_LOGS_FAILED answers a read asked for while another is in flight (ci_logs_busy).",
+  exec: ["gh"],
+  env: ["PATH", "HOME"]
+]
+uses Spec from "almadar-std/ci-run-logs"
+type CiLogLine = { job : string, step : string, msg : string, level : "error" | "warning" | "info" }
+type CiGhJob = { id : number, name : string, conclusion : string }
+type CiGhJobList = { jobs : [CiGhJob] }
+orbital CiRunLogsOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
+  entity CiRunLogsRead [runtime] {
+    id : string!
+    owner : string @description "The owner of the repository being read." = ""
+    repo : string @description "The repository being read." = ""
+    runId : string @description "The run being read." = ""
+    failed : [CiGhJob] @description "The run's failed jobs, in order." = []
+    cursor : number @description "Index of the failed job whose log is being read." = 0
+    lines : [CiLogLine] @description "The lines read so far." = []
+  }
+
+  trait CiLogsGh = Cli.traits.CliRunner {
+    listens { CiRunLogs.CI_LOGS_GH -> CLI_RUN }
+    config {
+      command: "gh"
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait CiRunLogs -> CiRunLogsRead [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No run log read yet." })
+      CI_LOGS_LOAD -> reading
+        (set @entity.owner @payload.owner)
+        (set @entity.repo @payload.repo)
+        (set @entity.runId @payload.runId)
+        (set @entity.failed [])
+        (set @entity.cursor 0)
+        (set @entity.lines [])
+        (emit CI_LOGS_GH { stage: "jobs", argv: ["api", (str/concat "repos/" @payload.owner "/" @payload.repo "/actions/runs/" @payload.runId "/jobs")] })
+    }
+
+    state reading {
+      INIT -> reading
+      CI_LOGS_LOAD -> reading
+        (emit CI_LOGS_FAILED { runId: @payload.runId, error: (str/concat "the log of run " @entity.runId " is being read") , code: "ci_logs_busy" })
+
+      CI_LOGS_RAN -> reading when (and (= @payload.stage "jobs") (= @payload.exitCode 0) (json/valid @payload.stdout) (> (array/len (array/filter (object/get (json/parse @payload.stdout CiGhJobList) "jobs" []) (fn j (= @j.conclusion "failure")))) 0))
+        (set @entity.failed (array/filter (object/get (json/parse @payload.stdout CiGhJobList) "jobs" []) (fn j (= @j.conclusion "failure"))))
+        (set @entity.cursor 0)
+        (emit CI_LOGS_GH { stage: "log", argv: ["api", (str/concat "repos/" @entity.owner "/" @entity.repo "/actions/jobs/" (object/get (array/nth @entity.failed 0) "id") "/logs")] })
+      CI_LOGS_RAN -> reading when (and (= @payload.stage "jobs") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout) (> (array/len (array/filter (object/get (json/parse @payload.stdout CiGhJobList) "jobs" []) (fn j (= @j.conclusion "failure")))) 0))))
+        (emit CI_LOGS_GH { stage: "view", argv: ["run", "view", @entity.runId, "--repo", (str/concat @entity.owner "/" @entity.repo)] })
+
+      CI_LOGS_RAN -> reading when (and (= @payload.stage "log") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))
+        (let ((job (array/nth @entity.failed @entity.cursor)))
+          (set @entity.lines (array/concat @entity.lines (array/map (array/filter (array/map (array/filter (array/map (str/split @payload.stdout "\n") (fn l (str/trim @l))) (fn l (!= @l ""))) (fn l (str/trim (str/replace-pattern @l "^\\d{4}-\\d{2}-\\d{2}T[\\d:.]+Z\\s*" "")))) (fn m (!= @m ""))) (fn m (if (str/startsWith @m "##[error]") { job: @job.name, step: "", msg: (str/trim (str/slice @m 9)), level: "error" } (if (str/startsWith @m "##[warning]") { job: @job.name, step: "", msg: (str/trim (str/slice @m 11)), level: "warning" } { job: @job.name, step: "", msg: @m, level: "info" })))))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CI_LOGS_NEXT { })
+      CI_LOGS_RAN -> reading when (and (= @payload.stage "log") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CI_LOGS_NEXT { })
+      CI_LOGS_NEXT -> reading when (< @entity.cursor (array/len @entity.failed))
+        (emit CI_LOGS_GH { stage: "log", argv: ["api", (str/concat "repos/" @entity.owner "/" @entity.repo "/actions/jobs/" (object/get (array/nth @entity.failed @entity.cursor) "id") "/logs")] })
+      CI_LOGS_NEXT -> idle when (>= @entity.cursor (array/len @entity.failed))
+        (emit CI_LOGS { repo: @entity.repo, runId: @entity.runId, lines: @entity.lines })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat (array/len @entity.lines) " log lines from run " @entity.runId ".") })
+
+      CI_LOGS_RAN -> idle when (= @payload.stage "view")
+        (emit CI_LOGS { repo: @entity.repo, runId: @entity.runId, lines: (array/map (array/filter (array/map (str/split (if (!= (str/trim @payload.stdout) "") @payload.stdout @payload.stderr) "\n") (fn l (str/trim @l))) (fn l (!= @l ""))) (fn m { job: "", step: "", msg: @m, level: "info" })) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Run " @entity.runId " has no failed job log; showing its summary.") })
+
+      CI_LOGS_GH_FAILED -> reading when (= @payload.stage "jobs")
+        (emit CI_LOGS_GH { stage: "view", argv: ["run", "view", @entity.runId, "--repo", (str/concat @entity.owner "/" @entity.repo)] })
+      CI_LOGS_GH_FAILED -> reading when (= @payload.stage "log")
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CI_LOGS_NEXT { })
+      CI_LOGS_GH_FAILED -> idle when (= @payload.stage "view")
+        (emit CI_LOGS { repo: @entity.repo, runId: @entity.runId, lines: @entity.lines })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "gh could not run: " @payload.error) })
+    }
+
+    emits {
+      CI_LOGS -> external {
+        repo : string!
+        runId : string!
+        lines : [CiLogLine]!
+      }
+        @description "The run's log lines: the failed jobs' lines with their job and level, or the run summary's lines."
+        @synonyms "run log, build log, failed job output"
+        @tier "primary"
+      CI_LOGS_FAILED -> external {
+        runId : string!
+        error : string!
+        code : string!
+      }
+        @description "The read was refused: ci_logs_busy, another run's log is being read."
+        @tier "primary"
+      CI_LOGS_GH {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: one gh run, to the CLI runner."
+        @tier "internal"
+      CI_LOGS_NEXT -> internal { }
+        @description "Internal: read the next failed job's log, or answer."
+        @tier "internal"
+    }
+
+    listens {
+      CI_LOGS_LOAD -> external {
+        owner : string!
+        repo : string!
+        runId : string!
+      }
+        @description "Read this run's log."
+        @synonyms "show run log, why did ci fail, failed job logs"
+      CI_LOGS_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "A std-cli CLI_DONE: one gh run exited."
+      CI_LOGS_GH_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "A std-cli CLI_FAILED: gh could not run."
+      CiLogsGh.CLI_DONE -> CI_LOGS_RAN
+      CiLogsGh.CLI_FAILED -> CI_LOGS_GH_FAILED
+    }
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the reader shows its one-line status."
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+  }
+
+  page "/ci-run-logs" as CiRunLogsPage -> CiRunLogs, CiLogsGh
+}

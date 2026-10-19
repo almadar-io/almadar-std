@@ -1,6 +1,6 @@
 app std-github [
   version: "1.0.0",
-  description: "std-github — the GitHub REST API (api.github.com) as one atom: open a pull request, list a pull request's review comments, list and read issues, open an issue, read a file at a ref, list commits, list a repository's workflow runs and a run's jobs, and run a GraphQL query (answered as the reply text; its failure carries the HTTP status, 0 when unreachable). Requests are authenticated with the GitHub token knob and carry the 2022-11-28 API version. A non-2xx reply answers the action's failure event with GitHub's code (RATE_LIMIT_ERROR for 429, AUTH_ERROR for 401/403, SERVICE_ERROR otherwise) and message; an unreachable API answers NETWORK_ERROR. The git CLI actions (clone, branch, commit, push) are local processes, not HTTP, and are not part of this atom.",
+  description: "std-github — the GitHub REST API (api.github.com) as one atom: open a pull request, list a pull request's review comments, list and read issues, open an issue, read a file at a ref, list commits, list a repository's workflow runs and a run's jobs, read an organization's or user's monthly billing usage, and run a GraphQL query (answered as the reply text; its failure carries the HTTP status, 0 when unreachable). Requests are authenticated with the GitHub token knob and carry the 2022-11-28 API version. A non-2xx reply answers the action's failure event with GitHub's code (RATE_LIMIT_ERROR for 429, AUTH_ERROR for 401/403, SERVICE_ERROR otherwise) and message; an unreachable API answers NETWORK_ERROR. The git CLI actions (clone, branch, commit, push) are local processes, not HTTP, and are not part of this atom.",
   egress: ["https://api.github.com"]
 ]
 uses Spec from "almadar-std/github"
@@ -23,6 +23,9 @@ type GithubJob = { id : number, name : string, status : string, conclusion : str
 type GithubJobList = { jobs : [GithubJob] }
 type GithubRunsKey = { owner : string, repo : string }
 type GithubJobsKey = { owner : string, repo : string, runId : number }
+type GithubUsageItem = { product : string, sku : string, quantity : number, unitType : string, grossAmount : number, discountAmount : number, netAmount : number, repositoryName : string }
+type GithubUsageReport = { usageItems : [GithubUsageItem] }
+type GithubBillingKey = { account : string, kind : string, year : number, month : number }
 orbital GithubOrbital {
   entity GithubCall [runtime] {
     id : string!
@@ -231,9 +234,65 @@ orbital GithubOrbital {
           (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
 
+      GITHUB_BILLING_USAGE -> idle
+        (http GET @config.origin (str/concat (if (= @payload.kind "org") "/organizations/" "/users/") @payload.account "/settings/billing/usage") {
+          query: { year: (str/concat @payload.year), month: (str/concat @payload.month) },
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { account: @payload.account, kind: @payload.kind, year: @payload.year, month: @payload.month }), emit: { success: GITHUB_BILLING_USAGE_REPLIED, failure: GITHUB_BILLING_USAGE_UNREACHABLE } })
+      GITHUB_BILLING_USAGE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
+        (let ((at (json/parse @payload.key GithubBillingKey)))
+          (emit GITHUB_BILLING_USAGE_ANSWERED { account: @at.account, kind: @at.kind, year: @at.year, month: @at.month, items: (object/get (json/parse @payload.body GithubUsageReport) "usageItems" []) }))
+      GITHUB_BILLING_USAGE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
+        (let ((at (json/parse @payload.key GithubBillingKey)))
+          (emit GITHUB_BILLING_USAGE_FAILED { account: @at.account, kind: @at.kind, status: @payload.status, code: "PARSE_ERROR", message: "GitHub answered a billing usage body that is not JSON" }))
+      GITHUB_BILLING_USAGE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (let ((at (json/parse @payload.key GithubBillingKey)))
+          (emit GITHUB_BILLING_USAGE_FAILED { account: @at.account, kind: @at.kind, status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (and (json/valid @payload.body) (!= (object/get (json/parse @payload.body GithubError) message "") "")) (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
+      GITHUB_BILLING_USAGE_UNREACHABLE -> idle
+        (let ((at (json/parse @payload.key GithubBillingKey)))
+          (emit GITHUB_BILLING_USAGE_FAILED { account: @at.account, kind: @at.kind, status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
     }
 
     emits {
+      GITHUB_BILLING_USAGE_ANSWERED -> external {
+        account : string!
+        kind : string!
+        year : number!
+        month : number!
+        items : [GithubUsageItem]!
+      }
+        @description "An account's billing usage for the month: GitHub's usage items (product, SKU, quantity and unit, gross, discount and net amounts, repository)."
+        @synonyms "billing usage, github spend, actions cost"
+        @tier "primary"
+      GITHUB_BILLING_USAGE_FAILED -> external {
+        account : string!
+        kind : string!
+        status : number!
+        code : string
+        message : string!
+      }
+        @description "The account's billing usage could not be read: the HTTP status (0 when unreachable), GitHub's code (PARSE_ERROR for a body that is not JSON) and message."
+        @synonyms "billing unavailable"
+        @tier "primary"
+      GITHUB_BILLING_USAGE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: the billing usage call's HTTP reply; key carries the account and month."
+        @tier "secondary"
+      GITHUB_BILLING_USAGE_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: the billing usage call never produced a reply."
+        @tier "secondary"
       GITHUB_GRAPHQL_ANSWERED -> external {
         body : string!
       }
@@ -542,6 +601,25 @@ orbital GithubOrbital {
     }
 
     listens {
+      GITHUB_BILLING_USAGE -> external {
+        account : string!
+        kind : "org" | "user"
+        year : number!
+        month : number!
+      }
+        @description "Read an organization's (kind org) or a user's (kind user) enhanced billing usage for one month."
+        @synonyms "github billing, actions minutes cost"
+      GITHUB_BILLING_USAGE_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      GITHUB_BILLING_USAGE_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
       GITHUB_GRAPHQL -> external {
         query : string!
         variables : string

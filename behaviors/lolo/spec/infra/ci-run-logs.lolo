@@ -1,0 +1,24 @@
+app ci-run-logs-spec [
+  version: "1.0.0",
+  description: "Design contract for reading a GitHub Actions run's log: the lines of its failed jobs, each with the job it came from and a level read only from GitHub's own error and warning markers; a run with no failed job (or whose job list cannot be read) answers its run summary instead. One read at a time; a read asked for while one is in flight is refused, never queued."
+]
+
+orbital CiRunLogsSpec {
+  expects entity CiRunLogsRead [runtime] {
+    id : string!
+    runId : string
+  }
+  expects trait CiRunLogs {
+    state idle {
+      CI_LOGS_LOAD -> reading
+    }
+    state reading {
+      CI_LOGS_LOAD -> reading
+    }
+    emits {
+      CI_LOGS { repo : string!  runId : string! }
+      CI_LOGS_FAILED { runId : string!  error : string!  code : string! }
+    }
+  }
+  expects page "/ci-run-logs" -> CiRunLogs
+}

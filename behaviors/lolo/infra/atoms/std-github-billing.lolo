@@ -1,0 +1,174 @@
+app std-github-billing [
+  version: "1.0.0",
+  description: "std-github-billing — this month's GitHub enhanced billing usage for the organizations and users the accounts knob lists, read one after another through std-github (GITHUB_TOKEN; the token needs the user scope for a user and admin:org for an organization). Per account it sums every usage item's gross, net and discount amounts (rounded to cents), and groups them per product (net to 4 places, quantity whole), per SKU (with the SKU's first product and unit, quantity to one place) and per repository, each list sorted by gross, highest first, ties in the order GitHub listed them; netByCategory sums net per cost category, which the unitCategories knob reads from GitHub's declared unit (Minutes compute, GigabyteHours storage, Gigabytes transfer, any other unit other). A missing product, SKU or unit counts as other, (unknown) and empty. An account whose usage cannot be read is available false with GitHub's message as its error. BILLING_LOAD answers BILLING from the cache within cacheTtlMs; BILLING_REFRESH reads afresh; a load asked for during a read is answered by that read. BILLING carries the accounts, the period (YYYY-MM, UTC), the totals and fetchedAt (when the read began).",
+  egress: ["https://api.github.com"]
+]
+uses Spec from "almadar-std/github-billing"
+type GhBillingProduct = { product : string, gross : number, net : number, quantity : number, unit : string }
+type GhBillingSku = { product : string, sku : string, unit : string, category : string, quantity : number, gross : number, net : number }
+type GhBillingRepo = { repo : string, gross : number, net : number }
+type GhBillingCategories = { compute : number, storage : number, transfer : number, other : number }
+type GhBillingAccount = { name : string, kind : string, available : boolean, error : string, grossUsd : number, netUsd : number, discountUsd : number, byProduct : [GhBillingProduct], bySku : [GhBillingSku], netByCategory : GhBillingCategories, repos : [GhBillingRepo] }
+type GhBillingAccountRef = { name : string, kind : "org" | "user" }
+type GhUsageItem = { product : string, sku : string, quantity : number, unitType : string, grossAmount : number, discountAmount : number, netAmount : number, repositoryName : string }
+orbital GithubBillingOrbital {
+  uses Github from "std/behaviors/std-github"
+
+  entity GithubBillingBoard [runtime] {
+    id : string!
+    accounts : [GhBillingAccount] @description "The board last answered." = []
+    period : string @description "The month the board covers, YYYY-MM." = ""
+    totalGrossUsd : number = 0
+    totalNetUsd : number = 0
+    fetchedAt : string @description "When the read the board came from began." = ""
+    cachedAt : number @description "Epoch milliseconds at which the board was cached." = 0
+    hasCache : boolean = false
+    loading : boolean @description "Whether a read is in flight." = false
+    collected : [GhBillingAccount] @description "The accounts the read in flight has answered so far." = []
+    cursor : number @description "Index of the account being read." = 0
+    startedAt : number @description "Epoch milliseconds at which the read in flight began." = 0
+  }
+
+  trait BillingGithub = Github.traits.GithubClient {
+    listens { GithubBilling.BILLING_USAGE -> GITHUB_BILLING_USAGE }
+  }
+
+  trait GithubBilling -> GithubBillingBoard [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No GitHub billing read yet." })
+      BILLING_LOAD -> idle when (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs))
+        (emit BILLING { accounts: @entity.accounts, period: @entity.period, totalGrossUsd: @entity.totalGrossUsd, totalNetUsd: @entity.totalNetUsd, fetchedAt: @entity.fetchedAt })
+      BILLING_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
+        (set @entity.loading true)
+        (set @entity.collected [])
+        (set @entity.cursor 0)
+        (set @entity.startedAt @now)
+        (emit BILLING_NEXT { })
+      BILLING_REFRESH -> reading
+        (set @entity.loading true)
+        (set @entity.collected [])
+        (set @entity.cursor 0)
+        (set @entity.startedAt @now)
+        (emit BILLING_NEXT { })
+    }
+
+    state reading {
+      INIT -> reading
+      BILLING_LOAD -> reading
+      BILLING_REFRESH -> reading
+      BILLING_NEXT -> reading when (< @entity.cursor (array/len @config.accounts))
+        (let ((a (array/nth @config.accounts @entity.cursor)))
+          (emit BILLING_USAGE { account: @a.name, kind: @a.kind, year: (str/to-number (time/format @entity.startedAt "YYYY")), month: (str/to-number (time/format @entity.startedAt "MM")) }))
+      BILLING_NEXT -> idle when (>= @entity.cursor (array/len @config.accounts))
+        (set @entity.accounts @entity.collected)
+        (set @entity.period (time/format @entity.startedAt "YYYY-MM"))
+        (set @entity.totalGrossUsd (math/round (array/reduce @entity.collected 0 (fn acc a (+ @acc @a.grossUsd))) 2))
+        (set @entity.totalNetUsd (math/round (array/reduce @entity.collected 0 (fn acc a (+ @acc @a.netUsd))) 2))
+        (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
+        (set @entity.cachedAt @now)
+        (set @entity.hasCache true)
+        (set @entity.loading false)
+        (emit BILLING { accounts: @entity.accounts, period: @entity.period, totalGrossUsd: @entity.totalGrossUsd, totalNetUsd: @entity.totalNetUsd, fetchedAt: @entity.fetchedAt })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub billing for " @entity.period ": $" @entity.totalNetUsd " net.") })
+      BILLING_USAGE_READ -> reading
+        (set @entity.collected (array/append @entity.collected (let ((its (array/map @payload.items (fn i { product: (if (== @i.product null) "other" @i.product), sku: (if (== @i.sku null) "(unknown)" @i.sku), unit: (if (== @i.unitType null) "" @i.unitType), quantity: (if (== @i.quantity null) 0 @i.quantity), gross: (if (== @i.grossAmount null) 0 @i.grossAmount), discount: (if (== @i.discountAmount null) 0 @i.discountAmount), net: (if (== @i.netAmount null) 0 @i.netAmount), repo: (if (== @i.repositoryName null) "" @i.repositoryName) }))))
+          (object/merge (json/parse "{\"name\": \"\", \"kind\": \"\", \"available\": false, \"error\": null, \"grossUsd\": 0, \"netUsd\": 0, \"discountUsd\": 0, \"byProduct\": [], \"bySku\": [], \"netByCategory\": {\"compute\": 0, \"storage\": 0, \"transfer\": 0, \"other\": 0}, \"repos\": []}" GhBillingAccount) {
+            name: @payload.account,
+            kind: @payload.kind,
+            available: true,
+            grossUsd: (math/round (array/reduce @its 0 (fn acc i (+ @acc @i.gross))) 2),
+            netUsd: (math/round (array/reduce @its 0 (fn acc i (+ @acc @i.net))) 2),
+            discountUsd: (math/round (array/reduce @its 0 (fn acc i (+ @acc @i.discount))) 2),
+            byProduct: (array/sort (array/map (array/unique (array/map @its (fn i @i.product))) (fn p (let ((ps (array/filter @its (fn i (= @i.product @p))))) { product: @p, gross: (math/round (array/reduce @ps 0 (fn acc i (+ @acc @i.gross))) 2), net: (math/round (array/reduce @ps 0 (fn acc i (+ @acc @i.net))) 4), quantity: (math/round (array/reduce @ps 0 (fn acc i (+ @acc @i.quantity))) 0), unit: (object/get (array/nth @ps 0) "unit" "") }))) "gross" "desc"),
+            bySku: (array/sort (array/map (array/unique (array/map @its (fn i @i.sku))) (fn k (let ((ks (array/filter @its (fn i (= @i.sku @k)))) (first (array/nth (array/filter @its (fn i (= @i.sku @k))) 0))) { product: @first.product, sku: @k, unit: @first.unit, category: (object/get @config.unitCategories @first.unit "other"), quantity: (math/round (array/reduce @ks 0 (fn acc i (+ @acc @i.quantity))) 1), gross: (math/round (array/reduce @ks 0 (fn acc i (+ @acc @i.gross))) 2), net: (math/round (array/reduce @ks 0 (fn acc i (+ @acc @i.net))) 4) }))) "gross" "desc"),
+            netByCategory: { compute: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "compute"))) 0 (fn acc i (+ @acc @i.net))) 4), storage: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "storage"))) 0 (fn acc i (+ @acc @i.net))) 4), transfer: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "transfer"))) 0 (fn acc i (+ @acc @i.net))) 4), other: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "other"))) 0 (fn acc i (+ @acc @i.net))) 4) },
+            repos: (array/sort (array/map (array/unique (array/map (array/filter @its (fn i (!= @i.repo ""))) (fn i @i.repo))) (fn r (let ((rs (array/filter @its (fn i (= @i.repo @r))))) { repo: @r, gross: (math/round (array/reduce @rs 0 (fn acc i (+ @acc @i.gross))) 2), net: (math/round (array/reduce @rs 0 (fn acc i (+ @acc @i.net))) 4) }))) "gross" "desc")
+          }))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit BILLING_NEXT { })
+      BILLING_USAGE_FAILED -> reading
+        (set @entity.collected (array/append @entity.collected (object/merge (json/parse "{\"name\": \"\", \"kind\": \"\", \"available\": false, \"error\": null, \"grossUsd\": 0, \"netUsd\": 0, \"discountUsd\": 0, \"byProduct\": [], \"bySku\": [], \"netByCategory\": {\"compute\": 0, \"storage\": 0, \"transfer\": 0, \"other\": 0}, \"repos\": []}" GhBillingAccount) { name: @payload.account, kind: @payload.kind, error: @payload.message })))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit BILLING_NEXT { })
+    }
+
+    emits {
+      BILLING -> external {
+        accounts : [GhBillingAccount]!
+        period : string!
+        totalGrossUsd : number!
+        totalNetUsd : number!
+        fetchedAt : string!
+      }
+        @description "The board: each account's totals and breakdowns (or why it is unavailable), the month, the totals and when it was read."
+        @synonyms "github spend, actions cost, billing board"
+        @tier "primary"
+      BILLING_USAGE {
+        account : string!
+        kind : string!
+        year : number!
+        month : number!
+      }
+        @description "Internal: one account's usage read, to the GitHub client."
+        @tier "internal"
+      BILLING_NEXT -> internal { }
+        @description "Internal: read the next account, or answer."
+        @tier "internal"
+    }
+
+    listens {
+      BILLING_LOAD -> external { }
+        @description "Answer the billing board, from the cache while it is fresh."
+        @synonyms "show github billing, github cost"
+      BILLING_REFRESH -> external { }
+        @description "Read the billing board afresh."
+        @synonyms "refresh github billing"
+      BILLING_USAGE_READ {
+        account : string!
+        kind : string!
+        year : number!
+        month : number!
+        items : [GhUsageItem]!
+      }
+        @description "A std-github GITHUB_BILLING_USAGE_ANSWERED."
+      BILLING_USAGE_FAILED {
+        account : string!
+        kind : string!
+        status : number!
+        code : string
+        message : string!
+      }
+        @description "A std-github GITHUB_BILLING_USAGE_FAILED."
+      BillingGithub.GITHUB_BILLING_USAGE_ANSWERED -> BILLING_USAGE_READ
+      BillingGithub.GITHUB_BILLING_USAGE_FAILED -> BILLING_USAGE_FAILED
+    }
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the board shows its one-line status."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      accounts : [GhBillingAccountRef] = []
+        @label "Accounts"
+        @description "The organizations (kind org) and users (kind user) whose billing the board reads, in the order it shows them."
+        @synonyms "github accounts, orgs, billing accounts"
+        @tier "domain"
+      unitCategories : Map string string = { "Minutes": "compute", "GigabyteHours": "storage", "Gigabytes": "transfer" }
+        @label "Cost category per unit"
+        @description "The cost category of a usage item by its declared unit type; any other unit is other."
+        @synonyms "unit categories"
+        @tier "domain"
+      cacheTtlMs : number = 600000
+        @label "Cache window"
+        @description "Milliseconds a read board is answered without asking GitHub again."
+        @synonyms "cache ttl"
+        @tier "infra"
+    }
+  }
+
+  page "/github-billing" as GithubBillingPage -> GithubBilling, BillingGithub
+}

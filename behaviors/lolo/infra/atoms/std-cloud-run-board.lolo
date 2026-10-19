@@ -1,0 +1,432 @@
+app std-cloud-run-board [
+  version: "1.0.0",
+  description: "std-cloud-run-board — a Google Cloud project's Cloud Run services and this month's cost, read through the gcloud and bq CLIs (std-cli, with the host's PATH and HOME passed through so they find their login) and Cloud Monitoring. CLOUD_RUN_LOAD answers CLOUD_RUN_BOARD from the cache within cacheTtlMs; CLOUD_RUN_REFRESH reads afresh; a load during a read is answered by that read. A read, in order: mints an access token (gcloud auth print-access-token) and sums each service's billable instance seconds and request count for the UTC month to date from Cloud Monitoring (usage unavailable without a token or when Monitoring is unreachable; a refused metric reads as none); when resourceLevelExport is on, reads each Cloud Run service's gross and net (credits included) cost from the billingExportTable billing export; lists the project's Cloud Run services and describes each one (cpu, memory, min and max instances, concurrency, GPU; an unset value is Cloud Run's documented default from the default knobs; a service that cannot be described has hasResourceData false and zero resources and price); lists the enabled Google Cloud APIs the trackedServices knob names, then replaces them with the month's cost per service from the billing export when it answers rows (each rounded to cents, sorted by cost, highest first, then by name). Per service: hourlyIfUp is one instance's list price for an hour at the rate knobs, activeInstanceHours the billed hours, avgInstances those over the hours elapsed, projectedMonthlyUsd the net cost scaled to hoursPerMonth. actualBilledUsd is the Cloud Run row of the rollup.",
+  exec: ["gcloud", "bq"],
+  env: ["PATH", "HOME"],
+  egress: ["https://monitoring.googleapis.com"]
+]
+uses Spec from "almadar-std/cloud-run-board"
+type CrCondition = { type : string, status : string }
+type CrStatus = { url : string, conditions : [CrCondition], latestReadyRevisionName : string, latestCreatedRevisionName : string }
+type CrMeta = { name : string, creationTimestamp : string, annotations : Map string string, labels : Map string string }
+type CrService = { metadata : CrMeta, status : CrStatus }
+type CrLimits = { limits : Map string string }
+type CrContainer = { resources : CrLimits }
+type CrTemplateSpec = { containerConcurrency : number, nodeSelector : Map string string, containers : [CrContainer] }
+type CrTemplateMeta = { annotations : Map string string }
+type CrTemplate = { metadata : CrTemplateMeta, spec : CrTemplateSpec }
+type CrSpec = { template : CrTemplate }
+type CrDescribe = { spec : CrSpec }
+type CrResources = { known : boolean, cpu : number, memoryGb : number, minInstances : number, maxInstances : number, concurrency : number, gpuCount : number, gpu : string, zonal : boolean }
+type CrMonValue = { doubleValue : number, int64Value : string }
+type CrMonPoint = { value : CrMonValue }
+type CrMonLabels = { service_name : string }
+type CrMonResource = { labels : CrMonLabels }
+type CrMonSeries = { resource : CrMonResource, points : [CrMonPoint] }
+type CrMonReply = { timeSeries : [CrMonSeries] }
+type CrSeriesSum = { svc : string, value : number }
+type CrSeriesSums = [CrSeriesSum]
+type CrCostRow = { svc : string, gross : string, net : string }
+type CrCost = { svc : string, gross : number, net : number }
+type CrBillRow = { service_name : string, total_cost : string, currency : string }
+type CrApiConfig = { name : string, title : string }
+type CrApi = { config : CrApiConfig }
+type CrEntry = { service : string, cost : number, currency : string }
+type CrServiceRow = { name : string, region : string, url : string, lastDeployed : string, latestRevision : string, status : string, creator : string, hasResourceData : boolean, cpu : number, memoryGb : number, minInstances : number, maxInstances : number, concurrency : number, gpu : string, gpuCount : number, hourlyIfUp : number, activeInstanceHours : number, avgInstances : number, requestCount : number, hasUsageData : boolean, grossCostMtd : number, netCostMtd : number, projectedMonthlyUsd : number, hasCostData : boolean }
+type CrBilling = { entries : [CrEntry], totalCost : number, currency : string, billingPeriod : string }
+type CrCloudRun = { services : [CrServiceRow], actualBilledUsd : number, periodHoursElapsed : number }
+type CrBillRows = [CrBillRow]
+type CrServices = [CrService]
+type CrCostRows = [CrCostRow]
+type CrApis = [CrApi]
+type CrGpuRate = { zonal : number, noZonal : number }
+orbital CloudRunBoardOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
+  entity CloudRunBoard [runtime] {
+    id : string!
+    billing : CrBilling @description "The billing part of the board last answered."
+    cloudRun : CrCloudRun @description "The Cloud Run part of the board last answered."
+    fetchedAt : string @description "When the read the board came from began." = ""
+    cachedAt : number @description "Epoch milliseconds at which the board was cached." = 0
+    hasCache : boolean = false
+    loading : boolean @description "Whether a read is in flight." = false
+    startedAt : number @description "Epoch milliseconds at which the read in flight began." = 0
+    token : string @description "The access token gcloud minted for the read in flight; empty without one." = ""
+    usageAvailable : boolean = false
+    instanceSeconds : [CrSeriesSum] = []
+    requests : [CrSeriesSum] = []
+    costAvailable : boolean = false
+    costRows : [CrCost] = []
+    services : [CrService] = []
+    resources : [CrResources] = []
+    cursor : number @description "Index of the service being described." = 0
+    entries : [CrEntry] = []
+    currency : string = "USD"
+    noMap : Map string string @description "An empty map, read where a part of a reply is absent." = {}
+  }
+
+  trait CrGcloud = Cli.traits.CliRunner {
+    listens { CloudRunStatus.CR_GCLOUD -> CLI_RUN }
+    config {
+      command: "gcloud"
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait CrBq = Cli.traits.CliRunner {
+    listens { CloudRunStatus.CR_BQ -> CLI_RUN }
+    config {
+      command: "bq"
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait CloudRunStatus -> CloudRunBoard [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No Google Cloud board read yet." })
+      CLOUD_RUN_LOAD -> idle when (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs))
+        (emit CLOUD_RUN_BOARD { billing: @entity.billing, cloudRun: @entity.cloudRun, fetchedAt: @entity.fetchedAt })
+      CLOUD_RUN_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
+        (set @entity.loading true)
+        (set @entity.startedAt @now)
+        (set @entity.token "")
+        (set @entity.usageAvailable false)
+        (set @entity.instanceSeconds [])
+        (set @entity.requests [])
+        (set @entity.costAvailable false)
+        (set @entity.costRows [])
+        (set @entity.services [])
+        (set @entity.resources [])
+        (set @entity.cursor 0)
+        (set @entity.entries [])
+        (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
+        (emit CR_GCLOUD { stage: "token", argv: ["auth", "print-access-token"] })
+      CLOUD_RUN_REFRESH -> reading
+        (set @entity.loading true)
+        (set @entity.startedAt @now)
+        (set @entity.token "")
+        (set @entity.usageAvailable false)
+        (set @entity.instanceSeconds [])
+        (set @entity.requests [])
+        (set @entity.costAvailable false)
+        (set @entity.costRows [])
+        (set @entity.services [])
+        (set @entity.resources [])
+        (set @entity.cursor 0)
+        (set @entity.entries [])
+        (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
+        (emit CR_GCLOUD { stage: "token", argv: ["auth", "print-access-token"] })
+    }
+
+    state reading {
+      INIT -> reading
+      CLOUD_RUN_LOAD -> reading
+      CLOUD_RUN_REFRESH -> reading
+
+      CR_RAN -> reading when (and (= @payload.stage "token") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))
+        (set @entity.token (str/trim @payload.stdout))
+        (http GET "https://monitoring.googleapis.com" (str/concat "/v3/projects/" @config.project "/timeSeries") {
+          query: { filter: "metric.type=\"run.googleapis.com/container/billable_instance_time\"", "interval.startTime": (str/concat (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (time/startOf @entity.startedAt "month") 1000)) 3 "0") "Z"), "interval.endTime": (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"), "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" },
+          headers: { Authorization: (str/concat "Bearer " @entity.token) },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: CR_TIME_REPLIED, failure: CR_MONITORING_UNREACHABLE } })
+      CR_RAN -> reading when (and (= @payload.stage "token") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))))
+        (emit CR_COST { })
+      CR_TIME_REPLIED -> reading
+        (set @entity.instanceSeconds (if (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body)) (array/filter (array/map (object/get (json/parse @payload.body CrMonReply) "timeSeries" []) (fn ts { svc: (object/get @ts "resource.labels.service_name" ""), value: (array/reduce (object/get @ts "points" []) 0 (fn acc p (+ @acc (if (!= (object/get @p "value.doubleValue" null) null) (object/get @p "value.doubleValue" 0) (str/to-number (object/get @p "value.int64Value" "0")))))) })) (fn x (!= @x.svc ""))) (json/parse "[]" CrSeriesSums)))
+        (http GET "https://monitoring.googleapis.com" (str/concat "/v3/projects/" @config.project "/timeSeries") {
+          query: { filter: "metric.type=\"run.googleapis.com/request_count\"", "interval.startTime": (str/concat (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod (time/startOf @entity.startedAt "month") 1000)) 3 "0") "Z"), "interval.endTime": (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"), "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" },
+          headers: { Authorization: (str/concat "Bearer " @entity.token) },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: CR_REQUESTS_REPLIED, failure: CR_MONITORING_UNREACHABLE } })
+      CR_REQUESTS_REPLIED -> reading
+        (set @entity.requests (if (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body)) (array/filter (array/map (object/get (json/parse @payload.body CrMonReply) "timeSeries" []) (fn ts { svc: (object/get @ts "resource.labels.service_name" ""), value: (array/reduce (object/get @ts "points" []) 0 (fn acc p (+ @acc (if (!= (object/get @p "value.doubleValue" null) null) (object/get @p "value.doubleValue" 0) (str/to-number (object/get @p "value.int64Value" "0")))))) })) (fn x (!= @x.svc ""))) (json/parse "[]" CrSeriesSums)))
+        (set @entity.usageAvailable true)
+        (emit CR_COST { })
+      CR_MONITORING_UNREACHABLE -> reading
+        (set @entity.instanceSeconds [])
+        (set @entity.requests [])
+        (set @entity.usageAvailable false)
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Cloud Monitoring unreachable: " @payload.error) })
+        (emit CR_COST { })
+
+      CR_COST -> reading when (and @config.resourceLevelExport (!= @config.billingExportTable ""))
+        (emit CR_BQ { stage: "cost", argv: [(str/concat "--project_id=" @config.project), "query", "--use_legacy_sql=false", "--format=json", (str/concat "SELECT resource.name AS svc,   SUM(cost) AS gross,   SUM(cost) + SUM(IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)) AS net FROM `" @config.project ".billing_export." @config.billingExportTable "` WHERE service.description = 'Cloud Run' AND DATE(usage_start_time) >= '" (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DD") "' GROUP BY svc")] })
+      CR_COST -> reading when (not (and @config.resourceLevelExport (!= @config.billingExportTable "")))
+        (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
+      CR_RAN -> reading when (and (= @payload.stage "cost") (= @payload.exitCode 0) (json/valid (if (= (str/trim @payload.stdout) "") "[]" @payload.stdout)))
+        (set @entity.costAvailable true)
+        (set @entity.costRows (array/map (array/filter (json/parse (if (= (str/trim @payload.stdout) "") "[]" @payload.stdout) CrCostRows) (fn row (!= (or @row.svc "") ""))) (fn row { svc: @row.svc, gross: (str/to-number @row.gross), net: (str/to-number @row.net) })))
+        (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
+      CR_RAN -> reading when (and (= @payload.stage "cost") (not (and (= @payload.exitCode 0) (json/valid (if (= (str/trim @payload.stdout) "") "[]" @payload.stdout)))))
+        (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
+
+      CR_RAN -> reading when (and (= @payload.stage "services") (= @payload.exitCode 0) (json/valid @payload.stdout))
+        (set @entity.services (json/parse @payload.stdout CrServices))
+        (set @entity.cursor 0)
+        (emit CR_DESCRIBE_NEXT { })
+      CR_RAN -> reading when (and (= @payload.stage "services") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout))))
+        (set @entity.services [])
+        (emit CR_DESCRIBE_NEXT { })
+      CR_DESCRIBE_NEXT -> reading when (< @entity.cursor (array/len @entity.services))
+        (let ((svc (array/nth @entity.services @entity.cursor)))
+          (emit CR_GCLOUD { stage: "describe", argv: ["run", "services", "describe", (object/get @svc "metadata.name" ""), (str/concat "--region=" (or (array/nth (object/values (object/pick (object/get @svc "metadata.labels" @entity.noMap) [(str/concat "cloud.googleapis.com/location")])) 0) "")), (str/concat "--project=" @config.project), "--format=json"] }))
+      CR_DESCRIBE_NEXT -> reading when (>= @entity.cursor (array/len @entity.services))
+        (emit CR_GCLOUD { stage: "enabled", argv: ["services", "list", "--enabled", (str/concat "--project=" @config.project), "--format=json"] })
+      CR_RAN -> reading when (and (= @payload.stage "describe") (= @payload.exitCode 0) (json/valid @payload.stdout))
+        (set @entity.resources (array/append @entity.resources (let ((d (json/parse @payload.stdout CrDescribe)))
+          (let ((limits (object/get @d "spec.template.spec.containers.0.resources.limits" @entity.noMap))
+                (ann (object/get @d "spec.template.metadata.annotations" @entity.noMap))
+                (selector (object/get @d "spec.template.spec.nodeSelector" @entity.noMap)))
+            (let ((cpuRaw (array/nth (object/values (object/pick @limits [(str/concat "cpu")])) 0)) (memRaw (array/nth (object/values (object/pick @limits [(str/concat "memory")])) 0)) (gpuRaw (array/nth (object/values (object/pick @limits [(str/concat "nvidia.com/gpu")])) 0)))
+              { known: true,
+                cpu: (if (== @cpuRaw null) @config.defaultCpu (if (str/endsWith @cpuRaw "m") (/ (str/to-number (str/slice @cpuRaw 0 (- (str/len @cpuRaw) 1))) 1000) (str/to-number @cpuRaw))),
+                memoryGb: (if (== @memRaw null) @config.defaultMemoryGb (let ((m (str/trim @memRaw))) (if (or (str/endsWith @m "Gi") (str/endsWith @m "Mi") (str/endsWith @m "Ki")) (/ (str/to-number (str/trim (str/slice @m 0 (- (str/len @m) 2)))) (if (str/endsWith @m "Gi") 1 (if (str/endsWith @m "Mi") 1024 1048576))) (if (or (str/endsWith @m "G") (str/endsWith @m "M") (str/endsWith @m "K")) (/ (str/to-number (str/trim (str/slice @m 0 (- (str/len @m) 1)))) (if (str/endsWith @m "G") 1 (if (str/endsWith @m "M") 1024 1048576))) (/ (str/to-number @m) 1073741824))))),
+                minInstances: (if (== (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/minScale")])) 0) null) @config.defaultMinInstances (str/to-number (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/minScale")])) 0))),
+                maxInstances: (if (== (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/maxScale")])) 0) null) @config.defaultMaxInstances (str/to-number (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/maxScale")])) 0))),
+                concurrency: (object/get @d "spec.template.spec.containerConcurrency" @config.defaultConcurrency),
+                gpuCount: (if (== @gpuRaw null) 0 (str/to-number @gpuRaw)),
+                gpu: (if (and (!= @gpuRaw null) (> (str/to-number @gpuRaw) 0)) (array/nth (object/values (object/pick @selector [(str/concat "run.googleapis.com/accelerator")])) 0) (array/nth (object/values (object/pick @entity.noMap [(str/concat "gpu")])) 0)),
+                zonal: (!= (array/nth (object/values (object/pick @ann [(str/concat "run.googleapis.com/gpu-zonal-redundancy-disabled")])) 0) "true") })))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CR_DESCRIBE_NEXT { })
+      CR_RAN -> reading when (and (= @payload.stage "describe") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout))))
+        (set @entity.resources (array/append @entity.resources (json/parse "{\"known\":false,\"cpu\":0,\"memoryGb\":0,\"minInstances\":0,\"maxInstances\":0,\"concurrency\":0,\"gpuCount\":0,\"gpu\":null,\"zonal\":true}" CrResources)))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CR_DESCRIBE_NEXT { })
+
+      CR_RAN -> reading when (= @payload.stage "enabled")
+        (set @entity.entries (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (array/filter (json/parse @payload.stdout CrApis) (fn a (!= (array/nth (object/values (object/pick @config.trackedServices [(object/get @a "config.name" "")])) 0) null))) (fn a { service: (array/nth (object/values (object/pick @config.trackedServices [(object/get @a "config.name" "")])) 0), cost: 0, currency: "USD" })) []))
+        (set @entity.currency "USD")
+        (emit CR_ROLLUP { })
+      CR_ROLLUP -> reading when (!= @config.billingExportTable "")
+        (emit CR_BQ { stage: "rollup", argv: [(str/concat "--project_id=" @config.project), "query", "--use_legacy_sql=false", "--format=json", (str/concat "SELECT service.description AS service_name,   SUM(cost) + SUM(IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)) AS total_cost,   currency FROM `" @config.project ".billing_export." @config.billingExportTable "` WHERE DATE(usage_start_time) >= '" (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DD") "' GROUP BY service_name, currency ORDER BY total_cost DESC")] })
+      CR_ROLLUP -> reading when (= @config.billingExportTable "")
+        (emit CR_ANSWER { })
+      CR_RAN -> reading when (and (= @payload.stage "rollup") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) "") (json/valid @payload.stdout) (> (array/len (json/parse @payload.stdout CrBillRows)) 0))
+        (set @entity.entries (array/map (json/parse @payload.stdout CrBillRows) (fn row { service: @row.service_name, cost: (math/round (str/to-number @row.total_cost) 2), currency: (or @row.currency "USD") })))
+        (set @entity.currency (or (object/get (array/nth (json/parse @payload.stdout CrBillRows) (- (array/len (json/parse @payload.stdout CrBillRows)) 1)) "currency" null) "USD"))
+        (emit CR_ANSWER { })
+      CR_RAN -> reading when (and (= @payload.stage "rollup") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) "") (json/valid @payload.stdout) (> (array/len (json/parse @payload.stdout CrBillRows)) 0))))
+        (emit CR_ANSWER { })
+
+      CR_ANSWER -> idle
+        (set @entity.billing { entries: (array/sort (array/sort @entity.entries "service" "asc") "cost" "desc"), totalCost: (math/round (array/reduce @entity.entries 0 (fn acc e (+ @acc @e.cost))) 2), currency: @entity.currency, billingPeriod: (time/format @entity.startedAt "YYYY-MM") })
+        (set @entity.cloudRun { services: (array/map (array/range (array/len @entity.services)) (fn i (let ((svc (array/nth @entity.services @i)) (r (array/nth @entity.resources @i)))
+            (let ((name (object/get @svc "metadata.name" "")) (ready (array/find (object/get @svc "status.conditions" []) (fn c (= @c.type "Ready")))) (cost (array/find @entity.costRows (fn c (= @c.svc (object/get @svc "metadata.name" ""))))))
+              { name: @name,
+                region: (or (array/nth (object/values (object/pick (object/get @svc "metadata.labels" @entity.noMap) [(str/concat "cloud.googleapis.com/location")])) 0) ""),
+                url: (object/get @svc "status.url" ""),
+                lastDeployed: (or (array/nth (object/values (object/pick (object/get @svc "metadata.annotations" @entity.noMap) [(str/concat "serving.knative.dev/lastModified")])) 0) (object/get @svc "metadata.creationTimestamp" "")),
+                latestRevision: (or (object/get @svc "status.latestReadyRevisionName" null) (object/get @svc "status.latestCreatedRevisionName" "")),
+                status: (if (== @ready null) "Unknown" (if (= @ready.status "True") "Active" "Inactive")),
+                creator: (or (array/nth (object/values (object/pick (object/get @svc "metadata.annotations" @entity.noMap) [(str/concat "serving.knative.dev/creator")])) 0) ""),
+                hasResourceData: @r.known, cpu: @r.cpu, memoryGb: @r.memoryGb, minInstances: @r.minInstances, maxInstances: @r.maxInstances, concurrency: @r.concurrency, gpu: @r.gpu, gpuCount: @r.gpuCount,
+                hourlyIfUp: (if @r.known (math/round (* (+ (+ (* @r.cpu @config.cpuRatePerSecond) (* @r.memoryGb @config.memoryRatePerSecond)) (if (and (!= @r.gpu null) (> @r.gpuCount 0) (!= (object/get @config.gpuRatesPerSecond @r.gpu null) null)) (* @r.gpuCount (if @r.zonal (object/get @config.gpuRatesPerSecond (str/concat @r.gpu ".zonal") 0) (object/get @config.gpuRatesPerSecond (str/concat @r.gpu ".noZonal") 0))) 0)) 3600) 4) 0),
+                activeInstanceHours: (math/round (/ (array/reduce (array/filter @entity.instanceSeconds (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 3600) 2),
+                avgInstances: (math/round (/ (math/round (/ (array/reduce (array/filter @entity.instanceSeconds (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 3600) 2) (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600)) 3),
+                requestCount: (math/round (array/reduce (array/filter @entity.requests (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 0),
+                hasUsageData: @entity.usageAvailable,
+                grossCostMtd: (math/round (if (== @cost null) 0 @cost.gross) 4),
+                netCostMtd: (math/round (if (== @cost null) 0 @cost.net) 4),
+                projectedMonthlyUsd: (math/round (* (if (== @cost null) 0 @cost.net) (/ @config.hoursPerMonth (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600))) 2),
+                hasCostData: @entity.costAvailable })))), actualBilledUsd: (object/get (array/find @entity.entries (fn e (= @e.service "Cloud Run"))) "cost" null), periodHoursElapsed: (math/round (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600) 1) })
+        (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
+        (set @entity.cachedAt @now)
+        (set @entity.hasCache true)
+        (set @entity.loading false)
+        (emit CLOUD_RUN_BOARD { billing: @entity.billing, cloudRun: @entity.cloudRun, fetchedAt: @entity.fetchedAt })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat (array/len @entity.services) " Cloud Run services, " @entity.currency " " @entity.billing.totalCost " this month.") })
+
+      CR_CLI_FAILED -> reading when (= @payload.stage "token")
+        (emit CR_COST { })
+      CR_CLI_FAILED -> reading when (= @payload.stage "cost")
+        (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
+      CR_CLI_FAILED -> reading when (= @payload.stage "services")
+        (set @entity.services [])
+        (emit CR_DESCRIBE_NEXT { })
+      CR_CLI_FAILED -> reading when (= @payload.stage "describe")
+        (set @entity.resources (array/append @entity.resources (json/parse "{\"known\":false,\"cpu\":0,\"memoryGb\":0,\"minInstances\":0,\"maxInstances\":0,\"concurrency\":0,\"gpuCount\":0,\"gpu\":null,\"zonal\":true}" CrResources)))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CR_DESCRIBE_NEXT { })
+      CR_CLI_FAILED -> reading when (= @payload.stage "enabled")
+        (set @entity.entries [])
+        (emit CR_ROLLUP { })
+      CR_CLI_FAILED -> reading when (= @payload.stage "rollup")
+        (emit CR_ANSWER { })
+    }
+
+    emits {
+      CLOUD_RUN_BOARD -> external {
+        billing : CrBilling!
+        cloudRun : CrCloudRun!
+        fetchedAt : string!
+      }
+        @description "The board: the month's cost per Google Cloud service, the Cloud Run services with resources, usage and cost, and when it was read."
+        @synonyms "cloud run status, gcp cost, cloud board"
+        @tier "primary"
+      CR_TIME_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: Cloud Monitoring's billable instance time reply."
+        @tier "internal"
+      CR_REQUESTS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: Cloud Monitoring's request count reply."
+        @tier "internal"
+      CR_MONITORING_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: Cloud Monitoring could not be reached."
+        @tier "internal"
+      CR_GCLOUD {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: one gcloud run."
+        @tier "internal"
+      CR_BQ {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: one bq run."
+        @tier "internal"
+      CR_COST -> internal { }
+        @description "Internal: read the per-service cost."
+        @tier "internal"
+      CR_DESCRIBE_NEXT -> internal { }
+        @description "Internal: describe the next service, or move on."
+        @tier "internal"
+      CR_ROLLUP -> internal { }
+        @description "Internal: read the month's cost per service."
+        @tier "internal"
+      CR_ANSWER -> internal { }
+        @description "Internal: answer the board."
+        @tier "internal"
+    }
+
+    listens {
+      CLOUD_RUN_LOAD -> external { }
+        @description "Answer the Google Cloud board, from the cache while it is fresh."
+        @synonyms "show cloud run, gcp cost"
+      CLOUD_RUN_REFRESH -> external { }
+        @description "Read the Google Cloud board afresh."
+        @synonyms "refresh cloud run"
+      CR_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "A std-cli CLI_DONE: one gcloud or bq run exited."
+      CR_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "A std-cli CLI_FAILED: gcloud or bq could not run."
+      CR_TIME_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Cloud Monitoring's billable instance time reply."
+      CR_REQUESTS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Cloud Monitoring's request count reply."
+      CR_MONITORING_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Cloud Monitoring could not be reached."
+      CrGcloud.CLI_DONE -> CR_RAN
+      CrGcloud.CLI_FAILED -> CR_CLI_FAILED
+      CrBq.CLI_DONE -> CR_RAN
+      CrBq.CLI_FAILED -> CR_CLI_FAILED
+    }
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the board shows its one-line status."
+        @synonyms "status area"
+        @tier "presentation"
+      project : string = ""
+        @label "Project"
+        @description "The Google Cloud project id."
+        @synonyms "gcp project"
+        @tier "domain"
+      billingExportTable : string = ""
+        @label "Billing export table"
+        @description "The table id in the project's billing_export dataset; empty reads no cost."
+        @synonyms "billing export"
+        @tier "domain"
+      resourceLevelExport : boolean = false
+        @label "Resource-level export"
+        @description "The billing export table carries resource names, so cost can be read per Cloud Run service."
+        @synonyms "per-service cost"
+        @tier "domain"
+      trackedServices : Map string string = {}
+        @label "Tracked APIs"
+        @description "The enabled Google Cloud APIs the board lists before cost is known, by API name, with the name to show."
+        @synonyms "tracked services"
+        @tier "domain"
+      cpuRatePerSecond : number = 0.000024
+        @label "vCPU price per second"
+        @description "Cloud Run's list price per active vCPU-second."
+        @tier "domain"
+      memoryRatePerSecond : number = 0.0000025
+        @label "Memory price per second"
+        @description "Cloud Run's list price per active GiB-second."
+        @tier "domain"
+      gpuRatesPerSecond : Map string CrGpuRate = {}
+        @label "GPU prices per second"
+        @description "Cloud Run's list price per GPU-second by accelerator, with and without zonal redundancy."
+        @tier "domain"
+      hoursPerMonth : number = 730
+        @label "Hours per month"
+        @description "The month length a projection scales to."
+        @tier "domain"
+      defaultCpu : number = 1
+        @description "Cloud Run's vCPU limit when a service sets none."
+        @tier "domain"
+      defaultMemoryGb : number = 0.5
+        @description "Cloud Run's memory limit in GiB when a service sets none."
+        @tier "domain"
+      defaultMinInstances : number = 0
+        @description "Cloud Run's minimum instances when a service sets none."
+        @tier "domain"
+      defaultMaxInstances : number = 100
+        @description "Cloud Run's maximum instances when a service sets none."
+        @tier "domain"
+      defaultConcurrency : number = 80
+        @description "Cloud Run's concurrency when a service sets none."
+        @tier "domain"
+      timeoutMs : number = 30000
+        @description "Milliseconds each Cloud Monitoring call may take."
+        @tier "infra"
+      cacheTtlMs : number = 600000
+        @label "Cache window"
+        @description "Milliseconds a read board is answered without reading again."
+        @tier "infra"
+    }
+  }
+
+  page "/cloud-run-board" as CloudRunBoardPage -> CloudRunStatus, CrGcloud, CrBq
+}
