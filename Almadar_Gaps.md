@@ -8,7 +8,7 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **Close by deleting.** Remove the entry in the same commit as the fix. There is no "closed" section; git history is the record.
 - **Cross-repo gaps don't go here.** If fixing it needs another repo, describe it in your report or PR body; the monorepo coordinator files it.
 
-Next code: `G-STD-081`
+Next code: `G-STD-082`
 
 - **G-STD-078** — `std-circuit-breaker` never counts: `failureCount` and `successCount` are set to 0 by `INIT` and nothing else writes them (no `FAILURE`/`SUCCESS` arm increments), yet the stats and the failures meter read them and `threshold` is set from `failureThreshold`, so the circuit trips on the first `FAILURE` rather than after `threshold` failures. `@almadar/std` [mechanical] — found by the spec prover (`spec/infra/circuit-breaker.lolo` only holds `failureCount >= 0` because the count stays 0); prevention rung: `orb validate` (a read-only counter that is displayed against a threshold).
 
@@ -28,6 +28,7 @@ Next code: `G-STD-081`
 
 ## Open gaps
 
+- **G-STD-081** — `std-infra-projection`'s tier 3 inherits the decorative load balancer of the retired `@almadar-io/terraform` (was G-TERRAFORM-001; the port is byte-identical by parity): tier 3 emits a `google_compute_global_address` and a Cloud Armor `google_compute_security_policy` that nothing uses — no serverless NEG, backend service, URL map, HTTPS proxy, certificate or forwarding rule — so the IP it outputs serves nothing and the WAF protects nothing. It passes `terraform validate`, which is why only reading it finds it. Either generate the whole chain (a domain knob for the certificate) or drop both resources and the output. `@almadar/std` `infra/atoms/std-infra-projection.lolo` [owner-decision] — prevention rung: none of the language rungs (a generated-text artifact whose consumer is Terraform); regression gate: the atom's parity test, updated with the chosen output.
 
 - **G-STD-069** — `std-graph` recomputes every node's depth and dependency closure with one level-synchronous Kahn pass on each order-edge write: measured on the `orbital` daemon, a 60-deep chain costs about 1.1 s per write and per `GRAPH_ORDER` (about 0.3 s at 10, 0.5 s at 30; a `GRAPH_REACH` costs about 0.15 s, the call floor). Fine for the short prerequisite graphs of a path; the owner criterion for a native operator ("only if a measured graph is too slow") applies once real graphs exceed ~100 deep. [owner-decision] — measured 2026-10-17. Prevention rung: none of the language rungs (a performance budget, not a structural defect); an `orb verify` timing budget would catch it.
 
