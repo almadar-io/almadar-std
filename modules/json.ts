@@ -38,6 +38,17 @@ export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["json/parse", "{\\"a\\": 1}", "Point"] // => {a: 1}',
   },
+  'json/nodes': {
+    module: 'json',
+    category: 'std-json',
+    minArity: 1,
+    maxArity: 1,
+    description: 'The value and every value nested in it, in pre-order: a list before its items (in order), an object before its values (in key order). Each node is program data (`SExpr`); a list whose first item names an operator is data, never called. For walking a quoted program or a parsed document, e.g. finding every `call-service` form at any depth',
+    hasSideEffects: false,
+    returnType: { kind: 'array', of: 'sexpr' },
+    params: [{ name: 'v', type: tv('T'), description: 'The value to walk' }],
+    example: '["json/nodes", {"a": [1]}] // => [{"a": [1]}, [1], 1]',
+  },
   'json/stringify': {
     module: 'json',
     category: 'std-json',

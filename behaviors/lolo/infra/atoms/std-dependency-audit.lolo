@@ -1,0 +1,581 @@
+app std-dependency-audit [
+  version: "1.0.0",
+  exec: ["pnpm", "npm", "node", "safety", "pip", "python3"],
+  fs: { "/workspace/**": [read] },
+  description: "std-dependency-audit — audits the dependencies of one or more projects under the root knob's directory. AUDIT names the projects (paths relative to root); each one is a Node project when it has a package.json and a Python project when it has a requirements.txt, pyproject.toml or setup.py. A Node project runs its package manager's audit and outdated checks (pnpm when a pnpm-lock.yaml or pnpm-workspace.yaml is present, npm otherwise) and checks its .npmrc, lock file, audit script and the node version; a Python project runs safety over its requirements file, pip's outdated list, and checks pinning, a virtual environment, Bandit config, pyproject security tools and the python3 version. Every command runs through std-cli under the exec grant. AUDIT_DONE answers once with the run's progress lines (the scanned, skipped and failed projects) and the report as console text (ANSI colours), compact JSON and SARIF 2.1.0, the counts, and the exit code a CI step would use for the failOn level; AUDIT_FAILED answers a run asked for while another is in flight. A missing path or an unrecognised project is logged and skipped."
+]
+type AuditVulnerability = { id : string!, title : string, description : string, severity : string!, score : number!, package : string, affectedVersions : string, patchedVersion : string, cve : string, ghsa : string, cwe : string, references : [string]!, exploitAvailable : boolean!, fixAvailable : boolean!, dependencyPath : [string]!, ecosystem : string! }
+type AuditOutdated = { package : string!, current : string, latest : string, wanted : string, ecosystem : string!, isDevDependency : boolean! }
+type AuditConfigIssue = { type : string!, config : string!, description : string!, severity : string!, recommendation : string!, ecosystem : string! }
+type AuditPackageSummary = { vulnerabilityCount : number!, outdatedCount : number!, configIssueCount : number! }
+type AuditPackage = { name : string!, version : string!, path : string!, ecosystem : string!, vulnerabilities : [AuditVulnerability]!, outdated : [AuditOutdated]!, configIssues : [AuditConfigIssue]!, summary : AuditPackageSummary! }
+type AuditFinding = { version : string, paths : [string] }
+type AuditCvss = { score : number, vectorString : string }
+type PnpmAdvisory = { title : string, severity : string, cves : [string], github_advisory_id : string, cwe : [string], vulnerable_versions : string, patched_versions : string, overview : string, references : string, module_name : string, findings : [AuditFinding], url : string, cvss : AuditCvss }
+type NpmAdvisory = { source : number, name : string, dependency : string, title : string, url : string, severity : string, cwe : [string], cvss : AuditCvss, range : string }
+type NpmFix = { name : string, version : string, isSemVerMajor : boolean }
+type NpmVulnerability = { name : string, severity : string, isDirect : boolean, via : [(NpmAdvisory | string)], effects : [string], range : string, nodes : [string], fixAvailable : (boolean | NpmFix) }
+type NodeAuditJson = { advisories : Map string PnpmAdvisory, vulnerabilities : Map string NpmVulnerability }
+type NodeOutdatedEntry = { current : string, wanted : string, latest : string, type : string }
+type SafetyVulnerability = { advisory_id : string, advisory : string, severity : string, cvssv3 : number, package_name : string, vulnerable_spec : string, fixed_versions : string, cve : string, more_info_url : string }
+type SafetyJson = { vulnerabilities : [SafetyVulnerability] }
+type PipOutdated = { name : string, version : string, latest_version : string }
+type NodeOutdatedMap = Map string NodeOutdatedEntry
+type PipOutdatedList = [PipOutdated]
+type PackageJson = { name : string, version : string, scripts : Map string string }
+type EolPython = { major : number!, minor : number!, date : string! }
+orbital DependencyAuditOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
+  entity AuditRun [runtime] {
+    id : string!
+    status : "idle" | "auditing" @description "Whether a run is in flight." = idle
+    exitCode : number @description "The exit code of the last finished run." = 0
+    projects : [string] @description "The projects of the run in flight, relative to root." = []
+    failOn : string @description "The severity at or above which the run fails: critical, high, moderate, low or never." = "high"
+    includeDev : boolean @description "Whether outdated development dependencies are reported." = true
+    startedAt : number @description "Wall-clock milliseconds at which the run began." = 0
+    startNanos : number @description "Monotonic-clock nanoseconds at which the run began." = 0
+    cursor : number @description "Index of the project being audited." = 0
+    rel : string @description "The project being audited, relative to root." = ""
+    present : [string] @description "The marker files and directories the project has." = []
+    checkCursor : number @description "Index of the next marker file to look for." = 0
+    pkgName : string = ""
+    pkgVersion : string = ""
+    pkgScripts : Map string string = {}
+    pm : string @description "The Node package manager: pnpm or npm." = "npm"
+    npmrcAuditOff : boolean @description "The project's .npmrc disables audits." = false
+    requirements : string @description "The text of the project's requirements.txt." = ""
+    pyproject : string @description "The text of the project's pyproject.toml." = ""
+    vulns : [AuditVulnerability] = []
+    outdated : [AuditOutdated] = []
+    issues : [AuditConfigIssue] = []
+    packages : [AuditPackage] @description "Every finished project report of the run, in order." = []
+    log : [string] @description "The progress lines of the run in flight, as the CLI printed them." = []
+  }
+
+  trait PnpmCli = Cli.traits.CliRunner {
+    listens { DependencyAuditor.AUD_PNPM_RUN -> CLI_RUN }
+    config { command: "pnpm" }
+  }
+  trait NpmCli = Cli.traits.CliRunner {
+    listens { DependencyAuditor.AUD_NPM_RUN -> CLI_RUN }
+    config { command: "npm" }
+  }
+  trait NodeCli = Cli.traits.CliRunner {
+    listens { DependencyAuditor.AUD_NODE_RUN -> CLI_RUN }
+    config { command: "node" }
+  }
+  trait SafetyCli = Cli.traits.CliRunner {
+    listens { DependencyAuditor.AUD_SAFETY_RUN -> CLI_RUN }
+    config { command: "safety" }
+  }
+  trait PipCli = Cli.traits.CliRunner {
+    listens { DependencyAuditor.AUD_PIP_RUN -> CLI_RUN }
+    config { command: "pip" }
+  }
+  trait PythonCli = Cli.traits.CliRunner {
+    listens { DependencyAuditor.AUD_PYTHON_RUN -> CLI_RUN }
+    config { command: "python3" }
+  }
+
+  trait DependencyAuditor -> AuditRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.status "idle")
+      AUDIT -> auditing
+        (set @entity.status "auditing")
+        (set @entity.projects @payload.projects)
+        (set @entity.failOn (or @payload.failOn "high"))
+        (set @entity.includeDev (if (== @payload.includeDev null) true @payload.includeDev))
+        (set @entity.startedAt @now)
+        (set @entity.cursor 0)
+        (set @entity.packages [])
+        (set @entity.log [])
+        (set @entity.log (array/append @entity.log (str/concat "\u{1b}[36mℹ\u{1b}[0m " (str/concat "Scanning " (array/len @payload.projects) " project(s)..."))))
+        (os/clock-monotonic { key: "start" emit: { success: AUD_STARTED failure: AUD_CLOCK_FAILED } })
+      AUD_REPORT -> idle
+        (let ((vs (array/flatten (array/map @entity.packages (fn p @p.vulnerabilities))))
+              (ods (array/flatten (array/map @entity.packages (fn p @p.outdated))))
+              (cs (array/flatten (array/map @entity.packages (fn p @p.configIssues))))
+              (crit (array/len (array/filter (array/flatten (array/map @entity.packages (fn p @p.vulnerabilities))) (fn v (= @v.severity "critical")))))
+              (high (array/len (array/filter (array/flatten (array/map @entity.packages (fn p @p.vulnerabilities))) (fn v (= @v.severity "high")))))
+              (mod (array/len (array/filter (array/flatten (array/map @entity.packages (fn p @p.vulnerabilities))) (fn v (= @v.severity "moderate")))))
+              (low (array/len (array/filter (array/flatten (array/map @entity.packages (fn p @p.vulnerabilities))) (fn v (= @v.severity "low")))))
+              (info (array/len (array/filter (array/flatten (array/map @entity.packages (fn p @p.vulnerabilities))) (fn v (= @v.severity "info")))))
+              (idx (array/indexOf ["critical", "high", "moderate", "low"] @entity.failOn))
+              (iso (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
+              (sevColor { critical: "\u{1b}[41m\u{1b}[37m\u{1b}[1m", high: "\u{1b}[31m\u{1b}[1m", moderate: "\u{1b}[33m", low: "\u{1b}[34m", info: "\u{1b}[2m" })
+              (sevLabel { critical: "CRITICAL", high: "HIGH", moderate: "MODERATE", low: "LOW", info: "INFO" })
+              (sarifLevel { critical: "error", high: "error", moderate: "warning", low: "note", info: "note" }))
+          (emit AUDIT_DONE {
+            log: @entity.log,
+            vulnerabilityCount: (array/len @vs),
+            outdatedCount: (array/len @ods),
+            configIssueCount: (array/len @cs),
+            exitCode: (if (= @entity.failOn "never") 0 (if (or (and (>= @idx 0) (> @crit 0)) (and (>= @idx 1) (> @high 0)) (and (>= @idx 2) (> @mod 0)) (and (>= @idx 3) (> @low 0))) 1 0)),
+            json: (str/concat "{" (str/join [(str/concat "\"projectName\":" (json/stringify "almadar-security-audit")) (str/concat "\"timestamp\":" (json/stringify @entity.startedAt)) (str/concat "\"duration\":" (json/stringify @payload.duration)) (str/concat "\"packages\":" (str/concat "[" (str/join (array/map @entity.packages (fn p (str/concat "{" (str/join [(str/concat "\"name\":" (json/stringify @p.name)) (str/concat "\"version\":" (json/stringify @p.version)) (str/concat "\"path\":" (json/stringify @p.path)) (str/concat "\"ecosystem\":" (json/stringify @p.ecosystem)) (str/concat "\"vulnerabilities\":" (str/concat "[" (str/join (array/map @p.vulnerabilities (fn v (if (= @v.ecosystem "node") (str/concat "{" (str/join (array/flatten [[(str/concat "\"id\":" (json/stringify @v.id))] (if (!= @v.title null) [(str/concat "\"title\":" (json/stringify @v.title))] (array/take [(str/concat "" "")] 0)) (if (!= @v.description null) [(str/concat "\"description\":" (json/stringify @v.description))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"severity\":" (json/stringify @v.severity))] [(str/concat "\"score\":" (json/stringify @v.score))] (if (!= @v.package null) [(str/concat "\"package\":" (json/stringify @v.package))] (array/take [(str/concat "" "")] 0)) (if (!= @v.affectedVersions null) [(str/concat "\"affectedVersions\":" (json/stringify @v.affectedVersions))] (array/take [(str/concat "" "")] 0)) (if (!= @v.patchedVersion null) [(str/concat "\"patchedVersion\":" (json/stringify @v.patchedVersion))] (array/take [(str/concat "" "")] 0)) (if (!= @v.cve null) [(str/concat "\"cve\":" (json/stringify @v.cve))] (array/take [(str/concat "" "")] 0)) (if (!= @v.ghsa null) [(str/concat "\"ghsa\":" (json/stringify @v.ghsa))] (array/take [(str/concat "" "")] 0)) (if (!= @v.cwe null) [(str/concat "\"cwe\":" (json/stringify @v.cwe))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"references\":" (json/stringify @v.references))] [(str/concat "\"exploitAvailable\":" (json/stringify @v.exploitAvailable))] [(str/concat "\"fixAvailable\":" (json/stringify @v.fixAvailable))] [(str/concat "\"dependencyPath\":" (json/stringify @v.dependencyPath))] [(str/concat "\"ecosystem\":" (json/stringify @v.ecosystem))]]) ",") "}") (str/concat "{" (str/join (array/flatten [[(str/concat "\"id\":" (json/stringify @v.id))] (if (!= @v.title null) [(str/concat "\"title\":" (json/stringify @v.title))] (array/take [(str/concat "" "")] 0)) (if (!= @v.description null) [(str/concat "\"description\":" (json/stringify @v.description))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"severity\":" (json/stringify @v.severity))] [(str/concat "\"score\":" (json/stringify @v.score))] (if (!= @v.package null) [(str/concat "\"package\":" (json/stringify @v.package))] (array/take [(str/concat "" "")] 0)) (if (!= @v.affectedVersions null) [(str/concat "\"affectedVersions\":" (json/stringify @v.affectedVersions))] (array/take [(str/concat "" "")] 0)) (if (!= @v.patchedVersion null) [(str/concat "\"patchedVersion\":" (json/stringify @v.patchedVersion))] (array/take [(str/concat "" "")] 0)) (if (!= @v.cve null) [(str/concat "\"cve\":" (json/stringify @v.cve))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"references\":" (json/stringify @v.references))] [(str/concat "\"exploitAvailable\":" (json/stringify @v.exploitAvailable))] [(str/concat "\"fixAvailable\":" (json/stringify @v.fixAvailable))] [(str/concat "\"ecosystem\":" (json/stringify @v.ecosystem))] [(str/concat "\"dependencyPath\":" (json/stringify @v.dependencyPath))]]) ",") "}")))) ",") "]")) (str/concat "\"outdated\":" (str/concat "[" (str/join (array/map @p.outdated (fn d (str/concat "{" (str/join (array/flatten [[(str/concat "\"package\":" (json/stringify @d.package))] (if (!= @d.current null) [(str/concat "\"current\":" (json/stringify @d.current))] (array/take [(str/concat "" "")] 0)) (if (!= @d.latest null) [(str/concat "\"latest\":" (json/stringify @d.latest))] (array/take [(str/concat "" "")] 0)) (if (!= @d.wanted null) [(str/concat "\"wanted\":" (json/stringify @d.wanted))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"ecosystem\":" (json/stringify @d.ecosystem))] [(str/concat "\"isDevDependency\":" (json/stringify @d.isDevDependency))]]) ",") "}"))) ",") "]")) (str/concat "\"configIssues\":" (json/stringify @p.configIssues)) (str/concat "\"summary\":" (json/stringify @p.summary))] ",") "}"))) ",") "]")) (str/concat "\"vulnerabilities\":" (str/concat "[" (str/join (array/map @vs (fn v (if (= @v.ecosystem "node") (str/concat "{" (str/join (array/flatten [[(str/concat "\"id\":" (json/stringify @v.id))] (if (!= @v.title null) [(str/concat "\"title\":" (json/stringify @v.title))] (array/take [(str/concat "" "")] 0)) (if (!= @v.description null) [(str/concat "\"description\":" (json/stringify @v.description))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"severity\":" (json/stringify @v.severity))] [(str/concat "\"score\":" (json/stringify @v.score))] (if (!= @v.package null) [(str/concat "\"package\":" (json/stringify @v.package))] (array/take [(str/concat "" "")] 0)) (if (!= @v.affectedVersions null) [(str/concat "\"affectedVersions\":" (json/stringify @v.affectedVersions))] (array/take [(str/concat "" "")] 0)) (if (!= @v.patchedVersion null) [(str/concat "\"patchedVersion\":" (json/stringify @v.patchedVersion))] (array/take [(str/concat "" "")] 0)) (if (!= @v.cve null) [(str/concat "\"cve\":" (json/stringify @v.cve))] (array/take [(str/concat "" "")] 0)) (if (!= @v.ghsa null) [(str/concat "\"ghsa\":" (json/stringify @v.ghsa))] (array/take [(str/concat "" "")] 0)) (if (!= @v.cwe null) [(str/concat "\"cwe\":" (json/stringify @v.cwe))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"references\":" (json/stringify @v.references))] [(str/concat "\"exploitAvailable\":" (json/stringify @v.exploitAvailable))] [(str/concat "\"fixAvailable\":" (json/stringify @v.fixAvailable))] [(str/concat "\"dependencyPath\":" (json/stringify @v.dependencyPath))] [(str/concat "\"ecosystem\":" (json/stringify @v.ecosystem))]]) ",") "}") (str/concat "{" (str/join (array/flatten [[(str/concat "\"id\":" (json/stringify @v.id))] (if (!= @v.title null) [(str/concat "\"title\":" (json/stringify @v.title))] (array/take [(str/concat "" "")] 0)) (if (!= @v.description null) [(str/concat "\"description\":" (json/stringify @v.description))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"severity\":" (json/stringify @v.severity))] [(str/concat "\"score\":" (json/stringify @v.score))] (if (!= @v.package null) [(str/concat "\"package\":" (json/stringify @v.package))] (array/take [(str/concat "" "")] 0)) (if (!= @v.affectedVersions null) [(str/concat "\"affectedVersions\":" (json/stringify @v.affectedVersions))] (array/take [(str/concat "" "")] 0)) (if (!= @v.patchedVersion null) [(str/concat "\"patchedVersion\":" (json/stringify @v.patchedVersion))] (array/take [(str/concat "" "")] 0)) (if (!= @v.cve null) [(str/concat "\"cve\":" (json/stringify @v.cve))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"references\":" (json/stringify @v.references))] [(str/concat "\"exploitAvailable\":" (json/stringify @v.exploitAvailable))] [(str/concat "\"fixAvailable\":" (json/stringify @v.fixAvailable))] [(str/concat "\"ecosystem\":" (json/stringify @v.ecosystem))] [(str/concat "\"dependencyPath\":" (json/stringify @v.dependencyPath))]]) ",") "}")))) ",") "]")) (str/concat "\"outdated\":" (str/concat "[" (str/join (array/map @ods (fn d (str/concat "{" (str/join (array/flatten [[(str/concat "\"package\":" (json/stringify @d.package))] (if (!= @d.current null) [(str/concat "\"current\":" (json/stringify @d.current))] (array/take [(str/concat "" "")] 0)) (if (!= @d.latest null) [(str/concat "\"latest\":" (json/stringify @d.latest))] (array/take [(str/concat "" "")] 0)) (if (!= @d.wanted null) [(str/concat "\"wanted\":" (json/stringify @d.wanted))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"ecosystem\":" (json/stringify @d.ecosystem))] [(str/concat "\"isDevDependency\":" (json/stringify @d.isDevDependency))]]) ",") "}"))) ",") "]")) (str/concat "\"configIssues\":" (json/stringify @cs)) (str/concat "\"summary\":" (json/stringify { vulnerabilityCount: (array/len @vs), criticalCount: @crit, highCount: @high, moderateCount: @mod, lowCount: @low, infoCount: @info, outdatedCount: (array/len @ods), configIssueCount: (array/len @cs) }))] ",") "}"),
+            sarif: (str/concat "{\"$schema\":" (json/stringify "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json") ",\"version\":\"2.1.0\",\"runs\":[{\"tool\":{\"driver\":{\"name\":\"almadar-security-audit\",\"informationUri\":\"https://almadar.io\",\"version\":\"1.0.0\",\"rules\":" (str/concat "[" (str/join (array/map (array/filter @vs (fn v (= (array/findIndex @vs (fn w (= @w.id @v.id))) (array/indexOf @vs @v)))) (fn v (str/concat "{" (str/join (array/flatten [[(str/concat "\"id\":" (json/stringify @v.id))] (if (!= @v.title null) [(str/concat "\"name\":" (json/stringify @v.title))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"shortDescription\":" (if (!= @v.title null) (str/concat "{\"text\":" (json/stringify @v.title) "}") "{}"))] [(str/concat "\"fullDescription\":" (if (!= @v.description null) (str/concat "{\"text\":" (json/stringify @v.description) "}") "{}"))] [(str/concat "\"defaultConfiguration\":" (json/stringify { level: (object/get @sarifLevel @v.severity) }))] [(str/concat "\"help\":" (if (!= @v.description null) (json/stringify { text: @v.description, markdown: @v.description }) "{}"))] [(str/concat "\"properties\":" (json/stringify { tags: ["security", @v.ecosystem, @v.severity], precision: "high" }))]]) ",") "}"))) ",") "]") "}},\"results\":" (str/concat "[" (str/join (array/map @vs (fn v (str/concat "{" (str/join [(str/concat "\"ruleId\":" (json/stringify @v.id)) (str/concat "\"level\":" (json/stringify (object/get @sarifLevel @v.severity))) (str/concat "\"message\":" (json/stringify { text: (str/concat @v.title " in " @v.package " (" @v.affectedVersions ")"), markdown: (str/concat "**" @v.title "**\n\nPackage: " @v.package "\nAffected versions: " @v.affectedVersions) })) (str/concat "\"locations\":" (json/stringify [{ physicalLocation: { artifactLocation: { uri: (if (= @v.ecosystem "node") "package.json" "requirements.txt") } } }])) (str/concat "\"properties\":" (str/concat "{" (str/join (array/flatten [[(str/concat "\"cvssScore\":" (json/stringify @v.score))] (if (!= @v.cve null) [(str/concat "\"cve\":" (json/stringify @v.cve))] (array/take [(str/concat "" "")] 0)) (if (!= @v.cwe null) [(str/concat "\"cwe\":" (json/stringify @v.cwe))] (array/take [(str/concat "" "")] 0)) [(str/concat "\"fixAvailable\":" (json/stringify @v.fixAvailable))]]) ",") "}"))] ",") "}"))) ",") "]") ",\"invocations\":[{\"executionSuccessful\":true,\"startTimeUtc\":" (json/stringify @iso) "}]}]}"),
+            console: (str/join (array/flatten [
+              [(str/concat "\n\u{1b}[1m\u{1b}[34m" (str/repeat "═" 25) "\u{1b}[0m\n\u{1b}[1m\u{1b}[34m  SECURITY AUDIT REPORT  \u{1b}[0m\n\u{1b}[1m\u{1b}[34m" (str/repeat "═" 25) "\u{1b}[0m\n")],
+              [(str/concat "Project: " "almadar-security-audit")],
+              [(str/concat "Scanned: " @iso)],
+              [(str/concat "Duration: " @payload.duration "ms")],
+              [(str/concat "" "")],
+              [(str/concat "\n\u{1b}[1m\u{1b}[37mSUMMARY\u{1b}[0m\n\u{1b}[2m" (str/repeat "─" 7) "\u{1b}[0m")],
+              [(str/concat "Total Vulnerabilities: " (if (= (array/len @vs) 0) "\u{1b}[32m0\u{1b}[0m" (if (> (array/len @vs) 10) (str/concat "\u{1b}[31m" (array/len @vs) "\u{1b}[0m") (str/concat "\u{1b}[33m" (array/len @vs) "\u{1b}[0m"))))],
+              [(str/concat "  Critical: " (if (= @crit 0) "\u{1b}[2m0\u{1b}[0m" (str/concat "\u{1b}[31m" @crit "\u{1b}[0m")))],
+              [(str/concat "  High: " (if (= @high 0) "\u{1b}[2m0\u{1b}[0m" (str/concat "\u{1b}[31m" @high "\u{1b}[0m")))],
+              [(str/concat "  Moderate: " (if (= @mod 0) "\u{1b}[2m0\u{1b}[0m" (str/concat "\u{1b}[31m" @mod "\u{1b}[0m")))],
+              [(str/concat "  Low: " (if (= @low 0) "\u{1b}[2m0\u{1b}[0m" (str/concat "\u{1b}[31m" @low "\u{1b}[0m")))],
+              [(str/concat "  Info: " (if (= @info 0) "\u{1b}[2m0\u{1b}[0m" (str/concat "\u{1b}[31m" @info "\u{1b}[0m")))],
+              [(str/concat "Outdated Dependencies: " (if (= (array/len @ods) 0) "\u{1b}[32m0\u{1b}[0m" (if (> (array/len @ods) 10) (str/concat "\u{1b}[31m" (array/len @ods) "\u{1b}[0m") (str/concat "\u{1b}[33m" (array/len @ods) "\u{1b}[0m"))))],
+              [(str/concat "Config Issues: " (if (= (array/len @cs) 0) "\u{1b}[32m0\u{1b}[0m" (if (> (array/len @cs) 10) (str/concat "\u{1b}[31m" (array/len @cs) "\u{1b}[0m") (str/concat "\u{1b}[33m" (array/len @cs) "\u{1b}[0m"))))],
+              [(str/concat "" "")],
+              (if (= (array/len @vs) 0) (array/take [(str/concat "" "")] 0)
+                (array/flatten [
+                  [(str/concat "\n\u{1b}[1m\u{1b}[37mVULNERABILITIES\u{1b}[0m\n\u{1b}[2m" (str/repeat "─" 15) "\u{1b}[0m")],
+                  (array/flatten (array/map ["critical", "high", "moderate", "low", "info"] (fn sev
+                    (if (= (array/len (array/filter @vs (fn v (= @v.severity @sev)))) 0) (array/take [(str/concat "" "")] 0)
+                      (array/concat
+                        [(str/concat "\n" (object/get @sevColor @sev) (object/get @sevLabel @sev) "\u{1b}[0m (" (array/len (array/filter @vs (fn v (= @v.severity @sev)))) "):")]
+                        (array/map (array/filter @vs (fn v (= @v.severity @sev))) (fn v
+                          (str/join (array/flatten [
+                            [(str/concat "  " (if (str/startsWith @v.id "CVE-") "\u{1b}[31m" (if (str/startsWith @v.id "GHSA-") "\u{1b}[35m" "\u{1b}[33m")) @v.id "\u{1b}[0m: " @v.title)],
+                            [(str/concat "    Package: \u{1b}[36m" @v.package "\u{1b}[0m")],
+                            [(str/concat "    Severity: " (object/get @sevColor @v.severity) (object/get @sevLabel @v.severity) "\u{1b}[0m (CVSS: " @v.score ")")],
+                            [(str/concat "    Affected: " @v.affectedVersions)],
+                            (if (and (!= @v.patchedVersion null) (!= @v.patchedVersion "")) [(str/concat "    Patched: " @v.patchedVersion)] (array/take [(str/concat "" "")] 0)),
+                            (if (and (!= @v.cve null) (!= @v.cve "")) [(str/concat "    CVE: " @v.cve)] (array/take [(str/concat "" "")] 0)),
+                            (if (> (array/len @v.dependencyPath) 1) [(str/concat "    Path: " (str/join @v.dependencyPath " → "))] (array/take [(str/concat "" "")] 0)),
+                            (if @v.fixAvailable [(str/concat "    \u{1b}[32m✓ Fix available" "\u{1b}[0m")] (array/take [(str/concat "" "")] 0))
+                          ]) "\n")))))))),
+                  [(str/concat "" "")]
+                ])),
+              (if (= (array/len @ods) 0) (array/take [(str/concat "" "")] 0)
+                (array/flatten [
+                  [(str/concat "\n\u{1b}[1m\u{1b}[37mOUTDATED DEPENDENCIES\u{1b}[0m\n\u{1b}[2m" (str/repeat "─" 21) "\u{1b}[0m")],
+                  (array/map @ods (fn d (str/concat "  \u{1b}[36m" @d.package "\u{1b}[0m" (if @d.isDevDependency " [dev]" "") ": \u{1b}[31m" @d.current "\u{1b}[0m → \u{1b}[32m" @d.latest "\u{1b}[0m"))),
+                  [(str/concat "" "")]
+                ])),
+              (if (= (array/len @cs) 0) (array/take [(str/concat "" "")] 0)
+                (array/flatten [
+                  [(str/concat "\n\u{1b}[1m\u{1b}[37mCONFIGURATION ISSUES\u{1b}[0m\n\u{1b}[2m" (str/repeat "─" 20) "\u{1b}[0m")],
+                  (array/map @cs (fn c (str/concat "  [" @c.type "] " (object/get @sevColor @c.severity) (object/get @sevLabel @c.severity) "\u{1b}[0m " @c.config "\n    " @c.description "\n    Recommendation: " @c.recommendation))),
+                  [(str/concat "" "")]
+                ])),
+              [(str/concat "\n\u{1b}[1m\u{1b}[37mPACKAGE REPORTS\u{1b}[0m\n\u{1b}[2m" (str/repeat "─" 15) "\u{1b}[0m")],
+              (array/flatten (array/map @entity.packages (fn p [
+                (str/concat "\n📦 \u{1b}[36m" @p.name "\u{1b}[0m \u{1b}[2mv" @p.version "\u{1b}[0m"),
+                (str/concat "   Ecosystem: " @p.ecosystem),
+                (str/concat "   Vulnerabilities: " @p.summary.vulnerabilityCount),
+                (str/concat "   Outdated: " @p.summary.outdatedCount),
+                (str/concat "   Config Issues: " @p.summary.configIssueCount)
+              ]))),
+              [(str/concat "" "")],
+              [(str/concat "\u{1b}[2m" (str/repeat "═" 50) "\u{1b}[0m")],
+              [(if (> @crit 0) (str/concat "\u{1b}[41m\u{1b}[37m CRITICAL VULNERABILITIES DETECTED " "\u{1b}[0m") (if (> @high 0) (str/concat "\u{1b}[31m HIGH VULNERABILITIES DETECTED " "\u{1b}[0m") (if (> (array/len @vs) 0) (str/concat "\u{1b}[33m VULNERABILITIES DETECTED " "\u{1b}[0m") (str/concat "\u{1b}[32m ✓ No vulnerabilities detected " "\u{1b}[0m"))))]
+            ]) "\n")
+          }))
+        (set @entity.exitCode 0)
+    }
+
+    state auditing {
+      INIT -> auditing
+      AUDIT -> auditing
+        (emit AUDIT_FAILED { code: "audit_busy" message: "another audit is in flight" })
+      AUD_STARTED -> auditing
+        (set @entity.startNanos @payload.nanos)
+        (emit AUD_NEXT { })
+      AUD_CLOCK_FAILED -> auditing
+        (emit AUD_NEXT { })
+
+      AUD_NEXT -> auditing when (>= @entity.cursor (array/len @entity.projects))
+        (os/clock-monotonic { key: "end" emit: { success: AUD_ENDED failure: AUD_END_CLOCK_FAILED } })
+      AUD_NEXT -> auditing when (< @entity.cursor (array/len @entity.projects))
+        (set @entity.rel (array/nth @entity.projects @entity.cursor))
+        (set @entity.present [])
+        (set @entity.checkCursor 0)
+        (set @entity.vulns [])
+        (set @entity.outdated [])
+        (set @entity.issues [])
+        (set @entity.pkgName "")
+        (set @entity.pkgVersion "")
+        (set @entity.pkgScripts {})
+        (set @entity.npmrcAuditOff false)
+        (set @entity.requirements "")
+        (set @entity.pyproject "")
+        (os/exists (str/concat @config.root "/" (array/nth @entity.projects @entity.cursor)) { key: "project" emit: { success: AUD_PROJECT_CHECKED failure: AUD_PROJECT_MISSING } })
+      AUD_PROJECT_CHECKED -> auditing when (not @payload.ok)
+        (set @entity.log (array/append @entity.log (str/concat "\u{1b}[31m✗\u{1b}[0m " (str/concat "Path not found: " @config.root "/" @entity.rel))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit AUD_NEXT { })
+      AUD_PROJECT_CHECKED -> auditing when @payload.ok
+        (emit AUD_CHECK { })
+      AUD_PROJECT_MISSING -> auditing
+        (set @entity.log (array/append @entity.log (str/concat "\u{1b}[31m✗\u{1b}[0m " (str/concat "Path not found: " @config.root "/" @entity.rel))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit AUD_NEXT { })
+
+      AUD_CHECK -> auditing when (< @entity.checkCursor (array/len @config.markers))
+        (os/exists (str/concat @config.root "/" @entity.rel "/" (array/nth @config.markers @entity.checkCursor)) { key: "marker" emit: { success: AUD_CHECKED failure: AUD_CHECK_FAILED } })
+      AUD_CHECK -> auditing when (>= @entity.checkCursor (array/len @config.markers))
+        (emit AUD_DETECT { })
+      AUD_CHECKED -> auditing when @payload.ok
+        (set @entity.present (array/append @entity.present (array/nth @config.markers @entity.checkCursor)))
+        (set @entity.checkCursor (+ @entity.checkCursor 1))
+        (emit AUD_CHECK { })
+      AUD_CHECKED -> auditing when (not @payload.ok)
+        (set @entity.checkCursor (+ @entity.checkCursor 1))
+        (emit AUD_CHECK { })
+      AUD_CHECK_FAILED -> auditing
+        (set @entity.checkCursor (+ @entity.checkCursor 1))
+        (emit AUD_CHECK { })
+
+      AUD_DETECT -> auditing when (array/includes @entity.present "package.json")
+        (set @entity.log (array/append @entity.log (str/concat "\u{1b}[36mℹ\u{1b}[0m " (str/concat "Auditing Node.js project: " @config.root "/" @entity.rel))))
+        (set @entity.pm (if (or (array/includes @entity.present "pnpm-lock.yaml") (array/includes @entity.present "pnpm-workspace.yaml")) "pnpm" "npm"))
+        (os/read-file (str/concat @config.root "/" @entity.rel "/package.json") { key: "package" emit: { success: AUD_PACKAGE_READ failure: AUD_PACKAGE_UNREAD } })
+      AUD_DETECT -> auditing when (and (not (array/includes @entity.present "package.json")) (or (array/includes @entity.present "requirements.txt") (array/includes @entity.present "pyproject.toml") (array/includes @entity.present "setup.py")))
+        (set @entity.log (array/append @entity.log (str/concat "\u{1b}[36mℹ\u{1b}[0m " (str/concat "Auditing Python project: " @config.root "/" @entity.rel))))
+        (emit AUD_PY_START { })
+      AUD_DETECT -> auditing when (and (not (array/includes @entity.present "package.json")) (not (or (array/includes @entity.present "requirements.txt") (array/includes @entity.present "pyproject.toml") (array/includes @entity.present "setup.py"))))
+        (set @entity.log (array/append @entity.log (str/concat "\u{1b}[33m⚠\u{1b}[0m " (str/concat "No recognized project found at " @config.root "/" @entity.rel))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit AUD_NEXT { })
+
+      AUD_PACKAGE_READ -> auditing
+        (let ((p (json/parse (bytes/to-string @payload.data) PackageJson)))
+          (do
+            (set @entity.pkgName (or (object/get @p "name") "unknown"))
+            (set @entity.pkgVersion (or (object/get @p "version") "0.0.0"))
+            (set @entity.pkgScripts (or (object/get @p "scripts") {}))))
+        (emit AUD_NODE_CONFIG { })
+      AUD_PACKAGE_UNREAD -> auditing
+        (set @entity.pkgName "unknown")
+        (set @entity.pkgVersion "0.0.0")
+        (emit AUD_NODE_CONFIG { })
+      AUD_NODE_CONFIG -> auditing when (array/includes @entity.present ".npmrc")
+        (os/read-file (str/concat @config.root "/" @entity.rel "/.npmrc") { key: "npmrc" emit: { success: AUD_NPMRC_READ failure: AUD_NPMRC_UNREAD } })
+      AUD_NODE_CONFIG -> auditing when (not (array/includes @entity.present ".npmrc"))
+        (emit AUD_NODE_AUDIT { })
+      AUD_NPMRC_READ -> auditing
+        (set @entity.npmrcAuditOff (str/includes (bytes/to-string @payload.data) "audit=false"))
+        (emit AUD_NODE_AUDIT { })
+      AUD_NPMRC_UNREAD -> auditing
+        (emit AUD_NODE_AUDIT { })
+
+      AUD_NODE_AUDIT -> auditing when (= @entity.pm "pnpm")
+        (emit AUD_PNPM_RUN { stage: "audit", argv: ["--dir", (str/concat @config.root "/" @entity.rel), "audit", "--json", "--audit-level=info"], env: @config.env })
+      AUD_NODE_AUDIT -> auditing when (= @entity.pm "npm")
+        (emit AUD_NPM_RUN { stage: "audit", argv: ["--prefix", (str/concat @config.root "/" @entity.rel), "audit", "--json", "--audit-level=info"], env: @config.env })
+
+      AUD_RAN -> auditing when (and (= @payload.stage "audit") (!= @payload.exitCode 0) (!= (object/get (json/parse @payload.stdout NodeAuditJson) "advisories") null))
+        (set @entity.vulns (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "advisories")))) (fn i (validate/pattern (array/nth (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "advisories")) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "advisories")) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "advisories")))) (fn i (not (validate/pattern (array/nth (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "advisories")) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((k (array/nth (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "advisories")) @i)) (v (array/nth (object/values (object/get (json/parse @payload.stdout NodeAuditJson) "advisories")) @i))) (let ((paths (object/get (array/first (or @v.findings [])) "paths")) (cve (if (== @v.cves null) null (array/first @v.cves))) (base (object/get { critical: 9, high: 7.5, moderate: 5, low: 2, info: 0 } @v.severity)))
+                  { id: (or @v.github_advisory_id @cve (str/concat "NPM-" @k)), title: @v.title, description: (or @v.overview ""), severity: @v.severity, score: (or @v.cvss.score (if (or (== @base null) (== @base 0)) 5 @base)), package: @v.module_name, affectedVersions: @v.vulnerable_versions, patchedVersion: @v.patched_versions, cve: @cve, ghsa: @v.github_advisory_id, cwe: (if (== @v.cwe null) null (array/first @v.cwe)), references: (if (and (!= @v.url null) (!= @v.url "")) (array/concat [@v.url] (if (== @v.references null) (array/take [@v.url] 0) (str/split @v.references "\n"))) (array/take [@v.url] 0)), exploitAvailable: (or (= @v.severity "critical") (= @v.severity "high")), fixAvailable: (!= (or @v.patched_versions "") ""), dependencyPath: (if (== @paths null) [@v.module_name] @paths), ecosystem: "node" })))))
+        (emit AUD_NODE_OUTDATED { })
+      AUD_RAN -> auditing when (and (= @payload.stage "audit") (or (= @payload.exitCode 0) (== (object/get (json/parse @payload.stdout NodeAuditJson) "advisories") null)) (!= (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities") null))
+        (set @entity.vulns (array/flatten (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")))) (fn i (validate/pattern (array/nth (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")))) (fn i (not (validate/pattern (array/nth (object/keys (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((e (array/nth (object/values (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities")) @i)))
+                  (array/map (array/filter @e.via (fn x (str/startsWith (json/stringify @x) "{"))) (fn x (let ((a (json/parse (json/stringify @x) NpmAdvisory)) (base (object/get { critical: 9, high: 7.5, moderate: 5, low: 2, info: 0 } @e.severity)))
+                    (let ((ghsa (if (str/startsWith (or (array/last (str/split (or @a.url "") "/")) "") "GHSA-") (array/last (str/split @a.url "/")) null)))
+                      { id: (or @ghsa (str/concat "NPM-" @a.source)), title: @a.title, description: "", severity: @a.severity, score: (if (> (or @a.cvss.score 0) 0) @a.cvss.score (if (or (== @base null) (== @base 0)) 5 @base)), package: @a.name, affectedVersions: @a.range, patchedVersion: null, cve: null, ghsa: @ghsa, cwe: (if (== @a.cwe null) null (array/first @a.cwe)), references: (if (and (!= @a.url null) (!= @a.url "")) [@a.url] (array/take [(str/concat "" "")] 0)), exploitAvailable: (or (= @a.severity "critical") (= @a.severity "high")), fixAvailable: (!= @e.fixAvailable false), dependencyPath: [@a.name], ecosystem: "node" })))))))))
+        (emit AUD_NODE_OUTDATED { })
+      AUD_RAN -> auditing when (and (= @payload.stage "audit") (or (= @payload.exitCode 0) (== (object/get (json/parse @payload.stdout NodeAuditJson) "advisories") null)) (== (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities") null))
+        (emit AUD_NODE_OUTDATED { })
+      AUD_RUN_FAILED -> auditing when (= @payload.stage "audit")
+        (set @entity.log (array/append @entity.log (str/concat "\u{1b}[33m⚠\u{1b}[0m " (str/concat "npm audit failed: " @payload.error))))
+        (emit AUD_NODE_OUTDATED { })
+
+      AUD_NODE_OUTDATED -> auditing when (= @entity.pm "pnpm")
+        (emit AUD_PNPM_RUN { stage: "outdated", argv: ["--dir", (str/concat @config.root "/" @entity.rel), "outdated", "--json"], env: @config.env })
+      AUD_NODE_OUTDATED -> auditing when (= @entity.pm "npm")
+        (emit AUD_NPM_RUN { stage: "outdated", argv: ["--prefix", (str/concat @config.root "/" @entity.rel), "outdated", "--json"], env: @config.env })
+      AUD_RAN -> auditing when (and (= @payload.stage "outdated") (or (= @payload.exitCode 0) (= @payload.exitCode 1)))
+        (set @entity.outdated (array/filter (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap)))) (fn i (validate/pattern (array/nth (object/keys (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap)) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap)) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap)))) (fn i (not (validate/pattern (array/nth (object/keys (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap)) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((k (array/nth (object/keys (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap)) @i)) (v (array/nth (object/values (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap)) @i))) { package: @k, current: @v.current, latest: @v.latest, wanted: @v.wanted, ecosystem: "node", isDevDependency: (= @v.type "devDependencies") }))) (fn d (or @entity.includeDev (not @d.isDevDependency)))))
+        (emit AUD_NODE_VERSION { })
+      AUD_RAN -> auditing when (and (= @payload.stage "outdated") (!= @payload.exitCode 0) (!= @payload.exitCode 1))
+        (emit AUD_NODE_VERSION { })
+      AUD_RUN_FAILED -> auditing when (= @payload.stage "outdated")
+        (emit AUD_NODE_VERSION { })
+
+      AUD_NODE_VERSION -> auditing
+        (set @entity.issues
+          (array/concat
+            (array/concat
+              (if @entity.npmrcAuditOff [{ type: "misconfiguration", config: ".npmrc", description: "npm audit is disabled in .npmrc", severity: "high", recommendation: "Remove \"audit=false\" from .npmrc to enable security audits", ecosystem: "node" }] [])
+              (if (or (array/includes @entity.present "package-lock.json") (array/includes @entity.present "pnpm-lock.yaml")) [] [{ type: "missing", config: "lock file", description: "No lock file (package-lock.json or pnpm-lock.yaml) found", severity: "moderate", recommendation: "Use a lock file to ensure reproducible builds and audit accuracy", ecosystem: "node" }]))
+            (if (or (object/has @entity.pkgScripts "audit") (object/has @entity.pkgScripts "security:audit")) [] [{ type: "missing", config: "package.json scripts", description: "No security audit script defined", severity: "low", recommendation: "Add \"audit\": \"npm audit\" to scripts for easy security checks", ecosystem: "node" }])))
+        (emit AUD_NODE_RUN { stage: "node-version", argv: ["--version"], env: @config.env })
+      AUD_RAN -> auditing when (= @payload.stage "node-version")
+        (let ((version (str/trim @payload.stdout)) (major (str/to-number (array/first (str/split (str/slice (str/trim @payload.stdout) 1) ".")))))
+          (set @entity.issues
+            (array/concat
+              (array/concat @entity.issues
+                (if (array/includes [14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 0, 1, 2, 3] @major) [{ type: "deprecated", config: "Node.js version", description: (str/concat "Node.js " @version " has reached End-of-Life (EOL)"), severity: "critical", recommendation: "Upgrade to an actively supported Node.js version (18.x, 20.x, or 22.x)", ecosystem: "node" }] []))
+              (if (= @major 18) [{ type: "deprecated", config: "Node.js version", description: (str/concat "Node.js " @major ".x is in Maintenance LTS mode"), severity: "low", recommendation: "Consider upgrading to Active LTS (20.x or 22.x) for latest features and security fixes", ecosystem: "node" }] []))))
+        (emit AUD_PACKAGE_DONE { ecosystem: "node" })
+      AUD_RUN_FAILED -> auditing when (= @payload.stage "node-version")
+        (emit AUD_PACKAGE_DONE { ecosystem: "node" })
+
+      AUD_PY_START -> auditing when (array/includes @entity.present "pyproject.toml")
+        (os/read-file (str/concat @config.root "/" @entity.rel "/pyproject.toml") { key: "pyproject" emit: { success: AUD_PYPROJECT_READ failure: AUD_PY_META_UNREAD } })
+      AUD_PY_START -> auditing when (and (not (array/includes @entity.present "pyproject.toml")) (array/includes @entity.present "setup.py"))
+        (os/read-file (str/concat @config.root "/" @entity.rel "/setup.py") { key: "setup" emit: { success: AUD_SETUP_READ failure: AUD_PY_META_UNREAD } })
+      AUD_PY_START -> auditing when (and (not (array/includes @entity.present "pyproject.toml")) (not (array/includes @entity.present "setup.py")))
+        (set @entity.pkgName "unknown")
+        (set @entity.pkgVersion "0.0.0")
+        (emit AUD_PY_REQUIREMENTS { })
+      AUD_PYPROJECT_READ -> auditing
+        (set @entity.pyproject (bytes/to-string @payload.data))
+        (set @entity.pkgName (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern (bytes/to-string @payload.data) "name\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "unknown"))
+        (set @entity.pkgVersion (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern (bytes/to-string @payload.data) "version\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "0.0.0"))
+        (emit AUD_PY_REQUIREMENTS { })
+      AUD_SETUP_READ -> auditing
+        (set @entity.pkgName (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern (bytes/to-string @payload.data) "name\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "unknown"))
+        (set @entity.pkgVersion (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern (bytes/to-string @payload.data) "version\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "0.0.0"))
+        (emit AUD_PY_REQUIREMENTS { })
+      AUD_PY_META_UNREAD -> auditing
+        (set @entity.pkgName "unknown")
+        (set @entity.pkgVersion "0.0.0")
+        (emit AUD_PY_REQUIREMENTS { })
+
+      AUD_PY_REQUIREMENTS -> auditing when (array/includes @entity.present "requirements.txt")
+        (os/read-file (str/concat @config.root "/" @entity.rel "/requirements.txt") { key: "requirements" emit: { success: AUD_REQUIREMENTS_READ failure: AUD_REQUIREMENTS_UNREAD } })
+      AUD_PY_REQUIREMENTS -> auditing when (not (array/includes @entity.present "requirements.txt"))
+        (emit AUD_PY_SAFETY { })
+      AUD_REQUIREMENTS_READ -> auditing
+        (set @entity.requirements (bytes/to-string @payload.data))
+        (emit AUD_PY_SAFETY { })
+      AUD_REQUIREMENTS_UNREAD -> auditing
+        (emit AUD_PY_SAFETY { })
+
+      AUD_PY_SAFETY -> auditing when (array/includes @entity.present "requirements.txt")
+        (emit AUD_SAFETY_RUN { stage: "safety", argv: (array/prepend ["--file", (str/concat @config.root "/" @entity.rel "/requirements.txt"), "--json"] "check"), env: @config.env })
+      AUD_PY_SAFETY -> auditing when (and (not (array/includes @entity.present "requirements.txt")) (array/includes @entity.present "requirements-dev.txt"))
+        (emit AUD_SAFETY_RUN { stage: "safety", argv: (array/prepend ["--file", (str/concat @config.root "/" @entity.rel "/requirements-dev.txt"), "--json"] "check"), env: @config.env })
+      AUD_PY_SAFETY -> auditing when (and (not (array/includes @entity.present "requirements.txt")) (not (array/includes @entity.present "requirements-dev.txt")))
+        (emit AUD_PY_OUTDATED { })
+      AUD_RAN -> auditing when (and (= @payload.stage "safety") (or (= @payload.exitCode 0) (= @payload.exitCode 64)))
+        (set @entity.vulns
+          (array/map (or (object/get (json/parse @payload.stdout SafetyJson) "vulnerabilities") [])
+            (fn v
+              (let ((sev (object/get { critical: "critical", high: "high", medium: "moderate", low: "low", info: "info" } (str/lower (or (object/get @v "severity") "moderate")))))
+                { id: (or (object/get @v "advisory_id") (object/get @v "cve") (str/concat "PYSEC-" (object/get @v "package_name"))), title: (or (object/get @v "advisory") "Security Vulnerability"), description: (or (object/get @v "advisory") ""), severity: (or @sev "moderate"), score: (or (object/get @v "cvssv3") 5), package: (object/get @v "package_name"), affectedVersions: (or (object/get @v "vulnerable_spec") ""), patchedVersion: (object/get @v "fixed_versions"), cve: (object/get @v "cve"), references: (if (and (!= (object/get @v "more_info_url") null) (!= (object/get @v "more_info_url") "")) [(object/get @v "more_info_url")] []), exploitAvailable: false, fixAvailable: (!= (or (object/get @v "fixed_versions") "") ""), ecosystem: "python", dependencyPath: (if (and (!= (object/get @v "package_name") null) (!= (object/get @v "package_name") "")) [(object/get @v "package_name")] []) }))))
+        (emit AUD_PY_OUTDATED { })
+      AUD_RAN -> auditing when (and (= @payload.stage "safety") (!= @payload.exitCode 0) (!= @payload.exitCode 64))
+        (emit AUD_PY_OUTDATED { })
+      AUD_RUN_FAILED -> auditing when (= @payload.stage "safety")
+        (emit AUD_PY_OUTDATED { })
+
+      AUD_PY_OUTDATED -> auditing
+        (emit AUD_PIP_RUN { stage: "pip-outdated", argv: (array/prepend ["--outdated", "--format=json"] "list"), env: @config.env })
+      AUD_RAN -> auditing when (and (= @payload.stage "pip-outdated") (= @payload.exitCode 0))
+        (set @entity.outdated
+          (array/map (or (json/parse (if (= @payload.stdout "") "[]" @payload.stdout) PipOutdatedList) [])
+            (fn p { package: (object/get @p "name"), current: (object/get @p "version"), latest: (object/get @p "latest_version"), wanted: (object/get @p "latest_version"), ecosystem: "python", isDevDependency: false })))
+        (emit AUD_PY_CONFIG { })
+      AUD_RAN -> auditing when (and (= @payload.stage "pip-outdated") (!= @payload.exitCode 0))
+        (emit AUD_PY_CONFIG { })
+      AUD_RUN_FAILED -> auditing when (= @payload.stage "pip-outdated")
+        (emit AUD_PY_CONFIG { })
+
+      AUD_PY_CONFIG -> auditing
+        (let ((unpinned (array/filter (array/filter (str/split @entity.requirements "\n") (fn l (and (!= (str/trim @l) "") (not (str/startsWith @l "#"))))) (fn l (and (not (validate/pattern @l "==|>=|<=|~=")) (not (str/startsWith @l "-")))))))
+          (set @entity.issues
+            (array/concat
+              (array/concat
+                (array/concat
+                  (array/concat
+                    (if (and (array/includes @entity.present "requirements.txt") (> (array/len @unpinned) 0)) [{ type: "misconfiguration", config: "requirements.txt", description: (str/concat (array/len @unpinned) " unpinned dependencies detected"), severity: "moderate", recommendation: "Pin dependency versions (e.g., package==1.2.3) for reproducible and secure builds", ecosystem: "python" }] [])
+                    (if (array/some ["venv", ".venv", "env", ".env", "virtualenv"] (fn d (array/includes @entity.present @d))) [] [{ type: "missing", config: "virtual environment", description: "No virtual environment directory found", severity: "low", recommendation: "Use virtual environments to isolate project dependencies", ecosystem: "python" }]))
+                  (if (array/includes @entity.present "bandit.yml") [] [{ type: "missing", config: "bandit.yml", description: "Bandit config for security linting not found", severity: "info", recommendation: "Consider adding Bandit for automated security scanning", ecosystem: "python" }]))
+                (if (array/includes @entity.present ".bandit") [] [{ type: "missing", config: ".bandit", description: "Bandit config for security linting not found", severity: "info", recommendation: "Consider adding Bandit for automated security scanning", ecosystem: "python" }]))
+              (if (and (array/includes @entity.present "pyproject.toml") (not (str/includes @entity.pyproject "bandit")) (not (str/includes @entity.pyproject "safety"))) [{ type: "missing", config: "pyproject.toml", description: "No security tools configured in pyproject.toml", severity: "low", recommendation: "Add security tools like bandit and safety to dev dependencies", ecosystem: "python" }] []))))
+        (emit AUD_PYTHON_RUN { stage: "python-version", argv: ["--version"], env: @config.env })
+      AUD_RAN -> auditing when (and (= @payload.stage "python-version") (validate/pattern (str/trim @payload.stdout) "Python \\d+\\.\\d+\\.\\d+"))
+        (let ((parts (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".")) (major (str/to-number (array/nth (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".") 0))) (minor (str/to-number (array/nth (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".") 1))) (eol (array/find [{ major: 2, minor: 7, date: "2020-01-01" }, { major: 3, minor: 5, date: "2020-09-13" }, { major: 3, minor: 6, date: "2021-12-23" }, { major: 3, minor: 7, date: "2023-06-27" }] (fn e (and (= @e.major (str/to-number (array/nth (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".") 0))) (<= (str/to-number (array/nth (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".") 1)) @e.minor))))))
+          (set @entity.issues
+            (array/concat
+              (array/concat @entity.issues
+                (if (== @eol null) [] [{ type: "deprecated", config: "Python version", description: (str/concat "Python " @major "." @minor " reached End-of-Life on " @eol.date), severity: (if (= @major 2) "critical" "high"), recommendation: "Upgrade to Python 3.9+ (3.11 or 3.12 recommended)", ecosystem: "python" }]))
+              (if (and (= @major 3) (= @minor 8)) [{ type: "deprecated", config: "Python version", description: "Python 3.8 is in security-fix-only mode", severity: "low", recommendation: "Upgrade to Python 3.11 or 3.12 for active development support", ecosystem: "python" }] []))))
+        (emit AUD_PACKAGE_DONE { ecosystem: "python" })
+      AUD_RAN -> auditing when (and (= @payload.stage "python-version") (not (validate/pattern (str/trim @payload.stdout) "Python \\d+\\.\\d+\\.\\d+")))
+        (emit AUD_PACKAGE_DONE { ecosystem: "python" })
+      AUD_RUN_FAILED -> auditing when (= @payload.stage "python-version")
+        (emit AUD_PACKAGE_DONE { ecosystem: "python" })
+
+      AUD_PACKAGE_DONE -> auditing
+        (set @entity.packages (array/append @entity.packages { name: @entity.pkgName, version: @entity.pkgVersion, path: (str/concat @config.root "/" @entity.rel), ecosystem: @payload.ecosystem, vulnerabilities: @entity.vulns, outdated: @entity.outdated, configIssues: @entity.issues, summary: { vulnerabilityCount: (array/len @entity.vulns), outdatedCount: (array/len @entity.outdated), configIssueCount: (array/len @entity.issues) } }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit AUD_NEXT { })
+
+      AUD_ENDED -> idle
+        (emit AUD_REPORT { duration: (math/round (/ (- @payload.nanos @entity.startNanos) 1000000)) })
+      AUD_END_CLOCK_FAILED -> idle
+        (emit AUD_REPORT { duration: 0 })
+    }
+
+    emits {
+      AUDIT_DONE -> external {
+        log : [string]!
+        console : string!
+        json : string!
+        sarif : string!
+        exitCode : number!
+        vulnerabilityCount : number!
+        outdatedCount : number!
+        configIssueCount : number!
+      }
+        @description "The run finished: its progress lines, the report as console text, compact JSON and SARIF 2.1.0, the counts, and the exit code for the run's failOn level."
+        @synonyms "audit finished, security report, vulnerabilities"
+        @tier "domain"
+      AUDIT_FAILED -> external {
+        code : string!
+        message : string!
+      }
+        @description "The run could not start: audit_busy (another audit is in flight)."
+        @synonyms "audit error, busy"
+        @tier "domain"
+      AUD_PNPM_RUN { stage : string!  argv : [string]!  env : Map string string }
+        @description "One pnpm command for the project being audited."
+        @tier "internal"
+      AUD_NPM_RUN { stage : string!  argv : [string]!  env : Map string string }
+        @description "One npm command for the project being audited."
+        @tier "internal"
+      AUD_NODE_RUN { stage : string!  argv : [string]!  env : Map string string }
+        @description "One node command (its version)."
+        @tier "internal"
+      AUD_SAFETY_RUN { stage : string!  argv : [string]!  env : Map string string }
+        @description "One safety check of the project's requirements."
+        @tier "internal"
+      AUD_PIP_RUN { stage : string!  argv : [string]!  env : Map string string }
+        @description "One pip command (the outdated list)."
+        @tier "internal"
+      AUD_PYTHON_RUN { stage : string!  argv : [string]!  env : Map string string }
+        @description "One python3 command (its version)."
+        @tier "internal"
+      AUD_STARTED -> internal { nanos : number! }
+        @tier "internal"
+      AUD_CLOCK_FAILED -> internal { error : string }
+        @tier "internal"
+      AUD_ENDED -> internal { nanos : number! }
+        @tier "internal"
+      AUD_END_CLOCK_FAILED -> internal { error : string }
+        @tier "internal"
+      AUD_NEXT -> internal { }
+        @tier "internal"
+      AUD_PROJECT_CHECKED -> internal { ok : boolean! }
+        @tier "internal"
+      AUD_PROJECT_MISSING -> internal { error : string }
+        @tier "internal"
+      AUD_CHECK -> internal { }
+        @tier "internal"
+      AUD_CHECKED -> internal { ok : boolean! }
+        @tier "internal"
+      AUD_CHECK_FAILED -> internal { error : string }
+        @tier "internal"
+      AUD_DETECT -> internal { }
+        @tier "internal"
+      AUD_PACKAGE_READ -> internal { data : bytes! }
+        @tier "internal"
+      AUD_PACKAGE_UNREAD -> internal { error : string }
+        @tier "internal"
+      AUD_NODE_CONFIG -> internal { }
+        @tier "internal"
+      AUD_NPMRC_READ -> internal { data : bytes! }
+        @tier "internal"
+      AUD_NPMRC_UNREAD -> internal { error : string }
+        @tier "internal"
+      AUD_NODE_AUDIT -> internal { }
+        @tier "internal"
+      AUD_NODE_OUTDATED -> internal { }
+        @tier "internal"
+      AUD_NODE_VERSION -> internal { }
+        @tier "internal"
+      AUD_PY_START -> internal { }
+        @tier "internal"
+      AUD_PYPROJECT_READ -> internal { data : bytes! }
+        @tier "internal"
+      AUD_SETUP_READ -> internal { data : bytes! }
+        @tier "internal"
+      AUD_PY_META_UNREAD -> internal { error : string }
+        @tier "internal"
+      AUD_PY_REQUIREMENTS -> internal { }
+        @tier "internal"
+      AUD_REQUIREMENTS_READ -> internal { data : bytes! }
+        @tier "internal"
+      AUD_REQUIREMENTS_UNREAD -> internal { error : string }
+        @tier "internal"
+      AUD_PY_SAFETY -> internal { }
+        @tier "internal"
+      AUD_PY_OUTDATED -> internal { }
+        @tier "internal"
+      AUD_PY_CONFIG -> internal { }
+        @tier "internal"
+      AUD_PACKAGE_DONE -> internal { ecosystem : string! }
+        @tier "internal"
+      AUD_REPORT -> internal { duration : number! }
+        @tier "internal"
+    }
+
+    config {
+      root : string = "/workspace"
+        @label "Projects root"
+        @description "The absolute directory the audited projects live under; AUDIT names each project relative to it. The composing program grants fs read under it."
+        @synonyms "workspace, repository root, projects directory"
+        @tier "domain"
+      env : Map string string = { PATH: "/usr/local/bin:/usr/bin:/bin" }
+        @label "Environment"
+        @description "The environment every audit command runs with; PATH must reach pnpm, npm, node, safety, pip and python3."
+        @synonyms "path, environment variables"
+        @tier "infra"
+      markers : [string] = ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".npmrc", "package-lock.json", "requirements.txt", "requirements-dev.txt", "pyproject.toml", "setup.py", "venv", ".venv", "env", ".env", "virtualenv", "bandit.yml", ".bandit"]
+        @label "Marker files"
+        @description "The files and directories looked for in each project's root: the manifests that decide its ecosystem and the configuration the checks read."
+        @synonyms "manifests, project files"
+        @tier "infra"
+    }
+
+    listens {
+      AUDIT -> external {
+        projects : [string]!
+        failOn : string
+        includeDev : boolean
+      }
+        @description "Audit these projects (paths relative to root); failOn sets the exit code's severity bar (default high) and includeDev whether outdated development dependencies count (default true)."
+        @synonyms "audit dependencies, security audit, scan vulnerabilities"
+      AUD_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "A std-cli CLI_DONE: one audit command exited."
+      AUD_RUN_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "A std-cli CLI_FAILED: one audit command could not run."
+      PnpmCli.CLI_DONE -> AUD_RAN
+      PnpmCli.CLI_FAILED -> AUD_RUN_FAILED
+      NpmCli.CLI_DONE -> AUD_RAN
+      NpmCli.CLI_FAILED -> AUD_RUN_FAILED
+      NodeCli.CLI_DONE -> AUD_RAN
+      NodeCli.CLI_FAILED -> AUD_RUN_FAILED
+      SafetyCli.CLI_DONE -> AUD_RAN
+      SafetyCli.CLI_FAILED -> AUD_RUN_FAILED
+      PipCli.CLI_DONE -> AUD_RAN
+      PipCli.CLI_FAILED -> AUD_RUN_FAILED
+      PythonCli.CLI_DONE -> AUD_RAN
+      PythonCli.CLI_FAILED -> AUD_RUN_FAILED
+    }
+  }
+
+  page "/dependency-audit" as DependencyAuditPage -> DependencyAuditor, PnpmCli, NpmCli, NodeCli, SafetyCli, PipCli, PythonCli
+}

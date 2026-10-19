@@ -1,7 +1,7 @@
 app std-docker [
   version: "1.0.0",
   exec: ["docker"],
-  description: "std-docker — drives the real docker CLI through os/spawn and os/wait. BUILD, RUN, STOP, REMOVE, LOGS, STATUS and LIST each run one or two docker commands (stdout and stderr piped, read to the end with os/read, then os/wait), parse the --format '{{json .}}' output with json/parse into typed records, and answer BUILD_DONE, RUN_DONE, STOP_DONE, REMOVE_DONE, LOGS_DONE, STATUS_DONE or LIST_DONE. A non-zero exit answers DOCKER_FAILED with the stderr text. One call at a time: a call made while another runs answers DOCKER_FAILED code docker_busy. Needs the exec grant for docker The child runs with exactly the environment the env knob names (an empty one still finds docker through PATH lookup and the default socket)."
+  description: "std-docker — drives the real docker CLI through std-cli. BUILD, RUN, STOP, REMOVE, LOGS, STATUS and LIST each run one or two docker commands (std-cli pipes stdout and stderr, reads both to the end and waits for the exit), parse the --format '{{json .}}' output with json/parse into typed records, and answer BUILD_DONE, RUN_DONE, STOP_DONE, REMOVE_DONE, LOGS_DONE, STATUS_DONE or LIST_DONE. A non-zero exit answers DOCKER_FAILED with the stderr text. One call at a time: a call made while another runs answers DOCKER_FAILED code docker_busy. Needs the exec grant for docker The child runs with exactly the environment the env knob names; it should carry PATH (an empty one does not find a docker outside the host's default search path) and DOCKER_HOST when the daemon is not on the default socket."
 ]
 type DockerLogLine = { at : string!, line : string! }
 type DockerPort = { host : number!, container : number!, protocol : string }
@@ -15,6 +15,8 @@ type DockerInspect = { Id : string!, Name : string, Created : string, State : Do
 type DockerImageInspect = { Id : string!, Size : number }
 type DockerContainerView = { id : string!, name : string!, image : string!, status : string!, ports : [DockerPortView]!, createdAt : number! }
 orbital DockerOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
   entity DockerCall [runtime] {
     id : string!
     op : string @description "The operation in flight: build, run, stop, remove, logs, status or list." = ""
@@ -22,14 +24,15 @@ orbital DockerOrbital {
     target : string @description "Container id or image tag the operation acts on." = ""
     startedAt : number @description "Monotonic-clock nanoseconds at which the build began." = 0
     buildMs : number @description "Milliseconds the finished build command took." = 0
-    pid : number @description "Process id of the docker child being read." = 0
-    outFd : number @description "Descriptor of the child's piped stdout." = 0
-    outDone : boolean @description "True once the child's stdout reached end of file." = false
-    errDone : boolean @description "True once the child's stderr reached end of file." = false
-    errFd : number @description "Descriptor of the child's piped stderr." = 0
-    out : bytes @description "Everything the child wrote to stdout so far." = ""
-    err : bytes @description "Everything the child wrote to stderr so far." = ""
-    exitCode : number @description "Exit code of the finished child; -1 when it ended by signal." = 0
+  }
+
+  trait DockerCli = Cli.traits.CliRunner {
+    listens {
+      DockerDriver.DOCKER_EXEC -> CLI_RUN
+    }
+    config {
+      command: "docker"
+    }
   }
 
   trait DockerDriver -> @rebindable DockerCall [integration, instance] {
@@ -43,29 +46,29 @@ orbital DockerOrbital {
         (set @entity.op "build")
         (set @entity.target (or @payload.tag ""))
         (os/clock-monotonic { key: "start" emit: { success: DOCKER_CLOCK failure: DOCKER_HOST_FAILED } })
-        (emit DOCKER_EXEC { stage: "build" argv: (array/concat (array/concat (array/concat ["build" "-q" "-t" @payload.tag] (if (!= (or @payload.dockerfile "") "") ["-f" @payload.dockerfile] [])) (array/flatten (array/map (object/entries (or @payload.buildArgs {})) (fn e ["--build-arg" (str/concat (array/nth @e 0) "=" (array/nth @e 1))])))) [(or @payload.context ".")]) })
+        (emit DOCKER_EXEC { env: @config.env stage: "build" argv: (array/concat (array/concat (array/concat ["build" "-q" "-t" @payload.tag] (if (!= (or @payload.dockerfile "") "") ["-f" @payload.dockerfile] [])) (array/flatten (array/map (object/entries (or @payload.buildArgs {})) (fn e ["--build-arg" (str/concat (array/nth @e 0) "=" (array/nth @e 1))])))) [(or @payload.context ".")]) })
       RUN -> working
         (set @entity.op "run")
-        (emit DOCKER_EXEC { stage: "run" argv: (array/concat (array/concat (array/concat (array/concat (array/concat ["run" "-d"] (if (!= (or @payload.name "") "") ["--name" @payload.name] [])) (array/flatten (array/map (or @payload.ports []) (fn p ["-p" (str/concat @p.host ":" @p.container "/" (or @p.protocol "tcp"))])))) (array/flatten (array/map (object/entries (or @payload.env {})) (fn e ["-e" (str/concat (array/nth @e 0) "=" (array/nth @e 1))])))) (array/flatten (array/map (or @payload.volumes []) (fn v ["-v" (str/concat @v.host ":" @v.container)])))) (array/concat [@payload.image] (array/filter (str/split (or @payload.command "") " ") (fn t (!= @t ""))))) })
+        (emit DOCKER_EXEC { env: @config.env stage: "run" argv: (array/concat (array/concat (array/concat (array/concat (array/concat ["run" "-d"] (if (!= (or @payload.name "") "") ["--name" @payload.name] [])) (array/flatten (array/map (or @payload.ports []) (fn p ["-p" (str/concat @p.host ":" @p.container "/" (or @p.protocol "tcp"))])))) (array/flatten (array/map (object/entries (or @payload.env {})) (fn e ["-e" (str/concat (array/nth @e 0) "=" (array/nth @e 1))])))) (array/flatten (array/map (or @payload.volumes []) (fn v ["-v" (str/concat @v.host ":" @v.container)])))) (array/concat [@payload.image] (array/filter (str/split (or @payload.command "") " ") (fn t (!= @t ""))))) })
       STOP -> working
         (set @entity.op "stop")
         (set @entity.target @payload.containerId)
-        (emit DOCKER_EXEC { stage: "stop" argv: ["stop" @payload.containerId] })
+        (emit DOCKER_EXEC { env: @config.env stage: "stop" argv: ["stop" @payload.containerId] })
       REMOVE -> working
         (set @entity.op "remove")
         (set @entity.target @payload.containerId)
-        (emit DOCKER_EXEC { stage: "remove" argv: (array/concat (if (or @payload.force false) ["rm" "-f"] ["rm"]) [@payload.containerId]) })
+        (emit DOCKER_EXEC { env: @config.env stage: "remove" argv: (array/concat (if (or @payload.force false) ["rm" "-f"] ["rm"]) [@payload.containerId]) })
       LOGS -> working
         (set @entity.op "logs")
         (set @entity.target @payload.containerId)
-        (emit DOCKER_EXEC { stage: "logs" argv: (array/concat (array/concat (array/concat ["logs" "--tail" (str/concat (or @payload.tail 100))] (if (!= (or @payload.since "") "") ["--since" @payload.since] [])) ["--timestamps"]) [@payload.containerId]) })
+        (emit DOCKER_EXEC { env: @config.env stage: "logs" argv: (array/concat (array/concat (array/concat ["logs" "--tail" (str/concat (or @payload.tail 100))] (if (!= (or @payload.since "") "") ["--since" @payload.since] [])) ["--timestamps"]) [@payload.containerId]) })
       STATUS -> working
         (set @entity.op "status")
         (set @entity.target @payload.containerId)
-        (emit DOCKER_EXEC { stage: "status" argv: ["inspect" "--format" "{{json .}}" @payload.containerId] })
+        (emit DOCKER_EXEC { env: @config.env stage: "status" argv: ["inspect" "--format" "{{json .}}" @payload.containerId] })
       LIST -> working
         (set @entity.op "list")
-        (emit DOCKER_EXEC { stage: "list" argv: (array/concat (array/concat ["ps" "-q" "--no-trunc"] (if (or @payload.all false) ["-a"] [])) (if (!= (or @payload.filterByLabel "") "") ["--filter" (str/concat "label=" @payload.filterByLabel)] [])) })
+        (emit DOCKER_EXEC { env: @config.env stage: "list" argv: (array/concat (array/concat ["ps" "-q" "--no-trunc"] (if (or @payload.all false) ["-a"] [])) (if (!= (or @payload.filterByLabel "") "") ["--filter" (str/concat "label=" @payload.filterByLabel)] [])) })
     }
 
     state working {
@@ -89,79 +92,50 @@ orbital DockerOrbital {
         (set @entity.stage "")
       DOCKER_EXEC -> working
         (set @entity.stage @payload.stage)
-        (set @entity.out (bytes/from-string ""))
-        (set @entity.err (bytes/from-string ""))
-        (set @entity.outDone false)
-        (set @entity.errDone false)
-        (os/spawn "docker" @payload.argv { cwd: null env: @config.env stdin: "null" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: DOCKER_SPAWNED failure: DOCKER_SPAWN_FAILED } })
-      DOCKER_SPAWNED -> working
-        (set @entity.pid @payload.pid)
-        (set @entity.outFd @payload.stdout)
-        (set @entity.errFd @payload.stderr)
-        (os/read @payload.stdout 65536 { key: "out" emit: { success: DOCKER_OUT_CHUNK failure: DOCKER_HOST_FAILED } })
-        (os/read @payload.stderr 65536 { key: "err" emit: { success: DOCKER_ERR_CHUNK failure: DOCKER_HOST_FAILED } })
-      DOCKER_SPAWN_FAILED -> idle
+      DOCKER_CLI_FAILED -> idle when (= @payload.code "cli_spawn_failed")
         (emit DOCKER_FAILED { op: @entity.op error: @payload.error code: "docker_spawn_failed" })
-      DOCKER_OUT_CHUNK -> working when (not @payload.eof)
-        (set @entity.out (bytes/concat [@entity.out @payload.data]))
-        (os/read @entity.outFd 65536 { key: "out" emit: { success: DOCKER_OUT_CHUNK failure: DOCKER_HOST_FAILED } })
-      DOCKER_OUT_CHUNK -> working when (and @payload.eof (not @entity.errDone))
-        (set @entity.outDone true)
-        (os/close @entity.outFd { key: "close-out" emit: { failure: DOCKER_HOST_FAILED } })
-      DOCKER_OUT_CHUNK -> working when (and @payload.eof @entity.errDone)
-        (set @entity.outDone true)
-        (os/close @entity.outFd { key: "close-out" emit: { failure: DOCKER_HOST_FAILED } })
-        (os/wait @entity.pid { key: "wait" emit: { success: DOCKER_EXITED failure: DOCKER_HOST_FAILED } })
-      DOCKER_ERR_CHUNK -> working when (not @payload.eof)
-        (set @entity.err (bytes/concat [@entity.err @payload.data]))
-        (os/read @entity.errFd 65536 { key: "err" emit: { success: DOCKER_ERR_CHUNK failure: DOCKER_HOST_FAILED } })
-      DOCKER_ERR_CHUNK -> working when (and @payload.eof (not @entity.outDone))
-        (set @entity.errDone true)
-        (os/close @entity.errFd { key: "close-err" emit: { failure: DOCKER_HOST_FAILED } })
-      DOCKER_ERR_CHUNK -> working when (and @payload.eof @entity.outDone)
-        (set @entity.errDone true)
-        (os/close @entity.errFd { key: "close-err" emit: { failure: DOCKER_HOST_FAILED } })
-        (os/wait @entity.pid { key: "wait" emit: { success: DOCKER_EXITED failure: DOCKER_HOST_FAILED } })
+      DOCKER_CLI_FAILED -> idle when (!= @payload.code "cli_spawn_failed")
+        (emit DOCKER_FAILED { op: @entity.op error: @payload.error code: "docker_host_failed" })
       DOCKER_HOST_FAILED -> idle
         (emit DOCKER_FAILED { op: @entity.op error: @payload.error code: "docker_host_failed" })
 
-      DOCKER_EXITED -> idle when (!= (if (== @payload.code null) -1 @payload.code) 0)
-        (emit DOCKER_FAILED { op: @entity.op error: (str/trim (bytes/to-string @entity.err)) code: (str/concat "docker_exit_" (if (== @payload.code null) -1 @payload.code)) })
-      DOCKER_EXITED -> working when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "build"))
+      DOCKER_RAN -> idle when (!= @payload.exitCode 0)
+        (emit DOCKER_FAILED { op: @entity.op error: (str/trim @payload.stderr) code: (str/concat "docker_exit_" @payload.exitCode) })
+      DOCKER_RAN -> working when (and (== @payload.exitCode 0) (== @entity.stage "build"))
         (os/clock-monotonic { key: "end" emit: { success: DOCKER_BUILD_ENDED failure: DOCKER_HOST_FAILED } })
       DOCKER_CLOCK -> working
         (set @entity.startedAt @payload.nanos)
       DOCKER_BUILD_ENDED -> working
         (set @entity.buildMs (math/floor (/ (- @payload.nanos @entity.startedAt) 1000000)))
-        (emit DOCKER_EXEC { stage: "build-inspect" argv: ["image" "inspect" "--format" "{{json .}}" @entity.target] })
-      DOCKER_EXITED -> idle when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "build-inspect"))
-        (let ((d (json/parse (str/trim (bytes/to-string @entity.out)) DockerImageInspect)))
+        (emit DOCKER_EXEC { env: @config.env stage: "build-inspect" argv: ["image" "inspect" "--format" "{{json .}}" @entity.target] })
+      DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "build-inspect"))
+        (let ((d (json/parse (str/trim @payload.stdout) DockerImageInspect)))
           (emit BUILD_DONE { imageId: @d.Id tag: @entity.target size: (or @d.Size 0) buildTime: @entity.buildMs }))
-      DOCKER_EXITED -> working when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "run"))
-        (set @entity.target (str/trim (bytes/to-string @entity.out)))
-        (emit DOCKER_EXEC { stage: "run-inspect" argv: ["inspect" "--format" "{{json .}}" (str/trim (bytes/to-string @entity.out))] })
-      DOCKER_EXITED -> idle when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "run-inspect"))
-        (let ((d (json/parse (str/trim (bytes/to-string @entity.out)) DockerInspect)))
+      DOCKER_RAN -> working when (and (== @payload.exitCode 0) (== @entity.stage "run"))
+        (set @entity.target (str/trim @payload.stdout))
+        (emit DOCKER_EXEC { env: @config.env stage: "run-inspect" argv: ["inspect" "--format" "{{json .}}" (str/trim @payload.stdout)] })
+      DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "run-inspect"))
+        (let ((d (json/parse (str/trim @payload.stdout) DockerInspect)))
           (emit RUN_DONE { containerId: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys @d.NetworkSettings.Ports) (fn k (array/map (object/get @d.NetworkSettings.Ports @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (array/nth (str/split @k "/") 0)) protocol: (array/nth (str/split @k "/") 1) }))))))}))
-      DOCKER_EXITED -> working when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "stop"))
-        (emit DOCKER_EXEC { stage: "stop-inspect" argv: ["inspect" "--format" "{{json .}}" @entity.target] })
-      DOCKER_EXITED -> idle when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "stop-inspect"))
-        (let ((d (json/parse (str/trim (bytes/to-string @entity.out)) DockerInspect)))
+      DOCKER_RAN -> working when (and (== @payload.exitCode 0) (== @entity.stage "stop"))
+        (emit DOCKER_EXEC { env: @config.env stage: "stop-inspect" argv: ["inspect" "--format" "{{json .}}" @entity.target] })
+      DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "stop-inspect"))
+        (let ((d (json/parse (str/trim @payload.stdout) DockerInspect)))
           (emit STOP_DONE { containerId: @d.Id status: @d.State.Status stoppedAt: (if (str/startsWith @d.State.FinishedAt "0001") 0 (time/parse @d.State.FinishedAt)) }))
-      DOCKER_EXITED -> idle when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "remove"))
+      DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "remove"))
         (emit REMOVE_DONE { containerId: @entity.target removed: true })
-      DOCKER_EXITED -> idle when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "logs"))
-        (let ((lines (array/map (array/sort (array/map (array/filter (str/split (str/trim (str/concat (bytes/to-string @entity.out) "\n" (bytes/to-string @entity.err))) "\n") (fn l (!= @l ""))) (fn l { at: (array/first (str/split @l " ")) line: @l })) "at" "asc") (fn r @r.line))))
+      DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "logs"))
+        (let ((lines (array/map (array/sort (array/map (array/filter (str/split (str/trim (str/concat @payload.stdout "\n" @payload.stderr)) "\n") (fn l (!= @l ""))) (fn l { at: (array/first (str/split @l " ")) line: @l })) "at" "asc") (fn r @r.line))))
           (emit LOGS_DONE { containerId: @entity.target logs: @lines lineCount: (array/len @lines) }))
-      DOCKER_EXITED -> idle when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "status"))
-        (let ((d (json/parse (str/trim (bytes/to-string @entity.out)) DockerInspect)))
+      DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "status"))
+        (let ((d (json/parse (str/trim @payload.stdout) DockerInspect)))
           (emit STATUS_DONE { containerId: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) image: @d.Config.Image status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys @d.NetworkSettings.Ports) (fn k (array/map (object/get @d.NetworkSettings.Ports @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (array/nth (str/split @k "/") 0)) protocol: (array/nth (str/split @k "/") 1) })))))) createdAt: (time/parse @d.Created) startedAt: (if (str/startsWith @d.State.StartedAt "0001") 0 (time/parse @d.State.StartedAt)) stoppedAt: (if (str/startsWith @d.State.FinishedAt "0001") 0 (time/parse @d.State.FinishedAt)) }))
-      DOCKER_EXITED -> idle when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "list") (== (str/trim (bytes/to-string @entity.out)) ""))
+      DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "list") (== (str/trim @payload.stdout) ""))
         (emit LIST_DONE { containers: [] total: 0 })
-      DOCKER_EXITED -> working when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "list") (!= (str/trim (bytes/to-string @entity.out)) ""))
-        (emit DOCKER_EXEC { stage: "list-inspect" argv: (array/concat ["inspect" "--format" "{{json .}}"] (array/filter (str/split (str/trim (bytes/to-string @entity.out)) "\n") (fn l (!= @l "")))) })
-      DOCKER_EXITED -> idle when (and (== (if (== @payload.code null) -1 @payload.code) 0) (== @entity.stage "list-inspect"))
-        (let ((rows (array/map (array/filter (str/split (str/trim (bytes/to-string @entity.out)) "\n") (fn l (!= @l ""))) (fn l (json/parse @l DockerInspect)))))
+      DOCKER_RAN -> working when (and (== @payload.exitCode 0) (== @entity.stage "list") (!= (str/trim @payload.stdout) ""))
+        (emit DOCKER_EXEC { env: @config.env stage: "list-inspect" argv: (array/concat ["inspect" "--format" "{{json .}}"] (array/filter (str/split (str/trim @payload.stdout) "\n") (fn l (!= @l "")))) })
+      DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "list-inspect"))
+        (let ((rows (array/map (array/filter (str/split (str/trim @payload.stdout) "\n") (fn l (!= @l ""))) (fn l (json/parse @l DockerInspect)))))
           (emit LIST_DONE { containers: (array/map @rows (fn d { id: @d.Id name: (str/slice @d.Name 1 (str/len @d.Name)) image: @d.Config.Image status: @d.State.Status ports: (array/unique (array/flatten (array/map (object/keys @d.NetworkSettings.Ports) (fn k (array/map (object/get @d.NetworkSettings.Ports @k) (fn b { host: (str/to-number @b.HostPort) container: (str/to-number (array/nth (str/split @k "/") 0)) protocol: (array/nth (str/split @k "/") 1) })))))) createdAt: (time/parse @d.Created) })) total: (array/len @rows) }))
     }
 
@@ -238,31 +212,8 @@ orbital DockerOrbital {
       DOCKER_EXEC -> internal {
         stage : string!
         argv : [string]!
+        env : Map string string
       }
-        @tier "internal"
-      DOCKER_SPAWNED -> internal {
-        pid : number!
-        stdout : number!
-        stderr : number!
-      }
-        @description "Internal: the os/spawn answer."
-        @tier "internal"
-      DOCKER_SPAWN_FAILED -> internal {
-        error : string
-      }
-        @description "Internal: os/spawn could not start docker."
-        @tier "internal"
-      DOCKER_OUT_CHUNK -> internal {
-        data : bytes!
-        eof : boolean!
-      }
-        @description "Internal: one os/read of the child's stdout."
-        @tier "internal"
-      DOCKER_ERR_CHUNK -> internal {
-        data : bytes!
-        eof : boolean!
-      }
-        @description "Internal: one os/read of the child's stderr."
         @tier "internal"
       DOCKER_CLOCK -> internal {
         nanos : number!
@@ -274,16 +225,10 @@ orbital DockerOrbital {
       }
         @description "Internal: the os/clock-monotonic answer when the build command ended."
         @tier "internal"
-      DOCKER_EXITED -> internal {
-        code : number
-        signal : number
-      }
-        @description "Internal: the os/wait answer."
-        @tier "internal"
       DOCKER_HOST_FAILED -> internal {
         error : string
       }
-        @description "Internal: an os/read, os/close or os/wait failed."
+        @description "Internal: an os/clock-monotonic call failed."
         @tier "internal"
     }
 
@@ -346,33 +291,9 @@ orbital DockerOrbital {
       DOCKER_EXEC {
         stage : string!
         argv : [string]!
+        env : Map string string
       }
         @description "Internal: run one docker command."
-      DOCKER_SPAWNED {
-        pid : number!
-        stdout : number!
-        stderr : number!
-        key : string!
-      }
-        @description "The os/spawn success."
-      DOCKER_SPAWN_FAILED {
-        error : string
-        kind : string
-        key : string!
-      }
-        @description "The os/spawn failure."
-      DOCKER_OUT_CHUNK {
-        data : bytes!
-        eof : boolean!
-        key : string!
-      }
-        @description "The os/read success on stdout."
-      DOCKER_ERR_CHUNK {
-        data : bytes!
-        eof : boolean!
-        key : string!
-      }
-        @description "The os/read success on stderr."
       DOCKER_CLOCK {
         nanos : number!
       }
@@ -381,20 +302,30 @@ orbital DockerOrbital {
         nanos : number!
       }
         @description "The os/clock-monotonic success when the build command ended."
-      DOCKER_EXITED {
-        code : number
-        signal : number
-        key : string!
-      }
-        @description "The os/wait success."
       DOCKER_HOST_FAILED {
         error : string
         kind : string
         key : string!
       }
-        @description "An os/read, os/close or os/wait failure."
+        @description "An os/clock-monotonic failure."
+      DOCKER_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE: one docker command exited, with its code and both streams."
+      DOCKER_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED: one docker command could not be run."
+      DockerCli.CLI_DONE -> DOCKER_RAN
+      DockerCli.CLI_FAILED -> DOCKER_CLI_FAILED
     }
   }
 
-  page "/docker" as DockerPage -> DockerDriver
+  page "/docker" as DockerPage -> DockerDriver, DockerCli
 }

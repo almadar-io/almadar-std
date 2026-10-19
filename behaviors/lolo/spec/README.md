@@ -4,23 +4,29 @@ Design contracts for the generic substrate, written before the atom that satisfi
 
 Flow: spec → `almadar-std` atom → (organism) → `almadar-behaviors` spec → atom → organism. Keep these specs subject-agnostic; subject vocabulary belongs in `almadar-behaviors/spec`.
 
+A spec sits under the same folder path as the behavior it specs: the spec for `infra/atoms/std-retry.lolo` is `spec/infra/retry.lolo`, for `ui/game/atoms/std-score.lolo` it is `spec/ui/game/score.lolo`. The folder does not change binding (a spec still resolves by its file name).
+
 | Spec | Satisfied by |
 |---|---|
-| `approval-gate.lolo` | `std-approval-gate` |
-| `audit-trail.lolo` | `std-audit-capture` |
-| `timeout.lolo` | `std-timeout` |
-| `retry.lolo` | `std-retry` |
-| `api-keys.lolo` | `std-api-keys` |
-| `label-capture.lolo` | `std-ml-label-capture` |
-| `gallery.lolo` | `std-gallery` |
-| `audit-entry.lolo` | any program with the audit row (`std-audit-capture`, `std-document-mgmt`) |
-| `throttle.lolo` | `std-throttle` (bound; proves `open ⇒ suppressed = 0`) |
-| `cooldown.lolo` | `std-cooldown` (bound; proves the remaining time is never negative) |
-| `circuit-breaker.lolo` | `std-circuit-breaker` (not bound: `std-api-gateway` composes it under another trait name, G-ORB-378; holds when bound in a scratch copy) |
-| `rate-limiter.lolo` | `std-rate-limiter` (not bound, same reason; holds when bound in a scratch copy) |
-| `score.lolo` | `std-score` (bound; score never negative) |
-| `lifecycle.lolo` | `std-lifecycle` (bound; a dry run never reaches the writing state) |
-| `data-import.lolo` | `std-data-import` (not bound: it fails `project-friday`'s foreign writer, G-ORB-378) |
+| `infra/approval-gate.lolo` | `std-approval-gate` |
+| `infra/audit-trail.lolo` | `std-audit-capture` |
+| `infra/timeout.lolo` | `std-timeout` |
+| `infra/retry.lolo` | `std-retry` |
+| `infra/api-keys.lolo` | `std-api-keys` |
+| `ml/label-capture.lolo` | `std-ml-label-capture` |
+| `ui/core/gallery.lolo` | `std-gallery` |
+| `infra/audit-entry.lolo` | any program with the audit row (`std-audit-capture`, `std-document-mgmt`) |
+| `infra/throttle.lolo` | `std-throttle` (bound; proves `open ⇒ suppressed = 0`) |
+| `infra/cooldown.lolo` | `std-cooldown` (bound; proves the remaining time is never negative) |
+| `infra/circuit-breaker.lolo` | `std-circuit-breaker` (not bound: `std-api-gateway` composes it under another trait name, G-ORB-378; holds when bound in a scratch copy) |
+| `infra/rate-limiter.lolo` | `std-rate-limiter` (not bound, same reason; holds when bound in a scratch copy) |
+| `ui/game/score.lolo` | `std-score` (bound; score never negative) |
+| `infra/lifecycle.lolo` | `std-lifecycle` (bound; a dry run never reaches the writing state) |
+| `infra/data-import.lolo` | `std-data-import` (not bound: it fails `project-friday`'s foreign writer, G-ORB-378) |
+| `infra/analytics.lolo` | `std-analytics` (not bound: every composer renames the trait, G-ORB-378; holds when bound in a scratch copy, and changing the status vocabulary or the page path fails it) |
+| `infra/analytics-collector.lolo` | `std-analytics-collector` (not bound: its io realization imports the orbital, which prefixes trait names, G-ORB-378; holds when bound in a scratch copy, and dropping `AnalyticsStats` from the page fails it) |
+| `infra/cli.lolo` | `std-cli` (not bound: composers run it under their own trait name, G-ORB-378; holds when bound in a scratch copy, and moving the busy edge out of `running` fails it) |
+| `infra/dependency-audit.lolo` | `std-dependency-audit` (not bound: an orbital import prefixes its trait names, G-ORB-378; holds when bound in a scratch copy, and dropping the busy `AUDIT` edge in `auditing` fails it) |
 
 One spec per atom: a spec binds to the whole program that imports it, so a spec covering two atoms fails until both are composed.
 

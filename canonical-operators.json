@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-18T14:47:50.196Z",
+  "generated": "2026-10-19T09:00:40.041Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -8889,6 +8889,31 @@
       ],
       "examples": [
         "(if true 42 0) // => 42"
+      ],
+      "docsSource": "generated"
+    },
+    "json/nodes": {
+      "category": "std-json",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": {
+        "kind": "array",
+        "of": "sexpr"
+      },
+      "description": "The value and every value nested in it, in pre-order: a list before its items (in order), an object before its values (in key order). Each node is program data (`SExpr`); a list whose first item names an operator is data, never called. For walking a quoted program or a parsed document, e.g. finding every `call-service` form at any depth",
+      "module": "json",
+      "params": [
+        {
+          "name": "v",
+          "type": {
+            "kind": "var",
+            "name": "T"
+          },
+          "description": "The value to walk"
+        }
+      ],
+      "examples": [
+        "(json/nodes {\"a\":[1]}) // => [{\"a\": [1]}, [1], 1]"
       ],
       "docsSource": "generated"
     },
@@ -22209,6 +22234,36 @@
       ],
       "examples": [
         "(train/validate {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [{\"input\":[0],\"expected\":[1]}])"
+      ],
+      "docsSource": "generated"
+    },
+    "typed": {
+      "category": "logic",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "var",
+        "name": "T"
+      },
+      "description": "Resolved IR only, never written in .lolo: the value, checked to be of the type the program declared for it. `orb resolve` writes it at an operator argument whose declared type is a list of a union or of SExpr, so the kernel binds the operator's type variable to that declared type instead of reading one from the items. An item outside the declared type is a type mismatch.",
+      "module": "core",
+      "params": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "var",
+            "name": "T"
+          },
+          "description": "The argument value"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "description": "The declared type, as the JSON of an IR type"
+        }
+      ],
+      "examples": [
+        "(typed @entity.via \"{\\\"kind\\\":\\\"array\\\",\\\"inner\\\":{\\\"kind\\\":\\\"sexpr\\\"}}\")"
       ],
       "docsSource": "generated"
     },

@@ -1,0 +1,25 @@
+app cli-spec [
+  version: "1.0.0",
+  description: "Design contract for running one command-line program as a child process: a run takes the arguments, collects everything the child writes to stdout and stderr, waits for its exit and answers once with the exit code and both streams. One run at a time; a run asked for while another is in flight is refused, never queued or dropped silently."
+]
+
+orbital CliSpec {
+  expects entity CliCall [runtime] {
+    id : string!
+    stage : string
+    exitCode : number
+  }
+  expects trait CliRunner {
+    state idle {
+      CLI_RUN -> running
+    }
+    state running {
+      CLI_RUN -> running
+    }
+    emits {
+      CLI_DONE { stage : string!  exitCode : number!  stdout : string!  stderr : string! }
+      CLI_FAILED { stage : string!  error : string!  code : string! }
+    }
+  }
+  expects page "/cli" -> CliRunner
+}

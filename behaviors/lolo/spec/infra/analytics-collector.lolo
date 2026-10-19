@@ -1,0 +1,40 @@
+app analytics-collector-spec [
+  version: "1.0.0",
+  description: "Design contract for the collector side of cookieless first-party analytics: beacons arrive at an inbound hook and become stored events keyed by a daily-rotating visitor hash (the IP derives the hash and is never stored), one random salt per UTC day kept in a persisted row, and a stats query that answers pageviews, unique visitors and the top pages, countries and referrers of a domain and time window."
+]
+
+orbital AnalyticsCollectorSpec {
+  expects entity AnalyticsEvent [persistent] {
+    ts : number!
+    name : string!
+    domain : string!
+    path : string!
+    visitorId : string!
+    referrer : string
+    screenWidth : number
+    props : Map string (string | number | boolean)
+  }
+  expects entity AnalyticsSalt [persistent] {
+    id : string!
+    salt : string!
+    createdAt : number
+  }
+  expects trait AnalyticsIntake {
+    state ready {
+      BEACON_RECEIVED -> ready
+    }
+    emits {
+      BEACON_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects trait AnalyticsStats {
+    state ready {
+      ANALYTICS_STATS -> ready
+    }
+    emits {
+      ANALYTICS_STATS_RESULT { pageviews : number!  visitors : number! }
+      ANALYTICS_STATS_FAILED { error : string! }
+    }
+  }
+  expects page "/analytics-collector" -> AnalyticsIntake, AnalyticsStats
+}

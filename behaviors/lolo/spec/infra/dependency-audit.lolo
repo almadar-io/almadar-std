@@ -1,0 +1,25 @@
+app dependency-audit-spec [
+  version: "1.0.0",
+  description: "Design contract for auditing the dependencies of one or more projects: each run reads every project's manifests, runs its package manager's audit and outdated checks, and answers once with the report as console text, JSON and SARIF, plus the exit code a CI step would use. One run at a time; a run asked for while another is in flight is refused."
+]
+
+orbital DependencyAuditSpec {
+  expects entity AuditRun [runtime] {
+    id : string!
+    status : "idle" | "auditing"
+    exitCode : number
+  }
+  expects trait DependencyAuditor {
+    state idle {
+      AUDIT -> auditing
+    }
+    state auditing {
+      AUDIT -> auditing
+    }
+    emits {
+      AUDIT_DONE { console : string!  json : string!  sarif : string!  exitCode : number!  vulnerabilityCount : number!  outdatedCount : number!  configIssueCount : number! }
+      AUDIT_FAILED { code : string!  message : string! }
+    }
+  }
+  expects page "/dependency-audit" -> DependencyAuditor
+}

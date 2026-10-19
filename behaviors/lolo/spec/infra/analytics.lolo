@@ -1,0 +1,20 @@
+app analytics-spec [
+  version: "1.0.0",
+  description: "Design contract for cookieless first-party page analytics: a per-page runtime record of what the last report did, a trait that answers every report with REPORTED or REPORT_FAILED and hears TRACK from its page, and the page that mounts it. The status never claims a report it did not make."
+]
+
+orbital AnalyticsSpec {
+  expects entity AnalyticsRecord [runtime] {
+    reported : number
+    status : "reporting" | "reported" | "skipped" | "failed"
+    errorMessage : string
+  }
+  expects trait Analytics {
+    state active @holds (>= @entity.reported 0)
+    emits {
+      REPORTED { sent : boolean! }
+      REPORT_FAILED { error : string! }
+    }
+  }
+  expects page "/analytics" -> Analytics
+}

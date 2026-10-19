@@ -457,6 +457,22 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["as", "search", "CallKey"] // => "search"',
   },
 
+  typed: {
+    module: 'core',
+    category: 'logic',
+    minArity: 2,
+    maxArity: 2,
+    description:
+      'Resolved IR only, never written in .lolo: the value, checked to be of the type the program declared for it. `orb resolve` writes it at an operator argument whose declared type is a list of a union or of SExpr, so the kernel binds the operator\'s type variable to that declared type instead of reading one from the items. An item outside the declared type is a type mismatch.',
+    hasSideEffects: false,
+    returnType: tv('T'),
+    params: [
+      { name: 'value', type: tv('T'), description: 'The argument value' },
+      { name: 'type', type: 'string', description: 'The declared type, as the JSON of an IR type' },
+    ],
+    example: '["typed", "@entity.via", "{\\"kind\\":\\"array\\",\\"inner\\":{\\"kind\\":\\"sexpr\\"}}"]',
+  },
+
   // --- control ----------------------------------------------------------------
 
   let: {

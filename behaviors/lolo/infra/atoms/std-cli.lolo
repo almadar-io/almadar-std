@@ -1,0 +1,310 @@
+app std-cli [
+  version: "1.0.0",
+  exec: ["echo"],
+  description: "std-cli — runs one command-line program as a child process through os/spawn, os/read and os/wait. CLI_RUN carries the arguments and a stage name the caller uses to tell its runs apart; the atom pipes stdout and stderr, reads both to the end, waits for the exit and answers CLI_DONE with the stage, the exit code (-1 when a signal ended it), the signal and both streams as text. What a non-zero exit means is the caller's to decide. CLI_FAILED answers a run that could not be made: the child did not start (cli_spawn_failed), a read, close or wait failed (cli_host_failed), or another run is in flight (cli_busy); a cancel with nothing running answers cli_idle. CLI_CANCEL sends TERM to the running child; a cancel that arrives before the child has started is applied as soon as it starts. The command knob names the executable, matched exactly against the exec grant the composing program declares; the child runs with exactly the environment the run's env or else the env knob names, in the cwd knob's directory (the host's working directory when it is empty). A run may feed the child stdin bytes, which are written whole and closed before the output is read. With the binaryOutput knob on, stdout is answered as bytes only."
+]
+orbital CliOrbital {
+  entity CliCall [runtime] {
+    id : string!
+    stage : string @description "The caller's name for the run in flight; blank when idle." = ""
+    pid : number @description "Process id of the running child; 0 before it starts." = 0
+    outFd : number @description "Descriptor of the child's piped stdout." = 0
+    errFd : number @description "Descriptor of the child's piped stderr." = 0
+    outDone : boolean @description "True once the child's stdout reached end of file." = false
+    errDone : boolean @description "True once the child's stderr reached end of file." = false
+    out : bytes @description "Everything the child wrote to stdout so far." = ""
+    err : bytes @description "Everything the child wrote to stderr so far." = ""
+    exitCode : number @description "Exit code of the last finished child; -1 when a signal ended it." = 0
+    cancelRequested : boolean @description "A cancel arrived before the child started." = false
+    hasStdin : boolean @description "The run in flight feeds the child bytes on stdin." = false
+    stdin : bytes @description "The bytes the run in flight feeds the child on stdin." = ""
+    inFd : number @description "Descriptor of the child's piped stdin." = 0
+  }
+
+  trait CliRunner -> @rebindable CliCall [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.stage "")
+      CLI_CANCEL -> idle
+        (emit CLI_FAILED { stage: "" error: "nothing is running" code: "cli_idle" })
+      CLI_RUN -> running when (and (= @config.cwd "") (== @payload.stdin null))
+        (set @entity.stage @payload.stage)
+        (set @entity.pid 0)
+        (set @entity.out (bytes/from-string ""))
+        (set @entity.err (bytes/from-string ""))
+        (set @entity.outDone false)
+        (set @entity.errDone false)
+        (set @entity.cancelRequested false)
+        (set @entity.hasStdin (!= @payload.stdin null))
+        (set @entity.stdin (or @payload.stdin (bytes/from-string "")))
+        (os/spawn @config.command @payload.argv { cwd: null env: (or @payload.env @config.env) stdin: "null" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+      CLI_RUN -> running when (and (= @config.cwd "") (!= @payload.stdin null))
+        (set @entity.stage @payload.stage)
+        (set @entity.pid 0)
+        (set @entity.out (bytes/from-string ""))
+        (set @entity.err (bytes/from-string ""))
+        (set @entity.outDone false)
+        (set @entity.errDone false)
+        (set @entity.cancelRequested false)
+        (set @entity.hasStdin (!= @payload.stdin null))
+        (set @entity.stdin (or @payload.stdin (bytes/from-string "")))
+        (os/spawn @config.command @payload.argv { cwd: null env: (or @payload.env @config.env) stdin: "pipe" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+      CLI_RUN -> running when (and (!= @config.cwd "") (== @payload.stdin null))
+        (set @entity.stage @payload.stage)
+        (set @entity.pid 0)
+        (set @entity.out (bytes/from-string ""))
+        (set @entity.err (bytes/from-string ""))
+        (set @entity.outDone false)
+        (set @entity.errDone false)
+        (set @entity.cancelRequested false)
+        (set @entity.hasStdin (!= @payload.stdin null))
+        (set @entity.stdin (or @payload.stdin (bytes/from-string "")))
+        (os/spawn @config.command @payload.argv { cwd: @config.cwd env: (or @payload.env @config.env) stdin: "null" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+      CLI_RUN -> running when (and (!= @config.cwd "") (!= @payload.stdin null))
+        (set @entity.stage @payload.stage)
+        (set @entity.pid 0)
+        (set @entity.out (bytes/from-string ""))
+        (set @entity.err (bytes/from-string ""))
+        (set @entity.outDone false)
+        (set @entity.errDone false)
+        (set @entity.cancelRequested false)
+        (set @entity.hasStdin (!= @payload.stdin null))
+        (set @entity.stdin (or @payload.stdin (bytes/from-string "")))
+        (os/spawn @config.command @payload.argv { cwd: @config.cwd env: (or @payload.env @config.env) stdin: "pipe" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+    }
+
+    state running {
+      INIT -> running
+      CLI_RUN -> running
+        (emit CLI_FAILED { stage: @payload.stage error: "another run is in flight" code: "cli_busy" })
+      CLI_CANCEL -> running when (> @entity.pid 0)
+        (os/kill @entity.pid "TERM" { key: "kill" emit: { failure: CLI_HOST_FAILED } })
+      CLI_CANCEL -> running when (= @entity.pid 0)
+        (set @entity.cancelRequested true)
+      CLI_SPAWNED -> running when (and (not @entity.cancelRequested) (not @entity.hasStdin))
+        (set @entity.pid @payload.pid)
+        (set @entity.outFd @payload.stdout)
+        (set @entity.errFd @payload.stderr)
+        (os/read @payload.stdout 65536 { key: "out" emit: { success: CLI_OUT_CHUNK failure: CLI_HOST_FAILED } })
+        (os/read @payload.stderr 65536 { key: "err" emit: { success: CLI_ERR_CHUNK failure: CLI_HOST_FAILED } })
+      CLI_SPAWNED -> running when (and (not @entity.cancelRequested) @entity.hasStdin)
+        (set @entity.pid @payload.pid)
+        (set @entity.outFd @payload.stdout)
+        (set @entity.errFd @payload.stderr)
+        (set @entity.inFd @payload.stdin)
+        (os/write @payload.stdin @entity.stdin { key: "stdin" emit: { success: CLI_STDIN_WRITTEN failure: CLI_HOST_FAILED } })
+      CLI_SPAWNED -> running when (and @entity.cancelRequested (not @entity.hasStdin))
+        (set @entity.pid @payload.pid)
+        (set @entity.outFd @payload.stdout)
+        (set @entity.errFd @payload.stderr)
+        (os/kill @payload.pid "TERM" { key: "kill" emit: { failure: CLI_HOST_FAILED } })
+        (os/read @payload.stdout 65536 { key: "out" emit: { success: CLI_OUT_CHUNK failure: CLI_HOST_FAILED } })
+        (os/read @payload.stderr 65536 { key: "err" emit: { success: CLI_ERR_CHUNK failure: CLI_HOST_FAILED } })
+      CLI_SPAWNED -> running when (and @entity.cancelRequested @entity.hasStdin)
+        (set @entity.pid @payload.pid)
+        (set @entity.outFd @payload.stdout)
+        (set @entity.errFd @payload.stderr)
+        (os/kill @payload.pid "TERM" { key: "kill" emit: { failure: CLI_HOST_FAILED } })
+        (set @entity.inFd @payload.stdin)
+        (os/close @payload.stdin { key: "close-in" emit: { success: CLI_STDIN_CLOSED failure: CLI_HOST_FAILED } })
+      CLI_STDIN_WRITTEN -> running
+        (os/close @entity.inFd { key: "close-in" emit: { success: CLI_STDIN_CLOSED failure: CLI_HOST_FAILED } })
+      CLI_STDIN_CLOSED -> running
+        (os/read @entity.outFd 65536 { key: "out" emit: { success: CLI_OUT_CHUNK failure: CLI_HOST_FAILED } })
+        (os/read @entity.errFd 65536 { key: "err" emit: { success: CLI_ERR_CHUNK failure: CLI_HOST_FAILED } })
+      CLI_SPAWN_FAILED -> idle
+        (emit CLI_FAILED { stage: @entity.stage error: (or @payload.error "") code: "cli_spawn_failed" })
+        (set @entity.stage "")
+      CLI_OUT_CHUNK -> running when (not @payload.eof)
+        (set @entity.out (bytes/concat [@entity.out @payload.data]))
+        (os/read @entity.outFd 65536 { key: "out" emit: { success: CLI_OUT_CHUNK failure: CLI_HOST_FAILED } })
+      CLI_OUT_CHUNK -> running when (and @payload.eof (not @entity.errDone))
+        (set @entity.outDone true)
+        (os/close @entity.outFd { key: "close-out" emit: { failure: CLI_HOST_FAILED } })
+      CLI_OUT_CHUNK -> running when (and @payload.eof @entity.errDone)
+        (set @entity.outDone true)
+        (os/close @entity.outFd { key: "close-out" emit: { failure: CLI_HOST_FAILED } })
+        (os/wait @entity.pid { key: "wait" emit: { success: CLI_EXITED failure: CLI_HOST_FAILED } })
+      CLI_ERR_CHUNK -> running when (not @payload.eof)
+        (set @entity.err (bytes/concat [@entity.err @payload.data]))
+        (os/read @entity.errFd 65536 { key: "err" emit: { success: CLI_ERR_CHUNK failure: CLI_HOST_FAILED } })
+      CLI_ERR_CHUNK -> running when (and @payload.eof (not @entity.outDone))
+        (set @entity.errDone true)
+        (os/close @entity.errFd { key: "close-err" emit: { failure: CLI_HOST_FAILED } })
+      CLI_ERR_CHUNK -> running when (and @payload.eof @entity.outDone)
+        (set @entity.errDone true)
+        (os/close @entity.errFd { key: "close-err" emit: { failure: CLI_HOST_FAILED } })
+        (os/wait @entity.pid { key: "wait" emit: { success: CLI_EXITED failure: CLI_HOST_FAILED } })
+      CLI_HOST_FAILED -> idle
+        (emit CLI_FAILED { stage: @entity.stage error: (or @payload.error "") code: "cli_host_failed" })
+        (set @entity.stage "")
+        (set @entity.pid 0)
+      CLI_EXITED -> idle when (not @config.binaryOutput)
+        (set @entity.exitCode (if (== @payload.code null) -1 @payload.code))
+        (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (or @payload.signal 0) stdout: (bytes/to-string @entity.out) stdoutBytes: @entity.out stderr: (bytes/to-string @entity.err) })
+        (set @entity.stage "")
+        (set @entity.pid 0)
+      CLI_EXITED -> idle when @config.binaryOutput
+        (set @entity.exitCode (if (== @payload.code null) -1 @payload.code))
+        (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (or @payload.signal 0) stdout: "" stdoutBytes: @entity.out stderr: (bytes/to-string @entity.err) })
+        (set @entity.stage "")
+        (set @entity.pid 0)
+    }
+
+    emits {
+      CLI_DONE -> external {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "The child exited: its exit code (-1 when a signal ended it), the signal (0 when none) and everything it wrote to stdout (as text, and as bytes for binary output) and stderr, for the run named by stage."
+        @synonyms "command finished, process exited, output"
+        @tier "domain"
+      CLI_FAILED -> external {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "The run could not be made: cli_spawn_failed (the child did not start), cli_host_failed (a read, close, kill or wait failed) cli_busy (another run is in flight) or cli_idle (a cancel with nothing running)."
+        @synonyms "command error, spawn failed, busy"
+        @tier "domain"
+      CLI_SPAWNED -> internal {
+        pid : number!
+        stdin : number
+        stdout : number!
+        stderr : number!
+      }
+        @description "Internal: the os/spawn answer."
+        @tier "internal"
+      CLI_STDIN_WRITTEN -> internal {
+        bytes : number!
+      }
+        @description "Internal: the os/write of the run's stdin bytes."
+        @tier "internal"
+      CLI_STDIN_CLOSED -> internal {
+      }
+        @description "Internal: the child's stdin was closed after the run's bytes were written."
+        @tier "internal"
+      CLI_SPAWN_FAILED -> internal {
+        error : string
+      }
+        @description "Internal: os/spawn could not start the child."
+        @tier "internal"
+      CLI_OUT_CHUNK -> internal {
+        data : bytes!
+        eof : boolean!
+      }
+        @description "Internal: one os/read of the child's stdout."
+        @tier "internal"
+      CLI_ERR_CHUNK -> internal {
+        data : bytes!
+        eof : boolean!
+      }
+        @description "Internal: one os/read of the child's stderr."
+        @tier "internal"
+      CLI_EXITED -> internal {
+        code : number
+        signal : number
+      }
+        @description "Internal: the os/wait answer."
+        @tier "internal"
+      CLI_HOST_FAILED -> internal {
+        error : string
+      }
+        @description "Internal: an os/read, os/close, os/kill or os/wait failed."
+        @tier "internal"
+    }
+
+    config {
+      command : string = "echo"
+        @label "Command"
+        @description "The executable to run, matched exactly against the exec grant of the program that composes this atom, e.g. gh, gcloud or pnpm. The default, echo, is what the atom grants on its own."
+        @synonyms "program, executable, binary"
+        @tier "domain"
+      cwd : string = ""
+        @label "Working directory"
+        @description "The absolute directory the child runs in, covered by the composing program's fs read grant; empty runs it in the host's working directory."
+        @synonyms "directory, folder"
+        @tier "domain"
+      binaryOutput : boolean = false
+        @label "Binary output"
+        @description "The child writes bytes that are not UTF-8 text on stdout (an archive, an image): CLI_DONE then carries them in stdoutBytes only, with stdout empty. Off decodes stdout as text."
+        @synonyms "raw output, bytes"
+        @tier "domain"
+      env : Map string string = {}
+        @label "Environment"
+        @description "Environment variables the child runs with, e.g. HOME or PATH. The child inherits nothing else."
+        @synonyms "child environment, variables"
+        @tier "domain"
+    }
+
+    listens {
+      CLI_RUN -> external {
+        stage : string!
+        argv : [string]!
+        env : Map string string
+        stdin : bytes
+      }
+        @description "Run the command once with these arguments; stage names the run in its answer, env, when given, replaces the env knob for this run, and stdin, when given, is written to the child and then closed."
+        @synonyms "run command, execute, spawn"
+      CLI_CANCEL -> external {
+      }
+        @description "Stop the running child with TERM; its exit is still answered with CLI_DONE."
+        @synonyms "cancel, kill, stop"
+      CLI_SPAWNED {
+        pid : number!
+        stdin : number
+        stdout : number!
+        stderr : number!
+        key : string!
+      }
+        @description "The os/spawn success."
+      CLI_STDIN_WRITTEN {
+        bytes : number!
+        key : string!
+      }
+        @description "The os/write success on stdin."
+      CLI_STDIN_CLOSED {
+        key : string!
+      }
+        @description "The os/close success on stdin."
+      CLI_SPAWN_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "The os/spawn failure."
+      CLI_OUT_CHUNK {
+        data : bytes!
+        eof : boolean!
+        key : string!
+      }
+        @description "The os/read success on stdout."
+      CLI_ERR_CHUNK {
+        data : bytes!
+        eof : boolean!
+        key : string!
+      }
+        @description "The os/read success on stderr."
+      CLI_EXITED {
+        code : number
+        signal : number
+        key : string!
+      }
+        @description "The os/wait success."
+      CLI_HOST_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "An os/read, os/close, os/kill or os/wait failure."
+    }
+  }
+
+  page "/cli" as CliPage -> CliRunner
+}
