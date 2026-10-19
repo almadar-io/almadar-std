@@ -1,0 +1,88 @@
+app std-file-drop [
+  version: "1.0.0",
+  inbound: ["file-drop"],
+  fs: { "/var/lib/almadar/drop/**": [write, create] },
+  description: "std-file-drop — a directory other programs deliver files into. A delivery at the inbound hook file-drop (/api/hooks/file-drop) is the JSON `{ name, data }`: name is a relative path of letters, digits, `_`, `-` and `/` separated segments (no empty, `.` or `..` segment), data the file's bytes as standard base64. The file is written as <dir><name>.<extension> (the dir and extension knobs) and the hook answers 201 `{ path }`; a body that is not that JSON, or a name that is not that shape, answers 400 and writes nothing; a write the host refuses answers 500. Each written file is also reported as FILE_DROPPED { path }. Needs the fs write and create grants on the directory (`<dir>**`)."
+]
+uses Spec from "almadar-std/file-drop"
+
+orbital FileDropOrbital {
+  type FileDropBody = { name : string!, data : bytes! }
+
+  entity FileDropRecord [runtime] {
+    id : string!
+    name : string @description "The delivery in flight: its name under the directory, without the extension" = ""
+    data : bytes @description "The delivery in flight: its bytes"
+  }
+
+  trait FileDrop -> FileDropRecord [integration, instance] {
+    initial: ready
+
+    config {
+      dir : string = "/var/lib/almadar/drop/"
+        @label "Directory"
+        @description "Where delivered files are written; ends with /. The app needs an fs grant { \"<dir>**\": [write, create] }."
+        @synonyms "folder, drop folder, output directory"
+        @tier "infra"
+      extension : string = "png"
+        @label "File extension"
+        @description "Appended to every delivered name, without the dot"
+        @synonyms "file type, suffix"
+        @tier "domain"
+    }
+
+    state ready {
+      INIT -> ready
+      FILE_DELIVERED -> ready when (not (and (str/startsWith (json/stringify (json/parse @payload.rawBody FileDropBody)) "{") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody FileDropBody) "name")) "\"") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody FileDropBody) "data")) "\"") (validate/pattern (object/get (json/parse @payload.rawBody FileDropBody) "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$")))
+        (emit FILE_DROP_ANSWERED { status: 400, body: "{\"error\":\"expected { name, data } with a relative name of letters, digits, _ and -\"}" })
+      FILE_DELIVERED -> ready when (and (str/startsWith (json/stringify (json/parse @payload.rawBody FileDropBody)) "{") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody FileDropBody) "name")) "\"") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody FileDropBody) "data")) "\"") (validate/pattern (object/get (json/parse @payload.rawBody FileDropBody) "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$"))
+        (set @entity.name (object/get (json/parse @payload.rawBody FileDropBody) "name"))
+        (set @entity.data (object/get (json/parse @payload.rawBody FileDropBody) "data"))
+        (os/mkdir (str/concat @config.dir (os/path-dir (object/get (json/parse @payload.rawBody FileDropBody) "name"))) true { emit: { success: DROP_DIR_READY, failure: DROP_WRITE_FAILED } })
+      DROP_DIR_READY -> ready
+        (os/write-file (str/concat @config.dir @entity.name "." @config.extension) @entity.data { emit: { success: DROP_WRITTEN, failure: DROP_WRITE_FAILED } })
+      DROP_WRITTEN -> ready
+        (emit FILE_DROPPED { path: (str/concat @config.dir @entity.name "." @config.extension) })
+        (emit FILE_DROP_ANSWERED { status: 201, body: (json/stringify { path: (str/concat @config.dir @entity.name "." @config.extension) }) })
+      DROP_WRITE_FAILED -> ready
+        (emit FILE_DROP_ANSWERED { status: 500, body: (json/stringify { error: @payload.error }) })
+    }
+
+    emits {
+      FILE_DROP_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the HTTP answer to the delivery, which the inbound hook writes back."
+        @tier "internal"
+      DROP_DIR_READY -> internal { }
+        @description "Internal: the file's directory exists."
+        @tier "internal"
+      DROP_WRITTEN -> internal { }
+        @description "Internal: the file was written."
+        @tier "internal"
+      DROP_WRITE_FAILED -> internal {
+        error : string!
+      }
+        @description "Internal: the host refused the directory or the write."
+        @tier "internal"
+      FILE_DROPPED -> external {
+        path : string!
+      }
+        @description "A delivered file was written, and where."
+        @synonyms "file saved, upload stored"
+        @tier "primary"
+    }
+
+    listens {
+      FILE_DELIVERED -> inbound "file-drop" answers FILE_DROP_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Write the delivered { name, data } file under the directory and answer where it went."
+        @synonyms "upload, deliver a file, save a file"
+    }
+  }
+
+  page "/file-drop" -> FileDrop
+}

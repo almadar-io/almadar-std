@@ -1,0 +1,90 @@
+app std-tab-capture [
+  version: "1.0.0",
+  description: "std-tab-capture — captures what one browser tab shows. CAPTURE { tab } brings the tab to the front of its window and captures the window in the format knob's format (png, or jpeg at jpegQuality), then reports CAPTURED { tab, format, image } with the image as bytes, or CAPTURE_FAILED { tab, error, kind }: kind unavailable when the host has no browser tabs, not-ready when the browser will not capture that page, invalid or failed otherwise. One capture at a time: CAPTURE is accepted again once CAPTURED or CAPTURE_FAILED is reported. Needs a host with browser tabs (a browser extension)."
+]
+uses Spec from "almadar-std/tab-capture"
+
+orbital TabCaptureOrbital {
+  entity TabCaptureRecord [runtime] {
+    id : string!
+    tab : number @description "The tab being captured; 0 = none" @synonyms "tab id" = 0
+    status : "idle" | "capturing" @description "Whether a capture is running" @synonyms "state, busy" = idle
+    errorMessage : string @description "Why the last capture failed; blank = none" @synonyms "error, failure reason" = ""
+  }
+
+  trait TabCapture -> TabCaptureRecord [interaction, instance] {
+    initial: idle
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the atom shows its one-line status; an organism capturing in the background sends it to `system`"
+        @synonyms "status area, slot"
+        @tier "presentation"
+      format : "png" | "jpeg" = png
+        @label "Image format"
+        @description "png keeps every pixel; jpeg is smaller"
+        @synonyms "image type, file type"
+        @tier "domain"
+      jpegQuality : number = 90
+        @label "JPEG quality"
+        @description "From 0 to 100, for the jpeg format"
+        @synonyms "quality, compression"
+        @tier "policy"
+    }
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: "Ready to capture" })
+      CAPTURE -> capturing when (= @config.format "png")
+        (set @entity.tab ?tab)
+        (set @entity.status capturing)
+        (browser/tab-capture { tab: ?tab, format: "png" } { emit: { success: SHOT, failure: SHOT_FAILED } })
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Capturing tab " ?tab) })
+      CAPTURE -> capturing when (= @config.format "jpeg")
+        (set @entity.tab ?tab)
+        (set @entity.status capturing)
+        (browser/tab-capture { tab: ?tab, format: "jpeg", quality: @config.jpegQuality } { emit: { success: SHOT, failure: SHOT_FAILED } })
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Capturing tab " ?tab) })
+    }
+
+    state capturing {
+      INIT -> capturing
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Capturing tab " @entity.tab) })
+      SHOT -> idle
+        (set @entity.status idle)
+        (set @entity.errorMessage "")
+        (emit CAPTURED { tab: ?tab, format: ?format, image: ?image })
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Captured tab " ?tab) })
+      SHOT_FAILED -> idle
+        (set @entity.status idle)
+        (set @entity.errorMessage ?error)
+        (emit CAPTURE_FAILED { tab: @entity.tab, error: ?error, kind: ?kind })
+        (render-ui @config.statusSlot { type: typography, variant: body, role: status, content: (str/concat "Couldn't capture: " ?error) })
+    }
+
+    emits {
+      SHOT { tab : number!, format : string!, image : bytes! }
+        @description "The tab was captured"
+        @tier "secondary"
+      SHOT_FAILED { error : string!, kind : string! }
+        @description "The tab could not be captured"
+        @tier "secondary"
+      CAPTURED -> external { tab : number!, format : string!, image : bytes! }
+        @description "What the tab showed: the image as bytes in the format asked for"
+        @synonyms "screenshot, capture, image"
+        @tier "primary"
+      CAPTURE_FAILED -> external { tab : number!, error : string!, kind : string! }
+        @description "The tab could not be captured, and why"
+        @tier "primary"
+    }
+
+    listens {
+      CAPTURE -> external { tab : number! }
+        @description "Capture what the tab shows"
+        @synonyms "screenshot, snap, take a picture of the tab"
+    }
+  }
+
+  page "/tab-capture" as TabCapturePage -> TabCapture
+}

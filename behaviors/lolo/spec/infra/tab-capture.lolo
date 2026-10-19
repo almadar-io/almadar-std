@@ -1,0 +1,25 @@
+app tab-capture-spec [
+  version: "1.0.0",
+  description: "Design contract for capturing a browser tab: a capture of a tab answers the image (as bytes, in the format asked for) or why it could not be taken, never neither, and one capture runs at a time."
+]
+
+orbital TabCaptureSpec {
+  expects entity TabCaptureRecord [runtime] {
+    id : string!
+    tab : number
+  }
+  expects trait TabCapture {
+    state idle {
+      CAPTURE -> capturing
+    }
+    state capturing {
+      SHOT -> idle
+      SHOT_FAILED -> idle
+    }
+    emits {
+      CAPTURED { tab : number!  format : string!  image : bytes! }
+      CAPTURE_FAILED { tab : number!  error : string!  kind : string! }
+    }
+  }
+  expects page "/tab-capture" -> TabCapture
+}

@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-19T09:00:40.041Z",
+  "generated": "2026-10-19T15:21:29.037Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -4168,6 +4168,136 @@
       ],
       "examples": [
         "(browser/tab-apply-many {\"items\":\"@payload.items\"} {\"emit\":{\"success\":\"APPLIED_MANY\",\"failure\":\"APPLY_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "browser/tab-capture": {
+      "category": "std-browser",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "tab": "number",
+          "format": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "png"
+              },
+              {
+                "kind": "literal",
+                "value": "jpeg"
+              }
+            ]
+          },
+          "image": "bytes",
+          "key": {
+            "kind": "union",
+            "of": [
+              "string",
+              {
+                "kind": "literal",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "description": "Capture what a tab shows: the host brings the tab to the front of its window and captures the window, as png (the default) or jpeg (an optional quality from 0 to 100). Hands back { tab, format, image, key } with the image as bytes. Resolves with the shape it produces via the trailing { emit } envelope. Keyed and cancellable like call-service: (cancel-call key) aborts the ask and fires emit.cancelled with { key }. A request outside its closed keys, or a value the kernel refuses, emits failure { error, kind: invalid, key } and asks the host nothing; a host with no browser tabs emits kind unavailable, a tab the browser will not capture kind not-ready. The kernel validates and shapes; the host only performs raw tab operations. Client only.",
+      "module": "browser",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "tab": "number",
+            "format": {
+              "kind": "union",
+              "of": [
+                {
+                  "kind": "literal",
+                  "value": "png"
+                },
+                {
+                  "kind": "literal",
+                  "value": "jpeg"
+                }
+              ]
+            },
+            "image": "bytes",
+            "key": {
+              "kind": "union",
+              "of": [
+                "string",
+                {
+                  "kind": "literal",
+                  "value": null
+                }
+              ]
+            }
+          }
+        }
+      },
+      "runsOn": "client",
+      "params": [
+        {
+          "name": "request",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "tab": "number",
+              "format": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "png"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "jpeg"
+                  }
+                ]
+              },
+              "quality": "number"
+            },
+            "open": true
+          },
+          "description": "{ tab }, an optional { format } (png or jpeg) and, for jpeg, an optional { quality } from 0 to 100"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { key } names the call for cancel-call and is echoed as key; { emit: { success, failure, cancelled } } routes the result",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(browser/tab-capture {\"tab\":\"@entity.tab\",\"format\":\"png\"} {\"emit\":{\"success\":\"CAPTURED\",\"failure\":\"CAPTURE_FAILED\"}})"
       ],
       "docsSource": "generated"
     },

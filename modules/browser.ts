@@ -14,7 +14,7 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
-import { BOOLEAN, NUMBER, STRING, list, lit, mapOf, nullable, openShape, shape, union } from '../signature.js';
+import { BOOLEAN, BYTES, NUMBER, STRING, list, lit, mapOf, nullable, openShape, shape, union } from '../signature.js';
 
 const EVENT_KEY: OperatorTypeRef = { kind: 'eventKey' };
 
@@ -49,6 +49,10 @@ const TAB_APPLY_PRODUCES = shape({ applied: BOOLEAN, tab: NUMBER, elementId: STR
 const TAB_APPLY_MANY_PRODUCES = shape({ applied: list(TAB_REF), missing: list(TAB_REF), key: nullable(STRING) });
 
 const TAB_ACT_PRODUCES = shape({ done: BOOLEAN, tab: NUMBER, elementId: STRING, key: nullable(STRING) });
+
+const TAB_IMAGE_FORMAT = union(lit('png'), lit('jpeg'));
+
+const TAB_CAPTURE_PRODUCES = shape({ tab: NUMBER, format: TAB_IMAGE_FORMAT, image: BYTES, key: nullable(STRING) });
 
 const TAB_FIELD = openShape({ selector: STRING, attr: STRING, resolve: BOOLEAN, template: STRING, required: BOOLEAN });
 
@@ -515,5 +519,27 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     effect: { kind: 'custom', produces: TAB_ACT_PRODUCES },
     example: '["browser/tab-act", { "tab": "@payload.tab", "elementId": "@payload.elementId", "action": "click" }, { "emit": { "success": "DONE", "failure": "ACT_FAILED" } }]',
+  },
+  'browser/tab-capture': {
+    module: 'browser',
+    category: 'std-browser',
+    minArity: 1,
+    maxArity: 2,
+    description:
+      'Capture what a tab shows: the host brings the tab to the front of its window and captures the window, as png (the default) or jpeg (an optional quality from 0 to 100). Hands back { tab, format, image, key } with the image as bytes. Resolves with the shape it produces via the trailing { emit } envelope. Keyed and cancellable like call-service: (cancel-call key) aborts the ask and fires emit.cancelled with { key }. A request outside its closed keys, or a value the kernel refuses, emits failure { error, kind: invalid, key } and asks the host nothing; a host with no browser tabs emits kind unavailable, a tab the browser will not capture kind not-ready. The kernel validates and shapes; the host only performs raw tab operations. Client only.',
+    hasSideEffects: true,
+    runsOn: 'client',
+    returnType: TAB_CAPTURE_PRODUCES,
+    params: [
+      { name: 'request', type: openShape({ tab: NUMBER, format: TAB_IMAGE_FORMAT, quality: NUMBER }), description: '{ tab }, an optional { format } (png or jpeg) and, for jpeg, an optional { quality } from 0 to 100' },
+      {
+        name: 'options',
+        type: MODEL_OPTIONS,
+        description: 'Optional trailing options: { key } names the call for cancel-call and is echoed as key; { emit: { success, failure, cancelled } } routes the result',
+        optional: true,
+      },
+    ],
+    effect: { kind: 'custom', produces: TAB_CAPTURE_PRODUCES },
+    example: '["browser/tab-capture", { "tab": "@entity.tab", "format": "png" }, { "emit": { "success": "CAPTURED", "failure": "CAPTURE_FAILED" } }]',
   },
 };
