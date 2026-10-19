@@ -19,6 +19,7 @@ type AhLogLabels = { revision_name : string }
 type AhLogResource = { labels : AhLogLabels }
 type AhLogEntry = { timestamp : string, severity : string, textPayload : string, jsonPayload : Map string SExpr, resource : AhLogResource }
 type AhLogEntries = [AhLogEntry]
+type AhBoardRow = { id : string, backend : string, state : string, when : string, commit : string, error : string }
 type AhStatusCached = { backendId : string, status : AhStatus, cachedAt : number }
 type AhLinesCached = { key : string, lines : [AhLogLine], cachedAt : number }
 type AhBuildCached = { key : string, lines : [string], cachedAt : number }
@@ -37,6 +38,8 @@ orbital AppHostingBoardOrbital {
     logsCache : [AhLinesCached] = []
     buildCache : [AhBuildCached] = []
     noPayload : Map string SExpr @description "An empty payload, read when a log entry has none." = {}
+    selected : string @description "The backend whose log lines the board shows." = ""
+    noLines : [AhLogLine] @description "No lines." = []
   }
 
   trait AhGcloud = Cli.traits.CliRunner {
@@ -51,9 +54,32 @@ orbital AppHostingBoardOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (not @config.loadOnInit)
         (set @entity.noPayload (object/fromEntries (array/take [["", ""]] 0)))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No App Hosting status read yet." })
+        (set @entity.selected "")
+        (set @entity.noLines [])
+        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: AH_REFRESH_ALL }] })
+      INIT -> idle when @config.loadOnInit
+        (set @entity.noPayload (object/fromEntries (array/take [["", ""]] 0)))
+        (set @entity.selected "")
+        (set @entity.noLines [])
+        (set @entity.queue (array/concat @entity.queue (array/map @config.backends (fn b { kind: "status", backendId: @b, force: false, cloudBuildId: "", region: "" }))))
+        (emit AH_RENDER { })
+        (emit AH_PUMP { })
+      AH_REFRESH_ALL -> idle
+        (set @entity.queue (array/concat @entity.queue (array/map @config.backends (fn b { kind: "status", backendId: @b, force: true, cloudBuildId: "", region: "" }))))
+        (emit AH_PUMP { })
+      AH_BACKEND_OPEN -> idle
+        (set @entity.selected @payload.id)
+        (set @entity.queue (array/append @entity.queue { kind: "logs", backendId: @payload.id, force: false, cloudBuildId: "", region: "" }))
+        (emit AH_PUMP { })
+      AH_RENDER -> idle
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
+          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AH_REFRESH_ALL }] },
+          { type: data-grid, cols: 1, gap: sm, itemClickEvent: AH_BACKEND_OPEN, entity: (array/map @config.backends (fn b (let ((c (array/find @entity.statusCache (fn x (= @x.backendId @b))))) (if (== @c null) { id: @b, backend: @b, state: "reading…", when: "", commit: "", error: "" } { id: @b, backend: @b, state: @c.status.rolloutState, when: @c.status.rolloutTime, commit: (str/concat @c.status.commitHash " " @c.status.commitMessage), error: @c.status.errorSource })))), fields: [{ label: Backend, name: backend, variant: body }, { label: Rollout, name: state, variant: badge }, { label: When, name: when, variant: caption }, { label: Commit, name: commit, variant: caption }, { label: Error, name: error, variant: caption }] },
+          { type: typography, variant: caption, content: (if (= @entity.selected "") "Pick a backend to read its recent log lines." (str/concat @entity.selected " · recent log lines")) },
+          { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/range (array/len (object/get (array/find @entity.logsCache (fn c (= @c.key @entity.selected))) "lines" @entity.noLines))) (fn i (let ((l (array/nth (object/get (array/find @entity.logsCache (fn c (= @c.key @entity.selected))) "lines" @entity.noLines) @i))) { id: (str/concat @i), ts: @l.ts, severity: @l.severity, msg: @l.msg }))), fields: [{ label: Time, name: ts, variant: caption }, { label: Severity, name: severity, variant: badge }, { label: Message, name: msg, variant: body }] }
+        ] })
       AH_STATUS_LOAD -> idle
         (set @entity.queue (array/append @entity.queue { kind: "status", backendId: @payload.backendId, force: (if (== @payload.force null) false @payload.force), cloudBuildId: "", region: "" }))
         (emit AH_PUMP { })
@@ -81,14 +107,28 @@ orbital AppHostingBoardOrbital {
       AH_BUILD_LOGS_LOAD -> reading
         (set @entity.queue (array/append @entity.queue { kind: "build-logs", backendId: "", force: false, cloudBuildId: @payload.cloudBuildId, region: (if (= (or @payload.region "") "") @config.region @payload.region) }))
       AH_PUMP -> reading
+      AH_REFRESH_ALL -> reading
+        (set @entity.queue (array/concat @entity.queue (array/map @config.backends (fn b { kind: "status", backendId: @b, force: true, cloudBuildId: "", region: "" }))))
+      AH_BACKEND_OPEN -> reading
+        (set @entity.selected @payload.id)
+        (set @entity.queue (array/append @entity.queue { kind: "logs", backendId: @payload.id, force: false, cloudBuildId: "", region: "" }))
+      AH_RENDER -> reading
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
+          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AH_REFRESH_ALL }] },
+          { type: data-grid, cols: 1, gap: sm, itemClickEvent: AH_BACKEND_OPEN, entity: (array/map @config.backends (fn b (let ((c (array/find @entity.statusCache (fn x (= @x.backendId @b))))) (if (== @c null) { id: @b, backend: @b, state: "reading…", when: "", commit: "", error: "" } { id: @b, backend: @b, state: @c.status.rolloutState, when: @c.status.rolloutTime, commit: (str/concat @c.status.commitHash " " @c.status.commitMessage), error: @c.status.errorSource })))), fields: [{ label: Backend, name: backend, variant: body }, { label: Rollout, name: state, variant: badge }, { label: When, name: when, variant: caption }, { label: Commit, name: commit, variant: caption }, { label: Error, name: error, variant: caption }] },
+          { type: typography, variant: caption, content: (if (= @entity.selected "") "Pick a backend to read its recent log lines." (str/concat @entity.selected " · recent log lines")) },
+          { type: data-grid, cols: 1, gap: sm, entity: (array/map (array/range (array/len (object/get (array/find @entity.logsCache (fn c (= @c.key @entity.selected))) "lines" @entity.noLines))) (fn i (let ((l (array/nth (object/get (array/find @entity.logsCache (fn c (= @c.key @entity.selected))) "lines" @entity.noLines) @i))) { id: (str/concat @i), ts: @l.ts, severity: @l.severity, msg: @l.msg }))), fields: [{ label: Time, name: ts, variant: caption }, { label: Severity, name: severity, variant: badge }, { label: Message, name: msg, variant: body }] }
+        ] })
 
       AH_START -> idle when (and (= @entity.current.kind "status") (not @entity.current.force) (!= (array/find @entity.statusCache (fn c (and (= @c.backendId @entity.current.backendId) (< (- @now @c.cachedAt) @config.statusTtlMs)))) null))
         (emit AH_STATUS { backendId: @entity.current.backendId, status: (object/get (array/find @entity.statusCache (fn c (= @c.backendId @entity.current.backendId))) "status") })
+        (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_START -> reading when (and (= @entity.current.kind "status") (or @entity.current.force (== (array/find @entity.statusCache (fn c (and (= @c.backendId @entity.current.backendId) (< (- @now @c.cachedAt) @config.statusTtlMs)))) null)))
         (emit AH_GCLOUD { stage: "token", argv: ["auth", "print-access-token"] })
       AH_START -> idle when (and (= @entity.current.kind "logs") (!= (array/find @entity.logsCache (fn c (and (= @c.key @entity.current.backendId) (< (- @now @c.cachedAt) @config.logsTtlMs)))) null))
         (emit AH_LOGS { backendId: @entity.current.backendId, lines: (object/get (array/find @entity.logsCache (fn c (= @c.key @entity.current.backendId))) "lines") })
+        (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_START -> reading when (and (= @entity.current.kind "logs") (== (array/find @entity.logsCache (fn c (and (= @c.key @entity.current.backendId) (< (- @now @c.cachedAt) @config.logsTtlMs)))) null))
         (emit AH_GCLOUD { stage: "logs", argv: ["logging", "read", (str/concat "resource.type=\"cloud_run_revision\" resource.labels.service_name=\"" @entity.current.backendId "\""), (str/concat "--project=" @config.project), (str/concat "--limit=" @config.logLimit), "--format=json"] })
@@ -108,6 +148,7 @@ orbital AppHostingBoardOrbital {
       AH_RAN -> idle when (and (= @payload.stage "token") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))))
         (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: (json/parse "{\"rolloutState\":\"UNKNOWN\",\"rolloutId\":\"\",\"rolloutTime\":\"\",\"commitMessage\":\"\",\"commitHash\":\"\",\"commitUrl\":\"\",\"buildLogsUrl\":\"\",\"cloudBuildId\":\"\",\"cloudBuildRegion\":\"\",\"errorSource\":\"\"}" AhStatus), cachedAt: @now }))
         (emit AH_STATUS { backendId: @entity.current.backendId, status: (json/parse "{\"rolloutState\":\"UNKNOWN\",\"rolloutId\":\"\",\"rolloutTime\":\"\",\"commitMessage\":\"\",\"commitHash\":\"\",\"commitUrl\":\"\",\"buildLogsUrl\":\"\",\"cloudBuildId\":\"\",\"cloudBuildRegion\":\"\",\"errorSource\":\"\"}" AhStatus) })
+        (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_ROLLOUTS_REPLIED -> reading when (and (json/valid @payload.body) (> (array/len (object/get (json/parse @payload.body AhRollouts) "rollouts" [])) 0))
         (set @entity.latest (object/get (array/nth (array/sort (array/map (object/get (json/parse @payload.body AhRollouts) "rollouts" []) (fn r { at: (time/parse @r.createTime), r: @r })) "at" "desc") 0) "r"))
@@ -115,6 +156,7 @@ orbital AppHostingBoardOrbital {
       AH_ROLLOUTS_REPLIED -> idle when (not (and (json/valid @payload.body) (> (array/len (object/get (json/parse @payload.body AhRollouts) "rollouts" [])) 0)))
         (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: (json/parse "{\"rolloutState\":\"UNKNOWN\",\"rolloutId\":\"\",\"rolloutTime\":\"\",\"commitMessage\":\"\",\"commitHash\":\"\",\"commitUrl\":\"\",\"buildLogsUrl\":\"\",\"cloudBuildId\":\"\",\"cloudBuildRegion\":\"\",\"errorSource\":\"\"}" AhStatus), cachedAt: @now }))
         (emit AH_STATUS { backendId: @entity.current.backendId, status: (json/parse "{\"rolloutState\":\"UNKNOWN\",\"rolloutId\":\"\",\"rolloutTime\":\"\",\"commitMessage\":\"\",\"commitHash\":\"\",\"commitUrl\":\"\",\"buildLogsUrl\":\"\",\"cloudBuildId\":\"\",\"cloudBuildRegion\":\"\",\"errorSource\":\"\"}" AhStatus) })
+        (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_BUILD -> reading when (!= (or @entity.latest.build "") "")
         (http GET "https://firebaseapphosting.googleapis.com" (str/concat "/v1beta/" @entity.latest.build) {
@@ -173,7 +215,7 @@ orbital AppHostingBoardOrbital {
         (emit AH_PUMP { })
       AH_BUILD_UNREACHABLE -> idle
         (set @entity.build (json/parse "{}" AhBuild))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "The App Hosting build could not be read: " @payload.error) })
+        (notify warning (str/concat "The App Hosting build could not be read: " @payload.error))
         (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: (let ((latest @entity.latest) (b @entity.build) (logsUrl (object/get @entity.build "buildLogsUri" "")))
           { rolloutState: @latest.state,
             rolloutId: (array/nth (str/split @latest.name "/") (- (array/len (str/split @latest.name "/")) 1)),
@@ -198,9 +240,10 @@ orbital AppHostingBoardOrbital {
             errorSource: (if (!= (object/get @b "errorSource" "") "") (object/get @b "errorSource" "") (object/get @b "errors.0.errorSource" "")) }) })
         (emit AH_PUMP { })
       AH_API_UNREACHABLE -> idle
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "App Hosting unreachable: " @payload.error) })
+        (notify warning (str/concat "App Hosting unreachable: " @payload.error))
         (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: (json/parse "{\"rolloutState\":\"UNKNOWN\",\"rolloutId\":\"\",\"rolloutTime\":\"\",\"commitMessage\":\"\",\"commitHash\":\"\",\"commitUrl\":\"\",\"buildLogsUrl\":\"\",\"cloudBuildId\":\"\",\"cloudBuildRegion\":\"\",\"errorSource\":\"\"}" AhStatus), cachedAt: @now }))
         (emit AH_STATUS { backendId: @entity.current.backendId, status: (json/parse "{\"rolloutState\":\"UNKNOWN\",\"rolloutId\":\"\",\"rolloutTime\":\"\",\"commitMessage\":\"\",\"commitHash\":\"\",\"commitUrl\":\"\",\"buildLogsUrl\":\"\",\"cloudBuildId\":\"\",\"cloudBuildRegion\":\"\",\"errorSource\":\"\"}" AhStatus) })
+        (emit AH_RENDER { })
         (emit AH_PUMP { })
 
       AH_RAN -> idle when (= @payload.stage "logs")
@@ -219,14 +262,16 @@ orbital AppHostingBoardOrbital {
       AH_CLI_FAILED -> idle when (= @payload.stage "token")
         (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: (json/parse "{\"rolloutState\":\"UNKNOWN\",\"rolloutId\":\"\",\"rolloutTime\":\"\",\"commitMessage\":\"\",\"commitHash\":\"\",\"commitUrl\":\"\",\"buildLogsUrl\":\"\",\"cloudBuildId\":\"\",\"cloudBuildRegion\":\"\",\"errorSource\":\"\"}" AhStatus), cachedAt: @now }))
         (emit AH_STATUS { backendId: @entity.current.backendId, status: (json/parse "{\"rolloutState\":\"UNKNOWN\",\"rolloutId\":\"\",\"rolloutTime\":\"\",\"commitMessage\":\"\",\"commitHash\":\"\",\"commitUrl\":\"\",\"buildLogsUrl\":\"\",\"cloudBuildId\":\"\",\"cloudBuildRegion\":\"\",\"errorSource\":\"\"}" AhStatus) })
+        (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_CLI_FAILED -> idle when (= @payload.stage "logs")
         (emit AH_LOGS { backendId: @entity.current.backendId, lines: [] })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "gcloud could not run: " @payload.error) })
+        (emit AH_RENDER { })
+        (notify warning (str/concat "gcloud could not run: " @payload.error))
         (emit AH_PUMP { })
       AH_CLI_FAILED -> idle when (= @payload.stage "build-logs")
         (emit AH_BUILD_LOGS { cloudBuildId: @entity.current.cloudBuildId, region: @entity.current.region, lines: [] })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "gcloud could not run: " @payload.error) })
+        (notify warning (str/concat "gcloud could not run: " @payload.error))
         (emit AH_PUMP { })
     }
 
@@ -258,6 +303,9 @@ orbital AppHostingBoardOrbital {
         argv : [string]!
       }
         @description "Internal: one gcloud run."
+        @tier "internal"
+      AH_RENDER -> internal { }
+        @description "Internal: repaint the board from what is known."
         @tier "internal"
       AH_PUMP -> internal { }
         @description "Internal: read the oldest waiting request, if the board is free."
@@ -314,6 +362,14 @@ orbital AppHostingBoardOrbital {
       }
         @description "Answer this Cloud Build's log; the region knob when none is given."
         @synonyms "build logs, why did the deploy fail"
+      AH_REFRESH_ALL -> external { }
+        @description "Read every listed backend's status afresh."
+        @synonyms "refresh app hosting"
+      AH_BACKEND_OPEN {
+        id : string!
+        row : AhBoardRow
+      }
+        @description "A board row was clicked: read that backend's recent log lines."
       AH_RAN {
         stage : string!
         exitCode : number!
@@ -352,6 +408,18 @@ orbital AppHostingBoardOrbital {
     }
 
     config {
+      title : string = "App Hosting"
+        @label "Title"
+        @description "The board's heading."
+        @tier "presentation"
+      loadOnInit : boolean = false
+        @label "Load when opened"
+        @description "Read every listed backend's status as soon as the page opens."
+        @tier "presentation"
+      backends : [string] = []
+        @label "Backends"
+        @description "The App Hosting backends the board lists."
+        @tier "domain"
       statusSlot : slot = main
         @label "Status slot"
         @description "Where the board shows its one-line status."

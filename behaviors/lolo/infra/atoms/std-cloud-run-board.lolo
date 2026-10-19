@@ -86,11 +86,15 @@ orbital CloudRunBoardOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (not @config.loadOnInit)
+        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: CLOUD_RUN_LOAD }] })
+      INIT -> idle when @config.loadOnInit
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
+        (emit CLOUD_RUN_LOAD { })
         (set @entity.noMap (object/fromEntries (array/take [["", ""]] 0)))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No Google Cloud board read yet." })
       CLOUD_RUN_LOAD -> idle when (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs))
         (emit CLOUD_RUN_BOARD { billing: @entity.billing, cloudRun: @entity.cloudRun, fetchedAt: @entity.fetchedAt })
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CLOUD_RUN_REFRESH }] }, { type: typography, variant: caption, content: (str/concat @entity.billing.billingPeriod ": " @entity.billing.currency " " @entity.billing.totalCost (if (== @entity.cloudRun.actualBilledUsd null) "" (str/concat " (Cloud Run " @entity.cloudRun.actualBilledUsd ")"))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.billing.entries (fn e { id: @e.service, service: @e.service, cost: @e.cost, currency: @e.currency })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Currency, name: currency, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.cloudRun.services (fn v { id: @v.name, name: @v.name, region: @v.region, status: @v.status, size: (if @v.hasResourceData (str/concat @v.cpu " vCPU, " @v.memoryGb " GiB" (if (> @v.gpuCount 0) (str/concat ", " @v.gpuCount " " @v.gpu) "")) "unknown"), instances: (str/concat @v.minInstances "–" @v.maxInstances), hours: @v.activeInstanceHours, requests: @v.requestCount, net: @v.netCostMtd, projected: @v.projectedMonthlyUsd })), fields: [{ label: Service, name: name, variant: body }, { label: Region, name: region, variant: caption }, { label: Status, name: status, variant: badge }, { label: Size, name: size, variant: caption }, { label: Instances, name: instances, variant: caption }, { label: Hours, name: hours, variant: caption }, { label: Requests, name: requests, variant: caption }, { label: Net, name: net, variant: caption }, { label: Projected, name: projected, variant: caption }] }] })
       CLOUD_RUN_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
         (set @entity.loading true)
         (set @entity.startedAt @now)
@@ -152,7 +156,7 @@ orbital CloudRunBoardOrbital {
         (set @entity.instanceSeconds [])
         (set @entity.requests [])
         (set @entity.usageAvailable false)
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Cloud Monitoring unreachable: " @payload.error) })
+        (notify warning (str/concat "Cloud Monitoring unreachable: " @payload.error))
         (emit CR_COST { })
 
       CR_COST -> reading when (and @config.resourceLevelExport (!= @config.billingExportTable ""))
@@ -241,7 +245,7 @@ orbital CloudRunBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit CLOUD_RUN_BOARD { billing: @entity.billing, cloudRun: @entity.cloudRun, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat (array/len @entity.services) " Cloud Run services, " @entity.currency " " @entity.billing.totalCost " this month.") })
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CLOUD_RUN_REFRESH }] }, { type: typography, variant: caption, content: (str/concat @entity.billing.billingPeriod ": " @entity.billing.currency " " @entity.billing.totalCost (if (== @entity.cloudRun.actualBilledUsd null) "" (str/concat " (Cloud Run " @entity.cloudRun.actualBilledUsd ")"))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.billing.entries (fn e { id: @e.service, service: @e.service, cost: @e.cost, currency: @e.currency })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Currency, name: currency, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.cloudRun.services (fn v { id: @v.name, name: @v.name, region: @v.region, status: @v.status, size: (if @v.hasResourceData (str/concat @v.cpu " vCPU, " @v.memoryGb " GiB" (if (> @v.gpuCount 0) (str/concat ", " @v.gpuCount " " @v.gpu) "")) "unknown"), instances: (str/concat @v.minInstances "–" @v.maxInstances), hours: @v.activeInstanceHours, requests: @v.requestCount, net: @v.netCostMtd, projected: @v.projectedMonthlyUsd })), fields: [{ label: Service, name: name, variant: body }, { label: Region, name: region, variant: caption }, { label: Status, name: status, variant: badge }, { label: Size, name: size, variant: caption }, { label: Instances, name: instances, variant: caption }, { label: Hours, name: hours, variant: caption }, { label: Requests, name: requests, variant: caption }, { label: Net, name: net, variant: caption }, { label: Projected, name: projected, variant: caption }] }] })
 
       CR_CLI_FAILED -> reading when (= @payload.stage "token")
         (emit CR_COST { })
@@ -270,6 +274,9 @@ orbital CloudRunBoardOrbital {
         @description "The board: the month's cost per Google Cloud service, the Cloud Run services with resources, usage and cost, and when it was read."
         @synonyms "cloud run status, gcp cost, cloud board"
         @tier "primary"
+      CLOUD_RUN_LOAD -> internal { }
+        @description "Internal: the load a page opening with loadOnInit asks for."
+        @tier "internal"
       CR_TIME_REPLIED {
         status : number!
         headers : Map string string
@@ -362,6 +369,14 @@ orbital CloudRunBoardOrbital {
     }
 
     config {
+      title : string = "Google Cloud"
+        @label "Title"
+        @description "The board's heading."
+        @tier "presentation"
+      loadOnInit : boolean = false
+        @label "Load when opened"
+        @description "Read the board as soon as its page opens."
+        @tier "presentation"
       statusSlot : slot = main
         @label "Status slot"
         @description "Where the board shows its one-line status."

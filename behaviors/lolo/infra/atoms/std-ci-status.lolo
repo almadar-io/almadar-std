@@ -19,6 +19,7 @@ type CiOrganization = { repositories : CiRepositoryConnection }
 type CiData = { organization : CiOrganization }
 type CiReply = { data : CiData }
 type CiRun = { repo : string, fullName : string, status : string, conclusion : string, name : string, url : string, databaseId : number, createdAt : string }
+type CiRunRow = { id : string, repo : string, name : string, status : string, conclusion : string, createdAt : string, runId : number }
 type CiExtraRepo = { owner : string, name : string, displayName : string }
 type CiGithubRun = { id : number, name : string, status : string, conclusion : string, created_at : string, html_url : string }
 orbital CiStatusOrbital {
@@ -67,10 +68,21 @@ orbital CiStatusOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No CI status read yet." })
+      INIT -> idle when (not @config.loadOnInit)
+        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: CI_STATUS_LOAD }] })
+      INIT -> idle when @config.loadOnInit
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reading CI status…" })
+        (emit CI_STATUS_LOAD { })
+      CI_RUN_OPEN -> idle when (and (!= @config.logsPage "") (= @payload.row.conclusion "failure"))
+        (navigate (str/concat "/" @config.logsPage "/" (array/nth (str/split @payload.id "/") 0) "/" (array/nth (str/split @payload.id "/") 1) "/" @payload.row.runId))
+      CI_RUN_OPEN -> idle when (not (and (!= @config.logsPage "") (= @payload.row.conclusion "failure")))
       CI_STATUS_LOAD -> idle when (and @entity.hasCache (<= (- @now @entity.cachedAt) @config.cacheTtlMs))
         (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: false })
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
+          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
+          { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if false " (GitHub could not be read; this is the last board)" "")) },
+          { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
+        ] })
       CI_STATUS_LOAD -> loading when (not (and @entity.hasCache (<= (- @now @entity.cachedAt) @config.cacheTtlMs)))
         (set @entity.loading true)
         (set @entity.collected [])
@@ -122,7 +134,11 @@ orbital CiStatusOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: true })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub could not be read; showing the board from " @entity.fetchedAt ".") })
+(render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
+          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
+          { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if true " (GitHub could not be read; this is the last board)" "")) },
+          { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
+        ] })
       CI_GAVE_UP -> idle when (== @payload.key @entity.key)
         (set @entity.runs (if @entity.hasCache @entity.runs []))
         (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt (str/concat (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z")))
@@ -130,7 +146,11 @@ orbital CiStatusOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: true })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub could not be read; showing the board from " @entity.fetchedAt ".") })
+(render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
+          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
+          { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if true " (GitHub could not be read; this is the last board)" "")) },
+          { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
+        ] })
 
       CI_EXTRA_NEXT -> loading when (< @entity.extra (array/len @config.extraRepos))
         (let ((x (array/nth @config.extraRepos @entity.extra)))
@@ -142,7 +162,11 @@ orbital CiStatusOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: false })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat (array/len @entity.runs) " repositories read at " @entity.fetchedAt ".") })
+(render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
+          { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CI_STATUS_REFRESH }] },
+          { type: typography, variant: caption, content: (str/concat (array/len @entity.runs) " repositories, " (array/len (array/filter @entity.runs (fn r (= @r.conclusion "failure")))) " failing, read at " @entity.fetchedAt (if false " (GitHub could not be read; this is the last board)" "")) },
+          { type: data-grid, cols: 1, gap: sm, itemClickEvent: CI_RUN_OPEN, entity: (array/map @entity.runs (fn r { id: @r.fullName, repo: @r.repo, name: @r.name, status: @r.status, conclusion: (or @r.conclusion @r.status), createdAt: @r.createdAt, runId: @r.databaseId })), fields: [{ label: Repository, name: repo, variant: body }, { label: Workflow, name: name, variant: caption }, { label: Result, name: conclusion, variant: badge }, { label: Started, name: createdAt, variant: caption }] }
+        ] })
       CI_EXTRA_RUNS -> loading
         (let ((x (array/nth @config.extraRepos @entity.extra)))
           (set @entity.collected (array/append @entity.collected (if (= (array/len @payload.runs) 0) (object/merge (json/parse "{\"repo\":\"\",\"fullName\":\"\",\"status\":\"unknown\",\"conclusion\":null,\"name\":\"\",\"url\":\"\",\"databaseId\":0,\"createdAt\":\"\"}" CiRun) { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name) }) (let ((run (array/nth @payload.runs 0))) { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name), status: (str/lower @run.status), conclusion: (if (== @run.conclusion null) null (str/lower @run.conclusion)), name: @run.name, url: @run.html_url, databaseId: @run.id, createdAt: @run.created_at })))))
@@ -196,6 +220,9 @@ orbital CiStatusOrbital {
       CI_RETRY_CANCEL { }
         @description "Internal: stop retrying the page."
         @tier "internal"
+      CI_STATUS_LOAD -> internal { }
+        @description "Internal: the load a page opening with loadOnInit asks for."
+        @tier "internal"
       CI_PAGE_READ -> internal { }
         @description "Internal: a page's repositories are collected."
         @tier "internal"
@@ -210,6 +237,11 @@ orbital CiStatusOrbital {
         @synonyms "load ci status, show build status"
       CI_STATUS_REFRESH -> external { }
         @description "Read the board afresh."
+      CI_RUN_OPEN {
+        id : string!
+        row : CiRunRow!
+      }
+        @description "A board row was clicked: a failed run opens its log page when logsPage is set."
         @synonyms "refresh ci status, reload runs"
       CI_ATTEMPT {
         key : CallKey!
@@ -258,6 +290,18 @@ orbital CiStatusOrbital {
         @label "Status slot"
         @description "Where the board shows its one-line status."
         @synonyms "status area, slot"
+        @tier "presentation"
+      title : string = "CI status"
+        @label "Title"
+        @description "The board's heading."
+        @tier "presentation"
+      loadOnInit : boolean = false
+        @label "Load when opened"
+        @description "Read the board as soon as its page opens."
+        @tier "presentation"
+      logsPage : string = ""
+        @label "Run log page"
+        @description "The page a failed run opens, without its leading slash, as /<logsPage>/<owner>/<repo>/<runId>; empty keeps rows unclickable."
         @tier "presentation"
       org : string = ""
         @label "Organization"

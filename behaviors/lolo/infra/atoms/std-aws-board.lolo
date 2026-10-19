@@ -66,10 +66,14 @@ orbital AwsBoardOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No AWS board read yet." })
+      INIT -> idle when (not @config.loadOnInit)
+        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: AWS_LOAD }] })
+      INIT -> idle when @config.loadOnInit
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
+        (emit AWS_LOAD { })
       AWS_LOAD -> idle when (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs))
         (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AWS_REFRESH }] }, { type: typography, variant: caption, content: (str/concat "Running $" @entity.board.runningHourlyCost "/h · est. $" @entity.board.estimatedMonthlyCost "/month · billed " @entity.board.costExplorerPeriod ": $" @entity.board.costExplorerTotal) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.instances (fn i { id: @i.instanceId, name: (if (= @i.name "") @i.instanceId @i.name), type: @i.instanceType, state: @i.state, gpu: (if (== @i.gpu null) "" (str/concat @i.gpuCount " × " @i.gpu)), hourly: (if (== @i.hourlyUsd null) "unpriced" (str/concat "$" @i.hourlyUsd)), az: @i.az })), fields: [{ label: Instance, name: name, variant: body }, { label: Type, name: type, variant: caption }, { label: State, name: state, variant: badge }, { label: GPU, name: gpu, variant: caption }, { label: Price, name: hourly, variant: caption }, { label: Zone, name: az, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.costExplorer (fn c { id: @c.service, service: @c.service, cost: @c.cost, unit: @c.unit })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Unit, name: unit, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.quotas (fn q { id: @q.name, name: @q.name, use: (str/concat @q.used " / " @q.value (if @q.usedComplete "" " (some instances not in the catalog)")) })), fields: [{ label: Quota, name: name, variant: body }, { label: Used, name: use, variant: caption }] }] })
       AWS_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
         (set @entity.loading true)
         (set @entity.startedAt @now)
@@ -202,7 +206,7 @@ orbital AwsBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat (array/len @entity.instances) " instances, est. $" @entity.board.estimatedMonthlyCost " a month.") })
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AWS_REFRESH }] }, { type: typography, variant: caption, content: (str/concat "Running $" @entity.board.runningHourlyCost "/h · est. $" @entity.board.estimatedMonthlyCost "/month · billed " @entity.board.costExplorerPeriod ": $" @entity.board.costExplorerTotal) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.instances (fn i { id: @i.instanceId, name: (if (= @i.name "") @i.instanceId @i.name), type: @i.instanceType, state: @i.state, gpu: (if (== @i.gpu null) "" (str/concat @i.gpuCount " × " @i.gpu)), hourly: (if (== @i.hourlyUsd null) "unpriced" (str/concat "$" @i.hourlyUsd)), az: @i.az })), fields: [{ label: Instance, name: name, variant: body }, { label: Type, name: type, variant: caption }, { label: State, name: state, variant: badge }, { label: GPU, name: gpu, variant: caption }, { label: Price, name: hourly, variant: caption }, { label: Zone, name: az, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.costExplorer (fn c { id: @c.service, service: @c.service, cost: @c.cost, unit: @c.unit })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Unit, name: unit, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.quotas (fn q { id: @q.name, name: @q.name, use: (str/concat @q.used " / " @q.value (if @q.usedComplete "" " (some instances not in the catalog)")) })), fields: [{ label: Quota, name: name, variant: body }, { label: Used, name: use, variant: caption }] }] })
       AWS_CLI_FAILED -> idle when (= @payload.stage "history")
         (set @entity.history [])
         (let ((running (math/round (array/reduce (array/filter @entity.instances (fn i (= @i.state "running"))) 0 (fn acc i (+ @acc (or @i.hourlyUsd 0)))) 2)))
@@ -221,7 +225,8 @@ orbital AwsBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "The aws CLI could not run: " @payload.error) })
+        (notify error (str/concat "The aws CLI could not run: " @payload.error))
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: AWS_REFRESH }] }, { type: typography, variant: caption, content: (str/concat "Running $" @entity.board.runningHourlyCost "/h · est. $" @entity.board.estimatedMonthlyCost "/month · billed " @entity.board.costExplorerPeriod ": $" @entity.board.costExplorerTotal) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.instances (fn i { id: @i.instanceId, name: (if (= @i.name "") @i.instanceId @i.name), type: @i.instanceType, state: @i.state, gpu: (if (== @i.gpu null) "" (str/concat @i.gpuCount " × " @i.gpu)), hourly: (if (== @i.hourlyUsd null) "unpriced" (str/concat "$" @i.hourlyUsd)), az: @i.az })), fields: [{ label: Instance, name: name, variant: body }, { label: Type, name: type, variant: caption }, { label: State, name: state, variant: badge }, { label: GPU, name: gpu, variant: caption }, { label: Price, name: hourly, variant: caption }, { label: Zone, name: az, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.costExplorer (fn c { id: @c.service, service: @c.service, cost: @c.cost, unit: @c.unit })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Unit, name: unit, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.board.quotas (fn q { id: @q.name, name: @q.name, use: (str/concat @q.used " / " @q.value (if @q.usedComplete "" " (some instances not in the catalog)")) })), fields: [{ label: Quota, name: name, variant: body }, { label: Used, name: use, variant: caption }] }] })
     }
 
     emits {
@@ -246,6 +251,9 @@ orbital AwsBoardOrbital {
         @description "The AWS board: instances, volumes, images, buckets, groups, keys, roles, quotas, the month's cost per service, billed instance types, the estimates and when it was read."
         @synonyms "aws status, ec2 cost, aws board"
         @tier "primary"
+      AWS_LOAD -> internal { }
+        @description "Internal: the load a page opening with loadOnInit asks for."
+        @tier "internal"
       AWS_RUN {
         stage : string!
         argv : [string]!
@@ -287,6 +295,14 @@ orbital AwsBoardOrbital {
     }
 
     config {
+      title : string = "AWS"
+        @label "Title"
+        @description "The board's heading."
+        @tier "presentation"
+      loadOnInit : boolean = false
+        @label "Load when opened"
+        @description "Read the board as soon as its page opens."
+        @tier "presentation"
       statusSlot : slot = main
         @label "Status slot"
         @description "Where the board shows its one-line status."

@@ -55,10 +55,14 @@ orbital TrainingBoardOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No training board read yet." })
+      INIT -> idle when (not @config.loadOnInit)
+        (render-ui @config.statusSlot { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Load", variant: primary, action: TRAINING_LOAD }] })
+      INIT -> idle when @config.loadOnInit
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading " @config.title "…") })
+        (emit TRAINING_LOAD { })
       TRAINING_LOAD -> idle when (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs))
         (emit TRAINING_BOARD { instances: @entity.instances, fetchedAt: @entity.fetchedAt })
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: TRAINING_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.instances (fn i { id: @i.instanceId, instance: @i.instanceId, type: @i.instanceType, ip: (if (= @i.publicIp "") "no public address" @i.publicIp), uptime: (or @i.uptime "unreachable"), gpu: (if (== @i.gpu null) "" (str/concat @i.gpu.name " " @i.gpu.utilization "% · " @i.gpu.memoryUsed "/" @i.gpu.memoryTotal " MiB · " @i.gpu.temp "°C")), process: (if (== @i.process null) "none" (str/concat @i.process.command " (" @i.process.elapsed ")")), epochs: (array/len @i.epochs) })), fields: [{ label: Instance, name: instance, variant: body }, { label: Type, name: type, variant: caption }, { label: Address, name: ip, variant: caption }, { label: Uptime, name: uptime, variant: caption }, { label: GPU, name: gpu, variant: caption }, { label: Process, name: process, variant: caption }, { label: Epochs, name: epochs, variant: caption }] }] })
       TRAINING_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
         (set @entity.loading true)
         (set @entity.startedAt @now)
@@ -115,7 +119,7 @@ orbital TrainingBoardOrbital {
         (set @entity.hasCache true)
         (set @entity.loading false)
         (emit TRAINING_BOARD { instances: @entity.instances, fetchedAt: @entity.fetchedAt })
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat (array/len @entity.instances) " training instances.") })
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: TRAINING_REFRESH }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.instances (fn i { id: @i.instanceId, instance: @i.instanceId, type: @i.instanceType, ip: (if (= @i.publicIp "") "no public address" @i.publicIp), uptime: (or @i.uptime "unreachable"), gpu: (if (== @i.gpu null) "" (str/concat @i.gpu.name " " @i.gpu.utilization "% · " @i.gpu.memoryUsed "/" @i.gpu.memoryTotal " MiB · " @i.gpu.temp "°C")), process: (if (== @i.process null) "none" (str/concat @i.process.command " (" @i.process.elapsed ")")), epochs: (array/len @i.epochs) })), fields: [{ label: Instance, name: instance, variant: body }, { label: Type, name: type, variant: caption }, { label: Address, name: ip, variant: caption }, { label: Uptime, name: uptime, variant: caption }, { label: GPU, name: gpu, variant: caption }, { label: Process, name: process, variant: caption }, { label: Epochs, name: epochs, variant: caption }] }] })
       TR_RAN -> reading when (= @payload.stage "visit")
         (set @entity.collected (array/append @entity.collected (let ((inst (array/nth @entity.found @entity.cursor)) (out (if (= @payload.exitCode 0) (str/trim @payload.stdout) "")))
           (let ((gpuText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "GPU"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (or (array/nth @parts (+ @at 1)) "")) "")))) (procText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "PROCESS"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (or (array/nth @parts (+ @at 1)) "")) "")))) (upText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "UPTIME"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (or (array/nth @parts (+ @at 1)) "")) "")))) (logText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "LOG"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (or (array/nth @parts (+ @at 1)) "")) "")))))
@@ -145,7 +149,7 @@ orbital TrainingBoardOrbital {
             process: (array/nth (object/values (object/pick @entity.noProcess [(str/concat "x")])) 0),
             epochs: [], logTail: [] })))
         (set @entity.cursor (+ @entity.cursor 1))
-        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "ssh could not run: " @payload.error) })
+        (notify warning (str/concat "ssh could not run: " @payload.error))
         (emit TR_NEXT { })
     }
 
@@ -157,6 +161,9 @@ orbital TrainingBoardOrbital {
         @description "The training instances with their GPU, process, uptime, log tail and epochs, and when they were read."
         @synonyms "training status, gpu instances, training progress"
         @tier "primary"
+      TRAINING_LOAD -> internal { }
+        @description "Internal: the load a page opening with loadOnInit asks for."
+        @tier "internal"
       TR_AWS {
         stage : string!
         argv : [string]!
@@ -205,6 +212,14 @@ orbital TrainingBoardOrbital {
     }
 
     config {
+      title : string = "Training"
+        @label "Title"
+        @description "The board's heading."
+        @tier "presentation"
+      loadOnInit : boolean = false
+        @label "Load when opened"
+        @description "Read the board as soon as its page opens."
+        @tier "presentation"
       statusSlot : slot = main
         @label "Status slot"
         @description "Where the board shows its one-line status."
