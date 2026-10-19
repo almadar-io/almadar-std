@@ -1,0 +1,41 @@
+app deployment-registry-spec [
+  version: "1.0.0",
+  description: "Design contract for a registry of versioned deployments of named artifacts: each deployment of an artifact gets the next version number (from 1, per artifact) and is kept in its history; a deployment that may serve becomes the artifact's active one, a rollback re-activates an earlier one that may serve, a withdrawal leaves nothing active and keeps the history, and resolving an artifact answers its active deployment or that there is none."
+]
+
+orbital DeploymentRegistrySpec {
+  expects entity Deployment {
+    id : string!
+    artifact : string!
+    version : number!
+    activates : boolean!
+    recordedAt : number
+    details : Map string (string | number)
+  }
+  expects entity DeploymentCounter {
+    id : string!
+    last : number!
+  }
+  expects entity ActiveDeployment {
+    id : string!
+    version : number!
+    recordedAt : number
+    details : Map string (string | number)
+  }
+  expects trait DeploymentRegistrar {
+    state idle {
+      DEPLOY -> idle
+      ROLLBACK -> idle
+      WITHDRAW -> idle
+      RESOLVE -> idle
+      HISTORY -> idle
+    }
+    emits {
+      DEPLOYED { artifact : string!  version : number! }
+      DEPLOY_FAILED { artifact : string!  code : string  message : string! }
+      RESOLVED { artifact : string!  found : boolean! }
+      HISTORY_ANSWERED { artifact : string! }
+    }
+  }
+  expects page "/deployment-registry" -> DeploymentRegistrar
+}

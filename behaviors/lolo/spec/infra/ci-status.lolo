@@ -1,0 +1,27 @@
+app ci-status-spec [
+  version: "1.0.0",
+  description: "Design contract for a CI status board: the latest GitHub Actions run of every repository of an organization, plus listed repositories elsewhere. A load within the cache window answers the cached board without asking GitHub; a refresh always asks. A load asked for while one is in flight is answered by that load, never by a second one. A page GitHub cannot serve right now is retried; when the board cannot be read, the last board is answered again rather than nothing."
+]
+
+orbital CiStatusSpec {
+  expects entity CiStatusBoard [runtime] {
+    id : string!
+    fetchedAt : string
+    cachedAt : number
+    loading : boolean
+  }
+  expects trait CiStatus {
+    state idle {
+      CI_STATUS_LOAD -> loading
+      CI_STATUS_REFRESH -> loading
+    }
+    state loading {
+      CI_STATUS_LOAD -> loading
+      CI_STATUS_REFRESH -> loading
+    }
+    emits {
+      CI_STATUS { fetchedAt : string! }
+    }
+  }
+  expects page "/ci-status" -> CiStatus
+}

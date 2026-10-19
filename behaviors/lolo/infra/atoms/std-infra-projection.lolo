@@ -1,0 +1,268 @@
+app std-infra-projection [
+  version: "1.0.0",
+  description: "std-infra-projection — projects a program onto cloud infrastructure. INFRA_PROJECT hands it a resolved program (the .orb JSON `orb resolve` prints) with the credentials each external service declares; it counts the program's orbitals, traits, pages, transitions, entities by persistence, effects by kind, ticks, cross-orbital events and external services, weights them into a complexity score whose tier (1 single instance, 2 multi-instance with a Redis event bus, 3 distributed with Postgres) sizes the infrastructure, and answers INFRA_PROJECTED once with the Terraform main and variables text (GCP; another provider answers a placeholder), the resources, the score and its breakdown, the tier and a monthly cost estimate per resource. A tier, database or instance-count override replaces the computed choice. Nothing is deployed and nothing is written; INFRA_PROJECT_FAILED answers a program that is not JSON."
+]
+type InfraField = { name : string, type : string }
+type InfraEntity = { name : string, persistence : string, identity : boolean, fields : [InfraField] }
+type InfraEffects = { effects : [SExpr] }
+type InfraStateMachine = { transitions : [InfraEffects] }
+type InfraTrait = { name : string, ticks : [InfraEffects], emits : [SExpr], listens : [SExpr], stateMachine : InfraStateMachine }
+type InfraEventRef = { event : string }
+type InfraServiceAuth = { secretEnv : string }
+type InfraService = { name : string, ref : string, type : string, auth : InfraServiceAuth }
+type InfraOrbital = { name : string, entity : SExpr, auxiliaryEntities : [SExpr], pages : [SExpr], services : [SExpr], traits : [SExpr] }
+type InfraProgram = { name : string, orbitals : [InfraOrbital], services : [SExpr] }
+type InfraForm = [SExpr]
+type InfraText = { v : string }
+type InfraPattern = { type : string }
+type InfraCredential = { envVar : string!, required : boolean!, description : string! }
+type InfraServiceCredentials = { name : string!, credentials : [InfraCredential]! }
+type InfraSecret = { svc : string!, env : string!, envVar : string! }
+type InfraEnv = { name : string!, value : string!, reference : boolean! }
+type InfraCost = { resource : string!, min : number!, max : number!, notes : string! }
+type InfraCount = { key : string!, value : number! }
+type InfraEffectCounts = { renderUI : number!, persist : number!, fetch : number!, callService : number!, emitExternal : number!, spawn : number!, despawn : number!, navigate : number!, notify : number!, set : number! }
+type InfraAnalysis = { orbitalCount : number!, effectCounts : InfraEffectCounts!, tickCount : number!, persistentEntityCount : number!, runtimeEntityCount : number!, crossOrbitalEventCount : number!, serviceRefs : [string]!, serviceCredentials : [InfraServiceCredentials]!, hasAuth : boolean!, hasFileUploads : boolean!, entityNames : [string]!, traitCount : number!, pageCount : number!, totalTransitions : number! }
+orbital InfraProjectionOrbital {
+  entity InfraProjection [runtime] {
+    id : string!
+    status : "idle" | "projected" | "failed" @description "What the last projection did." = idle
+    appName : string = ""
+    provider : string = "gcp"
+    region : string = ""
+    tierOverride : number = 0
+    database : string = ""
+    maxInstances : number = 0
+    orbitalCount : number = 0
+    traitCount : number = 0
+    pageCount : number = 0
+    totalTransitions : number = 0
+    persistentEntityCount : number = 0
+    runtimeEntityCount : number = 0
+    tickCount : number = 0
+    crossOrbitalEventCount : number = 0
+    renderUI : number = 0
+    persistCount : number = 0
+    fetchCount : number = 0
+    callService : number = 0
+    emitExternal : number = 0
+    spawnCount : number = 0
+    despawnCount : number = 0
+    navigateCount : number = 0
+    notifyCount : number = 0
+    setCount : number = 0
+    hasAuth : boolean = false
+    hasFileUploads : boolean = false
+    entityNames : [string] = []
+    serviceRefs : [string] = []
+    serviceCredentials : [InfraServiceCredentials] = []
+  }
+
+  trait InfraProjector -> InfraProjection [integration, instance] {
+    initial: idle
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the projector shows its one-line status."
+        @synonyms "status area, slot"
+        @tier "presentation"
+    }
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No projection yet." })
+
+      INFRA_PROJECT -> idle when (not (str/startsWith (json/stringify (json/parse @payload.program InfraProgram)) "{"))
+        (set @entity.status "failed")
+        (emit INFRA_PROJECT_FAILED { error: "the program is not a JSON object" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Projection failed: the program is not a JSON object." })
+      INFRA_PROJECT -> idle when (str/startsWith (json/stringify (json/parse @payload.program InfraProgram)) "{")
+        (set @entity.appName @payload.appName)
+        (set @entity.provider (or @payload.provider "gcp"))
+        (set @entity.region (or @payload.region ""))
+        (set @entity.tierOverride (if (== @payload.tier null) 0 @payload.tier))
+        (set @entity.database (or @payload.database ""))
+        (set @entity.maxInstances (if (== @payload.maxInstances null) 0 @payload.maxInstances))
+        (let ((p (json/parse @payload.program InfraProgram)))
+          (let ((orbitals (or @p.orbitals [])))
+            (let ((infos (array/map @orbitals (fn o (let ((ts (array/map (array/filter (or @o.traits []) (fn t (str/startsWith (json/stringify @t) "{"))) (fn t (json/parse (json/stringify @t) InfraTrait)))))
+                    (let ((forms (array/map (array/flatten (array/map @ts (fn t (array/concat (array/flatten (array/map (or @t.stateMachine.transitions []) (fn x (or @x.effects [])))) (array/flatten (array/map (or @t.ticks []) (fn x (or @x.effects [])))))))) (fn e (if (str/startsWith (json/stringify @e) "[") (json/parse (json/stringify @e) InfraForm) (json/parse "[]" InfraForm))))))
+                      {
+                        name: (or @o.name ""),
+                        ts: @ts,
+                        forms: @forms,
+                        services: (array/concat
+                          (array/filter (array/map (or @o.services []) (fn s (if (str/startsWith (json/stringify @s) "\"") (object/get (json/parse (str/concat "{\"v\":" (json/stringify @s) "}") InfraText) "v") (let ((d (json/parse (json/stringify @s) InfraService))) (or @d.ref @d.name ""))))) (fn n (!= @n "")))
+                          (array/flatten (array/map @forms (fn f (array/concat
+                            (array/map (array/filter (json/nodes (array/drop @f 1)) (fn n (and (str/startsWith (json/stringify @n) "[") (let ((l (json/parse (json/stringify @n) InfraForm))) (and (> (array/len @l) 1) (array/includes [(str/concat "\"call-service\""), (str/concat "\"call_service\"")] (json/stringify (array/first @l))) (str/startsWith (json/stringify (array/nth @l 1)) "\"")))))) (fn n (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth (json/parse (json/stringify @n) InfraForm) 1)) "}") InfraText) "v")))
+                            (if (and (> (array/len @f) 1) (= (json/stringify (array/first @f)) "\"call-service\"") (str/startsWith (json/stringify (array/nth @f 1)) "\"")) [(str/concat (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 1)) "}") InfraText) "v"))] (array/take [""] 0))))))),
+                        emits: (array/unique (array/filter (array/map (array/flatten (array/map @ts (fn t (or @t.emits [])))) (fn e (if (str/startsWith (json/stringify @e) "\"") (object/get (json/parse (str/concat "{\"v\":" (json/stringify @e) "}") InfraText) "v") (if (str/startsWith (json/stringify @e) "{") (or (object/get (json/parse (json/stringify @e) InfraEventRef) "event") "") "")))) (fn n (!= @n "")))),
+                        listens: (array/unique (array/filter (array/map (array/flatten (array/map @ts (fn t (or @t.listens [])))) (fn e (if (str/startsWith (json/stringify @e) "\"") (object/get (json/parse (str/concat "{\"v\":" (json/stringify @e) "}") InfraText) "v") (if (str/startsWith (json/stringify @e) "{") (or (object/get (json/parse (json/stringify @e) InfraEventRef) "event") "") "")))) (fn n (!= @n ""))))
+                      }))))))
+              (let ((allTs (array/flatten (array/map @infos (fn i @i.ts))))
+                    (forms (array/flatten (array/map @infos (fn i @i.forms))))
+                    (entities (array/map (array/filter @orbitals (fn o (str/startsWith (json/stringify @o.entity) "{"))) (fn o { entity: (json/parse (json/stringify @o.entity) InfraEntity), orbital: (or @o.name "") })))
+                    (schemaServices (array/concat (or @p.services []) (array/flatten (array/map @orbitals (fn o (or @o.services [])))))))
+                (let ((heads (array/map @forms (fn f (if (> (array/len @f) 0) (json/stringify (array/first @f)) ""))))
+                      (refs (array/unique (array/concat (array/flatten (array/map @infos (fn i @i.services))) (array/filter (array/map (or @p.services []) (fn s (if (str/startsWith (json/stringify @s) "{") (or (object/get (json/parse (json/stringify @s) InfraService) "name") "") ""))) (fn n (!= @n "")))))))
+                  (do
+                    (set @entity.orbitalCount (array/len @orbitals))
+                    (set @entity.traitCount (array/len @allTs))
+                    (set @entity.pageCount (array/sum (array/map @orbitals (fn o (array/len (or @o.pages []))))))
+                    (set @entity.totalTransitions (array/sum (array/map @allTs (fn t (array/len (or @t.stateMachine.transitions []))))))
+                    (set @entity.tickCount (array/sum (array/map @allTs (fn t (array/len (or @t.ticks []))))))
+                    (set @entity.persistentEntityCount (array/len (array/filter @entities (fn e (= (or @e.entity.persistence "persistent") "persistent")))))
+                    (set @entity.runtimeEntityCount (array/len (array/filter @entities (fn e (= @e.entity.persistence "runtime")))))
+                    (set @entity.hasFileUploads (array/some @entities (fn e (array/some (or @e.entity.fields []) (fn f (or (= @f.type "file") (= @f.type "image")))))))
+                    (set @entity.entityNames (array/map @entities (fn e (or @e.entity.name @e.orbital))))
+                    (set @entity.renderUI (array/len (array/filter @heads (fn h (= @h "\"render-ui\"")))))
+                    (set @entity.persistCount (array/len (array/filter @heads (fn h (= @h "\"persist\"")))))
+                    (set @entity.fetchCount (array/len (array/filter @heads (fn h (= @h "\"fetch\"")))))
+                    (set @entity.callService (array/len (array/filter @heads (fn h (= @h "\"call-service\"")))))
+                    (set @entity.emitExternal (array/len (array/filter @heads (fn h (= @h "\"emit\"")))))
+                    (set @entity.spawnCount (array/len (array/filter @heads (fn h (= @h "\"spawn\"")))))
+                    (set @entity.despawnCount (array/len (array/filter @heads (fn h (= @h "\"despawn\"")))))
+                    (set @entity.navigateCount (array/len (array/filter @heads (fn h (= @h "\"navigate\"")))))
+                    (set @entity.notifyCount (array/len (array/filter @heads (fn h (= @h "\"notify\"")))))
+                    (set @entity.setCount (array/len (array/filter @heads (fn h (= @h "\"set\"")))))
+                    (set @entity.hasAuth (array/some (array/concat (array/map @orbitals (fn o @o.entity)) (array/flatten (array/map @orbitals (fn o (or @o.auxiliaryEntities []))))) (fn e (and (str/startsWith (json/stringify @e) "{") (= (object/get (json/parse (json/stringify @e) InfraEntity) "identity") true)))))
+                    (set @entity.crossOrbitalEventCount (array/sum (array/map (array/range 0 (array/len @infos)) (fn i (array/sum (array/map (array/range 0 (array/len @infos)) (fn j (if (= (object/get (array/nth @infos @i) "name") (object/get (array/nth @infos @j) "name")) 0 (array/len (array/filter (object/get (array/nth @infos @i) "emits") (fn ev (array/includes (object/get (array/nth @infos @j) "listens") @ev))))))))))))
+                    (set @entity.serviceRefs @refs)
+                    (set @entity.serviceCredentials (array/map @refs (fn svc (let ((registered (if (>= (array/indexOf (object/keys (or @payload.credentials {})) @svc) 0) (array/nth (object/values (or @payload.credentials {})) (array/indexOf (object/keys (or @payload.credentials {})) @svc)) (array/take [{ envVar: "", required: false, description: "" }] 0))))
+                      { name: @svc, credentials: (if (> (array/len @registered) 0) @registered (array/map (array/filter (array/map (array/filter @schemaServices (fn s (str/startsWith (json/stringify @s) "{"))) (fn s (json/parse (json/stringify @s) InfraService))) (fn s (and (= @s.name @svc) (= @s.type "rest") (!= (or @s.auth.secretEnv "") "")))) (fn s { envVar: @s.auth.secretEnv, required: true, description: (str/concat "API credential for " @svc) }))) }))))
+                    (emit INFRA_ANALYZED { })))))))
+
+      INFRA_ANALYZED -> idle
+        (let ((breakdown (array/filter [
+                { key: "orbitals", value: (* @entity.orbitalCount 1) },
+                { key: "persist", value: (* @entity.persistCount 2) },
+                { key: "fetch", value: (* @entity.fetchCount 2) },
+                { key: "callService", value: (* @entity.callService 3) },
+                { key: "emitExternal", value: (* @entity.emitExternal 4) },
+                { key: "spawn", value: (* @entity.spawnCount 2) },
+                { key: "despawn", value: (* @entity.despawnCount 1) },
+                { key: "ticks", value: (* @entity.tickCount 3) },
+                { key: "persistentEntities", value: (* @entity.persistentEntityCount 2) },
+                { key: "crossOrbitalEvents", value: (* @entity.crossOrbitalEventCount 4) },
+                { key: "serviceRefs", value: (* (array/len @entity.serviceRefs) 3) }
+              ] (fn c (> @c.value 0)))))
+          (let ((raw (array/sum (array/map @breakdown (fn c @c.value)))))
+            (let ((tier (if (> @entity.tierOverride 0) @entity.tierOverride (if (<= @raw 25) 1 (if (<= @raw 60) 2 3))))
+                  (gcp (= @entity.provider "gcp"))
+                  (heavy (and (> @entity.persistCount 20) (> @entity.persistentEntityCount 5)))
+                  (events (or (> @entity.crossOrbitalEventCount 0) (> @entity.emitExternal 0)))
+                  (secrets (array/flatten (array/map @entity.serviceCredentials (fn s (array/map @s.credentials (fn c { svc: (str/replace-pattern @s.name "[^a-zA-Z0-9]" "-"), env: (str/lower (str/replace-pattern @c.envVar "[^a-zA-Z0-9]" "-")), envVar: @c.envVar })))))))
+              (let ((db (if (!= @entity.database "") @entity.database (if (= @tier 3) "postgres" "firestore")))
+                    (maxInstances (if (> @entity.maxInstances 0) @entity.maxInstances (if (= @tier 1) 3 (if (= @tier 2) 10 50))))
+                    (region (if (= @entity.region "") "europe-west4" @entity.region))
+                    (anyCreds (> (array/len @secrets) 0)))
+                (let ((firestore (and (> @entity.persistentEntityCount 0) (= @db "firestore")))
+                      (usePostgres (and (>= @tier 2) (or (= @db "postgres") @heavy)))
+                      (useRedis (and (>= @tier 2) @events)))
+                  (let ((vpc (or @useRedis @usePostgres))
+                        (cost (array/flatten [
+                          (if (= @tier 1) (array/flatten [
+                            [{ resource: (if @gcp "Cloud Run" "ECS Fargate"), min: 0, max: 15, notes: "Scale-to-zero. Free tier covers 2M requests/mo." }],
+                            (if (> @entity.persistentEntityCount 0) [{ resource: (if @gcp "Firestore" "DynamoDB"), min: 0, max: 15, notes: "Free tier: 50K reads/day, 20K writes/day." }] (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0)),
+                            [{ resource: "CDN/Hosting", min: 0, max: 5, notes: "Free tier: 10 GiB storage, 360 MiB/day bandwidth." }],
+                            (if @entity.hasAuth [{ resource: "Authentication", min: 0, max: 0, notes: "Free up to 50K MAU." }] (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0)),
+                            (if @entity.hasFileUploads [{ resource: "Object Storage", min: 1, max: 10, notes: "$0.026/GiB/month." }] (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0))
+                          ]) (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0)),
+                          (if (= @tier 2) (array/flatten [
+                            [{ resource: (if @gcp "Cloud Run" "ECS Fargate"), min: 15, max: 80, notes: "2-5 instances average. Auto-scaling." }],
+                            (if @heavy [{ resource: (if @gcp "Cloud SQL Postgres" "RDS Postgres"), min: 51, max: 100, notes: "db-g1-small shared instance." }] (if (> @entity.persistentEntityCount 0) [{ resource: (if @gcp "Firestore" "DynamoDB"), min: 15, max: 80, notes: "Pay-per-operation beyond free tier." }] (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0))),
+                            (if @events [{ resource: "Redis (event bus)", min: 5, max: 30, notes: "Upstash pay-as-you-go: $0.20/100K commands." }] (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0)),
+                            [{ resource: "CDN/Hosting", min: 5, max: 30, notes: "Beyond free tier bandwidth." }],
+                            (if (> (array/len @entity.serviceRefs) 0) [{ resource: "Secrets Manager", min: 1, max: 5, notes: (str/concat (array/len @entity.serviceRefs) " API keys stored.") }] (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0)),
+                            (if (> @entity.tickCount 0) [{ resource: "Scheduler", min: 0, max: 5, notes: (str/concat @entity.tickCount " scheduled jobs.") }] (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0)),
+                            (if (or @events @heavy) [{ resource: "VPC Connector", min: 7, max: 20, notes: "Serverless VPC Access: $0.01/hr per instance (2-3 instances)." }] (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0))
+                          ]) (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0)),
+                          (if (= @tier 3) (array/flatten [
+                            [{ resource: (if @gcp "Cloud Run" "ECS Fargate"), min: 100, max: 500, notes: "10-30 instances. Multi-region." }],
+                            [{ resource: (if @gcp "Cloud SQL Postgres" "RDS Postgres"), min: 100, max: 400, notes: "db-custom-2-4096. Regional availability." }],
+                            [{ resource: "Redis Cluster", min: 50, max: 200, notes: "Managed Redis with replication." }],
+                            [{ resource: "CDN/Load Balancer", min: 30, max: 100, notes: "Global load balancer + CDN." }],
+                            [{ resource: "WAF/Security", min: 10, max: 50, notes: "Cloud Armor or AWS WAF." }],
+                            (if (> (array/len @entity.serviceRefs) 0) [{ resource: "Secrets Manager", min: 2, max: 10, notes: (str/concat (array/len @entity.serviceRefs) " secrets.") }] (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0)),
+                            [{ resource: "VPC Connector", min: 14, max: 30, notes: "Serverless VPC Access: 2-3 instances sustained." }],
+                            [{ resource: "Monitoring/Logging", min: 20, max: 80, notes: "Cloud Ops Suite or CloudWatch." }]
+                          ]) (array/take [{ resource: "", min: 0, max: 0, notes: "" }] 0))
+                        ]))
+                        (env (array/filter (array/flatten [
+                          [{ name: "NODE_ENV", value: "production", reference: false }, { name: "FIREBASE_PROJECT_ID", value: "var.project_id", reference: true }],
+                          (if @firestore [{ name: "FIREBASE_DATABASE_ID", value: "(default)", reference: false }] (array/take [{ name: "", value: "", reference: false }] 0)),
+                          (if @entity.hasFileUploads [{ name: "FIREBASE_STORAGE_BUCKET", value: "${var.app_name}-uploads", reference: false }] (array/take [{ name: "", value: "", reference: false }] 0)),
+                          (if @useRedis [{ name: "REDIS_HOST", value: "google_redis_instance.events.host", reference: true }, { name: "REDIS_PORT", value: "google_redis_instance.events.port", reference: true }] (array/take [{ name: "", value: "", reference: false }] 0)),
+                          (if @usePostgres [{ name: "DATABASE_URL", value: "postgresql://postgres:${var.db_password}@localhost/${var.app_name}?host=/cloudsql/${google_sql_database_instance.main.connection_name}", reference: false }] (array/take [{ name: "", value: "", reference: false }] 0))
+                        ]) (fn v (not (and @usePostgres (= @v.name "FIREBASE_DATABASE_ID")))))))
+                    (let ((resources (let ((all (array/flatten [[(str/concat "google_service_account")] (if @firestore [(str/concat "google_project_iam_member")] (array/take [""] 0)) (if @entity.hasFileUploads [(str/concat "google_project_iam_member")] (array/take [""] 0)) (if @anyCreds [(str/concat "google_project_iam_member")] (array/take [""] 0)) (if (> @entity.renderUI 0) [(str/concat "google_firebase_hosting_site")] (array/take [""] 0)) [(str/concat "google_cloud_run_v2_service")] [(str/concat "google_cloud_run_v2_service_iam_member")] (if @firestore [(str/concat "google_firestore_database")] (array/take [""] 0)) (if @entity.hasAuth [(str/concat "google_identity_platform_config")] (array/take [""] 0)) (if @entity.hasFileUploads [(str/concat "google_storage_bucket")] (array/take [""] 0)) (if @anyCreds [(str/concat "google_secret_manager_secret")] (array/take [""] 0)) (if (>= @tier 2) (array/flatten [(if @useRedis [(str/concat "google_redis_instance")] (array/take [""] 0)) (if @usePostgres [(str/concat "google_sql_database_instance") (str/concat "google_sql_database") (str/concat "google_project_iam_member")] (array/take [""] 0)) (if @vpc [(str/concat "google_vpc_access_connector")] (array/take [""] 0)) (if (> @entity.tickCount 0) [(str/concat "google_cloud_scheduler_job")] (array/take [""] 0))]) (array/take [""] 0)) (if (= @tier 3) [(str/concat "google_compute_global_address") (str/concat "google_compute_security_policy") (str/concat "google_compute_region_network_endpoint_group") (str/concat "google_compute_backend_service") (str/concat "google_compute_url_map") (str/concat "google_compute_managed_ssl_certificate") (str/concat "google_compute_target_https_proxy") (str/concat "google_compute_global_forwarding_rule")] (array/take [""] 0))])))
+                            (if (and @usePostgres (>= (array/indexOf @all "google_firestore_database") 0)) (array/remove @all (array/indexOf @all "google_firestore_database")) @all)))
+                          (envBlock (let ((lines (array/concat (array/map @env (fn v (if @v.reference (str/concat "      env {\n        name  = \"" @v.name "\"\n        value = " @v.value "\n      }") (str/concat "      env {\n        name  = \"" @v.name "\"\n        value = \"" @v.value "\"\n      }")))) (array/map @secrets (fn c (str/concat "      env {\n        name = \"" @c.envVar "\"\n        value_source {\n          secret_key_ref {\n            secret  = google_secret_manager_secret." @c.svc "_" @c.env ".secret_id\n            version = \"latest\"\n          }\n        }\n      }"))))))
+                            (if (> (array/len @lines) 0) (str/concat "\n\n" (str/join @lines "\n\n")) "")))
+                          (volumeMount (if @usePostgres "\n\n      volume_mounts {\n        name       = \"cloudsql\"\n        mount_path = \"/cloudsql\"\n      }" ""))
+                          (vpcBlock (if @vpc "\n\n    vpc_access {\n      connector = google_vpc_access_connector.main.id\n      egress    = \"PRIVATE_RANGES_ONLY\"\n    }" ""))
+                          (volumeBlock (if @usePostgres "\n\n    volumes {\n      name = \"cloudsql\"\n      cloud_sql_instance {\n        instances = [google_sql_database_instance.main.connection_name]\n      }\n    }" "")))
+                      (do
+                        (set @entity.status "projected")
+                        (emit INFRA_PROJECTED {
+                          hcl: (if @gcp (str/concat (if (= @tier 1) (str/join (array/flatten [[(str/concat "provider \"google\" {\n  project = var.project_id\n  region  = var.region\n}\n\nprovider \"google-beta\" {\n  project = var.project_id\n  region  = var.region\n}\n")] [(str/concat "resource \"google_service_account\" \"app\" {\n  account_id   = \"${var.app_name}-sa\"\n  display_name = \"${var.app_name} Cloud Run Service Account\"\n}\n")] (if @firestore [(str/concat "resource \"google_project_iam_member\" \"sa_firestore\" {\n  project = var.project_id\n  role    = \"roles/datastore.user\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if @entity.hasFileUploads [(str/concat "resource \"google_project_iam_member\" \"sa_storage\" {\n  project = var.project_id\n  role    = \"roles/storage.objectAdmin\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if @anyCreds [(str/concat "resource \"google_project_iam_member\" \"sa_secrets\" {\n  project = var.project_id\n  role    = \"roles/secretmanager.secretAccessor\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if (> @entity.renderUI 0) [(str/concat "resource \"google_firebase_hosting_site\" \"frontend\" {\n  project  = var.project_id\n  site_id  = var.app_name\n  provider = google-beta\n}\n\nresource \"google_firebase_hosting_version\" \"frontend\" {\n  site_id  = google_firebase_hosting_site.frontend.site_id\n  provider = google-beta\n\n  config {\n    rewrites {\n      glob = \"/api/**\"\n      run {\n        service_id = google_cloud_run_v2_service.app.name\n        region     = var.region\n      }\n    }\n    rewrites {\n      glob = \"**\"\n      path = \"/index.html\"\n    }\n  }\n}\n\nresource \"google_firebase_hosting_release\" \"frontend\" {\n  site_id      = google_firebase_hosting_site.frontend.site_id\n  version_name = google_firebase_hosting_version.frontend.name\n  provider     = google-beta\n}\n")] (array/take [""] 0)) [(str/concat "resource \"google_cloud_run_v2_service_iam_member\" \"public\" {\n  name     = google_cloud_run_v2_service.app.name\n  location = var.region\n  role     = \"roles/run.invoker\"\n  member   = \"allUsers\"\n}\n")] (if @firestore [(str/concat "resource \"google_firestore_database\" \"main\" {\n  name        = \"(default)\"\n  location_id = var.region\n  type        = \"FIRESTORE_NATIVE\"\n}\n")] (array/take [""] 0)) (if @entity.hasAuth [(str/concat "resource \"google_identity_platform_config\" \"auth\" {\n  project = var.project_id\n\n  sign_in {\n    allow_duplicate_emails = false\n    email {\n      enabled           = true\n      password_required = true\n    }\n  }\n}\n")] (array/take [""] 0)) (if @entity.hasFileUploads [(str/concat "resource \"google_storage_bucket\" \"uploads\" {\n  name          = \"${var.app_name}-uploads\"\n  location      = var.region\n  force_destroy = false\n\n  uniform_bucket_level_access = true\n}\n")] (array/take [""] 0)) (if @anyCreds (array/map @secrets (fn c (str/concat "resource \"google_secret_manager_secret\" \"" @c.svc "_" @c.env "\" {\n  secret_id = \"${var.app_name}-" @c.env "\"\n  replication {\n    auto {}\n  }\n}\n"))) (array/take [""] 0)) [(str/concat "output \"backend_url\" {\n  value = google_cloud_run_v2_service.app.uri\n}\n")] (if (> @entity.renderUI 0) [(str/concat "output \"frontend_url\" {\n  value = \"https://${var.app_name}.web.app\"\n}\n")] (array/take [""] 0)) [(str/concat "output \"service_account_email\" {\n  value = google_service_account.app.email\n}\n")]]) "\n") (if (= @tier 2) (str/join (array/flatten [[(str/concat (str/join (array/flatten [[(str/concat "provider \"google\" {\n  project = var.project_id\n  region  = var.region\n}\n\nprovider \"google-beta\" {\n  project = var.project_id\n  region  = var.region\n}\n")] [(str/concat "resource \"google_service_account\" \"app\" {\n  account_id   = \"${var.app_name}-sa\"\n  display_name = \"${var.app_name} Cloud Run Service Account\"\n}\n")] (if @firestore [(str/concat "resource \"google_project_iam_member\" \"sa_firestore\" {\n  project = var.project_id\n  role    = \"roles/datastore.user\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if @entity.hasFileUploads [(str/concat "resource \"google_project_iam_member\" \"sa_storage\" {\n  project = var.project_id\n  role    = \"roles/storage.objectAdmin\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if @anyCreds [(str/concat "resource \"google_project_iam_member\" \"sa_secrets\" {\n  project = var.project_id\n  role    = \"roles/secretmanager.secretAccessor\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if (> @entity.renderUI 0) [(str/concat "resource \"google_firebase_hosting_site\" \"frontend\" {\n  project  = var.project_id\n  site_id  = var.app_name\n  provider = google-beta\n}\n\nresource \"google_firebase_hosting_version\" \"frontend\" {\n  site_id  = google_firebase_hosting_site.frontend.site_id\n  provider = google-beta\n\n  config {\n    rewrites {\n      glob = \"/api/**\"\n      run {\n        service_id = google_cloud_run_v2_service.app.name\n        region     = var.region\n      }\n    }\n    rewrites {\n      glob = \"**\"\n      path = \"/index.html\"\n    }\n  }\n}\n\nresource \"google_firebase_hosting_release\" \"frontend\" {\n  site_id      = google_firebase_hosting_site.frontend.site_id\n  version_name = google_firebase_hosting_version.frontend.name\n  provider     = google-beta\n}\n")] (array/take [""] 0)) [(str/concat "resource \"google_cloud_run_v2_service_iam_member\" \"public\" {\n  name     = google_cloud_run_v2_service.app.name\n  location = var.region\n  role     = \"roles/run.invoker\"\n  member   = \"allUsers\"\n}\n")] (if @firestore [(str/concat "resource \"google_firestore_database\" \"main\" {\n  name        = \"(default)\"\n  location_id = var.region\n  type        = \"FIRESTORE_NATIVE\"\n}\n")] (array/take [""] 0)) (if @entity.hasAuth [(str/concat "resource \"google_identity_platform_config\" \"auth\" {\n  project = var.project_id\n\n  sign_in {\n    allow_duplicate_emails = false\n    email {\n      enabled           = true\n      password_required = true\n    }\n  }\n}\n")] (array/take [""] 0)) (if @entity.hasFileUploads [(str/concat "resource \"google_storage_bucket\" \"uploads\" {\n  name          = \"${var.app_name}-uploads\"\n  location      = var.region\n  force_destroy = false\n\n  uniform_bucket_level_access = true\n}\n")] (array/take [""] 0)) (if @anyCreds (array/map @secrets (fn c (str/concat "resource \"google_secret_manager_secret\" \"" @c.svc "_" @c.env "\" {\n  secret_id = \"${var.app_name}-" @c.env "\"\n  replication {\n    auto {}\n  }\n}\n"))) (array/take [""] 0)) [(str/concat "output \"backend_url\" {\n  value = google_cloud_run_v2_service.app.uri\n}\n")] (if (> @entity.renderUI 0) [(str/concat "output \"frontend_url\" {\n  value = \"https://${var.app_name}.web.app\"\n}\n")] (array/take [""] 0)) [(str/concat "output \"service_account_email\" {\n  value = google_service_account.app.email\n}\n")]]) "\n"))] (if @useRedis [(str/concat "resource \"google_redis_instance\" \"events\" {\n  name           = \"${var.app_name}-events\"\n  tier           = \"BASIC\"\n  memory_size_gb = 1\n  region         = var.region\n\n  redis_configs = {\n    maxmemory-policy = \"allkeys-lru\"\n  }\n}\n\noutput \"redis_host\" {\n  value = google_redis_instance.events.host\n}\n")] (array/take [""] 0)) (if @usePostgres [(str/concat "resource \"google_sql_database_instance\" \"main\" {\n  name             = \"${var.app_name}-db\"\n  database_version = \"POSTGRES_15\"\n  region           = var.region\n\n  settings {\n    tier              = \"db-g1-small\"\n    availability_type = \"ZONAL\"\n    disk_size         = 10\n\n    backup_configuration {\n      enabled = true\n    }\n\n    ip_configuration {\n      ipv4_enabled = true\n    }\n  }\n\n  deletion_protection = true\n}\n\nresource \"google_sql_database\" \"app\" {\n  name     = var.app_name\n  instance = google_sql_database_instance.main.name\n}\n\noutput \"database_connection\" {\n  value     = google_sql_database_instance.main.connection_name\n  sensitive = true\n}\n")] (array/take [""] 0)) (if @usePostgres [(str/concat "resource \"google_project_iam_member\" \"sa_cloudsql\" {\n  project = var.project_id\n  role    = \"roles/cloudsql.client\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if @vpc [(str/concat "resource \"google_vpc_access_connector\" \"main\" {\n  name          = \"${var.app_name}-vpc\"\n  region        = var.region\n  network       = \"default\"\n  ip_cidr_range = \"10.8.0.0/28\"\n  min_instances = 2\n  max_instances = 3\n}\n")] (array/take [""] 0)) (if (> @entity.tickCount 0) [(str/concat "resource \"google_cloud_scheduler_job\" \"tick\" {\n  name     = \"${var.app_name}-tick\"\n  region   = var.region\n  schedule = \"*/1 * * * *\"\n\n  http_target {\n    uri         = \"${google_cloud_run_v2_service.app.uri}/api/tick\"\n    http_method = \"POST\"\n\n    oidc_token {\n      service_account_email = google_service_account.app.email\n    }\n  }\n}\n")] (array/take [""] 0))]) "\n") (str/join [(str/join (array/flatten [[(str/concat (str/join (array/flatten [[(str/concat "provider \"google\" {\n  project = var.project_id\n  region  = var.region\n}\n\nprovider \"google-beta\" {\n  project = var.project_id\n  region  = var.region\n}\n")] [(str/concat "resource \"google_service_account\" \"app\" {\n  account_id   = \"${var.app_name}-sa\"\n  display_name = \"${var.app_name} Cloud Run Service Account\"\n}\n")] (if @firestore [(str/concat "resource \"google_project_iam_member\" \"sa_firestore\" {\n  project = var.project_id\n  role    = \"roles/datastore.user\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if @entity.hasFileUploads [(str/concat "resource \"google_project_iam_member\" \"sa_storage\" {\n  project = var.project_id\n  role    = \"roles/storage.objectAdmin\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if @anyCreds [(str/concat "resource \"google_project_iam_member\" \"sa_secrets\" {\n  project = var.project_id\n  role    = \"roles/secretmanager.secretAccessor\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if (> @entity.renderUI 0) [(str/concat "resource \"google_firebase_hosting_site\" \"frontend\" {\n  project  = var.project_id\n  site_id  = var.app_name\n  provider = google-beta\n}\n\nresource \"google_firebase_hosting_version\" \"frontend\" {\n  site_id  = google_firebase_hosting_site.frontend.site_id\n  provider = google-beta\n\n  config {\n    rewrites {\n      glob = \"/api/**\"\n      run {\n        service_id = google_cloud_run_v2_service.app.name\n        region     = var.region\n      }\n    }\n    rewrites {\n      glob = \"**\"\n      path = \"/index.html\"\n    }\n  }\n}\n\nresource \"google_firebase_hosting_release\" \"frontend\" {\n  site_id      = google_firebase_hosting_site.frontend.site_id\n  version_name = google_firebase_hosting_version.frontend.name\n  provider     = google-beta\n}\n")] (array/take [""] 0)) [(str/concat "resource \"google_cloud_run_v2_service_iam_member\" \"public\" {\n  name     = google_cloud_run_v2_service.app.name\n  location = var.region\n  role     = \"roles/run.invoker\"\n  member   = \"allUsers\"\n}\n")] (if @firestore [(str/concat "resource \"google_firestore_database\" \"main\" {\n  name        = \"(default)\"\n  location_id = var.region\n  type        = \"FIRESTORE_NATIVE\"\n}\n")] (array/take [""] 0)) (if @entity.hasAuth [(str/concat "resource \"google_identity_platform_config\" \"auth\" {\n  project = var.project_id\n\n  sign_in {\n    allow_duplicate_emails = false\n    email {\n      enabled           = true\n      password_required = true\n    }\n  }\n}\n")] (array/take [""] 0)) (if @entity.hasFileUploads [(str/concat "resource \"google_storage_bucket\" \"uploads\" {\n  name          = \"${var.app_name}-uploads\"\n  location      = var.region\n  force_destroy = false\n\n  uniform_bucket_level_access = true\n}\n")] (array/take [""] 0)) (if @anyCreds (array/map @secrets (fn c (str/concat "resource \"google_secret_manager_secret\" \"" @c.svc "_" @c.env "\" {\n  secret_id = \"${var.app_name}-" @c.env "\"\n  replication {\n    auto {}\n  }\n}\n"))) (array/take [""] 0)) [(str/concat "output \"backend_url\" {\n  value = google_cloud_run_v2_service.app.uri\n}\n")] (if (> @entity.renderUI 0) [(str/concat "output \"frontend_url\" {\n  value = \"https://${var.app_name}.web.app\"\n}\n")] (array/take [""] 0)) [(str/concat "output \"service_account_email\" {\n  value = google_service_account.app.email\n}\n")]]) "\n"))] (if @useRedis [(str/concat "resource \"google_redis_instance\" \"events\" {\n  name           = \"${var.app_name}-events\"\n  tier           = \"BASIC\"\n  memory_size_gb = 1\n  region         = var.region\n\n  redis_configs = {\n    maxmemory-policy = \"allkeys-lru\"\n  }\n}\n\noutput \"redis_host\" {\n  value = google_redis_instance.events.host\n}\n")] (array/take [""] 0)) (if @usePostgres [(str/concat "resource \"google_sql_database_instance\" \"main\" {\n  name             = \"${var.app_name}-db\"\n  database_version = \"POSTGRES_15\"\n  region           = var.region\n\n  settings {\n    tier              = \"db-g1-small\"\n    availability_type = \"ZONAL\"\n    disk_size         = 10\n\n    backup_configuration {\n      enabled = true\n    }\n\n    ip_configuration {\n      ipv4_enabled = true\n    }\n  }\n\n  deletion_protection = true\n}\n\nresource \"google_sql_database\" \"app\" {\n  name     = var.app_name\n  instance = google_sql_database_instance.main.name\n}\n\noutput \"database_connection\" {\n  value     = google_sql_database_instance.main.connection_name\n  sensitive = true\n}\n")] (array/take [""] 0)) (if @usePostgres [(str/concat "resource \"google_project_iam_member\" \"sa_cloudsql\" {\n  project = var.project_id\n  role    = \"roles/cloudsql.client\"\n  member  = \"serviceAccount:${google_service_account.app.email}\"\n}\n")] (array/take [""] 0)) (if @vpc [(str/concat "resource \"google_vpc_access_connector\" \"main\" {\n  name          = \"${var.app_name}-vpc\"\n  region        = var.region\n  network       = \"default\"\n  ip_cidr_range = \"10.8.0.0/28\"\n  min_instances = 2\n  max_instances = 3\n}\n")] (array/take [""] 0)) (if (> @entity.tickCount 0) [(str/concat "resource \"google_cloud_scheduler_job\" \"tick\" {\n  name     = \"${var.app_name}-tick\"\n  region   = var.region\n  schedule = \"*/1 * * * *\"\n\n  http_target {\n    uri         = \"${google_cloud_run_v2_service.app.uri}/api/tick\"\n    http_method = \"POST\"\n\n    oidc_token {\n      service_account_email = google_service_account.app.email\n    }\n  }\n}\n")] (array/take [""] 0))]) "\n") (str/concat "resource \"google_compute_global_address\" \"lb_ip\" {\n  name = \"${var.app_name}-lb-ip\"\n}\n\noutput \"load_balancer_ip\" {\n  value = google_compute_global_address.lb_ip.address\n}\n") (str/concat "resource \"google_compute_security_policy\" \"waf\" {\n  name = \"${var.app_name}-waf\"\n\n  rule {\n    action   = \"allow\"\n    priority = 2147483647\n\n    match {\n      versioned_expr = \"SRC_IPS_V1\"\n      config {\n        src_ip_ranges = [\"*\"]\n      }\n    }\n  }\n}\n") (str/concat "resource \"google_compute_region_network_endpoint_group\" \"app\" {\n  name                  = \"${var.app_name}-neg\"\n  network_endpoint_type = \"SERVERLESS\"\n  region                = var.region\n\n  cloud_run {\n    service = google_cloud_run_v2_service.app.name\n  }\n}\n\nresource \"google_compute_backend_service\" \"app\" {\n  name            = \"${var.app_name}-backend\"\n  protocol        = \"HTTPS\"\n  security_policy = google_compute_security_policy.waf.id\n\n  backend {\n    group = google_compute_region_network_endpoint_group.app.id\n  }\n}\n\nresource \"google_compute_url_map\" \"app\" {\n  name            = \"${var.app_name}-url-map\"\n  default_service = google_compute_backend_service.app.id\n}\n\nresource \"google_compute_managed_ssl_certificate\" \"app\" {\n  name = \"${var.app_name}-cert\"\n\n  managed {\n    domains = [var.domain]\n  }\n}\n\nresource \"google_compute_target_https_proxy\" \"app\" {\n  name             = \"${var.app_name}-https-proxy\"\n  url_map          = google_compute_url_map.app.id\n  ssl_certificates = [google_compute_managed_ssl_certificate.app.id]\n}\n\nresource \"google_compute_global_forwarding_rule\" \"app\" {\n  name                  = \"${var.app_name}-https\"\n  target                = google_compute_target_https_proxy.app.id\n  port_range            = \"443\"\n  ip_address            = google_compute_global_address.lb_ip.address\n  load_balancing_scheme = \"EXTERNAL\"\n}\n")] "\n"))) "\n" (str/concat "resource \"google_cloud_run_v2_service\" \"app\" {\n  name     = var.app_name\n  location = var.region\n\n  template {" "\n    service_account = google_service_account.app.email" "\n    containers {\n      image = var.container_image\n\n      resources {\n        limits = {\n          cpu    = \"" "1" "\"\n          memory = \"" "512Mi" "\"\n        }\n      }" @envBlock "" @volumeMount "\n    }\n\n    scaling {\n      min_instance_count = 0\n      max_instance_count = " @maxInstances "\n    }" @vpcBlock "" @volumeBlock "\n  }\n\n  traffic {\n    type    = \"TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST\"\n    percent = 100\n  }\n}\n")) "# AWS Terraform generation not yet implemented\n# Use --provider gcp for now\n"),
+                          variables: (if @gcp (str/concat (str/concat "variable \"project_id\" {\n  description = \"GCP project ID\"\n  type        = string\n}\n\nvariable \"region\" {\n  description = \"GCP region\"\n  type        = string\n  default     = \"" @region "\"\n}\n\nvariable \"app_name\" {\n  description = \"Application name\"\n  type        = string\n  default     = \"" @entity.appName "\"\n}\n\nvariable \"container_image\" {\n  description = \"Docker container image for the backend\"\n  type        = string\n}\n\nvariable \"db_password\" {\n  description = \"Database password for Cloud SQL (only required when Postgres is used)\"\n  type        = string\n  sensitive   = true\n  default     = \"\"\n}\n") (if (= @tier 3) "\nvariable \"domain\" {\n  description = \"The domain the tier-3 HTTPS load balancer serves; its managed certificate is issued for it\"\n  type        = string\n}\n" "")) "# AWS provider support coming soon\n"),
+                          tier: @tier,
+                          score: @raw,
+                          resources: (if @gcp @resources (array/take [""] 0)),
+                          monthlyMin: (array/sum (array/map @cost (fn c @c.min))),
+                          monthlyMax: (array/sum (array/map @cost (fn c @c.max))),
+                          cost: @cost,
+                          breakdown: @breakdown,
+                          analysis: { orbitalCount: @entity.orbitalCount, effectCounts: { renderUI: @entity.renderUI, persist: @entity.persistCount, fetch: @entity.fetchCount, callService: @entity.callService, emitExternal: @entity.emitExternal, spawn: @entity.spawnCount, despawn: @entity.despawnCount, navigate: @entity.navigateCount, notify: @entity.notifyCount, set: @entity.setCount }, tickCount: @entity.tickCount, persistentEntityCount: @entity.persistentEntityCount, runtimeEntityCount: @entity.runtimeEntityCount, crossOrbitalEventCount: @entity.crossOrbitalEventCount, serviceRefs: @entity.serviceRefs, serviceCredentials: @entity.serviceCredentials, hasAuth: @entity.hasAuth, hasFileUploads: @entity.hasFileUploads, entityNames: @entity.entityNames, traitCount: @entity.traitCount, pageCount: @entity.pageCount, totalTransitions: @entity.totalTransitions },
+                          tierDescription: (if (= @tier 1) "Tier 1: Single Instance (Cloud Run + Firestore, $10-50/mo)" (if (= @tier 2) "Tier 2: Multi-Instance (+ Redis event bus, $50-400/mo)" "Tier 3: Distributed (+ Postgres, multi-region, $400-5000+/mo)"))
+                        })
+                        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Projected: tier " @tier ", score " @raw ".") })))))))))
+    }
+
+    emits {
+      INFRA_PROJECTED -> external {
+        hcl : string!
+        variables : string!
+        tier : number!
+        score : number!
+        resources : [string]!
+        monthlyMin : number!
+        monthlyMax : number!
+        cost : [InfraCost]!
+        breakdown : [InfraCount]!
+        analysis : InfraAnalysis!
+        tierDescription : string!
+      }
+        @description "The projection: Terraform main and variables text, the tier and its description, the complexity score and its breakdown (each weighted construct that contributed), the resources, and the monthly cost estimate per resource and in total."
+        @synonyms "terraform, infrastructure, cost estimate, complexity score"
+        @tier "primary"
+      INFRA_PROJECT_FAILED -> external {
+        error : string!
+      }
+        @description "The program could not be read."
+        @tier "primary"
+      INFRA_ANALYZED -> internal { }
+        @description "Internal: the program's constructs are counted."
+        @tier "internal"
+    }
+
+    listens {
+      INFRA_PROJECT -> external {
+        program : string!
+        appName : string!
+        provider : string
+        region : string
+        tier : number
+        database : string
+        maxInstances : number
+        credentials : Map string [InfraCredential]
+      }
+        @description "Project this resolved program (the .orb JSON text) for the app name; provider gcp (default) or aws, region (default europe-west4), and optional tier (1-3), database (firestore or postgres) and maxInstances overrides. credentials names each external service's declared credentials (the installed services registry's; absent: none)."
+        @synonyms "project infrastructure, generate terraform, estimate cost, analyze complexity"
+    }
+  }
+
+  page "/infra-projection" -> InfraProjector
+}

@@ -32,6 +32,7 @@ orbital LifecycleOrbital {
       ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun [">", (array/len ?data), 0])
         (notify info (str/concat "Dry run — " (array/len ?data) " record(s) would transition, nothing was written."))
       ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) [">", (array/len ?data), 0])
+        @ensures (= @entity.headStatus @config.toStatus)
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headStatus @config.toStatus)
         (emit LifecycleTransitioned { entityId: @entity.headId, status: @entity.headStatus })
@@ -50,6 +51,7 @@ orbital LifecycleOrbital {
           filter: (and ["=", (object/get @entity status), @config.fromStatus] ["<", (object/get @entity @config.dateField), ["-", @now, ["*", @config.ageDays, 86400000]]])
         })
       ScanRecordsLoaded -> scanning when [">", (array/len ?data), 0]
+        @ensures (= @entity.headStatus @config.toStatus)
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headStatus @config.toStatus)
         (emit LifecycleTransitioned { entityId: @entity.headId, status: @entity.headStatus })

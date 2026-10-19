@@ -1,0 +1,328 @@
+app std-deployment-registry [
+  version: "1.0.0",
+  description: "std-deployment-registry — the versioned deployments of named artifacts (an app, a package, a site). DEPLOY { artifact, activates, details } records the artifact's next deployment, numbered from 1 per artifact, with its details (the caller's own fields: a commit, a target, who published it); one that activates (it may serve) becomes the artifact's active deployment, one that does not (an export run elsewhere) is only kept in the history. The counter, the deployment row and the active pointer are written as one atomic batch, and two deploys racing for one number retry on the next one (up to the maxRetries knob). ROLLBACK { artifact, version } re-activates an earlier deployment that may serve; WITHDRAW { artifact } leaves nothing active and keeps the history; RESOLVE { artifact } answers the active deployment or that there is none; HISTORY { artifact } answers every deployment, oldest first."
+]
+type DeploymentDetails = Map string (string | number)
+orbital DeploymentRegistryOrbital {
+  entity Deployment [persistent: deployments] {
+    id : string! @description "artifact#version."
+    artifact : string! @description "The artifact deployed."
+    version : number! @description "Its number among the artifact's deployments, from 1."
+    activates : boolean! @description "Whether it may be the artifact's active deployment."
+    recordedAt : number @description "When it was recorded, in epoch milliseconds."
+    details : DeploymentDetails @description "The caller's own fields of the deployment."
+  }
+
+  entity DeploymentCounter [persistent: deployment_counters] {
+    id : string! @description "The artifact."
+    last : number! @description "The last version allocated."
+  }
+
+  entity ActiveDeployment [persistent: active_deployments] {
+    id : string! @description "The artifact."
+    version : number! @description "The version it serves."
+    recordedAt : number @description "When it became active, in epoch milliseconds."
+    details : DeploymentDetails @description "That deployment's details."
+  }
+
+  entity DeploymentRun [runtime] {
+    id : string!
+    artifact : string @description "The artifact the request in flight concerns." = ""
+    activates : boolean = false
+    details : DeploymentDetails = {}
+    last : number @description "The artifact's last version when the deploy read it." = 0
+    counterRow : boolean = false
+    activeRow : boolean = false
+    version : number @description "The version being written or re-activated." = 0
+    retries : number @description "Retries of the deploy in flight after a lost race." = 0
+  }
+
+  trait DeploymentRegistrar -> DeploymentRun [integration, instance] {
+    initial: idle
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the registrar shows its one-line status."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      maxRetries : number = 3
+        @label "Retries after a lost race"
+        @description "How many times a deploy that lost a race for a version number tries the next one."
+        @synonyms "retry limit"
+        @tier "infra"
+    }
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No deployment recorded yet." })
+
+      DEPLOY -> idle
+        (set @entity.artifact @payload.artifact)
+        (set @entity.activates @payload.activates)
+        (set @entity.details (or @payload.details {}))
+        (set @entity.retries 0)
+        (emit DEPLOY_NEXT { })
+      DEPLOY_NEXT -> idle
+        (fetch DeploymentCounter { id: @entity.artifact, emit: { success: COUNTER_LOADED, failure: COUNTER_ABSENT } })
+      COUNTER_LOADED -> idle
+        (set @entity.last @payload.data.last)
+        (set @entity.counterRow true)
+        (emit DEPLOY_ACTIVE_CHECK { })
+      COUNTER_ABSENT -> idle when (= @payload.code "not-found")
+        (set @entity.last 0)
+        (set @entity.counterRow false)
+        (emit DEPLOY_ACTIVE_CHECK { })
+      COUNTER_ABSENT -> idle when (!= @payload.code "not-found")
+        (emit DEPLOY_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Deploy failed: " @payload.error) })
+      DEPLOY_ACTIVE_CHECK -> idle
+        (fetch ActiveDeployment { id: @entity.artifact, emit: { success: DEPLOY_ACTIVE_LOADED, failure: DEPLOY_ACTIVE_ABSENT } })
+      DEPLOY_ACTIVE_LOADED -> idle
+        (set @entity.activeRow true)
+        (emit DEPLOY_WRITE { })
+      DEPLOY_ACTIVE_ABSENT -> idle when (= @payload.code "not-found")
+        (set @entity.activeRow false)
+        (emit DEPLOY_WRITE { })
+      DEPLOY_ACTIVE_ABSENT -> idle when (!= @payload.code "not-found")
+        (emit DEPLOY_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Deploy failed: " @payload.error) })
+      DEPLOY_WRITE -> idle
+        (set @entity.version (+ @entity.last 1))
+        (persist batch (array/flatten [
+          (if @entity.counterRow [["update", "DeploymentCounter", @entity.artifact, { last: (+ @entity.last 1) }]] [["create", "DeploymentCounter", { id: @entity.artifact, last: (+ @entity.last 1) }]]),
+          [["create", "Deployment", { id: (str/concat @entity.artifact "#" (+ @entity.last 1)), artifact: @entity.artifact, version: (+ @entity.last 1), activates: @entity.activates, recordedAt: @now, details: @entity.details }]],
+          (if (not @entity.activates) (array/take [["delete", "ActiveDeployment", ""]] 0)
+            (if @entity.activeRow
+              [["update", "ActiveDeployment", @entity.artifact, { version: (+ @entity.last 1), recordedAt: @now, details: @entity.details }]]
+              [["create", "ActiveDeployment", { id: @entity.artifact, version: (+ @entity.last 1), recordedAt: @now, details: @entity.details }]]))
+        ]) { emit: { success: DEPLOY_WRITTEN, failure: DEPLOY_NOT_WRITTEN } })
+      DEPLOY_WRITTEN -> idle
+        (emit DEPLOYED { artifact: @entity.artifact, version: @entity.version })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Recorded " @entity.artifact " version " @entity.version ".") })
+      DEPLOY_NOT_WRITTEN -> idle when (and (= @payload.code "duplicate-id") (< @entity.retries @config.maxRetries))
+        (set @entity.retries (+ @entity.retries 1))
+        (emit DEPLOY_NEXT { })
+      DEPLOY_NOT_WRITTEN -> idle when (not (and (= @payload.code "duplicate-id") (< @entity.retries @config.maxRetries)))
+        (emit DEPLOY_FAILED { artifact: @entity.artifact, code: (if (= @payload.code "duplicate-id") "contended" "failed"), message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Deploy failed: " @payload.error) })
+
+      ROLLBACK -> idle
+        (set @entity.artifact @payload.artifact)
+        (set @entity.version @payload.version)
+        (fetch Deployment { id: (str/concat @payload.artifact "#" @payload.version), emit: { success: ROLLBACK_LOADED, failure: ROLLBACK_ABSENT } })
+      ROLLBACK_LOADED -> idle when (not @payload.data.activates)
+        (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "not-activatable", message: (str/concat "Version " @entity.version " of " @entity.artifact " cannot be active") })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Version " @entity.version " of " @entity.artifact " cannot be active.") })
+      ROLLBACK_LOADED -> idle when @payload.data.activates
+        (set @entity.details (or @payload.data.details {}))
+        (fetch ActiveDeployment { id: @entity.artifact, emit: { success: ROLLBACK_ACTIVE_LOADED, failure: ROLLBACK_ACTIVE_ABSENT } })
+      ROLLBACK_ABSENT -> idle
+        (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "not-recorded", message: (str/concat @entity.artifact " has no recorded version " @entity.version) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " has no recorded version " @entity.version ".") })
+      ROLLBACK_ACTIVE_LOADED -> idle
+        (persist update ActiveDeployment { id: @entity.artifact, version: @entity.version, recordedAt: @now, details: @entity.details } { emit: { success: ROLLBACK_WRITTEN, failure: ROLLBACK_NOT_WRITTEN } })
+      ROLLBACK_ACTIVE_ABSENT -> idle when (!= @payload.code "not-found")
+        (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rollback failed: " @payload.error) })
+      ROLLBACK_ACTIVE_ABSENT -> idle when (= @payload.code "not-found")
+        (persist create ActiveDeployment { id: @entity.artifact, version: @entity.version, recordedAt: @now, details: @entity.details } { emit: { success: ROLLBACK_WRITTEN, failure: ROLLBACK_NOT_WRITTEN } })
+      ROLLBACK_WRITTEN -> idle
+        (emit ROLLED_BACK { artifact: @entity.artifact, version: @entity.version })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " serves version " @entity.version " again.") })
+      ROLLBACK_NOT_WRITTEN -> idle
+        (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "failed", message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Rollback failed: " @payload.error) })
+
+      WITHDRAW -> idle
+        (set @entity.artifact @payload.artifact)
+        (persist delete ActiveDeployment @payload.artifact { emit: { success: WITHDRAW_WRITTEN, failure: WITHDRAW_NOT_WRITTEN } })
+      WITHDRAW_WRITTEN -> idle
+        (emit WITHDRAWN { artifact: @entity.artifact })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " is withdrawn.") })
+      WITHDRAW_NOT_WRITTEN -> idle when (= @payload.code "not-found")
+        (emit WITHDRAWN { artifact: @entity.artifact })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " had nothing active.") })
+      WITHDRAW_NOT_WRITTEN -> idle when (!= @payload.code "not-found")
+        (emit WITHDRAW_FAILED { artifact: @entity.artifact, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Withdraw failed: " @payload.error) })
+
+      RESOLVE -> idle
+        (set @entity.artifact @payload.artifact)
+        (fetch ActiveDeployment { id: @payload.artifact, emit: { success: RESOLVE_LOADED, failure: RESOLVE_ABSENT } })
+      RESOLVE_LOADED -> idle
+        (emit RESOLVED { artifact: @entity.artifact, found: true, version: @payload.data.version, recordedAt: @payload.data.recordedAt, details: (or @payload.data.details {}) })
+      RESOLVE_ABSENT -> idle
+        (emit RESOLVED { artifact: @entity.artifact, found: false, version: 0, recordedAt: 0, details: {} })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.artifact " has nothing active.") })
+
+      HISTORY -> idle
+        (set @entity.artifact @payload.artifact)
+        (fetch Deployment { filter: ["=", (object/get @entity artifact), @payload.artifact], emit: { success: HISTORY_LOADED, failure: HISTORY_UNREADABLE } })
+      HISTORY_LOADED -> idle
+        (emit HISTORY_ANSWERED { artifact: @entity.artifact, deployments: (array/sort @payload.data "version") })
+      HISTORY_UNREADABLE -> idle
+        (emit HISTORY_ANSWERED { artifact: @entity.artifact, deployments: (array/take [{ id: "", artifact: "", version: 0, activates: false, recordedAt: 0, details: {} }] 0) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "History unavailable: " @payload.error) })
+    }
+
+    emits {
+      DEPLOYED -> external {
+        artifact : string!
+        version : number!
+      }
+        @description "A deployment was recorded under this version (and is active when it activates)."
+        @tier "primary"
+      DEPLOY_FAILED -> external {
+        artifact : string!
+        code : "contended" | "failed"
+        message : string!
+      }
+        @description "No deployment was recorded: contended after the retries ran out on lost races, failed for a store error."
+        @tier "primary"
+      ROLLED_BACK -> external {
+        artifact : string!
+        version : number!
+      }
+        @description "This earlier version is the active deployment again."
+        @tier "primary"
+      ROLLBACK_FAILED -> external {
+        artifact : string!
+        code : "not-recorded" | "not-activatable" | "failed"
+        message : string!
+      }
+        @description "Nothing changed: the version was never recorded, or it may not serve, or the store failed."
+        @tier "primary"
+      WITHDRAWN -> external {
+        artifact : string!
+      }
+        @description "The artifact has no active deployment; its history stays."
+        @tier "primary"
+      WITHDRAW_FAILED -> external {
+        artifact : string!
+        message : string!
+      }
+        @description "The active deployment could not be removed."
+        @tier "primary"
+      RESOLVED -> external {
+        artifact : string!
+        found : boolean!
+        version : number!
+        recordedAt : number
+        details : Map string (string | number)
+      }
+        @description "The artifact's active deployment (found false, version 0 when nothing is active)."
+        @tier "primary"
+      HISTORY_ANSWERED -> external {
+        artifact : string!
+        deployments : [Deployment]!
+      }
+        @description "Every recorded deployment of the artifact, oldest first."
+        @tier "primary"
+      DEPLOY_NEXT -> internal { }
+        @tier "internal"
+      DEPLOY_ACTIVE_CHECK -> internal { }
+        @tier "internal"
+      DEPLOY_WRITE -> internal { }
+        @tier "internal"
+      COUNTER_LOADED {
+        data : DeploymentCounter!
+      }
+      COUNTER_ABSENT {
+        error : string
+        code : string
+      }
+      DEPLOY_ACTIVE_LOADED {
+        data : ActiveDeployment!
+      }
+      DEPLOY_ACTIVE_ABSENT {
+        error : string
+        code : string
+      }
+      DEPLOY_WRITTEN {
+        completedCount : number!
+        totalCount : number!
+      }
+      DEPLOY_NOT_WRITTEN {
+        error : string
+        code : string
+        index : number
+      }
+      ROLLBACK_LOADED {
+        data : Deployment!
+      }
+      ROLLBACK_ABSENT {
+        error : string
+        code : string
+      }
+      ROLLBACK_ACTIVE_LOADED {
+        data : ActiveDeployment!
+      }
+      ROLLBACK_ACTIVE_ABSENT {
+        error : string
+        code : string
+      }
+      ROLLBACK_WRITTEN {
+        id : string
+      }
+      ROLLBACK_NOT_WRITTEN {
+        error : string
+        code : string
+      }
+      WITHDRAW_WRITTEN {
+        id : string
+      }
+      WITHDRAW_NOT_WRITTEN {
+        error : string
+        code : string
+      }
+      RESOLVE_LOADED {
+        data : ActiveDeployment!
+      }
+      RESOLVE_ABSENT {
+        error : string
+        code : string
+      }
+      HISTORY_LOADED {
+        data : [Deployment]!
+      }
+      HISTORY_UNREADABLE {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      DEPLOY -> external {
+        artifact : string!
+        activates : boolean!
+        details : Map string (string | number)
+      }
+        @description "Record the artifact's next deployment; activates says whether it may serve (and so becomes active)."
+        @synonyms "publish, deploy, release"
+      ROLLBACK -> external {
+        artifact : string!
+        version : number!
+      }
+        @description "Make this earlier version the active one again."
+        @synonyms "roll back, revert deployment"
+      WITHDRAW -> external {
+        artifact : string!
+      }
+        @description "Leave the artifact with nothing active; its history stays."
+        @synonyms "unpublish, take down"
+      RESOLVE -> external {
+        artifact : string!
+      }
+        @description "The artifact's active deployment."
+        @synonyms "what is live, current deployment"
+      HISTORY -> external {
+        artifact : string!
+      }
+        @description "Every recorded deployment of the artifact, oldest first."
+        @synonyms "deployment history, releases"
+    }
+  }
+
+  page "/deployment-registry" -> DeploymentRegistrar
+}

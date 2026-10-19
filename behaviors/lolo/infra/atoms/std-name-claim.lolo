@@ -1,0 +1,226 @@
+app std-name-claim [
+  version: "1.0.0",
+  description: "std-name-claim — unique names that holders claim (a handle, a slug, a namespace). CLAIM_NAME { name, holder, keepHeld? } claims a name for a holder: a name is held by at most one holder and a holder holds one name, so claiming another releases the one it held; the first claim wins and a holder may claim its own name again. A name that does not match the namePattern knob is refused invalid, one the reserved knob lists reserved, one another holder holds taken, and moving off the held name when the caller says it must be kept (keepHeld) kept; NAME_CLAIM_FAILED carries the code, the name it concerns and a message using the label knob. The claim, the release of the old name and the holder's record are one atomic batch, and a name is claimed by creating its lock row under the name as id, so two holders racing for one name cannot both win. NAME_OF { holder } and HOLDER_OF { name } answer who holds what (empty when nobody)."
+]
+orbital NameClaimOrbital {
+  entity NameLock [persistent: name_locks] {
+    id : string! @description "The claimed name."
+    holder : string! @description "Who holds it."
+    claimedAt : number @description "When it was claimed, in epoch milliseconds."
+  }
+
+  entity NameHolder [persistent: name_holders] {
+    id : string! @description "The holder."
+    name : string! @description "The name it holds."
+  }
+
+  entity NameClaimRun [runtime] {
+    id : string!
+    name : string @description "The name being claimed." = ""
+    holder : string @description "The holder claiming it." = ""
+    keepHeld : boolean @description "Whether the holder must keep the name it already holds." = false
+    held : string @description "The name the holder held when the claim began; empty for none." = ""
+    heldRow : boolean @description "Whether the holder has a record yet." = false
+    asking : string @description "The name or holder a NAME_OF / HOLDER_OF read is for." = ""
+  }
+
+  trait NameClaimer -> NameClaimRun [integration, instance] {
+    initial: idle
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the claimer shows its one-line status."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      label : string = "name"
+        @label "What a name is called"
+        @description "The word messages use for a name: handle, slug, namespace."
+        @synonyms "noun, term"
+        @tier "domain"
+      reserved : [string] = []
+        @label "Reserved names"
+        @description "Names no holder can claim."
+        @synonyms "blocked names, system names"
+        @tier "domain"
+      namePattern : string = "^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$"
+        @label "Name pattern"
+        @description "The pattern a name must match; the default is 3-40 lowercase letters, digits or hyphens, not starting or ending with a hyphen."
+        @synonyms "name rule, format"
+        @tier "domain"
+      patternRule : string = "3-40 lowercase letters, digits or hyphens, not starting or ending with a hyphen"
+        @label "Pattern in words"
+        @description "The name pattern as the invalid message states it."
+        @synonyms "rule text"
+        @tier "domain"
+    }
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "No " @config.label " claimed yet.") })
+
+      CLAIM_NAME -> idle when (not (validate/pattern @payload.name @config.namePattern))
+        (emit NAME_CLAIM_FAILED { code: "invalid", value: @payload.name, message: (str/concat "The " @config.label " \"" @payload.name "\" must be " @config.patternRule) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @payload.name "\" is not a valid " @config.label ".") })
+      CLAIM_NAME -> idle when (and (validate/pattern @payload.name @config.namePattern) (array/includes @config.reserved @payload.name))
+        (emit NAME_CLAIM_FAILED { code: "reserved", value: @payload.name, message: (str/concat "\"" @payload.name "\" is reserved") })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @payload.name "\" is reserved.") })
+      CLAIM_NAME -> idle when (and (validate/pattern @payload.name @config.namePattern) (not (array/includes @config.reserved @payload.name)))
+        (set @entity.name @payload.name)
+        (set @entity.holder @payload.holder)
+        (set @entity.keepHeld (if (== @payload.keepHeld null) false @payload.keepHeld))
+        (fetch NameHolder { id: @payload.holder, emit: { success: HOLDER_LOADED, failure: HOLDER_ABSENT } })
+
+      HOLDER_LOADED -> idle
+        (set @entity.held @payload.data.name)
+        (set @entity.heldRow true)
+        (emit NAME_CHECK { })
+      HOLDER_ABSENT -> idle when (= @payload.code "not-found")
+        (set @entity.held "")
+        (set @entity.heldRow false)
+        (emit NAME_CHECK { })
+      HOLDER_ABSENT -> idle when (!= @payload.code "not-found")
+        (emit NAME_CLAIM_FAILED { code: "failed", value: @entity.name, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Claim failed: " @payload.error) })
+
+      NAME_CHECK -> idle when (and @entity.keepHeld (!= @entity.held "") (!= @entity.held @entity.name))
+        (emit NAME_CLAIM_FAILED { code: "kept", value: @entity.held, message: (str/concat "\"" @entity.held "\" must stay your " @config.label) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @entity.held "\" must stay your " @config.label ".") })
+      NAME_CHECK -> idle when (not (and @entity.keepHeld (!= @entity.held "") (!= @entity.held @entity.name)))
+        (fetch NameLock { id: @entity.name, emit: { success: LOCK_LOADED, failure: LOCK_ABSENT } })
+
+      LOCK_LOADED -> idle when (= @payload.data.holder @entity.holder)
+        (emit NAME_CLAIMED { name: @entity.name, holder: @entity.holder })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @entity.name "\" is yours.") })
+      LOCK_LOADED -> idle when (!= @payload.data.holder @entity.holder)
+        (emit NAME_CLAIM_FAILED { code: "taken", value: @entity.name, message: (str/concat "\"" @entity.name "\" is taken") })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @entity.name "\" is taken.") })
+      LOCK_ABSENT -> idle when (= @payload.code "not-found")
+        (persist batch (array/flatten [
+          [["create", "NameLock", { id: @entity.name, holder: @entity.holder, claimedAt: @now }]],
+          (if (and (!= @entity.held "") (!= @entity.held @entity.name)) [["delete", "NameLock", @entity.held]] (array/take [["delete", "NameLock", ""]] 0)),
+          (if @entity.heldRow [["update", "NameHolder", @entity.holder, { name: @entity.name }]] [["create", "NameHolder", { id: @entity.holder, name: @entity.name }]])
+        ]) { emit: { success: NAME_WRITTEN, failure: NAME_NOT_WRITTEN } })
+      LOCK_ABSENT -> idle when (!= @payload.code "not-found")
+        (emit NAME_CLAIM_FAILED { code: "failed", value: @entity.name, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Claim failed: " @payload.error) })
+
+      NAME_WRITTEN -> idle
+        (emit NAME_CLAIMED { name: @entity.name, holder: @entity.holder })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @entity.name "\" is yours.") })
+      NAME_NOT_WRITTEN -> idle when (= @payload.code "duplicate-id")
+        (emit NAME_CLAIM_FAILED { code: "taken", value: @entity.name, message: (str/concat "\"" @entity.name "\" is taken") })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "\"" @entity.name "\" is taken.") })
+      NAME_NOT_WRITTEN -> idle when (!= @payload.code "duplicate-id")
+        (emit NAME_CLAIM_FAILED { code: "failed", value: @entity.name, message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Claim failed: " @payload.error) })
+
+      NAME_OF -> idle
+        (set @entity.asking @payload.holder)
+        (fetch NameHolder { id: @payload.holder, emit: { success: NAME_OF_LOADED, failure: NAME_OF_ABSENT } })
+      NAME_OF_LOADED -> idle
+        (emit NAME_OF_ANSWERED { holder: @entity.asking, name: @payload.data.name })
+      NAME_OF_ABSENT -> idle
+        (emit NAME_OF_ANSWERED { holder: @entity.asking, name: "" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat @entity.asking " holds no " @config.label ".") })
+
+      HOLDER_OF -> idle
+        (set @entity.asking @payload.name)
+        (fetch NameLock { id: @payload.name, emit: { success: HOLDER_OF_LOADED, failure: HOLDER_OF_ABSENT } })
+      HOLDER_OF_LOADED -> idle
+        (emit HOLDER_OF_ANSWERED { name: @entity.asking, holder: @payload.data.holder })
+      HOLDER_OF_ABSENT -> idle
+        (emit HOLDER_OF_ANSWERED { name: @entity.asking, holder: "" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Nobody holds \"" @entity.asking "\".") })
+    }
+
+    emits {
+      NAME_CLAIMED -> external {
+        name : string!
+        holder : string!
+      }
+        @description "The holder holds the name (a fresh claim, or the name it already held)."
+        @tier "primary"
+      NAME_CLAIM_FAILED -> external {
+        code : "invalid" | "reserved" | "taken" | "kept" | "failed"
+        value : string!
+        message : string!
+      }
+        @description "The claim was refused: invalid, reserved or taken concern the name asked for, kept the name the holder must keep, failed a store error."
+        @tier "primary"
+      NAME_OF_ANSWERED -> external {
+        holder : string!
+        name : string!
+      }
+        @description "The name a holder holds; empty when it holds none."
+        @tier "primary"
+      HOLDER_OF_ANSWERED -> external {
+        name : string!
+        holder : string!
+      }
+        @description "Who holds a name; empty when nobody does."
+        @tier "primary"
+      NAME_CHECK -> internal { }
+        @description "Internal: the holder's current name is known."
+        @tier "internal"
+      HOLDER_LOADED {
+        data : NameHolder!
+      }
+      HOLDER_ABSENT {
+        error : string
+        code : string
+      }
+      LOCK_LOADED {
+        data : NameLock!
+      }
+      LOCK_ABSENT {
+        error : string
+        code : string
+      }
+      NAME_WRITTEN {
+        operations : [NameLock]
+        completedCount : number!
+        totalCount : number!
+      }
+      NAME_NOT_WRITTEN {
+        error : string
+        code : string
+        index : number
+      }
+      NAME_OF_LOADED {
+        data : NameHolder!
+      }
+      NAME_OF_ABSENT {
+        error : string
+        code : string
+      }
+      HOLDER_OF_LOADED {
+        data : NameLock!
+      }
+      HOLDER_OF_ABSENT {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      CLAIM_NAME -> external {
+        name : string!
+        holder : string!
+        keepHeld : boolean
+      }
+        @description "Claim this name for this holder; keepHeld says the holder may not move off the name it already holds."
+        @synonyms "claim handle, reserve name, choose username"
+      NAME_OF -> external {
+        holder : string!
+      }
+        @description "Which name this holder holds."
+      HOLDER_OF -> external {
+        name : string!
+      }
+        @description "Who holds this name."
+    }
+  }
+
+  page "/name-claim" -> NameClaimer
+}

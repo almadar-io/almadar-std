@@ -1,0 +1,21 @@
+app infra-projection-spec [
+  version: "1.0.0",
+  description: "Design contract for projecting a program onto cloud infrastructure: a resolved program's constructs (orbitals, entities by persistence, effects by kind, ticks, cross-orbital events, external services) are counted, weighted into a complexity score whose tier sizes the infrastructure, and answered as Terraform (main and variables), the resource list and a monthly cost estimate per resource. One projection at a time; nothing is deployed."
+]
+
+orbital InfraProjectionSpec {
+  expects entity InfraProjection [runtime] {
+    id : string!
+    status : "idle" | "projected" | "failed"
+  }
+  expects trait InfraProjector {
+    state idle {
+      INFRA_PROJECT -> idle
+    }
+    emits {
+      INFRA_PROJECTED { hcl : string!  variables : string!  tier : number!  score : number!  resources : [string]!  monthlyMin : number!  monthlyMax : number! }
+      INFRA_PROJECT_FAILED { error : string! }
+    }
+  }
+  expects page "/infra-projection" -> InfraProjector
+}

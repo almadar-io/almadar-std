@@ -19,6 +19,7 @@ orbital ScoreOrbital {
         (set @entity.score @config.startScore)
         (set @entity.scoreBaseline @config.initialEnemies)
       UNITS_CHANGED -> active when @config.running
+        @ensures (>= @entity.score @fromEntity.score)
         (set @entity.score (if (< @payload.enemiesAlive @entity.scoreBaseline) (+ @entity.score (* (- @entity.scoreBaseline @payload.enemiesAlive) @config.pointsPerKill)) @entity.score))
         (set @entity.scoreBaseline @payload.enemiesAlive)
     }

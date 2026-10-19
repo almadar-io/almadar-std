@@ -1,6 +1,6 @@
 app std-github [
   version: "1.0.0",
-  description: "std-github — the GitHub REST API (api.github.com) as one atom: open a pull request, list a pull request's review comments, list and read issues, open an issue, read a file at a ref and list commits. Requests are authenticated with the GitHub token knob and carry the 2022-11-28 API version. A non-2xx reply answers the action's failure event with GitHub's code (RATE_LIMIT_ERROR for 429, AUTH_ERROR for 401/403, SERVICE_ERROR otherwise) and message; an unreachable API answers NETWORK_ERROR. The git CLI actions (clone, branch, commit, push) are local processes, not HTTP, and are not part of this atom.",
+  description: "std-github — the GitHub REST API (api.github.com) as one atom: open a pull request, list a pull request's review comments, list and read issues, open an issue, read a file at a ref, list commits, list a repository's workflow runs and a run's jobs, and run a GraphQL query (answered as the reply text; its failure carries the HTTP status, 0 when unreachable). Requests are authenticated with the GitHub token knob and carry the 2022-11-28 API version. A non-2xx reply answers the action's failure event with GitHub's code (RATE_LIMIT_ERROR for 429, AUTH_ERROR for 401/403, SERVICE_ERROR otherwise) and message; an unreachable API answers NETWORK_ERROR. The git CLI actions (clone, branch, commit, push) are local processes, not HTTP, and are not part of this atom.",
   egress: ["https://api.github.com"]
 ]
 type GithubError = { message : string }
@@ -16,6 +16,12 @@ type GithubCommitAuthor = { name : string, email : string, date : string }
 type GithubCommitDetail = { message : string, author : GithubCommitAuthor }
 type GithubCommitItem = { sha : string, commit : GithubCommitDetail }
 type GithubCreatedIssue = { number : number, title : string, url : string }
+type GithubRun = { id : number, name : string, status : string, conclusion : string, created_at : string, html_url : string }
+type GithubRunList = { workflow_runs : [GithubRun] }
+type GithubJob = { id : number, name : string, status : string, conclusion : string, html_url : string }
+type GithubJobList = { jobs : [GithubJob] }
+type GithubRunsKey = { owner : string, repo : string }
+type GithubJobsKey = { owner : string, repo : string, runId : number }
 orbital GithubOrbital {
   entity GithubCall [runtime] {
     id : string!
@@ -174,9 +180,152 @@ orbital GithubOrbital {
       GITHUB_CREATE_ISSUE_UNREACHABLE -> idle
         (emit GITHUB_CREATE_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+      GITHUB_GRAPHQL -> idle
+        (http POST @config.origin "/graphql" {
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion, Content-Type: "application/json" },
+          text: (str/concat "{\"query\":" (json/stringify @payload.query) ",\"variables\":" (if (= (or @payload.variables "") "") "{}" @payload.variables) "}"),
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: GITHUB_GRAPHQL_REPLIED, failure: GITHUB_GRAPHQL_UNREACHABLE } })
+      GITHUB_GRAPHQL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit GITHUB_GRAPHQL_ANSWERED { body: @payload.body })
+      GITHUB_GRAPHQL_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GITHUB_GRAPHQL_FAILED { status: @payload.status, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) })
+      GITHUB_GRAPHQL_UNREACHABLE -> idle
+        (emit GITHUB_GRAPHQL_FAILED { status: 0, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
+      GITHUB_LIST_RUNS -> idle
+        (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/actions/runs") {
+          query: { per_page: (if (== @payload.per_page null) null (str/concat @payload.per_page)) },
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { owner: @payload.owner, repo: @payload.repo }), emit: { success: GITHUB_LIST_RUNS_REPLIED, failure: GITHUB_LIST_RUNS_UNREACHABLE } })
+      GITHUB_LIST_RUNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (let ((at (json/parse @payload.key GithubRunsKey)))
+          (emit GITHUB_RUNS { owner: @at.owner, repo: @at.repo, runs: (array/map (object/get (json/parse @payload.body GithubRunList) workflow_runs []) (fn r { id: @r.id, name: @r.name, status: @r.status, conclusion: @r.conclusion, created_at: @r.created_at, html_url: @r.html_url })) }))
+      GITHUB_LIST_RUNS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (let ((at (json/parse @payload.key GithubRunsKey)))
+          (emit GITHUB_LIST_RUNS_FAILED { owner: @at.owner, repo: @at.repo, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
+      GITHUB_LIST_RUNS_UNREACHABLE -> idle
+        (let ((at (json/parse @payload.key GithubRunsKey)))
+          (emit GITHUB_LIST_RUNS_FAILED { owner: @at.owner, repo: @at.repo, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
+      GITHUB_LIST_RUN_JOBS -> idle
+        (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/actions/runs/" @payload.runId "/jobs") {
+          headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
+          auth: { scheme: bearer, credential: @config.token },
+          timeoutMs: @config.timeoutMs
+        } { key: (json/stringify { owner: @payload.owner, repo: @payload.repo, runId: @payload.runId }), emit: { success: GITHUB_LIST_RUN_JOBS_REPLIED, failure: GITHUB_LIST_RUN_JOBS_UNREACHABLE } })
+      GITHUB_LIST_RUN_JOBS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+        (let ((at (json/parse @payload.key GithubJobsKey)))
+          (emit GITHUB_RUN_JOBS { owner: @at.owner, repo: @at.repo, runId: @at.runId, jobs: (array/map (object/get (json/parse @payload.body GithubJobList) jobs []) (fn j { id: @j.id, name: @j.name, status: @j.status, conclusion: @j.conclusion, html_url: @j.html_url })) }))
+      GITHUB_LIST_RUN_JOBS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (let ((at (json/parse @payload.key GithubJobsKey)))
+          (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: (if (= @payload.status 429) "RATE_LIMIT_ERROR" (if (or (= @payload.status 401) (= @payload.status 403)) "AUTH_ERROR" "SERVICE_ERROR")), message: (if (= @payload.status 429) "GitHub API rate limit exceeded" (str/concat (if (or (= @payload.status 401) (= @payload.status 403)) "GitHub API authentication failed: " "GitHub API request failed: ") (if (!= (object/get (json/parse @payload.body GithubError) message "") "") (object/get (json/parse @payload.body GithubError) message "") (object/get @config.statusText (str/concat @payload.status) "")))) }))
+      GITHUB_LIST_RUN_JOBS_UNREACHABLE -> idle
+        (let ((at (json/parse @payload.key GithubJobsKey)))
+          (emit GITHUB_LIST_RUN_JOBS_FAILED { owner: @at.owner, repo: @at.repo, runId: @at.runId, code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) }))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub unavailable: " @payload.error) })
+
     }
 
     emits {
+      GITHUB_GRAPHQL_ANSWERED -> external {
+        body : string!
+      }
+        @description "The GraphQL reply body as JSON text, data and errors both, for the caller to read with its own types."
+        @synonyms "graphql result, query answer"
+        @tier "primary"
+      GITHUB_GRAPHQL_FAILED -> external {
+        status : number!
+        code : string
+        message : string!
+      }
+        @description "The GraphQL query failed: the HTTP status (0 when GitHub was unreachable), GitHub's code (RATE_LIMIT_ERROR, AUTH_ERROR, SERVICE_ERROR, NETWORK_ERROR) and message."
+        @synonyms "graphql error, query failed"
+        @tier "primary"
+      GITHUB_GRAPHQL_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the GraphQL call's HTTP reply."
+        @tier "secondary"
+      GITHUB_GRAPHQL_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the GraphQL call never produced a reply."
+        @tier "secondary"
+      GITHUB_RUNS -> external {
+        owner : string!
+        repo : string!
+        runs : [GithubRun]!
+      }
+        @description "A repository's workflow runs, newest first: id, workflow name, status, conclusion (absent while running), creation time and page url."
+        @synonyms "workflow runs, actions runs, ci runs"
+        @tier "primary"
+      GITHUB_LIST_RUNS_FAILED -> external {
+        owner : string!
+        repo : string!
+        code : string
+        message : string!
+      }
+        @description "Listing a repository's workflow runs failed: the repository, GitHub's code and message."
+        @synonyms "listing runs failed, github error"
+        @tier "primary"
+      GITHUB_LIST_RUNS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: the run list's HTTP reply; key carries the repository."
+        @tier "secondary"
+      GITHUB_LIST_RUNS_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: the run list never produced a reply."
+        @tier "secondary"
+      GITHUB_RUN_JOBS -> external {
+        owner : string!
+        repo : string!
+        runId : number!
+        jobs : [GithubJob]!
+      }
+        @description "A workflow run's jobs: id, name, status, conclusion and page url."
+        @synonyms "run jobs, workflow jobs"
+        @tier "primary"
+      GITHUB_LIST_RUN_JOBS_FAILED -> external {
+        owner : string!
+        repo : string!
+        runId : number!
+        code : string
+        message : string!
+      }
+        @description "Listing a run's jobs failed: the repository and run, GitHub's code and message."
+        @synonyms "listing jobs failed, github error"
+        @tier "primary"
+      GITHUB_LIST_RUN_JOBS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "Internal: the job list's HTTP reply; key carries the repository and run."
+        @tier "secondary"
+      GITHUB_LIST_RUN_JOBS_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "Internal: the job list never produced a reply."
+        @tier "secondary"
       GITHUB_PR_CREATED -> external {
         number : number!
         url : string!
@@ -392,6 +541,57 @@ orbital GithubOrbital {
     }
 
     listens {
+      GITHUB_GRAPHQL -> external {
+        query : string!
+        variables : string
+      }
+        @description "Run a GitHub GraphQL query; variables is a JSON object as text."
+        @synonyms "graphql query, github graphql"
+      GITHUB_GRAPHQL_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+      GITHUB_GRAPHQL_UNREACHABLE {
+        error : string!
+        kind : string!
+      }
+      GITHUB_LIST_RUNS -> external {
+        owner : string!
+        repo : string!
+        per_page : number
+      }
+        @description "List a repository's workflow runs, newest first."
+        @synonyms "list workflow runs, ci status"
+      GITHUB_LIST_RUNS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      GITHUB_LIST_RUNS_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
+      GITHUB_LIST_RUN_JOBS -> external {
+        owner : string!
+        repo : string!
+        runId : number!
+      }
+        @description "List a workflow run's jobs."
+        @synonyms "run jobs, failed jobs"
+      GITHUB_LIST_RUN_JOBS_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+      GITHUB_LIST_RUN_JOBS_UNREACHABLE {
+        error : string!
+        kind : string!
+        key : string!
+      }
       GITHUB_CREATE_PR -> external {
         title : string!
         body : string!

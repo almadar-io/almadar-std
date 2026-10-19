@@ -18,12 +18,14 @@ orbital CooldownOrbital {
 
     state ready {
       START -> cooling
+        @ensures (and @entity.active (= @entity.remainingMs @config.defaultDurationMs))
         (set @entity.remainingMs @config.defaultDurationMs)
         (set @entity.active true)
     }
 
     state cooling {
       EXPIRE -> ready
+        @ensures (and (not @entity.active) (= @entity.remainingMs 0))
         (set @entity.active false)
         (set @entity.remainingMs 0)
         (emit CooldownReady { entityId: @entity.id })

@@ -19,6 +19,8 @@ orbital ThrottleOrbital {
         (set @entity.openAt 0)
         (set @entity.suppressed 0)
       INPUT -> cooling
+        @ensures (= @entity.suppressed 0)
+        @ensures (> @entity.openAt 0)
         (set @entity.openAt (+ @now @config.intervalMs))
         (set @entity.suppressed 0)
         (emit PASSED { trailing: false, suppressed: 0 })
@@ -29,12 +31,15 @@ orbital ThrottleOrbital {
         (set @entity.openAt 0)
         (set @entity.suppressed 0)
       INPUT -> cooling
+        @ensures (= @entity.suppressed (+ @fromEntity.suppressed 1))
+        @ensures (= @entity.openAt @fromEntity.openAt)
         (set @entity.suppressed (+ @entity.suppressed 1))
       TIMER_DUE -> cooling when (and @config.trailing (> @entity.suppressed 0))
         (emit PASSED { trailing: true, suppressed: @entity.suppressed })
         (set @entity.openAt (+ @now @config.intervalMs))
         (set @entity.suppressed 0)
       TIMER_DUE -> open when (not (and @config.trailing (> @entity.suppressed 0)))
+        @ensures (and (= @entity.openAt 0) (= @entity.suppressed 0))
         (set @entity.openAt 0)
         (set @entity.suppressed 0)
     }

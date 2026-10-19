@@ -27,6 +27,11 @@ A spec sits under the same folder path as the behavior it specs: the spec for `i
 | `infra/analytics-collector.lolo` | `std-analytics-collector` (not bound: its io realization imports the orbital, which prefixes trait names, G-ORB-378; holds when bound in a scratch copy, and dropping `AnalyticsStats` from the page fails it) |
 | `infra/cli.lolo` | `std-cli` (not bound: composers run it under their own trait name, G-ORB-378; holds when bound in a scratch copy, and moving the busy edge out of `running` fails it) |
 | `infra/dependency-audit.lolo` | `std-dependency-audit` (not bound: an orbital import prefixes its trait names, G-ORB-378; holds when bound in a scratch copy, and dropping the busy `AUDIT` edge in `auditing` fails it) |
+| `infra/infra-projection.lolo` | `std-infra-projection` (not bound: its composers import the orbital, which prefixes trait names, G-ORB-378; holds when bound in a scratch copy, and a page mounting another trait fails it) |
+| `infra/name-claim.lolo` | `std-name-claim` (not bound, as above; its entities are stated without `[persistent]` until `orb validate` counts `persist batch` writes, G-ORB-388) |
+| `infra/deployment-registry.lolo` | `std-deployment-registry` (not bound, as above; entities without `[persistent]` for the same reason, G-ORB-388) |
+| `infra/github.lolo` | `std-github` (not bound: `std-ci-status` composes its trait, which prefixes trait names, G-ORB-378; holds when bound in a scratch copy, and dropping `status` from `GITHUB_GRAPHQL_FAILED` fails it) |
+| `infra/ci-status.lolo` | `std-ci-status` (not bound: its realizations import the orbital, G-ORB-378; holds when bound in a scratch copy, and dropping the `CI_STATUS_REFRESH` edge in `loading` fails it) |
 
 One spec per atom: a spec binds to the whole program that imports it, so a spec covering two atoms fails until both are composed.
 

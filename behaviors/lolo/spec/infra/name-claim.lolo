@@ -1,0 +1,30 @@
+app name-claim-spec [
+  version: "1.0.0",
+  description: "Design contract for unique names that holders claim: a name is held by at most one holder and a holder holds at most one name, so claiming another releases the one it held; the first claim wins, a holder may claim its own name again, and a malformed, reserved or taken name is refused with its reason, as is moving off a name the holder must keep. Who holds a name, and which name a holder holds, can be asked."
+]
+
+orbital NameClaimSpec {
+  expects entity NameLock {
+    id : string!
+    holder : string!
+    claimedAt : number
+  }
+  expects entity NameHolder {
+    id : string!
+    name : string!
+  }
+  expects trait NameClaimer {
+    state idle {
+      CLAIM_NAME -> idle
+      NAME_OF -> idle
+      HOLDER_OF -> idle
+    }
+    emits {
+      NAME_CLAIMED { name : string!  holder : string! }
+      NAME_CLAIM_FAILED { code : string  value : string!  message : string! }
+      NAME_OF_ANSWERED { holder : string!  name : string! }
+      HOLDER_OF_ANSWERED { name : string!  holder : string! }
+    }
+  }
+  expects page "/name-claim" -> NameClaimer
+}

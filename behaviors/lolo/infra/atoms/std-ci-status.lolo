@@ -1,0 +1,310 @@
+app std-ci-status [
+  version: "1.0.0",
+  description: "std-ci-status — the latest GitHub Actions run of every repository of an organization, plus listed repositories elsewhere, as one board. CI_STATUS_LOAD answers CI_STATUS with the board: within the cacheTtlMs window the cached board, without asking GitHub; otherwise a fresh read. CI_STATUS_REFRESH always reads afresh. A load or refresh asked for while a read is in flight is answered by that read. A read pages through the org knob's repositories with one GraphQL query per pageSize repositories (at most maxPages), looks at each repository's last historyDepth default-branch commits and their checkSuiteDepth GitHub Actions check suites (the appId knob), and keeps the newest suite that has a workflow run: its status and conclusion lower-cased, the workflow name, url, run id and creation time; a repository with none is status unknown. Repositories the skipRepos knob names are left out. A page GitHub answers with a gateway error (502, 503, 504) or not at all is retried by std-retry (maxAttempts, from baseDelayMs doubling); any other failure, or the attempts spent, ends the read and answers the last board again (stale), or an empty one when there was none. After the org's pages, each extraRepos entry's newest run is read, one after another, through the REST run list, and a repository whose list fails or is empty is status unknown. GraphQL errors beside data do not stop the read. fetchedAt is the ISO time of the read the board came from.",
+  egress: ["https://api.github.com"]
+]
+type CiWorkflow = { name : string }
+type CiWorkflowRun = { databaseId : number, url : string, createdAt : string, workflow : CiWorkflow }
+type CiCheckSuite = { status : string, conclusion : string, workflowRun : CiWorkflowRun }
+type CiSuiteConnection = { nodes : [CiCheckSuite] }
+type CiCommit = { checkSuites : CiSuiteConnection }
+type CiHistory = { nodes : [CiCommit] }
+type CiTarget = { history : CiHistory }
+type CiBranchRef = { target : CiTarget }
+type CiRepository = { name : string, defaultBranchRef : CiBranchRef }
+type CiPageInfo = { hasNextPage : boolean, endCursor : string }
+type CiRepositoryConnection = { pageInfo : CiPageInfo, nodes : [CiRepository] }
+type CiOrganization = { repositories : CiRepositoryConnection }
+type CiData = { organization : CiOrganization }
+type CiReply = { data : CiData }
+type CiRun = { repo : string, fullName : string, status : string, conclusion : string, name : string, url : string, databaseId : number, createdAt : string }
+type CiExtraRepo = { owner : string, name : string, displayName : string }
+type CiGithubRun = { id : number, name : string, status : string, conclusion : string, created_at : string, html_url : string }
+orbital CiStatusOrbital {
+  uses Github from "std/behaviors/std-github"
+  uses Retry from "std/behaviors/std-retry"
+
+  entity CiStatusBoard [runtime] {
+    id : string!
+    runs : [CiRun] @description "The board last answered." = []
+    fetchedAt : string @description "ISO time of the read the board came from; empty before the first." = ""
+    cachedAt : number @description "Epoch milliseconds at which the board was cached." = 0
+    hasCache : boolean @description "Whether a board has been cached." = false
+    loading : boolean @description "Whether a read is in flight." = false
+    collected : [CiRun] @description "The runs the read in flight has collected so far." = []
+    more : boolean @description "Whether the page just read has another after it." = false
+    cursor : string @description "The cursor of the next page." = ""
+    page : number @description "The page in flight, from 1." = 0
+    extra : number @description "Index of the extra repository being read." = 0
+    key : CallKey @description "The retry key of the page in flight."
+    seq : number @description "Pages asked so far; makes each retry key unique." = 0
+  }
+
+  trait CiGithub = Github.traits.GithubClient {
+    listens {
+      CiStatus.CI_GQL -> GITHUB_GRAPHQL
+      CiStatus.CI_EXTRA -> GITHUB_LIST_RUNS
+    }
+  }
+
+  trait CiRetry = Retry.traits.Retry {
+    listens {
+      CiStatus.CI_RETRY_START -> START
+      CiStatus.CI_RETRY_SUCCEEDED -> SUCCEEDED
+      CiStatus.CI_RETRY_FAILED -> FAILED
+      CiStatus.CI_RETRY_CANCEL -> CANCEL
+    }
+    config {
+      maxAttempts: 4
+      baseDelayMs: 500
+      multiplier: 2
+      maxDelayMs: 30000
+    }
+  }
+
+  trait CiStatus -> CiStatusBoard [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No CI status read yet." })
+      CI_STATUS_LOAD -> idle when (and @entity.hasCache (<= (- @now @entity.cachedAt) @config.cacheTtlMs))
+        (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: false })
+      CI_STATUS_LOAD -> loading when (not (and @entity.hasCache (<= (- @now @entity.cachedAt) @config.cacheTtlMs)))
+        (set @entity.loading true)
+        (set @entity.collected [])
+        (set @entity.cursor "")
+        (set @entity.page 1)
+        (set @entity.seq (+ @entity.seq 1))
+        (set @entity.key (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey))
+        (emit CI_RETRY_START { key: (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey) })
+      CI_STATUS_REFRESH -> loading
+        (set @entity.loading true)
+        (set @entity.collected [])
+        (set @entity.cursor "")
+        (set @entity.page 1)
+        (set @entity.seq (+ @entity.seq 1))
+        (set @entity.key (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey))
+        (emit CI_RETRY_START { key: (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey) })
+    }
+
+    state loading {
+      INIT -> loading
+      CI_STATUS_LOAD -> loading
+      CI_STATUS_REFRESH -> loading
+
+      CI_ATTEMPT -> loading when (== @payload.key @entity.key)
+        (emit CI_GQL { query: (str/concat "\nquery OrgRuns($org: String!, $appId: Int!, $cursor: String) {\n  organization(login: $org) {\n    repositories(first: " @config.pageSize ", after: $cursor, orderBy: {field: PUSHED_AT, direction: DESC}) {\n      pageInfo { hasNextPage endCursor }\n      nodes {\n        name\n        defaultBranchRef {\n          target {\n            ... on Commit {\n              history(first: " @config.historyDepth ") {\n                nodes {\n                  checkSuites(first: " @config.checkSuiteDepth ", filterBy: {appId: $appId}) {\n                    nodes {\n                      status\n                      conclusion\n                      workflowRun {\n                        databaseId\n                        url\n                        createdAt\n                        workflow { name }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}"), variables: (json/stringify { org: @config.org, appId: @config.appId, cursor: (if (= @entity.page 1) null @entity.cursor) }) })
+
+      CI_GQL_ANSWERED -> loading
+        (emit CI_RETRY_SUCCEEDED { key: @entity.key })
+        (set @entity.collected (array/concat @entity.collected (array/map (array/filter (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "nodes" []) (fn r (not (array/includes @config.skipRepos @r.name)))) (fn r (let ((ss (array/sort (array/map (array/filter (array/flatten (array/map (object/get @r "defaultBranchRef.target.history.nodes" []) (fn c (object/get @c "checkSuites.nodes" [])))) (fn s (!= (object/get @s "workflowRun" null) null))) (fn s { at: @s.workflowRun.createdAt, suite: @s })) "at" "desc"))) (if (= (array/len @ss) 0) (object/merge (json/parse "{\"repo\":\"\",\"fullName\":\"\",\"status\":\"unknown\",\"conclusion\":null,\"name\":\"\",\"url\":\"\",\"databaseId\":0,\"createdAt\":\"\"}" CiRun) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name) }) (let ((s (object/get (array/nth @ss 0) "suite"))) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name), status: (str/lower @s.status), conclusion: (if (== @s.conclusion null) null (str/lower @s.conclusion)), name: (object/get @s "workflowRun.workflow.name" ""), url: @s.workflowRun.url, databaseId: @s.workflowRun.databaseId, createdAt: @s.workflowRun.createdAt })))))))
+        (set @entity.more (and (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.hasNextPage" false) (!= (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.endCursor" "") "") (< @entity.page @config.maxPages)))
+        (set @entity.cursor (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.endCursor" ""))
+        (emit CI_PAGE_READ { })
+      CI_PAGE_READ -> loading when @entity.more
+        (set @entity.page (+ @entity.page 1))
+        (set @entity.seq (+ @entity.seq 1))
+        (set @entity.key (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey))
+        (emit CI_RETRY_START { key: (as (str/concat "ci-status:" (+ @entity.seq 1)) CallKey) })
+      CI_PAGE_READ -> loading when (not @entity.more)
+        (set @entity.extra 0)
+        (emit CI_EXTRA_NEXT { })
+
+      CI_GQL_FAILED -> loading when (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504))
+        (emit CI_RETRY_FAILED { key: @entity.key, error: @payload.message })
+      CI_GQL_FAILED -> idle when (not (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504)))
+        (emit CI_RETRY_CANCEL { })
+        (set @entity.runs (if @entity.hasCache @entity.runs []))
+        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt (str/concat (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z")))
+        (set @entity.cachedAt (if @entity.hasCache @entity.cachedAt @now))
+        (set @entity.hasCache true)
+        (set @entity.loading false)
+        (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: true })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub could not be read; showing the board from " @entity.fetchedAt ".") })
+      CI_GAVE_UP -> idle when (== @payload.key @entity.key)
+        (set @entity.runs (if @entity.hasCache @entity.runs []))
+        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt (str/concat (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z")))
+        (set @entity.cachedAt (if @entity.hasCache @entity.cachedAt @now))
+        (set @entity.hasCache true)
+        (set @entity.loading false)
+        (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: true })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "GitHub could not be read; showing the board from " @entity.fetchedAt ".") })
+
+      CI_EXTRA_NEXT -> loading when (< @entity.extra (array/len @config.extraRepos))
+        (let ((x (array/nth @config.extraRepos @entity.extra)))
+          (emit CI_EXTRA { owner: @x.owner, repo: @x.name, per_page: 1 }))
+      CI_EXTRA_NEXT -> idle when (>= @entity.extra (array/len @config.extraRepos))
+        (set @entity.runs @entity.collected)
+        (set @entity.fetchedAt (str/concat (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z"))
+        (set @entity.cachedAt @now)
+        (set @entity.hasCache true)
+        (set @entity.loading false)
+        (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: false })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat (array/len @entity.runs) " repositories read at " @entity.fetchedAt ".") })
+      CI_EXTRA_RUNS -> loading
+        (let ((x (array/nth @config.extraRepos @entity.extra)))
+          (set @entity.collected (array/append @entity.collected (if (= (array/len @payload.runs) 0) (object/merge (json/parse "{\"repo\":\"\",\"fullName\":\"\",\"status\":\"unknown\",\"conclusion\":null,\"name\":\"\",\"url\":\"\",\"databaseId\":0,\"createdAt\":\"\"}" CiRun) { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name) }) (let ((run (array/nth @payload.runs 0))) { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name), status: (str/lower @run.status), conclusion: (if (== @run.conclusion null) null (str/lower @run.conclusion)), name: @run.name, url: @run.html_url, databaseId: @run.id, createdAt: @run.created_at })))))
+        (set @entity.extra (+ @entity.extra 1))
+        (emit CI_EXTRA_NEXT { })
+      CI_EXTRA_FAILED -> loading
+        (let ((x (array/nth @config.extraRepos @entity.extra)))
+          (set @entity.collected (array/append @entity.collected (object/merge (json/parse "{\"repo\":\"\",\"fullName\":\"\",\"status\":\"unknown\",\"conclusion\":null,\"name\":\"\",\"url\":\"\",\"databaseId\":0,\"createdAt\":\"\"}" CiRun) { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name) }))))
+        (set @entity.extra (+ @entity.extra 1))
+        (emit CI_EXTRA_NEXT { })
+    }
+
+    emits {
+      CI_STATUS -> external {
+        runs : [CiRun]!
+        fetchedAt : string!
+        stale : boolean!
+      }
+        @description "The board: per repository its latest run's status, conclusion (absent while running), workflow name, url, run id and creation time, or status unknown; fetchedAt is when it was read, and stale says GitHub could not be read this time."
+        @synonyms "ci board, build status, workflow runs"
+        @tier "primary"
+      CI_GQL {
+        query : string!
+        variables : string!
+      }
+        @description "Internal: one page's GraphQL query, to the GitHub client."
+        @tier "internal"
+      CI_EXTRA {
+        owner : string!
+        repo : string!
+        per_page : number!
+      }
+        @description "Internal: one extra repository's run list, to the GitHub client."
+        @tier "internal"
+      CI_RETRY_START {
+        key : CallKey!
+      }
+        @description "Internal: begin retrying one page."
+        @tier "internal"
+      CI_RETRY_SUCCEEDED {
+        key : CallKey!
+      }
+        @description "Internal: the page was answered."
+        @tier "internal"
+      CI_RETRY_FAILED {
+        key : CallKey!
+        error : string!
+      }
+        @description "Internal: the page met a gateway error or no answer."
+        @tier "internal"
+      CI_RETRY_CANCEL { }
+        @description "Internal: stop retrying the page."
+        @tier "internal"
+      CI_PAGE_READ -> internal { }
+        @description "Internal: a page's repositories are collected."
+        @tier "internal"
+      CI_EXTRA_NEXT -> internal { }
+        @description "Internal: read the next extra repository, or finish."
+        @tier "internal"
+    }
+
+    listens {
+      CI_STATUS_LOAD -> external { }
+        @description "Answer the board, from the cache while it is fresh."
+        @synonyms "load ci status, show build status"
+      CI_STATUS_REFRESH -> external { }
+        @description "Read the board afresh."
+        @synonyms "refresh ci status, reload runs"
+      CI_ATTEMPT {
+        key : CallKey!
+        attempt : number!
+      }
+        @description "A std-retry ATTEMPT: ask for the page."
+      CI_GAVE_UP {
+        key : CallKey!
+        attempts : number!
+        error : string
+      }
+        @description "A std-retry GAVE_UP: the page's attempts are spent."
+      CI_GQL_ANSWERED {
+        body : string!
+      }
+        @description "A std-github GITHUB_GRAPHQL_ANSWERED: the page's reply."
+      CI_GQL_FAILED {
+        status : number!
+        code : string
+        message : string!
+      }
+        @description "A std-github GITHUB_GRAPHQL_FAILED: the page was not served."
+      CI_EXTRA_RUNS {
+        owner : string!
+        repo : string!
+        runs : [CiGithubRun]!
+      }
+        @description "A std-github GITHUB_RUNS: an extra repository's runs."
+      CI_EXTRA_FAILED {
+        owner : string!
+        repo : string!
+        code : string
+        message : string!
+      }
+        @description "A std-github GITHUB_LIST_RUNS_FAILED: an extra repository's runs could not be read."
+      CiRetry.ATTEMPT -> CI_ATTEMPT
+      CiRetry.GAVE_UP -> CI_GAVE_UP
+      CiGithub.GITHUB_GRAPHQL_ANSWERED -> CI_GQL_ANSWERED
+      CiGithub.GITHUB_GRAPHQL_FAILED -> CI_GQL_FAILED
+      CiGithub.GITHUB_RUNS -> CI_EXTRA_RUNS
+      CiGithub.GITHUB_LIST_RUNS_FAILED -> CI_EXTRA_FAILED
+    }
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the board shows its one-line status."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      org : string = ""
+        @label "Organization"
+        @description "The GitHub organization whose repositories the board reads."
+        @synonyms "github org, owner"
+        @tier "domain"
+      skipRepos : [string] = []
+        @label "Repositories left out"
+        @description "Repository names of the organization the board does not show."
+        @synonyms "ignored repos, hidden repositories"
+        @tier "domain"
+      extraRepos : [CiExtraRepo] = []
+        @label "Other repositories"
+        @description "Repositories outside the organization to show too: owner, name and the name to show."
+        @synonyms "extra repos, external repositories"
+        @tier "domain"
+      cacheTtlMs : number = 300000
+        @label "Cache window"
+        @description "Milliseconds a read board is answered without asking GitHub again."
+        @synonyms "cache ttl, freshness"
+        @tier "infra"
+      appId : number = 15368
+        @label "Checks app id"
+        @description "The GitHub App whose check suites count; 15368 is GitHub Actions."
+        @synonyms "github actions app"
+        @tier "domain"
+      pageSize : number = 25
+        @label "Repositories per query"
+        @description "Repositories asked for per GraphQL query; larger pages time out on GitHub's side."
+        @synonyms "page size"
+        @tier "infra"
+      maxPages : number = 8
+        @label "Most pages"
+        @description "The most pages one read asks for."
+        @synonyms "page cap"
+        @tier "infra"
+      historyDepth : number = 5
+        @label "Commits looked at"
+        @description "Default-branch commits looked at per repository."
+        @synonyms "history depth"
+        @tier "infra"
+      checkSuiteDepth : number = 3
+        @label "Check suites per commit"
+        @description "Check suites looked at per commit."
+        @synonyms "suite depth"
+        @tier "infra"
+    }
+  }
+
+  page "/ci-status" as CiStatusPage -> CiStatus, CiGithub, CiRetry
+}

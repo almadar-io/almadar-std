@@ -144,6 +144,7 @@ orbital ServiceNodeOrbital {
 
     state closed {
       INIT -> closed
+        @ensures (and (= @entity.failureCount 0) (= @entity.successCount 0))
         (set @entity.failureCount 0)
         (set @entity.successCount 0)
         (set @entity.threshold @config.failureThreshold)
@@ -167,6 +168,7 @@ orbital ServiceNodeOrbital {
           type: stack
         })
       FAILURE -> open
+        @ensures (> @entity.openedAt 0)
         (set @entity.openedAt (time/now))
         (render-ui main {
           children: [{
@@ -211,6 +213,7 @@ orbital ServiceNodeOrbital {
 
     state open {
       INIT -> closed
+        @ensures (and (= @entity.failureCount 0) (= @entity.successCount 0))
         (set @entity.failureCount 0)
         (set @entity.successCount 0)
         (set @entity.threshold @config.failureThreshold)
@@ -277,6 +280,7 @@ orbital ServiceNodeOrbital {
 
     state halfOpen {
       INIT -> closed
+        @ensures (and (= @entity.failureCount 0) (= @entity.successCount 0))
         (set @entity.failureCount 0)
         (set @entity.successCount 0)
         (set @entity.threshold @config.failureThreshold)
@@ -320,6 +324,7 @@ orbital ServiceNodeOrbital {
           type: stack
         })
       FAILURE -> open
+        @ensures (> @entity.openedAt 0)
         (set @entity.openedAt (time/now))
         (render-ui main {
           children: [{

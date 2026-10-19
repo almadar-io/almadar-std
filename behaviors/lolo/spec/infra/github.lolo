@@ -1,0 +1,23 @@
+app github-spec [
+  version: "1.0.0",
+  description: "Design contract for the GitHub API atom: every action answers its result event or its failure event, never neither. A GraphQL query answers the reply body as text for the caller to read with its own types, and its failure carries the HTTP status (0 when GitHub was unreachable) so a caller can tell a gateway error from a refusal. Listing a repository's workflow runs and a run's jobs answers which repository and run the answer is for, so several lists can be in flight at once."
+]
+
+orbital GithubSpec {
+  expects trait GithubClient {
+    state idle {
+      GITHUB_GRAPHQL -> idle
+      GITHUB_LIST_RUNS -> idle
+      GITHUB_LIST_RUN_JOBS -> idle
+    }
+    emits {
+      GITHUB_GRAPHQL_ANSWERED { body : string! }
+      GITHUB_GRAPHQL_FAILED { status : number!  code : string  message : string! }
+      GITHUB_RUNS { owner : string!  repo : string! }
+      GITHUB_LIST_RUNS_FAILED { owner : string!  repo : string!  message : string! }
+      GITHUB_RUN_JOBS { owner : string!  repo : string!  runId : number! }
+      GITHUB_LIST_RUN_JOBS_FAILED { owner : string!  repo : string!  runId : number!  message : string! }
+    }
+  }
+  expects page "/github" -> GithubClient
+}
