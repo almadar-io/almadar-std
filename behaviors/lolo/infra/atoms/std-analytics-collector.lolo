@@ -192,8 +192,11 @@ orbital AnalyticsCollectorOrbital {
     initial: ready
 
     state ready {
-      INIT -> ready
+      INIT -> ready when (not @config.loadOnInit)
         (render-ui main { type: typography, variant: caption, role: status, content: "No stats asked for yet." })
+      INIT -> ready when @config.loadOnInit
+        (render-ui main { type: typography, variant: caption, role: status, content: "Reading the stats…" })
+        (emit ANALYTICS_STATS { })
       ANALYTICS_STATS -> ready
         (set @entity.statsLimit (if (== @payload.limit null) 100 @payload.limit))
         (fetch AnalyticsEvent { filter: ["and", (or (== @payload.domain null) (= @payload.domain "") ["=", (object/get @entity domain), @payload.domain]), (or (== @payload.from null) [">=", (object/get @entity ts), @payload.from]), (or (== @payload.to null) ["<=", (object/get @entity ts), @payload.to])], emit: { success: STATS_LOADED, failure: STATS_UNREADABLE } })
@@ -205,23 +208,30 @@ orbital AnalyticsCollectorOrbital {
                   (let ((h (str/lower (if (str/startsWith @rest "[") (str/concat (str/replace-pattern @rest "\\].*$" "") "]") (str/replace-pattern @rest "[:/?#].*$" "")))))
                     (if (= @h "") @e.referrer @h))
                   @e.referrer))))))
-          (let ((pageUniq (array/unique @pageKeys))
-                (refUniq (array/unique @refKeys)))
+          (let ((pagesTop (array/take (array/sort (array/map (array/unique @pageKeys) (fn k { key: @k, count: (array/count @pageKeys (fn x (= @x @k))) })) "count" "desc") @entity.statsLimit))
+                (refsTop (array/take (array/sort (array/map (array/unique @refKeys) (fn k { key: @k, count: (array/count @refKeys (fn x (= @x @k))) })) "count" "desc") @entity.statsLimit)))
+            (let ((pageRows (array/map @pagesTop (fn r { id: @r.key, page: @r.key, views: @r.count })))
+                  (refRows (array/map @refsTop (fn r { id: @r.key, referrer: @r.key, views: @r.count }))))
             (do
               (emit ANALYTICS_STATS_RESULT {
                 pageviews: (array/len @views),
                 visitors: (array/len (array/unique (array/map @payload.data (fn e @e.visitorId)))),
-                pages: (array/take (array/sort (array/map @pageUniq (fn k { key: @k, count: (array/count @pageKeys (fn x (= @x @k))) })) "count" "desc") @entity.statsLimit),
+                pages: @pagesTop,
                 countries: (array/take [{ key: "", count: 0 }] 0),
-                referrers: (array/take (array/sort (array/map @refUniq (fn k { key: @k, count: (array/count @refKeys (fn x (= @x @k))) })) "count" "desc") @entity.statsLimit)
+                referrers: @refsTop
               })
-              (render-ui main { type: stack, direction: horizontal, gap: md, children: [
-                { type: stat-display, label: "Pageviews", value: (array/len @views) },
-                { type: stat-display, label: "Unique visitors", value: (array/len (array/unique (array/map @payload.data (fn e @e.visitorId)))) }
-              ] }))))
+              (render-ui main { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: ANALYTICS_STATS }] },
+                { type: stack, direction: horizontal, gap: md, children: [
+                  { type: stat-display, label: "Pageviews", value: (array/len @views) },
+                  { type: stat-display, label: "Unique visitors", value: (array/len (array/unique (array/map @payload.data (fn e @e.visitorId)))) }
+                ] },
+                { type: data-grid, cols: 1, gap: sm, entity: @pageRows, fields: [{ label: Page, name: page, variant: body }, { label: Views, name: "views", variant: caption }] },
+                { type: data-grid, cols: 1, gap: sm, entity: @refRows, fields: [{ label: Referrer, name: referrer, variant: body }, { label: Views, name: "views", variant: caption }] }
+              ] })))))
       STATS_UNREADABLE -> ready
         (emit ANALYTICS_STATS_FAILED { error: @payload.error })
-        (render-ui main { type: typography, variant: caption, role: status, content: (str/concat "Stats unavailable: " @payload.error) })
+        (render-ui main { type: stack, direction: vertical, gap: md, children: [{ type: typography, variant: caption, role: status, content: (str/concat "Stats unavailable: " @payload.error) }, { type: button, label: "Try again", variant: secondary, action: ANALYTICS_STATS }] })
     }
 
     emits {
@@ -240,6 +250,14 @@ orbital AnalyticsCollectorOrbital {
       }
         @description "The stored events could not be read."
         @tier "primary"
+      ANALYTICS_STATS -> internal {
+        domain : string
+        from : number
+        to : number
+        limit : number
+      }
+        @description "Internal: the stats a page opening with loadOnInit asks for."
+        @tier "internal"
       STATS_LOADED {
         data : [AnalyticsEvent]!
       }
@@ -260,6 +278,17 @@ orbital AnalyticsCollectorOrbital {
       }
         @description "Ask for the stats of a site (empty or absent: every site) between from and to (epoch milliseconds, inclusive; absent: unbounded), with at most limit rows per breakdown (default 100)."
         @synonyms "analytics stats, traffic report, visitor count"
+    }
+
+    config {
+      title : string = "Analytics"
+        @label "Title"
+        @description "The stats board's heading."
+        @tier "presentation"
+      loadOnInit : boolean = false
+        @label "Load when opened"
+        @description "Read every site's stats as soon as the page opens."
+        @tier "presentation"
     }
   }
 
