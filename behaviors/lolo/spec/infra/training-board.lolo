@@ -1,0 +1,26 @@
+app training-board-spec [
+  version: "1.0.0",
+  description: "Design contract for a model-training board: the running GPU instances of a cloud region, and for each one reachable over ssh its GPU, the training process, its uptime, the tail of its training log and the epochs the log reports. A load within the cache window answers the cached board; a refresh always reads. An instance that cannot be reached keeps its listing with nothing guessed."
+]
+
+orbital TrainingBoardSpec {
+  expects entity TrainingBoard [runtime] {
+    id : string!
+    cachedAt : number
+    loading : boolean
+  }
+  expects trait TrainingStatus {
+    state idle {
+      TRAINING_LOAD -> reading
+      TRAINING_REFRESH -> reading
+    }
+    state reading {
+      TRAINING_LOAD -> reading
+      TRAINING_REFRESH -> reading
+    }
+    emits {
+      TRAINING_BOARD { fetchedAt : string! }
+    }
+  }
+  expects page "/training-board" -> TrainingStatus
+}

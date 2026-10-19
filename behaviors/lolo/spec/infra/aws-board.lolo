@@ -1,0 +1,26 @@
+app aws-board-spec [
+  version: "1.0.0",
+  description: "Design contract for an AWS account board: one region's EC2 instances (with catalog specs and prices), volumes, own images, chosen S3 buckets, security groups, key pairs, roles, service quotas, this month's cost per service and the billed instance types of a lookback window. A load within the cache window answers the cached board; a refresh always reads. A part the CLI cannot read is empty, never guessed."
+]
+
+orbital AwsBoardSpec {
+  expects entity AwsBoard [runtime] {
+    id : string!
+    cachedAt : number
+    loading : boolean
+  }
+  expects trait AwsStatus {
+    state idle {
+      AWS_LOAD -> reading
+      AWS_REFRESH -> reading
+    }
+    state reading {
+      AWS_LOAD -> reading
+      AWS_REFRESH -> reading
+    }
+    emits {
+      AWS_BOARD { fetchedAt : string!  estimatedMonthlyCost : number! }
+    }
+  }
+  expects page "/aws-board" -> AwsStatus
+}

@@ -1,0 +1,27 @@
+app app-hosting-board-spec [
+  version: "1.0.0",
+  description: "Design contract for a Firebase App Hosting board: per backend, its latest rollout with the build behind it, and its recent Cloud Run log lines; per Cloud Build, its log. Requests that arrive while one is being read wait in a first-in-first-out queue and are answered in order; each answer is cached for a while, and a forced status read skips the cache."
+]
+
+orbital AppHostingBoardSpec {
+  expects entity AppHostingBoard [runtime] {
+    id : string!
+    loading : boolean
+  }
+  expects trait AppHostingStatus {
+    state idle {
+      AH_PUMP -> reading
+    }
+    state reading {
+      AH_STATUS_LOAD -> reading
+      AH_LOGS_LOAD -> reading
+      AH_BUILD_LOGS_LOAD -> reading
+    }
+    emits {
+      AH_STATUS { backendId : string! }
+      AH_LOGS { backendId : string! }
+      AH_BUILD_LOGS { cloudBuildId : string!  region : string! }
+    }
+  }
+  expects page "/app-hosting-board" -> AppHostingStatus
+}

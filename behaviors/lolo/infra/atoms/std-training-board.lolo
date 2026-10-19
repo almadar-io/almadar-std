@@ -1,0 +1,243 @@
+app std-training-board [
+  version: "1.0.0",
+  description: "std-training-board — the model-training instances of one AWS region, read through the aws and ssh CLIs (std-cli, with the host's PATH and HOME passed through). TRAINING_LOAD answers TRAINING_BOARD from the cache within cacheTtlMs; TRAINING_REFRESH reads afresh; a load during a read is answered by that read. A read lists the region's running instances of the instanceTypes families, then, for each one with a public address, runs one ssh command as sshUser with the sshKey identity that prints four sections: the GPU (nvidia-smi: name, temperature, memory used and total, utilization; each number is the value's leading token), the first process matching processPattern (pid, cpu, memory in MiB, elapsed time, command), the uptime, and the last logLines lines of the first readable logPaths file. From the log it keeps the last tailLines lines and the epochs in the trainer's declared formats: an `Epoch N | key=value … (Ts)` line (best when it carries *BEST*), and a Hugging Face Trainer metrics dict (its epoch times 1000, rounded). An instance ssh cannot reach, or without a public address, keeps its listing with every other part absent.",
+  exec: ["aws", "ssh"],
+  env: ["PATH", "HOME"]
+]
+uses Spec from "almadar-std/training-board"
+type TrListed = { Id : string, Type : string, IP : string, Launch : string }
+type TrListing = [TrListed]
+type TrFound = { instanceId : string, instanceType : string, publicIp : string, launchTime : string }
+type TrGpu = { name : string, temp : number, memoryUsed : number, memoryTotal : number, utilization : number }
+type TrProcess = { pid : number, cpu : number, memoryMb : number, elapsed : string, command : string }
+type TrGpuMap = Map string TrGpu
+type TrProcessMap = Map string TrProcess
+type TrMetricText = Map string string
+type TrEpoch = { epoch : number, metrics : Map string number, time : number, isBest : boolean }
+type TrInstance = { instanceId : string, instanceType : string, publicIp : string, launchTime : string, uptime : string, gpu : TrGpu, process : TrProcess, epochs : [TrEpoch], logTail : [string] }
+orbital TrainingBoardOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
+  entity TrainingBoard [runtime] {
+    id : string!
+    instances : [TrInstance] @description "The board last answered." = []
+    fetchedAt : string @description "When the read the board came from began." = ""
+    cachedAt : number = 0
+    hasCache : boolean = false
+    loading : boolean @description "Whether a read is in flight." = false
+    startedAt : number = 0
+    found : [TrFound] @description "The instances the read in flight is visiting." = []
+    collected : [TrInstance] = []
+    cursor : number @description "Index of the instance being visited." = 0
+    noText : Map string string @description "Empty: read where a part is absent." = {}
+    noGpu : TrGpuMap @description "Empty: read where a GPU is absent." = {}
+    noProcess : TrProcessMap @description "Empty: read where a process is absent." = {}
+    noMetrics : Map string number @description "Empty metrics." = {}
+  }
+
+  trait TrAws = Cli.traits.CliRunner {
+    listens { TrainingStatus.TR_AWS -> CLI_RUN }
+    config {
+      command: "aws"
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait TrSsh = Cli.traits.CliRunner {
+    listens { TrainingStatus.TR_SSH -> CLI_RUN }
+    config {
+      command: "ssh"
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait TrainingStatus -> TrainingBoard [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No training board read yet." })
+      TRAINING_LOAD -> idle when (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs))
+        (emit TRAINING_BOARD { instances: @entity.instances, fetchedAt: @entity.fetchedAt })
+      TRAINING_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
+        (set @entity.loading true)
+        (set @entity.startedAt @now)
+        (set @entity.found [])
+        (set @entity.collected [])
+        (set @entity.cursor 0)
+        (set @entity.noText (object/fromEntries (array/take [["", ""]] 0)))
+        (set @entity.noGpu (json/parse "{}" TrGpuMap))
+        (set @entity.noProcess (json/parse "{}" TrProcessMap))
+        (set @entity.noMetrics (object/fromEntries (array/take [["", 0]] 0)))
+        (emit TR_AWS { stage: "list", argv: ["ec2", "describe-instances", "--region", @config.region, "--filters", "Name=instance-state-name,Values=running", (str/concat "Name=instance-type,Values=" (str/join @config.instanceTypes ",")), "--query", "Reservations[].Instances[].{Id:InstanceId,Type:InstanceType,IP:PublicIpAddress,Launch:LaunchTime}", "--output", "json"] })
+      TRAINING_REFRESH -> reading
+        (set @entity.loading true)
+        (set @entity.startedAt @now)
+        (set @entity.found [])
+        (set @entity.collected [])
+        (set @entity.cursor 0)
+        (set @entity.noText (object/fromEntries (array/take [["", ""]] 0)))
+        (set @entity.noGpu (json/parse "{}" TrGpuMap))
+        (set @entity.noProcess (json/parse "{}" TrProcessMap))
+        (set @entity.noMetrics (object/fromEntries (array/take [["", 0]] 0)))
+        (emit TR_AWS { stage: "list", argv: ["ec2", "describe-instances", "--region", @config.region, "--filters", "Name=instance-state-name,Values=running", (str/concat "Name=instance-type,Values=" (str/join @config.instanceTypes ",")), "--query", "Reservations[].Instances[].{Id:InstanceId,Type:InstanceType,IP:PublicIpAddress,Launch:LaunchTime}", "--output", "json"] })
+    }
+
+    state reading {
+      INIT -> reading
+      TRAINING_LOAD -> reading
+      TRAINING_REFRESH -> reading
+
+      TR_RAN -> reading when (= @payload.stage "list")
+        (set @entity.found (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout TrListing) (fn i { instanceId: @i.Id, instanceType: @i.Type, publicIp: (or @i.IP ""), launchTime: @i.Launch })) []))
+        (set @entity.cursor 0)
+        (emit TR_NEXT { })
+      TR_CLI_FAILED -> reading when (= @payload.stage "list")
+        (set @entity.cursor 0)
+        (emit TR_NEXT { })
+      TR_NEXT -> reading when (and (< @entity.cursor (array/len @entity.found)) (!= (object/get (array/nth @entity.found @entity.cursor) "publicIp" "") ""))
+        (emit TR_SSH { stage: "visit", argv: ["-i", @config.sshKey, "-o", "ConnectTimeout=5", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", "-l", @config.sshUser, (object/get (array/nth @entity.found @entity.cursor) "publicIp" ""), (str/concat "echo \"===GPU===\"; nvidia-smi --query-gpu=name,temperature.gpu,memory.used,memory.total,utilization.gpu --format=csv,noheader 2>/dev/null || echo \"N/A\"; echo \"===PROCESS===\"; ps aux | grep -E \"" @config.processPattern "\" | grep -v grep | head -1 || echo \"NONE\"; echo \"===UPTIME===\"; uptime -p 2>/dev/null || uptime; echo \"===LOG===\"; " (str/join (array/map @config.logPaths (fn p (str/concat "tail -" @config.logLines " " @p " 2>/dev/null"))) " || ") " || echo \"NO LOG\"")] })
+      TR_NEXT -> reading when (and (< @entity.cursor (array/len @entity.found)) (= (object/get (array/nth @entity.found @entity.cursor) "publicIp" "") ""))
+        (emit TR_SKIP { })
+      TR_SKIP -> reading
+        (set @entity.collected (array/append @entity.collected (let ((inst (array/nth @entity.found @entity.cursor)))
+          { instanceId: @inst.instanceId, instanceType: @inst.instanceType, publicIp: @inst.publicIp, launchTime: @inst.launchTime,
+            uptime: (array/nth (object/values (object/pick @entity.noText [(str/concat "x")])) 0),
+            gpu: (array/nth (object/values (object/pick @entity.noGpu [(str/concat "x")])) 0),
+            process: (array/nth (object/values (object/pick @entity.noProcess [(str/concat "x")])) 0),
+            epochs: [], logTail: [] })))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit TR_NEXT { })
+      TR_NEXT -> idle when (>= @entity.cursor (array/len @entity.found))
+        (set @entity.instances @entity.collected)
+        (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
+        (set @entity.cachedAt @now)
+        (set @entity.hasCache true)
+        (set @entity.loading false)
+        (emit TRAINING_BOARD { instances: @entity.instances, fetchedAt: @entity.fetchedAt })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat (array/len @entity.instances) " training instances.") })
+      TR_RAN -> reading when (= @payload.stage "visit")
+        (set @entity.collected (array/append @entity.collected (let ((inst (array/nth @entity.found @entity.cursor)) (out (if (= @payload.exitCode 0) (str/trim @payload.stdout) "")))
+          (let ((gpuText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "GPU"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (or (array/nth @parts (+ @at 1)) "")) "")))) (procText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "PROCESS"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (or (array/nth @parts (+ @at 1)) "")) "")))) (upText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "UPTIME"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (or (array/nth @parts (+ @at 1)) "")) "")))) (logText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "LOG"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (or (array/nth @parts (+ @at 1)) "")) "")))))
+            (let ((gpuParts (array/map (str/split @gpuText ",") (fn x (str/trim @x))))
+                  (cols (array/filter (str/split @procText " ") (fn c (!= @c ""))))
+                  (lines (if (and (!= @logText "") (!= @logText "NO LOG")) (str/split @logText "\n") (array/take [""] 0))))
+              { instanceId: @inst.instanceId, instanceType: @inst.instanceType, publicIp: @inst.publicIp, launchTime: @inst.launchTime,
+                uptime: (if (= @upText "") (array/nth (object/values (object/pick @entity.noText [(str/concat "x")])) 0) @upText),
+                gpu: (if (and (!= @gpuText "") (!= @gpuText "N/A") (>= (array/len @gpuParts) 5)) { name: (array/nth @gpuParts 0), temp: (str/to-number (array/nth (str/split (str/trim (array/nth @gpuParts 1)) " ") 0)), memoryUsed: (str/to-number (array/nth (str/split (str/trim (array/nth @gpuParts 2)) " ") 0)), memoryTotal: (str/to-number (array/nth (str/split (str/trim (array/nth @gpuParts 3)) " ") 0)), utilization: (str/to-number (array/nth (str/split (str/trim (array/nth @gpuParts 4)) " ") 0)) } (array/nth (object/values (object/pick @entity.noGpu [(str/concat "x")])) 0)),
+                process: (if (and (!= @procText "") (!= @procText "NONE") (>= (array/len @cols) 11)) { pid: (str/to-number (array/nth @cols 1)), cpu: (str/to-number (array/nth @cols 2)), memoryMb: (math/round (/ (str/to-number (array/nth @cols 5)) 1024) 0), elapsed: (array/nth @cols 9), command: (str/join (array/slice @cols 10) " ") } (array/nth (object/values (object/pick @entity.noProcess [(str/concat "x")])) 0)),
+                epochs: (array/flatten (array/map @lines (fn l (if (validate/pattern @l "Epoch\\s+\\d+\\s*\\|.+\\(\\d+(?:\\.\\d+)?s\\)") [(let ((afterPipe (str/join (array/slice (str/split @l "|") 1) "|")))
+            (let ((parts (str/split @afterPipe "(")))
+              { epoch: (str/to-number (str/trim (array/nth (str/split (array/nth (str/split @l "|") 0) "Epoch") (- (array/len (str/split (array/nth (str/split @l "|") 0) "Epoch")) 1)))),
+                metrics: (object/fromEntries (array/map (array/filter (str/split (str/trim (str/join (array/take @parts (- (array/len @parts) 1)) "(")) " ") (fn t (validate/pattern @t "^\\w+=[\\d.]+$"))) (fn t [(array/nth (str/split @t "=") 0), (str/to-number (array/nth (str/split @t "=") 1))]))),
+                time: (str/to-number (array/nth (str/split (array/nth @parts (- (array/len @parts) 1)) "s)") 0)),
+                isBest: (str/includes @l "*BEST*") }))] (if (validate/pattern @l "\\{(?:'[a-z_]+':\\s*'[\\d.e+-]+',?\\s*)+\\}") [(let ((dict (json/parse (str/replaceAll (let ((afterBrace (str/join (array/slice (str/split @l "{") 1) "{"))) (str/concat "{" (str/join (array/take (str/split @afterBrace "}") (- (array/len (str/split @afterBrace "}")) 1)) "}") "}")) "'" "\"") TrMetricText)))
+            (let ((metrics (object/fromEntries (array/map (object/entries @dict) (fn e [(array/nth @e 0), (str/to-number (array/nth @e 1))])))))
+              { epoch: (math/round (* (object/get @metrics "epoch" 0) 1000) 0), metrics: @metrics, time: 0, isBest: false }))] (array/take [{ epoch: 0, metrics: @entity.noMetrics, time: 0, isBest: false }] 0)))))),
+                logTail: (array/takeLast @lines @config.tailLines) })))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit TR_NEXT { })
+      TR_CLI_FAILED -> reading when (= @payload.stage "visit")
+        (set @entity.collected (array/append @entity.collected (let ((inst (array/nth @entity.found @entity.cursor)))
+          { instanceId: @inst.instanceId, instanceType: @inst.instanceType, publicIp: @inst.publicIp, launchTime: @inst.launchTime,
+            uptime: (array/nth (object/values (object/pick @entity.noText [(str/concat "x")])) 0),
+            gpu: (array/nth (object/values (object/pick @entity.noGpu [(str/concat "x")])) 0),
+            process: (array/nth (object/values (object/pick @entity.noProcess [(str/concat "x")])) 0),
+            epochs: [], logTail: [] })))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "ssh could not run: " @payload.error) })
+        (emit TR_NEXT { })
+    }
+
+    emits {
+      TRAINING_BOARD -> external {
+        instances : [TrInstance]!
+        fetchedAt : string!
+      }
+        @description "The training instances with their GPU, process, uptime, log tail and epochs, and when they were read."
+        @synonyms "training status, gpu instances, training progress"
+        @tier "primary"
+      TR_AWS {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: one aws run."
+        @tier "internal"
+      TR_SSH {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: one ssh run."
+        @tier "internal"
+      TR_NEXT -> internal { }
+        @description "Internal: visit the next instance, or answer."
+        @tier "internal"
+      TR_SKIP -> internal { }
+        @description "Internal: list an instance without a public address as it is."
+        @tier "internal"
+    }
+
+    listens {
+      TRAINING_LOAD -> external { }
+        @description "Answer the training board, from the cache while it is fresh."
+        @synonyms "show training"
+      TRAINING_REFRESH -> external { }
+        @description "Read the training board afresh."
+      TR_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "A std-cli CLI_DONE: one aws or ssh run exited."
+      TR_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "A std-cli CLI_FAILED: aws or ssh could not run."
+      TrAws.CLI_DONE -> TR_RAN
+      TrAws.CLI_FAILED -> TR_CLI_FAILED
+      TrSsh.CLI_DONE -> TR_RAN
+      TrSsh.CLI_FAILED -> TR_CLI_FAILED
+    }
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the board shows its one-line status."
+        @tier "presentation"
+      region : string = "us-east-1"
+        @description "The AWS region the training instances run in."
+        @tier "domain"
+      instanceTypes : [string] = []
+        @description "The instance-type filters a training instance matches, e.g. g5.*."
+        @tier "domain"
+      sshKey : string = ""
+        @description "The ssh identity file (ssh expands a leading ~)."
+        @tier "domain"
+      sshUser : string = "ubuntu"
+        @description "The user ssh logs in as."
+        @tier "domain"
+      processPattern : string = ""
+        @description "The extended regular expression (grep -E) the training process's ps line matches."
+        @tier "domain"
+      logPaths : [string] = []
+        @description "The training log files, in order; the first readable one is read."
+        @tier "domain"
+      logLines : number = 60
+        @description "Lines read from the end of the log."
+        @tier "domain"
+      tailLines : number = 30
+        @description "Lines of the log kept in the board."
+        @tier "domain"
+      cacheTtlMs : number = 30000
+        @description "Milliseconds a read board is answered without reading again."
+        @tier "infra"
+    }
+  }
+
+  page "/training-board" as TrainingBoardPage -> TrainingStatus, TrAws, TrSsh
+}

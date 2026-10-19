@@ -1,0 +1,348 @@
+app std-aws-board [
+  version: "1.0.0",
+  description: "std-aws-board — one AWS region of an account at a glance, read through the aws CLI (std-cli, with the host's PATH and HOME passed through so the CLI finds its credentials). AWS_LOAD answers AWS_BOARD from the cache within cacheTtlMs; AWS_REFRESH reads afresh; a load during a read is answered by that read. A read, in order: EC2 instances (each priced and specified from the catalog knob, null when its type is not in it; daily and monthly price at 24 and hoursPerMonth hours), EBS volumes (priced at ebsPerGbMonth, one rate for every volume type), the account's own images (snapshot rate), the S3 buckets whose name contains a bucketNameContains entry (object count and size from the CLI's summary), the security groups matching securityGroupFilter, key pairs, the roles whose name contains roleNameContains, the quotas knob's service quotas (a quota that counts running instances sums the catalog vCPUs of running instances of the gvtFamilies families, usedComplete false when one of them is not in the catalog), this month's cost per service (Cost Explorer, cents, highest first) and the EC2 instance types billed over the last historyDays days (hours and cost summed per type, types below minHistoryCost left out, highest first). runningHourlyCost sums the running instances' prices; estimatedMonthlyCost adds volumes, images, buckets and the running instances for hoursPerMonth. A part the CLI cannot read is empty.",
+  exec: ["aws"],
+  env: ["PATH", "HOME"]
+]
+uses Spec from "almadar-std/aws-board"
+type AwsCell = string | number
+type AwsCells = [[AwsCell]]
+type AwsInstanceRows = [[[string]]]
+type AwsStringRows = [[string]]
+type AwsRole = { RoleName : string, CreateDate : string }
+type AwsRoleRows = [AwsRole]
+type AwsMoney = { Amount : string, Unit : string }
+type AwsMetrics = { UnblendedCost : AwsMoney, UsageQuantity : AwsMoney }
+type AwsGroup = { Keys : [string], Metrics : AwsMetrics }
+type AwsBucketTime = { Groups : [AwsGroup] }
+type AwsCostReply = { ResultsByTime : [AwsBucketTime] }
+type AwsSpec = { vcpus : number, memoryGb : number, gpu : string, gpuCount : number, gpuMemoryGb : number, hourlyUsd : number }
+type AwsQuotaRef = { code : string, name : string, countsRunning : boolean }
+type AwsInstance = { instanceId : string, instanceType : string, state : string, name : string, launchTime : string, publicIp : string, az : string, vcpus : number, memoryGb : number, gpu : string, gpuCount : number, gpuMemoryGb : number, hourlyUsd : number, dailyUsd : number, monthlyUsd : number }
+type AwsVolume = { volumeId : string, size : number, state : string, volumeType : string, az : string, name : string, attachedTo : string, iops : number, monthlyCost : number }
+type AwsImage = { imageId : string, name : string, state : string, created : string, sizeGb : number, monthlyCost : number }
+type AwsBucket = { name : string, totalObjects : number, totalSizeMb : number, monthlyCost : number }
+type AwsSecurityGroup = { groupId : string, groupName : string, description : string }
+type AwsKeyPair = { keyName : string, keyId : string, created : string }
+type AwsIamRole = { roleName : string, created : string }
+type AwsQuota = { name : string, value : number, used : number, usedComplete : boolean }
+type AwsServiceCost = { service : string, cost : number, unit : string }
+type AwsTypeUsage = { instanceType : string, hours : number, rawCost : number, cost : number, vcpus : number, memoryGb : number, gpu : string, gpuCount : number }
+type AwsTypeRow = { instanceType : string, hours : number, cost : number, vcpus : number, memoryGb : number, gpu : string, gpuCount : number }
+type AwsOverview = { instances : [AwsInstance], volumes : [AwsVolume], amis : [AwsImage], s3Buckets : [AwsBucket], securityGroups : [AwsSecurityGroup], keyPairs : [AwsKeyPair], iamRoles : [AwsIamRole], quotas : [AwsQuota], costExplorer : [AwsServiceCost], costExplorerTotal : number, costExplorerPeriod : string, estimatedMonthlyCost : number, runningHourlyCost : number, instanceTypeHistory : [AwsTypeRow], instanceTypeHistoryDays : number, fetchedAt : string }
+orbital AwsBoardOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
+  entity AwsBoard [runtime] {
+    id : string!
+    board : AwsOverview @description "The board last answered."
+    cachedAt : number @description "Epoch milliseconds at which the board was cached." = 0
+    hasCache : boolean = false
+    loading : boolean @description "Whether a read is in flight." = false
+    startedAt : number @description "Epoch milliseconds at which the read in flight began." = 0
+    instances : [AwsInstance] = []
+    volumes : [AwsVolume] = []
+    amis : [AwsImage] = []
+    buckets : [string] @description "The buckets of the read in flight whose summary is read next." = []
+    s3Buckets : [AwsBucket] = []
+    securityGroups : [AwsSecurityGroup] = []
+    keyPairs : [AwsKeyPair] = []
+    iamRoles : [AwsIamRole] = []
+    quotas : [AwsQuota] = []
+    costExplorer : [AwsServiceCost] = []
+    history : [AwsTypeUsage] = []
+    cursor : number @description "Index of the bucket or quota being read." = 0
+  }
+
+  trait AwsCli = Cli.traits.CliRunner {
+    listens { AwsStatus.AWS_RUN -> CLI_RUN }
+    config {
+      command: "aws"
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait AwsStatus -> AwsBoard [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No AWS board read yet." })
+      AWS_LOAD -> idle when (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs))
+        (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
+      AWS_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
+        (set @entity.loading true)
+        (set @entity.startedAt @now)
+        (set @entity.instances [])
+        (set @entity.volumes [])
+        (set @entity.amis [])
+        (set @entity.buckets [])
+        (set @entity.s3Buckets [])
+        (set @entity.securityGroups [])
+        (set @entity.keyPairs [])
+        (set @entity.iamRoles [])
+        (set @entity.quotas [])
+        (set @entity.costExplorer [])
+        (set @entity.history [])
+        (set @entity.cursor 0)
+        (emit AWS_RUN { stage: "instances", argv: ["ec2", "describe-instances", "--query", "Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0],LaunchTime,PublicIpAddress,Placement.AvailabilityZone]", "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_REFRESH -> reading
+        (set @entity.loading true)
+        (set @entity.startedAt @now)
+        (set @entity.instances [])
+        (set @entity.volumes [])
+        (set @entity.amis [])
+        (set @entity.buckets [])
+        (set @entity.s3Buckets [])
+        (set @entity.securityGroups [])
+        (set @entity.keyPairs [])
+        (set @entity.iamRoles [])
+        (set @entity.quotas [])
+        (set @entity.costExplorer [])
+        (set @entity.history [])
+        (set @entity.cursor 0)
+        (emit AWS_RUN { stage: "instances", argv: ["ec2", "describe-instances", "--query", "Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0],LaunchTime,PublicIpAddress,Placement.AvailabilityZone]", "--output", "json", "--region", @config.region, "--output", "json"] })
+    }
+
+    state reading {
+      INIT -> reading
+      AWS_LOAD -> reading
+      AWS_REFRESH -> reading
+
+      AWS_RAN -> reading when (= @payload.stage "instances")
+        (set @entity.instances (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (array/flatten (json/parse @payload.stdout AwsInstanceRows)) (fn i (let ((t (or (array/nth @i 1) "")) (spec (array/nth (object/values (object/pick @config.catalog [(or (array/nth @i 1) "")])) 0))) { instanceId: (or (array/nth @i 0) ""), instanceType: @t, state: (or (array/nth @i 2) ""), name: (or (array/nth @i 3) ""), launchTime: (or (array/nth @i 4) ""), publicIp: (array/nth @i 5), az: (or (array/nth @i 6) ""), vcpus: (object/get @spec "vcpus" null), memoryGb: (object/get @spec "memoryGb" null), gpu: (object/get @spec "gpu" null), gpuCount: (object/get @spec "gpuCount" 0), gpuMemoryGb: (object/get @spec "gpuMemoryGb" 0), hourlyUsd: (object/get @spec "hourlyUsd" null), dailyUsd: (if (== @spec null) null (math/round (* @spec.hourlyUsd 24) 2)), monthlyUsd: (if (== @spec null) null (math/round (* @spec.hourlyUsd @config.hoursPerMonth) 2)) }))) []))
+        (emit AWS_RUN { stage: "volumes", argv: ["ec2", "describe-volumes", "--query", "Volumes[*].[VolumeId,Size,State,VolumeType,AvailabilityZone,Tags[?Key==`Name`].Value|[0],Attachments[0].InstanceId,Iops]", "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_CLI_FAILED -> reading when (= @payload.stage "instances")
+        (emit AWS_RUN { stage: "volumes", argv: ["ec2", "describe-volumes", "--query", "Volumes[*].[VolumeId,Size,State,VolumeType,AvailabilityZone,Tags[?Key==`Name`].Value|[0],Attachments[0].InstanceId,Iops]", "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_RAN -> reading when (= @payload.stage "volumes")
+        (set @entity.volumes (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsCells) (fn v (let ((size (or (array/nth @v 1) 0))) { volumeId: (str/concat (or (array/nth @v 0) "")), size: @size, state: (str/concat (or (array/nth @v 2) "")), volumeType: (str/concat (or (array/nth @v 3) "")), az: (str/concat (or (array/nth @v 4) "")), name: (str/concat (or (array/nth @v 5) "")), attachedTo: (if (== (array/nth @v 6) null) (array/nth @v 6) (str/concat (array/nth @v 6))), iops: (or (array/nth @v 7) 0), monthlyCost: (math/round (* @size @config.ebsPerGbMonth) 2) }))) []))
+        (emit AWS_RUN { stage: "images", argv: ["ec2", "describe-images", "--owners", "self", "--query", "Images[*].[ImageId,Name,State,CreationDate,BlockDeviceMappings[0].Ebs.VolumeSize]", "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_CLI_FAILED -> reading when (= @payload.stage "volumes")
+        (emit AWS_RUN { stage: "images", argv: ["ec2", "describe-images", "--owners", "self", "--query", "Images[*].[ImageId,Name,State,CreationDate,BlockDeviceMappings[0].Ebs.VolumeSize]", "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_RAN -> reading when (= @payload.stage "images")
+        (set @entity.amis (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsCells) (fn a (let ((size (or (array/nth @a 4) 0))) { imageId: (str/concat (or (array/nth @a 0) "")), name: (str/concat (or (array/nth @a 1) "")), state: (str/concat (or (array/nth @a 2) "")), created: (str/concat (or (array/nth @a 3) "")), sizeGb: @size, monthlyCost: (math/round (* @size @config.snapshotPerGbMonth) 2) }))) []))
+        (emit AWS_RUN { stage: "s3", argv: ["s3", "ls", "--region", @config.region, "--output", "json"] })
+      AWS_CLI_FAILED -> reading when (= @payload.stage "images")
+        (emit AWS_RUN { stage: "s3", argv: ["s3", "ls", "--region", @config.region, "--output", "json"] })
+      AWS_RAN -> reading when (= @payload.stage "s3")
+        (set @entity.buckets (if (= @payload.exitCode 0) (array/filter (array/map (array/filter (str/split (str/trim @payload.stdout) "\n") (fn l (!= (str/trim @l) ""))) (fn l (let ((parts (array/filter (str/split (str/trim @l) " ") (fn p (!= @p ""))))) (array/nth @parts (- (array/len @parts) 1))))) (fn b (array/some @config.bucketNameContains (fn m (str/includes @b @m))))) []))
+        (set @entity.cursor 0)
+        (emit AWS_BUCKET_NEXT { })
+      AWS_CLI_FAILED -> reading when (= @payload.stage "s3")
+        (set @entity.cursor 0)
+        (emit AWS_BUCKET_NEXT { })
+      AWS_BUCKET_NEXT -> reading when (< @entity.cursor (array/len @entity.buckets))
+        (emit AWS_RUN { stage: "bucket", argv: ["s3", "ls", (str/concat "s3://" (array/nth @entity.buckets @entity.cursor) "/"), "--recursive", "--summarize", "--output", "text"] })
+      AWS_BUCKET_NEXT -> reading when (>= @entity.cursor (array/len @entity.buckets))
+        (emit AWS_RUN { stage: "security-groups", argv: ["ec2", "describe-security-groups", "--filters", (str/concat "Name=group-name,Values=" @config.securityGroupFilter), "--query", "SecurityGroups[*].[GroupId,GroupName,Description]", "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_RAN -> reading when (= @payload.stage "bucket")
+        (set @entity.s3Buckets (array/append @entity.s3Buckets (let ((tail (let ((ls (str/split @payload.stdout "\n"))) (let ((ls2 (if (= (array/nth @ls (- (array/len @ls) 1)) "") (array/take @ls (- (array/len @ls) 1)) @ls))) (array/takeLast @ls2 2)))))
+          (let ((objects (array/reduce @tail 0 (fn acc l (if (str/includes @l "Total Objects:") (str/to-number (str/trim (array/nth (str/split @l "Total Objects:") 1))) @acc))))
+                (bytes (array/reduce @tail 0 (fn acc l (if (str/includes @l "Total Size:") (str/to-number (str/trim (array/nth (str/split @l "Total Size:") 1))) @acc)))))
+            { name: (array/nth @entity.buckets @entity.cursor), totalObjects: @objects, totalSizeMb: (math/round (/ (/ @bytes 1024) 1024) 1), monthlyCost: (math/round (* (/ (math/round (/ (/ @bytes 1024) 1024) 1) 1024) @config.s3PerGbMonth) 2) }))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit AWS_BUCKET_NEXT { })
+      AWS_CLI_FAILED -> reading when (= @payload.stage "bucket")
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit AWS_BUCKET_NEXT { })
+      AWS_RAN -> reading when (= @payload.stage "security-groups")
+        (set @entity.securityGroups (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsStringRows) (fn g { groupId: (or (array/nth @g 0) ""), groupName: (or (array/nth @g 1) ""), description: (or (array/nth @g 2) "") })) []))
+        (emit AWS_RUN { stage: "key-pairs", argv: ["ec2", "describe-key-pairs", "--query", "KeyPairs[*].[KeyName,KeyPairId,CreateTime]", "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_CLI_FAILED -> reading when (= @payload.stage "security-groups")
+        (emit AWS_RUN { stage: "key-pairs", argv: ["ec2", "describe-key-pairs", "--query", "KeyPairs[*].[KeyName,KeyPairId,CreateTime]", "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_RAN -> reading when (= @payload.stage "key-pairs")
+        (set @entity.keyPairs (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsStringRows) (fn k { keyName: (or (array/nth @k 0) ""), keyId: (or (array/nth @k 1) ""), created: (or (array/nth @k 2) "") })) []))
+        (emit AWS_RUN { stage: "roles", argv: ["iam", "list-roles", "--query", (str/concat "Roles[?contains(RoleName, `" @config.roleNameContains "`)].{RoleName:RoleName,CreateDate:CreateDate}"), "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_CLI_FAILED -> reading when (= @payload.stage "key-pairs")
+        (emit AWS_RUN { stage: "roles", argv: ["iam", "list-roles", "--query", (str/concat "Roles[?contains(RoleName, `" @config.roleNameContains "`)].{RoleName:RoleName,CreateDate:CreateDate}"), "--output", "json", "--region", @config.region, "--output", "json"] })
+      AWS_RAN -> reading when (= @payload.stage "roles")
+        (set @entity.iamRoles (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout AwsRoleRows) (fn r { roleName: @r.RoleName, created: @r.CreateDate })) []))
+        (set @entity.cursor 0)
+        (emit AWS_QUOTA_NEXT { })
+      AWS_CLI_FAILED -> reading when (= @payload.stage "roles")
+        (set @entity.cursor 0)
+        (emit AWS_QUOTA_NEXT { })
+      AWS_QUOTA_NEXT -> reading when (< @entity.cursor (array/len @config.quotas))
+        (emit AWS_RUN { stage: "quota", argv: ["service-quotas", "get-service-quota", "--service-code", "ec2", "--quota-code", (object/get (array/nth @config.quotas @entity.cursor) "code" ""), "--query", "Quota.Value", "--output", "text", "--region", @config.region, "--output", "json"] })
+      AWS_QUOTA_NEXT -> reading when (>= @entity.cursor (array/len @config.quotas))
+        (emit AWS_RUN { stage: "cost", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "--group-by", "Type=DIMENSION,Key=SERVICE", "--region", @config.region, "--output", "json"] })
+      AWS_RAN -> reading when (and (= @payload.stage "quota") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))
+        (set @entity.quotas (array/append @entity.quotas (let ((q (array/nth @config.quotas @entity.cursor)))
+          { name: @q.name, value: (str/to-number (str/trim @payload.stdout)), used: (if @q.countsRunning (array/reduce (array/filter @entity.instances (fn i (and (= @i.state "running") (array/includes @config.gvtFamilies (array/nth (str/split @i.instanceType ".") 0))))) 0 (fn acc i (+ @acc (or @i.vcpus 0)))) 0), usedComplete: (or (not @q.countsRunning) (not (array/some (array/filter @entity.instances (fn i (and (= @i.state "running") (array/includes @config.gvtFamilies (array/nth (str/split @i.instanceType ".") 0))))) (fn i (== @i.vcpus null))))) })))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit AWS_QUOTA_NEXT { })
+      AWS_RAN -> reading when (and (= @payload.stage "quota") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit AWS_QUOTA_NEXT { })
+      AWS_CLI_FAILED -> reading when (= @payload.stage "quota")
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit AWS_QUOTA_NEXT { })
+      AWS_RAN -> reading when (= @payload.stage "cost")
+        (set @entity.costExplorer (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/sort (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime.0.Groups" []) (fn g { service: (or (array/nth (or @g.Keys []) 0) "Unknown"), cost: (math/round (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0")) 2), unit: (object/get @g "Metrics.UnblendedCost.Unit" "USD") })) "cost" "desc") []))
+        (emit AWS_RUN { stage: "history", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (- @entity.startedAt (* @config.historyDays 86400000)) "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "UsageQuantity", "--filter", (json/stringify { Dimensions: { Key: "SERVICE", Values: ["Amazon Elastic Compute Cloud - Compute"] } }), "--group-by", "Type=DIMENSION,Key=INSTANCE_TYPE", "--region", @config.region, "--output", "json"] })
+      AWS_CLI_FAILED -> reading when (= @payload.stage "cost")
+        (emit AWS_RUN { stage: "history", argv: ["ce", "get-cost-and-usage", "--time-period", (str/concat "Start=" (time/format (- @entity.startedAt (* @config.historyDays 86400000)) "YYYY-MM-DD") ",End=" (time/format @entity.startedAt "YYYY-MM-DD")), "--granularity", "MONTHLY", "--metrics", "UnblendedCost", "UsageQuantity", "--filter", (json/stringify { Dimensions: { Key: "SERVICE", Values: ["Amazon Elastic Compute Cloud - Compute"] } }), "--group-by", "Type=DIMENSION,Key=INSTANCE_TYPE", "--region", @config.region, "--output", "json"] })
+      AWS_RAN -> idle when (= @payload.stage "history")
+        (set @entity.history (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (let ((groups (array/filter (array/flatten (array/map (object/get (json/parse @payload.stdout AwsCostReply) "ResultsByTime" []) (fn b (or @b.Groups [])))) (fn g (and (!= (or (array/nth (or @g.Keys []) 0) "") "") (!= (array/nth @g.Keys 0) "NoInstanceType"))))))
+          (array/sort (array/filter (array/map (array/unique (array/map @groups (fn g (array/nth @g.Keys 0)))) (fn t (let ((gs (array/filter @groups (fn g (= (array/nth @g.Keys 0) @t)))) (spec (array/nth (object/values (object/pick @config.catalog [@t])) 0)))
+            { instanceType: @t, hours: (math/round (array/reduce @gs 0 (fn acc g (+ @acc (str/to-number (object/get @g "Metrics.UsageQuantity.Amount" "0"))))) 1), rawCost: (array/reduce @gs 0 (fn acc g (+ @acc (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0"))))), cost: (math/round (array/reduce @gs 0 (fn acc g (+ @acc (str/to-number (object/get @g "Metrics.UnblendedCost.Amount" "0"))))) 2), vcpus: (object/get @spec "vcpus" null), memoryGb: (object/get @spec "memoryGb" null), gpu: (object/get @spec "gpu" null), gpuCount: (object/get @spec "gpuCount" 0) }))) (fn h (>= @h.rawCost @config.minHistoryCost))) "cost" "desc")) []))
+        (let ((running (math/round (array/reduce (array/filter @entity.instances (fn i (= @i.state "running"))) 0 (fn acc i (+ @acc (or @i.hourlyUsd 0)))) 2)))
+          (set @entity.board {
+            instances: @entity.instances, volumes: @entity.volumes, amis: @entity.amis, s3Buckets: @entity.s3Buckets,
+            securityGroups: @entity.securityGroups, keyPairs: @entity.keyPairs, iamRoles: @entity.iamRoles, quotas: @entity.quotas,
+            costExplorer: @entity.costExplorer,
+            costExplorerTotal: (math/round (array/reduce @entity.costExplorer 0 (fn acc c (+ @acc @c.cost))) 2),
+            costExplorerPeriod: (time/format @entity.startedAt "YYYY-MM"),
+            estimatedMonthlyCost: (math/round (+ (+ (+ (array/reduce @entity.volumes 0 (fn acc v (+ @acc @v.monthlyCost))) (array/reduce @entity.amis 0 (fn acc a (+ @acc @a.monthlyCost)))) (array/reduce @entity.s3Buckets 0 (fn acc b (+ @acc @b.monthlyCost)))) (* @running @config.hoursPerMonth)) 2),
+            runningHourlyCost: @running,
+            instanceTypeHistory: (array/map @entity.history (fn h { instanceType: @h.instanceType, hours: @h.hours, cost: @h.cost, vcpus: @h.vcpus, memoryGb: @h.memoryGb, gpu: @h.gpu, gpuCount: @h.gpuCount })),
+            instanceTypeHistoryDays: @config.historyDays,
+            fetchedAt: (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z") }))
+        (set @entity.cachedAt @now)
+        (set @entity.hasCache true)
+        (set @entity.loading false)
+        (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat (array/len @entity.instances) " instances, est. $" @entity.board.estimatedMonthlyCost " a month.") })
+      AWS_CLI_FAILED -> idle when (= @payload.stage "history")
+        (set @entity.history [])
+        (let ((running (math/round (array/reduce (array/filter @entity.instances (fn i (= @i.state "running"))) 0 (fn acc i (+ @acc (or @i.hourlyUsd 0)))) 2)))
+          (set @entity.board {
+            instances: @entity.instances, volumes: @entity.volumes, amis: @entity.amis, s3Buckets: @entity.s3Buckets,
+            securityGroups: @entity.securityGroups, keyPairs: @entity.keyPairs, iamRoles: @entity.iamRoles, quotas: @entity.quotas,
+            costExplorer: @entity.costExplorer,
+            costExplorerTotal: (math/round (array/reduce @entity.costExplorer 0 (fn acc c (+ @acc @c.cost))) 2),
+            costExplorerPeriod: (time/format @entity.startedAt "YYYY-MM"),
+            estimatedMonthlyCost: (math/round (+ (+ (+ (array/reduce @entity.volumes 0 (fn acc v (+ @acc @v.monthlyCost))) (array/reduce @entity.amis 0 (fn acc a (+ @acc @a.monthlyCost)))) (array/reduce @entity.s3Buckets 0 (fn acc b (+ @acc @b.monthlyCost)))) (* @running @config.hoursPerMonth)) 2),
+            runningHourlyCost: @running,
+            instanceTypeHistory: (array/map @entity.history (fn h { instanceType: @h.instanceType, hours: @h.hours, cost: @h.cost, vcpus: @h.vcpus, memoryGb: @h.memoryGb, gpu: @h.gpu, gpuCount: @h.gpuCount })),
+            instanceTypeHistoryDays: @config.historyDays,
+            fetchedAt: (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z") }))
+        (set @entity.cachedAt @now)
+        (set @entity.hasCache true)
+        (set @entity.loading false)
+        (emit AWS_BOARD { instances: @entity.board.instances, volumes: @entity.board.volumes, amis: @entity.board.amis, s3Buckets: @entity.board.s3Buckets, securityGroups: @entity.board.securityGroups, keyPairs: @entity.board.keyPairs, iamRoles: @entity.board.iamRoles, quotas: @entity.board.quotas, costExplorer: @entity.board.costExplorer, costExplorerTotal: @entity.board.costExplorerTotal, costExplorerPeriod: @entity.board.costExplorerPeriod, estimatedMonthlyCost: @entity.board.estimatedMonthlyCost, runningHourlyCost: @entity.board.runningHourlyCost, instanceTypeHistory: @entity.board.instanceTypeHistory, instanceTypeHistoryDays: @entity.board.instanceTypeHistoryDays, fetchedAt: @entity.board.fetchedAt })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "The aws CLI could not run: " @payload.error) })
+    }
+
+    emits {
+      AWS_BOARD -> external {
+        instances : [AwsInstance]!
+        volumes : [AwsVolume]!
+        amis : [AwsImage]!
+        s3Buckets : [AwsBucket]!
+        securityGroups : [AwsSecurityGroup]!
+        keyPairs : [AwsKeyPair]!
+        iamRoles : [AwsIamRole]!
+        quotas : [AwsQuota]!
+        costExplorer : [AwsServiceCost]!
+        costExplorerTotal : number!
+        costExplorerPeriod : string!
+        estimatedMonthlyCost : number!
+        runningHourlyCost : number!
+        instanceTypeHistory : [AwsTypeRow]!
+        instanceTypeHistoryDays : number!
+        fetchedAt : string!
+      }
+        @description "The AWS board: instances, volumes, images, buckets, groups, keys, roles, quotas, the month's cost per service, billed instance types, the estimates and when it was read."
+        @synonyms "aws status, ec2 cost, aws board"
+        @tier "primary"
+      AWS_RUN {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Internal: one aws run."
+        @tier "internal"
+      AWS_BUCKET_NEXT -> internal { }
+        @description "Internal: summarize the next bucket, or move on."
+        @tier "internal"
+      AWS_QUOTA_NEXT -> internal { }
+        @description "Internal: read the next quota, or move on."
+        @tier "internal"
+    }
+
+    listens {
+      AWS_LOAD -> external { }
+        @description "Answer the AWS board, from the cache while it is fresh."
+        @synonyms "show aws, aws cost"
+      AWS_REFRESH -> external { }
+        @description "Read the AWS board afresh."
+        @synonyms "refresh aws"
+      AWS_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "A std-cli CLI_DONE: one aws run exited."
+      AWS_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "A std-cli CLI_FAILED: the aws CLI could not run."
+      AwsCli.CLI_DONE -> AWS_RAN
+      AwsCli.CLI_FAILED -> AWS_CLI_FAILED
+    }
+
+    config {
+      statusSlot : slot = main
+        @label "Status slot"
+        @description "Where the board shows its one-line status."
+        @synonyms "status area"
+        @tier "presentation"
+      region : string = "us-east-1"
+        @label "Region"
+        @description "The AWS region the board reads."
+        @tier "domain"
+      catalog : Map string AwsSpec = {}
+        @label "Instance catalog"
+        @description "Specs and on-demand hourly price per EC2 instance type."
+        @synonyms "instance types, prices"
+        @tier "domain"
+      ebsPerGbMonth : number = 0.08
+        @description "EBS price per GB-month, applied to every volume."
+        @tier "domain"
+      snapshotPerGbMonth : number = 0.05
+        @description "Snapshot price per GB-month, applied to every own image."
+        @tier "domain"
+      s3PerGbMonth : number = 0.023
+        @description "S3 Standard price per GB-month."
+        @tier "domain"
+      hoursPerMonth : number = 730
+        @description "Hours an always-on instance is billed per month."
+        @tier "domain"
+      bucketNameContains : [string] = []
+        @label "Buckets shown"
+        @description "A bucket is shown when its name contains one of these."
+        @synonyms "bucket filter"
+        @tier "domain"
+      securityGroupFilter : string = "*"
+        @description "The group-name filter the security groups are listed with."
+        @tier "domain"
+      roleNameContains : string = ""
+        @description "The text a listed role's name contains."
+        @tier "domain"
+      quotas : [AwsQuotaRef] = []
+        @label "Service quotas"
+        @description "The EC2 service quotas shown: code, name, and whether running G/VT instances count against it."
+        @tier "domain"
+      gvtFamilies : [string] = []
+        @description "The instance families the G and VT quotas cover."
+        @tier "domain"
+      historyDays : number = 90
+        @description "Days of billed instance-type history."
+        @tier "domain"
+      minHistoryCost : number = 0.005
+        @description "Billed instance types below this cost are left out of the history."
+        @tier "domain"
+      cacheTtlMs : number = 300000
+        @label "Cache window"
+        @description "Milliseconds a read board is answered without reading again."
+        @tier "infra"
+    }
+  }
+
+  page "/aws-board" as AwsBoardPage -> AwsStatus, AwsCli
+}
