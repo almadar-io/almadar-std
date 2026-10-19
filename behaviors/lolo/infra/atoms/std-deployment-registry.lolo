@@ -2,6 +2,7 @@ app std-deployment-registry [
   version: "1.0.0",
   description: "std-deployment-registry — the versioned deployments of named artifacts (an app, a package, a site). DEPLOY { artifact, activates, details } records the artifact's next deployment, numbered from 1 per artifact, with its details (the caller's own fields: a commit, a target, who published it); one that activates (it may serve) becomes the artifact's active deployment, one that does not (an export run elsewhere) is only kept in the history. The counter, the deployment row and the active pointer are written as one atomic batch, and two deploys racing for one number retry on the next one (up to the maxRetries knob). ROLLBACK { artifact, version } re-activates an earlier deployment that may serve; WITHDRAW { artifact } leaves nothing active and keeps the history; RESOLVE { artifact } answers the active deployment or that there is none; HISTORY { artifact } answers every deployment, oldest first."
 ]
+uses Spec from "almadar-std/deployment-registry"
 type DeploymentDetails = Map string (string | number)
 orbital DeploymentRegistryOrbital {
   entity Deployment [persistent: deployments] {

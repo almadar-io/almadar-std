@@ -1,8 +1,9 @@
 app std-cli [
   version: "1.0.0",
   exec: ["echo"],
-  description: "std-cli — runs one command-line program as a child process through os/spawn, os/read and os/wait. CLI_RUN carries the arguments and a stage name the caller uses to tell its runs apart; the atom pipes stdout and stderr, reads both to the end, waits for the exit and answers CLI_DONE with the stage, the exit code (-1 when a signal ended it), the signal and both streams as text. What a non-zero exit means is the caller's to decide. CLI_FAILED answers a run that could not be made: the child did not start (cli_spawn_failed), a read, close or wait failed (cli_host_failed), or another run is in flight (cli_busy); a cancel with nothing running answers cli_idle. CLI_CANCEL sends TERM to the running child; a cancel that arrives before the child has started is applied as soon as it starts. The command knob names the executable, matched exactly against the exec grant the composing program declares; the child runs with exactly the environment the run's env or else the env knob names, in the cwd knob's directory (the host's working directory when it is empty). A run may feed the child stdin bytes, which are written whole and closed before the output is read. With the binaryOutput knob on, stdout is answered as bytes only."
+  description: "std-cli — runs one command-line program as a child process through os/spawn, os/read and os/wait. CLI_RUN carries the arguments and a stage name the caller uses to tell its runs apart; the atom pipes stdout and stderr, reads both to the end, waits for the exit and answers CLI_DONE with the stage, the exit code (-1 when a signal ended it), the signal and both streams as text. What a non-zero exit means is the caller's to decide. CLI_FAILED answers a run that could not be made: the child did not start (cli_spawn_failed), a read, close or wait failed (cli_host_failed), or another run is in flight (cli_busy); a cancel with nothing running answers cli_idle. CLI_CANCEL sends TERM to the running child; a cancel that arrives before the child has started is applied as soon as it starts. The command knob names the executable, matched exactly against the exec grant the composing program declares; the child runs with exactly the environment the run's env or else the env knob names, with the passEnv knob's host variables added (read with os/getenv; the explicit env wins on a clash), in the cwd knob's directory (the host's working directory when it is empty). A run may feed the child stdin bytes, which are written whole and closed before the output is read. With the binaryOutput knob on, stdout is answered as bytes only."
 ]
+uses Spec from "almadar-std/cli"
 orbital CliOrbital {
   entity CliCall [runtime] {
     id : string!
@@ -19,6 +20,10 @@ orbital CliOrbital {
     hasStdin : boolean @description "The run in flight feeds the child bytes on stdin." = false
     stdin : bytes @description "The bytes the run in flight feeds the child on stdin." = ""
     inFd : number @description "Descriptor of the child's piped stdin." = 0
+    argv : [string] @description "The arguments of the run in flight." = []
+    baseEnv : Map string string @description "The run's env, or the env knob, for the run in flight." = {}
+    passed : Map string string @description "The passEnv variables read from the host for the run in flight." = {}
+    envCursor : number @description "Index of the next passEnv variable to read." = 0
   }
 
   trait CliRunner -> @rebindable CliCall [integration, instance] {
@@ -29,7 +34,7 @@ orbital CliOrbital {
         (set @entity.stage "")
       CLI_CANCEL -> idle
         (emit CLI_FAILED { stage: "" error: "nothing is running" code: "cli_idle" })
-      CLI_RUN -> running when (and (= @config.cwd "") (== @payload.stdin null))
+      CLI_RUN -> running
         (set @entity.stage @payload.stage)
         (set @entity.pid 0)
         (set @entity.out (bytes/from-string ""))
@@ -39,46 +44,34 @@ orbital CliOrbital {
         (set @entity.cancelRequested false)
         (set @entity.hasStdin (!= @payload.stdin null))
         (set @entity.stdin (or @payload.stdin (bytes/from-string "")))
-        (os/spawn @config.command @payload.argv { cwd: null env: (or @payload.env @config.env) stdin: "null" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
-      CLI_RUN -> running when (and (= @config.cwd "") (!= @payload.stdin null))
-        (set @entity.stage @payload.stage)
-        (set @entity.pid 0)
-        (set @entity.out (bytes/from-string ""))
-        (set @entity.err (bytes/from-string ""))
-        (set @entity.outDone false)
-        (set @entity.errDone false)
-        (set @entity.cancelRequested false)
-        (set @entity.hasStdin (!= @payload.stdin null))
-        (set @entity.stdin (or @payload.stdin (bytes/from-string "")))
-        (os/spawn @config.command @payload.argv { cwd: null env: (or @payload.env @config.env) stdin: "pipe" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
-      CLI_RUN -> running when (and (!= @config.cwd "") (== @payload.stdin null))
-        (set @entity.stage @payload.stage)
-        (set @entity.pid 0)
-        (set @entity.out (bytes/from-string ""))
-        (set @entity.err (bytes/from-string ""))
-        (set @entity.outDone false)
-        (set @entity.errDone false)
-        (set @entity.cancelRequested false)
-        (set @entity.hasStdin (!= @payload.stdin null))
-        (set @entity.stdin (or @payload.stdin (bytes/from-string "")))
-        (os/spawn @config.command @payload.argv { cwd: @config.cwd env: (or @payload.env @config.env) stdin: "null" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
-      CLI_RUN -> running when (and (!= @config.cwd "") (!= @payload.stdin null))
-        (set @entity.stage @payload.stage)
-        (set @entity.pid 0)
-        (set @entity.out (bytes/from-string ""))
-        (set @entity.err (bytes/from-string ""))
-        (set @entity.outDone false)
-        (set @entity.errDone false)
-        (set @entity.cancelRequested false)
-        (set @entity.hasStdin (!= @payload.stdin null))
-        (set @entity.stdin (or @payload.stdin (bytes/from-string "")))
-        (os/spawn @config.command @payload.argv { cwd: @config.cwd env: (or @payload.env @config.env) stdin: "pipe" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+        (set @entity.argv @payload.argv)
+        (set @entity.baseEnv (or @payload.env @config.env))
+        (set @entity.passed (object/fromEntries (array/take [["", ""]] 0)))
+        (set @entity.envCursor 0)
+        (emit CLI_ENV_NEXT { })
     }
 
     state running {
       INIT -> running
       CLI_RUN -> running
         (emit CLI_FAILED { stage: @payload.stage error: "another run is in flight" code: "cli_busy" })
+      CLI_ENV_NEXT -> running when (< @entity.envCursor (array/len @config.passEnv))
+        (os/getenv (array/nth @config.passEnv @entity.envCursor) { key: "getenv" emit: { success: CLI_ENV_READ failure: CLI_HOST_FAILED } })
+      CLI_ENV_READ -> running when (== @payload.value null)
+        (set @entity.envCursor (+ @entity.envCursor 1))
+        (emit CLI_ENV_NEXT { })
+      CLI_ENV_READ -> running when (!= @payload.value null)
+        (set @entity.passed (object/merge @entity.passed (object/fromEntries [[(array/nth @config.passEnv @entity.envCursor), @payload.value]])))
+        (set @entity.envCursor (+ @entity.envCursor 1))
+        (emit CLI_ENV_NEXT { })
+      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") (not @entity.hasStdin))
+        (os/spawn @config.command @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "null" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") @entity.hasStdin)
+        (os/spawn @config.command @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "pipe" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (!= @config.cwd "") (not @entity.hasStdin))
+        (os/spawn @config.command @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "null" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (!= @config.cwd "") @entity.hasStdin)
+        (os/spawn @config.command @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "pipe" stdout: "pipe" stderr: "pipe" } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
       CLI_CANCEL -> running when (> @entity.pid 0)
         (os/kill @entity.pid "TERM" { key: "kill" emit: { failure: CLI_HOST_FAILED } })
       CLI_CANCEL -> running when (= @entity.pid 0)
@@ -181,6 +174,15 @@ orbital CliOrbital {
       }
         @description "Internal: the os/spawn answer."
         @tier "internal"
+      CLI_ENV_NEXT -> internal {
+      }
+        @description "Internal: read the next passEnv variable, or start the child."
+        @tier "internal"
+      CLI_ENV_READ -> internal {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for one passEnv variable; value is absent when it is unset."
+        @tier "internal"
       CLI_STDIN_WRITTEN -> internal {
         bytes : number!
       }
@@ -238,8 +240,13 @@ orbital CliOrbital {
         @tier "domain"
       env : Map string string = {}
         @label "Environment"
-        @description "Environment variables the child runs with, e.g. HOME or PATH. The child inherits nothing else."
+        @description "Environment variables the child runs with, e.g. HOME or PATH. A run's own env replaces it; beyond it and passEnv the child inherits nothing."
         @synonyms "child environment, variables"
+        @tier "domain"
+      passEnv : [string] = []
+        @label "Host variables passed through"
+        @description "Names of host environment variables read with os/getenv before each run and added to the child's environment, e.g. PATH and HOME for a CLI that keeps its login under HOME. Each must be in the composing program's env grant; an unset one is left out, and one the run's env (or the env knob) also names keeps that value."
+        @synonyms "inherit env, host environment, pass through variables"
         @tier "domain"
     }
 

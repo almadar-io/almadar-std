@@ -8,32 +8,32 @@ A spec sits under the same folder path as the behavior it specs: the spec for `i
 
 | Spec | Satisfied by |
 |---|---|
-| `infra/approval-gate.lolo` | `std-approval-gate` |
+| `infra/approval-gate.lolo` | `std-approval-gate` (bound) |
 | `infra/audit-trail.lolo` | `std-audit-capture` |
 | `infra/timeout.lolo` | `std-timeout` |
-| `infra/retry.lolo` | `std-retry` |
+| `infra/retry.lolo` | `std-retry` (bound; composers that rename the trait, `std-webhook` and its realizations, owe it under their own name) |
 | `infra/api-keys.lolo` | `std-api-keys` |
 | `ml/label-capture.lolo` | `std-ml-label-capture` |
 | `ui/core/gallery.lolo` | `std-gallery` |
 | `infra/audit-entry.lolo` | any program with the audit row (`std-audit-capture`, `std-document-mgmt`) |
 | `infra/throttle.lolo` | `std-throttle` (bound; proves `open ⇒ suppressed = 0`) |
 | `infra/cooldown.lolo` | `std-cooldown` (bound; proves the remaining time is never negative) |
-| `infra/circuit-breaker.lolo` | `std-circuit-breaker` (not bound: `std-api-gateway` composes it under another trait name, G-ORB-378; holds when bound in a scratch copy) |
-| `infra/rate-limiter.lolo` | `std-rate-limiter` (not bound, same reason; holds when bound in a scratch copy) |
+| `infra/circuit-breaker.lolo` | `std-circuit-breaker` (bound; `std-api-gateway` owes it under its own trait name) |
+| `infra/rate-limiter.lolo` | `std-rate-limiter` (bound) |
 | `ui/game/score.lolo` | `std-score` (bound; score never negative) |
 | `infra/lifecycle.lolo` | `std-lifecycle` (bound; a dry run never reaches the writing state) |
-| `infra/data-import.lolo` | `std-data-import` (not bound: it fails `project-friday`'s foreign writer, G-ORB-378) |
-| `infra/analytics.lolo` | `std-analytics` (not bound: every composer renames the trait, G-ORB-378; holds when bound in a scratch copy, and changing the status vocabulary or the page path fails it) |
-| `infra/analytics-collector.lolo` | `std-analytics-collector` (not bound: its io realization imports the orbital, which prefixes trait names, G-ORB-378; holds when bound in a scratch copy, and dropping `AnalyticsStats` from the page fails it) |
-| `infra/cli.lolo` | `std-cli` (not bound: composers run it under their own trait name, G-ORB-378; holds when bound in a scratch copy, and moving the busy edge out of `running` fails it) |
-| `infra/dependency-audit.lolo` | `std-dependency-audit` (not bound: an orbital import prefixes its trait names, G-ORB-378; holds when bound in a scratch copy, and dropping the busy `AUDIT` edge in `auditing` fails it) |
-| `infra/infra-projection.lolo` | `std-infra-projection` (not bound: its composers import the orbital, which prefixes trait names, G-ORB-378; holds when bound in a scratch copy, and a page mounting another trait fails it) |
-| `infra/name-claim.lolo` | `std-name-claim` (not bound, as above; its entities are stated without `[persistent]` until `orb validate` counts `persist batch` writes, G-ORB-388) |
-| `infra/deployment-registry.lolo` | `std-deployment-registry` (not bound, as above; entities without `[persistent]` for the same reason, G-ORB-388) |
-| `infra/github.lolo` | `std-github` (not bound: `std-ci-status` composes its trait, which prefixes trait names, G-ORB-378; holds when bound in a scratch copy, and dropping `status` from `GITHUB_GRAPHQL_FAILED` fails it) |
-| `infra/ci-status.lolo` | `std-ci-status` (not bound: its realizations import the orbital, G-ORB-378; holds when bound in a scratch copy, and dropping the `CI_STATUS_REFRESH` edge in `loading` fails it) |
+| `infra/data-import.lolo` | `std-data-import` (bound; `project-friday` proves it) |
+| `infra/analytics.lolo` | `std-analytics` (bound; changing the status vocabulary or the page path fails it) |
+| `infra/analytics-collector.lolo` | `std-analytics-collector` (bound; dropping `AnalyticsStats` from the page fails it) |
+| `infra/cli.lolo` | `std-cli` (bound; moving the busy edge out of `running` fails it) |
+| `infra/dependency-audit.lolo` | `std-dependency-audit` (bound; dropping the busy `AUDIT` edge in `auditing` fails it) |
+| `infra/infra-projection.lolo` | `std-infra-projection` (bound; a page mounting another trait fails it) |
+| `infra/name-claim.lolo` | `std-name-claim` (bound; both entities `[persistent]`, written only through a `persist batch`; a batch that stops writing `NameHolder` fails it) |
+| `infra/deployment-registry.lolo` | `std-deployment-registry` (bound; all three entities `[persistent]`, written only through `persist batch`) |
+| `infra/github.lolo` | `std-github` (bound; dropping `status` from `GITHUB_GRAPHQL_FAILED` fails it) |
+| `infra/ci-status.lolo` | `std-ci-status` (bound; dropping the `CI_STATUS_REFRESH` edge in `loading` fails it) |
 
-One spec per atom: a spec binds to the whole program that imports it, so a spec covering two atoms fails until both are composed.
+One spec per atom: a spec binds to the whole program that imports it, so a spec covering two atoms fails until both are composed. A composer owes an atom's spec under its own names: a trait reference's rename, `events`, `linkedEntity` and `fields`, or an orbital import's prefix and remaps (`docs/Almadar_LOLO.md`, Specs).
 
 A spec states what the atom is, in the real syntax with every body left off: `expects entity X [persistent] { @key … @read none "…" }`, `expects trait T { state idle { E -> next }  emits { E { fields } } }`, `expects page "/p" -> T`. `orb validate` fails until each stated storage mode, mark, policy, state, edge, payload field and mounted trait exists, and a persistent entity is actually written and an emitted event actually fired. A spec may `uses` another spec and then owes both.
 

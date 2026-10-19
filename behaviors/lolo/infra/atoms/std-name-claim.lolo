@@ -2,6 +2,7 @@ app std-name-claim [
   version: "1.0.0",
   description: "std-name-claim — unique names that holders claim (a handle, a slug, a namespace). CLAIM_NAME { name, holder, keepHeld? } claims a name for a holder: a name is held by at most one holder and a holder holds one name, so claiming another releases the one it held; the first claim wins and a holder may claim its own name again. A name that does not match the namePattern knob is refused invalid, one the reserved knob lists reserved, one another holder holds taken, and moving off the held name when the caller says it must be kept (keepHeld) kept; NAME_CLAIM_FAILED carries the code, the name it concerns and a message using the label knob. The claim, the release of the old name and the holder's record are one atomic batch, and a name is claimed by creating its lock row under the name as id, so two holders racing for one name cannot both win. NAME_OF { holder } and HOLDER_OF { name } answer who holds what (empty when nobody)."
 ]
+uses Spec from "almadar-std/name-claim"
 orbital NameClaimOrbital {
   entity NameLock [persistent: name_locks] {
     id : string! @description "The claimed name."
