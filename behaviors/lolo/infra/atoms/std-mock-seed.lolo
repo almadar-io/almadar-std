@@ -1,0 +1,327 @@
+app std-mock-seed [
+  version: "1.0.0",
+  description: "std-mock-seed — one mock value per declared field. SAMPLE_VALUE answers email, url, phone, uuid, number, money and boolean fields; SAMPLE_TEXT, SAMPLE_IMAGE_URL and SAMPLE_DATE answer the string, image and date families. The index strategy derives the value from the row ordinal alone (the same ordinal always yields the same value); the seeded strategy asks the composed std-mock-random stream for the draw. CHECK_DEFAULT says whether a declared default is a claim about every row, PICK_CANDIDATE rotates a declared candidate list by row, RESOLVE_MOCK_DATE turns a relative offset (-2h, +3w) into a date against the stream clock (a fixed anchor for the index strategy), TYPE_MOCK reads a declared literal in its field's own type and TITLE_CASE makes a field name readable."
+]
+uses Spec from "almadar-std/mock-seed"
+uses Rand from "std/behaviors/std-mock-random"
+
+orbital MockSeedOrbital {
+  entity MockCell [runtime] {
+    id : string!
+    fieldType : string @description "The declared type of the field being sampled." = ""
+    fieldName : string @description "The field's name." = ""
+    entityName : string @description "The owning entity's name." = ""
+    declared : string @description "A declared default, mock literal or candidate list." = ""
+    index : number @description "The row ordinal, from 1." = 1
+    seeded : boolean @description "Whether the seeded strategy draws the value from the stream." = false
+    runtime : boolean @description "Whether the owning entity is a runtime singleton." = false
+    value : string @description "The last value answered." = ""
+    num : number @description "The last numeric value answered." = 0
+    honored : boolean @description "Whether the checked default is a claim about every row." = false
+    seed : number @description "The stream seed." = 42
+    state : number @description "The stream generator state." = 42
+    nowMs : number @description "Epoch milliseconds the stream's relative dates are drawn against." = 0
+    draws : [number] @description "The stream states of the last draw." = []
+    int : number @description "Last integer drawn." = 0
+    text : string @description "Last text drawn." = ""
+    ms : number @description "Last date drawn, epoch milliseconds." = 0
+  }
+
+  trait MockStream = Rand.traits.MockRandom -> MockCell {
+    listens {
+      MockSeed.DRAW_INT -> DRAW_INT
+      MockSeed.DRAW_BOOL -> DRAW_BOOL
+      MockSeed.DRAW_WORDS -> DRAW_WORDS
+      MockSeed.DRAW_EMAIL -> DRAW_EMAIL
+      MockSeed.DRAW_URL -> DRAW_URL
+      MockSeed.DRAW_PHONE -> DRAW_PHONE
+      MockSeed.DRAW_UUID -> DRAW_UUID
+      MockSeed.DRAW_STRADDLING_DATE -> DRAW_STRADDLING_DATE
+    }
+  }
+
+  trait MockSeed -> @rebindable MockCell [lifecycle, instance] {
+    initial: ready
+
+    state ready {
+      SAMPLE_VALUE -> ready when (and (not ?seeded) (= ?fieldType "email"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (str/concat (let ((s (str/lower (str/replace-pattern ?fieldName "[^A-Za-z0-9]" "")))) (if (= @s "") "value" @s)) @entity.index (str/slice "x@y" 1 2) "example.com"))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      SAMPLE_VALUE -> ready when (and (not ?seeded) (= ?fieldType "url"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (str/concat "https://example.com/" (let ((s (str/lower (str/replace-pattern ?fieldName "[^A-Za-z0-9]" "")))) (if (= @s "") "value" @s)) "/" @entity.index))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      SAMPLE_VALUE -> ready when (and (not ?seeded) (= ?fieldType "phone"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (str/concat "+1-555-" (str/padStart (str/concat "" (+ 1000 (math/mod @entity.index 9000))) 4 "0")))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      SAMPLE_VALUE -> ready when (and (not ?seeded) (= ?fieldType "uuid"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (str/concat "00000000-0000-4000-8000-" (str/join (array/map (array/reverse (array/range 12)) (fn k (str/slice "0123456789abcdef" (math/mod (math/floor (/ @entity.index (math/pow 16 @k))) 16) (+ (math/mod (math/floor (/ @entity.index (math/pow 16 @k))) 16) 1)))) "")))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      SAMPLE_VALUE -> ready when (and (not ?seeded) (or (= ?fieldType "number") (= ?fieldType "money")))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (str/concat "" (* @entity.index 10)))
+        (set @entity.num (* @entity.index 10))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      SAMPLE_VALUE -> ready when (and (not ?seeded) (= ?fieldType "boolean"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (if (= (math/mod @entity.index 2) 0) "true" "false"))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      SAMPLE_VALUE -> ready when (and ?seeded (= ?fieldType "email"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_EMAIL { })
+      SAMPLE_VALUE -> ready when (and ?seeded (= ?fieldType "url"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_URL { })
+      SAMPLE_VALUE -> ready when (and ?seeded (= ?fieldType "phone"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_PHONE { })
+      SAMPLE_VALUE -> ready when (and ?seeded (= ?fieldType "uuid"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_UUID { })
+      SAMPLE_VALUE -> ready when (and ?seeded (= ?fieldType "number"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_INT { min: 1, max: 250 })
+      SAMPLE_VALUE -> ready when (and ?seeded (= ?fieldType "money"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_INT { min: 10, max: 900 })
+      SAMPLE_VALUE -> ready when (and ?seeded (= ?fieldType "boolean"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_BOOL { })
+      SAMPLE_TEXT -> ready when (and (not ?seeded) true)
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (if (array/includes ["image", "imageurl", "image_url", "photo", "photourl", "photo_url", "avatar", "avatarurl", "avatar_url", "thumbnail", "thumbnailurl", "thumbnail_url", "picture", "pictureurl", "cover", "coverurl", "banner", "bannerurl"] (str/lower ?fieldName)) (str/concat "https://picsum.photos/seed/" (str/encode-uri-component (str/concat @entity.entityName "-" @entity.fieldName "-" @entity.index)) "/400/400") (str/concat (str/join (array/map (array/filter (str/split (str/replaceAll (str/replaceAll (str/join (array/map (str/split ?fieldName "") (fn c (if (and (!= @c (str/lower @c)) (= @c (str/upper @c))) (str/concat " " @c) @c))) "") "_" " ") "-" " ") " ") (fn w (!= @w ""))) (fn w (str/concat (str/upper (str/slice @w 0 1)) (str/slice @w 1 (str/len @w))))) " ") " " @entity.index)))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      SAMPLE_TEXT -> ready when (and ?seeded (array/includes ["image", "imageurl", "image_url", "photo", "photourl", "photo_url", "avatar", "avatarurl", "avatar_url", "thumbnail", "thumbnailurl", "thumbnail_url", "picture", "pictureurl", "cover", "coverurl", "banner", "bannerurl"] (str/lower ?fieldName)))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_INT { min: 0, max: 1000 })
+      SAMPLE_TEXT -> ready when (and ?seeded (not (array/includes ["image", "imageurl", "image_url", "photo", "photourl", "photo_url", "avatar", "avatarurl", "avatar_url", "thumbnail", "thumbnailurl", "thumbnail_url", "picture", "pictureurl", "cover", "coverurl", "banner", "bannerurl"] (str/lower ?fieldName))))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_WORDS { count: 2 })
+      SAMPLE_IMAGE_URL -> ready when (and (not ?seeded) true)
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (str/concat "https://picsum.photos/seed/" (str/encode-uri-component (str/concat @entity.entityName "-" @entity.fieldName "-" @entity.index)) "/400/400"))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      SAMPLE_IMAGE_URL -> ready when (and ?seeded true)
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_INT { min: 0, max: 1000 })
+      SAMPLE_DATE -> ready when (and (not ?seeded) (= ?fieldType "date"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (str/concat "2026-" (str/padStart (str/concat "" (+ (math/mod @entity.index 12) 1)) 2 "0") "-15"))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      SAMPLE_DATE -> ready when (and (not ?seeded) (!= ?fieldType "date"))
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (str/concat (str/concat "2026-" (str/padStart (str/concat "" (+ (math/mod @entity.index 12) 1)) 2 "0") "-15") "T00:00:00.000Z"))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      SAMPLE_DATE -> ready when (and ?seeded true)
+        (set @entity.fieldType ?fieldType)
+        (set @entity.fieldName ?fieldName)
+        (set @entity.entityName ?entityName)
+        (set @entity.index ?index)
+        (set @entity.seeded ?seeded)
+        (emit DRAW_STRADDLING_DATE { days: 120 })
+      CHECK_DEFAULT -> ready
+        (set @entity.runtime ?runtime)
+        (set @entity.honored (and ?hasDefault (or ?runtime (= ?kind "array") (= ?kind "object") (and (= ?kind "string") (if (= ?default "") (array/includes ?values "") (= (array/len ?values) 0))))))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      PICK_CANDIDATE -> ready
+        (set @entity.declared ?declared)
+        (set @entity.runtime ?runtime)
+        (set @entity.index ?index)
+        (set @entity.value (let ((c (array/filter (array/map (str/split ?declared ",") (fn p (str/trim @p))) (fn p (!= @p ""))))) (let ((o (if ?runtime 1 ?index))) (if (> (array/len @c) 1) (array/nth @c (math/mod (- @o 1) (array/len @c))) (str/concat (str/trim ?declared) "-" @o)))))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      RESOLVE_MOCK_DATE -> ready
+        (set @entity.declared ?declared)
+        (set @entity.fieldType ?fieldType)
+        (set @entity.seeded ?seeded)
+        (set @entity.value (let ((t (str/trim ?declared))) (let ((sign (str/slice @t 0 1))) (let ((unit (str/slice @t (- (str/len @t) 1) (str/len @t)))) (let ((digits (str/slice @t 1 (- (str/len @t) 1)))) (let ((valid (and (or (= @sign "-") (= @sign "+")) (array/includes ["m" "h" "d" "w"] @unit) (!= @digits "") (= (str/replace-pattern @digits "[0-9]" "") "")))) (if @valid (if (= ?fieldType "date") (time/format (+ (if ?seeded ?nowMs 1781481600000) (* (if (= @sign "-") -1 1) (str/to-number @digits) (if (= @unit "m") 60000 (if (= @unit "h") 3600000 (if (= @unit "d") 86400000 604800000))))) "YYYY-MM-DD") (str/concat (time/format (+ (if ?seeded ?nowMs 1781481600000) (* (if (= @sign "-") -1 1) (str/to-number @digits) (if (= @unit "m") 60000 (if (= @unit "h") 3600000 (if (= @unit "d") 86400000 604800000))))) "YYYY-MM-DD") "T" (time/format (+ (if ?seeded ?nowMs 1781481600000) (* (if (= @sign "-") -1 1) (str/to-number @digits) (if (= @unit "m") 60000 (if (= @unit "h") 3600000 (if (= @unit "d") 86400000 604800000))))) "HH:mm:ss") "." (str/padStart (str/concat "" (math/mod (math/floor (+ (if ?seeded ?nowMs 1781481600000) (* (if (= @sign "-") -1 1) (str/to-number @digits) (if (= @unit "m") 60000 (if (= @unit "h") 3600000 (if (= @unit "d") 86400000 604800000)))))) 1000)) 3 "0") "Z")) ?declared)))))))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      TYPE_MOCK -> ready
+        (set @entity.fieldType ?fieldType)
+        (set @entity.declared ?declared)
+        (set @entity.value ?declared)
+        (set @entity.num (if (and (or (= ?fieldType "number") (= ?fieldType "money")) (!= (str/trim ?declared) "") (= (str/replace-pattern (str/trim ?declared) "^-?[0-9]+([.][0-9]+)?$" "") "")) (str/to-number (str/trim ?declared)) @entity.num))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      TITLE_CASE -> ready
+        (set @entity.fieldName ?fieldName)
+        (set @entity.value (str/join (array/map (array/filter (str/split (str/replaceAll (str/replaceAll (str/join (array/map (str/split ?fieldName "") (fn c (if (and (!= @c (str/lower @c)) (= @c (str/upper @c))) (str/concat " " @c) @c))) "") "_" " ") "-" " ") " ") (fn w (!= @w ""))) (fn w (str/concat (str/upper (str/slice @w 0 1)) (str/slice @w 1 (str/len @w))))) " "))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      MOCK_DRAWN -> ready when (and (= @entity.fieldType "string") (not (array/includes ["image", "imageurl", "image_url", "photo", "photourl", "photo_url", "avatar", "avatarurl", "avatar_url", "thumbnail", "thumbnailurl", "thumbnail_url", "picture", "pictureurl", "cover", "coverurl", "banner", "bannerurl"] (str/lower @entity.fieldName))))
+        (set @entity.value (str/titleCase @payload.text))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      MOCK_DRAWN -> ready when (or (= @entity.fieldType "string") (= @entity.fieldType "image"))
+        (set @entity.value (str/concat "https://picsum.photos/seed/" (str/encode-uri-component (str/concat @entity.entityName "-" @entity.fieldName "-" @payload.int)) "/400/400"))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      MOCK_DRAWN -> ready when (or (= @entity.fieldType "number") (= @entity.fieldType "money"))
+        (set @entity.num @payload.int)
+        (set @entity.value (str/concat "" @payload.int))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      MOCK_DRAWN -> ready when (= @entity.fieldType "boolean")
+        (set @entity.value (if (= @payload.int 1) "true" "false"))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      MOCK_DRAWN -> ready when (= @entity.fieldType "date")
+        (set @entity.value (time/format @payload.ms "YYYY-MM-DD"))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      MOCK_DRAWN -> ready when (or (= @entity.fieldType "datetime") (= @entity.fieldType "timestamp"))
+        (set @entity.value (str/concat (time/format @payload.ms "YYYY-MM-DD") "T" (time/format @payload.ms "HH:mm:ss") "." (str/padStart (str/concat "" (math/mod (math/floor @payload.ms) 1000)) 3 "0") "Z"))
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+      MOCK_DRAWN -> ready
+        (set @entity.value @payload.text)
+        (emit MOCK_VALUE { value: @entity.value, num: @entity.num })
+    }
+
+    emits {
+      MOCK_DRAWN -> external {
+        text : string
+        int : number
+        ms : number
+      }
+        @description "The composed stream answered a draw."
+      DRAW_INT -> external {
+        min : number
+        max : number
+      }
+        @description "Ask the stream for an integer."
+      DRAW_BOOL -> external { }
+        @description "Ask the stream for a boolean."
+      DRAW_WORDS -> external {
+        count : number
+      }
+        @description "Ask the stream for corpus words."
+      DRAW_EMAIL -> external { }
+        @description "Ask the stream for an email address."
+      DRAW_URL -> external { }
+        @description "Ask the stream for a URL."
+      DRAW_PHONE -> external { }
+        @description "Ask the stream for a phone number."
+      DRAW_UUID -> external { }
+        @description "Ask the stream for a uuid."
+      DRAW_STRADDLING_DATE -> external {
+        days : number
+      }
+        @description "Ask the stream for a date around now."
+      MOCK_VALUE -> external {
+        value : string
+        num : number
+      }
+        @description "A mock value was synthesized."
+        @synonyms "sample, seed value"
+        @tier "domain"
+    }
+
+    listens {
+      SAMPLE_VALUE { fieldType : string!  fieldName : string!  entityName : string!  index : number!  seeded : boolean! }
+        @description "Synthesize one value for an email, url, phone, uuid, number, money or boolean field."
+        @synonyms "mock value"
+      SAMPLE_TEXT { fieldType : string!  fieldName : string!  entityName : string!  index : number!  seeded : boolean! }
+        @description "Synthesize display text: a photo URL for an image-named field, else the title-cased name and the ordinal."
+        @synonyms "mock text"
+      SAMPLE_IMAGE_URL { fieldType : string!  fieldName : string!  entityName : string!  index : number!  seeded : boolean! }
+        @description "Synthesize a stock-photo URL."
+        @synonyms "mock image"
+      SAMPLE_DATE { fieldType : string!  fieldName : string!  entityName : string!  index : number!  seeded : boolean! }
+        @description "Synthesize a date, or a datetime for any other field type."
+        @synonyms "mock date"
+      CHECK_DEFAULT { hasDefault : boolean!  kind : string!  default : string!  values : [string]!  runtime : boolean! }
+        @description "Decide whether a declared default is honored verbatim."
+        @synonyms "default honored"
+      PICK_CANDIDATE { declared : string!  index : number!  runtime : boolean! }
+        @description "Rotate a comma-separated candidate list by row, or suffix a single literal with the ordinal."
+        @synonyms "mock candidate"
+      RESOLVE_MOCK_DATE { declared : string!  fieldType : string!  seeded : boolean!  nowMs : number! }
+        @description "Resolve a relative mock date against the stream clock or the fixed index anchor."
+        @synonyms "relative date"
+      TYPE_MOCK { fieldType : string!  declared : string! }
+        @description "Read a declared literal in its field's own type."
+        @synonyms "typed mock"
+      TITLE_CASE { fieldName : string! }
+        @description "Turn a camelCase or snake_case name into title-cased words."
+        @synonyms "readable name"
+      MockStream.MOCK_DRAWN -> MOCK_DRAWN
+    }
+  }
+
+  page "/mock-seed" as MockSeedPage -> MockSeed, MockStream
+}

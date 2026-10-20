@@ -1,0 +1,126 @@
+app std-api-key-verifier [
+  version: "1.0.0",
+  description: "std-api-key-verifier — decides whether a presented bearer is a live API key. VERIFY_KEY { token } refuses a bearer without the key prefix (not-a-key), hashes the rest with scrypt (N 16384, r 8, p 1, 32 bytes, hex) over the salt credential exactly as std-api-keys minted it, and looks the row up by that hash: no row is unknown, a revoked row revoked, a row whose expiresAt is positive and not after now expired. A salt that is missing or not non-empty hex refuses salt. A live key answers API_KEY_VERIFIED { owner, claims }: the row's owner acts, and claims is the row's remaining fields (everything but id, owner, revoked, expiresAt) as name/value pairs. A row that names no owner refuses lookup. The key itself is never stored or emitted."
+]
+uses Spec from "almadar-std/api-key-verifier"
+type KeyClaim = { name : string!, value : string! }
+orbital ApiKeyVerifierOrbital {
+  type VERIFY_KEY = Event { token : string! } "Verify one presented bearer."
+
+  entity ApiKeyRecord [persistent: api_keys] {
+    id : string! @description "The key's scrypt hash: what a presented bearer is looked up by."
+    lastFour : string @description "The key's last four characters." = ""
+    label : string @description "A name the owner gave the key." = ""
+    owner : string @description "Who the key acts as." = ""
+    revoked : boolean @description "Whether the key has been revoked and no longer works." = false
+    expiresAt : number @description "When the key stops working, in epoch milliseconds; 0 means never." = 0
+  }
+
+  entity ApiKeyCheck [runtime] {
+    id : string!
+    keyHash : string @description "The hash of the bearer being verified." = ""
+  }
+
+  trait ApiKeyVerifier -> ApiKeyCheck [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      VERIFY_KEY -> idle when (!= (str/slice @payload.token 0 (str/len @config.prefix)) @config.prefix)
+        (emit API_KEY_REFUSED { reason: "not-a-key", message: "not an API key" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+      VERIFY_KEY -> looking when (= (str/slice @payload.token 0 (str/len @config.prefix)) @config.prefix)
+        (let ((hashed (hash/scrypt @payload.token @config.salt)))
+          (if (= @hashed null)
+            (emit SALT_UNUSABLE {})
+            (do
+              (set @entity.keyHash @hashed)
+              (fetch ApiKeyRecord { id: @hashed, emit: { success: KEY_FOUND, failure: KEY_ABSENT } }))))
+    }
+
+    state looking {
+      INIT -> idle
+
+      SALT_UNUSABLE -> idle
+        (emit API_KEY_REFUSED { reason: "salt", message: "the API key salt must be non-empty hex" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+      KEY_ABSENT -> idle when (= @payload.code "not-found")
+        (emit API_KEY_REFUSED { reason: "unknown", message: "unknown API key" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+      KEY_ABSENT -> idle when (!= @payload.code "not-found")
+        (emit API_KEY_REFUSED { reason: "lookup", message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+      KEY_FOUND -> idle when (= (or @payload.data.owner "") "")
+        (emit API_KEY_REFUSED { reason: "lookup", message: (str/concat "the API key row " @entity.keyHash " names no owner") })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+      KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (= @payload.data.revoked true))
+        (emit API_KEY_REFUSED { reason: "revoked", message: "revoked API key" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+      KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (!= @payload.data.revoked true) (> (or @payload.data.expiresAt 0) 0) (<= (or @payload.data.expiresAt 0) @now))
+        (emit API_KEY_REFUSED { reason: "expired", message: "expired API key" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "API key refused" })
+      KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (!= @payload.data.revoked true) (not (and (> (or @payload.data.expiresAt 0) 0) (<= (or @payload.data.expiresAt 0) @now))))
+        (emit API_KEY_VERIFIED { owner: @payload.data.owner, claims: (array/map (object/entries (object/omit @payload.data ["id", "owner", "revoked", "expiresAt"])) (fn e { name: (array/nth @e 0), value: (str/concat (array/nth @e 1)) })) })
+    }
+
+    emits {
+      API_KEY_VERIFIED -> external {
+        owner : string!
+        claims : [KeyClaim]!
+      }
+        @description "The bearer is a live API key; owner is who it acts as and claims the row's remaining fields as name/value pairs."
+        @synonyms "api key verified, key accepted"
+        @tier "primary"
+      API_KEY_REFUSED -> external {
+        reason : "not-a-key" | "salt" | "lookup" | "unknown" | "revoked" | "expired"
+        message : string!
+      }
+        @description "The bearer was not accepted as an API key, and why."
+        @synonyms "api key refused, key rejected"
+        @tier "primary"
+      SALT_UNUSABLE
+        @description "Internal: the salt credential is missing or not hex, so no hash was made."
+        @tier "secondary"
+      KEY_FOUND {
+        data : ApiKeyRecord!
+      }
+        @description "Internal: the key row exists."
+        @tier "secondary"
+      KEY_ABSENT {
+        error : string
+        code : string
+      }
+        @description "Internal: no key row, or the store failed."
+        @tier "secondary"
+    }
+
+    listens {
+      VERIFY_KEY {
+        token : string!
+      }
+        @description "Verify one presented bearer."
+        @synonyms "verify api key, check key"
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a refused key; a page running it in the background keeps it in `system`."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      salt : secret = "ALMADAR_API_KEY_SALT"
+        @label "Hash salt"
+        @description "Name of the credential holding the hex salt keys are hashed with; the same one std-api-keys minted them with."
+        @synonyms "api key salt, hashing salt"
+        @tier "infra"
+      prefix : string = "sk_live_"
+        @label "Key prefix"
+        @description "What every key starts with; a bearer without it is not a key."
+        @synonyms "key prefix, bearer prefix"
+        @tier "infra"
+    }
+  }
+
+  page "/key-verify" as ApiKeyVerifierPage -> ApiKeyVerifier
+}

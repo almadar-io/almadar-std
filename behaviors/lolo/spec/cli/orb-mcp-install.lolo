@@ -1,0 +1,14 @@
+app orb-mcp-install-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb mcp install --client claude|cursor|vscode`: register the `orb` MCP server in the working directory's project config (claude: .mcp.json, cursor: .cursor/mcp.json, vscode: .vscode/mcp.json) and print `Registered `orb mcp` in <path>`. The entry runs `npx -y @almadar/orb mcp` (the vscode entry also carries type stdio) under `mcpServers` (claude, cursor) or `servers` (vscode). Every other entry and every other key of an existing config is kept as it was; a config that is not a JSON object, or a servers key that is not an object, is left unchanged and answered with its path (status 500, exit 1); the parent directory is created when missing. A missing or unknown --client, or any further word, is a usage error (exit 2). The installed language is then checked and a failure only warns, naming the fix."
+]
+
+orbital OrbMcpInstallSpec {
+  expects trait OrbMcpInstall {
+    state ready
+    emits {
+      MCP_INSTALL_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-mcp-install" -> OrbMcpInstall
+}

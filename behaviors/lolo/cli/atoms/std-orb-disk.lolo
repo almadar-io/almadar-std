@@ -1,0 +1,171 @@
+app std-orb-disk [
+  version: "1.0.0",
+  inbound: ["cli-disk"],
+  exec: ["df", "du"],
+  env: ["HOME", "PATH"],
+  description: "std-orb-disk — the `orb disk` command. It reports what fills the disk on a machine working the monorepo: the volume line from `df -k /System/Volumes/Data`, then one row per item of the items knob (a home or working-directory path set sized by `du -sk`), largest first, each `<size> <tag> <id> <label>` with tag safe, cost, danger or keep, and a closing `safe batch: ~<size>` line (status 200, exit 0). `--json` answers the same as one DiskReport record. Any other argument answers the usage (status 400, exit 2); a df or du that cannot run answers `<code>: <message>` (status 500, exit 1). Read-only: the clear actions of the tool and the items that need a directory walk (target/, node_modules, .turbo, .venv, temp sessions) are not ported yet. The probes are two std-cli runners (df, du); no fs grant is declared because the children, not the program, read the paths."
+]
+uses Spec from "almadar-std/orb-disk"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type DiskSpec = { id : string!, label : string!, tag : string!, paths : [string]! }
+type DiskSize = { path : string!, kb : number! }
+type DiskItem = { id : string!, label : string!, tag : string!, bytes : number! }
+type DiskReport = { totalBytes : number!, usedBytes : number!, freeBytes : number!, usePct : number!, items : [DiskItem]! }
+
+orbital OrbDiskOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
+  entity OrbDiskRun [runtime] {
+    id : string!
+    home : string = ""
+    cwd : string = ""
+    json : boolean = false
+    totalBytes : number = 0
+    usedBytes : number = 0
+    freeBytes : number = 0
+    usePct : number = 0
+    sizes : [DiskSize] = []
+    items : [DiskItem] = []
+  }
+
+  trait DiskDf = Cli.traits.CliRunner {
+    listens {
+      OrbDisk.DISK_DF_RUN -> CLI_RUN
+    }
+    config {
+      command: "df"
+      passEnv: ["PATH"]
+    }
+  }
+
+  trait DiskDu = Cli.traits.CliRunner {
+    listens {
+      OrbDisk.DISK_DU_RUN -> CLI_RUN
+    }
+    config {
+      command: "du"
+      passEnv: ["PATH"]
+    }
+  }
+
+  trait OrbDisk -> OrbDiskRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      DISK_CALLED -> ready when (and (> (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0) (!= (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "--json"))
+        (emit DISK_ANSWERED { status: 400, body: "usage: orb disk [--json]" })
+      DISK_CALLED -> ready when (> (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit DISK_ANSWERED { status: 400, body: "usage: orb disk [--json]" })
+      DISK_CALLED -> measuring when (<= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (set @entity.json (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (os/getenv "HOME" { key: "home" emit: { success: DISK_HOME failure: DISK_HOST_FAILED } })
+    }
+
+    state measuring {
+      INIT -> measuring
+      DISK_HOME -> measuring
+        (set @entity.home @payload.value)
+        (emit DISK_DF_RUN { stage: "df", argv: ["-k", @config.volume] })
+      DiskDf_DONE -> measuring
+        (set @entity.totalBytes (* 1024 (str/to-number (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l "")))) ) "\\s+" " ") " ") 1))))
+        (set @entity.usedBytes (* 1024 (str/to-number (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 2))))
+        (set @entity.freeBytes (* 1024 (str/to-number (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 3))))
+        (set @entity.usePct (str/to-number (str/replace (array/nth (str/split (str/replace-pattern (str/trim (array/last (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))))) "\\s+" " ") " ") 4) "%" "")))
+        (emit DISK_DU_RUN { stage: "du", argv: (array/concat ["-sk", "--"] (array/flatten (array/map @config.items (fn it (array/map (object/get @it "paths") (fn p (if (str/startsWith @p "~/") (str/concat @entity.home (str/slice @p 1 (str/len @p))) (str/concat @entity.cwd "/" (str/slice @p 2 (str/len @p)))))))))) })
+      DiskDu_DONE -> measuring
+        (set @entity.sizes (array/map (array/filter (str/split @payload.stdout "\n") (fn l (!= @l ""))) (fn l { path: (array/nth (str/split @l "\t") 1), kb: (str/to-number (array/first (str/split @l "\t"))) })))
+        (set @entity.items (array/sort (array/map @config.items (fn it { id: (object/get @it "id"), label: (object/get @it "label"), tag: (object/get @it "tag"), bytes: (* 1024 (array/sum (array/map (object/get @it "paths") (fn p (let ((hit (array/find @entity.sizes (fn s (= (object/get @s "path") (if (str/startsWith @p "~/") (str/concat @entity.home (str/slice @p 1 (str/len @p))) (str/concat @entity.cwd "/" (str/slice @p 2 (str/len @p))))))))) (if (!= @hit null) (object/get @hit "kb") 0)))))) })) "bytes" "desc"))
+        (emit DISK_BUILT { })
+      DISK_BUILT -> ready when @entity.json
+        (emit DISK_ANSWERED { status: 200, body: (json/stringify { totalBytes: @entity.totalBytes, usedBytes: @entity.usedBytes, freeBytes: @entity.freeBytes, usePct: @entity.usePct, items: @entity.items }) })
+      DISK_BUILT -> ready when (not @entity.json)
+        (emit DISK_ANSWERED { status: 200, body: (let ((t (array/map (array/concat [@entity.usedBytes, @entity.freeBytes, @entity.totalBytes, (array/sum (array/map (array/filter @entity.items (fn r (= (object/get @r "tag") "safe"))) (fn r (object/get @r "bytes"))))] (array/map @entity.items (fn r (object/get @r "bytes")))) (fn b (let ((i (array/len (array/filter [1024, 1048576, 1073741824, 1099511627776] (fn t (>= @b @t)))))) (let ((v (/ @b (math/pow 1024 @i)))) (let ((s (str/concat (if (or (= @i 0) (>= @v 10)) (math/round @v) (/ (math/round (* @v 10)) 10))))) (str/concat @s (if (and (> @i 0) (< @v 10) (not (str/includes @s "."))) ".0" "") (array/nth ["B", "K", "M", "G", "T"] @i))))))))) (str/concat "Disk: " (array/nth @t 0) " used, " (array/nth @t 1) " free of " (array/nth @t 2) " (" @entity.usePct "%)\n\n" (str/join (array/map (array/range 0 (array/len @entity.items)) (fn k (let ((r (array/nth @entity.items @k))) (str/concat (str/padStart (array/nth @t (+ 4 @k)) 7 " ") "  " (str/padEnd (object/get @r "tag") 6 " ") "  " (str/padEnd (object/get @r "id") 28 " ") "  " (object/get @r "label"))))) "\n") "\n\nsafe batch: ~" (array/nth @t 3))) })
+      DiskDf_FAILED -> ready
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+      DiskDu_FAILED -> ready
+        (emit DISK_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.error) })
+      DISK_HOST_FAILED -> ready
+        (emit DISK_ANSWERED { status: 500, body: "disk_host_failed: HOME could not be read" })
+    }
+
+    emits {
+      DISK_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      DISK_DF_RUN { stage : string!  argv : [string]! }
+        @description "Internal: run df on the volume."
+        @tier "internal"
+      DISK_DU_RUN { stage : string!  argv : [string]! }
+        @description "Internal: run du over the item paths."
+        @tier "internal"
+      DISK_HOME { value : string! }
+        @description "Internal: the os/getenv answer for HOME."
+        @tier "internal"
+      DISK_HOST_FAILED { error : string }
+        @description "Internal: HOME could not be read."
+        @tier "internal"
+      DISK_BUILT { }
+        @description "Internal: the items are sized and sorted."
+        @tier "internal"
+    }
+
+    config {
+      volume : string = "/System/Volumes/Data"
+        @label "Volume"
+        @description "The mount point df reports for the used, free and total line."
+      items : [DiskSpec] = [
+        { id: "chrome-disk-cache", label: "Chrome disk cache", tag: "safe", paths: ["~/Library/Caches/Google/Chrome"] },
+        { id: "misc-caches", label: "Misc dev caches (ts, node, node-gyp, mesa, thumbnails)", tag: "safe", paths: ["~/Library/Caches/typescript", "~/Library/Caches/node-gyp", "~/.cache/node"] },
+        { id: "npm-cache", label: "npm cache", tag: "safe", paths: ["~/.npm/_cacache"] },
+        { id: "cargo-registry-cache", label: "Cargo registry download cache", tag: "safe", paths: ["~/.cargo/registry/cache"] },
+        { id: "homebrew-cache", label: "Homebrew downloads (brew cleanup)", tag: "safe", paths: ["~/Library/Caches/Homebrew"] },
+        { id: "xcode-derived-data", label: "Xcode DerivedData", tag: "safe", paths: ["~/Library/Developer/Xcode/DerivedData"] },
+        { id: "sccache", label: "sccache compile cache", tag: "cost", paths: ["~/Library/Caches/Mozilla.sccache"] },
+        { id: "playwright", label: "Playwright browsers", tag: "cost", paths: ["~/Library/Caches/ms-playwright"] },
+        { id: "bun-cache", label: "Bun install cache", tag: "cost", paths: ["~/.bun/install/cache"] },
+        { id: "gradle-caches", label: "Gradle caches", tag: "cost", paths: ["~/.gradle/caches"] },
+        { id: "core-simulator-caches", label: "iOS simulator caches", tag: "cost", paths: ["~/Library/Developer/CoreSimulator/Caches"] },
+        { id: "trash", label: "Trash", tag: "cost", paths: ["~/.Trash"] },
+        { id: "overlay-stage", label: "Cascade overlay staging (.overlay/stage)", tag: "cost", paths: ["./.overlay/stage"] },
+        { id: "pnpm-store", label: "pnpm store (shared backing)", tag: "keep", paths: ["~/Library/pnpm/store"] },
+        { id: "huggingface-models", label: "Hugging Face models", tag: "keep", paths: ["~/.cache/huggingface"] },
+        { id: "colima-vm", label: "Colima VM disk (local CI runners)", tag: "keep", paths: ["~/.colima"] },
+        { id: "android-sdk", label: "Android SDK + emulators (~/.android, ~/Library/Android)", tag: "keep", paths: ["~/.android", "~/Library/Android"] },
+        { id: "rust-toolchains", label: "Rust toolchains (~/.rustup)", tag: "keep", paths: ["~/.rustup"] },
+        { id: "git-history", label: "Git histories (.git)", tag: "keep", paths: ["./.git"] },
+        { id: "model-weights", label: "Model weights (masar/weights)", tag: "keep", paths: ["./masar/weights"] },
+        { id: "assets", label: "Game assets (almadar-assets)", tag: "keep", paths: ["./almadar-assets"] }
+      ]
+        @label "Items"
+        @description "The registry: id, label, tag and the paths ('~/' under the home directory, './' under the working directory) du sizes."
+    }
+
+    listens {
+      DISK_CALLED -> inbound "cli-disk" answers DISK_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb disk` with its arguments and working directory."
+        @synonyms "orb disk, what fills the disk"
+      DiskDf.CLI_DONE -> DiskDf_DONE
+      DiskDf.CLI_FAILED -> DiskDf_FAILED
+      DiskDu.CLI_DONE -> DiskDu_DONE
+      DiskDu.CLI_FAILED -> DiskDu_FAILED
+      DiskDf_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "std-cli's CLI_DONE for df."
+      DiskDf_FAILED { stage : string!  error : string!  code : string! }
+        @description "std-cli's CLI_FAILED for df."
+      DiskDu_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "std-cli's CLI_DONE for du."
+      DiskDu_FAILED { stage : string!  error : string!  code : string! }
+        @description "std-cli's CLI_FAILED for du."
+    }
+  }
+
+  page "/orb-disk" as OrbDiskPage -> OrbDisk, DiskDf, DiskDu
+}

@@ -8,12 +8,20 @@ orbital DevPersonasSpec {
     id : string!
     name : string
     email : string
+    role : string
   }
   expects trait DevPersonas {
-    state ready
+    state ready {
+      PERSONAS_ROWS -> ready
+      SIGN_IN_CALLED -> ready
+      SIGN_IN_ROW -> ready
+      SIGN_IN_ROW_MISSED -> ready
+      SIGN_IN_UPDATED -> ready
+    }
     emits {
       PERSONAS_ANSWERED { status : number!  body : string! }
       PERSONA_SIGN_IN_ANSWERED { status : number!  body : string! }
+      SIGN_IN_ROW_MISSED { error : string!  code : string }
     }
   }
   expects page "/dev-personas" -> DevPersonas

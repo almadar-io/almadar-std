@@ -250,6 +250,20 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["path", "formValues", "customerName"] // => "formValues.customerName"',
   },
+  'row/matches': {
+    module: 'object',
+    category: 'std-object',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Whether the row satisfies the typed RowPredicate, decided by the kernel\'s one predicate evaluator (the one every store runs a compiled where/filter through); an absent predicate or row is an absent result',
+    hasSideEffects: false,
+    returnType: BOOLEAN,
+    params: [
+      { name: 'pred', type: 'RowPredicate', description: 'The typed predicate (compare, member, hasElement, contains, isNull, all, any, not, const)' },
+      { name: 'row', type: rec('E'), description: 'The row' },
+    ],
+    example: '["row/matches", {"kind": "compare", "field": "status", "op": "==", "value": "open"}, {"id": "t1", "status": "open"}] // => true',
+  },
 };
 
 /**

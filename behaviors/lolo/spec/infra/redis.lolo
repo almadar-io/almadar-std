@@ -1,0 +1,25 @@
+app redis-spec [
+  version: "1.0.0",
+  description: "Design contract for a Redis client whose RESP protocol is .lolo over os/tcp-connect, os/send, os/recv and os/close, replacing the kernel redis driver (runtime/src/redis.rs). A command is a RESP array of bulk strings: GET k is *2 CRLF $3 CRLF GET CRLF $1 CRLF k CRLF, an empty value is $0 CRLF CRLF, and the bulk length counts UTF-8 bytes (h-e-acute-llo is $6). One call connects, sends AUTH [user] password and SELECT db as ONE pipeline when configured, reads exactly one reply per pipelined command, checks every handshake reply before the command goes out, sends the command, reads its reply and closes the socket on success and on every failure. A reply split across reads keeps asking for more until the frame is whole; a frame cut at any byte is incomplete, a malformed one (unknown type byte, non-integer length, length below -1, bulk not CRLF-terminated, nesting past 32) is a protocol failure. Replies map: +OK is text, :-42 is a number, $-1 and *-1 are null, a bulk is UTF-8 text (invalid UTF-8 is unsupported), an array is a nested list to 3 levels, an integer beyond 2^53 is unsupported, -WRONGTYPE ... is kind redis with code WRONGTYPE. A missing credential is unconfigured and never connects; a target outside egress is refused before any ask; a read timeout is kind timeout; a close mid-reply is kind failed."
+]
+
+orbital RedisSpec {
+  expects entity RedisCall [runtime] {
+    id : string!
+  }
+  expects trait RedisClient {
+    state idle {
+      REDIS_GET -> idle
+    }
+    state connecting
+    state handshaking
+    state awaiting
+    state closing
+    emits {
+      REDIS_GOT { value : string }
+      REDIS_FAILED { action : string!  kind : string!  code : string  message : string! }
+      REDIS_WIRE_SENT { bytes : number! }
+    }
+  }
+  expects page "/redis" -> RedisClient
+}

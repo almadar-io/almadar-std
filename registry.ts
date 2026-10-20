@@ -54,6 +54,7 @@ import { BEHAVIOR_OPERATORS } from './modules/behavior.js';
 import { PROGRAM_OPERATORS } from './modules/program.js';
 import { BYTES_OPERATORS } from './modules/bytes.js';
 import { BASE64_OPERATORS, HASH_OPERATORS, HMAC_OPERATORS } from './modules/codec.js';
+import { JWK_OPERATORS, JWS_OPERATORS } from './modules/jws.js';
 
 // ============================================================================
 // Combined Registry
@@ -103,6 +104,8 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = withNullRejection(
   ...BASE64_OPERATORS,
   ...HASH_OPERATORS,
   ...HMAC_OPERATORS,
+  ...JWS_OPERATORS,
+  ...JWK_OPERATORS,
   ...XML_OPERATORS,
 });
 
@@ -155,6 +158,8 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   base64: BASE64_OPERATORS,
   hash: HASH_OPERATORS,
   hmac: HMAC_OPERATORS,
+  jws: JWS_OPERATORS,
+  jwk: JWK_OPERATORS,
   xml: XML_OPERATORS,
 };
 

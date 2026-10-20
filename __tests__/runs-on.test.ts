@@ -7,7 +7,7 @@ import { OS_SYS_PAYLOADS } from '../modules/os-sys.js';
 const OS_PURE = ['os/path-base', 'os/path-dir', 'os/path-ext', 'os/path-is-absolute', 'os/path-join', 'os/path-normalize', 'os/path-relative'];
 const OS_EFFECTS = [
   'os/ac-power', 'os/access', 'os/append-file', 'os/battery-status', 'os/brightness-get', 'os/brightness-set', 'os/chdir', 'os/chmod', 'os/chown', 'os/clock-monotonic', 'os/close', 'os/copy',
-  'os/cpu-usage', 'os/cwd', 'os/default-gateway', 'os/disk-io', 'os/disk-usage', 'os/dns-resolve', 'os/environ', 'os/exists', 'os/fsync', 'os/getenv', 'os/gid', 'os/glob', 'os/group-of',
+  'os/cpu-usage', 'os/current-exe', 'os/cwd', 'os/default-gateway', 'os/disk-io', 'os/disk-usage', 'os/dns-resolve', 'os/environ', 'os/exists', 'os/fsync', 'os/getenv', 'os/gid', 'os/glob', 'os/group-of',
   'os/hibernate', 'os/hostname', 'os/isatty', 'os/kill', 'os/link', 'os/list-dir', 'os/load-avg', 'os/lstat', 'os/memory-info', 'os/mkdir', 'os/mktemp', 'os/mounts', 'os/network-connected',
   'os/network-interfaces', 'os/network-stats', 'os/notify', 'os/open', 'os/pid', 'os/ppid', 'os/read', 'os/read-file', 'os/readlink', 'os/realpath', 'os/recv', 'os/recvfrom', 'os/remove',
   'os/rename', 'os/rmdir', 'os/seek', 'os/send', 'os/sendto', 'os/setenv', 'os/shutdown', 'os/spawn', 'os/speak', 'os/stat', 'os/stderr-write', 'os/stdin-read', 'os/stdout-write',
@@ -28,9 +28,9 @@ describe('runsOn', () => {
 
   it('the server set is the data-owning effects, the OS watchers, and the effects that read installed packages through orb', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
-      'atomic', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
+      'atomic', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http', 'http/listen', 'http/respond',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
-      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/print', 'program/read', 'program/step', 'program/validate', 'random-bytes', 'redis', 'swap',
+      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/machine', 'program/print', 'program/read', 'program/step', 'program/validate', 'random-bytes', 'redis', 'swap',
     ].sort());
   });
 
@@ -79,7 +79,7 @@ describe('runsOn', () => {
 
   it('bytes/ is a pure closed family and os/ reads return bytes', () => {
     const names = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('bytes/')).sort();
-    expect(names).toEqual(['bytes/concat', 'bytes/equals', 'bytes/from-string', 'bytes/length', 'bytes/slice', 'bytes/to-string']);
+    expect(names).toEqual(['bytes/at', 'bytes/concat', 'bytes/equals', 'bytes/from-string', 'bytes/index-of', 'bytes/length', 'bytes/read-uint', 'bytes/slice', 'bytes/to-string', 'bytes/write-uint']);
     for (const name of names) {
       expect(STD_OPERATORS[name].hasSideEffects, name).toBe(false);
       expect(STD_OPERATORS[name].runsOn, name).toBeUndefined();

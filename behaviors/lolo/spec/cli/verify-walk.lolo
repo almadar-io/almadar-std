@@ -1,0 +1,22 @@
+app verify-walk-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb verify-walk <program>`: the L1 walk. It reads the program, enumerates every (trait, from, event) transition of its machines, plays each through the kernel with a payload built from the event's declared fields, and prints one report row per transition (trait, from, event, to, verdict), then the totals; exit 0 when every verdict passes, 1 otherwise, 2 on a usage error."
+]
+
+type VerifyRow = { trait : string!, from : string!, event : string!, to : string!, verdict : string! }
+
+orbital VerifyWalkSpec {
+  expects entity VerifyReport [runtime] {
+    id : string!
+    rows : [VerifyRow]!
+    passed : number!
+    failed : number!
+  }
+  expects trait VerifyWalk {
+    state ready
+    emits {
+      VERIFY_WALK_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/verify-walk" -> VerifyWalk
+}

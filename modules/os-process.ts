@@ -37,6 +37,11 @@ export const OS_PROCESS_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [],
     example: '["os/ppid", { "emit": { "success": "PPID_READ", "failure": "PROC_FAILED" } }]',
   }),
+  'os/current-exe': osEffect({
+    description: 'Read the absolute path of the running host binary, so a program can locate the binaries installed beside it (no grant: a fact of the process itself, like os/pid). Success payload: { path }.',
+    params: [],
+    example: '["os/current-exe", { "emit": { "success": "EXE_READ", "failure": "PROC_FAILED" } }]',
+  }),
   'os/watch-process': osEffect({
     description: 'Watch a process by name (grant exec). Events are { pid, name, exitCode, signal, args, duration } as processes start and exit. The options object also takes debounceMs.',
     params: [arg('name', STRING, 'Process name to monitor (e.g., "orbital")'), arg('args', OS_STRING_LIST, 'Arguments the process must carry, e.g. ["validate"]')],

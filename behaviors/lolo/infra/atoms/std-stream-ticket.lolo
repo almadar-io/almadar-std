@@ -1,0 +1,189 @@
+app std-stream-ticket [
+  version: "1.0.0",
+  description: "std-stream-ticket — single-use tickets for a live-event stream, whose client (an EventSource) sends no Authorization header. MINT_TICKET { viewer } draws 32 bytes from the host CSPRNG, keeps the base64url draw as the ticket (the row id) with the viewer text and an expiry ttlMs from now (60000 by default), and answers TICKET_MINTED { ticket, expiresAt }. TAKE_TICKET { ticket } spends it: the row is read, deleted, and the viewer answered once in TICKET_TAKEN { ticket, viewer }. A forged, expired or already spent ticket answers TICKET_REFUSED (unknown, expired or used); a failed draw or write answers seed or store. The viewer is a typed Viewer record: the @user fields id, email, name, role and permissions."
+]
+uses Spec from "almadar-std/stream-ticket"
+orbital StreamTicketOrbital {
+  type MINT_TICKET = Event { viewer : Viewer! } "Mint one ticket for a viewer."
+  type TAKE_TICKET = Event { ticket : string! } "Spend one ticket."
+
+  entity StreamTicket [persistent: stream_tickets] {
+    id : string! @description "The ticket: 32 CSPRNG bytes, base64url."
+    viewer : Viewer! @description "The viewer the ticket was minted for."
+    expiresAt : number @description "When the ticket stops working, in epoch milliseconds." = 0
+  }
+
+  entity StreamTicketRun [runtime] {
+    id : string!
+    viewer : Viewer @description "The viewer a mint in flight is for."
+    ticket : string @description "The ticket being minted or spent." = ""
+    expiresAt : number @description "The expiry of the ticket being minted." = 0
+    expired : boolean @description "Whether the ticket being spent had already expired." = false
+    holder : Viewer @description "The viewer read off the ticket being spent."
+  }
+
+  trait StreamTicketer -> StreamTicketRun [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      MINT_TICKET -> drawing
+        (set @entity.viewer @payload.viewer)
+        (random-bytes 32 { emit: { success: SEED_DRAWN, failure: SEED_FAILED } })
+
+      TAKE_TICKET -> taking
+        (set @entity.ticket @payload.ticket)
+        (fetch StreamTicket { id: @payload.ticket, emit: { success: TICKET_LOADED, failure: TICKET_ABSENT } })
+    }
+
+    state drawing {
+      INIT -> idle
+
+      SEED_DRAWN -> saving
+        (set @entity.ticket @payload.value)
+        (set @entity.expiresAt (+ @now @config.ttlMs))
+        (persist create StreamTicket { id: @payload.value, viewer: @entity.viewer, expiresAt: (+ @now @config.ttlMs) } {
+          emit: { success: TICKET_SAVED, failure: TICKET_NOT_SAVED }
+        })
+      SEED_FAILED -> idle
+        (emit TICKET_REFUSED { code: "seed", message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+    }
+
+    state saving {
+      INIT -> idle
+
+      TICKET_SAVED -> idle
+        (emit TICKET_MINTED { ticket: @entity.ticket, expiresAt: @entity.expiresAt })
+      TICKET_NOT_SAVED -> idle
+        (emit TICKET_REFUSED { code: "store", message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+    }
+
+    state taking {
+      INIT -> idle
+
+      TICKET_ABSENT -> idle when (= @payload.code "not-found")
+        (emit TICKET_REFUSED { code: "unknown", message: "no such stream ticket" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+      TICKET_ABSENT -> idle when (!= @payload.code "not-found")
+        (emit TICKET_REFUSED { code: "store", message: @payload.error })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+      TICKET_LOADED -> spending
+        (set @entity.holder @payload.data.viewer)
+        (set @entity.expired (<= @payload.data.expiresAt @now))
+        (persist delete StreamTicket @entity.ticket {
+          emit: { success: TICKET_SPENT, failure: TICKET_NOT_SPENT }
+        })
+    }
+
+    state spending {
+      INIT -> idle
+
+      TICKET_SPENT -> idle when @entity.expired
+        (emit TICKET_REFUSED { code: "expired", message: "the stream ticket has expired" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+      TICKET_SPENT -> idle when (not @entity.expired)
+        (emit TICKET_TAKEN { ticket: @entity.ticket, viewer: @entity.holder })
+      TICKET_NOT_SPENT -> idle
+        (emit TICKET_REFUSED { code: "used", message: "the stream ticket was already spent" })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Stream ticket refused" })
+    }
+
+    emits {
+      TICKET_MINTED -> external {
+        ticket : string!
+        expiresAt : number!
+      }
+        @description "A ticket was minted and stored; hand it to the stream client once."
+        @synonyms "stream ticket minted, ticket created"
+        @tier "primary"
+      TICKET_TAKEN -> external {
+        ticket : string!
+        viewer : Viewer!
+      }
+        @description "The ticket named its viewer, and is now spent."
+        @synonyms "stream ticket spent, ticket redeemed"
+        @tier "primary"
+      TICKET_REFUSED -> external {
+        code : "seed" | "store" | "unknown" | "expired" | "used"
+        message : string!
+      }
+        @description "No ticket was minted, or the one presented names nobody: forged or never minted (unknown), past its expiry (expired), already spent (used), or the draw or store failed."
+        @synonyms "stream ticket refused, ticket rejected"
+        @tier "primary"
+      SEED_DRAWN {
+        value : string!
+      }
+        @description "Internal: 32 CSPRNG bytes, base64url."
+        @tier "secondary"
+      SEED_FAILED {
+        error : string!
+      }
+        @description "Internal: the draw failed."
+        @tier "secondary"
+      TICKET_SAVED {
+        id : string!
+      }
+        @description "Internal: the ticket row is stored."
+        @tier "secondary"
+      TICKET_NOT_SAVED {
+        error : string!
+        code : string
+      }
+        @description "Internal: the ticket row could not be written."
+        @tier "secondary"
+      TICKET_LOADED {
+        data : StreamTicket!
+      }
+        @description "Internal: the presented ticket exists."
+        @tier "secondary"
+      TICKET_ABSENT {
+        error : string
+        code : string
+      }
+        @description "Internal: no such ticket, or the store failed."
+        @tier "secondary"
+      TICKET_SPENT {
+        id : string!
+      }
+        @description "Internal: the ticket row is deleted."
+        @tier "secondary"
+      TICKET_NOT_SPENT {
+        error : string
+        code : string
+      }
+        @description "Internal: the ticket row was already gone."
+        @tier "secondary"
+    }
+
+    listens {
+      MINT_TICKET {
+        viewer : Viewer!
+      }
+        @description "Mint one stream ticket for a viewer."
+        @synonyms "mint ticket, create stream ticket"
+      TAKE_TICKET {
+        ticket : string!
+      }
+        @description "Spend one stream ticket and learn its viewer."
+        @synonyms "take ticket, redeem ticket"
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a refused ticket; a page running it in the background keeps it in `system`."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      ttlMs : number = 60000
+        @label "Ticket lifetime"
+        @description "How long a minted ticket stays valid, in milliseconds."
+        @synonyms "ticket ttl, expiry"
+        @tier "domain"
+    }
+  }
+
+  page "/stream-ticket" as StreamTicketPage -> StreamTicketer
+}

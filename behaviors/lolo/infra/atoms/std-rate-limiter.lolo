@@ -26,6 +26,8 @@ orbital RateBucketOrbital {
     window : number @description "The duration of the rate limiting window, in seconds." @synonyms "duration, time, interval, period" = 0
     limiterStatus : string @description "Current operational state of the rate limiter." @synonyms "state, condition, mode" = open
     limit : number @description "Requests this bucket admits per window before it throttles; set from requestsPerMinute when the limiter mounts." @synonyms "cap, quota, ceiling, maximum requests" = 60
+    resetIn : number @description "Seconds until the current window resets and the bucket admits again." @synonyms "reset seconds, retry after, window remaining" = 60
+    @invariant (and (> @entity.limit 0) (>= @entity.resetIn 0) (<= @entity.resetIn @entity.window))
   }
 
   trait ShieldIcon = Icon.traits.IconRender -> RateBucket {
@@ -140,7 +142,8 @@ orbital RateBucketOrbital {
     state open {
       INIT -> open
         (set @entity.count 0)
-        (set @entity.window 60)
+        (set @entity.window @config.windowSeconds)
+        (set @entity.resetIn @config.windowSeconds)
         (set @entity.limit @config.requestsPerMinute)
         (set @entity.limiterStatus open)
         (render-ui main {
@@ -171,6 +174,7 @@ orbital RateBucketOrbital {
       REQUEST -> throttled when (and @config.enabled (>= (+ @entity.count 1) @entity.limit))
         (set @entity.count (+ @entity.count 1))
         (set @entity.limiterStatus throttled)
+        (emit THROTTLED { requestId: @payload.requestId, resetIn: @entity.resetIn, limit: @entity.limit, window: @entity.window })
         (render-ui main {
           children: [{
             align: center
@@ -198,6 +202,7 @@ orbital RateBucketOrbital {
         })
       REQUEST -> open when (and @config.enabled (< (+ @entity.count 1) @entity.limit))
         (set @entity.count (+ @entity.count 1))
+        (emit ADMITTED { requestId: @payload.requestId, remaining: (- @entity.limit @entity.count), resetIn: @entity.resetIn, limit: @entity.limit, window: @entity.window })
         (render-ui main {
           children: [{
             align: center
@@ -223,8 +228,11 @@ orbital RateBucketOrbital {
           gap: lg
           type: stack
         })
+      REQUEST -> open when (not @config.enabled)
+        (emit ADMITTED { requestId: @payload.requestId, remaining: @entity.limit, resetIn: @entity.resetIn, limit: @entity.limit, window: @entity.window })
       RESET -> open
         (set @entity.count 0)
+        (set @entity.resetIn @entity.window)
         (set @entity.limiterStatus open)
         (render-ui main {
           children: [{
@@ -253,16 +261,20 @@ orbital RateBucketOrbital {
         })
       WINDOW_ELAPSED -> open
         (set @entity.count 0)
-      CONFIGURE -> open
+        (set @entity.resetIn @entity.window)
+      CONFIGURE -> open when (> ?limit 0)
         (set @entity.limit ?limit)
     }
 
     state throttled {
-      CONFIGURE -> throttled
+      REQUEST -> throttled
+        (emit THROTTLED { requestId: @payload.requestId, resetIn: @entity.resetIn, limit: @entity.limit, window: @entity.window })
+      CONFIGURE -> throttled when (> ?limit 0)
         (set @entity.limit ?limit)
       WINDOW_ELAPSED -> open
         (set @entity.limiterStatus open)
         (set @entity.count 0)
+        (set @entity.resetIn @entity.window)
         (render-ui main {
           children: [{
             align: center
@@ -291,6 +303,7 @@ orbital RateBucketOrbital {
       RESET -> open
         (set @entity.limiterStatus open)
         (set @entity.count 0)
+        (set @entity.resetIn @entity.window)
         (render-ui main {
           children: [{
             align: center
@@ -345,18 +358,42 @@ orbital RateBucketOrbital {
     }
 
     listens {
+      REQUEST {
+        requestId : number!
+      }
+        @description "Counts one request against this bucket and answers it with ADMITTED or THROTTLED, echoing requestId."
+        @synonyms "count request, check rate"
       CONFIGURE {
-        limit : number
+        limit : number!
       }
         @description "Sets this bucket's limit (requests per window), e.g. from the host row's own rate limit."
     }
 
     ticks {
-      windowElapsed every 1m
+      windowCountdown every 1s when (> @entity.resetIn 1)
+        (set @entity.resetIn (- @entity.resetIn 1))
+      windowElapsed every 1s when (<= @entity.resetIn 1)
         (emit WINDOW_ELAPSED)
     }
 
     emits {
+      ADMITTED -> external {
+        requestId : number!
+        remaining : number!
+        resetIn : number!
+        limit : number!
+        window : number!
+      }
+        @description "The request was admitted: requests left in this window and seconds until the window resets."
+        @tier "primary"
+      THROTTLED -> external {
+        requestId : number!
+        resetIn : number!
+        limit : number!
+        window : number!
+      }
+        @description "The request was throttled: seconds until the window resets and the bucket admits again."
+        @tier "primary"
       WINDOW_ELAPSED -> internal {
       }
         @description "One rate-limit window (a minute) has elapsed; the request count starts over."
@@ -372,6 +409,11 @@ orbital RateBucketOrbital {
         @label "Requests per minute"
         @description "Requests a bucket admits per one-minute window; the next request throttles it, and each elapsed minute (or RESET) reopens it."
         @synonyms "rate limit, request cap, RPS, throttle threshold"
+        @tier "domain"
+      windowSeconds : number = 60
+        @label "Window seconds"
+        @description "Length of one rate-limit window in seconds; the bucket counts down resetIn from it and reopens when it reaches zero."
+        @synonyms "window, period, reset interval, rate limit window"
         @tier "domain"
       statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = elevated
         @label "Stat display look"

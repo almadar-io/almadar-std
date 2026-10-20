@@ -1,5 +1,5 @@
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
-import { BYTES, EMIT_ENVELOPE, STRING, NUMBER, BOOLEAN, list, lit, shape, union } from '../signature.js';
+import { BYTES, EMIT_ENVELOPE, STRING, NUMBER, BOOLEAN, list, lit, openShape, shape, union } from '../signature.js';
 
 type OsParam = NonNullable<StdOperatorMeta['params']>[number];
 
@@ -26,6 +26,18 @@ const OPTIONS: OsParam = {
   optional: true,
 };
 
+const EVENT_KEY: OperatorTypeRef = { kind: 'eventKey' };
+
+const STREAM_OPTIONS: OsParam = {
+  name: 'options',
+  type: openShape({
+    key: STRING,
+    emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY, onMessage: EVENT_KEY }),
+  }),
+  description: 'Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed',
+  optional: true,
+};
+
 interface OsEffectDef {
   description: string;
   params: OsParam[];
@@ -46,7 +58,7 @@ export function osEffect(def: OsEffectDef): StdOperatorMeta {
     runsOn: 'server',
     host: 'os',
     returnType: 'void',
-    params: [...def.params, OPTIONS],
+    params: [...def.params, def.stream ? STREAM_OPTIONS : OPTIONS],
     example: def.example,
   };
 }

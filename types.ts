@@ -180,6 +180,8 @@ export const STD_MODULES = [
   'base64',
   'hash',
   'hmac',
+  'jws',
+  'jwk',
   'xml',
 ] as const;
 
@@ -291,7 +293,9 @@ export type OperatorTypeRef =
   /** The record whose fields are those of every binding of the `each` variable `of`, later bindings winning. */
   | { kind: 'mergeOf'; of: string }
   /** The declared target shape of the call: an argument naming a type, which is also the result type. */
-  | { kind: 'shape' };
+  | { kind: 'shape' }
+  /** A structural fold's childResults over the record `of` (the call's shape): every field of `of` declared the shape, a list of it or a map of it, with the shape replaced by `result`. */
+  | { kind: 'childrenOf'; of: string; result: string };
 
 /**
  * Effect-specific metadata (Schema v2).

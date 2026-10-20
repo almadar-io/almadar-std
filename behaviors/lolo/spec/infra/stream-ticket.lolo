@@ -1,0 +1,32 @@
+app stream-ticket-spec [
+  version: "1.0.0",
+  description: "Design contract for single-use stream tickets: a ticket is 32 CSPRNG bytes in base64url, minted for a viewer on an authenticated request, valid for a bounded time (60 seconds unless a knob names another) and spent by its first take. A forged, expired or already spent ticket names nobody. The Rust values it replaces: a minted ticket names its viewer once; a second take, a forged ticket and a short draw are refused."
+]
+
+orbital StreamTicketSpec {
+  expects entity StreamTicket [persistent] {
+    id : string!
+    viewer : Viewer!
+    expiresAt : number
+    @invariant (>= @entity.expiresAt 0)
+  }
+  expects trait StreamTicketer {
+    state idle {
+      MINT_TICKET -> drawing
+      TAKE_TICKET -> taking
+    }
+    state drawing {
+      SEED_DRAWN -> saving @ensures (= @entity.expiresAt (+ @now 60000))
+    }
+    state spending {
+      TICKET_SPENT -> idle
+      TICKET_NOT_SPENT -> idle
+    }
+    emits {
+      TICKET_MINTED { ticket : string!  expiresAt : number! }
+      TICKET_TAKEN { ticket : string!  viewer : Viewer! }
+      TICKET_REFUSED { code : string  message : string! }
+    }
+  }
+  expects page "/stream-ticket" -> StreamTicketer
+}

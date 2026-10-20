@@ -129,7 +129,7 @@ describe('operator table: signatures are well formed', () => {
     expect(unbound).toEqual([]);
   });
 
-  it('ties key-of / field-of / pick-of / omit-of / merge-of to a variable of the same signature', () => {
+  it('ties key-of / field-of / pick-of / omit-of / merge-of / children-of to a variable of the same signature', () => {
     const problems: string[] = [];
     for (const [op, meta] of Object.entries(STD_OPERATORS)) {
       const records = new Set<string>();
@@ -144,6 +144,7 @@ describe('operator table: signatures are well formed', () => {
         if (typeof t === 'string') return;
         // A key-of over an element variable (`array/sort`'s key) names a field when the element is a record and is absent otherwise.
         if (t.kind === 'keyOf' && !declared.has(t.of)) problems.push(`${op} ${path}: ${formatOperatorType(t)}`);
+        if (t.kind === 'childrenOf' && (!declared.has(t.of) || !declared.has(t.result))) problems.push(`${op} ${path}: ${formatOperatorType(t)}`);
         if ((t.kind === 'fieldOf' || t.kind === 'pickOf' || t.kind === 'omitOf' || t.kind === 'mergeOf') && !records.has(t.of)) {
           problems.push(`${op} ${path}: ${formatOperatorType(t)}`);
         }

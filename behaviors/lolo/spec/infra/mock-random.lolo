@@ -1,0 +1,22 @@
+app mock-random-spec [
+  version: "1.0.0",
+  description: "Design contract for a seeded mock-data stream: the same seed yields the same draws, and the stream state stays inside the 32-bit generator range."
+]
+
+orbital MockRandomSpec {
+  expects entity MockStream [runtime] {
+    id : string!
+    seed : number
+    state : number
+    nowMs : number
+    int : number
+    text : string
+    ms : number
+  }
+  expects trait MockRandom {
+    state ready
+    state ready { SEED -> ready  DRAW_INT -> ready  DRAW_WORDS -> ready  DRAW_UUID -> ready  DRAW_PHONE -> ready  DRAW_PAST_DATE -> ready  DRAW_STRADDLING_DATE -> ready }
+    emits { MOCK_DRAWN }
+  }
+  expects page "/mock-random" -> MockRandom
+}

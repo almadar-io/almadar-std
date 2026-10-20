@@ -1,6 +1,6 @@
 app cli-spec [
   version: "1.0.0",
-  description: "Design contract for running one command-line program as a child process: a run takes the arguments, collects everything the child writes to stdout and stderr, waits for its exit and answers once with the exit code and both streams. One run at a time; a run asked for while another is in flight is refused, never queued or dropped silently."
+  description: "Design contract for running one command-line program as a child process: a run takes the arguments, collects everything the child writes to stdout and stderr, waits for its exit and answers once with the exit code and both streams. The streams are piped and collected by default; an explicit stdio setting of inherit instead hands the child the terminal, keeping prompts and live output, and the run answers with the exit code alone. One run at a time; a run asked for while another is in flight is refused, never queued or dropped silently."
 ]
 
 orbital CliSpec {
@@ -21,5 +21,6 @@ orbital CliSpec {
       CLI_FAILED { stage : string!  error : string!  code : string! }
     }
   }
+  expects config { stdio : string = "pipe" }
   expects page "/cli" -> CliRunner
 }

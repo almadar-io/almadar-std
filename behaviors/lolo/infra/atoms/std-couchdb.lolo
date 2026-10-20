@@ -1,0 +1,503 @@
+app std-couchdb [
+  version: "1.0.0",
+  description: "std-couchdb — a CouchDB row store over the REST API, the std driver for the kernel's CouchDB backend. The caller names the database (one per collection) and the row id; a row is the document whose _id is the id, and every answer hands the row back without _id and _rev. COUCH_GET answers COUCH_ROW or COUCH_ROW_ABSENT (404). COUCH_CREATE makes the database once (PUT /db, 201 or 202 made, 409 or 412 already there) then PUTs the document; a 409 is COUCH_DUPLICATE_ID. COUCH_UPDATE merges changes over the stored document, COUCH_UPSERT replaces it keeping its createdAt, COUCH_DELETE removes it: each reads the document for its _rev and writes conditioned on it, and a 409 re-reads and tries again up to maxAttempts times before COUCH_FAILED (changed concurrently). COUCH_LIST reads /db/_all_docs; COUCH_FIND POSTs a Mango selector to /db/_find (404 is an empty answer), reads every page through the bookmark when no limit is given and counts the total when a full window cannot say it. Requests carry a Basic Authorization header from the user and password credentials. A non-2xx reply answers COUCH_FAILED with CouchDB's reason; an unreachable server answers status 0.",
+  egress: ["http://couchdb.example.test:5984"]
+]
+uses Spec from "almadar-std/couchdb"
+type CouchScalar = string | number | boolean
+type CouchCell = CouchScalar | [CouchScalar] | [[CouchScalar]] | [[[CouchScalar]]]
+type CouchDoc = Map string CouchCell
+type CouchRev = { _rev : string }
+type CouchError = { error : string, reason : string }
+type CouchFound = { docs : [CouchDoc], bookmark : string }
+type CouchAllDocsRow = { doc : CouchDoc }
+type CouchAllDocs = { rows : [CouchAllDocsRow] }
+orbital CouchdbOrbital {
+  entity CouchCall [runtime] {
+    id : string!
+    op : string @description "The verb in flight: get, create, upsert, update, delete, list or find; empty while idle." = ""
+    db : string = ""
+    docId : string = ""
+    attempt : number @description "The write attempt in flight, from 1; 0 while idle." = 0
+    row : CouchDoc @description "The document body the next write sends." = {}
+    changes : CouchDoc @description "The caller's row (create, upsert) or merge (update)." = {}
+    rev : string @description "The _rev the write is conditioned on; empty for a document not yet stored." = ""
+    ensured : [string] @description "Databases already made this run." = []
+    selector : string = ""
+    sort : string = ""
+    skip : number = 0
+    limit : number @description "Window size; -1 when the find has no limit." = -1
+    bookmark : string = ""
+    acc : [CouchDoc] = []
+    count : number = 0
+  }
+
+  trait CouchClient -> CouchCall [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.op "")
+        (set @entity.attempt 0)
+
+      COUCH_GET -> getting when (and (!= @payload.db "") (!= @payload.id ""))
+        (set @entity.op "get")
+        (set @entity.db @payload.db)
+        (set @entity.docId @payload.id)
+        (set @entity.attempt 1)
+        (http GET @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId)) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_GET_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_GET -> idle when (or (= @payload.db "") (= @payload.id ""))
+        (emit COUCH_FAILED { op: "get", status: 0, message: "db and id are required" })
+
+      COUCH_CREATE -> ensuring when (and (!= @payload.db "") (!= @payload.id "") (not (array/includes @entity.ensured @payload.db)))
+        (set @entity.op "create")
+        (set @entity.db @payload.db)
+        (set @entity.docId @payload.id)
+        (set @entity.attempt 1)
+        (set @entity.changes @payload.row)
+        (http PUT @config.origin (str/concat "/" (str/encode-uri-component @payload.db)) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_ENSURE_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_CREATE -> writing when (and (!= @payload.db "") (!= @payload.id "") (array/includes @entity.ensured @payload.db))
+        (set @entity.op "create")
+        (set @entity.db @payload.db)
+        (set @entity.docId @payload.id)
+        (set @entity.attempt 1)
+        (set @entity.rev "")
+        (set @entity.row (object/merge @payload.row { _id: @payload.id, id: @payload.id }))
+        (http PUT @config.origin (str/concat "/" (str/encode-uri-component @payload.db) "/" (str/encode-uri-component @payload.id)) {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (json/stringify (object/merge @payload.row { _id: @payload.id, id: @payload.id })),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_WRITE_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_CREATE -> idle when (or (= @payload.db "") (= @payload.id ""))
+        (emit COUCH_FAILED { op: "create", status: 0, message: "create needs a database and a string id" })
+
+      COUCH_UPSERT -> ensuring when (and (!= @payload.db "") (!= @payload.id "") (not (array/includes @entity.ensured @payload.db)))
+        (set @entity.op "upsert")
+        (set @entity.db @payload.db)
+        (set @entity.docId @payload.id)
+        (set @entity.attempt 1)
+        (set @entity.changes @payload.row)
+        (http PUT @config.origin (str/concat "/" (str/encode-uri-component @payload.db)) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_ENSURE_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_UPSERT -> reading when (and (!= @payload.db "") (!= @payload.id "") (array/includes @entity.ensured @payload.db))
+        (set @entity.op "upsert")
+        (set @entity.db @payload.db)
+        (set @entity.docId @payload.id)
+        (set @entity.attempt 1)
+        (set @entity.changes @payload.row)
+        (http GET @config.origin (str/concat "/" (str/encode-uri-component @payload.db) "/" (str/encode-uri-component @payload.id)) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_READ_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_UPSERT -> idle when (or (= @payload.db "") (= @payload.id ""))
+        (emit COUCH_FAILED { op: "upsert", status: 0, message: "upsert needs a database and a string id" })
+
+      COUCH_UPDATE -> reading when (and (!= @payload.db "") (!= @payload.id ""))
+        (set @entity.op "update")
+        (set @entity.db @payload.db)
+        (set @entity.docId @payload.id)
+        (set @entity.attempt 1)
+        (set @entity.changes @payload.changes)
+        (http GET @config.origin (str/concat "/" (str/encode-uri-component @payload.db) "/" (str/encode-uri-component @payload.id)) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_READ_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_UPDATE -> idle when (or (= @payload.db "") (= @payload.id ""))
+        (emit COUCH_FAILED { op: "update", status: 0, message: "db and id are required" })
+
+      COUCH_DELETE -> reading when (and (!= @payload.db "") (!= @payload.id ""))
+        (set @entity.op "delete")
+        (set @entity.db @payload.db)
+        (set @entity.docId @payload.id)
+        (set @entity.attempt 1)
+        (http GET @config.origin (str/concat "/" (str/encode-uri-component @payload.db) "/" (str/encode-uri-component @payload.id)) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_READ_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_DELETE -> idle when (or (= @payload.db "") (= @payload.id ""))
+        (emit COUCH_FAILED { op: "delete", status: 0, message: "db and id are required" })
+
+      COUCH_LIST -> listing when (!= @payload.db "")
+        (set @entity.op "list")
+        (set @entity.db @payload.db)
+        (http GET @config.origin (str/concat "/" (str/encode-uri-component @payload.db) "/_all_docs?include_docs=true") {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_LIST_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_LIST -> idle when (= @payload.db "")
+        (emit COUCH_FAILED { op: "list", status: 0, message: "db is required" })
+
+      COUCH_FIND -> finding when (!= @payload.db "")
+        (set @entity.op "find")
+        (set @entity.db @payload.db)
+        (set @entity.selector @payload.selector)
+        (set @entity.sort @payload.sort)
+        (set @entity.skip (or @payload.skip 0))
+        (set @entity.limit (if (= @payload.limit null) -1 @payload.limit))
+        (set @entity.bookmark "")
+        (set @entity.acc [])
+        (set @entity.count 0)
+        (http POST @config.origin (str/concat "/" (str/encode-uri-component @payload.db) "/_find") {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (str/concat "{\"selector\":" @payload.selector ",\"sort\":" @payload.sort ",\"skip\":" (or @payload.skip 0) ",\"limit\":" (if (= @payload.limit null) @config.pageSize @payload.limit) "" "}"),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_FIND_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_FIND -> idle when (= @payload.db "")
+        (emit COUCH_FAILED { op: "find", status: 0, message: "db is required" })
+    }
+
+    state getting {
+      INIT -> idle
+        (set @entity.op "")
+        (set @entity.attempt 0)
+      COUCH_GET_REPLIED -> idle when (= @payload.status 200)
+        (emit COUCH_ROW { db: @entity.db, id: @entity.docId, row: (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"]) })
+      COUCH_GET_REPLIED -> idle when (= @payload.status 404)
+        (emit COUCH_ROW_ABSENT { db: @entity.db, id: @entity.docId })
+      COUCH_GET_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB get answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+      COUCH_UNREACHABLE -> idle
+        (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
+    }
+
+    state ensuring {
+      INIT -> idle
+        (set @entity.op "")
+        (set @entity.attempt 0)
+      COUCH_ENSURE_REPLIED -> writing when (and (or (= @payload.status 201) (= @payload.status 202) (= @payload.status 409) (= @payload.status 412)) (= @entity.op "create"))
+        (set @entity.ensured (array/append @entity.ensured @entity.db))
+        (set @entity.rev "")
+        (set @entity.row (object/merge @entity.changes { _id: @entity.docId, id: @entity.docId }))
+        (http PUT @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId)) {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (json/stringify (object/merge @entity.changes { _id: @entity.docId, id: @entity.docId })),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_WRITE_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_ENSURE_REPLIED -> reading when (and (or (= @payload.status 201) (= @payload.status 202) (= @payload.status 409) (= @payload.status 412)) (= @entity.op "upsert"))
+        (set @entity.ensured (array/append @entity.ensured @entity.db))
+        (http GET @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId)) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_READ_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_ENSURE_REPLIED -> idle when (not (or (= @payload.status 201) (= @payload.status 202) (= @payload.status 409) (= @payload.status 412)))
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB create database answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+      COUCH_UNREACHABLE -> idle
+        (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
+    }
+
+    state reading {
+      INIT -> idle
+        (set @entity.op "")
+        (set @entity.attempt 0)
+      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (= @entity.op "update"))
+        (set @entity.rev (object/get (json/parse @payload.body CouchRev) _rev ""))
+        (set @entity.row (object/merge (json/parse @payload.body CouchDoc) (object/omit @entity.changes ["id"]) { _id: @entity.docId }))
+        (http PUT @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId)) {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (json/stringify (object/merge (json/parse @payload.body CouchDoc) (object/omit @entity.changes ["id"]) { _id: @entity.docId })),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_WRITE_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (= @entity.op "upsert"))
+        (set @entity.rev (object/get (json/parse @payload.body CouchRev) _rev ""))
+        (set @entity.row (object/merge @entity.changes (object/pick (json/parse @payload.body CouchDoc) ["createdAt", "_rev"]) { _id: @entity.docId, id: @entity.docId }))
+        (http PUT @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId)) {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (json/stringify (object/merge @entity.changes (object/pick (json/parse @payload.body CouchDoc) ["createdAt", "_rev"]) { _id: @entity.docId, id: @entity.docId })),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_WRITE_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (= @entity.op "delete"))
+        (set @entity.rev (object/get (json/parse @payload.body CouchRev) _rev ""))
+        (http DELETE @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId) "?rev=" (str/encode-uri-component (object/get (json/parse @payload.body CouchRev) _rev ""))) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_WRITE_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_READ_REPLIED -> writing when (and (= @payload.status 404) (= @entity.op "upsert"))
+        (set @entity.rev "")
+        (set @entity.row (object/merge @entity.changes { _id: @entity.docId, id: @entity.docId }))
+        (http PUT @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId)) {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (json/stringify (object/merge @entity.changes { _id: @entity.docId, id: @entity.docId })),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_WRITE_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_READ_REPLIED -> idle when (and (= @payload.status 404) (!= @entity.op "upsert"))
+        (emit COUCH_NOT_FOUND { db: @entity.db, id: @entity.docId })
+      COUCH_READ_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB get answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+      COUCH_UNREACHABLE -> idle
+        (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
+    }
+
+    state writing {
+      INIT -> idle
+        (set @entity.op "")
+        (set @entity.attempt 0)
+      COUCH_WRITE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "create"))
+        (emit COUCH_CREATED { db: @entity.db, id: @entity.docId, row: (object/omit @entity.row ["_id", "_rev"]) })
+      COUCH_WRITE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "update"))
+        (emit COUCH_UPDATED { db: @entity.db, id: @entity.docId, row: (object/omit @entity.row ["_id", "_rev"]) })
+      COUCH_WRITE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "upsert"))
+        (emit COUCH_UPSERTED { db: @entity.db, id: @entity.docId, created: (= @entity.rev ""), row: (object/omit @entity.row ["_id", "_rev"]) })
+      COUCH_WRITE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "delete"))
+        (emit COUCH_DELETED { db: @entity.db, id: @entity.docId })
+      COUCH_WRITE_REPLIED -> idle when (and (= @payload.status 409) (= @entity.op "create"))
+        (emit COUCH_DUPLICATE_ID { db: @entity.db, id: @entity.docId })
+      COUCH_WRITE_REPLIED -> reading when (and (= @payload.status 409) (!= @entity.op "create") (< @entity.attempt @config.maxAttempts))
+        (set @entity.attempt (+ @entity.attempt 1))
+        (http GET @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId)) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_READ_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_WRITE_REPLIED -> idle when (and (= @payload.status 409) (!= @entity.op "create") (>= @entity.attempt @config.maxAttempts))
+        (emit COUCH_FAILED { op: @entity.op, status: 409, message: (str/concat @entity.db " " @entity.docId " changed concurrently " @entity.attempt " times") })
+      COUCH_WRITE_REPLIED -> idle when (and (not (and (>= @payload.status 200) (< @payload.status 300))) (!= @payload.status 409))
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB write answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+      COUCH_UNREACHABLE -> idle
+        (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
+    }
+
+    state listing {
+      INIT -> idle
+        (set @entity.op "")
+        (set @entity.attempt 0)
+      COUCH_LIST_REPLIED -> idle when (= @payload.status 200)
+        (emit COUCH_LISTED { db: @entity.db, rows: (array/map (object/get (json/parse @payload.body CouchAllDocs) rows []) (fn entry (object/omit (object/get @entry doc {}) ["_id", "_rev"]))) })
+      COUCH_LIST_REPLIED -> idle when (= @payload.status 404)
+        (emit COUCH_LISTED { db: @entity.db, rows: [] })
+      COUCH_LIST_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB list answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+      COUCH_UNREACHABLE -> idle
+        (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
+    }
+
+    state finding {
+      INIT -> idle
+        (set @entity.op "")
+        (set @entity.attempt 0)
+      COUCH_FIND_REPLIED -> finding when (and (= @payload.status 200) (< @entity.limit 0) (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize))
+        (set @entity.acc (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs [])))
+        (set @entity.bookmark (object/get (json/parse @payload.body CouchFound) bookmark ""))
+        (set @entity.skip 0)
+        (http POST @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/_find") {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (str/concat "{\"selector\":" @entity.selector ",\"sort\":" @entity.sort ",\"skip\":" @entity.skip ",\"limit\":" @config.pageSize (if (!= @entity.bookmark "") (str/concat ",\"bookmark\":" (json/stringify @entity.bookmark)) "") "}"),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_FIND_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 200) (< @entity.limit 0) (< (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize))
+        (emit COUCH_FOUND { db: @entity.db, rows: (array/map (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs [])) (fn doc (object/omit @doc ["_id", "_rev"]))), total: (+ @entity.skip (array/len (array/concat @entity.acc (object/get (json/parse @payload.body CouchFound) docs [])))) })
+      COUCH_FIND_REPLIED -> idle when (and (= @payload.status 200) (>= @entity.limit 0) (< (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @entity.limit))
+        (emit COUCH_FOUND { db: @entity.db, rows: (array/map (object/get (json/parse @payload.body CouchFound) docs []) (fn doc (object/omit @doc ["_id", "_rev"]))), total: (+ @entity.skip (array/len (object/get (json/parse @payload.body CouchFound) docs []))) })
+      COUCH_FIND_REPLIED -> counting when (and (= @payload.status 200) (>= @entity.limit 0) (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @entity.limit))
+        (set @entity.acc (object/get (json/parse @payload.body CouchFound) docs []))
+        (set @entity.bookmark "")
+        (set @entity.count 0)
+        (http POST @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/_find") {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (str/concat "{\"selector\":" @entity.selector ",\"fields\":[\"_id\"],\"limit\":" @config.pageSize (if (!= @entity.bookmark "") (str/concat ",\"bookmark\":" (json/stringify @entity.bookmark)) "") "}"),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_COUNT_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_FIND_REPLIED -> idle when (= @payload.status 404)
+        (emit COUCH_FOUND { db: @entity.db, rows: [], total: 0 })
+      COUCH_FIND_REPLIED -> idle when (and (!= @payload.status 200) (!= @payload.status 404))
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB _find answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+      COUCH_UNREACHABLE -> idle
+        (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
+    }
+
+    state counting {
+      INIT -> idle
+        (set @entity.op "")
+        (set @entity.attempt 0)
+      COUCH_COUNT_REPLIED -> counting when (and (= @payload.status 200) (>= (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize))
+        (set @entity.count (+ @entity.count (array/len (object/get (json/parse @payload.body CouchFound) docs []))))
+        (set @entity.bookmark (object/get (json/parse @payload.body CouchFound) bookmark ""))
+        (http POST @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/_find") {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (str/concat "{\"selector\":" @entity.selector ",\"fields\":[\"_id\"],\"limit\":" @config.pageSize (if (!= @entity.bookmark "") (str/concat ",\"bookmark\":" (json/stringify @entity.bookmark)) "") "}"),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_COUNT_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_COUNT_REPLIED -> idle when (and (= @payload.status 200) (< (array/len (object/get (json/parse @payload.body CouchFound) docs [])) @config.pageSize))
+        (emit COUCH_FOUND { db: @entity.db, rows: (array/map @entity.acc (fn doc (object/omit @doc ["_id", "_rev"]))), total: (+ @entity.count (array/len (object/get (json/parse @payload.body CouchFound) docs []))) })
+      COUCH_COUNT_REPLIED -> idle when (!= @payload.status 200)
+        (emit COUCH_FAILED { op: @entity.op, status: @payload.status, message: (str/concat "CouchDB _find answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+      COUCH_UNREACHABLE -> idle
+        (emit COUCH_FAILED { op: @entity.op, status: 0, message: (str/concat "CouchDB request failed: " @payload.error) })
+        (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "CouchDB unavailable: " @payload.error) })
+    }
+
+    emits {
+      COUCH_ROW -> external { db : string!  id : string!  row : Map string CouchCell! }
+        @description "The stored row (without _id and _rev)."
+        @synonyms "document read, row found"
+        @tier "primary"
+      COUCH_ROW_ABSENT -> external { db : string!  id : string! }
+        @description "No document with that id (404)."
+        @synonyms "missing row, not found"
+        @tier "primary"
+      COUCH_CREATED -> external { db : string!  id : string!  row : Map string CouchCell! }
+        @description "The document was written."
+        @synonyms "row created, inserted"
+        @tier "primary"
+      COUCH_DUPLICATE_ID -> external { db : string!  id : string! }
+        @description "A create lost to a document that already has this id (409)."
+        @synonyms "id taken, already exists"
+        @tier "primary"
+      COUCH_UPDATED -> external { db : string!  id : string!  row : Map string CouchCell! }
+        @description "The changes were merged over the stored document, conditioned on the _rev read."
+        @synonyms "row updated, merged"
+        @tier "primary"
+      COUCH_UPSERTED -> external { db : string!  id : string!  created : boolean!  row : Map string CouchCell! }
+        @description "The document was replaced (created false, createdAt kept) or inserted (created true)."
+        @synonyms "row replaced, created or replaced"
+        @tier "primary"
+      COUCH_DELETED -> external { db : string!  id : string! }
+        @description "The document was deleted at the _rev read."
+        @synonyms "row deleted, removed"
+        @tier "primary"
+      COUCH_NOT_FOUND -> external { db : string!  id : string! }
+        @description "An update or delete found no document to write over."
+        @synonyms "nothing to update, missing"
+        @tier "primary"
+      COUCH_LISTED -> external { db : string!  rows : [Map string CouchCell]! }
+        @description "Every document of the database, without _id and _rev; empty when the database does not exist."
+        @synonyms "all rows, list result"
+        @tier "primary"
+      COUCH_FOUND -> external { db : string!  rows : [Map string CouchCell]!  total : number! }
+        @description "The documents a Mango query matched (the window when a limit was given) and the total the query matches."
+        @synonyms "query result, find result, mango result"
+        @tier "primary"
+      COUCH_FAILED -> external { op : string!  status : number!  message : string! }
+        @description "The call did not complete: the verb, the HTTP status (0 when unreachable or refused before sending) and CouchDB's reason, or the changed-concurrently message after maxAttempts lost races."
+        @synonyms "database error, request failed, write conflict"
+        @tier "primary"
+      COUCH_GET_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: the get reply."
+        @tier "secondary"
+      COUCH_ENSURE_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: the create-database reply."
+        @tier "secondary"
+      COUCH_READ_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: the read-for-_rev reply."
+        @tier "secondary"
+      COUCH_WRITE_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: the conditioned write reply."
+        @tier "secondary"
+      COUCH_LIST_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: the _all_docs reply."
+        @tier "secondary"
+      COUCH_FIND_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: a _find page reply."
+        @tier "secondary"
+      COUCH_COUNT_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: a count page reply."
+        @tier "secondary"
+      COUCH_UNREACHABLE { error : string!  kind : string!  credential : string  key : string }
+        @description "Internal: the http effect's failure."
+        @tier "secondary"
+    }
+
+    listens {
+      COUCH_GET -> external { db : string!  id : string! }
+        @description "Read one document."
+        @synonyms "read row, fetch document"
+      COUCH_CREATE -> external { db : string!  id : string!  row : Map string CouchCell! }
+        @description "Make the database once, then PUT the document under id."
+        @synonyms "insert row, add document"
+      COUCH_UPSERT -> external { db : string!  id : string!  row : Map string CouchCell! }
+        @description "Create or replace by id, keeping the stored createdAt."
+        @synonyms "save row, replace document"
+      COUCH_UPDATE -> external { db : string!  id : string!  changes : Map string CouchCell! }
+        @description "Merge changes (id excluded) over the stored document."
+        @synonyms "patch row, modify document"
+      COUCH_DELETE -> external { db : string!  id : string! }
+        @description "Delete the document at its current _rev."
+        @synonyms "remove row, drop document"
+      COUCH_LIST -> external { db : string! }
+        @description "Read every document of the database."
+        @synonyms "all rows, list documents"
+      COUCH_FIND -> external { db : string!  selector : string!  sort : string!  skip : number  limit : number }
+        @description "Run a Mango query: selector and sort are JSON text; no limit reads every page."
+        @synonyms "query rows, mango find, search documents"
+      COUCH_GET_REPLIED
+      COUCH_ENSURE_REPLIED
+      COUCH_READ_REPLIED
+      COUCH_WRITE_REPLIED
+      COUCH_LIST_REPLIED
+      COUCH_FIND_REPLIED
+      COUCH_COUNT_REPLIED
+      COUCH_UNREACHABLE
+    }
+
+    config {
+      statusSlot : slot = system
+        @label "Status slot"
+        @description "Where the atom reports a failed call."
+        @synonyms "status area, slot"
+        @tier "presentation"
+      origin : url = "http://couchdb.example.test:5984"
+        @label "CouchDB origin"
+        @description "The server as http(s)://host[:port], without credentials. Must be declared in the app egress list."
+        @synonyms "couchdb url, database server, couch host"
+        @tier "infra"
+      userCredential : secret = "COUCHDB_USER"
+        @label "User credential"
+        @description "The credential name the host resolves to the CouchDB user for Basic authorization."
+        @synonyms "database user, couch login"
+        @tier "infra"
+      passwordCredential : secret = "COUCHDB_PASSWORD"
+        @label "Password credential"
+        @description "The credential name the host resolves to the CouchDB password."
+        @synonyms "database password, couch secret"
+        @tier "infra"
+      pageSize : number = 1000
+        @label "Page size"
+        @description "Documents per _find request when a read has no limit or counts matches."
+        @synonyms "batch size, find page"
+        @tier "infra"
+      maxAttempts : number = 5
+        @label "Write attempts"
+        @description "How many times a write that loses a _rev race re-reads and tries again."
+        @synonyms "conflict retries, rev retries"
+        @tier "infra"
+      timeoutMs : number = 10000
+        @label "Request timeout (ms)"
+        @description "Milliseconds each request may take."
+        @synonyms "http timeout"
+        @tier "infra"
+    }
+  }
+
+  page "/couchdb" as CouchPage -> CouchClient
+}

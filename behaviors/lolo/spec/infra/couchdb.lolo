@@ -1,0 +1,45 @@
+app couchdb-spec [
+  version: "1.0.0",
+  description: "Design contract for a CouchDB row store over the REST API: one database per collection name the caller gives; a row is a document whose _id is the row id, and a read hands back the row without _id and _rev. A create makes the database once (PUT /stocks answers 201, 202, 409 or 412 for made-or-existing) then PUTs the document; a 409 on the document is a duplicate id. A get answers the row, or absent on 404. An update or delete reads the document for its _rev, then writes conditioned on that _rev (PUT with _rev, DELETE ?rev=); a 409 re-reads and tries again, at most 5 attempts, then gives up as changed concurrently. A find POSTs a Mango selector to /db/_find (404 is an empty answer) and reads a full page through the bookmark. Credentials from the server URL travel as a Basic Authorization header."
+]
+
+orbital CouchdbSpec {
+  expects entity CouchCall [runtime] {
+    id : string!
+    op : string
+    db : string
+    docId : string
+    attempt : number
+  }
+  expects trait CouchClient {
+    state idle {
+      COUCH_GET -> getting
+      COUCH_CREATE -> ensuring
+      COUCH_UPSERT -> ensuring
+      COUCH_UPDATE -> reading
+      COUCH_DELETE -> reading
+      COUCH_LIST -> listing
+      COUCH_FIND -> finding
+    }
+    state ensuring @holds (>= @entity.attempt 1)
+    state reading @holds (>= @entity.attempt 1)
+    state writing @holds (>= @entity.attempt 1)
+    state finding
+    state reading { COUCH_READ_REPLIED -> idle }
+    state writing { COUCH_WRITE_REPLIED -> idle }
+    emits {
+      COUCH_ROW { db : string!  id : string! }
+      COUCH_ROW_ABSENT { db : string!  id : string! }
+      COUCH_CREATED { db : string!  id : string! }
+      COUCH_DUPLICATE_ID { db : string!  id : string! }
+      COUCH_UPDATED { db : string!  id : string! }
+      COUCH_UPSERTED { db : string!  id : string!  created : boolean! }
+      COUCH_DELETED { db : string!  id : string! }
+      COUCH_NOT_FOUND { db : string!  id : string! }
+      COUCH_LISTED { db : string! }
+      COUCH_FOUND { db : string!  total : number! }
+      COUCH_FAILED { op : string!  status : number!  message : string! }
+    }
+  }
+  expects page "/couchdb" -> CouchClient
+}

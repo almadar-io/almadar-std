@@ -1,7 +1,10 @@
 app std-ml-similarity [
   version: "1.0.0",
-  description: "Retrieval rung (R3) — embed a candidate against references and gate on cosine floor + margin; abstains when not confident."
+  description: "Retrieval rung (R3) — embed a candidate against references through std-llm (LLM_EMBED) and gate on cosine floor + margin; abstains when not confident.",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
+
+uses Llm from "std/behaviors/std-llm"
 
 orbital MlSimilarityOrbital {
 
@@ -26,6 +29,12 @@ orbital MlSimilarityOrbital {
     reason           : string    = ""
     request          : DecisionRequest = {}
     status           : "idle" | "embedding" | "resolved" = idle
+  }
+
+  trait SimilarityLlm = Llm.traits.LlmClient {
+    listens {
+      SimilarityRun.LLM_EMBED -> LLM_EMBED
+    }
   }
 
   trait SimilarityRun -> SimilarityComparison [lifecycle, instance] {
@@ -61,7 +70,7 @@ orbital MlSimilarityOrbital {
         (set @entity.candidates ?candidates)
         (set @entity.request ?request)
         (set @entity.status embedding)
-        (llm/embed (array/prepend ?candidates ?query) { emit: { success: EMBEDDED, failure: EMBED_FAILED } })
+        (emit LLM_EMBED { texts: (array/prepend ?candidates ?query) })
 
       COMPARE -> resolved when (== (array/len ?candidates) 0)
         (set @entity.query ?query)
@@ -93,11 +102,11 @@ orbital MlSimilarityOrbital {
         (set @entity.status idle)
 
       EMBEDDED -> resolved
-        (set @entity.embeddings ?result)
+        (set @entity.embeddings ?embeddings)
         (set @entity.status resolved)
         ;; An embed result without query + at least one candidate vector is an
         ;; abstain, not a crash — the rung can prove nothing from it.
-        (if (< (array/len ?result) 2)
+        (if (< (array/len ?embeddings) 2)
           (do
             (set @entity.queryVector [])
             (set @entity.candidateVectors [])
@@ -152,10 +161,10 @@ orbital MlSimilarityOrbital {
     }
 
     emits {
-      EMBEDDED {
-        result : [[float]]!
+      LLM_EMBED -> external {
+        texts : [string]!
       }
-        @description "Raw embeddings from llm/embed — query vector at index 0, candidate vectors following in input order"
+        @description "Ask std-llm to embed the query (index 0) followed by the candidates"
         @tier "secondary"
 
       SIMILARITY_MATCHED -> external {
@@ -174,6 +183,15 @@ orbital MlSimilarityOrbital {
     }
 
     listens {
+      SimilarityLlm.LLM_EMBED_RESULT -> EMBEDDED
+      SimilarityLlm.LLM_FAILED -> EMBED_FAILED
+      EMBEDDED {
+        embeddings : [[number]]!
+      }
+      EMBED_FAILED {
+        code : string
+        message : string!
+      }
       COMPARE {
         query : string!
         candidates : [string]!
@@ -182,5 +200,5 @@ orbital MlSimilarityOrbital {
     }
   }
 
-  page "/ml-similarity" as MlSimilarityPage -> SimilarityRun
+  page "/ml-similarity" as MlSimilarityPage -> SimilarityRun, SimilarityLlm
 }

@@ -1,11 +1,32 @@
 app rate-limiter-spec [
   version: "1.0.0",
-  description: "Design contract for a rate limiter: the request count is never negative, open or throttled."
+  description: "Design contract for a fixed-window rate limiter: a bucket admits its limit per window, throttles the next request, reports the seconds until the window resets, and a new window admits again. Every REQUEST carries a requestId and is answered by ADMITTED { requestId, remaining, resetIn, limit, window } or THROTTLED { requestId, resetIn, limit, window }; a counted request adds exactly one and a disabled limiter admits without counting."
 ]
 
 orbital RateLimiterSpec {
+  expects entity RateBucket [runtime] {
+    count : number
+    limit : number
+    window : number
+    resetIn : number
+    @invariant (>= @entity.resetIn 0)
+  }
   expects trait RateBucketRateLimiter {
-    state open @holds (>= @entity.count 0)
-    state throttled @holds (>= @entity.count 0)
+    state open @holds (and (>= @entity.count 0) (< @entity.count @entity.limit))
+    state throttled @holds (and (>= @entity.count 0) (> @entity.limit 0))
+    state open {
+      REQUEST -> open @ensures (if @config.enabled (= @entity.count (+ @fromEntity.count 1)) (= @entity.count @fromEntity.count))
+      WINDOW_ELAPSED -> open @ensures (and (= @entity.count 0) (= @entity.resetIn @entity.window))
+      RESET -> open @ensures (and (= @entity.count 0) (= @entity.resetIn @entity.window))
+    }
+    state throttled {
+      WINDOW_ELAPSED -> open @ensures (and (= @entity.count 0) (= @entity.resetIn @entity.window))
+      RESET -> open @ensures (and (= @entity.count 0) (= @entity.resetIn @entity.window))
+    }
+    emits {
+      WINDOW_ELAPSED
+      ADMITTED { requestId : number!  remaining : number!  resetIn : number!  limit : number!  window : number! }
+      THROTTLED { requestId : number!  resetIn : number!  limit : number!  window : number! }
+    }
   }
 }

@@ -1,0 +1,30 @@
+app http-policy-spec [
+  version: "1.0.0",
+  description: "Design contract for the HTTP policy a served app answers with, from the orbital-server http_layers.rs tests. CORS: any OPTIONS request is a preflight answered at once with status 200, no body, and the layers below skip it; an origin on the allow list (default http://localhost:5173; a comma list, trimmed, blanks dropped; CONFIGURE replaces it at runtime) is echoed in allow-origin with allow-credentials true, an unlisted or absent origin gets neither; a preflight also carries allow-methods GET,HEAD,PUT,PATCH,POST,DELETE and mirrors the requested headers in allow-headers. Security headers: only a path starting /api gets the twelve helmet 8 defaults (CSP, COOP same-origin, CORP same-origin, origin-agent-cluster ?1, referrer no-referrer, HSTS max-age 31536000 includeSubDomains, nosniff, dns-prefetch off, download-options noopen, frame SAMEORIGIN, permitted-cross-domain none, xss 0); a page gets none. Body limit: 16777216 bytes pass, 16777217 are refused with 413. Every decision echoes the asking requestId so concurrent requests never serialize. Compression: a response of 1024 bytes or more is compressed (br when accepted, else gzip), under 1024 stays plain, text/event-stream is never compressed, and no accepted encoding means plain."
+]
+
+type HttpHeader = { name : string!, value : string! }
+orbital HttpPolicySpec {
+  expects entity HttpExchange {
+    id : string!
+    method : string
+    path : string
+    contentLength : number
+    responseSize : number
+  }
+  expects trait HttpPolicy {
+    state idle {
+      HTTP_DECIDE -> idle
+    }
+    emits {
+      HTTP_DECIDED {
+        requestId : number!
+        verdict : string!
+        status : number!
+        responseHeaders : [HttpHeader]!
+        compress : string!
+      }
+    }
+  }
+  expects page "/http-policy" -> HttpPolicy
+}

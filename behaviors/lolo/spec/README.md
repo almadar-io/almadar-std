@@ -13,13 +13,18 @@ A spec sits under the same folder path as the behavior it specs: the spec for `i
 | `infra/timeout.lolo` | `std-timeout` |
 | `infra/retry.lolo` | `std-retry` (bound; composers that rename the trait, `std-webhook` and its realizations, owe it under their own name) |
 | `infra/api-keys.lolo` | `std-api-keys` |
+| `infra/api-key-verifier.lolo` | `std-api-key-verifier` (bound) |
+| `infra/stream-ticket.lolo` | `std-stream-ticket` (bound) |
+| `infra/bearer-verify.lolo` | `std-bearer-verify` (unbound until WS-0 crypto operators land; `KeyDocument` persistent, verdicts emit `BEARER_VERIFIED { viewer }` / `BEARER_REFUSED { reason }`) |
 | `ml/label-capture.lolo` | `std-ml-label-capture` |
+| `ml/llm-provider.lolo` | `std-llm` (bound; dropping `LLM_FAILED` or the `LLM_GENERATE`/`LLM_CLASSIFY`/`LLM_EMBED` arms fails it) |
 | `ui/core/gallery.lolo` | `std-gallery` |
 | `infra/audit-entry.lolo` | any program with the audit row (`std-audit-capture`, `std-document-mgmt`) |
 | `infra/throttle.lolo` | `std-throttle` (bound; proves `open ⇒ suppressed = 0`) |
 | `infra/cooldown.lolo` | `std-cooldown` (bound; proves the remaining time is never negative) |
 | `infra/circuit-breaker.lolo` | `std-circuit-breaker` (bound; `std-api-gateway` owes it under its own trait name) |
 | `infra/rate-limiter.lolo` | `std-rate-limiter` (bound) |
+| `infra/http-policy.lolo` | `std-http-policy` (bound; CORS preflight/echo, `/api` security headers, 16 MiB body limit, 1 KiB compression threshold from `orbital-server` `http_layers.rs`; rate limiting stays `std-rate-limiter`) |
 | `ui/game/score.lolo` | `std-score` (bound; score never negative) |
 | `infra/lifecycle.lolo` | `std-lifecycle` (bound; a dry run never reaches the writing state) |
 | `infra/data-import.lolo` | `std-data-import` (bound; `project-friday` proves it) |
@@ -41,6 +46,12 @@ A spec sits under the same folder path as the behavior it specs: the spec for `i
 | `infra/llm-spend-board.lolo` | `std-llm-spend-board` (bound; both entities `[persistent]`, one written by `persist create`, one by `persist upsert`) |
 | `infra/tab-capture.lolo` | `std-tab-capture` (bound; dropping `CAPTURE_FAILED` from the atom fails it) |
 | `infra/file-drop.lolo` | `std-file-drop` (bound) |
+| `infra/credential-admin.lolo` | `std-credential-admin` (bound; dropping the `CRED_ADMIN_GATE` edge fails it) |
+| `infra/store-selection.lolo` | `std-store-selection` (bound; `reading` keeps `poolMax` absent or >= 0) |
+| `infra/row-store.lolo` | the store drivers (unbound; declares the `Row*` record types the verbs and replies carry) |
+| `infra/server.lolo` | the WS-S server program (unbound; route contract of `orbital-server`) |
+| `infra/mock-seed.lolo` | `std-mock-seed` (bound; composes `std-mock-random` for the seeded draws; the index strategy matches the `sample-rows.index.json` golden on every row) |
+| `infra/redis.lolo` | `std-redis` (bound; RESP over `os/tcp-connect`/`send`/`recv`/`close`; dropping the `handshaking`/`awaiting`/`closing` states or the `REDIS_WIRE_SENT` emit fails it) |
 
 One spec per atom: a spec binds to the whole program that imports it, so a spec covering two atoms fails until both are composed. A composer owes an atom's spec under its own names: a trait reference's rename, `events`, `linkedEntity` and `fields`, or an orbital import's prefix and remaps (`docs/Almadar_LOLO.md`, Specs).
 
@@ -60,6 +71,7 @@ A spec states what the atom is, in the real syntax with every body left off: `ex
 | Trait states and a direct edge | `approval-gate`, `retry`, `timeout`, `label-capture` |
 | Page with mounted traits | every spec |
 | A spec built on another spec (`uses`) | `audit-trail` on `audit-entry` |
+| Config knob with its type and default (`expects config { stdio : string = "pipe" }`) | `cli` |
 
 Not shown in a real spec: `@unique` (no atom carries it yet) and `@create`/`@update`/`@delete` policies (they belong to organisms; see `almadar-behaviors/spec/document-center`); `[local]` is in `almadar-behaviors/spec/learner-tuning`.
 

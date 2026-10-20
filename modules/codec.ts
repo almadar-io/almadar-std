@@ -9,7 +9,7 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
-import { STRING, lit, nullable, union } from '../signature.js';
+import { BYTES, NUMBER, STRING, lit, nullable, union } from '../signature.js';
 
 const DIGEST_ENCODING: OperatorTypeRef = union(lit('hex'), lit('base64'));
 
@@ -92,6 +92,22 @@ export const HASH_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'salt', type: STRING, description: 'A secret-typed @config knob naming the credential that holds the hex salt' },
     ],
     example: '["hash/scrypt", "sk_live_", "@config.salt"] // => "010bbcf1a211930bca10afa35c740b1c70dcb058711e165c9918f1137c97b940" when the salt credential holds 00112233445566778899',
+  },
+  'hash/pbkdf2': {
+    module: 'hash',
+    category: 'std-codec',
+    minArity: 4,
+    maxArity: 4,
+    description: 'PBKDF2 with HMAC-SHA256 (RFC 8018) over bytes, answering length derived bytes (a bytes value is a standard padded base64 string at run time). Iterations and length are whole numbers from 1; anything else fails with kind invalid',
+    hasSideEffects: false,
+    returnType: BYTES,
+    params: [
+      { name: 'password', type: BYTES, description: 'The password bytes' },
+      { name: 'salt', type: BYTES, description: 'The salt bytes' },
+      { name: 'iterations', type: NUMBER, description: 'Round count, at least 1' },
+      { name: 'length', type: NUMBER, description: 'Derived key length in bytes, at least 1' },
+    ],
+    example: '["hash/pbkdf2", "cGFzc3dvcmQ=", "c2FsdA==", 1, 32] // => "Eg+2z/z4syxD5yJSVsT4N6hlSMkszDVICAWYfLcL4Xs="',
   },
 };
 

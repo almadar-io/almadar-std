@@ -1,7 +1,10 @@
 app std-agent-planner [
   version: "1.0.0",
-  description: "Agent planner molecule — recall memories, then generate a plan from the prompt + recalled context."
+  description: "Agent planner molecule — recall memories, then generate a plan from the prompt + recalled context through std-llm (LLM_GENERATE).",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
+
+uses Llm from "std/behaviors/std-llm"
 
 type MemoryRecord = { id: string!, content: string!, category: string!, strength: number }
 
@@ -12,6 +15,12 @@ orbital AgentPlannerOrbital {
     memories : [MemoryRecord] = []
     plan : string = ""
     status : "idle" | "planning" | "planned" = idle
+  }
+
+  trait PlannerLlm = Llm.traits.LlmClient {
+    listens {
+      PlannerExecution.LLM_GENERATE -> LLM_GENERATE
+    }
   }
 
   trait PlannerExecution -> PlannerPlan [lifecycle, instance] {
@@ -36,10 +45,10 @@ orbital AgentPlannerOrbital {
         (set @entity.status idle)
       MEMORIES_RECALLED -> planning
         (set @entity.memories ?result)
-        (llm/generate @entity.prompt { emit: { success: PLAN_GENERATED, failure: PLAN_GENERATION_FAILED } })
+        (emit LLM_GENERATE { userPrompt: @entity.prompt })
       RECALL_FAILED -> planning
         (set @entity.memories [])
-        (llm/generate @entity.prompt { emit: { success: PLAN_GENERATED, failure: PLAN_GENERATION_FAILED } })
+        (emit LLM_GENERATE { userPrompt: @entity.prompt })
     }
 
     state planning {
@@ -49,7 +58,7 @@ orbital AgentPlannerOrbital {
         (set @entity.plan "")
         (set @entity.status idle)
       PLAN_GENERATED -> planned
-        (set @entity.plan ?result)
+        (set @entity.plan ?content)
         (set @entity.status planned)
         (emit PLANNED { plan: @entity.plan, memoryCount: @entity.memories })
       PLAN_GENERATION_FAILED -> planned
@@ -76,12 +85,23 @@ orbital AgentPlannerOrbital {
       MEMORIES_RECALLED {
         result : [MemoryRecord]!
       }
-      PLAN_GENERATED {
-        result : string!
+      LLM_GENERATE -> external {
+        userPrompt : string!
       }
+        @description "Ask std-llm to generate the plan from the prompt"
+        @tier "secondary"
     }
 
     listens {
+      PlannerLlm.LLM_GENERATE_RESULT -> PLAN_GENERATED
+      PlannerLlm.LLM_FAILED -> PLAN_GENERATION_FAILED
+      PLAN_GENERATED {
+        content : string!
+      }
+      PLAN_GENERATION_FAILED {
+        code : string
+        message : string!
+      }
       PLAN {
         prompt : string!
       }
@@ -111,5 +131,5 @@ orbital AgentPlannerOrbital {
     }
   }
 
-  page "/agent-planner" as AgentPlannerPage -> PlannerExecution, PlannerListener
+  page "/agent-planner" as AgentPlannerPage -> PlannerExecution, PlannerListener, PlannerLlm
 }

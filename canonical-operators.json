@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-19T18:22:09.353Z",
+  "generated": "2026-10-20T13:34:30.361Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -5012,6 +5012,41 @@
       ],
       "docsSource": "generated"
     },
+    "bytes/at": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "The byte at index i as a number 0-255; null when i is outside the data (negative included). A non-whole index fails with kind invalid. A bytes value is a standard padded base64 string at run time.",
+      "module": "bytes",
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The bytes to read",
+          "rejectsNull": true
+        },
+        {
+          "name": "i",
+          "type": "number",
+          "description": "Byte index",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bytes/at \"AAEC/w==\" 3) // => 255"
+      ],
+      "docsSource": "generated"
+    },
     "bytes/concat": {
       "category": "std-codec",
       "minArity": 1,
@@ -5081,6 +5116,47 @@
       ],
       "docsSource": "generated"
     },
+    "bytes/index-of": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "number",
+      "description": "Byte offset of the first occurrence of needle at or after from (default 0; a negative from counts from the end, out-of-range clamps), or -1 when absent. An empty needle answers from. A bytes value is a standard padded base64 string at run time.",
+      "module": "bytes",
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The bytes to search",
+          "rejectsNull": true
+        },
+        {
+          "name": "needle",
+          "type": "bytes",
+          "description": "The bytes to find",
+          "rejectsNull": true
+        },
+        {
+          "name": "from",
+          "type": {
+            "kind": "union",
+            "of": [
+              "number",
+              {
+                "kind": "literal",
+                "value": null
+              }
+            ]
+          },
+          "description": "Byte index to start at; null for 0",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(bytes/index-of \"aGVsbG8=\" \"bA==\") // => 2"
+      ],
+      "docsSource": "generated"
+    },
     "bytes/length": {
       "category": "std-codec",
       "minArity": 1,
@@ -5098,6 +5174,85 @@
       ],
       "examples": [
         "(bytes/length \"aGVsbG8=\") // => 5"
+      ],
+      "docsSource": "generated"
+    },
+    "bytes/read-uint": {
+      "category": "std-codec",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "The unsigned integer stored in width bytes at offset, big-endian (be) or little-endian (le); null when those bytes run past the data. A width-8 value above 2^53 - 1 fails with kind invalid rather than round. A bytes value is a standard padded base64 string at run time.",
+      "module": "bytes",
+      "params": [
+        {
+          "name": "data",
+          "type": "bytes",
+          "description": "The bytes to read",
+          "rejectsNull": true
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "description": "Byte index of the first byte",
+          "rejectsNull": true
+        },
+        {
+          "name": "width",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": 1
+              },
+              {
+                "kind": "literal",
+                "value": 2
+              },
+              {
+                "kind": "literal",
+                "value": 4
+              },
+              {
+                "kind": "literal",
+                "value": 8
+              }
+            ]
+          },
+          "description": "Byte count: 1, 2, 4 or 8",
+          "rejectsNull": true
+        },
+        {
+          "name": "endian",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "be"
+              },
+              {
+                "kind": "literal",
+                "value": "le"
+              }
+            ]
+          },
+          "description": "Byte order: \"be\" or \"le\"",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bytes/read-uint \"EjQ=\" 0 2 \"be\") // => 4660"
       ],
       "docsSource": "generated"
     },
@@ -5158,6 +5313,70 @@
       ],
       "examples": [
         "(bytes/to-string \"aGVsbG8=\") // => \"hello\""
+      ],
+      "docsSource": "generated"
+    },
+    "bytes/write-uint": {
+      "category": "std-codec",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "bytes",
+      "description": "A whole number as width unsigned bytes, big-endian (be) or little-endian (le). A value that is negative, not whole, too large for the width, or above 2^53 - 1 fails with kind invalid. A bytes value is a standard padded base64 string at run time.",
+      "module": "bytes",
+      "params": [
+        {
+          "name": "value",
+          "type": "number",
+          "description": "The unsigned integer to encode",
+          "rejectsNull": true
+        },
+        {
+          "name": "width",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": 1
+              },
+              {
+                "kind": "literal",
+                "value": 2
+              },
+              {
+                "kind": "literal",
+                "value": 4
+              },
+              {
+                "kind": "literal",
+                "value": 8
+              }
+            ]
+          },
+          "description": "Byte count: 1, 2, 4 or 8",
+          "rejectsNull": true
+        },
+        {
+          "name": "endian",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "be"
+              },
+              {
+                "kind": "literal",
+                "value": "le"
+              }
+            ]
+          },
+          "description": "Byte order: \"be\" or \"le\"",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(bytes/write-uint 4660 2 \"be\") // => \"EjQ=\""
       ],
       "docsSource": "generated"
     },
@@ -7879,6 +8098,44 @@
       ],
       "docsSource": "generated"
     },
+    "hash/pbkdf2": {
+      "category": "std-codec",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": "bytes",
+      "description": "PBKDF2 with HMAC-SHA256 (RFC 8018) over bytes, answering length derived bytes (a bytes value is a standard padded base64 string at run time). Iterations and length are whole numbers from 1; anything else fails with kind invalid",
+      "module": "hash",
+      "params": [
+        {
+          "name": "password",
+          "type": "bytes",
+          "description": "The password bytes",
+          "rejectsNull": true
+        },
+        {
+          "name": "salt",
+          "type": "bytes",
+          "description": "The salt bytes",
+          "rejectsNull": true
+        },
+        {
+          "name": "iterations",
+          "type": "number",
+          "description": "Round count, at least 1",
+          "rejectsNull": true
+        },
+        {
+          "name": "length",
+          "type": "number",
+          "description": "Derived key length in bytes, at least 1",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(hash/pbkdf2 \"cGFzc3dvcmQ=\" \"c2FsdA==\" 1 32) // => \"Eg+2z/z4syxD5yJSVsT4N6hlSMkszDVICAWYfLcL4Xs=\""
+      ],
+      "docsSource": "generated"
+    },
     "hash/scrypt": {
       "category": "std-codec",
       "minArity": 2,
@@ -8941,6 +9198,131 @@
       ],
       "examples": [
         "(http \"GET\" \"https://api.example.com\" \"/items\" {\"query\":{\"limit\":10}} {\"emit\":{\"success\":\"ITEMS_LOADED\",\"failure\":\"ITEMS_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "http/listen": {
+      "category": "std-os",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Serve HTTP/1.1 (grant net: listen). The first answer is { sock, address, port }; each request arrives on the onMessage route as { requestId, method, path, query, headers, body, peer, key } (header names lower-cased, repeats joined with \", \"; body as UTF-8 text; query the raw text after ?). Answer each with http/respond. A malformed head is answered 400 and a body without content-length 411 by the host, never delivered. One request per connection. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
+      "module": "os",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "os",
+      "params": [
+        {
+          "name": "host",
+          "type": "string",
+          "description": "Address to bind"
+        },
+        {
+          "name": "port",
+          "type": "number",
+          "description": "Port; 0 picks a free one"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(http/listen \"127.0.0.1\" 8080 {\"key\":\"server\",\"emit\":{\"success\":\"SERVING\",\"failure\":\"SERVE_FAILED\",\"onMessage\":\"REQUEST\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "http/respond": {
+      "category": "std-os",
+      "minArity": 4,
+      "maxArity": 5,
+      "returnType": "void",
+      "description": "Answer one http/listen request and close its connection. Status 200 to 599; content-length and connection are written by the host, so content-length, transfer-encoding and connection headers are refused; a 204 or 304 has no body. A refused answer leaves the request pending; a second answer fails closed. Success payload: { bytes }.",
+      "module": "os",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "os",
+      "params": [
+        {
+          "name": "requestId",
+          "type": "number",
+          "description": "The requestId of the delivered request"
+        },
+        {
+          "name": "status",
+          "type": "number",
+          "description": "Status code"
+        },
+        {
+          "name": "headers",
+          "type": {
+            "kind": "map",
+            "key": "string",
+            "value": "string"
+          },
+          "description": "Response headers"
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "description": "Response body as UTF-8 text"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(http/respond @payload.requestId 200 {\"content-type\":\"application/json\"} \"{}\" {\"emit\":{\"failure\":\"RESPOND_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -12430,6 +12812,50 @@
       ],
       "docsSource": "generated"
     },
+    "os/current-exe": {
+      "category": "std-os",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Read the absolute path of the running host binary, so a program can locate the binaries installed beside it (no grant: a fact of the process itself, like os/pid). Success payload: { path }.",
+      "module": "os",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "os",
+      "params": [
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/current-exe {\"emit\":{\"success\":\"EXE_READ\",\"failure\":\"PROC_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "os/cwd": {
       "category": "std-os",
       "minArity": 0,
@@ -15236,6 +15662,9 @@
                   },
                   "cancelled": {
                     "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
                   }
                 },
                 "open": true
@@ -15243,7 +15672,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
           "optional": true
         }
       ],
@@ -15458,7 +15887,7 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "void",
-      "description": "Listen for TCP connections (grant net: listen). The first answer is { sock }; each connection arrives as an os/accept event { sock, peer }. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
+      "description": "Listen for TCP connections (grant net: listen). The first answer is { sock }; each connection arrives on the onMessage route as { sock, peer }. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -15491,6 +15920,9 @@
                   },
                   "cancelled": {
                     "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
                   }
                 },
                 "open": true
@@ -15498,7 +15930,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
           "optional": true
         }
       ],
@@ -16223,6 +16655,9 @@
                   },
                   "cancelled": {
                     "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
                   }
                 },
                 "open": true
@@ -16230,7 +16665,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
           "optional": true
         }
       ],
@@ -16273,6 +16708,9 @@
                   },
                   "cancelled": {
                     "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
                   }
                 },
                 "open": true
@@ -16280,7 +16718,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
           "optional": true
         }
       ],
@@ -16323,6 +16761,9 @@
                   },
                   "cancelled": {
                     "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
                   }
                 },
                 "open": true
@@ -16330,7 +16771,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
           "optional": true
         }
       ],
@@ -16418,6 +16859,9 @@
                   },
                   "cancelled": {
                     "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
                   }
                 },
                 "open": true
@@ -16425,7 +16869,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
           "optional": true
         }
       ],
@@ -16476,6 +16920,9 @@
                   },
                   "cancelled": {
                     "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
                   }
                 },
                 "open": true
@@ -16483,7 +16930,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
           "optional": true
         }
       ],
@@ -16566,6 +17013,9 @@
                   },
                   "cancelled": {
                     "kind": "eventKey"
+                  },
+                  "onMessage": {
+                    "kind": "eventKey"
                   }
                 },
                 "open": true
@@ -16573,7 +17023,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "description": "Optional trailing options: { key, emit: { success, failure, cancelled, onMessage } } routes the first answer, the { error, kind } failure, the cancellation and each stream event (onMessage); kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
           "optional": true
         }
       ],
@@ -18151,6 +18601,60 @@
       ],
       "docsSource": "generated"
     },
+    "program/machine": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "array",
+        "of": "MachineRow"
+      },
+      "description": "Read a program's state machine as data: one row per transition of every trait — its orbital, trait, `from` state, event, `to` state, whether the transition carries a guard of its own, and the payload slots the event declares (`name`, `type`, `required`, optional `values` and `entity`). The rows are the kernel planner's own transition groups, the ones the walkers drive; a trait with no transitions has none.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "program",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "A quoted program"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/machine @entity.program {\"emit\":{\"success\":\"MACHINE_READ\",\"failure\":\"MACHINE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "program/print": {
       "category": "std-program",
       "minArity": 1,
@@ -18870,6 +19374,36 @@
       ],
       "examples": [
         "(render-ui \"button\" \"primary-slot\")"
+      ],
+      "docsSource": "generated"
+    },
+    "row/matches": {
+      "category": "std-object",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "boolean",
+      "description": "Whether the row satisfies the typed RowPredicate, decided by the kernel's one predicate evaluator (the one every store runs a compiled where/filter through); an absent predicate or row is an absent result",
+      "module": "object",
+      "params": [
+        {
+          "name": "pred",
+          "type": "RowPredicate",
+          "description": "The typed predicate (compare, member, hasElement, contains, isNull, all, any, not, const)"
+        },
+        {
+          "name": "row",
+          "type": {
+            "kind": "var",
+            "name": "E",
+            "bound": {
+              "kind": "record"
+            }
+          },
+          "description": "The row"
+        }
+      ],
+      "examples": [
+        "(row/matches {\"kind\":\"compare\",\"field\":\"status\",\"op\":\"==\",\"value\":\"open\"} {\"id\":\"t1\",\"status\":\"open\"}) // => true"
       ],
       "docsSource": "generated"
     },
@@ -19934,6 +20468,35 @@
         "(str/titleCase \"hello world\") // => \"Hello World\""
       ],
       "docsSource": "reference-docs"
+    },
+    "str/to-int": {
+      "category": "std-str",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "Strict integer parse matching Rust i64::from_str: an optional leading + or -, then one or more ASCII digits 0-9 and nothing else (no whitespace, no decimal point, no exponent, no hex, no other digit scripts). Null for any other text and for a value beyond 2^53 - 1 in either direction",
+      "module": "str",
+      "params": [
+        {
+          "name": "s",
+          "type": "string",
+          "description": "The decimal integer text",
+          "rejectsNull": true
+        }
+      ],
+      "examples": [
+        "(str/to-int \"-42\") // => -42"
+      ],
+      "docsSource": "generated"
     },
     "str/to-number": {
       "category": "std-str",
@@ -22365,6 +22928,68 @@
       ],
       "examples": [
         "(train/validate {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [{\"input\":[0],\"expected\":[1]}])"
+      ],
+      "docsSource": "generated"
+    },
+    "tree/fold": {
+      "category": "std-json",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": {
+        "kind": "var",
+        "name": "R"
+      },
+      "description": "The structural bottom-up fold over a value of a recursive type (the third argument names it). The children of a node are its fields whose declared type is the type itself, a list of it or a Map of it, read from the type, never from names or the value's shape; a union node is read through the variant it belongs to. The step is called once per node with (node childResults), childResults holding one entry per child field present, in its position: a field holds the child's result, a list the list of results, a map the map of results; a leaf gets {}. Every call works on a strict subterm of a finite value, so the fold terminates. An absent value folds to null",
+      "module": "json",
+      "returnSemantics": "lambda-result",
+      "lambdaArgPosition": 1,
+      "params": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "var",
+            "name": "T"
+          },
+          "description": "The value to fold"
+        },
+        {
+          "name": "step",
+          "type": {
+            "kind": "fn",
+            "params": [
+              {
+                "kind": "var",
+                "name": "T"
+              },
+              {
+                "kind": "childrenOf",
+                "of": "T",
+                "result": "R"
+              }
+            ],
+            "returns": {
+              "kind": "var",
+              "name": "R"
+            }
+          },
+          "description": "The step (fn (node childResults) ...): one node and its children's results"
+        },
+        {
+          "name": "shape",
+          "type": {
+            "kind": "shape"
+          },
+          "description": "The name of the value's recursive type"
+        },
+        {
+          "name": "definition",
+          "type": "string",
+          "description": "Written by the compiler, never by hand: the declared type's .orb field definition as JSON text, its recursive back-references the by-name reference to the shape",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(tree/fold @entity.filter [\"fn\",[\"node\",\"kids\"],[\"str/concat\",\"@node.kind\",\"(\",[\"str/join\",\"@kids.of\",\",\"],\")\"]] \"RowPredicate\")"
       ],
       "docsSource": "generated"
     },

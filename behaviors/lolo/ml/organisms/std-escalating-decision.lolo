@@ -172,6 +172,15 @@ orbital EscalatingDecisionOrbital {
   trait SimilarityRung = Rung3.traits.SimilarityRun -> SimilarityComparison {
     listens {
       LadderEntry.RUNGS_RESET -> RESET
+      ClassifyLlm.LLM_EMBED_RESULT -> EMBEDDED
+      ClassifyLlm.LLM_FAILED -> EMBED_FAILED
+      EMBEDDED {
+        embeddings : [[number]]!
+      }
+      EMBED_FAILED {
+        code : string
+        message : string!
+      }
       LookupRung.KEY_MISS -> COMPARE
         with { query: (str/concat ?candidate), candidates: (object/get ?request "categories"), request: ?request }
     }
@@ -223,6 +232,7 @@ orbital EscalatingDecisionOrbital {
   trait ClassifyLlm = Rung5.traits.ClassifyLlm {
     listens {
       ClassifyRung.LLM_CLASSIFY -> LLM_CLASSIFY
+      SimilarityRung.LLM_EMBED -> LLM_EMBED
     }
   }
 

@@ -1,0 +1,17 @@
+app orb-disk-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb disk`: report what fills the disk on a machine working the monorepo. The first line is the volume (`Disk: <used> used, <free> free of <total> (<pct>%)`), then one row per registry item, largest first, each `<size> <tag> <id> <label>` with tag safe, cost, danger or keep, and a closing `safe batch: ~<size>` line (status 200, exit 0). `--json` answers the same as one DiskReport record. Any other argument answers the usage (status 400, exit 2); a volume or size probe that cannot run answers `<code>: <message>` (status 500, exit 1)."
+]
+
+type DiskItem = { id : string!, label : string!, tag : string!, bytes : number! }
+type DiskReport = { totalBytes : number!, usedBytes : number!, freeBytes : number!, usePct : number!, items : [DiskItem]! }
+
+orbital OrbDiskSpec {
+  expects trait OrbDisk {
+    state ready
+    emits {
+      DISK_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-disk" -> OrbDisk
+}

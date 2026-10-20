@@ -1,0 +1,128 @@
+app std-http-policy [
+  version: "1.0.0",
+  description: "std-http-policy — the HTTP policy a served app answers with, as one pure decision. HTTP_DECIDE { requestId, method, path, headers, contentLength, responseSize, responseType } answers HTTP_DECIDED { requestId (echoed), verdict, status, responseHeaders, compress }. Any OPTIONS request is a preflight: status 200 at once, CORS grant plus allow-methods and the mirrored request headers, nothing else applied. Otherwise a body over bodyLimitBytes is refused 413 (payload-too-large); else ok 200. An origin on corsOrigins (the knob, replaced at runtime by CONFIGURE { corsOrigins }) is echoed in access-control-allow-origin with allow-credentials true, an unlisted or absent one gets no grant. A path starting with apiPrefix also carries the securityHeaders set (the helmet 8 defaults); a page gets none. compress is br when accepted, else gzip, else none; none for a preflight, an event stream, or a response under minCompressBytes."
+]
+uses Spec from "almadar-std/http-policy"
+type HttpHeader = { name : string!, value : string! }
+orbital HttpPolicyOrbital {
+  type HTTP_DECIDE = Event { requestId : number!, method : string!, path : string!, headers : [HttpHeader]!, contentLength : number, responseSize : number, responseType : string } "Decide the policy answer for one request."
+
+  entity HttpExchange [runtime] {
+    id : string!
+    method : string @description "The request method last decided." = ""
+    path : string @description "The request path last decided." = ""
+    corsOrigins : [string] @description "The origins granted CORS now; set from the corsOrigins knob at mount and replaced by CONFIGURE." = []
+    contentLength : number @description "The declared request body size in bytes." = 0
+    responseSize : number @description "The response body size in bytes." = 0
+  }
+
+  trait HttpPolicy -> HttpExchange [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.corsOrigins @config.corsOrigins)
+
+      CONFIGURE -> idle
+        (set @entity.corsOrigins @payload.corsOrigins)
+
+      HTTP_DECIDE -> idle
+        (set @entity.method @payload.method)
+        (set @entity.path @payload.path)
+        (set @entity.contentLength (or @payload.contentLength 0))
+        (set @entity.responseSize (or @payload.responseSize 0))
+        (let ((origin (array/find @payload.headers (fn h (= (str/lower @h.name) "origin"))))
+              (asked (array/find @payload.headers (fn h (= (str/lower @h.name) "access-control-request-headers"))))
+              (accept (array/find @payload.headers (fn h (= (str/lower @h.name) "accept-encoding"))))
+              (preflight (= (str/upper @payload.method) "OPTIONS")))
+          (let ((granted (and (!= @origin null) (array/includes @entity.corsOrigins @origin.value)))
+                (acceptValue (if (= @accept null) "" (str/lower @accept.value))))
+            (let ((cors (if @granted
+                      [{ name: "access-control-allow-origin", value: @origin.value }, { name: "access-control-allow-credentials", value: "true" }, { name: "vary", value: "origin, access-control-request-method, access-control-request-headers" }]
+                      [{ name: "vary", value: "origin, access-control-request-method, access-control-request-headers" }]))
+                  (api (and (not @preflight) (str/startsWith @payload.path @config.apiPrefix))))
+              (emit HTTP_DECIDED {
+                requestId: @payload.requestId,
+                verdict: (if @preflight "preflight" (if (> (or @payload.contentLength 0) @config.bodyLimitBytes) "payload-too-large" "ok")),
+                status: (if (and (not @preflight) (> (or @payload.contentLength 0) @config.bodyLimitBytes)) 413 200),
+                responseHeaders: (array/concat
+                  @cors
+                  (if @preflight
+                    (array/concat
+                      [{ name: "access-control-allow-methods", value: @config.allowMethods }]
+                      (if (= @asked null) [] [{ name: "access-control-allow-headers", value: @asked.value }]))
+                    [])
+                  (if @api @config.securityHeaders [])),
+                compress: (if (or @preflight (str/startsWith (str/lower (or @payload.responseType "")) "text/event-stream") (< (or @payload.responseSize 0) @config.minCompressBytes)) "none"
+                  (if (str/includes @acceptValue "br") "br" (if (str/includes @acceptValue "gzip") "gzip" "none")))
+              }))))
+    }
+
+    emits {
+      HTTP_DECIDED -> external {
+        requestId : number!
+        verdict : ("ok" | "preflight" | "payload-too-large")!
+        status : number!
+        responseHeaders : [HttpHeader]!
+        compress : ("br" | "gzip" | "none")!
+      }
+        @description "The policy's answer for one request: its verdict, the status, the headers to add and the compression to apply."
+        @synonyms "cors answer, security headers, body limit verdict, compression decision"
+        @tier "primary"
+    }
+
+    listens {
+      HTTP_DECIDE {
+        requestId : number!
+        method : string!
+        path : string!
+        headers : [HttpHeader]!
+        contentLength : number
+        responseSize : number
+        responseType : string
+      }
+        @description "Ask the policy about one request."
+        @synonyms "check request, apply cors, apply policy"
+      CONFIGURE {
+        corsOrigins : [string]!
+      }
+        @description "Replaces the origins granted CORS, e.g. from the CORS_ORIGIN environment read at boot."
+        @synonyms "set cors origins, allow origins"
+    }
+
+    config {
+      corsOrigins : [string] = ["http://localhost:5173"]
+        @label "CORS origins"
+        @description "Origins granted CORS with credentials; each is echoed back exactly. An origin not listed gets no grant."
+        @synonyms "allowed origins, cors origin"
+        @tier "infra"
+      allowMethods : string = "GET,HEAD,PUT,PATCH,POST,DELETE"
+        @label "Allowed methods"
+        @description "The access-control-allow-methods value a preflight carries."
+        @synonyms "cors methods"
+        @tier "infra"
+      apiPrefix : string = "/api"
+        @label "API prefix"
+        @description "Paths starting with it carry the security headers; other paths (pages) get none."
+        @synonyms "api path prefix"
+        @tier "infra"
+      securityHeaders : [HttpHeader] = [{ name: "content-security-policy", value: "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests" }, { name: "cross-origin-opener-policy", value: "same-origin" }, { name: "cross-origin-resource-policy", value: "same-origin" }, { name: "origin-agent-cluster", value: "?1" }, { name: "referrer-policy", value: "no-referrer" }, { name: "strict-transport-security", value: "max-age=31536000; includeSubDomains" }, { name: "x-content-type-options", value: "nosniff" }, { name: "x-dns-prefetch-control", value: "off" }, { name: "x-download-options", value: "noopen" }, { name: "x-frame-options", value: "SAMEORIGIN" }, { name: "x-permitted-cross-domain-policies", value: "none" }, { name: "x-xss-protection", value: "0" }]
+        @label "Security headers"
+        @description "The header set an API path carries; the helmet 8 defaults."
+        @synonyms "helmet, csp, hsts"
+        @tier "infra"
+      bodyLimitBytes : number = 16777216
+        @label "Body limit (bytes)"
+        @description "Largest request body admitted; one byte more is refused 413."
+        @synonyms "max body, request size limit"
+        @tier "infra"
+      minCompressBytes : number = 1024
+        @label "Minimum compress size (bytes)"
+        @description "Responses of this size or more are compressed; smaller ones stay plain."
+        @synonyms "compression threshold"
+        @tier "infra"
+    }
+  }
+
+  page "/http-policy" as HttpPolicyPage -> HttpPolicy
+}

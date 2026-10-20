@@ -1,0 +1,26 @@
+app mock-seed-spec [
+  version: "1.0.0",
+  description: "Design contract for mock row synthesis from declared fields: one value per field type, a declared default honored where it is a claim about every row, a declared mock candidate list rotated by row, relative mock dates resolved against the stream clock, and the same row ordinal always yielding the same index-strategy value."
+]
+
+orbital MockSeedSpec {
+  expects entity MockCell [runtime] {
+    id : string!
+    fieldType : string
+    fieldName : string
+    entityName : string
+    declared : string
+    index : number
+    seeded : boolean
+    runtime : boolean
+    value : string
+    num : number
+    honored : boolean
+  }
+  expects trait MockSeed {
+    state ready
+    state ready { SAMPLE_VALUE -> ready  SAMPLE_DATE -> ready  SAMPLE_TEXT -> ready  SAMPLE_IMAGE_URL -> ready  CHECK_DEFAULT -> ready  PICK_CANDIDATE -> ready  RESOLVE_MOCK_DATE -> ready  TYPE_MOCK -> ready  TITLE_CASE -> ready }
+    emits { MOCK_VALUE }
+  }
+  expects page "/mock-seed" -> MockSeed
+}

@@ -7,7 +7,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, NUMBER, PRIMITIVE_VALUE, STRING, list, rec, tv, union } from '../signature.js';
+import { BOOLEAN, NUMBER, PRIMITIVE_VALUE, STRING, list, nullable, rec, tv, union } from '../signature.js';
 
 /**
  * String module operators.
@@ -24,6 +24,17 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: NUMBER,
     params: [{ name: 's', type: STRING, description: 'The numeric string' }],
     example: '["str/to-number", "0x10"] // => 16',
+  },
+  'str/to-int': {
+    module: 'str',
+    category: 'std-str',
+    minArity: 1,
+    maxArity: 1,
+    description: 'Strict integer parse matching Rust i64::from_str: an optional leading + or -, then one or more ASCII digits 0-9 and nothing else (no whitespace, no decimal point, no exponent, no hex, no other digit scripts). Null for any other text and for a value beyond 2^53 - 1 in either direction',
+    hasSideEffects: false,
+    returnType: nullable(NUMBER),
+    params: [{ name: 's', type: STRING, description: 'The decimal integer text' }],
+    example: '["str/to-int", "-42"] // => -42',
   },
   'str/len': {
     module: 'str',

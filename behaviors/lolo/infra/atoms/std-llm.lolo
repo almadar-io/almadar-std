@@ -3,6 +3,7 @@ app std-llm [
   description: "std-llm — text generation, classification, summarization, embeddings and Jev decisions over OpenAI-compatible and Anthropic chat endpoints. The provider, its origin, base path and default model are config knobs, never inferred; credentials are secret knobs naming the host env var. A request that cannot be answered ends in LLM_FAILED. extract returns the reply's JSON text for the caller to read under its own shape; call-tools runs the model's tool loop and hands each batch of tool calls to the caller, which runs them and answers. A classify, classifyMany or embed that carries a key can be cancelled by LLM_CANCEL while it waits for its provider: it ends in LLM_CANCELLED and a reply that arrives later is dropped.",
   egress: ["https://api.openai.com", "https://api.anthropic.com", "https://api.deepseek.com", "https://api.moonshot.ai", "https://openrouter.ai", "http://127.0.0.1:1234"]
 ]
+uses Spec from "almadar-std/llm-provider"
 type LlmImage = { mediaType : string!, data : string! }
 type LlmJob = { stream : boolean, action : string!, attempt : number!, system : string!, user : string!, base : string!, model : string!, temperature : number!, maxTokens : number!, categories : [string], itemIds : [string], callKey : string, images : [LlmImage] }
 type LlmInFlight = { key : string!, httpKey : string! }

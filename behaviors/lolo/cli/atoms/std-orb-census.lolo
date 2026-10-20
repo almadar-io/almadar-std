@@ -1,0 +1,194 @@
+app std-orb-census [
+  version: "1.0.0",
+  inbound: ["cli-census"],
+  fs: { "~/kflow.ai.builder/**": [read] },
+  description: "std-orb-census — the `orb census <package-name>` command, the consumer census a package passes before it moves to archive/ (port of tools/almadar-retire). It expands the manifest and source globs under the root knob, drops the skipped directories, and reports every package.json outside the package's own directory that names it as a key (dependencies, devDependencies, peerDependencies, optionalDependencies, overrides) and every TS or JS source outside that directory that imports it (from, import(), require(), any subpath), one line each, then a `<name>: N import file(s), M manifest edge(s)` line. Zero hits answers status 200 (exit 0); any hit, or any file that could not be read, status 500 (exit 1); any other arguments the usage (status 400, exit 2). os/glob cannot prune, so the globs are enumerated by depth instead of walked."
+]
+uses Spec from "almadar-std/orb-census"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type CensusHit = { file : string!, kind : string!, detail : string! }
+type CensusReport = { name : string!, imports : number!, manifests : number!, hits : [CensusHit]! }
+
+orbital OrbCensusOrbital {
+  entity OrbCensusRun [runtime] {
+    id : string!
+    name : string = ""
+    probes : [string] = []
+    globs : [string] = []
+    paths : [string] = []
+    cursor : number = 0
+    ownDirs : [string] = []
+    hits : [CensusHit] = []
+    unread : [string] = []
+  }
+
+  trait OrbCensus -> OrbCensusRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      CENSUS_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+        (emit CENSUS_ANSWERED { status: 400, body: "usage: orb census <package-name>" })
+      CENSUS_CALLED -> ready when (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (str/startsWith (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "-"))
+        (emit CENSUS_ANSWERED { status: 400, body: "usage: orb census <package-name>" })
+      CENSUS_CALLED -> manifests when (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (str/startsWith (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "-")))
+        (set @entity.name (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
+        (set @entity.probes (array/flatten (array/flatten (array/map (str/split "from |from|import(|import (|require(|require (|import " "|") (fn pre (array/map (str/split "\"|'|`" "|") (fn q (array/map (str/split "__Q__|/" "|") (fn t (str/concat @pre @q @entity.name (str/replace @t "__Q__" @q)))))))))))
+        (set @entity.globs @config.manifestGlobs)
+        (set @entity.paths [])
+        (set @entity.ownDirs [])
+        (set @entity.hits [])
+        (set @entity.unread [])
+        (set @entity.cursor 0)
+        (emit CENSUS_GLOB { })
+      CENSUS_REPORT -> ready
+        (set @entity.hits (array/filter @entity.hits (fn h (= (array/len (array/filter @entity.ownDirs (fn d (str/startsWith (object/get @h "file") @d)))) 0))))
+        (emit CENSUS_FINISH { })
+      CENSUS_FINISH -> ready when (and (= (array/len @entity.hits) 0) (= (array/len @entity.unread) 0))
+        (emit CENSUS_ANSWERED { status: 200, body: (str/concat @entity.name ": 0 import file(s), 0 manifest edge(s)") })
+      CENSUS_FINISH -> ready when (or (> (array/len @entity.hits) 0) (> (array/len @entity.unread) 0))
+        (emit CENSUS_ANSWERED { status: 500, body: (str/join (array/concat
+          (array/map [(str/concat @entity.name ": " (array/len (array/filter @entity.hits (fn h (= (object/get @h "kind") "import")))) " import file(s), " (array/sum (array/map (array/filter @entity.hits (fn h (= (object/get @h "kind") "manifest"))) (fn h (str/to-number (array/first (str/split (object/get @h "detail") " ")))))) " manifest edge(s)")] (fn l @l))
+          (array/map (array/filter @entity.hits (fn h (= (object/get @h "kind") "manifest"))) (fn h (str/concat "  manifest " (object/get @h "file") " " (object/get @h "detail"))))
+          (array/map (array/filter @entity.hits (fn h (= (object/get @h "kind") "import"))) (fn h (str/concat "  import   " (object/get @h "file"))))
+          (array/map @entity.unread (fn u (str/concat "  UNREAD   " @u)))) "\n") })
+    }
+
+    state manifests {
+      INIT -> manifests
+      CENSUS_GLOB -> manifests when (< @entity.cursor (array/len @entity.globs))
+        (os/glob (str/concat @config.root "/" (array/nth @entity.globs @entity.cursor)) { key: "glob" emit: { success: CENSUS_GLOBBED, failure: CENSUS_GLOB_FAILED } })
+      CENSUS_GLOB -> readingManifests when (>= @entity.cursor (array/len @entity.globs))
+        (set @entity.cursor 0)
+        (emit CENSUS_READ { })
+      CENSUS_GLOBBED -> manifests
+        (set @entity.paths (array/concat @entity.paths (array/filter (array/map @payload.paths (fn p (str/slice @p (+ (str/len @config.root) 1)))) (fn p (= (array/len (array/filter @config.skipDirs (fn s (str/includes (str/concat "/" @p) @s)))) 0)))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_GLOB { })
+      CENSUS_GLOB_FAILED -> manifests
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_GLOB { })
+    }
+
+    state readingManifests {
+      INIT -> readingManifests
+      CENSUS_READ -> readingManifests when (< @entity.cursor (array/len @entity.paths))
+        (os/read-file (str/concat @config.root "/" (array/nth @entity.paths @entity.cursor)) { key: "file" emit: { success: CENSUS_FILE_READ, failure: CENSUS_FILE_UNREAD } })
+      CENSUS_READ -> sources when (>= @entity.cursor (array/len @entity.paths))
+        (set @entity.globs @config.sourceGlobs)
+        (set @entity.paths [])
+        (set @entity.cursor 0)
+        (emit CENSUS_GLOB { })
+      CENSUS_FILE_READ -> readingManifests when (str/includes (bytes/to-string @payload.data) (str/concat "\"name\": \"" @entity.name "\""))
+        (set @entity.ownDirs (array/append @entity.ownDirs (str/replace (array/nth @entity.paths @entity.cursor) "package.json" "")))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_READ { })
+      CENSUS_FILE_READ -> readingManifests when (and (not (str/includes (bytes/to-string @payload.data) (str/concat "\"name\": \"" @entity.name "\""))) (str/includes (bytes/to-string @payload.data) (str/concat "\"" @entity.name "\":")))
+        (set @entity.hits (array/append @entity.hits { file: (array/nth @entity.paths @entity.cursor), kind: "manifest", detail: (str/concat (- (array/len (str/split (bytes/to-string @payload.data) (str/concat "\"" @entity.name "\":"))) 1) " key(s)") }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_READ { })
+      CENSUS_FILE_READ -> readingManifests when (and (not (str/includes (bytes/to-string @payload.data) (str/concat "\"name\": \"" @entity.name "\""))) (not (str/includes (bytes/to-string @payload.data) (str/concat "\"" @entity.name "\":"))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_READ { })
+      CENSUS_FILE_UNREAD -> readingManifests
+        (set @entity.unread (array/append @entity.unread (array/nth @entity.paths @entity.cursor)))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_READ { })
+    }
+
+    state sources {
+      INIT -> sources
+      CENSUS_GLOB -> sources when (< @entity.cursor (array/len @entity.globs))
+        (os/glob (str/concat @config.root "/" (array/nth @entity.globs @entity.cursor)) { key: "glob" emit: { success: CENSUS_GLOBBED, failure: CENSUS_GLOB_FAILED } })
+      CENSUS_GLOB -> readingSources when (>= @entity.cursor (array/len @entity.globs))
+        (set @entity.paths (array/unique @entity.paths))
+        (set @entity.cursor 0)
+        (emit CENSUS_READ { })
+      CENSUS_GLOBBED -> sources
+        (set @entity.paths (array/concat @entity.paths (array/filter (array/map @payload.paths (fn p (str/slice @p (+ (str/len @config.root) 1)))) (fn p (and (not (str/endsWith @p ".d.ts")) (= (array/len (array/filter @config.skipDirs (fn s (str/includes (str/concat "/" @p) @s)))) 0))))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_GLOB { })
+      CENSUS_GLOB_FAILED -> sources
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_GLOB { })
+    }
+
+    state readingSources {
+      INIT -> readingSources
+      CENSUS_READ -> readingSources when (< @entity.cursor (array/len @entity.paths))
+        (os/read-file (str/concat @config.root "/" (array/nth @entity.paths @entity.cursor)) { key: "file" emit: { success: CENSUS_FILE_READ, failure: CENSUS_FILE_UNREAD } })
+      CENSUS_READ -> ready when (>= @entity.cursor (array/len @entity.paths))
+        (emit CENSUS_REPORT { })
+      CENSUS_FILE_READ -> readingSources when (array/some @entity.probes (fn p (str/includes (bytes/to-string @payload.data) @p)))
+        (set @entity.hits (array/append @entity.hits { file: (array/nth @entity.paths @entity.cursor), kind: "import", detail: "" }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_READ { })
+      CENSUS_FILE_READ -> readingSources when (not (array/some @entity.probes (fn p (str/includes (bytes/to-string @payload.data) @p))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_READ { })
+      CENSUS_FILE_UNREAD -> readingSources
+        (set @entity.unread (array/append @entity.unread (array/nth @entity.paths @entity.cursor)))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_READ { })
+    }
+
+    emits {
+      CENSUS_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      CENSUS_GLOBBED { paths : [string]! }
+        @description "A glob expanded."
+        @tier "internal"
+      CENSUS_GLOB_FAILED { error : string }
+        @description "A glob that could not be expanded."
+        @tier "internal"
+      CENSUS_FILE_READ { data : bytes! }
+        @description "A file read."
+        @tier "internal"
+      CENSUS_FILE_UNREAD { error : string }
+        @description "A file that could not be read."
+        @tier "internal"
+      CENSUS_GLOB { }
+        @description "Internal: expand the next glob."
+        @tier "internal"
+      CENSUS_READ { }
+        @description "Internal: read the next file."
+        @tier "internal"
+      CENSUS_REPORT { }
+        @description "Internal: drop the hits under the package's own directory."
+        @tier "internal"
+      CENSUS_FINISH { }
+        @description "Internal: answer with the census."
+        @tier "internal"
+    }
+
+    config {
+      root : string = "/Users/osamaalghanmi/kflow.ai.builder"
+        @label "Monorepo root"
+        @description "Absolute directory the census scans; the fs grant covers it. os/ targets must start from a literal or this knob, so the invocation cwd cannot be used directly."
+      manifestGlobs : [string] = ["package.json", "*/package.json", "*/*/package.json", "*/*/*/package.json", "*/*/*/*/package.json", "*/*/*/*/*/package.json"]
+        @label "Manifest globs"
+        @description "Depth-enumerated package.json globs, relative to the root."
+      sourceGlobs : [string] = ["*.ts", "*.tsx", "*.mts", "*.cts", "*.js", "*.jsx", "*.mjs", "*.cjs", "*/*.ts", "*/*.tsx", "*/*.mts", "*/*.cts", "*/*.js", "*/*.jsx", "*/*.mjs", "*/*.cjs", "*/*/*.ts", "*/*/*.tsx", "*/*/*.mts", "*/*/*.cts", "*/*/*.js", "*/*/*.jsx", "*/*/*.mjs", "*/*/*.cjs", "*/*/src/**/*.ts", "*/*/src/**/*.tsx", "*/*/src/**/*.mjs", "*/*/src/**/*.js", "*/*/test/**/*.ts", "*/*/test/**/*.tsx", "*/*/test/**/*.mjs", "*/*/test/**/*.js", "*/*/tests/**/*.ts", "*/*/tests/**/*.tsx", "*/*/tests/**/*.mjs", "*/*/tests/**/*.js", "*/*/__tests__/**/*.ts", "*/*/__tests__/**/*.tsx", "*/*/__tests__/**/*.mjs", "*/*/__tests__/**/*.js", "*/*/lib/**/*.ts", "*/*/lib/**/*.tsx", "*/*/lib/**/*.mjs", "*/*/lib/**/*.js", "*/*/hooks/**/*.ts", "*/*/hooks/**/*.tsx", "*/*/hooks/**/*.mjs", "*/*/hooks/**/*.js", "*/*/runtime/**/*.ts", "*/*/runtime/**/*.tsx", "*/*/runtime/**/*.mjs", "*/*/runtime/**/*.js", "*/*/providers/**/*.ts", "*/*/providers/**/*.tsx", "*/*/providers/**/*.mjs", "*/*/providers/**/*.js", "*/*/scripts/**/*.ts", "*/*/scripts/**/*.tsx", "*/*/scripts/**/*.mjs", "*/*/scripts/**/*.js", "*/*/site/**/*.ts", "*/*/site/**/*.tsx", "*/*/site/**/*.mjs", "*/*/site/**/*.js", "*/*/.site/**/*.ts", "*/*/.site/**/*.tsx", "*/*/.site/**/*.mjs", "*/*/.site/**/*.js", "*/*/.app/**/*.ts", "*/*/.app/**/*.tsx", "*/*/.app/**/*.mjs", "*/*/.app/**/*.js"]
+        @label "Source globs"
+        @description "TS and JS source globs, relative to the root."
+      skipDirs : [string] = ["/node_modules/", "/dist/", "/target/", "/archive/", "/.git/", "/.next/", "/.turbo/", "/.orbital/", "/.vite/", "/build/"]
+        @label "Skipped directories"
+        @description "A path containing one of these segments is not scanned."
+    }
+
+    listens {
+      CENSUS_CALLED -> inbound "cli-census" answers CENSUS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb census` with its arguments and working directory."
+        @synonyms "orb census, retire consumer census"
+    }
+  }
+
+  page "/orb-census" as OrbCensusPage -> OrbCensus
+}

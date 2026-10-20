@@ -1,13 +1,23 @@
 app std-agent-completion [
   version: "1.0.0",
-  description: "Wraps llm/generate — takes a prompt, returns generated text."
+  description: "Takes a prompt, returns generated text through std-llm (LLM_GENERATE).",
+  egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
+
+uses Llm from "std/behaviors/std-llm"
+
 orbital AgentCompletionOrbital {
 
   entity Completion [runtime] {
     prompt : string = ""
     response : string = ""
     status : "idle" | "done" = idle
+  }
+
+  trait CompletionLlm = Llm.traits.LlmClient {
+    listens {
+      CompletionGeneration.LLM_GENERATE -> LLM_GENERATE
+    }
   }
 
   trait CompletionGeneration -> Completion [lifecycle, instance] {
@@ -20,7 +30,7 @@ orbital AgentCompletionOrbital {
         (set @entity.status idle)
       GENERATE -> generating
         (set @entity.prompt ?prompt)
-        (llm/generate @entity.prompt { emit: { success: GENERATED, failure: GENERATION_FAILED } })
+        (emit LLM_GENERATE { userPrompt: @entity.prompt })
     }
 
     state generating {
@@ -29,7 +39,7 @@ orbital AgentCompletionOrbital {
         (set @entity.response "")
         (set @entity.status idle)
       GENERATED -> done
-        (set @entity.response ?result)
+        (set @entity.response ?content)
         (set @entity.status done)
         (emit COMPLETED { response: @entity.response })
       GENERATION_FAILED -> done
@@ -50,12 +60,23 @@ orbital AgentCompletionOrbital {
       COMPLETED {
         response : string!
       }
-      GENERATED {
-        result : string!
+      LLM_GENERATE -> external {
+        userPrompt : string!
       }
+        @description "Ask std-llm to generate text from the prompt"
+        @tier "secondary"
     }
 
     listens {
+      CompletionLlm.LLM_GENERATE_RESULT -> GENERATED
+      CompletionLlm.LLM_FAILED -> GENERATION_FAILED
+      GENERATED {
+        content : string!
+      }
+      GENERATION_FAILED {
+        code : string
+        message : string!
+      }
       GENERATE {
         prompt : string!
       }
@@ -85,5 +106,5 @@ orbital AgentCompletionOrbital {
     }
   }
 
-  page "/agent-completion" as AgentCompletionPage -> CompletionGeneration, CompletionReady
+  page "/agent-completion" as AgentCompletionPage -> CompletionGeneration, CompletionReady, CompletionLlm
 }

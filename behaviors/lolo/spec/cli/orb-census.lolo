@@ -1,0 +1,17 @@
+app orb-census-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb census <package-name>`, the consumer census a package passes before it moves to archive/ (port of tools/almadar-retire). It reports every file outside the package's own directory that imports it (TS and JS sources: from, import(), require(), any subpath) and every package.json that depends on it (all four dependency kinds and the overrides tables), one CensusHit per file, then a `<name>: N import file(s), M manifest edge(s)` line. Zero hits answers status 200 (exit 0), any hit status 500 (exit 1), any other argument list status 400 (exit 2)."
+]
+
+type CensusHit = { file : string!, kind : string!, detail : string! }
+type CensusReport = { name : string!, imports : number!, manifests : number!, hits : [CensusHit]! }
+
+orbital OrbCensusSpec {
+  expects trait OrbCensus {
+    state ready
+    emits {
+      CENSUS_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-census" -> OrbCensus
+}

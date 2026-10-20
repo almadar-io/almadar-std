@@ -1,0 +1,24 @@
+app api-key-verifier-spec [
+  version: "1.0.0",
+  description: "Design contract for verifying a presented API key: a bearer without the key prefix is not a key; otherwise it is hashed with scrypt over the salt credential (N 16384, r 8, p 1, 32 bytes, hex) and the row stored under that hash decides. No row is unknown, a revoked row revoked, a row whose expiresAt is positive and not after now expired; otherwise the key's owner acts, with the row's remaining fields as claims. Vectors it replaces: salt 00112233445566778899 over sk_live_ followed by 64 x 'ab' hashes to a492cbeb...1537; salt AbCdEf0123456789 over sk_live_ followed by 64 x '0f' hashes to 1dcc68a2...47b5; a salt that is not non-empty hex hashes to null and verifies nothing."
+]
+
+type KeyClaim = { name : string!, value : string! }
+orbital ApiKeyVerifierSpec {
+  expects entity ApiKeyRecord {
+    id : string!
+    owner : string
+    revoked : boolean
+    expiresAt : number
+  }
+  expects trait ApiKeyVerifier {
+    state idle {
+      VERIFY_KEY -> looking
+    }
+    emits {
+      API_KEY_VERIFIED { owner : string!  claims : [KeyClaim]! }
+      API_KEY_REFUSED { reason : string  message : string! }
+    }
+  }
+  expects page "/key-verify" -> ApiKeyVerifier
+}

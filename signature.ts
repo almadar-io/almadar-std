@@ -113,6 +113,10 @@ export function mergeOf(record: string): Tagged<'mergeOf'> {
   return { kind: 'mergeOf', of: record };
 }
 
+export function childrenOf(record: string, result: string): Tagged<'childrenOf'> {
+  return { kind: 'childrenOf', of: record, result };
+}
+
 /** A value `str/concat` and the formatters render as text. */
 export const PRIMITIVE_VALUE: OperatorTypeRef = union(STRING, NUMBER, BOOLEAN, 'date', 'datetime');
 
@@ -201,5 +205,7 @@ export function formatOperatorType(ref: OperatorTypeRef): string {
       return `merge-of ${ref.of}`;
     case 'shape':
       return 'Shape';
+    case 'childrenOf':
+      return `children-of ${ref.of} ${ref.result}`;
   }
 }

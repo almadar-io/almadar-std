@@ -8,10 +8,12 @@
  * @packageDocumentation
  */
 
-import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, BYTES, NUMBER, STRING, list, nullable } from '../signature.js';
+import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
+import { BOOLEAN, BYTES, NUMBER, STRING, lit, list, nullable, union } from '../signature.js';
 
 const REPRESENTATION = 'A bytes value is a standard padded base64 string at run time.';
+const UINT_WIDTH: OperatorTypeRef = union(lit(1), lit(2), lit(4), lit(8));
+const ENDIAN: OperatorTypeRef = union(lit('be'), lit('le'));
 
 export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
   'bytes/from-string': {
@@ -86,5 +88,65 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'b', type: BYTES, description: 'Second bytes value' },
     ],
     example: '["bytes/equals", "aGk=", "aGk="] // => true',
+  },
+  'bytes/index-of': {
+    module: 'bytes',
+    category: 'std-codec',
+    minArity: 2,
+    maxArity: 3,
+    description: `Byte offset of the first occurrence of needle at or after from (default 0; a negative from counts from the end, out-of-range clamps), or -1 when absent. An empty needle answers from. ${REPRESENTATION}`,
+    hasSideEffects: false,
+    returnType: NUMBER,
+    params: [
+      { name: 'data', type: BYTES, description: 'The bytes to search' },
+      { name: 'needle', type: BYTES, description: 'The bytes to find' },
+      { name: 'from', type: nullable(NUMBER), description: 'Byte index to start at; null for 0', optional: true },
+    ],
+    example: '["bytes/index-of", "aGVsbG8=", "bA=="] // => 2',
+  },
+  'bytes/at': {
+    module: 'bytes',
+    category: 'std-codec',
+    minArity: 2,
+    maxArity: 2,
+    description: `The byte at index i as a number 0-255; null when i is outside the data (negative included). A non-whole index fails with kind invalid. ${REPRESENTATION}`,
+    hasSideEffects: false,
+    returnType: nullable(NUMBER),
+    params: [
+      { name: 'data', type: BYTES, description: 'The bytes to read' },
+      { name: 'i', type: NUMBER, description: 'Byte index' },
+    ],
+    example: '["bytes/at", "AAEC/w==", 3] // => 255',
+  },
+  'bytes/read-uint': {
+    module: 'bytes',
+    category: 'std-codec',
+    minArity: 4,
+    maxArity: 4,
+    description: `The unsigned integer stored in width bytes at offset, big-endian (be) or little-endian (le); null when those bytes run past the data. A width-8 value above 2^53 - 1 fails with kind invalid rather than round. ${REPRESENTATION}`,
+    hasSideEffects: false,
+    returnType: nullable(NUMBER),
+    params: [
+      { name: 'data', type: BYTES, description: 'The bytes to read' },
+      { name: 'offset', type: NUMBER, description: 'Byte index of the first byte' },
+      { name: 'width', type: UINT_WIDTH, description: 'Byte count: 1, 2, 4 or 8' },
+      { name: 'endian', type: ENDIAN, description: 'Byte order: "be" or "le"' },
+    ],
+    example: '["bytes/read-uint", "EjQ=", 0, 2, "be"] // => 4660',
+  },
+  'bytes/write-uint': {
+    module: 'bytes',
+    category: 'std-codec',
+    minArity: 3,
+    maxArity: 3,
+    description: `A whole number as width unsigned bytes, big-endian (be) or little-endian (le). A value that is negative, not whole, too large for the width, or above 2^53 - 1 fails with kind invalid. ${REPRESENTATION}`,
+    hasSideEffects: false,
+    returnType: BYTES,
+    params: [
+      { name: 'value', type: NUMBER, description: 'The unsigned integer to encode' },
+      { name: 'width', type: UINT_WIDTH, description: 'Byte count: 1, 2, 4 or 8' },
+      { name: 'endian', type: ENDIAN, description: 'Byte order: "be" or "le"' },
+    ],
+    example: '["bytes/write-uint", 4660, 2, "be"] // => "EjQ="',
   },
 };

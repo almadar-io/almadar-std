@@ -1,0 +1,177 @@
+app std-orb-behaviors [
+  version: "1.0.0",
+  inbound: ["cli-behaviors"],
+  description: "std-orb-behaviors — the `orb behaviors` command over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the installed behaviors under the scopes (`behavior/catalog`) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>` prints the trait's knobs and events as JSON (`behavior/describe`); `source <behavior>` prints the behavior's program as JSON (`behavior/source`). Each answers status 200 (exit 0). No subcommand, an unknown one or a missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
+]
+uses Spec from "almadar-std/orb-behaviors"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type CatalogHit = {
+  behavior : string!
+  package : string!
+  topic : string!
+  level : string!
+  exposure : string
+  description : string!
+  capabilities : [string]
+  traits : [trait]!
+  value : behavior!
+  vectors : Map string [number]
+  model : string
+}
+type KnobField = {
+  key : string!
+  type : string!
+  label : string
+  description : string
+  tier : string
+}
+type TraitEvents = {
+  emits : [string]!
+  listens : [string]!
+  transitions : [string]!
+}
+type TraitDescription = {
+  value : trait
+  knobs : [KnobField]!
+  events : TraitEvents!
+  model : string
+}
+type BehaviorDescription = {
+  behavior : string!
+  knobs : [KnobField]!
+}
+
+orbital OrbBehaviorsOrbital {
+  entity OrbBehaviorsRun [runtime] {
+    id : string!
+    argv : [string] @description "The words after `orb behaviors` for the call in flight." = []
+    sub : string = ""
+    json : boolean = false
+    exposure : [string] = []
+    paths : [string] = []
+    spec : string = ""
+  }
+
+  trait OrbBehaviors -> OrbBehaviorsRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      BEHAVIORS_CALLED -> ready
+        (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
+        (set @entity.sub (str/default (array/first @entity.argv) ""))
+        (emit BEHAVIORS_ROUTE { })
+      BEHAVIORS_ROUTE -> ready when (and (!= @entity.sub "catalog") (!= @entity.sub "describe") (!= @entity.sub "source"))
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors <catalog|describe|source> …" })
+      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "catalog") (= (array/len (array/drop @entity.argv 1)) 0))
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]" })
+      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "describe") (!= (array/len @entity.argv) 2))
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors describe <behavior>.traits.<Trait>" })
+      BEHAVIORS_ROUTE -> ready when (and (= @entity.sub "source") (!= (array/len @entity.argv) 2))
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors source <behavior>" })
+      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "catalog") (> (array/len (array/drop @entity.argv 1)) 0))
+        (set @entity.json (array/includes @entity.argv "--json"))
+        (set @entity.exposure (array/map (array/filter (array/range 1 (array/len @entity.argv)) (fn i (= (array/nth @entity.argv (- @i 1)) "--exposure"))) (fn i (array/nth @entity.argv @i))))
+        (set @entity.paths (array/reject (array/drop @entity.argv 1) (fn a (or (str/startsWith @a "--") (array/includes @entity.exposure @a)))))
+        (emit BEHAVIORS_CATALOG { })
+      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "describe") (= (array/len @entity.argv) 2))
+        (set @entity.spec (array/nth @entity.argv 1))
+        (emit BEHAVIORS_DESCRIBE { })
+      BEHAVIORS_ROUTE -> working when (and (= @entity.sub "source") (= (array/len @entity.argv) 2))
+        (set @entity.spec (array/nth @entity.argv 1))
+        (emit BEHAVIORS_SOURCE { })
+    }
+
+    state working {
+      INIT -> working
+      BEHAVIORS_CATALOG -> working
+        (behavior/catalog { paths: @entity.paths, exposure: @entity.exposure } {
+          emit: { success: CATALOG_LISTED, failure: BEHAVIORS_FAILED }
+        })
+      BEHAVIORS_DESCRIBE -> working when (str/includes @entity.spec ".traits.")
+        (behavior/describe { behavior: (array/first (str/split @entity.spec ".traits.")), trait: (array/nth (str/split @entity.spec ".traits.") 1) } {
+          emit: { success: TRAIT_DESCRIBED, failure: BEHAVIORS_FAILED }
+        })
+      BEHAVIORS_DESCRIBE -> working when (not (str/includes @entity.spec ".traits."))
+        (behavior/describe { behavior: @entity.spec } {
+          emit: { success: BEHAVIOR_DESCRIBED, failure: BEHAVIORS_FAILED }
+        })
+      BEHAVIORS_SOURCE -> working
+        (behavior/source { behavior: (array/first (str/split @entity.spec ".traits.")) } {
+          emit: { success: SOURCED, failure: BEHAVIORS_FAILED }
+        })
+      CATALOG_LISTED -> ready when @entity.json
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+      CATALOG_LISTED -> ready when (not @entity.json)
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (str/join (array/map @payload.result (fn e (str/concat (str/padEnd (object/get @e behavior "") 48 " ") " " (str/padEnd (object/get @e level "") 9 " ") " " (str/padEnd (object/get @e exposure "-") 10 " ") " " (object/get @e description "")))) "\n") })
+      TRAIT_DESCRIBED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+      BEHAVIOR_DESCRIBED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+      SOURCED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
+      BEHAVIORS_FAILED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 500, body: @payload.error })
+    }
+
+    emits {
+      BEHAVIORS_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      BEHAVIORS_ROUTE { }
+        @description "Internal: route the parsed subcommand."
+        @tier "internal"
+      BEHAVIORS_CATALOG { }
+        @description "Internal: list the behaviors under the scopes."
+        @tier "internal"
+      BEHAVIORS_DESCRIBE { }
+        @description "Internal: describe the named trait or behavior."
+        @tier "internal"
+      BEHAVIORS_SOURCE { }
+        @description "Internal: read the named behavior's program."
+        @tier "internal"
+    }
+
+    listens {
+      BEHAVIORS_CALLED -> inbound "cli-behaviors" answers BEHAVIORS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb behaviors <subcommand>` with its arguments."
+        @synonyms "orb behaviors, list behaviors, describe behavior, behavior source"
+      BEHAVIORS_ROUTE { }
+        @description "Self: route the parsed subcommand."
+      BEHAVIORS_CATALOG { }
+        @description "Self: list the behaviors."
+      BEHAVIORS_DESCRIBE { }
+        @description "Self: describe the behavior."
+      BEHAVIORS_SOURCE { }
+        @description "Self: read the program."
+      CATALOG_LISTED {
+        result : [CatalogHit]!
+      }
+        @description "behavior/catalog's success."
+      TRAIT_DESCRIBED {
+        result : TraitDescription!
+      }
+        @description "behavior/describe's success for a trait."
+      BEHAVIOR_DESCRIBED {
+        result : BehaviorDescription!
+      }
+        @description "behavior/describe's success for a whole behavior."
+      SOURCED {
+        result : SExpr!
+      }
+        @description "behavior/source's success."
+      BEHAVIORS_FAILED {
+        error : string!
+      }
+        @description "A reflection operator's failure."
+    }
+  }
+
+  page "/orb-behaviors" as OrbBehaviorsPage -> OrbBehaviors
+}

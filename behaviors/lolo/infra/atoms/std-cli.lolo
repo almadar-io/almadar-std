@@ -1,7 +1,7 @@
 app std-cli [
   version: "1.0.0",
   exec: ["echo"],
-  description: "std-cli — runs one command-line program as a child process through os/spawn, os/read and os/wait. CLI_RUN carries the arguments and a stage name the caller uses to tell its runs apart; the atom pipes stdout and stderr, reads both to the end, waits for the exit and answers CLI_DONE with the stage, the exit code (-1 when a signal ended it), the signal and both streams as text. What a non-zero exit means is the caller's to decide. CLI_FAILED answers a run that could not be made: the child did not start (cli_spawn_failed), a read, close or wait failed (cli_host_failed), or another run is in flight (cli_busy); a cancel with nothing running answers cli_idle. CLI_CANCEL sends TERM to the running child; a cancel that arrives before the child has started is applied as soon as it starts. The command knob names the executable, matched exactly against the exec grant the composing program declares; the child runs with exactly the environment the run's env or else the env knob names, with the passEnv knob's host variables added (read with os/getenv; the explicit env wins on a clash), in the cwd knob's directory (the host's working directory when it is empty). A run may feed the child stdin bytes, which are written whole and closed before the output is read. With the binaryOutput knob on, stdout is answered as bytes only."
+  description: "std-cli — runs one command-line program as a child process through os/spawn, os/read and os/wait. CLI_RUN carries the arguments and a stage name the caller uses to tell its runs apart; the atom pipes stdout and stderr, reads both to the end, waits for the exit and answers CLI_DONE with the stage, the exit code (-1 when a signal ended it), the signal and both streams as text. What a non-zero exit means is the caller's to decide. CLI_FAILED answers a run that could not be made: the child did not start (cli_spawn_failed), a read, close or wait failed (cli_host_failed), or another run is in flight (cli_busy); a cancel with nothing running answers cli_idle. CLI_CANCEL sends TERM to the running child; a cancel that arrives before the child has started is applied as soon as it starts. The command knob names the executable, matched exactly against the exec grant the composing program declares; the child runs with exactly the environment the run's env or else the env knob names, with the passEnv knob's host variables added (read with os/getenv; the explicit env wins on a clash), in the cwd knob's directory (the host's working directory when it is empty). A run may feed the child stdin bytes, which are written whole and closed before the output is read. With the binaryOutput knob on, stdout is answered as bytes only. With the stdio knob set to inherit the child runs on this process's terminal instead: nothing is piped or read, the atom waits for the exit and CLI_DONE carries the exit code with empty streams."
 ]
 uses Spec from "almadar-std/cli"
 orbital CliOrbital {
@@ -64,44 +64,55 @@ orbital CliOrbital {
         (set @entity.passed (object/merge @entity.passed (object/fromEntries [[(array/nth @config.passEnv @entity.envCursor), @payload.value]])))
         (set @entity.envCursor (+ @entity.envCursor 1))
         (emit CLI_ENV_NEXT { })
-      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") (not @entity.hasStdin))
+      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") (= @config.stdio "pipe") (not @entity.hasStdin))
         (os/spawn @config.command @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "null" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
-      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") @entity.hasStdin)
+      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") (= @config.stdio "pipe") @entity.hasStdin)
         (os/spawn @config.command @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "pipe" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
-      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (!= @config.cwd "") (not @entity.hasStdin))
+      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (!= @config.cwd "") (= @config.stdio "pipe") (not @entity.hasStdin))
         (os/spawn @config.command @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "null" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
-      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (!= @config.cwd "") @entity.hasStdin)
+      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (!= @config.cwd "") (= @config.stdio "pipe") @entity.hasStdin)
         (os/spawn @config.command @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "pipe" stdout: "pipe" stderr: "pipe" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") (= @config.stdio "inherit"))
+        (os/spawn @config.command @entity.argv { cwd: null env: (object/merge @entity.passed @entity.baseEnv) stdin: "inherit" stdout: "inherit" stderr: "inherit" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
+      CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (!= @config.cwd "") (= @config.stdio "inherit"))
+        (os/spawn @config.command @entity.argv { cwd: @config.cwd env: (object/merge @entity.passed @entity.baseEnv) stdin: "inherit" stdout: "inherit" stderr: "inherit" detached: false } { key: "spawn" emit: { success: CLI_SPAWNED failure: CLI_SPAWN_FAILED } })
       CLI_CANCEL -> running when (> @entity.pid 0)
         (os/kill @entity.pid "TERM" { key: "kill" emit: { failure: CLI_HOST_FAILED } })
       CLI_CANCEL -> running when (= @entity.pid 0)
         (set @entity.cancelRequested true)
-      CLI_SPAWNED -> running when (and (not @entity.cancelRequested) (not @entity.hasStdin))
+      CLI_SPAWNED -> running when (and (= @config.stdio "pipe") (not @entity.cancelRequested) (not @entity.hasStdin))
         (set @entity.pid @payload.pid)
         (set @entity.outFd @payload.stdout)
         (set @entity.errFd @payload.stderr)
         (os/read @payload.stdout 65536 { key: "out" emit: { success: CLI_OUT_CHUNK failure: CLI_HOST_FAILED } })
         (os/read @payload.stderr 65536 { key: "err" emit: { success: CLI_ERR_CHUNK failure: CLI_HOST_FAILED } })
-      CLI_SPAWNED -> running when (and (not @entity.cancelRequested) @entity.hasStdin)
+      CLI_SPAWNED -> running when (and (= @config.stdio "pipe") (not @entity.cancelRequested) @entity.hasStdin)
         (set @entity.pid @payload.pid)
         (set @entity.outFd @payload.stdout)
         (set @entity.errFd @payload.stderr)
         (set @entity.inFd @payload.stdin)
         (os/write @payload.stdin @entity.stdin { key: "stdin" emit: { success: CLI_STDIN_WRITTEN failure: CLI_HOST_FAILED } })
-      CLI_SPAWNED -> running when (and @entity.cancelRequested (not @entity.hasStdin))
+      CLI_SPAWNED -> running when (and (= @config.stdio "pipe") @entity.cancelRequested (not @entity.hasStdin))
         (set @entity.pid @payload.pid)
         (set @entity.outFd @payload.stdout)
         (set @entity.errFd @payload.stderr)
         (os/kill @payload.pid "TERM" { key: "kill" emit: { failure: CLI_HOST_FAILED } })
         (os/read @payload.stdout 65536 { key: "out" emit: { success: CLI_OUT_CHUNK failure: CLI_HOST_FAILED } })
         (os/read @payload.stderr 65536 { key: "err" emit: { success: CLI_ERR_CHUNK failure: CLI_HOST_FAILED } })
-      CLI_SPAWNED -> running when (and @entity.cancelRequested @entity.hasStdin)
+      CLI_SPAWNED -> running when (and (= @config.stdio "pipe") @entity.cancelRequested @entity.hasStdin)
         (set @entity.pid @payload.pid)
         (set @entity.outFd @payload.stdout)
         (set @entity.errFd @payload.stderr)
         (os/kill @payload.pid "TERM" { key: "kill" emit: { failure: CLI_HOST_FAILED } })
         (set @entity.inFd @payload.stdin)
         (os/close @payload.stdin { key: "close-in" emit: { success: CLI_STDIN_CLOSED failure: CLI_HOST_FAILED } })
+      CLI_SPAWNED -> running when (and (= @config.stdio "inherit") (not @entity.cancelRequested))
+        (set @entity.pid @payload.pid)
+        (os/wait @payload.pid { key: "wait" emit: { success: CLI_EXITED failure: CLI_HOST_FAILED } })
+      CLI_SPAWNED -> running when (and (= @config.stdio "inherit") @entity.cancelRequested)
+        (set @entity.pid @payload.pid)
+        (os/kill @payload.pid "TERM" { key: "kill" emit: { failure: CLI_HOST_FAILED } })
+        (os/wait @payload.pid { key: "wait" emit: { success: CLI_EXITED failure: CLI_HOST_FAILED } })
       CLI_STDIN_WRITTEN -> running
         (os/close @entity.inFd { key: "close-in" emit: { success: CLI_STDIN_CLOSED failure: CLI_HOST_FAILED } })
       CLI_STDIN_CLOSED -> running
@@ -232,6 +243,11 @@ orbital CliOrbital {
         @label "Working directory"
         @description "The absolute directory the child runs in, covered by the composing program's fs read grant; empty runs it in the host's working directory."
         @synonyms "directory, folder"
+        @tier "domain"
+      stdio : string = "pipe"
+        @label "Standard streams"
+        @description "pipe (the default) captures the child's stdout and stderr and answers them in CLI_DONE; inherit hands the child this process's terminal on stdin, stdout and stderr, so a prompt and live output reach the user, CLI_DONE carries the exit code with empty stdout and stderr, and a run's stdin bytes are not written. inherit needs the stdio grant (in, out, err) in the composing program; any other word is not a mode and no child starts."
+        @synonyms "terminal, tty, inherit terminal, interactive"
         @tier "domain"
       binaryOutput : boolean = false
         @label "Binary output"

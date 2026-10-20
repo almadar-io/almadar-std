@@ -1,0 +1,14 @@
+app orb-convert-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb convert [path] [-o file] [--crawl url] [--crawl-facts file] [--ai] [--verify] [--facts-only] [--headed] [--depth n] [-v]`: run `npx almadar-converter` with those words (the output defaults to converted.orb, the depth to 3, and --json is always added; -v is passed as --verbose) and render its JSON progress lines for the user: a start line `[gate] message...`, then ` message` on complete, `[gate] message` on progress, ` ERROR: message` on error, and `Output: <file>` for the final success line; with -v the command line `Running: npx <words>` leads and lines that are not JSON are echoed. A final line with success false answers `Conversion failed: <error>`, a converter that exits non-zero `almadar-converter exited with code <n>`, and an npx that cannot start `Failed to spawn npx: <error>. Is Node.js installed?` (status 500, exit 1). A converter that finishes cleanly answers status 200 (exit 0)."
+]
+
+orbital OrbConvertSpec {
+  expects trait OrbConvert {
+    state ready
+    emits {
+      CONVERT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-convert" -> OrbConvert
+}

@@ -1,0 +1,802 @@
+app std-orb-gaps [
+  version: "1.0.0",
+  inbound: ["cli-gaps"],
+  fs: { "~/kflow.ai.builder/**": [read, write], "~/.almadar/gaps-out/**": [write, create] },
+  description: "std-orb-gaps — the `orb gaps` command, the port of tools/almadar-gaps (check, sync, rollup). `check` reads docs/Almadar_Gaps.md under the root knob and every repo ledger its generated roll-up names, then reports duplicate gap codes, repo ledgers without a Next code counter, unreadable ledgers and entries without a [mechanical], [architectural] or [owner-decision] tag, one line each (status 500, exit 1); a clean tree answers `gaps: clean` (status 200, exit 0). `sync` and `status` reconcile the master with the repo ledgers by gap code: the repos come from the .gitmodules files, fenced code blocks never count, a three-way merge against tools/almadar-gaps/.sync-state.json decides which side wins per entry and refuses divergent edits, a repo's Next code never decreases, and the preview names every change; --write saves the ledger files and the baseline, --out <dir> saves the proposed files and the baseline under the outRoot knob (~/.almadar/gaps-out, the out grant), --check fails while any ledger file would change, --from master|repos makes one side authoritative. `rollup` rebuilds the master's generated roll-up from the repo ledgers. Any unknown command answers the usage (status 400, exit 2)."
+]
+uses Spec from "almadar-std/orb-gaps"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type GapEntry = { code : string!, repo : string!, heading : string!, body : string!, at : number!, endAt : number! }
+type GapMark = { at : number!, text : string! }
+type GapSpan = { lo : number!, hi : number! }
+type GapCodeRef = { code : string!, line : string!, path : string! }
+type GapScan = { key : string!, lines : [string]!, flags : [boolean]!, entries : [GapEntry]!, gapLines : [GapCodeRef]! }
+type GapJob = { key : string!, text : string!, repo : string! }
+type GapRead = { path : string!, ok : boolean!, text : string! }
+type GapCand = { path : string!, nested : boolean! }
+type GapProbe = { path : string!, nested : boolean!, dirOk : boolean!, hasLedger : boolean!, hasPy : boolean!, hasModules : boolean! }
+type GapDirEntry = { name : string!, kind : string! }
+type GapSortKey = { sort : string!, path : string! }
+type GapSig = { code : string!, side : string!, repo : string!, heading : string!, body : string! }
+type GapRow = { code : string!, side : string!, m : string!, l : string!, p : string!, pRepo : string!, eRepo : string!, eHeading : string!, eBody : string! }
+type GapBaseline = { version : number!, entries : [SExpr]! }
+
+orbital OrbGapsOrbital {
+  entity OrbGapsRun [runtime] {
+    id : string!
+    argv : [string] = []
+    rest : [string] = []
+    allowed : [string] = []
+    cwd : string = ""
+    cmd : string = ""
+    mode : string = ""
+    outDir : string = ""
+    from : string = ""
+    fail : string = ""
+    stage : string = ""
+    queue : [string] = []
+    reads : [GapRead] = []
+    work : [GapCand] = []
+    probes : [GapProbe] = []
+    cursor : number = 0
+    repos : [string] = []
+    ledgerRepos : [string] = []
+    jobs : [GapJob] = []
+    scans : [GapScan] = []
+    curLines : [string] = []
+    curFences : [string] = []
+    curCand : [GapMark] = []
+    curSpans : [GapSpan] = []
+    curFlags : [boolean] = []
+    curBounds : [number] = []
+    curSecs : [GapMark] = []
+    curStarts : [GapMark] = []
+    curKey : string = ""
+    curRepo : string = ""
+    curN : number = 0
+    curBegin : number = 0
+    findings : [string] = []
+    codeRefs : [GapCodeRef] = []
+    mOwn : [string] = []
+    lOwn : [string] = []
+    markB : [GapMark] = []
+    markE : [GapMark] = []
+    bIdx : number = 0
+    eIdx : number = 0
+    mPre : string = ""
+    mPost : string = ""
+    masterText : string = ""
+    hdrIdx : [number] = []
+    hdrRepos : [string] = []
+    hdrSrcs : [string] = []
+    mEntries : [GapEntry] = []
+    lEntries : [GapEntry] = []
+    rEntries : [GapEntry] = []
+    bEntries : [GapEntry] = []
+    mCodes : [string] = []
+    lCodes : [string] = []
+    rCodes : [string] = []
+    hasBaseline : boolean = false
+    errs : [string] = []
+    codes : [string] = []
+    rows : [GapRow] = []
+    merged : [GapEntry] = []
+    out : [string] = []
+    uRepo : string = ""
+    uLines : [string] = []
+    uEntries : [GapEntry] = []
+    uPend0 : [GapEntry] = []
+    uPend : [GapEntry] = []
+    uText : string = ""
+    upc : number = 0
+    utexts : [GapRead] = []
+    fkeys : [string] = []
+    rollupText : string = ""
+    nextMaster : string = ""
+    outFiles : [GapRead] = []
+    wcur : number = 0
+    outRel : string = ""
+    ucur : number = 0
+    uPrefix : string = ""
+    uCi : number = 0
+  }
+
+  trait OrbGaps -> OrbGapsRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      GAPS_CALLED -> ready
+        (set @entity.argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (set @entity.cmd (str/default (array/first @entity.argv) ""))
+        (set @entity.rest (array/drop @entity.argv 1))
+        (set @entity.allowed (if (= @entity.cmd "sync") ["--from" "--out" "--write" "--check"] (if (= @entity.cmd "rollup") ["--out" "--write" "--check"] (array/take ["--out"] 0))))
+        (set @entity.mode (if (array/includes @entity.rest "--write") "write" (if (array/includes @entity.rest "--check") "check" (if (array/includes @entity.rest "--out") "out" "preview"))))
+        (set @entity.outDir (if (array/includes @entity.rest "--out") (str/default (array/nth @entity.rest (+ (array/indexOf @entity.rest "--out") 1)) "") ""))
+        (set @entity.from (if (array/includes @entity.rest "--from") (str/default (array/nth @entity.rest (+ (array/indexOf @entity.rest "--from") 1)) "") ""))
+        (set @entity.fail (if (not (array/includes (str/split "check|sync|status|rollup" "|") @entity.cmd)) "usage"
+          (if (and (= @entity.cmd "check") (> (array/len @entity.rest) 0)) "usage"
+            (str/default (array/find (array/concat
+              (array/map (array/range 0 (array/len @entity.rest)) (fn i (if (and (> @i 0) (array/includes ["--out" "--from"] (array/nth @entity.rest (- @i 1))) (not (str/startsWith (array/nth @entity.rest @i) "--"))) ""
+                (if (not (array/includes @entity.allowed (array/nth @entity.rest @i))) (str/concat "unrecognized option: " (array/nth @entity.rest @i))
+                  (if (!= (array/indexOf @entity.rest (array/nth @entity.rest @i)) @i) (str/concat "duplicate option: " (array/nth @entity.rest @i))
+                    (if (and (array/includes ["--out" "--from"] (array/nth @entity.rest @i)) (or (>= (+ @i 1) (array/len @entity.rest)) (str/startsWith (str/default (array/nth @entity.rest (+ @i 1)) "") "--"))) (str/concat (array/nth @entity.rest @i) " needs a value") ""))))))
+              [(if (> (+ (if (array/includes @entity.rest "--write") 1 0) (if (array/includes @entity.rest "--check") 1 0) (if (array/includes @entity.rest "--out") 1 0)) 1) "choose only one of --write, --check, --out" "")
+               (if (and (array/includes @entity.rest "--from") (not (or (= @entity.from "master") (= @entity.from "repos")))) "--from must be master or repos" "")
+               (if (and (array/includes @entity.rest "--out") (or (str/startsWith @entity.outDir "/") (str/includes @entity.outDir ".."))) "--out must name a directory under the outRoot knob, not a path" "")]) (fn m (!= @m ""))) ""))))
+        (set @entity.stage "")
+        (set @entity.queue [])
+        (set @entity.reads [])
+        (set @entity.work [])
+        (set @entity.probes [])
+        (set @entity.cursor 0)
+        (set @entity.repos [])
+        (set @entity.ledgerRepos [])
+        (set @entity.jobs [])
+        (set @entity.scans [])
+        (set @entity.curLines [])
+        (set @entity.curFences [])
+        (set @entity.curCand [])
+        (set @entity.curSpans [])
+        (set @entity.curFlags [])
+        (set @entity.curBounds [])
+        (set @entity.curSecs [])
+        (set @entity.curStarts [])
+        (set @entity.curKey "")
+        (set @entity.curRepo "")
+        (set @entity.curN 0)
+        (set @entity.curBegin 0)
+        (set @entity.findings [])
+        (set @entity.codeRefs [])
+        (set @entity.mOwn [])
+        (set @entity.lOwn [])
+        (set @entity.markB [])
+        (set @entity.markE [])
+        (set @entity.bIdx 0)
+        (set @entity.eIdx 0)
+        (set @entity.mPre "")
+        (set @entity.mPost "")
+        (set @entity.masterText "")
+        (set @entity.hdrIdx [])
+        (set @entity.hdrRepos [])
+        (set @entity.hdrSrcs [])
+        (set @entity.mEntries [])
+        (set @entity.lEntries [])
+        (set @entity.rEntries [])
+        (set @entity.bEntries [])
+        (set @entity.mCodes [])
+        (set @entity.lCodes [])
+        (set @entity.rCodes [])
+        (set @entity.hasBaseline false)
+        (set @entity.errs [])
+        (set @entity.codes [])
+        (set @entity.rows [])
+        (set @entity.merged [])
+        (set @entity.out [])
+        (set @entity.uRepo "")
+        (set @entity.uLines [])
+        (set @entity.uEntries [])
+        (set @entity.uPend0 [])
+        (set @entity.uPend [])
+        (set @entity.uText "")
+        (set @entity.upc 0)
+        (set @entity.utexts [])
+        (set @entity.fkeys [])
+        (set @entity.rollupText "")
+        (set @entity.nextMaster "")
+        (set @entity.outFiles [])
+        (set @entity.wcur 0)
+        (set @entity.outRel @entity.outDir)
+        (emit GAPS_PARSED { })
+      GAPS_PARSED -> ready when (!= @entity.fail "")
+        (emit GAPS_ANSWERED { status: (if (= @entity.fail "usage") 400 500), body: (if (= @entity.fail "usage") "usage: orb gaps check | sync [--from master|repos] [--write | --check | --out <dir>] | status | rollup [--write | --check | --out <dir>]" (str/concat "error: " @entity.fail)) })
+      GAPS_PARSED -> reading when (and (= @entity.fail "") (= @entity.cmd "check"))
+        (set @entity.queue (str/split "docs/Almadar_Gaps.md" "|"))
+        (set @entity.stage "c1")
+        (emit GAPS_READ { })
+      GAPS_PARSED -> probing when (and (= @entity.fail "") (!= @entity.cmd "check"))
+        (set @entity.work [{ path: ".", nested: false }])
+        (emit GAPS_PROBE { })
+    }
+
+    state probing {
+      INIT -> probing
+      GAPS_PROBE -> probing when (< @entity.cursor (array/len @entity.work))
+        (os/list-dir (str/concat @config.root "/" (object/get (array/nth @entity.work @entity.cursor) "path")) { key: "dir" emit: { success: GAPS_DIR, failure: GAPS_DIR_MISSING } })
+      GAPS_DIR -> probing
+        (set @entity.probes (array/append @entity.probes {
+          path: (object/get (array/nth @entity.work @entity.cursor) "path"),
+          nested: (object/get (array/nth @entity.work @entity.cursor) "nested"),
+          dirOk: true,
+          hasLedger: (array/some @payload.entries (fn e (= (object/get @e "name") "Almadar_Gaps.md"))),
+          hasPy: (array/some @payload.entries (fn e (= (object/get @e "name") "pyproject.toml"))),
+          hasModules: (array/some @payload.entries (fn e (= (object/get @e "name") ".gitmodules"))) }))
+        (emit GAPS_PROBE_GM { })
+      GAPS_DIR_MISSING -> probing
+        (set @entity.probes (array/append @entity.probes { path: (object/get (array/nth @entity.work @entity.cursor) "path"), nested: (object/get (array/nth @entity.work @entity.cursor) "nested"), dirOk: false, hasLedger: false, hasPy: false, hasModules: false }))
+        (emit GAPS_PROBE_NEXT { })
+      GAPS_PROBE_GM -> probing when (object/get (array/last @entity.probes) "hasModules")
+        (os/read-file (str/concat @config.root "/" (object/get (array/nth @entity.work @entity.cursor) "path") "/.gitmodules") { key: "modules" emit: { success: GAPS_GM_TEXT, failure: GAPS_GM_FAIL } })
+      GAPS_PROBE_GM -> probing when (not (object/get (array/last @entity.probes) "hasModules"))
+        (emit GAPS_PROBE_LEDGER { })
+      GAPS_GM_TEXT -> probing
+        (set @entity.work (array/concat @entity.work (array/map
+          (array/filter (str/split (bytes/to-string @payload.data) "\n") (fn l (validate/pattern @l "^\\s*path\\s*=")))
+          (fn l { path: (os/path-normalize (os/path-join (object/get (array/nth @entity.work @entity.cursor) "path") (str/trim (str/replace-pattern @l "^\\s*path\\s*=" "")))), nested: (!= (object/get (array/nth @entity.work @entity.cursor) "path") ".") }))))
+        (emit GAPS_PROBE_LEDGER { })
+      GAPS_GM_FAIL -> probing
+        (emit GAPS_PROBE_LEDGER { })
+      GAPS_PROBE_LEDGER -> probing when (object/get (array/last @entity.probes) "hasLedger")
+        (os/read-file (str/concat @config.root "/" (object/get (array/nth @entity.work @entity.cursor) "path") "/Almadar_Gaps.md") { key: "ledger" emit: { success: GAPS_PL_READ, failure: GAPS_PL_FAIL } })
+      GAPS_PROBE_LEDGER -> probing when (not (object/get (array/last @entity.probes) "hasLedger"))
+        (emit GAPS_PROBE_NEXT { })
+      GAPS_PL_READ -> probing
+        (set @entity.reads (array/append @entity.reads { path: (os/path-normalize (os/path-join (object/get (array/nth @entity.work @entity.cursor) "path") "Almadar_Gaps.md")), ok: true, text: (bytes/to-string @payload.data) }))
+        (emit GAPS_PROBE_NEXT { })
+      GAPS_PL_FAIL -> probing
+        (emit GAPS_PROBE_NEXT { })
+      GAPS_PROBE_NEXT -> probing
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit GAPS_PROBE { })
+      GAPS_PROBE -> probing when (>= @entity.cursor (array/len @entity.work))
+        (set @entity.repos (array/map (array/sort (array/map
+          (array/filter @entity.probes (fn p (and (!= (object/get @p "path") ".") (object/get @p "dirOk") (not (object/get @p "hasPy")) (or (not (object/get @p "nested")) (object/get @p "hasLedger")) (not (array/includes @config.deprecated (object/get @p "path"))))))
+          (fn p { sort: (str/concat (str/padStart (str/concat (let ((i (array/indexOf @config.order (object/get @p "path")))) (if (< @i 0) (array/len @config.order) @i))) 3 "0") "|" (str/collate-key (object/get @p "path"))), path: (object/get @p "path") })) "sort") (fn k (object/get @k "path"))))
+        (set @entity.findings (array/map @entity.repos (fn p (if (= @p "orbital-rust") "ORB" (let ((dir (os/path-base @p))) (if (= @dir "almadar") "ALMADAR" (str/upper (str/replace-pattern @dir "^almadar-" "")))))))) 
+        (set @entity.fail (let ((dup (array/find @entity.findings (fn v (< (array/indexOf @entity.findings @v) @index))))) (if (= @dup null) "" (str/concat "two repos derive the same gap prefix G-" @dup "-"))))
+        (emit GAPS_PROBED { })
+      GAPS_PROBED -> ready when (!= @entity.fail "")
+        (emit GAPS_ANSWERED { status: 500, body: (str/concat "error: " @entity.fail) })
+      GAPS_PROBED -> reading when (= @entity.fail "")
+        (set @entity.queue (str/split "docs/Almadar_Gaps.md|tools/almadar-gaps/.sync-state.json" "|"))
+        (set @entity.stage "s2")
+        (set @entity.cursor 0)
+        (emit GAPS_READ { })
+    }
+
+    state reading {
+      INIT -> reading
+      GAPS_READ -> reading when (< @entity.cursor (array/len @entity.queue))
+        (os/read-file (str/concat @config.root "/" (array/nth @entity.queue @entity.cursor)) { key: "ledger" emit: { success: GAPS_FILE_READ, failure: GAPS_FILE_UNREAD } })
+      GAPS_FILE_READ -> reading
+        (set @entity.reads (array/append @entity.reads { path: (array/nth @entity.queue @entity.cursor), ok: true, text: (bytes/to-string @payload.data) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit GAPS_READ_NEXT { })
+      GAPS_FILE_UNREAD -> reading
+        (set @entity.reads (array/append @entity.reads { path: (array/nth @entity.queue @entity.cursor), ok: false, text: "" }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit GAPS_READ_NEXT { })
+      GAPS_READ_NEXT -> reading
+        (emit GAPS_READ { })
+      GAPS_READ -> scanning when (and (>= @entity.cursor (array/len @entity.queue)) (or (= @entity.stage "c1") (= @entity.stage "c3")))
+        (set @entity.jobs (array/map @entity.reads (fn r { key: (object/get @r "path"), text: (object/get @r "text"), repo: "" })))
+        (set @entity.stage (if (= @entity.stage "c1") "c2" "c4"))
+        (set @entity.scans [])
+        (set @entity.cursor 0)
+        (emit GAPS_SCAN { })
+      GAPS_READ -> ready when (and (>= @entity.cursor (array/len @entity.queue)) (= @entity.stage "s2") (not (object/get (array/find @entity.reads (fn r (= (object/get @r "path") "docs/Almadar_Gaps.md"))) "ok")))
+        (emit GAPS_ANSWERED { status: 500, body: "error: cannot read docs/Almadar_Gaps.md" })
+      GAPS_READ -> scanning when (and (>= @entity.cursor (array/len @entity.queue)) (= @entity.stage "s2") (object/get (array/find @entity.reads (fn r (= (object/get @r "path") "docs/Almadar_Gaps.md"))) "ok"))
+        (set @entity.ledgerRepos (array/filter @entity.repos (fn r (array/some @entity.reads (fn x (and (= (object/get @x "path") (str/concat @r "/Almadar_Gaps.md")) (object/get @x "ok")))))))
+        (set @entity.masterText (object/get (array/find @entity.reads (fn r (= (object/get @r "path") "docs/Almadar_Gaps.md"))) "text"))
+        (set @entity.jobs (array/concat
+          (array/map (array/filter @entity.reads (fn r (= (object/get @r "path") "docs/Almadar_Gaps.md"))) (fn r { key: (object/get @r "path"), text: (object/get @r "text"), repo: "ROOT" }))
+          (array/map @entity.ledgerRepos (fn r { key: (str/concat @r "/Almadar_Gaps.md"), text: (object/get (array/find @entity.reads (fn x (= (object/get @x "path") (str/concat @r "/Almadar_Gaps.md")))) "text"), repo: @r }))))
+        (set @entity.stage "s3")
+        (set @entity.scans [])
+        (set @entity.cursor 0)
+        (emit GAPS_SCAN { })
+    }
+
+    state scanning {
+      INIT -> scanning
+      GAPS_SCAN -> scanning when (< @entity.cursor (array/len @entity.jobs))
+        (set @entity.curKey (object/get (array/nth @entity.jobs @entity.cursor) "key"))
+        (set @entity.curRepo (object/get (array/nth @entity.jobs @entity.cursor) "repo"))
+        (set @entity.curLines (str/split (object/get (array/nth @entity.jobs @entity.cursor) "text") "\n"))
+        (set @entity.curN (array/len @entity.curLines))
+        (set @entity.curBegin (array/findIndex @entity.curLines (fn l (str/includes @l "<!-- BEGIN GENERATED ROLL-UP"))))
+        (set @entity.curCand (array/filter (array/map @entity.curLines (fn l (if (validate/pattern @l "^\\s*(`{3,}|~{3,})") { at: @index, text: @l } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.curFences (array/reduce @entity.curCand (array/take [""] 0) (fn acc m
+          (let ((prev (if (= (array/len @acc) 0) "" (array/last @acc)))
+                (lead (str/trimStart (object/get @m "text"))))
+            (array/append @acc
+              (if (!= @prev "")
+                (if (validate/pattern (str/trim (object/get @m "text")) (str/concat "^" (str/slice @prev 0 1) "{" (str/len @prev) ",}$")) "" @prev)
+                (str/slice @lead 0 (- (str/len @lead) (str/len (str/replace-pattern @lead (str/concat "^" (str/slice @lead 0 1) "+") "")))))))))) 
+        (set @entity.curSpans (array/map (array/filter (array/range 0 (array/len @entity.curCand)) (fn k (and (!= (array/nth @entity.curFences @k) "") (or (= @k 0) (= (array/nth @entity.curFences (- @k 1)) ""))))) (fn k
+          { lo: (object/get (array/nth @entity.curCand @k) "at"),
+            hi: (let ((j (array/find (array/range (+ @k 1) (array/len @entity.curCand)) (fn j (= (array/nth @entity.curFences @j) ""))))) (if (= @j null) @entity.curN (object/get (array/nth @entity.curCand @j) "at"))) })))
+        (set @entity.curFlags (array/map (array/range 0 @entity.curN) (fn i (not (array/some @entity.curSpans (fn sp (and (<= (object/get @sp "lo") @i) (<= @i (object/get @sp "hi")))))))))
+        (set @entity.curBounds (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^(?:#{1,4} |[-*+] |Next (?:cross-repo )?code:|_No open gaps\\._|---\\s*$|<!--)")) @index -1))) (fn i (>= @i 0))))
+        (set @entity.curSecs (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^#{1,4} ")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.curStarts (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^- \\*\\*G-[A-Z0-9_-]+-\\d+\\*\\*")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.scans (array/append @entity.scans {
+          key: @entity.curKey,
+          lines: @entity.curLines,
+          flags: @entity.curFlags,
+          gapLines: (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (str/startsWith (array/nth @p 0) "- **G-") (or (< @entity.curBegin 0) (< @index @entity.curBegin))) { code: (array/nth (str/split (array/nth @p 0) "**") 1), line: (array/nth @p 0), path: @entity.curKey } { code: "", line: "", path: "" }))) (fn r (!= (object/get @r "code") ""))),
+          entries: (array/map @entity.curStarts (fn m
+            (let ((s (object/get @m "at"))
+                  (e (math/default (array/nth @entity.curBounds (+ (array/indexOf @entity.curBounds (object/get @m "at")) 1)) @entity.curN))
+                  (hs (array/filter @entity.curSecs (fn j (< (object/get @j "at") (object/get @m "at"))))))
+              (let ((body (str/trimEnd (str/join (array/slice @entity.curLines @s @e) "\n")))
+                    (hl (if (= (array/len @hs) 0) "" (object/get (array/last @hs) "text"))))
+                { code: (array/nth (str/split (object/get @m "text") "**") 1),
+                  repo: @entity.curRepo,
+                  heading: (if (validate/pattern @hl "^#{3,4} ") (str/replace-pattern @hl "^#{1,4} " "") ""),
+                  body: @body,
+                  at: @s,
+                  endAt: (+ @s (array/len (str/split @body "\n"))) }))))
+        }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit GAPS_SCAN_NEXT { })
+      GAPS_SCAN_NEXT -> scanning
+        (emit GAPS_SCAN { })
+      GAPS_SCAN -> reading when (and (>= @entity.cursor (array/len @entity.jobs)) (= @entity.stage "c2"))
+        (set @entity.queue (array/concat (str/split "docs/Almadar_Gaps.md" "|") (array/map (array/filter (array/zip (object/get (array/first @entity.scans) "lines") (object/get (array/first @entity.scans) "flags")) (fn p (and (array/nth @p 1) (str/startsWith (array/nth @p 0) "## `")))) (fn p (str/concat (array/nth (str/split (array/nth @p 0) "`") 1) "/Almadar_Gaps.md")))))
+        (set @entity.cursor 1)
+        (set @entity.stage "c3")
+        (emit GAPS_READ { })
+      GAPS_SCAN -> analyzing when (and (>= @entity.cursor (array/len @entity.jobs)) (= @entity.stage "c4"))
+        (emit GAPS_CHECK { })
+      GAPS_SCAN -> analyzing when (and (>= @entity.cursor (array/len @entity.jobs)) (= @entity.stage "s3"))
+        (emit GAPS_S3 { })
+      GAPS_SCAN -> analyzing when (and (>= @entity.cursor (array/len @entity.jobs)) (= @entity.stage "s4"))
+        (emit GAPS_S4 { })
+      GAPS_SCAN -> updating when (and (>= @entity.cursor (array/len @entity.jobs)) (= @entity.stage "u"))
+        (emit GAPS_UPD_INSERT { })
+      GAPS_SCAN -> merging when (and (>= @entity.cursor (array/len @entity.jobs)) (= @entity.stage "r"))
+        (emit GAPS_RENDER { })
+    }
+
+    state analyzing {
+      INIT -> analyzing
+      GAPS_CHECK -> analyzing
+        (set @entity.codeRefs (array/flatten (array/map @entity.scans (fn s (object/get @s "gapLines")))))
+        (emit GAPS_REPORT { })
+      GAPS_REPORT -> ready
+        (set @entity.findings (array/concat
+          (array/map (array/filter (array/range 1 (array/len @entity.reads)) (fn i (not (object/get (array/nth @entity.reads @i) "ok")))) (fn i (str/concat "UNREADABLE " (object/get (array/nth @entity.reads @i) "path"))))
+          (array/map (array/filter (object/entries (array/groupBy @entity.codeRefs "code")) (fn kv (> (array/len (array/nth @kv 1)) 1))) (fn kv (str/concat "DUPLICATE " (array/nth @kv 0))))
+          (array/map (array/filter (array/range 1 (array/len @entity.reads)) (fn i (and (object/get (array/nth @entity.reads @i) "ok") (not (str/includes (object/get (array/nth @entity.reads @i) "text") "code: `G-"))))) (fn i (str/concat "NO_COUNTER " (object/get (array/nth @entity.reads @i) "path"))))
+          (array/map (array/filter @entity.codeRefs (fn r (and (not (str/includes (object/get @r "line") "[mechanical")) (not (str/includes (object/get @r "line") "[architectural")) (not (str/includes (object/get @r "line") "[owner-decision"))))) (fn r (str/concat "NO_TAG " (object/get @r "code") " (" (object/get @r "path") ")")))))
+        (emit GAPS_ANSWERED { status: (if (= (array/len @entity.findings) 0) 200 500), body: (if (= (array/len @entity.findings) 0) "gaps: clean" (str/join @entity.findings "\n")) })
+      GAPS_FAIL -> ready
+        (emit GAPS_ANSWERED { status: 500, body: (str/concat "error: " @entity.fail) })
+      GAPS_S3 -> analyzing
+        (set @entity.curLines (object/get (array/first @entity.scans) "lines"))
+        (set @entity.curFlags (object/get (array/first @entity.scans) "flags"))
+        (set @entity.curN (array/len @entity.curLines))
+        (set @entity.markB (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^<!-- BEGIN GENERATED ROLL-UP:.*-->$")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.markE (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^<!-- END GENERATED ROLL-UP -->$")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.fail (if (or (!= (array/len @entity.markB) 1) (!= (array/len @entity.markE) 1)) "docs/Almadar_Gaps.md needs exactly one ordered roll-up marker pair" (if (< (object/get (array/first @entity.markE) "at") (object/get (array/first @entity.markB) "at")) "docs/Almadar_Gaps.md needs exactly one ordered roll-up marker pair" "")))
+        (emit GAPS_S3B { })
+      GAPS_S3B -> analyzing when (!= @entity.fail "")
+        (emit GAPS_FAIL { })
+      GAPS_S3B -> scanning when (= @entity.fail "")
+        (set @entity.bIdx (object/get (array/first @entity.markB) "at"))
+        (set @entity.eIdx (object/get (array/first @entity.markE) "at"))
+        (set @entity.mPre (if (> @entity.bIdx 0) (str/concat (str/join (array/slice @entity.curLines 0 @entity.bIdx) "\n") "\n") ""))
+        (set @entity.mPost (if (< (+ @entity.eIdx 1) @entity.curN) (str/concat "\n" (str/join (array/slice @entity.curLines (+ @entity.eIdx 1) @entity.curN) "\n")) ""))
+        (set @entity.jobs [
+          { key: "__root__", text: (str/concat @entity.mPre @entity.mPost), repo: "ROOT" },
+          { key: "__body__", text: (str/concat "\n" (if (> @entity.eIdx (+ @entity.bIdx 1)) (str/concat (str/join (array/slice @entity.curLines (+ @entity.bIdx 1) @entity.eIdx) "\n") "\n") "")), repo: "" } ])
+        (set @entity.stage "s4")
+        (set @entity.cursor 0)
+        (emit GAPS_SCAN { })
+      GAPS_S4 -> analyzing
+        (set @entity.curLines (object/get (array/find @entity.scans (fn s (= (object/get @s "key") "__body__"))) "lines"))
+        (set @entity.curFlags (object/get (array/find @entity.scans (fn s (= (object/get @s "key") "__body__"))) "flags"))
+        (set @entity.markB (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^## `[^`]+` \\(source: `[^`]+`\\)$")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.hdrIdx (array/map @entity.markB (fn m (object/get @m "at"))))
+        (set @entity.hdrRepos (array/map @entity.markB (fn m (array/nth (str/split (object/get @m "text") "`") 1))))
+        (set @entity.hdrSrcs (array/map @entity.markB (fn m (array/nth (str/split (object/get @m "text") "`") 3))))
+        (set @entity.mEntries (array/map (object/get (array/find @entity.scans (fn s (= (object/get @s "key") "__body__"))) "entries") (fn e
+          (object/set @e "repo" (let ((hs (array/filter @entity.hdrIdx (fn j (< @j (object/get @e "at")))))) (if (= (array/len @hs) 0) "" (array/nth @entity.hdrRepos (- (array/len @hs) 1))))))))
+        (set @entity.lEntries (array/flatten (array/map @entity.ledgerRepos (fn r (object/get (array/find @entity.scans (fn s (= (object/get @s "key") (str/concat @r "/Almadar_Gaps.md")))) "entries")))))
+        (set @entity.rEntries (object/get (array/find @entity.scans (fn s (= (object/get @s "key") "__root__"))) "entries"))
+        (set @entity.mCodes (array/map @entity.mEntries (fn e (object/get @e "code"))))
+        (set @entity.lCodes (array/map @entity.lEntries (fn e (object/get @e "code"))))
+        (set @entity.rCodes (array/map @entity.rEntries (fn e (object/get @e "code"))))
+        (set @entity.mOwn (array/map @entity.mEntries (fn e (str/concat (object/get @e "code") "|" (object/get @e "repo")))))
+        (set @entity.lOwn (array/map @entity.lEntries (fn e (str/concat (object/get @e "code") "|" (object/get @e "repo")))))
+        (set @entity.hasBaseline (array/some @entity.reads (fn r (and (= (object/get @r "path") "tools/almadar-gaps/.sync-state.json") (object/get @r "ok")))))
+        (set @entity.bEntries (if @entity.hasBaseline
+          (array/map (object/get (json/parse (object/get (array/find @entity.reads (fn r (= (object/get @r "path") "tools/almadar-gaps/.sync-state.json"))) "text") GapBaseline) "entries")
+            (fn p { code: (object/get @p "0"), repo: (object/get @p "1.repo"), heading: (object/get @p "1.heading"), body: (object/get @p "1.body"), at: 0, endAt: 0 }))
+          (array/take @entity.mEntries 0)))
+        (set @entity.errs [
+          (str/default (array/find (array/map (array/range 0 (array/len @entity.hdrIdx)) (fn h
+            (if (or (not (array/includes @entity.repos (array/nth @entity.hdrRepos @h))) (!= (array/nth @entity.hdrSrcs @h) (str/concat (array/nth @entity.hdrRepos @h) "/Almadar_Gaps.md"))) (str/concat "unknown or unavailable repo owner: " (array/nth @entity.hdrRepos @h))
+              (if (< (array/indexOf @entity.hdrRepos (array/nth @entity.hdrRepos @h)) @h) (str/concat "duplicate repo section: " (array/nth @entity.hdrRepos @h)) "")))) (fn m (!= @m ""))) ""),
+          (if (array/some @entity.mEntries (fn e (= (object/get @e "repo") ""))) "gap outside an explicit repo section in master roll-up" ""),
+          (str/default (array/find (array/map (array/filter @entity.repos (fn r (and (array/includes @entity.hdrRepos @r) (not (array/includes @entity.ledgerRepos @r))))) (fn r (str/concat "missing ledger: " @r "/Almadar_Gaps.md"))) (fn m (!= @m ""))) ""),
+          (let ((d (array/find @entity.mCodes (fn c (< (array/indexOf @entity.mCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
+          (let ((d (array/find @entity.lCodes (fn c (< (array/indexOf @entity.lCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
+          (let ((d (array/find @entity.rCodes (fn c (< (array/indexOf @entity.rCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
+          (let ((d (array/find @entity.mOwn (fn o (and (array/includes @entity.lCodes (array/first (str/split @o "|"))) (not (array/includes @entity.lOwn @o))))))) (if (= @d null) "" (str/concat "conflicting owners for " (array/first (str/split @d "|"))))),
+          (let ((d (array/find (array/unique (array/concat @entity.mCodes @entity.lCodes)) (fn c (array/includes @entity.rCodes @c))))) (if (= @d null) "" (str/concat "duplicate gap code in root and repo: " @d))) ])
+        (set @entity.fail (str/default (array/find @entity.errs (fn m (!= @m ""))) ""))
+        (emit GAPS_S4B { })
+      GAPS_S4B -> analyzing when (!= @entity.fail "")
+        (emit GAPS_FAIL { })
+      GAPS_S4B -> merging when (= @entity.fail "")
+        (emit GAPS_ROWS { })
+    }
+
+    state merging {
+      INIT -> merging
+      GAPS_FAIL -> ready
+        (emit GAPS_ANSWERED { status: 500, body: (str/concat "error: " @entity.fail) })
+      GAPS_ROWS -> merging
+        (set @entity.rows (array/map
+          (object/entries (array/groupBy (array/concat
+            (array/map @entity.mEntries (fn e { code: (object/get @e "code"), side: "m", repo: (object/get @e "repo"), heading: (object/get @e "heading"), body: (object/get @e "body") }))
+            (array/map @entity.lEntries (fn e { code: (object/get @e "code"), side: "l", repo: (object/get @e "repo"), heading: (object/get @e "heading"), body: (object/get @e "body") }))
+            (array/map @entity.bEntries (fn e { code: (object/get @e "code"), side: "p", repo: (object/get @e "repo"), heading: (object/get @e "heading"), body: (object/get @e "body") }))) "code"))
+          (fn kv
+            (let ((mm (array/find (array/nth @kv 1) (fn s (= (object/get @s "side") "m"))))
+                  (ll (array/find (array/nth @kv 1) (fn s (= (object/get @s "side") "l"))))
+                  (pp (array/find (array/nth @kv 1) (fn s (= (object/get @s "side") "p")))))
+              (let ((sm (if (= @mm null) "" (json/stringify [(object/get @mm "repo") (object/get @mm "heading") (object/get @mm "body")])))
+                    (sl (if (= @ll null) "" (json/stringify [(object/get @ll "repo") (object/get @ll "heading") (object/get @ll "body")])))
+                    (sp (if (= @pp null) "" (json/stringify [(object/get @pp "repo") (object/get @pp "heading") (object/get @pp "body")]))))
+                (let ((side (if (and (!= @sp "") (not (array/includes @entity.repos (object/get @pp "repo"))) (= @sm "") (= @sl "")) "skip"
+                              (if (!= @entity.from "")
+                                (if (= @entity.from "master") (if (= @sm "") "n" "m") (if (= @sl "") "n" "l"))
+                                (if (= @sm @sl) (if (= @sm "") "n" "m")
+                                  (if (and @entity.hasBaseline (= @sm @sp)) (if (= @sl "") "n" "l")
+                                    (if (and @entity.hasBaseline (= @sl @sp)) (if (= @sm "") "n" "m") "x")))))))
+                  { code: (array/nth @kv 0), side: @side, m: @sm, l: @sl, p: @sp,
+                    pRepo: (if (= @pp null) "" (object/get @pp "repo")),
+                    eRepo: (if (= @side "m") (object/get @mm "repo") (if (= @side "l") (object/get @ll "repo") "")),
+                    eHeading: (if (= @side "m") (object/get @mm "heading") (if (= @side "l") (object/get @ll "heading") "")),
+                    eBody: (if (= @side "m") (object/get @mm "body") (if (= @side "l") (object/get @ll "body") "")) }))))))
+        (emit GAPS_ROWS_DONE { })
+      GAPS_ROWS_DONE -> merging when (= @entity.cmd "rollup")
+        (emit GAPS_ROLLUP { })
+      GAPS_ROWS_DONE -> merging when (!= @entity.cmd "rollup")
+        (emit GAPS_MERGE { })
+      GAPS_ROLLUP -> merging
+        (set @entity.fail (let ((bad (array/find @entity.rows (fn r (and @entity.hasBaseline (or (!= (object/get @r "m") "") (!= (object/get @r "p") "")) (!= (object/get @r "m") (object/get @r "p")) (!= (object/get @r "m") (object/get @r "l"))))))) (if (= @bad null) "" (str/concat "master has unsynchronized edits for " (object/get @bad "code") "; use sync to preserve them, or sync --from repos to explicitly replace them"))))
+        (emit GAPS_ROLLUP_B { })
+      GAPS_ROLLUP_B -> ready when (!= @entity.fail "")
+        (emit GAPS_ANSWERED { status: 500, body: (str/concat "error: " @entity.fail) })
+      GAPS_ROLLUP_B -> merging when (= @entity.fail "")
+        (set @entity.fkeys (array/map @entity.ledgerRepos (fn r (str/concat @r "/Almadar_Gaps.md"))))
+        (emit GAPS_RENDER { })
+      GAPS_MERGE -> merging
+        (set @entity.fail (str/default (array/find (array/concat
+          (array/map (array/filter @entity.rows (fn r (and (!= (object/get @r "side") "skip") (!= (object/get @r "p") "") (not (array/includes @entity.ledgerRepos (object/get @r "pRepo")))))) (fn r (str/concat "baseline owner ledger unavailable: " (object/get @r "pRepo") " (" (object/get @r "code") ")")))
+          [(if (array/some @entity.rows (fn r (= (object/get @r "side") "x"))) (str/concat "sync conflicts: " (str/join (array/map (array/filter @entity.rows (fn r (= (object/get @r "side") "x"))) (fn r (object/get @r "code"))) ", ") ". Reconcile these entries or explicitly select --from master|repos; no files written.") "")]) (fn m (!= @m ""))) ""))
+        (emit GAPS_MERGE_B { })
+      GAPS_MERGE_B -> ready when (!= @entity.fail "")
+        (emit GAPS_ANSWERED { status: 500, body: (str/concat "error: " @entity.fail) })
+      GAPS_MERGE_B -> updating when (= @entity.fail "")
+        (set @entity.merged (array/map (array/filter @entity.rows (fn r (or (= (object/get @r "side") "m") (= (object/get @r "side") "l")))) (fn r { code: (object/get @r "code"), repo: (object/get @r "eRepo"), heading: (object/get @r "eHeading"), body: (object/get @r "eBody"), at: 0, endAt: 0 })))
+        (set @entity.out (array/flatten (array/map (array/filter @entity.rows (fn r (or (!= (object/get @r "m") "") (!= (object/get @r "l") "")))) (fn r
+          (let ((cs (if (= (object/get @r "side") "m") (object/get @r "m") (if (= (object/get @r "side") "l") (object/get @r "l") ""))))
+            (array/concat
+              (if (!= (object/get @r "m") @cs) [(str/concat (if (= @cs "") "delete" "update") " master " (object/get @r "code"))] (array/take ["x"] 0))
+              (if (!= (object/get @r "l") @cs) [(str/concat (if (= @cs "") "delete" "update") " repo " (object/get @r "code"))] (array/take ["x"] 0))))))))
+        (set @entity.utexts [])
+        (set @entity.cursor 0)
+        (emit GAPS_UPD { })
+      GAPS_RENDER -> merging
+        (set @entity.rollupText (str/concat "<!-- BEGIN GENERATED ROLL-UP: node tools/almadar-gaps/index.mjs rollup --write; sync edits by gap code with sync --write -->\n\n"
+          (str/join
+            (array/map
+              (array/filter (array/range 0 (array/len @entity.ledgerRepos)) (fn i (> (array/len (object/get (array/find @entity.scans (fn s (= (object/get @s "key") (array/nth @entity.fkeys @i)))) "entries")) 0)))
+              (fn i
+                (let ((r (array/nth @entity.ledgerRepos @i))
+                      (en (object/get (array/find @entity.scans (fn s (= (object/get @s "key") (array/nth @entity.fkeys @i)))) "entries")))
+                  (str/concat "## `" @r "` (source: `" @r "/Almadar_Gaps.md`)\n\n"
+                    (str/join
+                      (array/flatten
+                        (array/map (array/range 0 (array/len @en))
+                          (fn j
+                            (let ((e (array/nth @en @j))
+                                  (ph (if (= @j 0) "" (object/get (array/nth @en (- @j 1)) "heading"))))
+                              (if (and (!= (object/get @e "heading") @ph) (!= (object/get @e "heading") ""))
+                                [(str/concat (if (> @j 0) "\n" "") "#### " (object/get @e "heading") "\n") (object/get @e "body")]
+                                [(object/get @e "body")])))))
+                      "\n")))))
+            "\n\n")
+          "\n\n<!-- END GENERATED ROLL-UP -->"))
+        (set @entity.nextMaster (str/concat @entity.mPre @entity.rollupText @entity.mPost))
+        (emit GAPS_RENDERED { })
+      GAPS_RENDERED -> ready when (and (= @entity.cmd "rollup") (= @entity.mode "check") (!= @entity.nextMaster @entity.masterText))
+        (emit GAPS_ANSWERED { status: 500, body: "error: docs/Almadar_Gaps.md roll-up is stale — run: orb gaps rollup --write" })
+      GAPS_RENDERED -> ready when (and (= @entity.cmd "rollup") (= @entity.mode "check") (= @entity.nextMaster @entity.masterText))
+        (emit GAPS_ANSWERED { status: 200, body: (str/concat "roll-up current: " (array/len @entity.lEntries) " repo-owned gaps") })
+      GAPS_RENDERED -> ready when (and (= @entity.cmd "rollup") (= @entity.mode "preview"))
+        (emit GAPS_ANSWERED { status: 500, body: "error: pass exactly one of --out <dir> or --write" })
+      GAPS_RENDERED -> writing when (and (= @entity.cmd "rollup") (or (= @entity.mode "write") (= @entity.mode "out")))
+        (set @entity.outFiles [{ path: "docs/Almadar_Gaps.md", ok: true, text: @entity.nextMaster }])
+        (set @entity.out (array/append @entity.out (str/concat "roll-up: " (array/len @entity.lEntries) " repo-owned gaps from " (array/len @entity.ledgerRepos) " repos")))
+        (set @entity.wcur 0)
+        (emit GAPS_W_NEXT { })
+      GAPS_RENDERED -> ready when (and (!= @entity.cmd "rollup") (or (= @entity.mode "preview") (= @entity.mode "check")))
+        (set @entity.out (array/append @entity.out (str/concat "sync: " (array/len @entity.merged) " repo-owned gaps; " (+ (array/len @entity.utexts) (if (!= @entity.nextMaster @entity.masterText) 1 0)) " ledger files to update" (if @entity.hasBaseline "" "; baseline not initialized"))))
+        (emit GAPS_ANSWERED { status: (if (and (= @entity.mode "check") (> (+ (array/len @entity.utexts) (if (!= @entity.nextMaster @entity.masterText) 1 0)) 0)) 500 200), body: (str/join (if (and (= @entity.mode "check") (> (+ (array/len @entity.utexts) (if (!= @entity.nextMaster @entity.masterText) 1 0)) 0)) (array/append @entity.out "error: ledgers differ; run sync --write") @entity.out) "\n") })
+      GAPS_RENDERED -> writing when (and (!= @entity.cmd "rollup") (or (= @entity.mode "write") (= @entity.mode "out")))
+        (set @entity.out (array/append @entity.out (str/concat "sync: " (array/len @entity.merged) " repo-owned gaps; " (+ (array/len @entity.utexts) (if (!= @entity.nextMaster @entity.masterText) 1 0)) " ledger files to update" (if @entity.hasBaseline "" "; baseline not initialized"))))
+        (set @entity.outFiles (array/concat @entity.utexts (if (!= @entity.nextMaster @entity.masterText) [{ path: "docs/Almadar_Gaps.md", ok: true, text: @entity.nextMaster }] (array/take @entity.utexts 0)) [{ path: "tools/almadar-gaps/.sync-state.json", ok: true, text: (str/concat "{\n  \"version\": 1,\n  \"entries\": " (if (= (array/len @entity.merged) 0) "[]" (str/concat "[\n" (str/join (array/map @entity.merged (fn e (str/concat "    [\n      " (json/stringify (object/get @e "code")) ",\n      {\n        \"repo\": " (json/stringify (object/get @e "repo")) ",\n        \"heading\": " (json/stringify (object/get @e "heading")) ",\n        \"body\": " (json/stringify (object/get @e "body")) "\n      }\n    ]"))) ",\n") "\n  ]")) "\n}\n") }]))
+        (set @entity.wcur 0)
+        (emit GAPS_W_NEXT { })
+    }
+
+    state updating {
+      INIT -> updating
+      GAPS_UPD -> updating when (< @entity.cursor (array/len @entity.ledgerRepos))
+        (set @entity.uRepo (array/nth @entity.ledgerRepos @entity.cursor))
+        (set @entity.uLines (object/get (array/find @entity.scans (fn s (= (object/get @s "key") (str/concat @entity.uRepo "/Almadar_Gaps.md")))) "lines"))
+        (set @entity.uEntries (object/get (array/find @entity.scans (fn s (= (object/get @s "key") (str/concat @entity.uRepo "/Almadar_Gaps.md")))) "entries"))
+        (set @entity.uPend0 (array/filter @entity.merged (fn e (= (object/get @e "repo") @entity.uRepo))))
+        (set @entity.uText (str/join (array/flatten (array/map @entity.uLines (fn line
+          (let ((ex (array/find @entity.uEntries (fn e (and (<= (object/get @e "at") @index) (< @index (object/get @e "endAt")))))))
+            (if (= @ex null) [@line]
+              (if (!= @index (object/get @ex "at")) (array/take ["x"] 0)
+                (let ((tail (str/slice (array/nth @entity.uLines (- (object/get @ex "endAt") 1)) (str/len (str/trimEnd (array/nth @entity.uLines (- (object/get @ex "endAt") 1))))))
+                      (r (array/find @entity.uPend0 (fn p (and (= (object/get @p "code") (object/get @ex "code")) (= (object/get @p "heading") (object/get @ex "heading")))))))
+                  (if (= @r null) [@tail]
+                    (let ((rl (str/split (object/get @r "body") "\n")))
+                      (array/append (array/dropLast @rl 1) (str/concat (array/last @rl) @tail))))))))))) "\n"))
+        (set @entity.uPend (array/filter @entity.uPend0 (fn p (not (array/some @entity.uEntries (fn e (and (= (object/get @e "code") (object/get @p "code")) (= (object/get @e "heading") (object/get @p "heading")))))))))
+        (set @entity.upc 0)
+        (emit GAPS_UPD_APPEND { })
+      GAPS_UPD_APPEND -> scanning when (< @entity.upc (array/len @entity.uPend))
+        (set @entity.jobs [{ key: "__u__", text: @entity.uText, repo: "" }])
+        (set @entity.stage "u")
+        (set @entity.cursor 0)
+        (emit GAPS_SCAN { })
+      GAPS_UPD_INSERT -> updating
+        (set @entity.curLines (object/get (array/last @entity.scans) "lines"))
+        (set @entity.curFlags (object/get (array/last @entity.scans) "flags"))
+        (set @entity.markB (array/filter (array/map (array/zip @entity.curLines @entity.curFlags) (fn p (if (and (array/nth @p 1) (validate/pattern (array/nth @p 0) "^#{2,3} .+$")) { at: @index, text: (array/nth @p 0) } { at: -1, text: "" }))) (fn m (>= (object/get @m "at") 0))))
+        (set @entity.uText (let ((en (array/nth @entity.uPend @entity.upc)))
+          (let ((hl (if (= (object/get @en "heading") "") "## Open gaps" (str/concat "### " (object/get @en "heading")))))
+            (let ((si (array/findIndex @entity.markB (fn m (= (object/get @m "text") @hl)))))
+              (if (< @si 0)
+                (str/concat (str/trimEnd @entity.uText) "\n\n" @hl "\n\n" (object/get @en "body") "\n")
+                (if (< (+ @si 1) (array/len @entity.markB))
+                  (str/concat (str/trimEnd (str/join (array/slice @entity.curLines 0 (object/get (array/nth @entity.markB (+ @si 1)) "at")) "\n")) "\n\n" (object/get @en "body") "\n\n" (str/join (array/slice @entity.curLines (object/get (array/nth @entity.markB (+ @si 1)) "at") (array/len @entity.curLines)) "\n"))
+                  (str/concat (str/trimEnd @entity.uText) "\n\n" (object/get @en "body") "\n\n")))))))
+        (set @entity.upc (+ @entity.upc 1))
+        (emit GAPS_UPD_APPEND { })
+      GAPS_UPD_APPEND -> updating when (>= @entity.upc (array/len @entity.uPend))
+        (set @entity.uPrefix (if (= @entity.uRepo "orbital-rust") "ORB" (let ((dir (os/path-base @entity.uRepo))) (if (= @dir "almadar") "ALMADAR" (str/upper (str/replace-pattern @dir "^almadar-" ""))))))
+        (set @entity.uCi (array/findIndex (str/split @entity.uText "\n") (fn l (validate/pattern @l (str/concat "Next code: `G-" @entity.uPrefix "-\\d+`")))))
+        (set @entity.fail (if (and (< @entity.uCi 0) (array/some @entity.uPend (fn p (not (array/some @entity.uEntries (fn e (= (object/get @e "code") (object/get @p "code")))))))) (str/concat @entity.uRepo "/Almadar_Gaps.md needs a Next code counter before accepting new gaps") ""))
+        (emit GAPS_UPD_COUNT { })
+      GAPS_UPD_COUNT -> ready when (!= @entity.fail "")
+        (emit GAPS_ANSWERED { status: 500, body: (str/concat "error: " @entity.fail) })
+      GAPS_UPD_COUNT -> updating when (= @entity.fail "")
+        (set @entity.uText (if (< @entity.uCi 0) @entity.uText
+          (let ((lines (str/split @entity.uText "\n"))
+                (needle (str/concat "Next code: `G-" @entity.uPrefix "-")))
+            (let ((digits (array/first (str/split (array/nth (str/split (array/nth @lines @entity.uCi) @needle) 1) "`"))))
+              (let ((num (array/max (array/append (array/map (array/filter (array/concat (array/map @entity.merged (fn e (object/get @e "code"))) (array/map @entity.uEntries (fn e (object/get @e "code")))) (fn c (and (str/startsWith @c (str/concat "G-" @entity.uPrefix "-")) (validate/pattern @c (str/concat "^G-" @entity.uPrefix "-\\d+$"))))) (fn c (+ 1 (str/to-number (str/replace @c (str/concat "G-" @entity.uPrefix "-") ""))))) (str/to-number @digits)))))
+                (str/join (array/flatten (array/map @lines (fn line
+                  (if (= @index @entity.uCi)
+                    [(str/replace @line (str/concat @needle @digits "`") (str/concat @needle (str/padStart (str/concat @num) 3 "0") "`"))]
+                    (if (and (> (array/len @entity.uPend) 0) (= @line "_No open gaps._"))
+                      (if (= @index (- (array/len @lines) 1)) [""] (array/take ["x"] 0))
+                      [@line]))))) "\n"))))))
+        (set @entity.utexts (if (!= @entity.uText (str/join @entity.uLines "\n")) (array/append @entity.utexts { path: (str/concat @entity.uRepo "/Almadar_Gaps.md"), ok: true, text: @entity.uText }) @entity.utexts))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit GAPS_UPD_NEXT { })
+      GAPS_UPD_NEXT -> updating
+        (emit GAPS_UPD { })
+      GAPS_UPD -> scanning when (and (>= @entity.cursor (array/len @entity.ledgerRepos)) (> (array/len @entity.utexts) 0))
+        (set @entity.fkeys (array/map @entity.ledgerRepos (fn r (let ((p (str/concat @r "/Almadar_Gaps.md"))) (if (array/some @entity.utexts (fn u (= (object/get @u "path") @p))) (str/concat "new:" @p) @p)))))
+        (set @entity.jobs (array/map @entity.utexts (fn u { key: (str/concat "new:" (object/get @u "path")), text: (object/get @u "text"), repo: "" })))
+        (set @entity.stage "r")
+        (set @entity.cursor 0)
+        (emit GAPS_SCAN { })
+      GAPS_UPD -> merging when (and (>= @entity.cursor (array/len @entity.ledgerRepos)) (= (array/len @entity.utexts) 0))
+        (set @entity.fkeys (array/map @entity.ledgerRepos (fn r (str/concat @r "/Almadar_Gaps.md"))))
+        (emit GAPS_RENDER { })
+    }
+
+    state writing {
+      INIT -> writing
+      GAPS_W_NEXT -> writing when (and (< @entity.wcur (array/len @entity.outFiles)) (= @entity.mode "out"))
+        (os/mkdir (str/concat @config.outRoot "/" @entity.outRel "/" (os/path-dir (object/get (array/nth @entity.outFiles @entity.wcur) "path"))) true { key: "mkdir" emit: { success: GAPS_W_MKDIR, failure: GAPS_W_FAILED } })
+      GAPS_W_MKDIR -> writing
+        (os/write-file (str/concat @config.outRoot "/" @entity.outRel "/" (object/get (array/nth @entity.outFiles @entity.wcur) "path")) (bytes/from-string (object/get (array/nth @entity.outFiles @entity.wcur) "text")) { key: "write" emit: { success: GAPS_W_WROTE, failure: GAPS_W_FAILED } })
+      GAPS_W_NEXT -> writing when (and (< @entity.wcur (array/len @entity.outFiles)) (= @entity.mode "write"))
+        (os/write-file (str/concat @config.root "/" (object/get (array/nth @entity.outFiles @entity.wcur) "path")) (bytes/from-string (object/get (array/nth @entity.outFiles @entity.wcur) "text")) { key: "write" emit: { success: GAPS_W_WROTE, failure: GAPS_W_FAILED } })
+      GAPS_W_WROTE -> writing
+        (set @entity.wcur (+ @entity.wcur 1))
+        (emit GAPS_W_NEXT { })
+      GAPS_W_FAILED -> ready
+        (emit GAPS_ANSWERED { status: 500, body: (str/concat "error: cannot write " (object/get (array/nth @entity.outFiles @entity.wcur) "path")) })
+      GAPS_W_NEXT -> ready when (>= @entity.wcur (array/len @entity.outFiles))
+        (emit GAPS_ANSWERED { status: 200, body: (str/join @entity.out "\n") })
+    }
+
+    emits {
+      GAPS_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      GAPS_PARSED { }
+        @description "Internal: the arguments were read."
+        @tier "internal"
+      GAPS_FAIL { }
+        @description "Internal: answer with the error held in fail."
+        @tier "internal"
+      GAPS_READ { }
+        @description "Internal: read the next file."
+        @tier "internal"
+      GAPS_READ_NEXT { }
+        @description "Internal: continue with the next file."
+        @tier "internal"
+      GAPS_FILE_READ {
+        data : bytes!
+      }
+        @description "A file read."
+        @tier "internal"
+      GAPS_FILE_UNREAD {
+        error : string
+      }
+        @description "A file that could not be read."
+        @tier "internal"
+      GAPS_SCAN { }
+        @description "Internal: scan the next job's text."
+        @tier "internal"
+      GAPS_SCAN_NEXT { }
+        @description "Internal: continue with the next job."
+        @tier "internal"
+      GAPS_CHECK { }
+        @description "Internal: collect the gap lines of the ledgers scanned."
+        @tier "internal"
+      GAPS_REPORT { }
+        @description "Internal: answer with the findings."
+        @tier "internal"
+      GAPS_PROBE { }
+        @description "Internal: probe the next candidate repo directory."
+        @tier "internal"
+      GAPS_PROBED { }
+        @description "Internal: every candidate repo directory was probed."
+        @tier "internal"
+      GAPS_PROBE_NEXT { }
+        @description "Internal: continue with the next candidate."
+        @tier "internal"
+      GAPS_PROBE_GM { }
+        @description "Internal: read the candidate's .gitmodules."
+        @tier "internal"
+      GAPS_PROBE_LEDGER { }
+        @description "Internal: read the candidate's ledger."
+        @tier "internal"
+      GAPS_DIR {
+        entries : [GapDirEntry]!
+      }
+        @description "A directory listed."
+        @tier "internal"
+      GAPS_DIR_MISSING {
+        error : string
+      }
+        @description "A directory that could not be listed."
+        @tier "internal"
+      GAPS_GM_TEXT {
+        data : bytes!
+      }
+        @description "A .gitmodules read."
+        @tier "internal"
+      GAPS_GM_FAIL {
+        error : string
+      }
+        @description "A .gitmodules that could not be read."
+        @tier "internal"
+      GAPS_PL_READ {
+        data : bytes!
+      }
+        @description "A candidate's ledger read."
+        @tier "internal"
+      GAPS_PL_FAIL {
+        error : string
+      }
+        @description "A candidate's ledger that could not be read."
+        @tier "internal"
+      GAPS_S3 { }
+        @description "Internal: find the roll-up markers in the master."
+        @tier "internal"
+      GAPS_S3B { }
+        @description "Internal: the markers were checked."
+        @tier "internal"
+      GAPS_S4 { }
+        @description "Internal: collect and validate the entries of both sides."
+        @tier "internal"
+      GAPS_S4B { }
+        @description "Internal: the entries were validated."
+        @tier "internal"
+      GAPS_ROWS { }
+        @description "Internal: compare each code across master, repos and baseline."
+        @tier "internal"
+      GAPS_ROWS_DONE { }
+        @description "Internal: the comparison rows are ready."
+        @tier "internal"
+      GAPS_ROLLUP { }
+        @description "Internal: check the master for unsynchronized edits."
+        @tier "internal"
+      GAPS_ROLLUP_B { }
+        @description "Internal: the master was checked."
+        @tier "internal"
+      GAPS_MERGE { }
+        @description "Internal: choose the winning side per code."
+        @tier "internal"
+      GAPS_MERGE_B { }
+        @description "Internal: the merge was decided."
+        @tier "internal"
+      GAPS_UPD { }
+        @description "Internal: rewrite the next repo ledger."
+        @tier "internal"
+      GAPS_UPD_APPEND { }
+        @description "Internal: add the next new entry to the repo ledger."
+        @tier "internal"
+      GAPS_UPD_INSERT { }
+        @description "Internal: place the new entry under its section."
+        @tier "internal"
+      GAPS_UPD_COUNT { }
+        @description "Internal: advance the Next code counter."
+        @tier "internal"
+      GAPS_UPD_NEXT { }
+        @description "Internal: continue with the next repo ledger."
+        @tier "internal"
+      GAPS_RENDER { }
+        @description "Internal: render the generated roll-up."
+        @tier "internal"
+      GAPS_RENDERED { }
+        @description "Internal: the roll-up was rendered."
+        @tier "internal"
+      GAPS_W_NEXT { }
+        @description "Internal: write the next file."
+        @tier "internal"
+      GAPS_W_MKDIR { }
+        @description "A directory made."
+        @tier "internal"
+      GAPS_W_WROTE {
+        bytes : number!
+      }
+        @description "A file written."
+        @tier "internal"
+      GAPS_W_FAILED {
+        error : string
+      }
+        @description "A directory or file that could not be written."
+        @tier "internal"
+    }
+
+    config {
+      root : string = "~/kflow.ai.builder/.gaps-parity"
+        @label "Monorepo root"
+        @description "Directory holding docs/Almadar_Gaps.md and the repo ledgers; the fs grant covers it."
+      outRoot : string = "~/.almadar/gaps-out"
+        @label "Out root"
+        @description "Directory --out <dir> writes under; the out grant covers it."
+      order : [string] = ["packages/almadar-eslint", "packages/almadar-core", "packages/almadar-logger", "packages/almadar-std", "packages/almadar-behaviors", "packages/almadar-syntax", "packages/almadar-runtime", "packages/almadar-server", "packages/almadar-ui", "packages/almadar-verify", "packages/almadar-tools", "tools/almadar-pattern-sync", "tools/runtime-verify", "packages/almadar-playground-runtime", "tools/asset-workflow", "apps/builder", "apps/kflow", "apps/nata", "apps/rawi", "almadar", "orbital-rust"]
+        @label "Repo order"
+        @description "Upstream to downstream order of the repos in the roll-up, per the root CLAUDE.md dependency map; unlisted repos follow alphabetically."
+      deprecated : [string] = ["packages/almadar-agent"]
+        @label "Retired repos"
+        @description "Submodule paths whose ledgers are no longer read."
+    }
+
+    listens {
+      GAPS_CALLED -> inbound "cli-gaps" answers GAPS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb gaps` with its arguments and working directory."
+        @synonyms "orb gaps, check gap ledgers, sync gap ledgers"
+    }
+  }
+
+  page "/orb-gaps" as OrbGapsPage -> OrbGaps
+}
