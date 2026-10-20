@@ -1,0 +1,186 @@
+app std-dev-personas [
+  version: "1.0.0",
+  inbound: ["personas", "persona-sign-in"],
+  env: ["FIREBASE_AUTH_EMULATOR_HOST"],
+  egress: ["http://127.0.0.1:9099"],
+  description: "std-dev-personas — sign in as a development persona against the local Firebase Auth emulator. Compose it with linkedEntity set to the app's identity entity: its rows are the personas. POST /api/hooks/personas answers 200 { success, personas, source } (every row with a non-empty id; source identity-entity, or none when there are no rows). POST /api/hooks/persona-sign-in with { id } makes that row an emulator user (uid = id, display name = name, every other non-null field but email a custom claim) and answers 200 { success, customToken, authEmulatorHost, projectId }, the token unsigned (alg none), which only the emulator accepts. Both answer 404 unless FIREBASE_AUTH_EMULATOR_HOST is 127.0.0.1:9099, so a deployment lists and signs in nobody; a body without an id is 400, an unknown id 404, a field named like a reserved token claim or an emulator refusal 500."
+]
+uses Spec from "almadar-std/dev-personas"
+type PersonaSignInBody = { id : string }
+type EmulatorError = { message : string }
+type EmulatorReply = { error : EmulatorError }
+
+orbital DevPersonasOrbital {
+  entity DevPersona [persistent: dev_personas] {
+    id : string!
+    name : string @description "Shown on the persona switcher and set as the emulator user's display name."
+    email : string @description "Kept off the token claims."
+  }
+
+  trait DevPersonas -> @rebindable DevPersona [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PERSONAS_CALLED -> ready
+        (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "list" emit: { success: PERSONAS_HOST failure: PERSONAS_FAILED } })
+      PERSONAS_HOST -> ready when (!= (or @payload.value "") @config.authEmulatorHost)
+        (emit PERSONAS_ANSWERED { status: 404, body: (json/stringify { success: false, error: "no dev personas: the Auth emulator is not configured" }) })
+      PERSONAS_HOST -> ready when (= (or @payload.value "") @config.authEmulatorHost)
+        (fetch DevPersona { emit: { success: PERSONAS_ROWS failure: PERSONAS_FAILED } })
+      PERSONAS_ROWS -> ready
+        (let ((rows (array/filter @payload.data (fn r (!= (or @r.id "") "")))))
+          (emit PERSONAS_ANSWERED { status: 200, body: (json/stringify { success: true, personas: @rows, source: (if (> (array/len @rows) 0) "identity-entity" "none") }) }))
+      PERSONAS_FAILED -> ready
+        (emit PERSONAS_ANSWERED { status: 500, body: (json/stringify { success: false, error: (or @payload.error "") }) })
+
+      SIGN_IN_CALLED -> ready when (= (or (object/get (json/parse (or @payload.rawBody "{}") PersonaSignInBody) "id") "") "")
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 400, body: (json/stringify { success: false, error: "expected { id }" }) })
+      SIGN_IN_CALLED -> ready when (!= (or (object/get (json/parse (or @payload.rawBody "{}") PersonaSignInBody) "id") "") "")
+        (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: (object/get (json/parse @payload.rawBody PersonaSignInBody) "id") emit: { success: SIGN_IN_HOST failure: SIGN_IN_FAILED } })
+      SIGN_IN_HOST -> ready when (!= (or @payload.value "") @config.authEmulatorHost)
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 404, body: (json/stringify { success: false, error: "no dev personas: the Auth emulator is not configured" }) })
+      SIGN_IN_HOST -> ready when (= (or @payload.value "") @config.authEmulatorHost)
+        (fetch DevPersona { id: @payload.key emit: { success: SIGN_IN_ROW failure: SIGN_IN_ROW_MISSED } })
+      SIGN_IN_ROW -> ready when (> (array/len (array/filter (object/keys @payload.data) (fn k (array/includes @config.reservedClaims @k)))) 0)
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: (str/concat "persona " @payload.data.id " has fields named like reserved token claims: " (str/join (array/filter (object/keys @payload.data) (fn k (array/includes @config.reservedClaims @k))) ", ")) }) })
+      SIGN_IN_ROW -> ready when (= (array/len (array/filter (object/keys @payload.data) (fn k (array/includes @config.reservedClaims @k)))) 0)
+        (http POST @config.authEmulatorOrigin (str/concat "/identitytoolkit.googleapis.com/v1/projects/" @config.projectId "/accounts") {
+          headers: { Content-Type: "application/json", Authorization: "Bearer owner" },
+          text: (json/stringify (if (!= (or @payload.data.name "") "") { localId: @payload.data.id, displayName: @payload.data.name } { localId: @payload.data.id })),
+          timeoutMs: 10000
+        } { key: @payload.data.id, emit: { success: SIGN_IN_CREATED, failure: SIGN_IN_FAILED } })
+      SIGN_IN_CREATED -> ready when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (str/startsWith (or (object/get (object/get (if (json/valid @payload.body) (json/parse @payload.body EmulatorReply) { error: { message: "" } }) "error") "message") "") "DUPLICATE_LOCAL_ID")))
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: (str/concat "the Auth emulator refused to create " @payload.key ": " (str/concat @payload.status) " " @payload.body) }) })
+      SIGN_IN_CREATED -> ready when (or (and (>= @payload.status 200) (< @payload.status 300)) (str/startsWith (or (object/get (object/get (if (json/valid @payload.body) (json/parse @payload.body EmulatorReply) { error: { message: "" } }) "error") "message") "") "DUPLICATE_LOCAL_ID"))
+        (fetch DevPersona { id: @payload.key emit: { success: SIGN_IN_CLAIMS failure: SIGN_IN_ROW_MISSED } })
+      SIGN_IN_CLAIMS -> ready
+        (http POST @config.authEmulatorOrigin (str/concat "/identitytoolkit.googleapis.com/v1/projects/" @config.projectId "/accounts:update") {
+          headers: { Content-Type: "application/json", Authorization: "Bearer owner" },
+          text: (json/stringify (object/merge (if (!= (or @payload.data.name "") "") { localId: @payload.data.id, displayName: @payload.data.name } { localId: @payload.data.id }) { customAttributes: (json/stringify (object/fromEntries (array/filter (object/entries (object/omit @payload.data ["id", "email", "name"])) (fn e (!= (array/nth @e 1) null))))) })),
+          timeoutMs: 10000
+        } { key: @payload.data.id, emit: { success: SIGN_IN_UPDATED, failure: SIGN_IN_FAILED } })
+      SIGN_IN_UPDATED -> ready when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: (str/concat "the Auth emulator refused to update " @payload.key ": " (str/concat @payload.status) " " @payload.body) }) })
+      SIGN_IN_UPDATED -> ready when (and (>= @payload.status 200) (< @payload.status 300))
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 200, body: (json/stringify { success: true, customToken: (str/concat (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { alg: "none", typ: "JWT" })) "\\+" "-") "/" "_") "=+$" "") "." (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { aud: "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit", iat: (math/floor (/ @now 1000)), exp: (+ (math/floor (/ @now 1000)) 3600), iss: "firebase-auth-emulator@example.com", sub: "firebase-auth-emulator@example.com", uid: @payload.key })) "\\+" "-") "/" "_") "=+$" "") "."), authEmulatorHost: @config.authEmulatorHost, projectId: @config.projectId }) })
+      SIGN_IN_ROW_MISSED -> ready when (= @payload.code "not-found")
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 404, body: (json/stringify { success: false, error: "no persona with that id" }) })
+      SIGN_IN_ROW_MISSED -> ready when (!= @payload.code "not-found")
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: @payload.error }) })
+      SIGN_IN_FAILED -> ready
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: (or @payload.error "") }) })
+    }
+
+    emits {
+      PERSONAS_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the answer of the personas hook."
+        @tier "internal"
+      PERSONA_SIGN_IN_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the answer of the persona-sign-in hook."
+        @tier "internal"
+      PERSONAS_HOST -> internal {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for FIREBASE_AUTH_EMULATOR_HOST on a list."
+        @tier "internal"
+      PERSONAS_ROWS -> internal {
+        data : [DevPersona]!
+      }
+        @description "Internal: the identity rows."
+        @tier "internal"
+      PERSONAS_FAILED -> internal {
+        error : string
+      }
+        @description "Internal: reading the environment or the rows failed."
+        @tier "internal"
+      SIGN_IN_HOST -> internal {
+        value : string
+        key : string!
+      }
+        @description "Internal: the os/getenv answer for FIREBASE_AUTH_EMULATOR_HOST on a sign-in, keyed by the persona id."
+        @tier "internal"
+      SIGN_IN_ROW -> internal {
+        data : DevPersona!
+      }
+        @description "Internal: the persona row to sign in as."
+        @tier "internal"
+      SIGN_IN_CLAIMS -> internal {
+        data : DevPersona!
+      }
+        @description "Internal: the persona row read again for its claims."
+        @tier "internal"
+      SIGN_IN_CREATED -> internal {
+        status : number!
+        body : string!
+        key : string!
+      }
+        @description "Internal: the Auth emulator's answer to creating the user."
+        @tier "internal"
+      SIGN_IN_UPDATED -> internal {
+        status : number!
+        body : string!
+        key : string!
+      }
+        @description "Internal: the Auth emulator's answer to setting the display name and claims."
+        @tier "internal"
+      SIGN_IN_ROW_MISSED -> internal {
+        error : string!
+        code : string
+      }
+        @description "Internal: the persona row could not be read; code not-found when no row has that id."
+        @tier "internal"
+      SIGN_IN_FAILED -> internal {
+        error : string
+      }
+        @description "Internal: the environment, the row or the Auth emulator could not be reached."
+        @tier "internal"
+    }
+
+    config {
+      authEmulatorHost : string = "127.0.0.1:9099"
+        @label "Auth emulator host"
+        @description "The host:port FIREBASE_AUTH_EMULATOR_HOST must name for the hooks to answer; anything else, or unset, answers 404."
+        @synonyms "auth emulator, emulator host"
+        @tier "infra"
+      authEmulatorOrigin : string = "http://127.0.0.1:9099"
+        @label "Auth emulator origin"
+        @description "The origin the emulator user calls go to; it must be in the composing program's egress list."
+        @synonyms "emulator url"
+        @tier "infra"
+      projectId : string = "demo-almadar"
+        @label "Project"
+        @description "The demo project the Auth emulator runs under, the same one std-firebase-emulators starts."
+        @synonyms "firebase project"
+        @tier "infra"
+      reservedClaims : [string] = ["acr", "amr", "at_hash", "aud", "auth_time", "azp", "cnf", "c_hash", "exp", "firebase", "iat", "iss", "jti", "nbf", "nonce", "sub"]
+        @label "Reserved claims"
+        @description "Token claim names Firebase reserves; a persona field named like one refuses the sign-in."
+        @synonyms "reserved token claims"
+        @tier "infra"
+    }
+
+    listens {
+      PERSONAS_CALLED -> inbound "personas" answers PERSONAS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "List the identity rows a developer can sign in as."
+        @synonyms "dev personas, persona list"
+      SIGN_IN_CALLED -> inbound "persona-sign-in" answers PERSONA_SIGN_IN_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Sign in as one persona on the Auth emulator and answer its custom token."
+        @synonyms "sign in as persona, impersonate"
+    }
+  }
+
+  page "/dev-personas" as DevPersonasPage -> DevPersonas
+}

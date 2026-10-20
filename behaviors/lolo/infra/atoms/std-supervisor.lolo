@@ -4,13 +4,7 @@ app std-supervisor [
   description: "std-supervisor — Erlang-style supervisor for OS child processes. START spawns every configured child in order (os/spawn) and watches each (os/wait). A child exit, or a DOWN event naming a child index, is judged by the child's restart policy (permanent always restarts, transient restarts on abnormal exit, temporary never). A restart stops siblings per strategy (os/kill: one-for-one none, one-for-all every other child, rest-for-one the children after it) and respawns them in order. Restarts are counted in a sliding periodMs window of @now stamps; one more than maxRestarts stops the remaining children and emits SUPERVISOR_GAVE_UP. Needs the exec grant for every configured command."
 ]
 orbital SupervisorOrbital {
-  entity SupervisedChild [runtime] {
-    id : string!
-    name : string @description "The child's name, reported in every event." = ""
-    command : string @description "Executable, matched exactly against the exec grant." = ""
-    args : [string] @description "Arguments passed to the command." = []
-    restart : "permanent" | "transient" | "temporary" @description "permanent restarts on any exit, transient only on abnormal exit, temporary never." = permanent
-  }
+  type SupervisedChild = { name : string!, command : string!, args : [string]!, restart : "permanent" | "transient" | "temporary"! }
 
   entity Supervisor [runtime] {
     id : string!
@@ -49,7 +43,7 @@ orbital SupervisorOrbital {
         (set @entity.restartLog [])
         (set @entity.cursor 0)
       SPAWN_STEP -> spawning
-        (os/spawn (object/get (array/nth @config.children @entity.cursor) "command") (object/get (array/nth @config.children @entity.cursor) "args") { cwd: null, env: null, stdin: "null", stdout: "inherit", stderr: "inherit" } { key: "spawn", emit: { success: CHILD_SPAWNED, failure: CHILD_SPAWN_FAILED } })
+        (os/spawn (object/get (array/nth @config.children @entity.cursor) "command") (object/get (array/nth @config.children @entity.cursor) "args") { cwd: null, env: null, stdin: "null", stdout: "inherit", stderr: "inherit", detached: false } { key: "spawn", emit: { success: CHILD_SPAWNED, failure: CHILD_SPAWN_FAILED } })
       CHILD_SPAWNED -> spawning when (< (+ @entity.cursor 1) @entity.spawnTo)
         (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @entity.cursor) @payload.pid @p))))
         (os/wait @payload.pid { key: (str/concat @payload.pid), emit: { success: CHILD_EXITED, failure: CHILD_WAIT_FAILED } })

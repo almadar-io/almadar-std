@@ -1,0 +1,24 @@
+app firebase-emulators-spec [
+  version: "1.0.0",
+  description: "Design contract for starting the local Firebase emulator suite (Firestore and Auth) a development host signs in and stores rows against: reuse a suite already listening on both ports, refuse when only one of them is taken, otherwise write its config under the data directory, start it detached so it outlives the program and is shared by every host on the machine, wait until both ports listen, and answer the hosts and project once. Never in production, never a non-demo project."
+]
+
+orbital FirebaseEmulatorsSpec {
+  expects entity EmulatorSuite [runtime] {
+    id : string!
+    projectId : string
+    reused : boolean
+  }
+  expects trait FirebaseEmulators {
+    state idle
+    state starting
+    state idle {
+      EMULATORS_START -> starting
+    }
+    emits {
+      EMULATORS_READY { projectId : string!  firestoreHost : string!  authHost : string!  reused : boolean! }
+      EMULATORS_FAILED { code : string!  message : string! }
+    }
+  }
+  expects page "/firebase-emulators" -> FirebaseEmulators
+}

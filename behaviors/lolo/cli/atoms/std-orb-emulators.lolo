@@ -1,0 +1,78 @@
+app std-orb-emulators [
+  version: "1.0.0",
+  inbound: ["cli-emulators"],
+  exec: ["firebase"],
+  env: ["NODE_ENV", "JAVA21_HOME", "PATH", "HOME"],
+  net: { "127.0.0.1:8080": [tcp], "127.0.0.1:9099": [tcp] },
+  fs: { "~/.almadar/emulator-data/**": [read, write, create], "/opt/homebrew/opt/openjdk@21/bin/java": [read], "/usr/local/opt/openjdk@21/bin/java": [read], "/usr/lib/jvm/java-21-openjdk-amd64/bin/java": [read], "/usr/lib/jvm/java-21-openjdk/bin/java": [read] },
+  description: "std-orb-emulators — the `orb emulators` command. It starts the local Firebase emulator suite through std-firebase-emulators, or reuses the one already listening, and answers the environment a development host connects with: FIRESTORE_EMULATOR_HOST, FIREBASE_AUTH_EMULATOR_HOST, FIREBASE_PROJECT_ID and GCLOUD_PROJECT, one KEY=value line each (status 200, exit 0). Any argument answers the usage (status 400, exit 2); a suite that cannot be started answers `<code>: <message>` (status 500, exit 1)."
+]
+uses Spec from "almadar-std/orb-emulators"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital OrbEmulatorsOrbital {
+  uses Emulators from "std/behaviors/std-firebase-emulators"
+
+  entity OrbEmulatorsRun [runtime] {
+    id : string!
+  }
+
+  trait Suite = Emulators.traits.FirebaseEmulators {
+    listens {
+      OrbEmulators.EMULATORS_REQUESTED -> EMULATORS_START
+    }
+  }
+
+  trait OrbEmulators -> OrbEmulatorsRun [integration] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      EMULATORS_CALLED -> ready when (> (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+        (emit EMULATORS_ANSWERED { status: 400, body: "usage: orb emulators" })
+      EMULATORS_CALLED -> ready when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+        (emit EMULATORS_REQUESTED { })
+      SUITE_READY -> ready
+        (emit EMULATORS_ANSWERED { status: 200, body: (str/concat "FIRESTORE_EMULATOR_HOST=" @payload.firestoreHost "\nFIREBASE_AUTH_EMULATOR_HOST=" @payload.authHost "\nFIREBASE_PROJECT_ID=" @payload.projectId "\nGCLOUD_PROJECT=" @payload.projectId) })
+      SUITE_FAILED -> ready
+        (emit EMULATORS_ANSWERED { status: 500, body: (str/concat @payload.code ": " @payload.message) })
+    }
+
+    emits {
+      EMULATORS_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      EMULATORS_REQUESTED { }
+        @description "Internal: start or reuse the emulator suite."
+        @tier "internal"
+    }
+
+    listens {
+      EMULATORS_CALLED -> inbound "cli-emulators" answers EMULATORS_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb emulators` with its arguments and working directory."
+        @synonyms "orb emulators, start emulators"
+      SUITE_READY {
+        projectId : string!
+        firestoreHost : string!
+        authHost : string!
+        reused : boolean!
+      }
+        @description "std-firebase-emulators' EMULATORS_READY."
+      SUITE_FAILED {
+        code : string!
+        message : string!
+      }
+        @description "std-firebase-emulators' EMULATORS_FAILED."
+      Suite.EMULATORS_READY -> SUITE_READY
+      Suite.EMULATORS_FAILED -> SUITE_FAILED
+    }
+  }
+
+  page "/orb-emulators" as OrbEmulatorsPage -> OrbEmulators, Suite
+}

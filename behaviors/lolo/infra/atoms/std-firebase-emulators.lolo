@@ -1,0 +1,268 @@
+app std-firebase-emulators [
+  version: "1.0.0",
+  exec: ["firebase"],
+  env: ["NODE_ENV", "JAVA21_HOME", "PATH", "HOME"],
+  net: { "127.0.0.1:8080": [tcp], "127.0.0.1:9099": [tcp] },
+  fs: { "~/.almadar/emulator-data/**": [read, write, create], "/opt/homebrew/opt/openjdk@21/bin/java": [read], "/usr/local/opt/openjdk@21/bin/java": [read], "/usr/lib/jvm/java-21-openjdk-amd64/bin/java": [read], "/usr/lib/jvm/java-21-openjdk/bin/java": [read] },
+  description: "std-firebase-emulators — starts the local Firebase emulator suite (Firestore on 127.0.0.1:8080, Auth on 127.0.0.1:9099) a development host stores rows and signs personas in against. EMULATORS_START reuses a suite already listening on both ports, refuses when only one of them is taken (emulators_port_split), refuses under NODE_ENV=production (emulators_production) and a project that does not start with demo- (emulators_not_demo). Otherwise it finds Java 21 (JAVA21_HOME, else the first of the usual install locations that has bin/java; emulators_no_java when none), writes firebase.json and open Firestore rules under ~/.almadar/emulator-data/, starts `firebase emulators:start` detached (so the suite outlives the program and every host on the machine reuses it; its data is exported there on exit and imported on the next start), and polls both ports until they listen (emulators_timeout after 120 seconds). The answer is EMULATORS_READY { projectId, firestoreHost, authHost, reused }, or EMULATORS_FAILED { code, message }."
+]
+uses Spec from "almadar-std/firebase-emulators"
+
+orbital FirebaseEmulatorsOrbital {
+  entity EmulatorSuite [runtime] {
+    id : string!
+    projectId : string @description "The demo project the suite runs under." = "demo-almadar"
+    reused : boolean @description "True when the suite was already listening and nothing was started." = false
+    firestoreUp : boolean @description "The Firestore port answered the last probe." = false
+    authUp : boolean @description "The Auth port answered the last probe." = false
+    javaHome : string @description "The Java 21 home the suite runs on." = ""
+    javaCandidate : number @description "Index of the next usual Java location to check." = 0
+    hostPath : string @description "The host's PATH, with Java 21 put first for the child." = ""
+    imports : boolean @description "A previous export exists and is imported at start." = false
+    started : boolean @description "This run started the suite and waits for its ports." = false
+    pollDueAt : number @description "When the next port probe is due (ms since the epoch); 0 when none is." = 0
+    deadline : number @description "When waiting for the ports gives up (ms since the epoch)." = 0
+  }
+
+  trait FirebaseEmulators -> EmulatorSuite [integration, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.pollDueAt 0)
+      EMULATORS_START -> starting
+        (set @entity.projectId @config.projectId)
+        (set @entity.reused false)
+        (set @entity.started false)
+        (set @entity.javaHome "")
+        (set @entity.javaCandidate 0)
+        (set @entity.pollDueAt 0)
+        (os/getenv "NODE_ENV" { emit: { success: EMULATORS_NODE_ENV failure: EMULATORS_HOST_FAILED } })
+    }
+
+    state starting {
+      INIT -> starting
+      EMULATORS_START -> starting
+        (emit EMULATORS_FAILED { code: "emulators_busy" message: "the emulators are already being started" })
+      EMULATORS_NODE_ENV -> idle when (= @payload.value "production")
+        (emit EMULATORS_FAILED { code: "emulators_production" message: "refusing to start the Firebase emulators with NODE_ENV=production" })
+      EMULATORS_NODE_ENV -> idle when (and (!= @payload.value "production") (not (str/startsWith @config.projectId "demo-")))
+        (emit EMULATORS_FAILED { code: "emulators_not_demo" message: (str/concat "projectId must start with demo- (got " @config.projectId ") so it can never reach a real project") })
+      EMULATORS_NODE_ENV -> starting when (and (!= @payload.value "production") (str/startsWith @config.projectId "demo-"))
+        (emit EMULATORS_PROBE { })
+      EMULATORS_PROBE -> starting
+        (os/tcp-connect "127.0.0.1" 8080 { emit: { success: EMULATORS_FIRESTORE_UP failure: EMULATORS_FIRESTORE_DOWN } })
+      EMULATORS_FIRESTORE_UP -> starting
+        (set @entity.firestoreUp true)
+        (os/close @payload.sock { emit: { failure: EMULATORS_HOST_FAILED } })
+        (os/tcp-connect "127.0.0.1" 9099 { emit: { success: EMULATORS_AUTH_UP failure: EMULATORS_AUTH_DOWN } })
+      EMULATORS_FIRESTORE_DOWN -> starting
+        (set @entity.firestoreUp false)
+        (os/tcp-connect "127.0.0.1" 9099 { emit: { success: EMULATORS_AUTH_UP failure: EMULATORS_AUTH_DOWN } })
+      EMULATORS_AUTH_UP -> starting
+        (set @entity.authUp true)
+        (os/close @payload.sock { emit: { failure: EMULATORS_HOST_FAILED } })
+        (emit EMULATORS_PROBED { })
+      EMULATORS_AUTH_DOWN -> starting
+        (set @entity.authUp false)
+        (emit EMULATORS_PROBED { })
+      EMULATORS_PROBED -> idle when (and @entity.firestoreUp @entity.authUp)
+        (set @entity.reused (not @entity.started))
+        (set @entity.pollDueAt 0)
+        (emit EMULATORS_READY { projectId: @entity.projectId firestoreHost: "127.0.0.1:8080" authHost: "127.0.0.1:9099" reused: (not @entity.started) })
+      EMULATORS_PROBED -> idle when (and (not @entity.started) (!= @entity.firestoreUp @entity.authUp))
+        (emit EMULATORS_FAILED { code: "emulators_port_split" message: (if @entity.firestoreUp "port 8080 is in use but 9099 is not, so this is not one emulator suite; stop what holds 8080" "port 9099 is in use but 8080 is not, so this is not one emulator suite; stop what holds 9099") })
+      EMULATORS_PROBED -> starting when (and (not @entity.started) (not @entity.firestoreUp) (not @entity.authUp))
+        (os/getenv "JAVA21_HOME" { emit: { success: EMULATORS_JAVA_HOME failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_PROBED -> starting when (and @entity.started (not (and @entity.firestoreUp @entity.authUp)) (< @now @entity.deadline))
+        (set @entity.pollDueAt (+ @now 500))
+      EMULATORS_PROBED -> idle when (and @entity.started (not (and @entity.firestoreUp @entity.authUp)) (>= @now @entity.deadline))
+        (set @entity.pollDueAt 0)
+        (emit EMULATORS_FAILED { code: "emulators_timeout" message: "the Firebase emulators did not listen on 8080 and 9099 within 120 seconds; see ~/.almadar/emulator-data/*-debug.log" })
+      EMULATORS_JAVA_HOME -> starting when (!= @payload.value null)
+        (set @entity.javaHome @payload.value)
+        (os/getenv "PATH" { emit: { success: EMULATORS_PATH failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_JAVA_HOME -> starting when (== @payload.value null)
+        (emit EMULATORS_JAVA_NEXT { })
+      EMULATORS_JAVA_NEXT -> starting when (= @entity.javaCandidate 0)
+        (set @entity.javaHome "/opt/homebrew/opt/openjdk@21")
+        (os/exists "/opt/homebrew/opt/openjdk@21/bin/java" { emit: { success: EMULATORS_JAVA_CHECKED failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_JAVA_NEXT -> starting when (= @entity.javaCandidate 1)
+        (set @entity.javaHome "/usr/local/opt/openjdk@21")
+        (os/exists "/usr/local/opt/openjdk@21/bin/java" { emit: { success: EMULATORS_JAVA_CHECKED failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_JAVA_NEXT -> starting when (= @entity.javaCandidate 2)
+        (set @entity.javaHome "/usr/lib/jvm/java-21-openjdk-amd64")
+        (os/exists "/usr/lib/jvm/java-21-openjdk-amd64/bin/java" { emit: { success: EMULATORS_JAVA_CHECKED failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_JAVA_NEXT -> starting when (= @entity.javaCandidate 3)
+        (set @entity.javaHome "/usr/lib/jvm/java-21-openjdk")
+        (os/exists "/usr/lib/jvm/java-21-openjdk/bin/java" { emit: { success: EMULATORS_JAVA_CHECKED failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_JAVA_NEXT -> idle when (>= @entity.javaCandidate 4)
+        (emit EMULATORS_FAILED { code: "emulators_no_java" message: "no Java 21 found; set JAVA21_HOME (looked in /opt/homebrew/opt/openjdk@21, /usr/local/opt/openjdk@21, /usr/lib/jvm/java-21-openjdk-amd64, /usr/lib/jvm/java-21-openjdk)" })
+      EMULATORS_JAVA_CHECKED -> starting when (not @payload.ok)
+        (set @entity.javaHome "")
+        (set @entity.javaCandidate (+ @entity.javaCandidate 1))
+        (emit EMULATORS_JAVA_NEXT { })
+      EMULATORS_JAVA_CHECKED -> starting when @payload.ok
+        (os/getenv "PATH" { emit: { success: EMULATORS_PATH failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_PATH -> starting
+        (set @entity.hostPath (str/concat @entity.javaHome "/bin:" (or @payload.value "")))
+        (os/mkdir "~/.almadar/emulator-data/" true { emit: { success: EMULATORS_DIR_READY failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_DIR_READY -> starting
+        (os/write-file "~/.almadar/emulator-data/firebase.json" (bytes/from-string (json/stringify { emulators: { ui: { enabled: false } singleProjectMode: { enabled: true } firestore: { host: "127.0.0.1" port: 8080 } auth: { host: "127.0.0.1" port: 9099 } } firestore: { rules: "firestore.rules" } })) { emit: { success: EMULATORS_CONFIG_WRITTEN failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_CONFIG_WRITTEN -> starting
+        (os/write-file "~/.almadar/emulator-data/firestore.rules" (bytes/from-string "rules_version = '2';\nservice cloud.firestore { match /databases/{db}/documents { match /{doc=**} { allow read, write: if true; } } }\n") { emit: { success: EMULATORS_RULES_WRITTEN failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_RULES_WRITTEN -> starting
+        (os/exists "~/.almadar/emulator-data/export/firebase-export-metadata.json" { emit: { success: EMULATORS_EXPORT_CHECKED failure: EMULATORS_HOST_FAILED } })
+      EMULATORS_EXPORT_CHECKED -> starting when @payload.ok
+        (set @entity.imports true)
+        (os/spawn "firebase" ["emulators:start", "--only", "firestore,auth", "--project", @entity.projectId, "--config", "firebase.json", "--export-on-exit", "export", "--import", "export"] { cwd: "~/.almadar/emulator-data/" env: { JAVA_HOME: @entity.javaHome PATH: @entity.hostPath HOME: null } stdin: "null" stdout: "null" stderr: "null" detached: true } { emit: { success: EMULATORS_SPAWNED failure: EMULATORS_SPAWN_FAILED } })
+      EMULATORS_EXPORT_CHECKED -> starting when (not @payload.ok)
+        (set @entity.imports false)
+        (os/spawn "firebase" ["emulators:start", "--only", "firestore,auth", "--project", @entity.projectId, "--config", "firebase.json", "--export-on-exit", "export"] { cwd: "~/.almadar/emulator-data/" env: { JAVA_HOME: @entity.javaHome PATH: @entity.hostPath HOME: null } stdin: "null" stdout: "null" stderr: "null" detached: true } { emit: { success: EMULATORS_SPAWNED failure: EMULATORS_SPAWN_FAILED } })
+      EMULATORS_SPAWNED -> starting
+        (set @entity.started true)
+        (set @entity.deadline (+ @now 120000))
+        (set @entity.pollDueAt (+ @now 500))
+      EMULATORS_SPAWN_FAILED -> idle
+        (emit EMULATORS_FAILED { code: "emulators_spawn_failed" message: (str/concat "firebase did not start (it needs firebase-tools on the PATH): " (or @payload.error "")) })
+      EMULATORS_POLL -> starting
+        (set @entity.pollDueAt 0)
+        (emit EMULATORS_PROBE { })
+      EMULATORS_HOST_FAILED -> idle
+        (set @entity.pollDueAt 0)
+        (emit EMULATORS_FAILED { code: "emulators_host_failed" message: (or @payload.error "") })
+    }
+
+    ticks {
+      pollPorts every 100ms [background]
+        when (and (> @entity.pollDueAt 0) (>= @now @entity.pollDueAt))
+        (emit EMULATORS_POLL { })
+    }
+
+    emits {
+      EMULATORS_READY -> external {
+        projectId : string!
+        firestoreHost : string!
+        authHost : string!
+        reused : boolean!
+      }
+        @description "The suite listens: its demo project and the host:port of Firestore and Auth (what FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST name), and whether it was already running."
+        @synonyms "emulators ready, emulators running"
+        @tier "domain"
+      EMULATORS_FAILED -> external {
+        code : string!
+        message : string!
+      }
+        @description "The suite could not be started or reused: production, a non-demo project, a split port, no Java 21, no firebase, a host failure or a timeout."
+        @synonyms "emulators failed, cannot start emulators"
+        @tier "domain"
+      EMULATORS_PROBE -> internal { }
+        @description "Internal: probe both ports."
+        @tier "internal"
+      EMULATORS_PROBED -> internal { }
+        @description "Internal: both ports were probed."
+        @tier "internal"
+      EMULATORS_JAVA_NEXT -> internal { }
+        @description "Internal: check the next usual Java 21 location."
+        @tier "internal"
+      EMULATORS_POLL -> internal { }
+        @description "Internal: the next port probe is due."
+        @tier "internal"
+      EMULATORS_NODE_ENV -> internal {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for NODE_ENV."
+        @tier "internal"
+      EMULATORS_FIRESTORE_UP -> internal {
+        sock : number!
+      }
+        @description "Internal: the Firestore port accepted a connection."
+        @tier "internal"
+      EMULATORS_FIRESTORE_DOWN -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: the Firestore port refused a connection."
+        @tier "internal"
+      EMULATORS_AUTH_UP -> internal {
+        sock : number!
+      }
+        @description "Internal: the Auth port accepted a connection."
+        @tier "internal"
+      EMULATORS_AUTH_DOWN -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: the Auth port refused a connection."
+        @tier "internal"
+      EMULATORS_JAVA_HOME -> internal {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for JAVA21_HOME."
+        @tier "internal"
+      EMULATORS_JAVA_CHECKED -> internal {
+        ok : boolean!
+      }
+        @description "Internal: whether the usual Java location holds bin/java."
+        @tier "internal"
+      EMULATORS_PATH -> internal {
+        value : string
+      }
+        @description "Internal: the os/getenv answer for PATH."
+        @tier "internal"
+      EMULATORS_DIR_READY -> internal {
+      }
+        @description "Internal: the data directory exists."
+        @tier "internal"
+      EMULATORS_CONFIG_WRITTEN -> internal {
+        bytes : number!
+      }
+        @description "Internal: firebase.json is written."
+        @tier "internal"
+      EMULATORS_RULES_WRITTEN -> internal {
+        bytes : number!
+      }
+        @description "Internal: the open Firestore rules are written."
+        @tier "internal"
+      EMULATORS_EXPORT_CHECKED -> internal {
+        ok : boolean!
+      }
+        @description "Internal: whether a previous export exists to import."
+        @tier "internal"
+      EMULATORS_SPAWNED -> internal {
+        pid : number!
+      }
+        @description "Internal: the detached firebase process started."
+        @tier "internal"
+      EMULATORS_SPAWN_FAILED -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: firebase could not be started."
+        @tier "internal"
+      EMULATORS_HOST_FAILED -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: an os/getenv, os/close, os/mkdir, os/write-file or os/exists failure."
+        @tier "internal"
+    }
+
+    config {
+      projectId : string = "demo-almadar"
+        @label "Project"
+        @description "The demo project the emulators run under; it must start with demo- so the suite can never reach a real Firebase project."
+        @synonyms "firebase project, project id"
+        @tier "infra"
+    }
+
+    listens {
+      EMULATORS_START -> external {
+      }
+        @description "Start the emulator suite, or reuse the one already listening."
+        @synonyms "start emulators, run firebase emulators"
+    }
+  }
+
+  page "/firebase-emulators" as FirebaseEmulatorsPage -> FirebaseEmulators
+}

@@ -1,5 +1,5 @@
 import type { StdOperatorMeta } from '../types.js';
-import { STRING, mapOf, nullable, shape } from '../signature.js';
+import { BOOLEAN, STRING, mapOf, nullable, shape } from '../signature.js';
 import { OS_HANDLE, OS_PATH, OS_SIGNAL, OS_STREAM_MODE, OS_STRING_LIST, arg, osEffect } from './os-common.js';
 
 const SPAWN_CONFIG = shape({
@@ -8,13 +8,14 @@ const SPAWN_CONFIG = shape({
   stdin: OS_STREAM_MODE,
   stdout: OS_STREAM_MODE,
   stderr: OS_STREAM_MODE,
+  detached: BOOLEAN,
 });
 
 export const OS_PROCESS_OPERATORS: Record<string, StdOperatorMeta> = {
   'os/spawn': osEffect({
-    description: 'Start a child process (grant exec; the command is matched against the grant by exact string and never run through a shell). Success payload: { pid, stdin?, stdout?, stderr? }; a piped stream is an fd read or written with os/read and os/write.',
-    params: [arg('command', STRING, 'Command, matched exactly against the exec grant'), arg('args', OS_STRING_LIST, 'Arguments'), arg('config', SPAWN_CONFIG, 'Working directory, environment and stdio modes (inherit, pipe or null)')],
-    example: '["os/spawn", "git", ["status"], { "cwd": null, "env": null, "stdin": "null", "stdout": "pipe", "stderr": "inherit" }, { "emit": { "success": "PROC_STARTED", "failure": "PROC_FAILED" } }]',
+    description: 'Start a child process (grant exec; the command is matched against the grant by exact string and never run through a shell). Success payload: { pid, stdin?, stdout?, stderr? }; a piped stream is an fd read or written with os/read and os/write. A detached child runs in its own session and process group and outlives the program that started it; it takes no piped stream.',
+    params: [arg('command', STRING, 'Command, matched exactly against the exec grant'), arg('args', OS_STRING_LIST, 'Arguments'), arg('config', SPAWN_CONFIG, 'Working directory, environment, stdio modes (inherit, pipe or null) and whether the child is detached')],
+    example: '["os/spawn", "git", ["status"], { "cwd": null, "env": null, "stdin": "null", "stdout": "pipe", "stderr": "inherit", "detached": false }, { "emit": { "success": "PROC_STARTED", "failure": "PROC_FAILED" } }]',
   }),
   'os/wait': osEffect({
     description: 'Wait for a child process to end (grant exec). Success payload: { code?, signal? }.',

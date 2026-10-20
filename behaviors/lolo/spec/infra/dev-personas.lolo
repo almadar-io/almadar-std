@@ -1,0 +1,20 @@
+app dev-personas-spec [
+  version: "1.0.0",
+  description: "Design contract for signing in as a development persona: the app's identity rows listed at the inbound hook personas, and one of them signed in at persona-sign-in as a real Auth-emulator user (uid = row id, display name = its name, every other non-null field but email a custom claim) answered with an unsigned custom token the emulator accepts. Both hooks answer 404 unless FIREBASE_AUTH_EMULATOR_HOST names the local Auth emulator, so a deployment never lists or signs in personas."
+]
+
+orbital DevPersonasSpec {
+  expects entity DevPersona {
+    id : string!
+    name : string
+    email : string
+  }
+  expects trait DevPersonas {
+    state ready
+    emits {
+      PERSONAS_ANSWERED { status : number!  body : string! }
+      PERSONA_SIGN_IN_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/dev-personas" -> DevPersonas
+}

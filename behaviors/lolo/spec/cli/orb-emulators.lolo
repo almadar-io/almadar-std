@@ -1,0 +1,14 @@
+app orb-emulators-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb emulators`: start the local Firebase emulator suite, or reuse the one already listening, and print the environment a development host connects with (FIRESTORE_EMULATOR_HOST, FIREBASE_AUTH_EMULATOR_HOST, FIREBASE_PROJECT_ID, GCLOUD_PROJECT), one KEY=value line each, exit 0. Any argument is a usage error (exit 2); a suite that cannot be started prints its code and message (exit 1)."
+]
+
+orbital OrbEmulatorsSpec {
+  expects trait OrbEmulators {
+    state ready
+    emits {
+      EMULATORS_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page "/orb-emulators" -> OrbEmulators
+}
